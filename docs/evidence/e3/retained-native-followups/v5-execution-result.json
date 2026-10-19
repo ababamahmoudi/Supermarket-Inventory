@@ -1,0 +1,54 @@
+{
+  "executions": [
+    {
+      "label": "normal-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "actual_exit_code": 0
+    },
+    {
+      "label": "native-desktop",
+      "command": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e3-retained-bounded-v5/source/prototype/bounded.config.ts",
+        "--workers=1",
+        "--project=desktop",
+        "--grep",
+        "Cashier gets only granted custom notebook|manual price stays visible to staff|branch-only manual prices|C6 keeps twenty distinct",
+        "--reporter=line,json",
+        "--output",
+        "/tmp/e3-retained-bounded-v5/desktop-output"
+      ],
+      "actual_exit_code": 0
+    },
+    {
+      "label": "native-phone",
+      "command": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e3-retained-bounded-v5/source/prototype/bounded.config.ts",
+        "--workers=1",
+        "--project=phone",
+        "--grep",
+        "Cashier gets only granted custom notebook|manual price stays visible to staff|branch-only manual prices|duplicate barcode reports|C5 button contract covers primary|Payables filters supplier totals",
+        "--reporter=line,json",
+        "--output",
+        "/tmp/e3-retained-bounded-v5/phone-output"
+      ],
+      "actual_exit_code": 1
+    }
+  ],
+  "seconds": 353.98757553100586,
+  "source_unchanged": true,
+  "http_matches_built_dist_before": true,
+  "http_unchanged": true,
+  "expected_tests": 10
+}

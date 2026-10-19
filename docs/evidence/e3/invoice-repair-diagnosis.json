@@ -1,0 +1,333 @@
+{
+  "actual_root_commit": "5741353f47457842f925df623f35e44135a250e5",
+  "unchanged_baseline_target_result": {
+    "passed": 4,
+    "failed": 1,
+    "report": "proof-baseline/vitest.json"
+  },
+  "diagnostic_samples": [
+    {
+      "case": "same-id-phase",
+      "elapsed_ms": 8,
+      "canonical_id": "invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "same-id-phase",
+      "elapsed_ms": 61,
+      "canonical_id": "invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "same-id-phase",
+      "elapsed_ms": 114,
+      "canonical_id": "invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "same-id-phase",
+      "elapsed_ms": 191,
+      "canonical_id": "invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "canonical_file": "idb-file:v1:super-arzon:e577d309d23a0bfafc3ea9628eb3e010387efb3fe19bbf0000d449aca40dcfe5",
+      "route": "#invoices?id=invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "same-id-phase",
+      "elapsed_ms": 625,
+      "canonical_id": "invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "canonical_file": "idb-file:v1:super-arzon:e577d309d23a0bfafc3ea9628eb3e010387efb3fe19bbf0000d449aca40dcfe5",
+      "route": "#invoices?id=invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "same-id-phase",
+      "elapsed_ms": 697,
+      "canonical_id": "invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "canonical_file": "idb-file:v1:super-arzon:e577d309d23a0bfafc3ea9628eb3e010387efb3fe19bbf0000d449aca40dcfe5",
+      "route": "#invoices?id=invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "same-id-phase",
+      "elapsed_ms": 1449,
+      "canonical_id": "invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "canonical_file": "idb-file:v1:super-arzon:e577d309d23a0bfafc3ea9628eb3e010387efb3fe19bbf0000d449aca40dcfe5",
+      "route": "#invoices?id=invoice-215fdb7a-af2c-4963-b161-add5aefc4079",
+      "new_button_disabled": false,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 3,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 162,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 307,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 446,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 682,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 862,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 1272,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 1523,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 1753,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 1980,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 2208,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 2348,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 2512,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 2644,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 2874,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 3009,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 3126,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 3264,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 3406,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 3533,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 3699,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 3921,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 4284,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 4537,
+      "canonical_id": "invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "canonical_file": "undefined",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 5109,
+      "canonical_id": "demo-c8-hw-5012",
+      "canonical_file": "idb-file:v1:super-arzon:b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 5850,
+      "canonical_id": "demo-c8-hw-5012",
+      "canonical_file": "idb-file:v1:super-arzon:b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 6189,
+      "canonical_id": "demo-c8-hw-5012",
+      "canonical_file": "idb-file:v1:super-arzon:b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444",
+      "route": "#invoices?id=invoice-432f017e-7eea-4bc1-8c2d-53a6d5a9b57c",
+      "new_button_disabled": true,
+      "real_work_pending": true
+    },
+    {
+      "case": "recognized-phase",
+      "elapsed_ms": 6215,
+      "canonical_id": "demo-c8-hw-5012",
+      "canonical_file": "idb-file:v1:super-arzon:b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444",
+      "route": "#invoices?id=demo-c8-hw-5012",
+      "new_button_disabled": false,
+      "real_work_pending": false
+    }
+  ],
+  "diagnosis": "The UI correctly keeps the old workspace inert until the genuine command, derived reconciliation and target route/projection settle. E2 command work outlasts the old test-only default1s file-read wait; the original New/Manual acceptance helper already permits10s. A public New-button + inert readiness barrier with that same budget now precedes both unchanged canonical/hash/retained-byte assertion blocks. No business action, producer/consumer, command, actor, authority check or pricing logic changes.",
+  "only_candidate_source_delta": [
+    "prototype/src/screens/Invoices.pending.e1.test.tsx"
+  ],
+  "all_original_test_assertions_and_deadlines_unchanged": true,
+  "original_invoices_source_sha256": "d7fa45166ea39cf2618b5051b1db9c63f2ede323c6cc3a0a253f4564a8466a55",
+  "final_invoices_source_sha256": "d7fa45166ea39cf2618b5051b1db9c63f2ede323c6cc3a0a253f4564a8466a55",
+  "root_mutated": false
+}

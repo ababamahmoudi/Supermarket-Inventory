@@ -1,3 +1,4 @@
+import { beginAppWork } from "./app-work";
 /** Browser-only evidence storage. Business JSON retains scoped content references,
  * never Blob URLs or base64. Sources are immutable; previews are disposable views. */
 import { decodeHistoryStorage, encodeHistoryStorage } from "./history-storage";
@@ -275,28 +276,33 @@ export async function storeUploadedFile(
   options: { purpose: "invoice" | "photo" | "logo" },
   repository: FileRepository = browserFileRepository,
 ): Promise<{ reference: string; name: string; type: string; size: number }> {
-  const allowed =
-    options.purpose === "invoice"
-      ? /^(application\/pdf|image\/(png|jpeg|webp|gif))$/
-      : /^image\/(png|jpeg|webp|gif)$/;
-  const includedInvoiceOriginal =
-    options.purpose === "invoice" &&
-    file.type === "image/svg+xml" &&
-    sha256Bytes(new Uint8Array(await file.arrayBuffer())) ===
-      INCLUDED_COST_INVOICE_SHA256;
-  if (!file.size || (!allowed.test(file.type) && !includedInvoiceOriginal))
-    throw new FileStorageError("image");
-  const name = file.name ?? "file";
+  const release = beginAppWork();
   try {
-    const record = await retainFile(file, name, companyId, repository);
-    return {
-      reference: record.reference,
-      name,
-      type: file.type,
-      size: file.size,
-    };
-  } catch (error) {
-    throw storageFailure(error);
+    const allowed =
+      options.purpose === "invoice"
+        ? /^(application\/pdf|image\/(png|jpeg|webp|gif))$/
+        : /^image\/(png|jpeg|webp|gif)$/;
+    const includedInvoiceOriginal =
+      options.purpose === "invoice" &&
+      file.type === "image/svg+xml" &&
+      sha256Bytes(new Uint8Array(await file.arrayBuffer())) ===
+        INCLUDED_COST_INVOICE_SHA256;
+    if (!file.size || (!allowed.test(file.type) && !includedInvoiceOriginal))
+      throw new FileStorageError("image");
+    const name = file.name ?? "file";
+    try {
+      const record = await retainFile(file, name, companyId, repository);
+      return {
+        reference: record.reference,
+        name,
+        type: file.type,
+        size: file.size,
+      };
+    } catch (error) {
+      throw storageFailure(error);
+    }
+  } finally {
+    release();
   }
 }
 export async function readStoredFile(
@@ -304,19 +310,24 @@ export async function readStoredFile(
   companyId: string,
   repository: FileRepository = browserFileRepository,
 ): Promise<StoredFileRecord> {
-  if (referenceCompany(reference) !== companyId)
-    throw new FileStorageError("scope");
-  const record = await repository.getFile(reference);
-  if (!record) throw new FileStorageError("missing");
-  if (record.company_id !== companyId || record.reference !== reference)
-    throw new FileStorageError("scope");
-  if (
-    record.source.size !== record.source_size ||
-    !reference.endsWith(`:${record.sha256}`) ||
-    (await blobDigest(record.source)) !== record.sha256
-  )
-    throw new FileStorageError("integrity");
-  return record;
+  const release = beginAppWork();
+  try {
+    if (referenceCompany(reference) !== companyId)
+      throw new FileStorageError("scope");
+    const record = await repository.getFile(reference);
+    if (!record) throw new FileStorageError("missing");
+    if (record.company_id !== companyId || record.reference !== reference)
+      throw new FileStorageError("scope");
+    if (
+      record.source.size !== record.source_size ||
+      !reference.endsWith(`:${record.sha256}`) ||
+      (await blobDigest(record.source)) !== record.sha256
+    )
+      throw new FileStorageError("integrity");
+    return record;
+  } finally {
+    release();
+  }
 }
 
 const assetKeys = new Set(["file_data", "photo", "logo_data"]);
@@ -329,83 +340,92 @@ export async function migrateInlineFiles<T>(
   companyId: string,
   repository: FileRepository = browserFileRepository,
 ): Promise<{ state: T; migrated: number }> {
-  const files = new Map<
-    string,
-    { value: string; company: string; name: string }
-  >();
-  const key = (scope: string, value: string) => `${scope}\u0000${value}`;
-  const collect = (node: unknown, scope: string) => {
-    if (Array.isArray(node)) {
-      node.forEach((entry) => collect(entry, scope));
-      return;
-    }
-    if (!object(node)) return;
-    const company =
-      typeof node.company_id === "string" ? node.company_id : scope;
-    const add = (value: unknown, name = "retained-file") => {
-      if (typeof value === "string" && value.startsWith("data:"))
-        files.set(key(company, value), { value, company, name });
+  const release = beginAppWork();
+  try {
+    const files = new Map<
+      string,
+      { value: string; company: string; name: string }
+    >();
+    const key = (scope: string, value: string) => `${scope}\u0000${value}`;
+    const collect = (node: unknown, scope: string) => {
+      if (Array.isArray(node)) {
+        node.forEach((entry) => collect(entry, scope));
+        return;
+      }
+      if (!object(node)) return;
+      const company =
+        typeof node.company_id === "string" ? node.company_id : scope;
+      const add = (value: unknown, name = "retained-file") => {
+        if (typeof value === "string" && value.startsWith("data:"))
+          files.set(key(company, value), { value, company, name });
+      };
+      for (const [property, value] of Object.entries(node)) {
+        if (assetKeys.has(property))
+          add(
+            value,
+            typeof node.file_name === "string" ? node.file_name : property,
+          );
+        collect(value, company);
+      }
+      if (
+        Array.isArray(node.path) &&
+        node.path.some(
+          (part) => typeof part === "string" && assetKeys.has(part),
+        )
+      ) {
+        add(node.before);
+        add(node.after);
+      }
     };
-    for (const [property, value] of Object.entries(node)) {
-      if (assetKeys.has(property))
-        add(
-          value,
-          typeof node.file_name === "string" ? node.file_name : property,
+    collect(input, companyId);
+    if (!files.size) return { state: input, migrated: 0 };
+    const replacements = new Map<string, StoredFileRecord>();
+    for (const [assetKey, file] of files) {
+      const saved = await retainFile(
+        inlineFileBlob(file.value),
+        file.name,
+        file.company,
+        repository,
+        true,
+      );
+      replacements.set(assetKey, saved);
+    }
+    const replace = (node: unknown, scope: string, asset = false): unknown => {
+      if (typeof node === "string")
+        return asset
+          ? (replacements.get(key(scope, node))?.reference ?? node)
+          : node;
+      if (Array.isArray(node))
+        return node.map((entry) => replace(entry, scope, asset));
+      if (!object(node)) return node;
+      const company =
+        typeof node.company_id === "string" ? node.company_id : scope;
+      const assetPath =
+        Array.isArray(node.path) &&
+        node.path.some(
+          (part) => typeof part === "string" && assetKeys.has(part),
         );
-      collect(value, company);
-    }
-    if (
-      Array.isArray(node.path) &&
-      node.path.some((part) => typeof part === "string" && assetKeys.has(part))
-    ) {
-      add(node.before);
-      add(node.after);
-    }
-  };
-  collect(input, companyId);
-  if (!files.size) return { state: input, migrated: 0 };
-  const replacements = new Map<string, StoredFileRecord>();
-  for (const [assetKey, file] of files) {
-    const saved = await retainFile(
-      inlineFileBlob(file.value),
-      file.name,
-      file.company,
-      repository,
-      true,
-    );
-    replacements.set(assetKey, saved);
+      const result = Object.fromEntries(
+        Object.entries(node).map(([property, value]) => [
+          property,
+          replace(
+            value,
+            company,
+            assetKeys.has(property) ||
+              (assetPath && (property === "before" || property === "after")),
+          ),
+        ]),
+      );
+      if (typeof node.file_data === "string" && "file_name" in node) {
+        const record = replacements.get(key(company, node.file_data));
+        if (record) result.file_size = record.source_size;
+      }
+      return result;
+    };
+    return { state: replace(input, companyId) as T, migrated: files.size };
+  } finally {
+    release();
   }
-  const replace = (node: unknown, scope: string, asset = false): unknown => {
-    if (typeof node === "string")
-      return asset
-        ? (replacements.get(key(scope, node))?.reference ?? node)
-        : node;
-    if (Array.isArray(node))
-      return node.map((entry) => replace(entry, scope, asset));
-    if (!object(node)) return node;
-    const company =
-      typeof node.company_id === "string" ? node.company_id : scope;
-    const assetPath =
-      Array.isArray(node.path) &&
-      node.path.some((part) => typeof part === "string" && assetKeys.has(part));
-    const result = Object.fromEntries(
-      Object.entries(node).map(([property, value]) => [
-        property,
-        replace(
-          value,
-          company,
-          assetKeys.has(property) ||
-            (assetPath && (property === "before" || property === "after")),
-        ),
-      ]),
-    );
-    if (typeof node.file_data === "string" && "file_name" in node) {
-      const record = replacements.get(key(company, node.file_data));
-      if (record) result.file_size = record.source_size;
-    }
-    return result;
-  };
-  return { state: replace(input, companyId) as T, migrated: files.size };
 }
 export async function archiveFileStorageSnapshot(
   storageKey: string,
@@ -413,42 +433,54 @@ export async function archiveFileStorageSnapshot(
   companyId: string,
   repository: FileRepository = browserFileRepository,
 ): Promise<string> {
-  const blob = new Blob([raw], { type: "application/json" });
-  const sha256 = await blobDigest(blob);
-  const reference = `idb-backup:v1:${encodeURIComponent(companyId)}:${encodeURIComponent(storageKey)}:${sha256}`;
-  const previous = await repository.getBackup(reference);
-  if (!previous)
-    await repository.putBackup({
-      reference,
-      company_id: companyId,
-      storage_key: storageKey,
-      sha256,
-      raw: blob,
-      saved_at: new Date().toISOString(),
-    });
-  const verified = await repository.getBackup(reference);
-  if (
-    !verified ||
-    verified.company_id !== companyId ||
-    (await verified.raw.text()) !== raw ||
-    (await blobDigest(verified.raw)) !== sha256
-  )
-    throw new FileStorageError("integrity");
-  return reference;
+  const release = beginAppWork();
+  try {
+    const blob = new Blob([raw], { type: "application/json" });
+    const sha256 = await blobDigest(blob);
+    const reference = `idb-backup:v1:${encodeURIComponent(companyId)}:${encodeURIComponent(storageKey)}:${sha256}`;
+    const previous = await repository.getBackup(reference);
+    if (!previous)
+      await repository.putBackup({
+        reference,
+        company_id: companyId,
+        storage_key: storageKey,
+        sha256,
+        raw: blob,
+        saved_at: new Date().toISOString(),
+      });
+    const verified = await repository.getBackup(reference);
+    if (
+      !verified ||
+      verified.company_id !== companyId ||
+      (await verified.raw.text()) !== raw ||
+      (await blobDigest(verified.raw)) !== sha256
+    )
+      throw new FileStorageError("integrity");
+    return reference;
+  } finally {
+    release();
+  }
 }
 export async function readFileStorageBackup(
   reference: string,
   companyId: string,
   repository: FileRepository = browserFileRepository,
 ): Promise<string> {
-  if (!reference.startsWith(`idb-backup:v1:${encodeURIComponent(companyId)}:`))
-    throw new FileStorageError("scope");
-  const backup = await repository.getBackup(reference);
-  if (!backup || backup.company_id !== companyId)
-    throw new FileStorageError("missing");
-  if ((await blobDigest(backup.raw)) !== backup.sha256)
-    throw new FileStorageError("integrity");
-  return backup.raw.text();
+  const release = beginAppWork();
+  try {
+    if (
+      !reference.startsWith(`idb-backup:v1:${encodeURIComponent(companyId)}:`)
+    )
+      throw new FileStorageError("scope");
+    const backup = await repository.getBackup(reference);
+    if (!backup || backup.company_id !== companyId)
+      throw new FileStorageError("missing");
+    if ((await blobDigest(backup.raw)) !== backup.sha256)
+      throw new FileStorageError("integrity");
+    return backup.raw.text();
+  } finally {
+    release();
+  }
 }
 /** Old verified migration backups can themselves fill Safari's text quota.
  * Preserve their exact raw bytes in IndexedDB before rewriting them with refs. */
@@ -457,37 +489,42 @@ export async function migrateLegacyFileBackups(
   companyId: string,
   repository: FileRepository = browserFileRepository,
 ): Promise<number> {
-  const keys = Array.from({ length: storage.length }, (_, index) =>
-    storage.key(index),
-  ).filter((value): value is string =>
-    Boolean(value?.startsWith("supermarket-prototype-before-")),
-  );
-  let count = 0;
-  for (const storageKey of keys) {
-    const raw = storage.getItem(storageKey);
-    if (!raw) continue;
-    let candidate: unknown;
-    try {
-      candidate = decodeHistoryStorage(JSON.parse(raw));
-    } catch {
-      continue;
+  const release = beginAppWork();
+  try {
+    const keys = Array.from({ length: storage.length }, (_, index) =>
+      storage.key(index),
+    ).filter((value): value is string =>
+      Boolean(value?.startsWith("supermarket-prototype-before-")),
+    );
+    let count = 0;
+    for (const storageKey of keys) {
+      const raw = storage.getItem(storageKey);
+      if (!raw) continue;
+      let candidate: unknown;
+      try {
+        candidate = decodeHistoryStorage(JSON.parse(raw));
+      } catch {
+        continue;
+      }
+      const owner =
+        object(candidate) &&
+        object(candidate.config) &&
+        object(candidate.config.company)
+          ? candidate.config.company.seed_key
+          : null;
+      if (owner !== companyId) continue;
+      const result = await migrateInlineFiles(candidate, companyId, repository);
+      if (!result.migrated) continue;
+      await archiveFileStorageSnapshot(storageKey, raw, companyId, repository);
+      if (storage.getItem(storageKey) !== raw) continue;
+      const rewritten = JSON.stringify(encodeHistoryStorage(result.state));
+      storage.setItem(storageKey, rewritten);
+      if (storage.getItem(storageKey) !== rewritten)
+        throw new FileStorageError("integrity");
+      count += result.migrated;
     }
-    const owner =
-      object(candidate) &&
-      object(candidate.config) &&
-      object(candidate.config.company)
-        ? candidate.config.company.seed_key
-        : null;
-    if (owner !== companyId) continue;
-    const result = await migrateInlineFiles(candidate, companyId, repository);
-    if (!result.migrated) continue;
-    await archiveFileStorageSnapshot(storageKey, raw, companyId, repository);
-    if (storage.getItem(storageKey) !== raw) continue;
-    const rewritten = JSON.stringify(encodeHistoryStorage(result.state));
-    storage.setItem(storageKey, rewritten);
-    if (storage.getItem(storageKey) !== rewritten)
-      throw new FileStorageError("integrity");
-    count += result.migrated;
+    return count;
+  } finally {
+    release();
   }
-  return count;
 }

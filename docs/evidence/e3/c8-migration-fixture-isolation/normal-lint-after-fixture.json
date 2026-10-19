@@ -1,0 +1,13 @@
+{
+  "command": "npm run lint",
+  "working_directory": "prototype",
+  "actual_exit_code": 0,
+  "tool_session": 51972,
+  "checks": [
+    "eslint . --max-warnings 0",
+    "prettier --check ."
+  ],
+  "observed_output": "All matched files use Prettier code style!",
+  "source_overlay_sha256": "e5ac3b22fcd3426b86e85a1b0d653544b7efe065c11bcc9a36f98fbe889fdd8b",
+  "scope": "Root normal lint after applying the actual test-only fixture correction; no production source changes."
+}

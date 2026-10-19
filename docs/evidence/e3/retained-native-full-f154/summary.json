@@ -1,0 +1,119 @@
+{
+  "created_utc": "2026-10-15T20:44:40Z",
+  "source_commit": "f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76",
+  "source_files": 2179,
+  "source_fingerprint": "c734b7c1d18d1ef07a06831a724b1ed381f800549b9863928c0bab08e42f9f3e",
+  "source_archive_sha256": "922e63d04f64f96e8ff03da013974de7d5cd8ed48a164c1360a325a886215275",
+  "normal_build": {
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 22.72056794166565,
+    "interrupted": false
+  },
+  "normal_build_source_guard": {
+    "before": true,
+    "after": true,
+    "commit": "f1545dfb4da4e0ea1a4059dcdd3aa1d59e231f76",
+    "old_build_reused": false
+  },
+  "old_build_reused": false,
+  "projects": {
+    "desktop": {
+      "counts": {
+        "PASS": 406
+      },
+      "total_discovered": 406,
+      "actual_native_cli_exit_code": 0,
+      "seconds": 2278.3679897785187,
+      "original_stats": {
+        "startTime": "2026-10-15T20:05:00.079Z",
+        "duration": 2277803.0790000004,
+        "expected": 406,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "workers": 2,
+      "retries": 0,
+      "global_errors": 0,
+      "source_unchanged": true,
+      "dist_unchanged": true,
+      "served_files_before_and_after": 61,
+      "all_served_bytes_unchanged": true,
+      "exact_original_case_keys": true,
+      "exact_original_skip_keys_and_reasons": true,
+      "raw_harness_skip_annotation_comparison": true,
+      "skip_metadata_explanation": null,
+      "lifecycle_tests": 406,
+      "lifecycle_terminal_event": {
+        "utc": "2026-10-15T20:42:57.908Z",
+        "type": "end",
+        "result": {
+          "status": "passed",
+          "startTime": "2026-10-15T20:05:00.079Z",
+          "duration": 2277803.0790000004
+        }
+      }
+    },
+    "phone": {
+      "counts": {
+        "PASS": 363,
+        "INTENTIONAL_SKIP": 42,
+        "FAIL": 1
+      },
+      "total_discovered": 406,
+      "actual_native_cli_exit_code": 1,
+      "seconds": 2132.4442965984344,
+      "original_stats": {
+        "startTime": "2026-10-15T20:07:23.903Z",
+        "duration": 2131734.6,
+        "expected": 363,
+        "skipped": 42,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "workers": 2,
+      "retries": 0,
+      "global_errors": 0,
+      "source_unchanged": true,
+      "dist_unchanged": true,
+      "served_files_before_and_after": 61,
+      "all_served_bytes_unchanged": true,
+      "exact_original_case_keys": true,
+      "exact_original_skip_keys_and_reasons": true,
+      "raw_harness_skip_annotation_comparison": false,
+      "skip_metadata_explanation": "Original skip type/description and exact case keys unchanged; raw equality false only because current Playwright adds source location metadata. Separate derived comparison retained.",
+      "lifecycle_tests": 406,
+      "lifecycle_terminal_event": {
+        "utc": "2026-10-15T20:42:55.694Z",
+        "type": "end",
+        "result": {
+          "status": "failed",
+          "startTime": "2026-10-15T20:07:23.903Z",
+          "duration": 2131734.6
+        }
+      }
+    }
+  },
+  "combined_counts": {
+    "PASS": 769,
+    "INTENTIONAL_SKIP": 42,
+    "FAIL": 1
+  },
+  "overall_pass": false,
+  "retained_actual_failures": true,
+  "combined_total": 812,
+  "not_run": 0,
+  "interrupted": 0,
+  "retries": 0,
+  "flaky": 0,
+  "global_errors": 0,
+  "exact_original_all812_case_keys": true,
+  "same_source_and_fresh_build_for_both_projects": true,
+  "no_timeout_assertion_skip_or_retry_relaxation": true,
+  "transport_limit": "Explicit .invalid HTTP transport fixture; not actual LAN, phone hardware, Safari/HomeScreen, physical printer, production deployment or Cloudflare policy verification."
+}

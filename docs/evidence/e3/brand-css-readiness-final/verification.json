@@ -1,0 +1,474 @@
+{
+  "scope": "Actual final formatted store.test entire-file E1/E2 checks plus original CI failure and failed unformatted attempts, not a new full E3 application/browser result",
+  "baseline_ci_commit": "0786ea262b6ebdf573cd02f2b56479952633ee21",
+  "ci_actual_unit_failure": "Expected #0F766E, received #2B59C3 at original store.test.tsx:100; PR run38806913395; build/browser skipped. Separate from30minute budget cancellations.",
+  "final_fixture_sha256": "bc5abad569a85b104e33ebc23971c5b7b822181888df8f23cf8aa5e90dd12c89",
+  "current_branch_fixture_matches": {
+    "feat/prototype-e1-location-roles": {
+      "commit": "48d9c27ec2925924431127f20b9185cf49ec09f1",
+      "fixture_sha256": "bc5abad569a85b104e33ebc23971c5b7b822181888df8f23cf8aa5e90dd12c89"
+    },
+    "feat/prototype-e2-price-updates": {
+      "commit": "b2988e382b473425508c0067ed2bd1c168e5154f",
+      "fixture_sha256": "bc5abad569a85b104e33ebc23971c5b7b822181888df8f23cf8aa5e90dd12c89"
+    },
+    "feat/prototype-e3-phones": {
+      "commit": "a6c66dc0d14e74c3d717f0ce355a9656ec924732",
+      "fixture_sha256": "bc5abad569a85b104e33ebc23971c5b7b822181888df8f23cf8aa5e90dd12c89"
+    }
+  },
+  "final_checks": {
+    "scope": "Sequential E1 then E2 entire store.test.tsx on exact committed branch archives;1 total worker; no source overlay, branch switch or tracked edit",
+    "results": [
+      {
+        "stage": "e1",
+        "branch": "feat/prototype-e1-location-roles",
+        "commit": "48d9c27ec2925924431127f20b9185cf49ec09f1",
+        "checks": [
+          {
+            "name": "unit",
+            "command": [
+              "node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest-brand-backport-proof.config.ts",
+              "src/store.test.tsx",
+              "--maxWorkers=1",
+              "--reporter=default",
+              "--reporter=json",
+              "--reporter=/tmp/brand-css-readiness-backports-formatted-final/e1/observer.mjs",
+              "--outputFile=/tmp/brand-css-readiness-backports-formatted-final/e1/unit.json"
+            ],
+            "actual_exit_code": 0,
+            "seconds": 11.231050968170166,
+            "source_unchanged": true
+          },
+          {
+            "name": "eslint",
+            "command": [
+              "node",
+              "node_modules/eslint/bin/eslint.js",
+              "src/store.test.tsx",
+              "--max-warnings",
+              "0"
+            ],
+            "actual_exit_code": 0,
+            "seconds": 1.41709566116333,
+            "source_unchanged": true
+          },
+          {
+            "name": "prettier",
+            "command": [
+              "node",
+              "node_modules/prettier/bin/prettier.cjs",
+              "--check",
+              "src/store.test.tsx"
+            ],
+            "actual_exit_code": 0,
+            "seconds": 0.34491705894470215,
+            "source_unchanged": true
+          }
+        ],
+        "source_pin_count": 562,
+        "unit_counts": {
+          "numTotalTests": 11,
+          "numPassedTests": 11,
+          "numFailedTests": 0,
+          "numPendingTests": 0,
+          "success": true
+        },
+        "global_errors": [],
+        "fixture_sha256": "bc5abad569a85b104e33ebc23971c5b7b822181888df8f23cf8aa5e90dd12c89",
+        "no_source_overlay": true,
+        "all_exact_color_assertions_unchanged": true,
+        "default_waitFor_timeout_1000_unchanged": true,
+        "show_helper_timeout_10000_unchanged": true,
+        "vitest_case_timeout_30000_unchanged": true
+      },
+      {
+        "stage": "e2",
+        "branch": "feat/prototype-e2-price-updates",
+        "commit": "b2988e382b473425508c0067ed2bd1c168e5154f",
+        "checks": [
+          {
+            "name": "unit",
+            "command": [
+              "node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest-brand-backport-proof.config.ts",
+              "src/store.test.tsx",
+              "--maxWorkers=1",
+              "--reporter=default",
+              "--reporter=json",
+              "--reporter=/tmp/brand-css-readiness-backports-formatted-final/e2/observer.mjs",
+              "--outputFile=/tmp/brand-css-readiness-backports-formatted-final/e2/unit.json"
+            ],
+            "actual_exit_code": 0,
+            "seconds": 12.867717981338501,
+            "source_unchanged": true
+          },
+          {
+            "name": "eslint",
+            "command": [
+              "node",
+              "node_modules/eslint/bin/eslint.js",
+              "src/store.test.tsx",
+              "--max-warnings",
+              "0"
+            ],
+            "actual_exit_code": 0,
+            "seconds": 1.2096118927001953,
+            "source_unchanged": true
+          },
+          {
+            "name": "prettier",
+            "command": [
+              "node",
+              "node_modules/prettier/bin/prettier.cjs",
+              "--check",
+              "src/store.test.tsx"
+            ],
+            "actual_exit_code": 0,
+            "seconds": 0.32180309295654297,
+            "source_unchanged": true
+          }
+        ],
+        "source_pin_count": 576,
+        "unit_counts": {
+          "numTotalTests": 11,
+          "numPassedTests": 11,
+          "numFailedTests": 0,
+          "numPendingTests": 0,
+          "success": true
+        },
+        "global_errors": [],
+        "fixture_sha256": "bc5abad569a85b104e33ebc23971c5b7b822181888df8f23cf8aa5e90dd12c89",
+        "no_source_overlay": true,
+        "all_exact_color_assertions_unchanged": true,
+        "default_waitFor_timeout_1000_unchanged": true,
+        "show_helper_timeout_10000_unchanged": true,
+        "vitest_case_timeout_30000_unchanged": true
+      }
+    ]
+  },
+  "prior_e1_unformatted": {
+    "stage": "e1",
+    "branch": "feat/prototype-e1-location-roles",
+    "commit": "30019c37440a4848a299e37ac82770711b49d9c1",
+    "checks": [
+      {
+        "name": "unit",
+        "command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--config",
+          "vitest-brand-backport-proof.config.ts",
+          "src/store.test.tsx",
+          "--maxWorkers=1",
+          "--reporter=default",
+          "--reporter=json",
+          "--reporter=/tmp/brand-css-readiness-backports/e1/observer.mjs",
+          "--outputFile=/tmp/brand-css-readiness-backports/e1/unit.json"
+        ],
+        "actual_exit_code": 0,
+        "seconds": 11.451971769332886,
+        "source_unchanged": true
+      },
+      {
+        "name": "eslint",
+        "command": [
+          "node",
+          "node_modules/eslint/bin/eslint.js",
+          "src/store.test.tsx",
+          "--max-warnings",
+          "0"
+        ],
+        "actual_exit_code": 0,
+        "seconds": 1.1936745643615723,
+        "source_unchanged": true
+      },
+      {
+        "name": "prettier",
+        "command": [
+          "node",
+          "node_modules/prettier/bin/prettier.cjs",
+          "--check",
+          "src/store.test.tsx"
+        ],
+        "actual_exit_code": 1,
+        "seconds": 0.29163074493408203,
+        "source_unchanged": true
+      }
+    ],
+    "source_pin_count": 562,
+    "unit_counts": {
+      "numTotalTests": 11,
+      "numPassedTests": 11,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "success": true
+    },
+    "global_errors": [],
+    "fixture_sha256": "acbb2ff78e964d5842a86da1fdcd4e7866d3a401decda5b100e2be4de2665dba",
+    "no_source_overlay": true,
+    "all_exact_color_assertions_unchanged": true,
+    "default_waitFor_timeout_1000_unchanged": true,
+    "show_helper_timeout_10000_unchanged": true,
+    "vitest_case_timeout_30000_unchanged": true
+  },
+  "prior_e3_unformatted_lint": {
+    "commit": "982577feff1cd034c9588228b580215e13a4451e",
+    "checks": [
+      {
+        "name": "lint",
+        "command": [
+          "npm",
+          "run",
+          "lint"
+        ],
+        "actual_exit_code": 1,
+        "seconds": 44.13987135887146,
+        "source_unchanged": true
+      }
+    ],
+    "source_unchanged": true
+  },
+  "all_exact_color_values_property_names_and_matchers_unchanged": true,
+  "waitFor_default_timeout_ms": 1000,
+  "show_default_timeout_ms_unchanged": 10000,
+  "vitest_test_timeout_ms_unchanged": 30000,
+  "source_delta": "Only existing await waitFor around all3 unchanged exact CSS assertions plus required formatting. No production/permissions/storage/seed/assets changes.",
+  "cause_limit": "show() stage predicate does not establish passive branding effect publication. Original CI snapshot lacks auth/effect timings; CPU/scheduling cause unproven.",
+  "new_mocks_timers_or_result_replacements": false,
+  "tracked_writes_or_branch_switches_by_agent": false,
+  "required_CI_pass_or_hardware_claim": false,
+  "raw_files": {
+    "final-e1/start.json.gz": {
+      "sha256": "2139eb4d890a22fa0b25de171c9856fe007cb152c0a5fddbc80884be78f11dfe",
+      "bytes": 27398,
+      "original_sha256": "4cceb0ce134be9f44902714504ba359b3f59e6c0c35c311191a9806080031b69",
+      "original_bytes": 64073
+    },
+    "final-e1/result.json.gz": {
+      "sha256": "0df97a633f733503a569ab4b7f2bdd3ddb6cdfafef20d8a9fedeec0d94341542",
+      "bytes": 685,
+      "original_sha256": "3895bfc1277482eb7c3d6a71dc7725421058040456c8e1814b6940e989604b41",
+      "original_bytes": 1806
+    },
+    "final-e1/unit.json.gz": {
+      "sha256": "f54a12f3098fbe4806acb4fe5cbb67a9bb296aa3df1bd8bfb0f93e517ff0749d",
+      "bytes": 1170,
+      "original_sha256": "3a193acbcc892686ad18b29a6b2fc43795562fdfac3406f0fd7cd11f472173e2",
+      "original_bytes": 4802
+    },
+    "final-e1/unit.log.gz": {
+      "sha256": "81865f55f45fcc140feadbddaa39bea12e2fc819b82068c175c89d26e2f485a8",
+      "bytes": 611,
+      "original_sha256": "aefcc15d971d2a91c436278974be18c093e1e0fe3665d3327906e7d6fadbd3b7",
+      "original_bytes": 1076
+    },
+    "final-e1/eslint.log.gz": {
+      "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+      "bytes": 20,
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_bytes": 0
+    },
+    "final-e1/prettier.log.gz": {
+      "sha256": "710c63d8d40d5688a62c3b08053dd1971c4e4ee87b2297f3f20c2540d22cd94e",
+      "bytes": 82,
+      "original_sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "original_bytes": 66
+    },
+    "final-e1/global-errors.json.gz": {
+      "sha256": "c8f0e69c2feb1554d64762a8c6757309e22d2ea33ba02907fcf755d34a4135f3",
+      "bytes": 130,
+      "original_sha256": "91716a636631a19a8d3d8b03e7f872697342a2cc203d316cfe462935c7735705",
+      "original_bytes": 172
+    },
+    "final-e1/observer.mjs.gz": {
+      "sha256": "322a4bffbbe0588c27215ad321b3650288e128221607e17b1b3c9c65591f4fdf",
+      "bytes": 352,
+      "original_sha256": "6ab3e706e6e8ad8628c07dc524bba49d780070cbda5f8d166543649f32e2f6e2",
+      "original_bytes": 526
+    },
+    "final-e1/runner-adapter.ts.gz": {
+      "sha256": "e0c6fbbfebc12c061623176bd953ba658bfa3eb9f1eca455218bc688111f7e97",
+      "bytes": 180,
+      "original_sha256": "af2d8c04185cb887bfc936a5e9b3e38c6d974830a277a6fdcc376adea10f6007",
+      "original_bytes": 252
+    },
+    "final-e2/start.json.gz": {
+      "sha256": "7b69ff78e64659dbb33218f85d4c8a854b5677ef47e4eb62f7345b78a4167fbd",
+      "bytes": 28100,
+      "original_sha256": "c33597e63cc937ef5070b0794ac515a72a5e37af149e40a2d8a6c3552d415016",
+      "original_bytes": 65695
+    },
+    "final-e2/result.json.gz": {
+      "sha256": "cbc9317517b34768f4bf37fe85dab39bbf7ed918ac1f78fe6e49b707a044a078",
+      "bytes": 685,
+      "original_sha256": "c58d75d00d9e0669f16084350ddac44689dd76195239fd26eeea1cb9cec9716b",
+      "original_bytes": 1807
+    },
+    "final-e2/unit.json.gz": {
+      "sha256": "900e08d586beb57c9ea23d193c668f248d50ef73e44d0a3ef3b5beb75007664c",
+      "bytes": 1170,
+      "original_sha256": "da07844a9fed03190cc6a505fdebb03fad16c25e0f9a86e3bbf190eb0b3e5f43",
+      "original_bytes": 4810
+    },
+    "final-e2/unit.log.gz": {
+      "sha256": "e79300fa56328696b3012046d0ea72eaf0df6507a88c4142b64d724e8e10b14d",
+      "bytes": 645,
+      "original_sha256": "523c4ca534212f0bed386a27b226ccb9138120981dbd33ee78198b57acf662a1",
+      "original_bytes": 1151
+    },
+    "final-e2/eslint.log.gz": {
+      "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+      "bytes": 20,
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_bytes": 0
+    },
+    "final-e2/prettier.log.gz": {
+      "sha256": "710c63d8d40d5688a62c3b08053dd1971c4e4ee87b2297f3f20c2540d22cd94e",
+      "bytes": 82,
+      "original_sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "original_bytes": 66
+    },
+    "final-e2/global-errors.json.gz": {
+      "sha256": "c8f0e69c2feb1554d64762a8c6757309e22d2ea33ba02907fcf755d34a4135f3",
+      "bytes": 130,
+      "original_sha256": "91716a636631a19a8d3d8b03e7f872697342a2cc203d316cfe462935c7735705",
+      "original_bytes": 172
+    },
+    "final-e2/observer.mjs.gz": {
+      "sha256": "bf2801ca5995c803e5161044d6f36f409791814a299a53f2722970d66168b825",
+      "bytes": 352,
+      "original_sha256": "f819b64701e146f999c669095ea8ce7996e28d8a97b7d26bcf939e6b98418227",
+      "original_bytes": 526
+    },
+    "final-e2/runner-adapter.ts.gz": {
+      "sha256": "e0c6fbbfebc12c061623176bd953ba658bfa3eb9f1eca455218bc688111f7e97",
+      "bytes": 180,
+      "original_sha256": "af2d8c04185cb887bfc936a5e9b3e38c6d974830a277a6fdcc376adea10f6007",
+      "original_bytes": 252
+    },
+    "initial-e1-unformatted/start.json.gz": {
+      "sha256": "fbd9f040d3365bfe8706a62b89068b15b2deaefee81ed351fb69188135e0ed92",
+      "bytes": 27400,
+      "original_sha256": "51ef16a33dbfc85586f3bc1acdf31d893a3cc54d6df8447eb06fbc1158d6bc5b",
+      "original_bytes": 64073
+    },
+    "initial-e1-unformatted/result.json.gz": {
+      "sha256": "94122a01a86385dd54143a2124fc5dbb0a935299c22fadc95ee7d4c18c27a2aa",
+      "bytes": 677,
+      "original_sha256": "fbcff048f9dfdfe4b7a708e1499379414078503cd946927e10df44a4971e5949",
+      "original_bytes": 1776
+    },
+    "initial-e1-unformatted/unit.json.gz": {
+      "sha256": "cef3859c893310bbb263d7d8402df93806081859f311ac8754bcf2ce7e091987",
+      "bytes": 1160,
+      "original_sha256": "33eba650f380b98f13151672c1b70a97d7154ab70d335ff625ac1c0613d6e51c",
+      "original_bytes": 4789
+    },
+    "initial-e1-unformatted/unit.log.gz": {
+      "sha256": "0d7c244ef6079d1199ff3d78ceeaec76edf78e440d993228ccc093e16b3ffc1b",
+      "bytes": 597,
+      "original_sha256": "4f061ede750c4d10cd4e80bc2f683c6a2ecd8200efd6d1b273a9f20dbf6cc98d",
+      "original_bytes": 1044
+    },
+    "initial-e1-unformatted/eslint.log.gz": {
+      "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+      "bytes": 20,
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_bytes": 0
+    },
+    "initial-e1-unformatted/prettier.log.gz": {
+      "sha256": "836d0a615ba629bcb42a49027ef549f6f08c4ff65a8f845548349c1d36268484",
+      "bytes": 127,
+      "original_sha256": "f2b1b5328c90d489e952d336abecface9626f9c13786ede5c32f6ff219b303bd",
+      "original_bytes": 133
+    },
+    "initial-e1-unformatted/global-errors.json.gz": {
+      "sha256": "c8f0e69c2feb1554d64762a8c6757309e22d2ea33ba02907fcf755d34a4135f3",
+      "bytes": 130,
+      "original_sha256": "91716a636631a19a8d3d8b03e7f872697342a2cc203d316cfe462935c7735705",
+      "original_bytes": 172
+    },
+    "initial-e1-unformatted/fixture.tsx.gz": {
+      "sha256": "7aff8fa932d5c68a3c54222e76161d43ee590b0760fb86cc532d687dc35f0dca",
+      "bytes": 3938,
+      "original_sha256": "acbb2ff78e964d5842a86da1fdcd4e7866d3a401decda5b100e2be4de2665dba",
+      "original_bytes": 19464
+    },
+    "initial-e3-unformatted-lint/start.json.gz": {
+      "sha256": "96a21ea78439b1890656a47526b76935d1901211be2b40b45ce975ee70bf2281",
+      "bytes": 28857,
+      "original_sha256": "a9602c038819581ce8921c32e2588247414a502e6fbbc52cd9361288d46024e0",
+      "original_bytes": 67464
+    },
+    "initial-e3-unformatted-lint/lint-build-result.json.gz": {
+      "sha256": "18531cd5c39b3513c8343a19b62363b4f67718616811162b0ee91424a2024695",
+      "bytes": 197,
+      "original_sha256": "76181686ed2670be62ed94394b5fa2ed2169399ef978e9c4cc76fd6464d05eea",
+      "original_bytes": 309
+    },
+    "initial-e3-unformatted-lint/lint-execution.json.gz": {
+      "sha256": "c796a9332ab386e4c005a98e41fce958e0829dbb5a261a4765c1aad4ed3d33ae",
+      "bytes": 138,
+      "original_sha256": "f92397fc39de7a45fe977103d25feccd448a39cd746c76ab7dc27b9a0a24ad2f",
+      "original_bytes": 159
+    },
+    "initial-e3-unformatted-lint/lint.log.gz": {
+      "sha256": "627dffe1850cde062ead548b0eea77daeb318d956bbf27d3dc225055aa2538f2",
+      "bytes": 296,
+      "original_sha256": "99ba690bfbf331758b12e55859a3fa97cdaebba9263139ad724cc0b74f95ddaa",
+      "original_bytes": 436
+    },
+    "ci-originals/check-116670025819-annotations-1.json.gz": {
+      "sha256": "475c6349be66b4d1f4b388642bd0ebb6a51a7779a0cea810372b6e39e9bad2f4",
+      "bytes": 751,
+      "original_sha256": "84d046868e2c15a407b00a5a2463e33ef0e4da3fe2e51e09486ca202d2048eef",
+      "original_bytes": 2314
+    },
+    "ci-originals/run-38806913395-jobs.json.gz": {
+      "sha256": "7add430658ffa54d69d9fbce16028adc5a7aa4aca9afb00a33c73a394d92f200",
+      "bytes": 1295,
+      "original_sha256": "7af9ac114d9ec0a00ea548d42f04d675348d80ffe6512b259db82d171224e31b",
+      "original_bytes": 11336
+    },
+    "drivers/run-brand-css-backport-proof.py.gz": {
+      "sha256": "7de3341852f9e8b4406536bc2a3520d779b3f5367142ca9ef4b26eeb4d28fd47",
+      "bytes": 2235,
+      "original_sha256": "6cce848b65e35f2a375918ac07dfecb67040010911f6dfa75552c08e0b2d2848",
+      "original_bytes": 5051
+    },
+    "drivers/run-brand-css-backport-final-proof.py.gz": {
+      "sha256": "61e5e5c727568bd289ce834683d0dbc2f0cf1d0086ebb910388c488e230f954c",
+      "bytes": 2248,
+      "original_sha256": "abdb53a7d3bc952fa2929a8324b79573fbdc984343bedc9d1d6ebae85fa2e5f4",
+      "original_bytes": 5067
+    },
+    "read-only-final-0786-evidence-path-audit.json.gz": {
+      "sha256": "27f936ae9e7cf9b4bfc070dde88844a160c2d3f2b5df2a8d4b4b415632b7774f",
+      "bytes": 2040,
+      "original_sha256": "71338735ffcd73c9078da1d88726dd6a1d9460beed2cf2c68616c84f7da9885a",
+      "original_bytes": 6391
+    },
+    "final-formatted-fixture.tsx.gz": {
+      "sha256": "ddbc48cee8ba190dae73fa443b103f744278cdca9a929c5c910ffb163e632071",
+      "bytes": 3941,
+      "original_sha256": "bc5abad569a85b104e33ebc23971c5b7b822181888df8f23cf8aa5e90dd12c89",
+      "original_bytes": 19481
+    },
+    "fixture-only.patch.gz": {
+      "sha256": "8823aceebb257de27638495e050914cbcd61884b6b7a1225e5a6a0661b095ce2",
+      "bytes": 381,
+      "original_sha256": "5008ca1d2e0305bf7b791ca2aab530d43b9bd79d3775bcff7bfe5d3a1a0138de",
+      "original_bytes": 907
+    }
+  },
+  "final_e3_full_application_at_packaging": "Pending: Root is running complete final E3 application/SDK separately; this scoped packet does not claim their result."
+}

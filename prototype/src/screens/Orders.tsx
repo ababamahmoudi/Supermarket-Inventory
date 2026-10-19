@@ -26,6 +26,7 @@ import {
   useTableColumns,
 } from "../ui";
 import {
+  CasesAndUnits,
   DateText,
   LtrText,
   Money,
@@ -49,7 +50,7 @@ import { orderError, orderStatusCopy } from "../c-orders-i18n";
 import { OrderPrintDocument } from "../order-print";
 import { useOperationalPrint } from "../operational-print-hook";
 import { createId } from "../ids";
-import { formatCasesAndUnits, formatQuantity } from "../formatters";
+import { formatQuantity } from "../formatters";
 import { ReceivedDateRange } from "./ReceivedDateRange";
 import type { DemoState, Language } from "../types";
 import type { AuthenticatedActor } from "../authority-types";
@@ -1808,18 +1809,18 @@ export default function Orders() {
                       )}
                     </td>
                     <td className="numeric">
-                      <LtrText>
-                        {line.quantity_unit !== "lb" &&
-                        line.new_item_association?.quantity_unit !== "lb" &&
-                        line.ordered_units !== null &&
-                        line.units_per_case !== null
-                          ? formatCasesAndUnits(
-                              line.ordered_units,
-                              line.units_per_case,
-                              lang,
-                            )
-                          : line.ordered_cases}
-                      </LtrText>
+                      {line.quantity_unit !== "lb" &&
+                      line.new_item_association?.quantity_unit !== "lb" &&
+                      line.ordered_units !== null &&
+                      line.units_per_case !== null ? (
+                        <CasesAndUnits
+                          units={line.ordered_units}
+                          unitsPerCase={line.units_per_case}
+                          language={lang}
+                        />
+                      ) : (
+                        <LtrText>{line.ordered_cases}</LtrText>
+                      )}
                     </td>
                     <td className="numeric">
                       <LtrText>

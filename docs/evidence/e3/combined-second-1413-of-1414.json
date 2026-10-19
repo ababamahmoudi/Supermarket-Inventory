@@ -1,0 +1,58 @@
+{
+  "source_commit": "2ceed74e1ba75cc303c0de1aefcf0e5de7d4d5b0",
+  "source_unchanged": true,
+  "commands": [
+    {
+      "name": "app",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--maxWorkers=1",
+        "--reporter=json",
+        "--outputFile=/tmp/e3-combined-verified/app.json"
+      ],
+      "exit_code": 1,
+      "seconds": 595.558
+    },
+    {
+      "name": "sdk",
+      "command": [
+        "npm",
+        "run",
+        "test:sdk",
+        "--",
+        "--maxWorkers=1",
+        "--reporter=json",
+        "--outputFile=/tmp/e3-combined-verified/sdk.json"
+      ],
+      "exit_code": 0,
+      "seconds": 3.649
+    },
+    {
+      "name": "lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 0,
+      "seconds": 59.398
+    }
+  ],
+  "application": {
+    "numTotalTests": 1414,
+    "numPassedTests": 1413,
+    "numFailedTests": 1,
+    "numPendingTests": 0,
+    "success": false
+  },
+  "sdk": {
+    "numTotalTests": 75,
+    "numPassedTests": 75,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "failure": "Existing Offers test exact text locator cannot span the new shared nonbreaking 24 cm markup. Exact visible product text remains correct; fix the test locator while preserving the exact full-name assertion, real row click and sale/filter assertions. Not a full green run."
+}

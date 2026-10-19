@@ -428,6 +428,11 @@ export default function Suppliers() {
             className={
               supervisor ? "suppliers-table supervisor" : "suppliers-table"
             }
+            phoneList={{
+              name: "name",
+              value: supervisor ? "balance" : "status",
+              secondary: ["last_delivery", "terms"],
+            }}
             columns={tableColumns.columns}
           >
             <thead>

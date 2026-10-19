@@ -1,0 +1,64 @@
+{
+  "commit": "431bdba29e25a3b53e3acc5d7ef8ad186150ab2b",
+  "results": [
+    {
+      "name": "unit",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest-readiness-proof.config.ts",
+        "src/screens/DocumentsReturns.c5.test.tsx",
+        "--maxWorkers=1",
+        "--reporter=default",
+        "--reporter=json",
+        "--reporter=/tmp/posted-totals-causal-readiness/observer.mjs",
+        "--outputFile=/tmp/posted-totals-causal-readiness/unit.json"
+      ],
+      "actual_exit_code": 0,
+      "seconds": 5.803301095962524,
+      "source_unchanged": true
+    },
+    {
+      "name": "eslint",
+      "command": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "src/screens/DocumentsReturns.c5.test.tsx",
+        "--max-warnings",
+        "0"
+      ],
+      "actual_exit_code": 0,
+      "seconds": 1.212400197982788,
+      "source_unchanged": true
+    },
+    {
+      "name": "prettier",
+      "command": [
+        "node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "src/screens/DocumentsReturns.c5.test.tsx"
+      ],
+      "actual_exit_code": 0,
+      "seconds": 0.27526044845581055,
+      "source_unchanged": true
+    }
+  ],
+  "unit_counts": {
+    "numTotalTests": 7,
+    "numPassedTests": 7,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "global_errors": [],
+  "source_pin_count": 595,
+  "all_final_heading_financial_canonical_assertions_unchanged": true,
+  "test_budget_30000_unchanged": true,
+  "default_heading_budget_1000_unchanged": true,
+  "root_file_unchanged": true,
+  "cause_limit": "First full431 run1429pass/1fail timed out before Provider published a workspace; raw failure does not identify exact startup phase and CPU cause is not claimed. Unchanged-source431 full diagnostic later genuinely passed1430/1430 with SDK75, no global errors and CLI0.",
+  "initial_unformatted_attempt_retained": "initial-unformatted/"
+}

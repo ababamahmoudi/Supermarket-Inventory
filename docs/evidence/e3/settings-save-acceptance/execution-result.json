@@ -1,0 +1,11 @@
+{
+  "actual_exit_code": 0,
+  "seconds": 14.830529928207397,
+  "source_unchanged": true,
+  "http_matches_dist_before": true,
+  "http_unchanged": true,
+  "dist_unchanged": true,
+  "expected_cases": 2,
+  "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "manifest_sha256": "0e2ea9e9e6abb1dc32d64ac4f5b5e6ae932c41fe2e6da42b7db56a54029015df"
+}

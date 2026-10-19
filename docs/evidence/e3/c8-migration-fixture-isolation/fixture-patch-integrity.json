@@ -1,0 +1,7 @@
+{
+  "path": "fixture.patch.gz",
+  "compressed_sha256": "5c1ef7d547ca5a5ca7915ccb4d0dce353d0036b7662270b9d4ce63d3050ebbba",
+  "original_sha256": "749447c4b7775708efc40536cfd880087587a003dbb4a6923186ec606986a0d6",
+  "original_bytes": 998,
+  "reason": "Retain exact patch context spaces through normal whitespace hooks."
+}

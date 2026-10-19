@@ -1,0 +1,121 @@
+{
+  "source_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "actual_exit_code": 1,
+  "counts": {
+    "PASS": 759,
+    "INTENTIONAL_SKIP": 42,
+    "FAIL": 11
+  },
+  "total_discovered": 812,
+  "interrupted": 0,
+  "not_run": 0,
+  "flaky": 0,
+  "retries": 0,
+  "global_errors": [],
+  "workers": 2,
+  "seconds": 3201.37637090683,
+  "source_dist_and_all61HTTPguards": true,
+  "fresh_for_e47_build": true,
+  "actual_current_success": false,
+  "historical_only": "Later genuine invoice navigation and Payables repairs change production. This completed original source report cannot prove final current source success or be combined into one green run. Fresh normal build/full current source verification is required.",
+  "failed_cases": [
+    {
+      "project": "phone",
+      "file": "c3-tables.spec.ts",
+      "title": "Columns keeps mandatory names, persists by user and never exposes Supervisor money to a Floor Worker",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Old desktop data-column-key selector is absent on intended compact phone price slot.",
+      "separate_correction_evidence": "test-only actual compact slot with approved23.99 and all privacy/preference oracles; scoped2 replay passed"
+    },
+    {
+      "project": "desktop",
+      "file": "c8-migration.spec.ts",
+      "title": "C8 backup write failure blocks schema replacement and retains exact state and originals until recovery",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Service worker served actual app at intended inert first-import fixture URL; isolate setup and preserve raw source/backup/privacy assertions.",
+      "separate_correction_evidence": "test-only inert setup isolation; scoped4/6 replay passed separately"
+    },
+    {
+      "project": "phone",
+      "file": "filters-a2.spec.ts",
+      "title": "Payables filters supplier totals and keeps selected report in the same branch",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Genuine Payables same-location reselect refresh replaces enabled search while typing, losing fresh.",
+      "separate_correction_evidence": "production no-op guard under meaningful actual Provider old-fail/new-pass verification; final proof still required"
+    },
+    {
+      "project": "desktop",
+      "file": "invoice-c4.spec.ts",
+      "title": "an uploaded PDF uses the custom viewer, navigates actual pages and retains exact bytes after refresh",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Native setInputFiles bypassed an actually disabled input inside guarded manual draft transition.",
+      "separate_correction_evidence": "test-only actual canonical draft/workspace/enabled-input precondition; scoped2 replay passed"
+    },
+    {
+      "project": "phone",
+      "file": "invoice-c4.spec.ts",
+      "title": "an uploaded PDF uses the custom viewer, navigates actual pages and retains exact bytes after refresh",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Native setInputFiles bypassed an actually disabled input inside guarded manual draft transition.",
+      "separate_correction_evidence": "test-only actual canonical draft/workspace/enabled-input precondition; scoped2 replay passed"
+    },
+    {
+      "project": "desktop",
+      "file": "labels-b.spec.ts",
+      "title": "live A4 designer redraws capacity and calibration, stores editable presets and prints an alignment page",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Reload3.64ms after Save click returned, before canonical template edit completed.",
+      "separate_correction_evidence": "test-only actual saved confirmation/canonical width60 offset1; scoped2 replay passed"
+    },
+    {
+      "project": "desktop",
+      "file": "layout-proof-c6.spec.ts",
+      "title": "ordinary en Activity sizes stay together and an unmarked split is detected",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Strong raw-text negative control uses24cm but inspector omitted cm/mm.",
+      "separate_correction_evidence": "verification-only stronger cm/mm oracle; all12 scoped original positive/broken/restored cases passed"
+    },
+    {
+      "project": "phone",
+      "file": "layout-proof-c6.spec.ts",
+      "title": "ordinary en Activity sizes stay together and an unmarked split is detected",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Strong raw-text negative control uses24cm but inspector omitted cm/mm.",
+      "separate_correction_evidence": "verification-only stronger cm/mm oracle; all12 scoped original positive/broken/restored cases passed"
+    },
+    {
+      "project": "desktop",
+      "file": "settings.spec.ts",
+      "title": "divisors update live, survive refresh, and invalid money preserves valid rules",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Reload3.688ms after Save changes returned, before actual divisor commit.",
+      "separate_correction_evidence": "test-only canonical Grocery0.50 acceptance; scoped2 replay passed"
+    },
+    {
+      "project": "phone",
+      "file": "settings.spec.ts",
+      "title": "divisors update live, survive refresh, and invalid money preserves valid rules",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Reload3.688ms after Save changes returned, before actual divisor commit.",
+      "separate_correction_evidence": "test-only canonical Grocery0.50 acceptance; scoped2 replay passed"
+    },
+    {
+      "project": "desktop",
+      "file": "storage-c6.spec.ts",
+      "title": "C6 migrates a near-full 5MiB legacy text store with verified raw backups and no lost source bytes",
+      "actual_original_outcome": "FAIL",
+      "diagnosis": "Service worker served actual app at intended inert first-import fixture URL; isolate setup and preserve raw source/backup/privacy assertions.",
+      "separate_correction_evidence": "test-only inert setup isolation; scoped4/6 replay passed separately"
+    }
+  ],
+  "twenty_real_photo_evidence": [
+    {
+      "path": "twenty-photos/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-desktop.json.gz",
+      "raw_sha256": "ac270906a505d2b117f8bf1e99ccc36de857f2a9effce763845ea9520dd47525"
+    },
+    {
+      "path": "twenty-photos/storage-c6-C6-keeps-twenty-932f4-d-reloads-readable-previews-phone.json.gz",
+      "raw_sha256": "e2f3e522843c2e8427e1b2ef0daf4ab39fd652026737f7dee206a1c24762fbed"
+    }
+  ]
+}

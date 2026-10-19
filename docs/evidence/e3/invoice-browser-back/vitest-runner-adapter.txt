@@ -1,0 +1,14 @@
+import config from "./vite.config.ts";
+export default {
+  ...config,
+  server: {
+    ...config.server,
+    fs: {
+      ...config.server?.fs,
+      allow: [
+        ...(config.server?.fs?.allow ?? []),
+        "/workspace/Supermarket-Inventory/prototype/node_modules",
+      ],
+    },
+  },
+};

@@ -7,7 +7,13 @@ import { decideSaleCostAlert, holdSaleDelivery, salesSettings } from "../sales";
 import { setAlertStatus } from "../approvals";
 import { branchLabel } from "../settings";
 import { useDemo } from "../store";
-import { DateText, LtrText, Money, ProductName } from "../presentation";
+import {
+  DateText,
+  LtrText,
+  Money,
+  ProductName,
+  UnitText,
+} from "../presentation";
 import { ProductCost, ProductPrice } from "../weight-price-presentation";
 import { Badge, Button, Card, Checkbox, ConfirmDialog } from "../ui";
 import type { Alert } from "../types";
@@ -285,11 +291,13 @@ export function SalesAlerts({
             )}
             {alert.type === "sale_no_end_reminder" && (
               <p>
-                {product
-                  ? lang === "fa"
-                    ? product.name_fa || product.name_en
-                    : product.name_en
-                  : alert.product_code}{" "}
+                <UnitText>
+                  {product
+                    ? lang === "fa"
+                      ? product.name_fa || product.name_en
+                      : product.name_en
+                    : alert.product_code}
+                </UnitText>{" "}
                 {t("has been on sale at", "در حراج بوده است در")}{" "}
                 {branchLabel(state.config, alert.branch, lang)}{" "}
                 {t("for", "به مدت")}{" "}
@@ -305,11 +313,13 @@ export function SalesAlerts({
                   "Sale ended: put the held",
                   "حراج پایان یافت: کالای نگه‌داشته‌شده",
                 )}{" "}
-                {product
-                  ? lang === "fa"
-                    ? product.name_fa || product.name_en
-                    : product.name_en
-                  : alert.product_code}{" "}
+                <UnitText>
+                  {product
+                    ? lang === "fa"
+                      ? product.name_fa || product.name_en
+                      : product.name_en
+                    : alert.product_code}
+                </UnitText>{" "}
                 {t("on the shelf.", "را در قفسه بگذارید.")}
               </p>
             )}

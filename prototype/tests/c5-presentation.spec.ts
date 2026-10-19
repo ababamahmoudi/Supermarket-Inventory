@@ -204,22 +204,36 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
           "Search products",
           "جست‌وجوی محصولات",
         ).fill("0016");
-        const cost = page.locator(".catalog-products-table .weight-cost");
-        if ((await cost.count()) === 0)
-          await button(
-            page.locator(".catalog-products-table tbody tr").first(),
-            "Show details",
-            "نمایش جزئیات",
-          ).click();
+        const row = page.locator(".catalog-products-table tbody tr").first();
+        const compact = await row.evaluate((element) =>
+          element.matches(".phone-list-row"),
+        );
+        let cost = page.locator(".catalog-products-table .weight-cost");
+        const price = page.locator(".catalog-products-table .weight-price");
+        if (compact) {
+          // E3 keeps selling prices on the compact row; private cost remains
+          // on this Manager's actual product page rather than an omitted cell.
+          await expect(price.locator(".weight-price-main")).toHaveText(
+            "$7.49/lb",
+          );
+          await expect(price.locator(".weight-price-secondary")).toHaveText(
+            "$16.51/kg",
+          );
+          await row.locator(".phone-list-chevron .table-row-link").click();
+          await expect(page).toHaveURL(/#product\?code=0016$/);
+          cost = page.locator(".product-page-cost-card .weight-cost");
+        } else {
+          if ((await cost.count()) === 0)
+            await button(row, "Show details", "نمایش جزئیات").click();
+          await expect(price.locator(".weight-price-main")).toHaveText(
+            "$7.49/lb",
+          );
+          await expect(price.locator(".weight-price-secondary")).toHaveText(
+            "$16.51/kg",
+          );
+        }
         await expect(cost).toHaveText("$4.9895/lb");
         await expect(cost).toHaveAttribute("dir", "ltr");
-        const price = page.locator(".catalog-products-table .weight-price");
-        await expect(price.locator(".weight-price-main")).toHaveText(
-          "$7.49/lb",
-        );
-        await expect(price.locator(".weight-price-secondary")).toHaveText(
-          "$16.51/kg",
-        );
         proofs.push(
           await assertContract(page, "Products weighed item", variant),
         );

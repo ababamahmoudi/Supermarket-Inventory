@@ -1,0 +1,91 @@
+{
+  "base_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "actual_exit_code": 0,
+  "passed": 6,
+  "failed": 0,
+  "skipped": 0,
+  "flaky": 0,
+  "retries": 0,
+  "global_errors": [],
+  "workers": 1,
+  "stats": {
+    "startTime": "2026-10-15T19:18:22.857Z",
+    "duration": 52244.11,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "project": "desktop",
+      "title": "C6 retains malformed History text until an explicit Reset, verifying its raw IndexedDB backup first",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "attachments/desktop-0-0.json.gz"
+      ]
+    },
+    {
+      "project": "desktop",
+      "title": "C6 migrates a near-full 5MiB legacy text store with verified raw backups and no lost source bytes",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "attachments/desktop-1-0.json.gz"
+      ]
+    },
+    {
+      "project": "desktop",
+      "title": "C6 keeps legacy inline evidence intact when the file database is disabled",
+      "status": "passed",
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "project": "phone",
+      "title": "C6 retains malformed History text until an explicit Reset, verifying its raw IndexedDB backup first",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "attachments/phone-3-0.json.gz"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "C6 migrates a near-full 5MiB legacy text store with verified raw backups and no lost source bytes",
+      "status": "passed",
+      "retry": 0,
+      "attachments": [
+        "attachments/phone-4-0.json.gz"
+      ]
+    },
+    {
+      "project": "phone",
+      "title": "C6 keeps legacy inline evidence intact when the file database is disabled",
+      "status": "passed",
+      "retry": 0,
+      "attachments": []
+    }
+  ],
+  "source_checks": {
+    "actual_exit_code": 0,
+    "seconds": 53.777469635009766,
+    "source_unchanged": true,
+    "http_matches_dist_before": true,
+    "http_unchanged": true,
+    "dist_unchanged": true,
+    "expected_cases": 6,
+    "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+    "manifest_sha256": "3f081a3c49ad7486fce5d593df4979f3045cbd7bb75b6b4e19cab7af624b2040"
+  },
+  "source_files_checked": 1841,
+  "test_only_overlay_files": [
+    "prototype/tests/storage-c6.spec.ts"
+  ],
+  "application_production_files_changed": [],
+  "normal_build_reused_from_exact_e47": true,
+  "actual_new_build_claimed": false,
+  "original_failure_trace_sha256": "ed9d67354e706bfc8915ad0fc2f708e78c53332a7e529b38d17f050a77d57fd1",
+  "scope": "Separate six-case replay only. Original full run keeps its genuine failures/partial statuses."
+}

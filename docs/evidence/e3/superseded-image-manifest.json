@@ -1,0 +1,83 @@
+{
+  "images": [
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-dashboard-en-390.png",
+      "sha256": "1c35aac818441b05810b1947c9a2dfece49e9f8d2d78b5c0b81aaef06accde02",
+      "original": "artifacts/e3-phones-E3-compact-phone-lists-390-en/dashboard-en-390.png",
+      "outcome": "issues_found"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-dashboard-fa-390.png",
+      "sha256": "4b3afe8e3b8e18c43ca4f70b4851f9162989b68bc2b35b7cc11a5484d34f9e4d",
+      "original": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/dashboard-fa-390.png",
+      "outcome": "issues_found"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-dashboard-en-430.png",
+      "sha256": "e7f148e21d23fd3e2edc032c15c00481161e3e872fbd38d77c305d0cbebcb3a8",
+      "original": "artifacts/e3-phones-E3-compact-phone-lists-430-en/dashboard-en-430.png",
+      "outcome": "issues_found"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-labels-en-430.png",
+      "sha256": "3c4d751677df8e56f733fa8c7104c2ba4021b340f83008e3417cbffa15f01239",
+      "original": "artifacts/e3-phones-E3-compact-phone-lists-430-en/labels-en-430.png",
+      "outcome": "issues_found"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-products-en-430.png",
+      "sha256": "0f14e88c597a1c694b4813c5892467e8267afa35ba8eb721f701731c66aab82f",
+      "original": "artifacts/e3-phones-E3-compact-phone-lists-430-en/products-en-430.png",
+      "outcome": "issues_found"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-dashboard-fa-430.png",
+      "sha256": "8892bdf94ee5597559d7997f3a5c5ae43033949ebaadda4d1ee63eb18d2a39c4",
+      "original": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/dashboard-fa-430.png",
+      "outcome": "issues_found"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-labels-fa-430.png",
+      "sha256": "2ca64a89458fb5674377c4a1ad4b39c7e79745f6b66086ed77871cad5450bd7f",
+      "original": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/labels-fa-430.png",
+      "outcome": "issues_found"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-products-fa-430.png",
+      "sha256": "a364faae9181cf986791ab147cc73179a6df5ef39108ce2f6584ce8cc186303e",
+      "original": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/products-fa-430.png",
+      "outcome": "issues_found"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-location-picker-en-390.png",
+      "sha256": "cc3dd472ae853a08372b417638ed0c59a10d1b997e67648c512d7800a3ed7ba2",
+      "original": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-picker-en-390.png",
+      "outcome": "capture_transient"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-notification-bell-en-390.png",
+      "sha256": "153aef8c496d305111d4ece84fcf50e98fac323a0e6aec072416e9825e07dd09",
+      "original": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/notification-bell-en-390.png",
+      "outcome": "capture_transient"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-location-picker-fa-390.png",
+      "sha256": "846524d2ebd889d5af128780308f3e2621ca46492b72e7073ce04b10747e46b3",
+      "original": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-picker-fa-390.png",
+      "outcome": "capture_transient"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-location-picker-en-430.png",
+      "sha256": "300a83f9db848842f600ed8f6ae00c92939dbbc102a4bd6914ed013ce600fbc0",
+      "original": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-picker-en-430.png",
+      "outcome": "capture_transient"
+    },
+    {
+      "path": "docs/evidence/e3/superseded/diagnostic-location-picker-fa-430.png",
+      "sha256": "a93492688b83a539238b361882b56c983becb3eb80baf86f1a3d554f59c44f59",
+      "original": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-picker-fa-430.png",
+      "outcome": "capture_transient"
+    }
+  ],
+  "reason": "Original13 manually flagged frames preserved byte-for-byte; final corrected Git capture replay pending."
+}

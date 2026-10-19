@@ -1,0 +1,167 @@
+{
+  "actual_skipped": 42,
+  "unchanged_original_phone_boundaries": true,
+  "groups": [
+    {
+      "project": "phone",
+      "file": "c2-shell-review.spec.ts",
+      "count": 3,
+      "annotations": [
+        {
+          "description": "Desktop viewport boundary check",
+          "location": {
+            "column": 10,
+            "file": "/tmp/e3-complete-final-proof-v2/source/prototype/tests/c2-shell-review.spec.ts",
+            "line": 8
+          },
+          "type": "skip"
+        }
+      ]
+    },
+    {
+      "project": "phone",
+      "file": "c3-additional-layout.spec.ts",
+      "count": 6,
+      "annotations": [
+        {
+          "description": "Desktop width proof.",
+          "location": {
+            "column": 12,
+            "file": "/tmp/e3-complete-final-proof-v2/source/prototype/tests/c3-additional-layout.spec.ts",
+            "line": 9
+          },
+          "type": "skip"
+        }
+      ]
+    },
+    {
+      "project": "phone",
+      "file": "c3-invoices.spec.ts",
+      "count": 12,
+      "annotations": [
+        {
+          "description": "This proof exercises the three required desktop widths.",
+          "location": {
+            "column": 14,
+            "file": "/tmp/e3-complete-final-proof-v2/source/prototype/tests/c3-invoices.spec.ts",
+            "line": 195
+          },
+          "type": "skip"
+        }
+      ]
+    },
+    {
+      "project": "phone",
+      "file": "c3-tables.spec.ts",
+      "count": 6,
+      "annotations": [
+        {
+          "description": "Desktop table geometry.",
+          "location": {
+            "column": 12,
+            "file": "/tmp/e3-complete-final-proof-v2/source/prototype/tests/c3-tables.spec.ts",
+            "line": 100
+          },
+          "type": "skip"
+        }
+      ]
+    },
+    {
+      "project": "phone",
+      "file": "c4-layout.spec.ts",
+      "count": 6,
+      "annotations": [
+        {
+          "description": "Desktop no-clipping matrix.",
+          "location": {
+            "column": 12,
+            "file": "/tmp/e3-complete-final-proof-v2/source/prototype/tests/c4-layout.spec.ts",
+            "line": 87
+          },
+          "type": "skip"
+        }
+      ]
+    },
+    {
+      "project": "phone",
+      "file": "design-v2.spec.ts",
+      "count": 1,
+      "annotations": [
+        {
+          "description": "Desktop layout is checked at 1920 by 1080.",
+          "location": {
+            "column": 8,
+            "file": "/tmp/e3-complete-final-proof-v2/source/prototype/tests/design-v2.spec.ts",
+            "line": 375
+          },
+          "type": "skip"
+        }
+      ]
+    },
+    {
+      "project": "phone",
+      "file": "design-v2.spec.ts",
+      "count": 1,
+      "annotations": [
+        {
+          "description": "The phone uses the hero product search.",
+          "location": {
+            "column": 8,
+            "file": "/tmp/e3-complete-final-proof-v2/source/prototype/tests/design-v2.spec.ts",
+            "line": 327
+          },
+          "type": "skip"
+        }
+      ]
+    },
+    {
+      "project": "phone",
+      "file": "invoice-a2.spec.ts",
+      "count": 1,
+      "annotations": [
+        {
+          "description": "Phone review uses one stacked column.",
+          "location": {
+            "column": 8,
+            "file": "/tmp/e3-complete-final-proof-v2/source/prototype/tests/invoice-a2.spec.ts",
+            "line": 149
+          },
+          "type": "skip"
+        }
+      ]
+    },
+    {
+      "project": "phone",
+      "file": "labels-notes-offers-c3.spec.ts",
+      "count": 3,
+      "annotations": [
+        {
+          "description": "Desktop width acceptance is run in the desktop project.",
+          "location": {
+            "column": 10,
+            "file": "/tmp/e3-complete-final-proof-v2/source/prototype/tests/labels-notes-offers-c3.spec.ts",
+            "line": 50
+          },
+          "type": "skip"
+        }
+      ]
+    },
+    {
+      "project": "phone",
+      "file": "orders-c4.spec.ts",
+      "count": 3,
+      "annotations": [
+        {
+          "description": "Desktop panel proof.",
+          "location": {
+            "column": 10,
+            "file": "/tmp/e3-complete-final-proof-v2/source/prototype/tests/orders-c4.spec.ts",
+            "line": 84
+          },
+          "type": "skip"
+        }
+      ]
+    }
+  ],
+  "note": "Intentional desktop-width/phone-layout proof boundaries, not skipped authority cases. All12 authority native cases ran in each project."
+}

@@ -22,6 +22,22 @@ async function newOrder(page: Page) {
   return form;
 }
 
+async function expectApprovedCatalogPrice(page: Page) {
+  const row = page.locator(".catalog-products-table tbody tr").filter({
+    has: page.locator('a[href="#product?code=0001"]'),
+  });
+  await expect(row).toHaveCount(1);
+  await expect(row).toBeVisible();
+  const compact = await row.evaluate((element) =>
+    element.matches(".phone-list-row"),
+  );
+  const price = compact
+    ? row.locator(".phone-list-value")
+    : row.locator("td[data-column-key=price]");
+  await expect(price).toBeVisible();
+  await expect(price).toContainText("$23.99");
+}
+
 async function proveTables(page: Page) {
   await page.evaluate(async () => document.fonts.ready);
   return page.evaluate(() => {
@@ -321,9 +337,7 @@ test("Columns keeps mandatory names, persists by user and never exposes Supervis
   await expect(
     page.locator(".catalog-products-table th[data-column-key=price]"),
   ).toHaveCount(1);
-  await expect(
-    page.locator(".catalog-products-table td[data-column-key=price]").first(),
-  ).toBeVisible();
+  await expectApprovedCatalogPrice(page);
   await page.goto("/#suppliers");
   await expect(
     page.locator(
@@ -350,9 +364,7 @@ test("Columns keeps mandatory names, persists by user and never exposes Supervis
   await expect(
     page.locator(".catalog-products-table th[data-column-key=price]"),
   ).toHaveCount(1);
-  await expect(
-    page.locator(".catalog-products-table td[data-column-key=price]").first(),
-  ).toBeVisible();
+  await expectApprovedCatalogPrice(page);
 });
 
 test("browser Back restores the Products search and Orders status without mutating data", async ({

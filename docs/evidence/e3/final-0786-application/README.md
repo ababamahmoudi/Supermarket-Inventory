@@ -1,0 +1,9 @@
+# Final corrected-source application checks
+
+Exact source `0786ea262b6ebdf573cd02f2b56479952633ee21`: **1,444 application tests passed**, **75 permission SDK tests passed**, zero failed/pending cases and no application global errors. Normal full lint and a fresh normal TypeScript/Vite build also exited **0**. All595 tracked application inputs remained unchanged; all23 pricing seed cases are included. [Verification and original-byte hashes](verification.json) retain the actual commands and unchanged compressed logs, JSON, source guards and drivers.
+
+The correction keeps inline sale-reminder product sizes and Persian compound centimetre/millimetre units together. Exact words, business data, money, permissions, seed files, assets and global CSS remain unchanged.14new unit cases and a stronger real clean/broken/restored Persian layout control address the earlier false negative. The posted-invoice unit fixture now awaits actual resumed sign-in readiness before its original heading budget and financial assertions.
+
+[Complete earlier f154 browser run](../retained-native-full-f154/README.md) remains769passed/1failed/42original skips. [431 native evidence](../sale-inline-units-native/README.md) retains the later manually rejected Persian frame. [Both431 application attempts](../retained-app-431/README.md) retain the initial failure and unchanged-source successful diagnostic without inventing a CPU cause. The [final selected-file browser replay](../final-0786-native/README.md) is separate; it must not be called a fresh full812-case pass.
+
+Required full browser CI remains unresolved; the [one-line90-minute proposal](../../../ci-prototype-time-budget.md) is unapplied and outside the owner's allowed directories. Physical phone installation, hardware printing, register integration and deployment remain unperformed.

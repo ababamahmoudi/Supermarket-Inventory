@@ -1,0 +1,19 @@
+{
+  "baseline_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "kind": "test-only actual manual draft and enabled upload readiness; no production changes",
+  "files": [
+    {
+      "path": "prototype/tests/invoice-c4.spec.ts",
+      "source": "/tmp/e3-pdf-upload-readiness-fix/staged/prototype/tests/invoice-c4.spec.ts",
+      "baseline_sha256": "9ceb69e6fcbf5c48951df89b528a62b0939a778611cf381153c5f06eb80b747d",
+      "sha256": "ef50a26bbf6ba8108548a73ad3f1f81b5b827869b6bd7fa76013139758dae3c5"
+    }
+  ],
+  "preserved": [
+    "all original two actual PDF pages and pixel color/render-change assertions",
+    "exact file hash/source bytes/size/company scope",
+    "retention after refresh and original download-byte proof",
+    "all original test and assertion budgets, retries0/skips0/test counts"
+  ],
+  "reason": "Original trace calls setInputFiles about20ms after Manual entry. Unlike user file selection, setInputFiles bypasses the real guarded inert/disabled transition. Wait for canonical accepted manual draft, real review workspace and enabled upload control."
+}

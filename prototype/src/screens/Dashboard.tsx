@@ -843,6 +843,11 @@ export function Dashboard() {
                 </EmptyState>
               ) : (
                 <DataTable
+                  phoneList={{
+                    name: "supplier",
+                    value: "status",
+                    secondary: ["invoice", "branch", "date"],
+                  }}
                   columns={[
                     {
                       key: "invoice",

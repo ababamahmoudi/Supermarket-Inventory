@@ -1,0 +1,115 @@
+{
+  "archive": "normal-hook-originals.tar.gz",
+  "archive_sha256": "78625b1a8f6b706dca3402dd01000c2c05a27a87092c6f84c2a6d00c9d28b392",
+  "reason": "Keep exact uploaded report/attachment bytes alongside readable files normalized by the mandatory whitespace/end-of-file hooks. Every JSON payload is unchanged. No runtime source is modified.",
+  "files": [
+    {
+      "path": "docs/evidence/e3/c8-migration-fixture-isolation/desktop-c8-backup-failure-recovery-proof.json",
+      "original_sha256": "ea38a26e6827625ba44f8b4841c29018a3f41595774c5d0d4aa1084b5b3fd7b2",
+      "normalized_sha256": "3c1d97e034b66a4a57a7f3badee546e55d98ef63a7cb77c074cde2c99c6c408c",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/c8-migration-fixture-isolation/desktop-c8-schema-only-migration-proof.json",
+      "original_sha256": "7d533ef1944d9d56b1b26c64144d6c7cdd120a82d7b39ee31c9316183ecdfdc1",
+      "normalized_sha256": "955ba81bebbf0c71ca7553156db7afe144cba1443d791cb51609c980da0f5c07",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/c8-migration-fixture-isolation/original-failure-error-context.md",
+      "original_sha256": "462175b9e2c875bb67939ce36958d0efee2ee4afa417cd456a2bd6101ee7f2e7",
+      "normalized_sha256": "8a343922fa4a8c562ff7096d0eb1d3607a41234b396bb7c4558193fd142f68f2",
+      "normal_hook_change": "trailing whitespace and final newline"
+    },
+    {
+      "path": "docs/evidence/e3/c8-migration-fixture-isolation/phone-c8-backup-failure-recovery-proof.json",
+      "original_sha256": "249bc62d5a4376e772fd9f076375bdae55d7737db0bbd255cf2f1f51e0016b10",
+      "normalized_sha256": "92d1ea66de27cf050cacfeefe3bb7d303b878e9aeae43ea11b8525fbe8fd64cb",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/c8-migration-fixture-isolation/phone-c8-schema-only-migration-proof.json",
+      "original_sha256": "4a5ed3e8e53370a275b94676b328f176fcbf2e91d26dcf47e9eb46d2dd1ba481",
+      "normalized_sha256": "f3030f01bdec27a978d6ebf300e48a6b470e708440ef986256f6478d4c5c7bf0",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/print-base-source.json",
+      "original_sha256": "75165602feb13665916389f10e9209edf03163b71202ceb89e3cc8feb68eb518",
+      "normalized_sha256": "c82697d460e3f3f66d1d7cc13cbb4d18572713f5f68842ca73c8654659a2c52f",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/print-dist-pins.json",
+      "original_sha256": "a991f8754619e9fc437e940cd1db701354b79f79d421437c3455ea74c55b731b",
+      "normalized_sha256": "a8a8ecee559cbcb1e4300a679ef9452639f73bb67d3331c0b90ef41db348dc0a",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/print-execution-result.json",
+      "original_sha256": "a03a8e571b3146be1149d0aadbc6b7034c8cca5eefaabc2bb6577437df060569",
+      "normalized_sha256": "fe56e0e51603d9c460f934fe4fc34402be3df781e1b38ece02ff34d8564f29e7",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/print-execution-start.json",
+      "original_sha256": "e54929ef096107a26cbe0728fc1d66865b6c332df0839373b3f61540bec7e42b",
+      "normalized_sha256": "0ac489a11ee12a46e34adc3784c397408bce89bd88d862aacf4a1dc3d69dd0fc",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/twenty-real-photos-proof.json",
+      "original_sha256": "97011fd160cc2a30dd0fdf9636f2e0f65e0b2d90b0eeb65c186ad8895b93e329",
+      "normalized_sha256": "907bf05c11d44930daa54f2516624541b63a3c9c6da231d54ac93316e088b998",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/v5-base-source.json",
+      "original_sha256": "96baa93da224df78aeab8010d67b8c9af89b67bf7ce37a421bfd2d7bfeec8718",
+      "normalized_sha256": "5635c8e786d8270056bd40c5faf77e2a9380843228fe402dc451b35c192b429d",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/v5-dist-pins.json",
+      "original_sha256": "77824f9ab9624f99e072f78e7bc61297c954480d0e11a9e5c158189ffee390e7",
+      "normalized_sha256": "556cea04c369da3e1be16bf10e1d9c23e54c9bc263e869ec355afe853c1eb8cc",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/v5-execution-result.json",
+      "original_sha256": "2456b54963eae3b2d550ce36740392fce5fd5c641f283ff4c060073a12b5d101",
+      "normalized_sha256": "00a3df29852f868a463a7c6b9e042583adaa1d9fc72af0146526c6a016ba2416",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/v5-execution-start.json",
+      "original_sha256": "47c227546426cc8ebd36f1af070d662a52a28c2f601bcd3f4ebf4700228c7a0d",
+      "normalized_sha256": "01c608660a2322979296aca674ed425fa71b8bcce8a5132c0bf0d374d2a009ae",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/v7-base-source.json",
+      "original_sha256": "74293944f3ecd5bb1a250f1fa8942091a5843936fd46c6fa9f58ee309cbed8a6",
+      "normalized_sha256": "9f233ec87fda83f6ee5db6187cddc97f0e06b0e4f60174664a2daf529218962d",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/v7-dist-pins.json",
+      "original_sha256": "a991f8754619e9fc437e940cd1db701354b79f79d421437c3455ea74c55b731b",
+      "normalized_sha256": "a8a8ecee559cbcb1e4300a679ef9452639f73bb67d3331c0b90ef41db348dc0a",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/v7-execution-result.json",
+      "original_sha256": "1927e368f6f47300c908eea60fb79d4ffc3acd325608e1a061f0b424a176c250",
+      "normalized_sha256": "7fec616b9bb27170b9069708ecc9c751a96d4be9f923eba6fed3053398de608c",
+      "normal_hook_change": "final newline only"
+    },
+    {
+      "path": "docs/evidence/e3/retained-native-followups/v7-execution-start.json",
+      "original_sha256": "206b1f0de4cfdf54db27c0092998a4734c1b5d34c01a9b03d77b555da0cd4e36",
+      "normalized_sha256": "1699df0ce8419db0cb6f8649818d030ff7220dd7a5287e56bd3ae310ccc80abd",
+      "normal_hook_change": "final newline only"
+    }
+  ]
+}

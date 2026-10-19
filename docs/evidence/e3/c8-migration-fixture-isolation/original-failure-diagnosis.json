@@ -1,0 +1,48 @@
+{
+  "source_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "original_failed_case": "[desktop] tests/c8-migration.spec.ts C8 backup write failure blocks schema replacement and retains exact state and originals until recovery",
+  "trace": "/tmp/e3-complete-final-proof-v2/native-run-001/native-output/c8-migration-C8-backup-wri-12edd-nd-originals-until-recovery-desktop/trace.zip",
+  "trace_sha256": "97c988d224a96f146c1e1fa91d250c3959250ef486993b2f2e67bae10baae073",
+  "expected_inert_body": "<!doctype html><title>Retained migration setup</title>",
+  "expected_inert_bytes": 54,
+  "actual_setup_navigation": [
+    {
+      "url": "http://127.0.0.1:5193/__e1-migration-setup",
+      "serviceWorkerRef": "worker@6d20c2e20a1cbf46ed4bfc1a3157ee0a",
+      "resourceType": "fetch",
+      "status": 200,
+      "response_content": {
+        "size": 0,
+        "mimeType": "text/html",
+        "compression": 0,
+        "_file": "resources/da39a3ee5e6b4b0d3255bfef95601890afd80709.html"
+      },
+      "body_bytes": 0,
+      "body_sha256": null,
+      "title": [],
+      "module_scripts": []
+    },
+    {
+      "url": "http://127.0.0.1:5193/__e1-migration-setup",
+      "serviceWorkerRef": null,
+      "resourceType": "document",
+      "status": 200,
+      "response_content": {
+        "size": 9039,
+        "mimeType": "text/html",
+        "compression": 9302,
+        "_file": "resources/1e977d31f249d6d144a469ad56fb897f9a1e622b.html"
+      },
+      "body_bytes": 9039,
+      "body_sha256": "30a844817b1ccc35fb2cefefb705de3e982e31aa8173cd7a01c35da449a55dc8",
+      "title": [
+        "Supermarket demo"
+      ],
+      "module_scripts": [
+        "<script type=\"module\" crossorigin src=\"./assets/index-DX541Ird.js\">"
+      ]
+    }
+  ],
+  "classification": "Test fixture isolation race: E3 service worker answered the intended inert navigation with actual app shell before backup failure hook was installed. No evidence of production suppressed storage error.",
+  "correction": "Unregister worker for explicit first-import setup, leave controlled app to about:blank, assert actual inert document title/no module scripts/no topbar before deleting authority DB. All original cases and assertions retained."
+}

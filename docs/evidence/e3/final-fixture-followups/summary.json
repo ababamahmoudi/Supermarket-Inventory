@@ -1,0 +1,65 @@
+{
+  "base_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "actual_total_disjoint_bounded_cases": 16,
+  "actual_total_passed": 16,
+  "failures": 0,
+  "skips": 0,
+  "retries": 0,
+  "groups": [
+    {
+      "group": "pdf",
+      "actual_passed": 2,
+      "overlay_files": [
+        "prototype/tests/invoice-c4.spec.ts"
+      ],
+      "source_checks": {
+        "actual_exit_code": 0,
+        "seconds": 16.4939284324646,
+        "source_unchanged": true,
+        "http_matches_dist_before": true,
+        "http_unchanged": true,
+        "dist_unchanged": true,
+        "expected_cases": 2,
+        "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+        "manifest_sha256": "fce44697acce2bb40fbd74899834e5a1ec14e5e9917363e5ce1b090f131f3b2a"
+      }
+    },
+    {
+      "group": "labels",
+      "actual_passed": 2,
+      "overlay_files": [
+        "prototype/tests/labels-b.spec.ts"
+      ],
+      "source_checks": {
+        "actual_exit_code": 0,
+        "seconds": 13.638375282287598,
+        "source_unchanged": true,
+        "http_matches_dist_before": true,
+        "http_unchanged": true,
+        "dist_unchanged": true,
+        "expected_cases": 2,
+        "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+        "manifest_sha256": "d3dea8e3d4f200cba0fe5424d5d40d85cbcf1201c48025a373417066d8118cb2"
+      }
+    },
+    {
+      "group": "unit-oracle",
+      "actual_passed": 12,
+      "overlay_files": [
+        "prototype/scripts/c6-layout-proof.mjs"
+      ],
+      "source_checks": {
+        "actual_exit_code": 0,
+        "seconds": 39.80638885498047,
+        "source_unchanged": true,
+        "http_matches_dist_before": true,
+        "http_unchanged": true,
+        "dist_unchanged": true,
+        "expected_cases": 12,
+        "commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+        "manifest_sha256": "4c21ad9433dd7e7dd508deef6002d8333abd1e9d86267b70e342aee81ba3350b"
+      }
+    }
+  ],
+  "warning": "Final full-run reports retain their own actual failed/interrupted/not-run statuses. These scoped successes do not make the original full812 a clean run. Shared unit-inspector consumers also require final-source coverage, separately from these12 cases."
+}

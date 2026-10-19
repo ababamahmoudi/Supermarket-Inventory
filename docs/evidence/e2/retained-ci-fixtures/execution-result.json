@@ -1,0 +1,112 @@
+{
+  "executions": [
+    {
+      "label": "native-labels-desktop",
+      "command": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "labels-c1.spec.ts",
+        "--config",
+        "/tmp/e2-ci-bounded-originals-v1/source/prototype/bounded.config.ts",
+        "--workers=1",
+        "--retries=0",
+        "--project=desktop",
+        "--grep",
+        "built-in templates can be duplicated, edited, archived and restored without deletion",
+        "--reporter=line,json",
+        "--output",
+        "/tmp/e2-ci-bounded-originals-v2/labels-desktop-output"
+      ],
+      "actual_exit_code": 0,
+      "seconds": 13.938628673553467
+    },
+    {
+      "label": "native-labels-phone",
+      "command": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "labels-c1.spec.ts",
+        "--config",
+        "/tmp/e2-ci-bounded-originals-v1/source/prototype/bounded.config.ts",
+        "--workers=1",
+        "--retries=0",
+        "--project=phone",
+        "--grep",
+        "built-in templates can be duplicated, edited, archived and restored without deletion",
+        "--reporter=line,json",
+        "--output",
+        "/tmp/e2-ci-bounded-originals-v2/labels-phone-output"
+      ],
+      "actual_exit_code": 0,
+      "seconds": 10.677102327346802
+    },
+    {
+      "label": "native-c8-fa900-phone",
+      "command": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "c8-layout-proof.spec.ts",
+        "--config",
+        "/tmp/e2-ci-bounded-originals-v1/source/prototype/bounded.config.ts",
+        "--workers=1",
+        "--retries=0",
+        "--project=phone",
+        "--grep",
+        "C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px",
+        "--reporter=line,json",
+        "--output",
+        "/tmp/e2-ci-bounded-originals-v2/c8-fa900-phone-output"
+      ],
+      "actual_exit_code": 0,
+      "seconds": 39.43769645690918
+    }
+  ],
+  "seconds": 64.79830884933472,
+  "source_unchanged": true,
+  "http_matches_dist_before": true,
+  "http_unchanged": true,
+  "dist_assets": 55,
+  "expected_tests": 3,
+  "summaries": [
+    {
+      "label": "labels-desktop",
+      "stats": {
+        "startTime": "2026-10-15T19:27:00.004Z",
+        "duration": 13278.151,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "global_errors": []
+    },
+    {
+      "label": "labels-phone",
+      "stats": {
+        "startTime": "2026-10-15T19:27:14.199Z",
+        "duration": 9772.286,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "global_errors": []
+    },
+    {
+      "label": "c8-fa900-phone",
+      "stats": {
+        "startTime": "2026-10-15T19:27:24.493Z",
+        "duration": 38905.313,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "global_errors": []
+    }
+  ],
+  "actual_exit_code": 0
+}

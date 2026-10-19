@@ -1,0 +1,295 @@
+{
+  "commit": "a6c66dc0d14e74c3d717f0ce355a9656ec924732",
+  "current_application_inputs_match": true,
+  "input_count": 595,
+  "application": {
+    "success": true,
+    "numTotalTests": 1444,
+    "numPassedTests": 1444,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numFailedTestSuites": 0
+  },
+  "sdk": {
+    "success": true,
+    "numTotalTests": 75,
+    "numPassedTests": 75,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numFailedTestSuites": 0
+  },
+  "actual_application_sdk_execution": {
+    "commit": "a6c66dc0d14e74c3d717f0ce355a9656ec924732",
+    "checks": [
+      {
+        "name": "app",
+        "command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--config",
+          "vitest-brand-archive-proof.config.ts",
+          "--maxWorkers=2",
+          "--reporter=default",
+          "--reporter=json",
+          "--reporter=/tmp/e3-brand-final-adapted-validation/observer.mjs",
+          "--outputFile=/tmp/e3-brand-final-adapted-validation/app.json"
+        ],
+        "actual_exit_code": 0,
+        "seconds": 222.3200249671936,
+        "source_unchanged": true
+      },
+      {
+        "name": "sdk",
+        "command": [
+          "npm",
+          "run",
+          "test:sdk",
+          "--",
+          "--maxWorkers=2",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile=/tmp/e3-brand-final-adapted-validation/sdk.json"
+        ],
+        "actual_exit_code": 0,
+        "seconds": 2.236391067504883,
+        "source_unchanged": true
+      }
+    ],
+    "source_unchanged": true
+  },
+  "actual_lint_build_execution": {
+    "commit": "a6c66dc0d14e74c3d717f0ce355a9656ec924732",
+    "checks": [
+      {
+        "name": "lint",
+        "command": [
+          "npm",
+          "run",
+          "lint"
+        ],
+        "actual_exit_code": 0,
+        "seconds": 43.30344557762146,
+        "source_unchanged": true
+      },
+      {
+        "name": "build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "actual_exit_code": 0,
+        "seconds": 17.42355227470398,
+        "source_unchanged": true
+      }
+    ],
+    "source_unchanged": true,
+    "fresh_dist_files": 61,
+    "dist_identical_to_0786_native": true
+  },
+  "global_errors": {
+    "phase": "process-exit",
+    "code": 0,
+    "errors": [],
+    "atRunEnd": {
+      "phase": "onTestRunEnd",
+      "reason": "passed",
+      "errors": [],
+      "moduleCount": 142
+    }
+  },
+  "changed_since_0786": [
+    "prototype/src/store.test.tsx"
+  ],
+  "production_unchanged_since_0786": true,
+  "fresh_build_all61_files_identical_to_actual_0786_browser_test": true,
+  "pricing_seed_cases": 23,
+  "native_scope": "Separate actual0786 selected72cases on production-identical source/build, not a new complete812case pass.",
+  "previous_failures": "Actual0786CIcolor assertion failure and unformattedcandidateE1Prettier/E3lint failures retained separately in brand-css-readiness-final. Completef154browser769pass/1fail/42skip and431rejectedPersianframe remain unchanged.",
+  "ci_scope": "Required complete CI remains unresolved; never substitute this local full application and selected native replay for completed requiredCI. Workflow scope exception remains unapplied.",
+  "raw_artifacts": [
+    {
+      "path": "start.json.gz",
+      "sha256": "1ced9931884e98ee6721a270c60a018ff67dcb0fa0eafde9795d4d56e33ed164",
+      "bytes": 28858,
+      "original_sha256": "8003258aa333a3603110eaef06f32662498147b33fc6db380af8d54a9909247d",
+      "original_bytes": 67464
+    },
+    {
+      "path": "application-result.json.gz",
+      "sha256": "cc4e4b2714de43e8aa7ebc76b0e63a2f852768c9bf64fb7f4586ce61073b4ee9",
+      "bytes": 374,
+      "original_sha256": "b47cb57ad417852efa39849b933c12e593233431b2610a26bedf14589ce4f4f8",
+      "original_bytes": 1008
+    },
+    {
+      "path": "app-execution.json.gz",
+      "sha256": "6ba40711cfb76dc78556036acca74e95f8ecd5cbfb83980422d0424a1ad751c5",
+      "bytes": 267,
+      "original_sha256": "ec0140385da578eddb5d309d4e7db5317100a98d1fc4e21bdebc75af118e98ba",
+      "original_bytes": 454
+    },
+    {
+      "path": "app.json.gz",
+      "sha256": "0f6d056d1101bbbae744a5e809992dd1da7a2b9a728f1f645a1031f0c6b7c858",
+      "bytes": 75143,
+      "original_sha256": "670af21f58d12f72cb53f56a4ddef4971506d7d9ed7f696258f48ea9e3f3dc35",
+      "original_bytes": 580067
+    },
+    {
+      "path": "app.log.gz",
+      "sha256": "c05dc4976064f55fc05fd504cece6319e519d10b1c3ad84bd835463f5b4fe241",
+      "bytes": 11090,
+      "original_sha256": "cf45f3e331978cf3201727b54b5419ce80162988308751980e903a6b2baedbd5",
+      "original_bytes": 33045
+    },
+    {
+      "path": "sdk-execution.json.gz",
+      "sha256": "2f9edc65893728e48d4ef45612d89b03943b01ac82a6ba7f8d539ba54a1adc55",
+      "bytes": 221,
+      "original_sha256": "b2a88a807e0169d48035c58b4a81490744bb049aa6892502a337a28826a28c9f",
+      "original_bytes": 311
+    },
+    {
+      "path": "sdk.json.gz",
+      "sha256": "23949b5acbd4793e51128338c1163f353d91edc46ce6b6460316543b829d9167",
+      "bytes": 4551,
+      "original_sha256": "ca0e4b5342b25db5e10f17c168130d153bfd625b155a86b5dbb53ceac326b25b",
+      "original_bytes": 25941
+    },
+    {
+      "path": "sdk.log.gz",
+      "sha256": "2b7779ade0c679aa88cf29ac29fce39bd01fd9a746f5ded9b1dd8fb987275e93",
+      "bytes": 650,
+      "original_sha256": "b5d1cd714e6eb86552ceae77ffc6ccdeba38fb57558ee8d8205de7b4d9289f8d",
+      "original_bytes": 1278
+    },
+    {
+      "path": "global-errors.json.gz",
+      "sha256": "107b36761718636a8c1f64a1c2ff267cfcbba8ca59b3cd2d0a303fca81899068",
+      "bytes": 132,
+      "original_sha256": "655ce234a5f5829d6600017d75d88eedb48e481e610b01a11cd50d9fa6b8c48b",
+      "original_bytes": 174
+    },
+    {
+      "path": "observer.mjs.gz",
+      "sha256": "b39e0e182f03bd42b6c1a284a061980f972deffcda50ad33c26e9900b0d38b25",
+      "bytes": 441,
+      "original_sha256": "389d4c6205753dfd01f944d08369677ba7bf3bbddc4a84ffc9683f5b1b4728da",
+      "original_bytes": 688
+    },
+    {
+      "path": "private-adapter.json.gz",
+      "sha256": "c1eb00e75c762e5cc918fa058c212ce5e016b43b7afd4fbcbba2cb24110bac0b",
+      "bytes": 401,
+      "original_sha256": "06156761b02db2fab35652a096318346c481fe06fabc719d39b30871e333f1b2",
+      "original_bytes": 603
+    },
+    {
+      "path": "lint-build-result.json.gz",
+      "sha256": "864bb31e253a87a70c9e4363244e647b26670dd5d24b9ed1bde9325c0562d608",
+      "bytes": 263,
+      "original_sha256": "4f1ea0eded2d3092fd151094c69df4e7a892ca91ea46f8992196a9e769bcda21",
+      "original_bytes": 582
+    },
+    {
+      "path": "lint-execution.json.gz",
+      "sha256": "451295359ac6efb60b4361b5deae7ec68b7d7091bd883c82070fd6cccb9ec519",
+      "bytes": 139,
+      "original_sha256": "c8e233139ba857dbd3fd7a94024ede3af3298cdf975b5af5492079986806bc86",
+      "original_bytes": 159
+    },
+    {
+      "path": "lint.log.gz",
+      "sha256": "e9e04f649ff25c2ad2782b5f9522a828eba147a3918b32884ff758a30ad0b2fe",
+      "bytes": 253,
+      "original_sha256": "4b9a11b558f0b2d9abf68e619cb3da5ddee4a553165f305dc68696a6fa21bf1a",
+      "original_bytes": 369
+    },
+    {
+      "path": "build-execution.json.gz",
+      "sha256": "719256909f96c954379797201a15de2d2ac217300b81b567e1742bc23fc13fca",
+      "bytes": 141,
+      "original_sha256": "5900c1e1ef66480f90d629db8b2ba742e0eac6da9dbb89b1fad13f9eff23d509",
+      "original_bytes": 161
+    },
+    {
+      "path": "build.log.gz",
+      "sha256": "c8c2a5a592980defeec584ee483496128d3b51aa30d2183c68b2edfce001438c",
+      "bytes": 1048,
+      "original_sha256": "8470f87f702c310ff6c70f8a8d08c16b1c117ba20632bf7417a4328f8537b3f3",
+      "original_bytes": 2902
+    },
+    {
+      "path": "dist-pins.json.gz",
+      "sha256": "9c07fad053670879ddae24c72fe8f90a6dbec833121275a60f1b0cd673047cda",
+      "bytes": 3088,
+      "original_sha256": "9746394c0cf417fc0c29039937b6612e94828d24c2c5e8694ef111d8b4c297dd",
+      "original_bytes": 6776
+    },
+    {
+      "path": "first-import-failure/application-result.json.gz",
+      "sha256": "de24772f97cb8942ce0b4f37d8878c78ca258348bdbeee429462b8de891bf598",
+      "bytes": 300,
+      "original_sha256": "82af0831518d1d54af1b28204218b15c2e9bb0cf381fda19228f12096d3e4455",
+      "original_bytes": 569
+    },
+    {
+      "path": "first-import-failure/app-execution.json.gz",
+      "sha256": "39dddbd39a9ccd5976ad5798a039eac08991937e3aa2c1028acc70efb7b872e4",
+      "bytes": 244,
+      "original_sha256": "4ccfcec9444794f079a051292c42ab149de584ede5b632a9ef361c8f13caeba2",
+      "original_bytes": 399
+    },
+    {
+      "path": "first-import-failure/app.json.gz",
+      "sha256": "229d37ecc7b85f9dcbb69882dc16d5a82fb762dce33d04a3f2cb336dc84d23ad",
+      "bytes": 72871,
+      "original_sha256": "d2cc67186f373e4d77d9ac748a892e42093d8ebd60b6e4be91caa981170ba02a",
+      "original_bytes": 562410
+    },
+    {
+      "path": "first-import-failure/app.log.gz",
+      "sha256": "7f10b2c3becb3aa58fce0956ad11dbd1f8e5e5b239ba429099ebca27de3de194",
+      "bytes": 9964,
+      "original_sha256": "f96f53c96b80684575d523541329da5bf7e2a7d172f5b38bce075ed18d80fdc4",
+      "original_bytes": 30363
+    },
+    {
+      "path": "first-import-failure/global-errors.json.gz",
+      "sha256": "c2b17b2a1ee2cd98e192f75cfac83b8fa5e1c0409ef58f514509e3e5531061f4",
+      "bytes": 132,
+      "original_sha256": "bde12c91c313efa41af7d22eee0597e17a43b5cd634164f69c21d001362133b7",
+      "original_bytes": 174
+    },
+    {
+      "path": "first-import-failure/start.json.gz",
+      "sha256": "1ced9931884e98ee6721a270c60a018ff67dcb0fa0eafde9795d4d56e33ed164",
+      "bytes": 28858,
+      "original_sha256": "8003258aa333a3603110eaef06f32662498147b33fc6db380af8d54a9909247d",
+      "original_bytes": 67464
+    },
+    {
+      "path": "actual-application-driver.py.gz",
+      "sha256": "c0d47fc2674a757707e3d9d9bdf5a2842b7a921e8ae0e5b0bb2bad86e58a5e07",
+      "bytes": 1911,
+      "original_sha256": "38d5d71574f26ee87814bd4ac9fa7f2ce1f6276bec7d0e37d322e44302684eea",
+      "original_bytes": 4409
+    },
+    {
+      "path": "actual-static-and-initial-import-driver.py.gz",
+      "sha256": "6ae24100624ea017d6f6083708eac4b6ec1c6046fff7a2c448ba12de773e653e",
+      "bytes": 1635,
+      "original_sha256": "fa513d105a2599f240ef5f94051ff885955cd6e3e62142819e4aa558b20a22df",
+      "original_bytes": 3692
+    },
+    {
+      "path": "private-archive-runner-config.ts.gz",
+      "sha256": "e0c6fbbfebc12c061623176bd953ba658bfa3eb9f1eca455218bc688111f7e97",
+      "bytes": 180,
+      "original_sha256": "af2d8c04185cb887bfc936a5e9b3e38c6d974830a277a6fdcc376adea10f6007",
+      "original_bytes": 252
+    }
+  ]
+}

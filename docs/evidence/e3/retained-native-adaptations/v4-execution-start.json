@@ -1,0 +1,18 @@
+{
+  "base_commit": "715b8dce6653e1ff5b44f15782c26e3f542b1375",
+  "manifests": {
+    "/tmp/e3-retained-native-adaptations/manifest-v7.json": "32d4fa06d77618f6e5ff6a87ffcc0d22f8a9162acc2af3dddfc9ef3ddf420755",
+    "/tmp/e3-labels-selection-repair/manifest.json": "523e3ce2c76d8f8c97d272bee4346084df92ddca1b8db96d089f16a3386cede1"
+  },
+  "expected_cases": {
+    "desktop": 11,
+    "phone": 17
+  },
+  "preserved": [
+    "original whole native test bodies and business/geometry oracles except documented current-contract replacements",
+    "original test and assertion time budgets",
+    "no retries or skips",
+    "same full frozen source except recorded21 files; normal production rebuild",
+    "one browser worker"
+  ]
+}

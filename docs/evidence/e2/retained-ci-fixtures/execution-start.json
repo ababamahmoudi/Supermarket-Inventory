@@ -1,0 +1,35 @@
+{
+  "base_git_commit": "73891b6c19852e1da6a99316b2fef7873039ea9c",
+  "candidate_manifest": "/tmp/e2-ci-review-guarded-fixtures/manifest.json",
+  "candidate_manifest_sha256": "de0491f92c70af1686d01ff3136f49b0cfac85832f5b3d70d96daa27a5d7ed44",
+  "jobs": [
+    [
+      "desktop",
+      "labels-c1.spec.ts",
+      "built-in templates can be duplicated, edited, archived and restored without deletion",
+      "labels-desktop",
+      1
+    ],
+    [
+      "phone",
+      "labels-c1.spec.ts",
+      "built-in templates can be duplicated, edited, archived and restored without deletion",
+      "labels-phone",
+      1
+    ],
+    [
+      "phone",
+      "c8-layout-proof.spec.ts",
+      "C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px",
+      "c8-fa900-phone",
+      1
+    ]
+  ],
+  "workers": 1,
+  "retries": 0,
+  "production_files_unchanged": true,
+  "original_test_bodies_except_recorded_observation_barriers": true,
+  "original_timeouts_assertions_and_skip_annotations_preserved": true,
+  "expected_tests": 3,
+  "served_dist_assets": 55
+}

@@ -1,0 +1,106 @@
+{
+  "baseline_commit": "8db82a74c9720b04c2e942f6bf0d7e4cd614c36a",
+  "candidate_delta": [
+    "prototype/src/screens/Invoices.tsx",
+    "prototype/src/screens/Invoices.navigation.e1.test.tsx"
+  ],
+  "production_before_sha256": "d7fa45166ea39cf2618b5051b1db9c63f2ede323c6cc3a0a253f4564a8466a55",
+  "production_after_sha256": "e9f43d7713559b8713c7adf9b4443b8198481f241abb1b7c8ffb2a4a39fe8379",
+  "regression_sha256": "f8aaf90fcbbb787f3188a98507b91d915f873b4e51d5c62ce904d0a60cf38e7a",
+  "actual_exit_codes": {
+    "old_production_final_regression": 1,
+    "fixed_production_final_regression": 0,
+    "normal_build_with_typecheck": 0,
+    "unchanged_original_browser": 0
+  },
+  "old_regression_failure": "After actual browser history.back first reaches #invoices, releasing real accepted command makes old duplicate resume continuation return to #invoices?id=a2-fixture%3AGG-11794; exact final hash assertion fails.",
+  "browser_cases": [
+    {
+      "title": "posted invoice Columns persist, and detail/browser Back retain the Posted list",
+      "file": "c3-invoices.spec.ts",
+      "project": "desktop",
+      "expectedStatus": "passed",
+      "actual": [
+        [
+          "passed",
+          0
+        ]
+      ]
+    },
+    {
+      "title": "posted invoice Columns persist, and detail/browser Back retain the Posted list",
+      "file": "c3-invoices.spec.ts",
+      "project": "phone",
+      "expectedStatus": "passed",
+      "actual": [
+        [
+          "passed",
+          0
+        ]
+      ]
+    },
+    {
+      "title": "Lookup Change price defaults to all stores and records the signed-in Supervisor",
+      "file": "catalog-a2.spec.ts",
+      "project": "desktop",
+      "expectedStatus": "passed",
+      "actual": [
+        [
+          "passed",
+          0
+        ]
+      ]
+    },
+    {
+      "title": "Lookup Change price defaults to all stores and records the signed-in Supervisor",
+      "file": "catalog-a2.spec.ts",
+      "project": "phone",
+      "expectedStatus": "passed",
+      "actual": [
+        [
+          "passed",
+          0
+        ]
+      ]
+    }
+  ],
+  "browser_stats": {
+    "startTime": "2026-10-15T19:32:40.412Z",
+    "duration": 31026.702999999998,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "browser_global_errors": [],
+  "source_guards": {
+    "command": [
+      "node",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "tests/catalog-a2.spec.ts",
+      "tests/c3-invoices.spec.ts",
+      "--grep",
+      "Lookup Change price defaults to all stores|posted invoice Columns persist",
+      "--config",
+      "/tmp/e3-ci-first-two-proof/candidate/prototype/playwright.ci-triage.config.ts",
+      "--workers=1",
+      "--reporter=line,json",
+      "--output",
+      "/tmp/e3-ci-first-two-proof/browser-output"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 32.07224440574646,
+    "source_unchanged": true,
+    "dist_unchanged": true,
+    "http_unchanged": true,
+    "served_assets": 61
+  },
+  "catalog_fixture_changed": false,
+  "full_current_combined_app_or_native_claim": false,
+  "limitations": [
+    "Bounded candidate proof, not a fresh complete final-head app/native run",
+    "Private actual-dependency fs.allow adapter is needed because node_modules is a symlink outside the archived source",
+    "No actual physical browser Back or hardware device was tested; unit history.back is native jsdom history and original browser cases use real Chromium"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "files": {
+    "manifest.json": "b9ecd17e3f28c87d2a836a2abf94f9e127ad776af5ed1c94c0dd24964bbcbd32",
+    "diagnosis.json": "d4798f7de29015cf0be5b1d5de8664ebae9c2409b12c3fb5428750ad490d7468",
+    "proof-final/execution-result.json": "5f7dcbc0e0a15c61f058ea171ad402898c4594b8d7485e175d7c58fa7ab07d51",
+    "proof-final/vitest.json": "66de4a4b2e202401f8281c5514f8a1bbef01c1ee8621fbefaf915280a868128d"
+  },
+  "test_result": "13 passed;0 failed;0 skipped, full combined TSC0,scoped ESLint0,Prettier0",
+  "scope": "Frozen actual combinedRoot5741353 source + one test readiness delta; no production changes; all original assertions and their deadlines unchanged; Root not edited",
+  "remaining": "Root apply normal commit and integrated full suite"
+}

@@ -1,0 +1,61 @@
+{
+  "root_personally_opened_both_final_original_frames": true,
+  "root_message_record": "Parent/root reported direct view_image inspection after final native72 results. Review is of exact0786 frames; later test-only source changes do not relabel this proof.",
+  "reviews": [
+    {
+      "reviewer": "/root",
+      "review_tool": "view_image",
+      "review_status": "PASS",
+      "source_commit": "0786ea262b6ebdf573cd02f2b56479952633ee21",
+      "language": "en",
+      "frame_path": "phone-en-release.jpeg",
+      "original_frame_sha256": "289b9f695fc043ad0c364593c55737cd06ac51984cf49ad810d9aabc15560ca3",
+      "trace_original_sha256": "eb13cdb452b5de58fc722bd743b40b62870f49a2833c816e8749a55e74d75b4d",
+      "original_frame_zip_path": "screencast/page@b56180df0d9b63f73041723b5f4df6f5-1792098723101.jpeg",
+      "actual_width": 390,
+      "visible_observation": "24 cm appears together on the second body line.",
+      "actual_full_phrase_unit_fragments": [
+        {
+          "text": "24 cm",
+          "lines": 1
+        },
+        {
+          "text": "24 cm",
+          "lines": 1
+        }
+      ],
+      "geometry_failures": [],
+      "image_bytes_changed": false
+    },
+    {
+      "reviewer": "/root",
+      "review_tool": "view_image",
+      "review_status": "PASS",
+      "source_commit": "0786ea262b6ebdf573cd02f2b56479952633ee21",
+      "language": "fa",
+      "frame_path": "phone-fa-release.jpeg",
+      "original_frame_sha256": "262149cb463fe0cb81cb72bff19a7449c95d5e92819bd5ec8387430304830d32",
+      "trace_original_sha256": "dc73bce77cf4c65a454a1db1276f1b30dfda83129ed5056b919a8aa5f2230948",
+      "original_frame_zip_path": "screencast/page@fd48cc91d1dacfe774e3926613ee125c-1792098752256.jpeg",
+      "actual_width": 390,
+      "visible_observation": "Complete۲۴ سانتی‌متری appears together in the heading and second body line.",
+      "actual_full_phrase_unit_fragments": [
+        {
+          "text": "۲۴ سانتی‌متری",
+          "lines": 1
+        },
+        {
+          "text": "۲۴ سانتی‌متری",
+          "lines": 1
+        }
+      ],
+      "geometry_failures": [],
+      "image_bytes_changed": false
+    }
+  ],
+  "prior431_persian_frame": {
+    "status": "FAIL",
+    "original_sha256": "e46229612c9776a46097a1faa1ec5ded5e7442bcfadf4c68195cd138bb1cd264",
+    "reason": "Body visibly split۲۴ andسانتی‌متری; earlier agent PASS claim was incorrect and remains explicitly corrected."
+  }
+}

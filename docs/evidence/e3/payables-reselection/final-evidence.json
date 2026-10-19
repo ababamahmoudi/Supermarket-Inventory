@@ -1,0 +1,115 @@
+{
+  "proof_baseline": {
+    "commit": "eb68cdca6345295a199819294f35b1cad34e6130",
+    "git_root": "/workspace/Supermarket-Inventory",
+    "same_test_in_both": true,
+    "production_difference": "Only Payables unchanged-branch&&!clear one-line guard"
+  },
+  "platform": "Standard actual Provider fixture: fake-indexeddb platform with real application authority/authentication/repository/React code and Node WebCrypto. Only delivery of a genuine completed repository refresh is delayed; no authority, business result or permission is fabricated.",
+  "cases": {
+    "old-v2": {
+      "actual_exit_code": 1,
+      "raw_report": "/tmp/e3-payables-reselection-proof/old-v2/vitest.json",
+      "raw_sha256": "7b23ef5b581a2c39eab320bd06f6694ab7a2def30519f39122f650cf024ce9e1",
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0,
+      "success": false,
+      "failures": [
+        {
+          "name": "reselecting the current Payables branch preserves live supplier typing and focus during a delayed genuine authority refresh",
+          "failure": "Error: expect(element).toHaveValue(fresh)\n\nExpected the element to have value:\n  fresh\nReceived:"
+        }
+      ],
+      "source_files": 595,
+      "source_unchanged": true
+    },
+    "patched-v2": {
+      "actual_exit_code": 0,
+      "raw_report": "/tmp/e3-payables-reselection-proof/patched-v2/vitest.json",
+      "raw_sha256": "99b8ed978d405a2ffab43c179bc22d3806b2d9462d32bf995abeacbf63ba1bf6",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "success": true,
+      "failures": [],
+      "source_files": 595,
+      "source_unchanged": true
+    }
+  },
+  "checks": [
+    {
+      "check": "unit",
+      "command": [
+        "npm",
+        "exec",
+        "vitest",
+        "--",
+        "run",
+        "src/screens/Payables.reselection.e1.test.tsx",
+        "--maxWorkers=1",
+        "--reporter=json",
+        "--outputFile=/tmp/e3-payables-reselection-proof/patched-v2/vitest.json"
+      ],
+      "exit_code": 0,
+      "seconds": 4.83
+    },
+    {
+      "check": "lint",
+      "command": [
+        "npm",
+        "exec",
+        "eslint",
+        "--",
+        "src/screens/Payables.tsx",
+        "src/screens/Payables.reselection.e1.test.tsx"
+      ],
+      "exit_code": 0,
+      "seconds": 2.19
+    },
+    {
+      "check": "typescript",
+      "command": [
+        "npm",
+        "exec",
+        "tsc",
+        "--",
+        "--noEmit"
+      ],
+      "exit_code": 0,
+      "seconds": 19.31
+    },
+    {
+      "check": "format",
+      "command": [
+        "npm",
+        "exec",
+        "prettier",
+        "--",
+        "--check",
+        "src/screens/Payables.tsx",
+        "src/screens/Payables.reselection.e1.test.tsx"
+      ],
+      "exit_code": 0,
+      "seconds": 0.77
+    }
+  ],
+  "same_final_test_sha256": "90960fa663db35be3457389609b15bb01ff91f94049e7a2c0a1a1b9243b11923",
+  "only_production_difference": [
+    "prototype/src/screens/Payables.tsx"
+  ],
+  "financial_and_scope_oracles": [
+    "full fresh search text retained",
+    "same input DOM and focus retained",
+    "exact current location retained",
+    "one actual matching supplier row",
+    "scoped session preference contains fresh",
+    "ledger and products unchanged",
+    "explicit Clear filters still clears aggregate search and balance flags",
+    "genuine Floor Worker financial permission denied"
+  ],
+  "native_browser": "NOT RUN by this agent; original native trace and forthcoming Root full native suite are separate evidence.",
+  "superseded_first_attempt": "/tmp/e3-payables-reselection-proof/{old,patched}: same behavioral failure/pass, then test-observation purity lint issue corrected with useLayoutEffect and rerun identically as v2.",
+  "manifest_sha256": "35f314ec3245a11082a49ed816d9f0a0f86799a2cea1dec4bcac75ddae797124",
+  "slot_released": true
+}

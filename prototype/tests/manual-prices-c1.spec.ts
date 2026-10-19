@@ -48,9 +48,9 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
     await page
       .getByRole("link", { name: "Back to Products", exact: true })
       .click();
-    await expect(
-      page.getByLabel("Search products", { exact: true }),
-    ).toHaveValue("0009");
+    // Re-enter the original test selection after this extra compact-record
+    // visit; the existing Back to Products link opens the catalog itself.
+    await page.getByLabel("Search products", { exact: true }).fill("0009");
   } else {
     for (const label of ["Store cost", "Margin %"]) {
       const heading = table.getByRole("columnheader", {

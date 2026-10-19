@@ -1,0 +1,36 @@
+{
+  "executions": [
+    {
+      "label": "normal-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "actual_exit_code": 0
+    },
+    {
+      "label": "native-phone",
+      "command": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "/tmp/e3-retained-bounded-v7/source/prototype/bounded.config.ts",
+        "--workers=1",
+        "--project=phone",
+        "--grep",
+        "Cashier gets only granted custom notebook|manual price stays visible to staff|Payables filters supplier totals",
+        "--reporter=line,json",
+        "--output",
+        "/tmp/e3-retained-bounded-v7/phone-output"
+      ],
+      "actual_exit_code": 0
+    }
+  ],
+  "seconds": 43.668785572052,
+  "source_unchanged": true,
+  "http_matches_built_dist_before": true,
+  "http_unchanged": true,
+  "expected_tests": 3
+}

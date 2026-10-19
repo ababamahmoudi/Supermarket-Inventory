@@ -1,0 +1,126 @@
+{
+  "baseline_commit": "431bdba29e25a3b53e3acc5d7ef8ad186150ab2b",
+  "scope": "Private staged four-file Persian compound physical-unit rendering and stronger raw-layout oracle correction; final committed-source full application/native verification remains pending.",
+  "prior_visual_claim_correction": "The prior agent claim that the431 Persian release frame kept۲۴ سانتی‌متری together was incorrect. The actual image visibly splits۲۴ andسانتی‌متری; the old geometry oracle omitted this compound entirely. The original431 report remains unchanged and is not presented as proof of Persian compound preservation.",
+  "unit_old": {
+    "passed": 16,
+    "failed": 12,
+    "actual_cli_exit_code": 1
+  },
+  "unit_patched": {
+    "passed": 28,
+    "failed": 0,
+    "actual_cli_exit_code": 0
+  },
+  "same_exact_unit_file_for_old_and_new": true,
+  "native_oracle_old_vs_patched": {
+    "old-oracle": {
+      "actual_exit_code": 1,
+      "stats": {
+        "startTime": "2026-10-15T21:00:19.151Z",
+        "duration": 4022.7249999999995,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "actual_status": "failed",
+      "global_errors": [],
+      "guards": {
+        "all595_source_inputs_unchanged": true,
+        "http_before_matches_actual_fresh_candidate_dist": true,
+        "http_after_identical": true,
+        "http_asset_count": 61,
+        "fresh_candidate_production_build": true,
+        "same_production_source_and_dist_for_both_oracle_variants": true,
+        "oracle_only_difference": true,
+        "original_budgets_retries_assertions_retained": true,
+        "evidence_only_override": "--trace=on"
+      }
+    },
+    "patched": {
+      "actual_exit_code": 0,
+      "stats": {
+        "startTime": "2026-10-15T21:00:24.741Z",
+        "duration": 3718.9300000000003,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "actual_status": "passed",
+      "global_errors": [],
+      "guards": {
+        "all595_source_inputs_unchanged": true,
+        "http_before_matches_actual_fresh_candidate_dist": true,
+        "http_after_identical": true,
+        "http_asset_count": 61,
+        "fresh_candidate_production_build": true,
+        "same_production_source_and_dist_for_both_oracle_variants": true,
+        "oracle_only_difference": true,
+        "original_budgets_retries_assertions_retained": true,
+        "evidence_only_override": "--trace=on"
+      }
+    }
+  },
+  "initial_native_selection_attempts": "Both anchored CLI grep attempts genuinely exited1 with No tests found. They are preserved as unexecuted harness attempts; only external selector changed for native-run-002, which discovered exactly one original expanded case.",
+  "normal_build": {
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 21.185489416122437
+  },
+  "changed_eslint": {
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      "src/presentation.tsx",
+      "scripts/c6-layout-proof.mjs",
+      "src/presentation.units.test.tsx",
+      "tests/layout-proof-c6.spec.ts",
+      "--max-warnings=0"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 1.213658332824707
+  },
+  "changed_prettier": {
+    "command": [
+      "node",
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "src/presentation.tsx",
+      "scripts/c6-layout-proof.mjs",
+      "src/presentation.units.test.tsx",
+      "tests/layout-proof-c6.spec.ts"
+    ],
+    "actual_exit_code": 0,
+    "seconds": 0.39776158332824707
+  },
+  "source_guards": {
+    "old-unit": {
+      "before_sha256": "9db6f7d1f6c3ad8433736c2305952c1118c1a5a1b8feccf7060247a85738d57f",
+      "after_sha256": "9db6f7d1f6c3ad8433736c2305952c1118c1a5a1b8feccf7060247a85738d57f",
+      "source_unchanged": true,
+      "application_input_files": 595
+    },
+    "patched": {
+      "before_sha256": "a9a4033bb002e6200399dd374d519a8632233b459bf0eb7e641fd32b327d54a3",
+      "after_sha256": "a9a4033bb002e6200399dd374d519a8632233b459bf0eb7e641fd32b327d54a3",
+      "source_unchanged": true,
+      "application_input_files": 595
+    },
+    "old-oracle": {
+      "before_sha256": "992ece50b24a214aee8d949d4dc2fc64bccc8304561c7a1fc31d5ca386237d6e",
+      "after_sha256": "992ece50b24a214aee8d949d4dc2fc64bccc8304561c7a1fc31d5ca386237d6e",
+      "source_unchanged": true,
+      "application_input_files": 595
+    }
+  },
+  "candidate_manifest_sha256": "50c9130b7ef99ce8b8cad2509a457d3b5290004c3b09912c61c366c3a81d29a7",
+  "production_change": "Only productNameUnits regex recognizes Persian centimetre/millimetre noun/adjective compounds with closed, whitespace or ZWNJ separators. Existing unit spans, numeric LTR isolation, exact text and all financial/data/authority/globalCSS behavior retained.",
+  "native_corpus": "Every prior glyph, tagged-unit and raw Activity control retained; actual seeded Persian pot name additionally clean → raw deliberate split → exact restore, original names/default budgets/retries/skips unchanged.",
+  "not_full812": true
+}

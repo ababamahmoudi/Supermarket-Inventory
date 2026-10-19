@@ -1,0 +1,18 @@
+{
+  "source_commit": "431bdba29e25a3b53e3acc5d7ef8ad186150ab2b",
+  "reviewer": "Root",
+  "english": {
+    "path": "phone-en-release.jpeg",
+    "sha256": "1e93314c3090c2df82548a2a1c564236c78510fb8640bcace0040f8c951170c1",
+    "result": "PASS",
+    "finding": "24 cm remains together."
+  },
+  "persian": {
+    "path": "phone-fa-release.jpeg",
+    "sha256": "e46229612c9776a46097a1faa1ec5ded5e7442bcfadf4c68195cd138bb1cd264",
+    "result": "FAIL",
+    "finding": "۲۴ ends a line while سانتی‌متری begins the next. Existing raw oracle omitted Persian compound cm/mm spelling; reject this frame despite28passing native cases."
+  },
+  "images_modified": false,
+  "new_fix_verification": "Separate later source; do not relabel this actual frame."
+}

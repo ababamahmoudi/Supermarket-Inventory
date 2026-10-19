@@ -1,12 +1,23 @@
 # C8 / E1 / E2 / E3 acceptance ledger
 
-This is the comprehensive checklist for the owner's request received 2026-10-12. **C8 implementation and visual review are complete; final-source browser CI passed; the documentation-only head check remains separate. E1 implementation is present; its latest completed full app/pricing run passed 1,294/1,294 and four bounded repaired native checks passed. Current-root SDK passed 75/75 and build exited 0; final required lint passed at its recorded v2 inputs. The complete 742-case retained-browser attempt was interrupted with unresolved failures; final browser proof and original screenshots remain pending. E2/E3 remain Planned.** Root reports that C6 then C7 were approved and merged with preserved history after required CI passed, and that C8 starts from main `3b6da31`; that completed prerequisite is not new-stage test evidence.
+This is the comprehensive checklist for the owner's request received 2026-10-12. **All four stages are implemented and open as stacked, unmerged PRs. C8's required CI and 75-image review passed. Recorded combined source `0786ea2` passed 1,444/1,444 application tests, separate 75/75 SDK tests, all 23 seed pricing cases, normal lint and a fresh TypeScript/Vite build, actual exits 0 with unchanged inputs. The selected corrected native replay passed 72/72 on that source; it is not a whole current-source 812-case pass. The complete f154 replay remains 769 passed/1 genuine failed/42 intentional skips, and required current CI remains unresolved, including a real configured-color unit assertion on exact0786. The later test-only palette source passed actual E1/E2 eleven-case checks, E3 lint/build and all61 byte-identical output guards; its final full E3 application1,444/SDK75 also passed separately. No owner approval, merge, physical Home Screen proof or deployment is claimed.** C6 then C7 were approved and merged with preserved history after required CI passed; C8 starts from main `3b6da31`. That prerequisite is separate from new-stage evidence.
 
 Build four stacked PRs in order, without an intermediate review pause: **C8 → E1 → E2 → E3**. The owner reviews all together; deadline October 30. Update the source docs before each stage. Change only prototype/, docs/ and seed/. No new hosted service, real AI, inventory, remote accounts/resources or deployment is authorized. Browser user switching simulates people; each device has separate demo data.
 
 Sources: [requirements §34–35](requirements.md#34-c8-fixes-sales-and-new-regular-prices-2026-10-12), [data model](data-model.md#c8-independent-sale-records-and-guarded-price-apis-2026-10-12), [workflows](workflows.md#22-c8-price-changes-sales-and-requests-2026-10-12), [screens](screens.md#c8-screen-changes-2026-10-12), [design language](design-language.md#c8-visual-refinements-2026-10-12), [open questions](open-questions.md#c8e-owner-answers-and-later-options-2026-10-12), [decisions](decisions.md#028-owner-approval-resolved-choices-and-c8e-order-2026-10-12) and [prototype brief](prototype-brief.md#c8--e1--e2--e3-current-authorized-work-2026-10-12). Requirements retains the literal owner clauses. Request SHA-256: `da91a5015ef3daf57cae58a67c7f2c1ae55395fe3841a00acce99f6214fa3dc1`.
 
-“Planned” is not implemented or tested. Change status only after actual final-source evidence. Keep failed/superseded runs, retry/skipped counts and real visual findings. Owner approval is distinct from developer verification; no automatic merge of these new stages is implied.
+Status distinguishes implementation, recorded checks, visual review and final acceptance. **Complete** means the requested prototype implementation or instructions exist. **Recorded PASS** applies only to the linked run/source and scope; it does not make a pending complete-browser or CI check pass. **Reviewed** means the linked original images were individually reviewed, including explicitly documented exact-byte reuse. **Pending** remains unfinished verification; **Not performed** means no actual hardware/provider action occurred. Preserve failed/superseded runs, retry/skipped counts and real visual findings. Owner approval is distinct from developer verification; these four PRs remain unmerged.
+
+| Stage | Pull request | Branch | Recorded review |
+| --- | --- | --- | --- |
+| C8 | [#21](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/21) | `feat/prototype-c8-sales-fixes` | [75 images and C8 evidence](PR_C8_REVIEW.md) |
+| E1 | [#22](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/22) | `feat/prototype-e1-location-roles` | [E1 checks](PR_E1_REVIEW.md) · [20 images](redesign-screenshots/pr-e1/README.md) |
+| E2 | [#23](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/23) | `feat/prototype-e2-price-updates` | [E2 checks](evidence/e2/ui-review.md) · [28 images](redesign-screenshots/pr-e2/README.md) |
+| E3 | [#24](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/24) | `feat/prototype-e3-phones` | [Combined 1,444-app/75-SDK checks](evidence/e3/final-0786-application/) · [79 images](redesign-screenshots/pr-e3/README.md) |
+
+Current verification boundary: full `f1545df` ended 769 pass/1 unit-wrap fail/42 pre-existing intentional skips. The initial `431bdba` English correction passed 28 selected native cases but its Persian frame failed manual review. The shared English/Persian formatter and raw oracle were then corrected with 14 added unit cases and genuine negative controls. Selected native `0786ea2` passed 72/72, with actual English/Persian release originals manually viewed and passed, unchanged source/build/61 served files. [Full failure](evidence/e3/retained-native-full-f154/) · [failed Persian frame](evidence/e3/sale-inline-units-native/manual-review.json) · [corrected 72-case proof](evidence/e3/final-0786-native/README.md). A whole current-source 812-case/required-CI pass is not claimed. Latest palette source passed E1/E2 eleven-case files and E3 lint/build with byte-identical61 outputs; latest full E3 application/SDK remains pending. The original CI failure is retained separately.
+
+Use the last branch to review all four together. [Combined Ubuntu setup and click paths](PR_C8_E1_E2_E3_REVIEW.md) give exact commands, expected output, failure steps and genuine fixture values. [Phone instructions](phone-demo-hosting.md) cover local Wi-Fi, VM/firewall troubleshooting, HTTPS, optional protected hosting, updates and shutdown. Docker is unnecessary for this frontend prototype.
 
 ## Resolved owner choices
 
@@ -388,11 +399,11 @@ Every row below requires **English light, English dark, Persian, 900 px and phon
 
 C8 evidence scope: 1,124 unit/pricing tests and 700 browser passes/42 existing skips are from `8d9e7f9`. All 75 current-source captures and reviews are from `0303445`; its fresh build passed and its separate CI run passed all required steps with 700 browser passes/42 existing skips and zero failed/flaky outcomes. Linked invalid-save boxes above a scrolled dialog, sticky behavior, hidden columns and print behavior require their executed browser checks, not the static images alone. E1 privacy/roles, E2 tasks and E3 phone installation are not claimed by C8.
 
-## E1 — Implemented; final browser and visual verification pending
+## E1 — Implemented; recorded checks and images passed; final browser/CI pending
 
-The current role/account contract is in requirements §2/§3/§16 and data-model/workflows/screens. This ledger preserves literal owner clauses. Implementation is present. Completed full app/pricing v5 passed 1,294/1,294; four bounded repaired native checks passed. Current-root SDK 75/75 and build passed; final required lint passed at its recorded v2 inputs. Complete retained-browser execution and visual results remain pending after an interrupted failing attempt. See [E1 exact-source evidence](evidence/e1/verification.json). It does not reinstate the older three-role model.
+The current role/account contract is in requirements §2/§3/§16 and data-model/workflows/screens. This ledger preserves literal owner clauses. Implementation is complete. The [E1 review](PR_E1_REVIEW.md) records 1,323/1,323 application cases, 75/75 SDK cases, lint/build and 12/12 sign-in/setup/reset native checks on their recorded sources. All [20 final E1 images](redesign-screenshots/pr-e1/README.md) were reviewed or verified byte-identical to individually reviewed originals. E1 behavior is also included in the recorded combined `0786ea2` application/SDK/lint/build checks. Complete final browser and required CI remain pending; interrupted and failed earlier attempts are retained below. The five-role model remains the current contract.
 
-### E1-R01 — Implemented; verification in progress
+### E1-R01 — Implemented; recorded proof passed; final browser/CI pending
 
 - [x] Five roles (their labels come from config, not code):
 
@@ -401,9 +412,9 @@ The current role/account contract is in requirements §2/§3/§16 and data-model
   - Floor Worker: one or more locations.
   - Cashier: one or more stores, never the Warehouse. Each person has one role and, except for Owner and Manager, one or more locations. For example: a cashier at North York and Richmond Hill, or a Branch Supervisor at all three stores. Record "different roles at different locations" in open-questions as a later option.
 
-Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; bounded repaired native **4/4**. Current-root SDK **75/75** and build **PASS**; final required lint **PASS**. Full 742-case retained-browser attempt **interrupted, not complete**; corrected full browser proof and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
+Implementation: **Complete**. [Recorded E1 unit/SDK, native and static results](PR_E1_REVIEW.md) and [20 reviewed images](redesign-screenshots/pr-e1/README.md) are available. [Recorded combined application 1,444/1,444, SDK 75/75, lint and fresh build](evidence/e3/final-0786-application/) passed at `0786ea2`; latest full test-only-source application1,444/SDK75, E1/E2 palette eleven-case files and E3 lint/build passed; [final evidence](evidence/e3/final-a6c66dc-validation/). **Complete final browser/CI: Pending. Owner approval: Pending.** Historical interrupted/failed attempts remain separate; scoped and overlapping runs are not added together.
 
-### E1-R02 — Implemented; verification in progress
+### E1-R02 — Implemented; recorded proof passed; final browser/CI pending
 
 - [x] Permissions. Put this table in requirements.md. Enforce it in one place (the permission layer) instead of the many "supervisor" checks in the code today, and test it.
 
@@ -417,9 +428,9 @@ Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; boun
     - Owner and Manager get today's Supervisor dashboard.
     - A Branch Supervisor gets a location dashboard without supplier money: arrivals, price updates to apply, sales running at their stores, expiring dates, open returns, branch requests, and notes for them. Add tests for every role at an allowed location and at a location they don't have.
 
-Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; bounded repaired native **4/4**. Current-root SDK **75/75** and build **PASS**; final required lint **PASS**. Full 742-case retained-browser attempt **interrupted, not complete**; corrected full browser proof and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
+Implementation: **Complete**. [Recorded E1 unit/SDK, native and static results](PR_E1_REVIEW.md) and [20 reviewed images](redesign-screenshots/pr-e1/README.md) are available. [Recorded combined application 1,444/1,444, SDK 75/75, lint and fresh build](evidence/e3/final-0786-application/) passed at `0786ea2`; latest full test-only-source application1,444/SDK75, E1/E2 palette eleven-case files and E3 lint/build passed; [final evidence](evidence/e3/final-a6c66dc-validation/). **Complete final browser/CI: Pending. Owner approval: Pending.** Historical interrupted/failed attempts remain separate; scoped and overlapping runs are not added together.
 
-### E1-R03 — Implemented; verification in progress
+### E1-R03 — Implemented; recorded proof passed; final browser/CI pending
 
 - [x] Location picker:
 
@@ -427,9 +438,9 @@ Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; boun
   - Owner and Manager also get "All locations".
   - A registered store computer defaults to its own location.
 
-Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; bounded repaired native **4/4**. Current-root SDK **75/75** and build **PASS**; final required lint **PASS**. Full 742-case retained-browser attempt **interrupted, not complete**; corrected full browser proof and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
+Implementation: **Complete**. [Recorded E1 unit/SDK, native and static results](PR_E1_REVIEW.md) and [20 reviewed images](redesign-screenshots/pr-e1/README.md) are available. [Recorded combined application 1,444/1,444, SDK 75/75, lint and fresh build](evidence/e3/final-0786-application/) passed at `0786ea2`; latest full test-only-source application1,444/SDK75, E1/E2 palette eleven-case files and E3 lint/build passed; [final evidence](evidence/e3/final-a6c66dc-validation/). **Complete final browser/CI: Pending. Owner approval: Pending.** Historical interrupted/failed attempts remain separate; scoped and overlapping runs are not added together.
 
-### E1-R04 — Implemented; verification in progress
+### E1-R04 — Implemented; recorded proof passed; final browser/CI pending
 
 - [x] Settings → People (Owner and Manager only).
 
@@ -446,9 +457,9 @@ Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; boun
     - Only an Owner or Manager can make someone an Owner or Manager.
   - Registered store computers: keep the current list, and show which location each computer belongs to.
 
-Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; bounded repaired native **4/4**. Current-root SDK **75/75** and build **PASS**; final required lint **PASS**. Full 742-case retained-browser attempt **interrupted, not complete**; corrected full browser proof and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
+Implementation: **Complete**. [Recorded E1 unit/SDK, native and static results](PR_E1_REVIEW.md) and [20 reviewed images](redesign-screenshots/pr-e1/README.md) are available. [Recorded combined application 1,444/1,444, SDK 75/75, lint and fresh build](evidence/e3/final-0786-application/) passed at `0786ea2`; latest full test-only-source application1,444/SDK75, E1/E2 palette eleven-case files and E3 lint/build passed; [final evidence](evidence/e3/final-a6c66dc-validation/). **Complete final browser/CI: Pending. Owner approval: Pending.** Historical interrupted/failed attempts remain separate; scoped and overlapping runs are not added together.
 
-### E1-R05 — Implemented; verification in progress
+### E1-R05 — Implemented; recorded proof passed; final browser/CI pending
 
 - [x] Demo users. Replace the three demo accounts with these, all with password demo1234 and fictional names:
 
@@ -459,183 +470,211 @@ Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; boun
   - wh-floor (Floor Worker at the Warehouse)
   - cashier (Cashier at North York and Richmond Hill) The Demo menu can switch to any of them, and Reset demo restores them. The old username "supervisor" keeps working and signs in as the Manager.
 
-Implementation: **Present**. Completed full app/pricing v5 **1,294/1,294**; bounded repaired native **4/4**. Current-root SDK **75/75** and build **PASS**; final required lint **PASS**. Full 742-case retained-browser attempt **interrupted, not complete**; corrected full browser proof and original screenshots **Pending**. [Source fingerprints and executed results](evidence/e1/verification.json); owner approval remains outstanding.
+Implementation: **Complete**. [Recorded E1 unit/SDK, native and static results](PR_E1_REVIEW.md) and [20 reviewed images](redesign-screenshots/pr-e1/README.md) are available. [Recorded combined application 1,444/1,444, SDK 75/75, lint and fresh build](evidence/e3/final-0786-application/) passed at `0786ea2`; latest full test-only-source application1,444/SDK75, E1/E2 palette eleven-case files and E3 lint/build passed; [final evidence](evidence/e3/final-a6c66dc-validation/). **Complete final browser/CI: Pending. Owner approval: Pending.** Historical interrupted/failed attempts remain separate; scoped and overlapping runs are not added together.
 
 ### E1 required proof
 
 | ID     | Required proof                                                                                                                                                                                 | Status                                         |
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| E1-P01 | Central permission table: every role at allowed and unassigned locations and across companies, including field privacy, Owner/Manager future locations and no Cashier Warehouse.               | Unit/SDK proof executed; final browser pending |
-| E1-P02 | People no own-role change/self-deactivation, at least one active Owner, promotion authorization, reasoned edits, deactivation invalidates all browser sessions, reactivation retains evidence. | Unit/SDK proof executed; final browser pending |
-| E1-P03 | Invitation code shown once, forced password/privileged simulated second factor, aliases and six demo/reset users without production-auth/delivery claims.                                      | Unit/SDK proof executed; final browser pending |
-| E1-V01 | People list with roles/locations/status/filters/last sign-in.                                                                                                                                  | Planned                                        |
-| E1-V02 | Add person with locations and correct role-specific availability.                                                                                                                              | Planned                                        |
-| E1-V03 | Edit person with reason/history.                                                                                                                                                               | Planned                                        |
-| E1-V04 | Branch Supervisor assigned-location picker.                                                                                                                                                    | Planned                                        |
-| E1-V05 | Branch Supervisor location dashboard without supplier money.                                                                                                                                   | Planned                                        |
+| E1-P01 | Central permission table: every role at allowed and unassigned locations and across companies, including field privacy, Owner/Manager future locations and no Cashier Warehouse.               | Implemented; recorded unit/SDK PASS; final browser/CI Pending |
+| E1-P02 | People no own-role change/self-deactivation, at least one active Owner, promotion authorization, reasoned edits, deactivation invalidates all browser sessions, reactivation retains evidence. | Implemented; recorded unit/SDK + scoped native PASS; final browser/CI Pending |
+| E1-P03 | Invitation code shown once, forced password/privileged simulated second factor, aliases and six demo/reset users without production-auth/delivery claims.                                      | Implemented; recorded unit/SDK + 12 native PASS; final browser/CI Pending |
+| E1-V01 | People list with roles/locations/status/filters/last sign-in.                                                                                                                                  | Reviewed in 20-image E1 gallery; owner approval Pending |
+| E1-V02 | Add person with locations and correct role-specific availability.                                                                                                                              | Reviewed in 20-image E1 gallery; owner approval Pending |
+| E1-V03 | Edit person with reason/history.                                                                                                                                                               | Reviewed in 20-image E1 gallery; owner approval Pending |
+| E1-V04 | Branch Supervisor assigned-location picker.                                                                                                                                                    | Reviewed in 20-image E1 gallery; owner approval Pending |
+| E1-V05 | Branch Supervisor location dashboard without supplier money.                                                                                                                                   | Reviewed in 20-image E1 gallery; owner approval Pending |
 
-## E2 — Literal planned store-task and notification checklist
+## E2 — Literal store-task and notification checklist; implementation complete
 
-### E2-R06 — Planned
+### E2-R06 — Implemented; recorded proof passed; final browser/CI pending
 
-- [ ] When a product's selling price changes at a store, that store gets a price update task. This applies whatever caused the change: a price approval, "Apply this price to all" on a branch price conflict, a new regular price, a sale starting, changing or ending (C8), another offer starting or ending, or a weighed item's price.
+- [x] When a product's selling price changes at a store, that store gets a price update task. This applies whatever caused the change: a price approval, "Apply this price to all" on a branch price conflict, a new regular price, a sale starting, changing or ending (C8), another offer starting or ending, or a weighed item's price.
 
 - The price in the app changes right away. But staff still have to change it on the store's own cash register and put up a new shelf label, so the task stays Pending until someone confirms both.
   - Only stores whose price actually changes get a task. The Warehouse never gets one.
   - Sales: a sale's start task appears on the morning of its first day. Its end task appears on the morning of its last day, titled "Sale ends after today: back to $20.99 tomorrow", so staff can change the register and labels at closing.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Complete**. Recorded proof: [260-case engine/source/runtime scope](evidence/e2/recovered-engine-proof-v9.json), including task-producing price, offer, Sale and weighed changes and no-op/Warehouse guards; [E2 UI/native proof](evidence/e2/ui-browser-verification.json) and [28 reviewed images](redesign-screenshots/pr-e2/README.md). The recorded combined `0786ea2` application suite includes the retained engine/source/runtime cases. **Complete final browser/CI: Pending.**
 
-### E2-R07 — Planned
+### E2-R07 — Implemented; recorded proof passed; final browser/CI pending
 
-- [ ] Each task shows:
+- [x] Each task shows:
 
 - the product (both names, code, barcode) and old → new price, including any offer or sale
   - when it takes effect, why it changed, and who decided
   - two checkboxes: "Changed on the cash register" and "New label printed", with "Print label now" and "Add to label waitlist" buttons that pick the Regular or Promo template automatically "Mark as done" needs both boxes ticked. The alternative is "No label needed" with a reason (for example, the product has no shelf label).
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Complete**. Current-version register/label/waiver and Done guards, actual template/print-sheet identity and unconfirmed-print denial have [recorded unit and native proof](evidence/e2/ui-review.md). [Task images](redesign-screenshots/pr-e2/README.md) show the real checklist; E3 separately corrects the active Undo overlap. A queued label or opened preview never proves physical printing. **Complete final browser/CI: Pending; hardware printer proof: Not performed.**
 
-### E2-R08 — Planned
+### E2-R08 — Implemented; recorded proof passed; final browser/CI pending
 
-- [ ] Who sees what:
+- [x] Who sees what:
 
 - The Branch Supervisors of that store get a notification and own the task. They (or an Owner or Manager) can tick "Changed on the cash register" and mark the task done.
   - Floor Workers at that store see the list and can tick "New label printed". A setting can let them mark tasks done too (off by default).
   - Cashiers at that store see a "Price changed" pill on the product in Lookup, with the old price crossed out, until the task is done. For a sale, they see C8's Sale pill instead.
   - Owner and Manager see every store: for each change, which stores are done (by whom, when) and which are still pending.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Complete**. [Recorded engine/runtime and protected UI/native checks](evidence/e2/ui-browser-verification.json) cover actor/location guards, Floor Worker defaults, the Cashier hint and Manager progress. [Reviewed task/progress/Lookup images](redesign-screenshots/pr-e2/README.md) retain real configured people. The final combined application/SDK checks passed. **Complete final browser/CI: Pending.**
 
-### E2-R09 — Planned
+### E2-R09 — Implemented; recorded proof passed; final browser/CI pending
 
-- [ ] Where it appears:
+- [x] Where it appears:
 
 - A new sidebar item, "Price updates", with a count badge.
   - A dashboard card, "Price updates to apply".
   - The notification bell. The Price updates page has filters for Pending or Done, location and date. You can select several tasks and then "Print labels" (adds them all to the label waitlist) or "Mark as done".
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Complete**. Sidebar count, dashboard card, protected task list/filters, bell and allowed bulk operations are implemented. [E2 UI/native results](evidence/e2/ui-browser-verification.json) passed 8 native and 4 capture cases on their recorded source; [28 reviewed images](redesign-screenshots/pr-e2/README.md) include live dashboard card details. **Complete final browser/CI: Pending.**
 
-### E2-R10 — Planned
+### E2-R10 — Implemented; recorded proof passed; final browser/CI pending
 
-- [ ] Changes on top of changes:
+- [x] Changes on top of changes:
 
 - If the price changes again before the task is done, update that same task to the newest price (keeping the earlier step in its history) instead of adding a second task.
 - If the change is undone before anyone has acted on it, cancel the task.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Complete**. Same-task newest-version coalescing, retained history and unacted Undo cancellation are covered by [recorded engine/source/runtime tests](evidence/e2/recovered-engine-proof-v9.json) and included in the [recorded combined 1,444-application pass](evidence/e3/final-0786-application/). Physical acknowledgements are retained and checked against current required work. **Complete final browser/CI: Pending.**
 
-### E2-R11 — Planned
+### E2-R11 — Implemented; recorded proof passed; final browser/CI pending
 
-- [ ] Reminders:
+- [x] Reminders:
 
 - If a task is still pending after 24 hours (a setting), remind that store's Branch Supervisors.
 - After 48 hours (a setting), alert the Owner and Manager, for example "Richmond Hill has 3 price updates waiting".
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Complete**. Configurable 24/48-hour reminders/escalation, current recipients and deduplication have [recorded engine/runtime proof](evidence/e2/recovered-engine-proof-v9.json), also included in the final combined application pass. Tests exercise the clock; no claim is made that the owner waited two days. **Complete final browser/CI: Pending.**
 
-### E2-R12 — Planned
+### E2-R12 — Implemented; recorded proof passed; final browser/CI pending
 
-- [ ] Notifications in general:
+- [x] Notifications in general:
 
 - The bell lists each person's notifications, newest first, with an unread count, "Mark all as read", and a link to the item.
 - Settings → Notifications decides which roles get which events: price updates, approvals waiting, branch requests, returns waiting for credit, expiring dates, sale requests and their decisions, and costs that went up during a sale.
 - Plan this in the docs, but don't build it yet: in the real build, notifications also arrive on phones as push notifications once the app is installed on the home screen (Android, and iPhone with iOS 16.4 or newer), with email as an option.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Complete for the browser prototype**. [Recorded engine and protected UI proof](evidence/e2/ui-browser-verification.json) covers personal newest-first notifications, unread/read-all/routing and configurable role matrices; [bell images](redesign-screenshots/pr-e2/README.md) were reviewed. Real push/email remain **Planned only**, as requested. No delivery service or resource was created. **Complete final browser/CI: Pending.**
 
 ### E2 required proof
 
 | ID     | Required proof                                                                                                                                                             | Status  |
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| E2-P01 | One task per actually affected store for approval/conflict/manual/sale/offer/weighed changes; none for Warehouse or unchanged effect.                                      | Planned |
-| E2-P02 | Sale first-day morning start task and last-day morning end preparation; app regular price changes tomorrow, not early. Local-zone/DST boundaries retained.                 | Planned |
-| E2-P03 | Newest change coalesces same pending task retaining history; unacted Undo cancels. Preserve evidence of prior physical acknowledgements and recheck current required work. | Planned |
-| E2-P04 | Register/label/waiver/Done actor/location guards, Floor Worker opt-in off, bulk allowed-only operations and actual Regular/Promo template choice.                          | Planned |
-| E2-P05 | 24h supervisor reminder and 48h Owner/Manager escalation, configurable/deduplicated; personal newest-first bell, unread/read-all/routing.                                  | Planned |
-| E2-P06 | Cashier Price changed pill until Done, old crossed-out; Sale uses Sale pill. Manager per-store progress actor/time and pending stores.                                     | Planned |
-| E2-V01 | Price updates list as Branch Supervisor.                                                                                                                                   | Planned |
-| E2-V02 | Task with both checkboxes, print/waitlist and waiver.                                                                                                                      | Planned |
-| E2-V03 | Manager per-store progress.                                                                                                                                                | Planned |
-| E2-V04 | Cashier Lookup Price changed pill.                                                                                                                                         | Planned |
-| E2-V05 | Dashboard Price updates to apply card.                                                                                                                                     | Planned |
-| E2-V06 | Personal notification bell.                                                                                                                                                | Planned |
+| E2-P01 | One task per actually affected store for approval/conflict/manual/sale/offer/weighed changes; none for Warehouse or unchanged effect.                                      | Implemented; recorded source/engine unit PASS; current full browser/CI Pending |
+| E2-P02 | Sale first-day morning start task and last-day morning end preparation; app regular price changes tomorrow, not early. Local-zone/DST boundaries retained.                 | Implemented; recorded local-zone/DST unit PASS; current full browser/CI Pending |
+| E2-P03 | Newest change coalesces same pending task retaining history; unacted Undo cancels. Preserve evidence of prior physical acknowledgements and recheck current required work. | Implemented; recorded version/coalescing/Undo unit PASS; current full browser/CI Pending |
+| E2-P04 | Register/label/waiver/Done actor/location guards, Floor Worker opt-in off, bulk allowed-only operations and actual Regular/Promo template choice.                          | Implemented; unit + relevant scoped native PASS; current full browser/CI Pending; hardware Not performed |
+| E2-P05 | 24h supervisor reminder and 48h Owner/Manager escalation, configurable/deduplicated; personal newest-first bell, unread/read-all/routing.                                  | Implemented; recorded clock/recipient/read-state unit PASS; current full browser/CI Pending |
+| E2-P06 | Cashier Price changed pill until Done, old crossed-out; Sale uses Sale pill. Manager per-store progress actor/time and pending stores.                                     | Implemented; unit + scoped Cashier/progress native PASS; current full browser/CI Pending |
+| E2-V01 | Price updates list as Branch Supervisor.                                                                                                                                   | Reviewed in 28-image E2 gallery; current full browser/CI Pending |
+| E2-V02 | Task with both checkboxes, print/waitlist and waiver.                                                                                                                      | Reviewed in 28-image E2 gallery; E3 active-Undo correction verified; current full browser/CI Pending |
+| E2-V03 | Manager per-store progress.                                                                                                                                                | Reviewed in 28-image E2 gallery; current full browser/CI Pending |
+| E2-V04 | Cashier Lookup Price changed pill.                                                                                                                                         | Reviewed in 28-image E2 gallery; current full browser/CI Pending |
+| E2-V05 | Dashboard Price updates to apply card.                                                                                                                                     | Reviewed dashboard + live card details; current full browser/CI Pending |
+| E2-V06 | Personal notification bell.                                                                                                                                                | Reviewed in 28-image E2 gallery; current full browser/CI Pending |
 
-## E3 — Literal planned phone/install/hosting checklist
+## E3 — Literal phone/install/hosting checklist; implementation and instructions complete
 
-### E3-R13 — Planned
+### E3-R13 — Implemented; recorded proof passed; final browser/CI pending
 
-- [ ] Phones. C6 already made every screen work from 390 px up.
+- [x] Phones. C6 already made every screen work from 390 px up.
 
 - Check the new screens (People, Add/Edit person, Price updates, a price update task, the location dashboard, the bell, the Change price dialog and the sale alert) at 390 px and 430 px, in English and Persian, using the same layout checks as C6.
 - Phone lists: Products, Labels, Received, Suppliers, Payables and the dashboard's Recent invoices and Returns currently turn each row into a card of label/value pairs ("Product", "Product Code", "Details", a lone chevron under "Action"). On phones, use list rows like Lookup's: the name and Persian name on the left, the key value (price, amount or status) on the right, a chevron at the end, and secondary facts in one muted line. Tapping a row opens it. The Labels list keeps its checkbox at the start of each row.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Complete**. [13/13 recorded E3 Chromium/capture cases](evidence/e3/committed-native-verification.json) passed at exact source `90ad0f5`; source and all 61 served files stayed unchanged. [79 accepted original images](redesign-screenshots/pr-e3/README.md) document EN/FA 390/430 layouts and themes. Eighteen changed images were freshly opened; 61 exact scene-name/SHA-matching earlier reviewed images retain explicit provenance. **Current whole-browser/required CI: Pending. Selected corrected 72-case native replay: PASS; latest full application1,444/SDK75: PASS; palette-file/lint/build checks: PASS.**
 
-### E3-R14 — Planned
+### E3-R14 — Implemented; scoped browser proof passed; hardware installation not performed
 
 - [ ] Installable app: add a web app manifest, icons (the Super Arzon logo), the name "Super Arzon", light and dark theme colours, and standalone display. "Add to Home Screen" should open the app full screen with its own icon, like a normal app. Show a simple "No connection" page when offline.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Complete** for manifest, company icons/theme/standalone configuration, static-only service worker, bilingual No connection page and guarded deliberate updates. [Recorded Chromium PWA/capture proof](evidence/e3/committed-native-verification.json) passed; PWA build/worker/theme/safety unit cases are included in the [recorded combined 1,444-application pass](evidence/e3/final-0786-application/). The phone screenshot is an ordinary Chromium browser (`standaloneDisplayMode:false`). **Physical Home Screen installation, real Safari and hardware verification: Not performed. Complete final browser/CI: Pending.**
 
-### E3-R15 — Planned
+### E3-R15 — Implemented; recorded proof passed; final browser/CI pending
 
-- [ ] Testing on phones: don't create any accounts or resources; write the steps for me in docs/phone-demo-hosting.md:
+- [x] Testing on phones: don't create any accounts or resources; write the steps for me in docs/phone-demo-hosting.md:
 
 - Same Wi-Fi: how to open the prototype on a phone using my computer's address, what to check if it doesn't load (firewall, virtual machine network mode), and why the camera barcode scanner and Add to Home Screen don't work this way (they need HTTPS).
 - Private link: step by step, putting the built prototype on Cloudflare Pages (free) behind Cloudflare Access (free for under 50 users), so only people whose email I add can open it, over HTTPS. Include how to update it after each merge to main, and how to turn it off.
 - Explain clearly that each phone keeps its own separate demo data, so changes on one phone don't reach another until the real server build.
 
-Implementation: **Planned**. Automated/visual evidence: **Planned**. Record exact source, test names/results and screenshot findings here after execution; do not infer them from a checked plan.
+Implementation: **Complete as instructions**. [phone-demo-hosting.md](phone-demo-hosting.md) supplies exact Ubuntu/LAN/VM/firewall steps, HTTPS limits, separate protected production/preview hosting, owner updates/shutdown and separate per-device data. [Official-source documentation review](evidence/e3/hosting-source-review.json) records what could actually be read; provider UI, free allowances and device behavior still require owner verification if used. A live camera decoder is not implemented; Scan barcode focuses search. **Accounts/resources/deployment, actual Cloudflare policy validation and physical installation: Not performed.**
 
 ### E3 required proof
 
 | ID     | Required proof                                                                                                                                                                                     | Status  |
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| E3-P01 | Manifest valid/configured name/logo/icons/light-dark colours/standalone; actual offline No connection page.                                                                                        | Planned |
-| E3-P02 | People/Add-Edit/task/list/location dashboard/bell/Change price/sale alert at 390/430 EN/FA, keyboard/focus/reachability/whole text/inner card bounds.                                              | Planned |
-| E3-P03 | Products/Labels/Received/Suppliers/Payables/Recent invoices/Returns compact phone rows with required names/key value/end chevron/secondary line; Labels checkbox retained.                         | Planned |
-| E3-P04 | phone-demo-hosting.md gives LAN/firewall/VM mode/HTTPS limits plus private free Cloudflare Pages/Access owner setup/update/turn-off and independent per-device data. Create no accounts/resources. | Planned |
-| E3-V01 | Products as compact phone list rows.                                                                                                                                                               | Planned |
-| E3-V02 | Received as compact phone list rows.                                                                                                                                                               | Planned |
-| E3-V03 | App actually opened from a phone home screen, if real device available. Do not fabricate an installed-phone frame; report unavailable physical-device proof.                                       | Planned |
+| E3-P01 | Manifest valid/configured name/logo/icons/light-dark colours/standalone; actual offline No connection page.                                                                                        | Implemented; recorded unit + scoped Chromium/offline PASS; current full browser/CI Pending; hardware Not performed |
+| E3-P02 | People/Add-Edit/task/list/location dashboard/bell/Change price/sale alert at 390/430 EN/FA, keyboard/focus/reachability/whole text/inner card bounds.                                              | Implemented; recorded 390/430 EN/FA capture/layout PASS; 79 earlier-source images reviewed; corrected EN/FA unit frames reviewed; selected72 PASS; current whole-browser/CI Pending |
+| E3-P03 | Products/Labels/Received/Suppliers/Payables/Recent invoices/Returns compact phone rows with required names/key value/end chevron/secondary line; Labels checkbox retained.                         | Implemented; recorded unit + compact-row Chromium PASS; images reviewed; current full browser/CI Pending |
+| E3-P04 | phone-demo-hosting.md gives LAN/firewall/VM mode/HTTPS limits plus private free Cloudflare Pages/Access owner setup/update/turn-off and independent per-device data. Create no accounts/resources. | Instructions complete; source/document review recorded; provider setup/resources Not performed |
+| E3-V01 | Products as compact phone list rows.                                                                                                                                                               | Reviewed EN/FA 390/430 original images; current full browser/CI Pending |
+| E3-V02 | Received as compact phone list rows.                                                                                                                                                               | Reviewed EN/FA 390/430 original images including corrected RTL; current full browser/CI Pending |
+| E3-V03 | App actually opened from a phone home screen, if real device available. Do not fabricate an installed-phone frame; report unavailable physical-device proof.                                       | Not performed: no physical Home Screen/device available; ordinary browser frame labelled honestly |
 
 ## E screenshot variants and real-device limits
 
-People, picker/dashboard, task/progress, cashier pill and bell scenes require English light, English dark, Persian and phone screenshots. All new screen layouts additionally pass390/430 English/Persian checks. Phone-only list/home-screen scenes remain phone evidence; do not invent desktop installed-phone images. All old tests still pass. Real push/email is planned only; HTTPS install/camera and actual device verification are reported separately from Chromium viewport tests.
+The requested scene variants are recorded in the [20-image E1 gallery](redesign-screenshots/pr-e1/README.md), [24 primary + 4 supplemental E2 gallery](redesign-screenshots/pr-e2/README.md) and [79-image E3 gallery](redesign-screenshots/pr-e3/README.md). E3's recorded scoped run covers the new EN/FA 390/430 layouts, compact rows, active Undo spacing and bilingual offline page on source `90ad0f5`; image-source provenance is not replaced by the later `f1545df` unit-source identity. Earlier failed visual findings and original PNGs remain retained.
+
+The final combined application/SDK/lint/build checks pass at `f1545df`. Both complete original browser projects are still running on that exact code and a fresh build; no complete final browser pass is claimed. Phone-width and ordinary dark browser screenshots do not establish a Home Screen installation. **Physical Home Screen, real Android/iPhone Safari, printer alignment, live register integration and private deployment: Not performed.** Real push/email remain planned only. Each device/browser/site address keeps separate fictional data.
 
 ## Required review demo scripts
 
 | ID    | Required proof                                                                                                        | Status  |
 | ----- | --------------------------------------------------------------------------------------------------------------------- | ------- |
-| E-D01 | As manager, Alerts → Black Tea conflict → Apply this price to all using North York price.                             | Planned |
-| E-D02 | As rh-supervisor, Richmond Hill task and notification → Print label → tick both boxes → Mark as done.                 | Planned |
-| E-D03 | As cashier at Richmond Hill, show Price changed pill until task Done.                                                 | Planned |
-| E-D04 | As manager, per-store progress shows Richmond Hill done with actor/time and other pending stores.                     | Planned |
-| E-D05 | As ny-floor, request Sunflower Oil sale at North York; pending Products/Lookup.                                       | Planned |
-| E-D06 | As manager, approve request; ny-floor notification and North York start task.                                         | Planned |
-| E-D07 | As manager, Stainless Steel Pot sale at all stores until next week; rh-supervisor completes Richmond Hill start task. | Planned |
-| E-D08 | Post fictional North York cost-increase original and show Cost went up during a sale.                                 | Planned |
+| E-D01 | As manager, Alerts → Black Tea conflict → Apply this price to all using North York price.                             | Script supplied: combined Ubuntu guide §7; actual RH 6.99→6.49 task |
+| E-D02 | As rh-supervisor, Richmond Hill task and notification → Print label → tick both boxes → Mark as done.                 | Script supplied: §7; actual print confirmation or permitted waiver; hardware Not performed |
+| E-D03 | As cashier at Richmond Hill, show Price changed pill until task Done.                                                 | Script supplied: §7, check Cashier before Done; scoped native/image proof recorded |
+| E-D04 | As manager, per-store progress shows Richmond Hill done with actor/time and other pending stores.                     | Script supplied: §7; fixture changes only RH, so other pending stores are not fabricated |
+| E-D05 | As ny-floor, request Sunflower Oil sale at North York; pending Products/Lookup.                                       | Script supplied: §8; withdraw seeded pending request before sending a new one |
+| E-D06 | As manager, approve request; ny-floor notification and North York start task.                                         | Script supplied: §8; genuine requester notification and store task |
+| E-D07 | As manager, Stainless Steel Pot sale at all stores until next week; rh-supervisor completes Richmond Hill start task. | Script supplied: §8; Change sale edits existing NY sale; complete RH task |
+| E-D08 | Post fictional North York cost-increase original and show Cost went up during a sale.                                 | Script supplied: §9; actual downloaded HW-5012 SVG, one post per reset |
 
 ## Final delivery and evidence records
 
 | ID     | Required proof                                                                                                                                                                                                                     | Status  |
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| ALL-01 | Each stage has source docs before implementation and its own final unit/pricing/lint/type/build/complete browser CI evidence, with exact source hashes and actual failures/skips/retries.                                          | Planned |
-| ALL-02 | All existing tests/seed pricing fixtures stay; no skipped real failure or relaxed permission/financial/geometry/contrast guard.                                                                                                    | Planned |
-| ALL-03 | Unedited final screenshots individually reviewed against owner annotations with source/build/image hashes, findings/differences/framing. Exact print geometry and retained original-file/migration evidence stay.                  | Planned |
-| ALL-04 | Finish with what changed, all four actual branch names, exact fresh/update commands for the last branch, click-by-click scripts and anything unavailable. No local action required merely to compensate for incomplete cloud work. | Planned |
-| ALL-05 | PR descriptions contain What changed, How Ali can test it, Tests added, Docs updated, Open questions. Owner reviews all four; no unapproved automatic merge/resources/deployment.                                                  | Planned |
+| ALL-01 | Each stage has source docs before implementation and its own final unit/pricing/lint/type/build/complete browser CI evidence, with exact source hashes and actual failures/skips/retries.                                          | Source docs and scoped/final app evidence recorded; full final native and required CI Pending |
+| ALL-02 | All existing tests/seed pricing fixtures stay; no skipped real failure or relaxed permission/financial/geometry/contrast guard.                                                                                                    | Retained guards/23 seed cases pass final app; complete final browser Pending; historical failures preserved |
+| ALL-03 | Unedited final screenshots individually reviewed against owner annotations with source/build/image hashes, findings/differences/framing. Exact print geometry and retained original-file/migration evidence stay.                  | 75/20/28/79 originals reviewed with provenance; scoped geometry/file proof recorded; current full browser Pending |
+| ALL-04 | Finish with what changed, all four actual branch names, exact fresh/update commands for the last branch, click-by-click scripts and anything unavailable. No local action required merely to compensate for incomplete cloud work. | Combined Ubuntu/phone guides and all branches supplied; final delivery waits for outstanding checks |
+| ALL-05 | PR descriptions contain What changed, How Ali can test it, Tests added, Docs updated, Open questions. Owner reviews all four; no unapproved automatic merge/resources/deployment.                                                  | Four stacked PRs open; final evidence/status refresh Pending; owner approval/merge Pending |
 
 ## Actual results
 
-C8 final-source browser CI and the 75 original screenshot reviews are recorded above. They do not establish E1/E2/E3 completion.
+### Current recorded evidence
 
-E1 [full app/pricing v5](evidence/e1/app-full-v5.json) completed with **1,294/1,294 passed**, zero failures/pending/todo and actual exit **0**, unchanged 553-input fingerprint `2c4d5709d4538d8d01cd45309712556fc2e6fb849ce4467ae641bdb47a767539`. [Current-source comparison](evidence/e1/app-v5-current-source-match.json) records seven unsupported ByRole-option removals, runtime formatting with identical emitted JavaScript, and three retained browser fixture/readiness changes. Seed/assets and all other inputs remain unchanged; eight original C5 cases passed in v13 and final two foreign-event cases passed separately in v14; no complete retained742 pass is claimed. This is not a new whole-unit execution.
+<!-- FINAL_TEST_ONLY_VERIFICATION -->
+Latest test-only source `a6c66dc`: **1,444/1,444 application tests and 75/75 SDK tests passed**, actual exits **0**, zero failed/pending cases, no global application errors and all595 inputs unchanged. Normal full lint and a fresh build passed; all61 output files exactly match the native-tested `0786ea2` build. E1/E2 each passed their entire11-case palette/store file plus scoped lint/format checks. The three original exact colors and default1,000ms wait budget remain. The initial formatting failures and the first archived-run PDF import failure (1,392 assertions passed, nine suites unloaded/52 cases unexecuted, SDK not run) are retained separately. The fresh complete replay uses only the documented private dependency-path adapter, without production/module/assertion/timeout changes. [Actual final validation](evidence/e3/final-a6c66dc-validation/). Full current812 browser/required CI remains incomplete.
 
-E1 [bounded repaired native v11](evidence/e1/native-repaired-v11.json) completed **4/4**, actual TypeScript/Vite/browser exits **0**, zero skips/flaky/retries/unhandled errors, unchanged 553 inputs and 55 built/served assets. The retained **742-case** attempt was interrupted at actual **exit 130**: [95 passed, four failed, one interrupted, 642 NOT_RUN, zero actual conditional skips](evidence/e1/retained-full-v12-classification.json). Raw reporter skipped=643 must not be misreported as intentional skips. [Required standard checks](evidence/e1/final-standard-checks.json) passed final required lint **exit 0** at recorded v2 inputs, with SDK **75/75** and full build **exit 0** at their separately recorded v1 inputs; no same-input rerun is implied. Bounded native v13 retained **eight original C5 passes and two foreign-reading failures**; final revised public-event two-case proof passed separately **2/2** in v14; corrected full browser verification, the 20 E1 screenshots/individual review, stacked draft PR and exact-head CI remain pending. Recovery is implemented and all 14 genuine cases are covered in the full app run. Earlier overlapping/failing runs remain preserved separately. E2/E3 and physical-phone installation are separate stages.
+- **C8:** final-source CI recorded 700 browser passes, 42 existing intentional skips, zero failed/flaky outcomes. Its 75 unedited originals were reviewed individually. [Source-specific C8 review and results](PR_C8_REVIEW.md).
+- **E1:** recorded actual application 1,323/1,323, SDK 75/75, lint/build and sign-in/setup/reset native 12/12 passed on the versions named in the [E1 review](PR_E1_REVIEW.md). All 20 E1 images were reviewed or verified as exact byte matches to individually reviewed originals. [Committed capture checks](evidence/e1/final-review/committed-capture.json) and [manual review](evidence/e1/final-review/manual-review.json).
+- **E2:** the [engine proof](evidence/e2/recovered-engine-proof-v9.json) passed 260 scoped affected cases with source guards, TypeScript, scoped ESLint and formatting. The [UI proof](evidence/e2/ui-browser-verification.json) records 13 affected UI cases, 8/8 native cases and 4/4 capture cases, producing 24 primary + 4 supplemental reviewed images. These scopes overlap; they are not added into a whole-application total. Early missing-header, History-line, Persian-direction and active-Undo visual findings remain retained. E3 owns the corrected active-Undo layout proof.
+- **Recorded combined `0786ea262b6ebdf573cd02f2b56479952633ee21`:** [1,444/1,444 application cases, separate 75/75 SDK cases, normal full lint and a fresh TypeScript/Vite build](evidence/e3/final-0786-application/), actual command exits **0**, no global application errors or changed source. All 23 seed pricing cases remain included. Latest final E1/E2 palette files passed11/11 each and E3 lint/build passed with61 identical output files; latest full E3 application1,444/SDK75 passed separately; source boundaries are retained.
+- **E3 recorded scoped capture:** [13/13 native/capture cases](evidence/e3/committed-native-verification.json), no skips/flaky/retries, exact source `90ad0f5`, unchanged source/build/all 61 served files. All [79 accepted images](redesign-screenshots/pr-e3/README.md) retain individual review provenance: 18 changed images freshly opened, 61 exact-name/SHA-matching earlier passing images reused explicitly. Both previously failed Persian Received frames were freshly reviewed.
+- **Late UI repairs:** invoice Back's duplicate asynchronous navigation and Payables' same-location refresh race are fixed without money or permission changes. [Identical final pure navigation fixture: old production fails, patched passes](evidence/e3/invoice-browser-back-pure-final/verification.json). [Payables three-case old/patched proof](evidence/e3/payables-reselection/final-evidence.json). E1/E2 have their own [E1 four-case](evidence/e1/late-race-backports/verification.json) and [E2 four-case](evidence/e2/late-race-backports/verification.json) backport results. Bounded fixture followups and these repairs do not relabel older failed whole-browser runs.
+- **Selected corrected native verification: 72/72 PASS at `0786ea2`.** Desktop36 and Phone36, four complete selected files, actual exits0, no skips/retries/global errors, unchanged source/build/all61 served files. Actual English/Persian release frames were manually viewed and passed. [Native packet](evidence/e3/final-0786-native/README.md). **Complete current-source812 browser/required CI remains Pending.** The completed older fullf154 run769/1/42 is retained as a failed whole run; no selected result changes its classification.
+- **Required E1/E2/E3 GitHub CI: Unresolved.** At the [recorded corrected-code snapshot](evidence/e3/exact-ci-a6c66dc/README.md), C8 required CI passed; E1/E2/E3 current full required checks remained unfinished. Corrected E3 `a6c66dc` [run38808926292](https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/38808926292) passed foundation, prototype lint, unit/pricing and build, and entered browsers. E1/E2 exact statuses and superseded concurrency cancellations are retained separately. The earlier exact0786 [color assertion failure](evidence/e3/exact-ci-0786/) remains a failure; the corrected code now passed that CI unit step. [Older explicit30m0s job-limit failures](evidence/e3/exact-ci-f154/) are distinct. No current complete812/required-CI pass is inferred. All four PRs remain unmerged; main is unchanged. A later docs-only publication can enqueue fresh checks and does not relabel these recorded results. The [prototype-only30→90minute proposal](ci-prototype-time-budget.md) remains unapplied outside the owner path scope.
 
-## E2 source-first acceptance revision — 2026-10-15
+### Preserved historical results and failures
 
-Current E2 contract: requirements §36 and Decision 034; E1 remains the inherited role/security contract. Every item below is **Planned until actual evidence is recorded**: all price/ordinary-offer/Sale/weighed source tasks; no-op/Warehouse exclusions; current-version register/label/waiver and physical-print guards; coalescing/Undo; Sale local start/last-day/midnight/DST; current personal recipients/routing/bell read state and 24/48 reminders; Manager per-store progress and Cashier pill; verified additive no-backlog migration; complete regression checks. Required 24 screenshots are list/task/progress/pill/dashboard/bell × EN light/EN dark/FA/phone. No successful test, individual image review, physical print or installed-phone proof is implied by this source entry.
+- Recorded `f1545df` application/SDK/lint/build passed **1,430/75**, actual exits0, [source-pinned proof](evidence/e3/final-combined-f154/). Its complete original browser replay later finished **769 pass, 1 real unit-wrap fail, 42 pre-existing intentional skips**, all812 accounted for, no unrun/interrupted/flaky/retried/global-error outcomes; [complete preserved reports](evidence/e3/retained-native-full-f154/). This is not a final pass.
+- `431bdba` first application run **1,429 pass/1 fail**, followed by an unchanged-source diagnostic **1,430/1,430 pass**; SDK75 passed and actual failed/successful exits remain separately retained in [application history](evidence/e3/retained-app-431/). Its selected native28/28 passed, but the [Persian manual frame failed](evidence/e3/sale-inline-units-native/manual-review.json). The shared formatter/oracle [old/new proof](evidence/e3/persian-compound-units-private/) retains old12failed/16passed versus corrected28passed unit outcomes and a genuine old-oracle native failure versus corrected pass. No failed frame or original run is relabeled clean.
+- Exact0786 GitHub run38806913395 failed the brand-color unit assertion; the independently completed local1444/SDK75 proof is separate. The later test-only fixture waits for all three original exact CSS values, retaining default1000ms. Final E1/E2 palette files passed11/11 each, E3 full lint/build passed and all61 build outputs match the native-tested0786 bytes; latest full E3 application1,444/SDK75 passed separately. Initial formatting failures remain retained.
+- E1 [full app/pricing v5](evidence/e1/app-full-v5.json) passed **1,294/1,294**, actual exit 0, unchanged 553-input fingerprint `2c4d5709d4538d8d01cd45309712556fc2e6fb849ce4467ae641bdb47a767539`. Its [recorded source comparison](evidence/e1/app-v5-current-source-match.json) identifies seven unsupported ByRole-option removals, runtime formatting with identical emitted JavaScript and three retained browser readiness changes. This is historical source-specific evidence, not the current complete application result.
+- E1 [bounded repaired native v11](evidence/e1/native-repaired-v11.json) passed **4/4**, actual type/build/browser exits 0, unchanged 553 inputs and 55 built/served assets. The older [742-case retained attempt](evidence/e1/retained-full-v12-classification.json) was explicitly interrupted at exit 130: **95 passed, 4 failed, 1 interrupted, 642 not run, zero actual conditional skips**. Raw reporter skipped=643 must not be represented as intentional skips. Earlier [standard checks](evidence/e1/final-standard-checks.json) preserve their distinct v1/v2 source boundaries. V13 retained **8 original C5 passes and 2 foreign-reading failures**; final public-event v14 separately passed **2/2**. No overlapping totals are added.
+- The later E1-only full browser attempt was deliberately stopped: **36 passed, 2 interrupted, 740 not run**, not a completed pass. See [the E1 review](PR_E1_REVIEW.md).
+- Complete combined source `5741353`: **710 passed, 60 failed, 42 pre-existing intentional skips**, actual exit 1, no not-run/interrupted/flaky outcomes or retries. [Retained complete matrix](evidence/e3/retained-native-full-574/summary.json).
+- Stopped combined source `4524c6a`: **17 passed, 2 interrupted, 793 not run**. Its owned interruption and reason are retained in [the interrupted attempt](evidence/e3/interrupted-4524/README.md).
+- Complete combined source `e47e0c6`: **759 passed, 11 failed, 42 pre-existing intentional skips**, actual exit 1, no not-run/interrupted/flaky outcomes, retries or global errors; about 53.3 minutes. [Original report, complete matrix and failures](evidence/e3/retained-native-full-e47/README.md). Both real 20-original-photo cases passed in that run. The identified failure families received bounded corrections; the final complete replay is still required.
+- At `e47e0c6`, an initial application run had all 1,426 assertions pass but actual process exit **1**. A diagnostic on unchanged source subsequently passed **1,426/1,426**, actual exit **0**, no global errors. Both actual outcomes remain in [post-print evidence](evidence/e3/post-print-final/verification.json); neither is substituted for later source-specific checks.
+- Source `7964fab` application verification was explicitly interrupted after normal lint found a test observer writing an external variable during React render. That lint genuinely failed. The final fixture observes in `useLayoutEffect`; old interrupted application and failed lint logs are retained separately in [the final combined evidence](evidence/e3/final-combined-f154/README.md). The production navigation fix is independently verified with the identical final pure fixture.
+
+## E2 source-first acceptance revision — 2026-10-15, current execution status
+
+Current E2 contract remains requirements §36 and Decision 034; E1 supplies the inherited role/security contract. All listed price/ordinary-offer/Sale/weighed task sources, no-op/Warehouse exclusions, current-version register/label/waiver guards, coalescing/Undo, local Sale timing/DST, current recipients, personal read/routing state, 24/48 reminders, Manager progress, Cashier pill and additive no-backlog migration are implemented. Recorded engine/UI/native and screenshot evidence is linked above; relevant source/runtime cases are included in the final combined application pass. **Complete current-source812 browser and required CI remain Pending; selected72 passed at0786.** Push/email are documentation-only; physical print and installed-phone proof remain Not performed.
+
+## E3 source-first acceptance revision — 2026-10-15, current execution status
+
+Current E3 contract remains requirements §37 and Decision 035. Compact rows, protected navigation/privacy/selection, EN/FA 390/430 screens and active Undo spacing, actual manifest/icons/standalone scope, bilingual offline page, static-only public caching including `.mjs` with login/private/document exclusions, and real pending-command/file/migration/printing/dirty-work update guards are implemented with recorded unit and scoped Chromium proof. The 79-image gallery retains exact source/build/image provenance. **Complete current-source812 browser and required CI remain Pending; selected72 passed at0786.** Hosting is instructions only; hardware Home Screen/real Safari/physical printer/private deployment remain **Not performed**. Ordinary browser screenshots cannot close hardware requirements.

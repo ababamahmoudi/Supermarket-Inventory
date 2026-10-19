@@ -1,0 +1,22 @@
+{
+  "baseline_commit": "e47e0c665bc85cbb619f9ab4c946a7dfe6d27e8a",
+  "kind": "test-only genuine inert legacy migration setup isolation",
+  "files": [
+    {
+      "path": "prototype/tests/storage-c6.spec.ts",
+      "source": "/tmp/e3-storage-inert-migration-fix/staged/prototype/tests/storage-c6.spec.ts",
+      "baseline_sha256": "269f6200fc58f8983292a094e6e3820dc29d621cc17ba573132c5cbe92335c9a",
+      "sha256": "86b214af39ee060f736b8d0770c86f6b4ce95d8a9c4864a9d4ae726d90ce9d07"
+    }
+  ],
+  "reason": "Original near-full trace setup URL returned exact9039byte production app index via service worker. It raced database deletion/text preparation; generic existing-file readiness accepted old canonical demo instead of prepared source. Same approved inert migration isolation as c8-migration fixture.",
+  "preserved": [
+    "strict real5MiB storage quota and5MiB-minus4096 fixture byte budget",
+    "actual408165byte JPEG expectedhash/original/legacy/logo source retention",
+    "exact raw main/legacy backups and digest verification",
+    "malformedHistory fail-closed retainedraw/reset/restore proof",
+    "disabledFileDB untouchedinlineevidence/fail-closed privacy",
+    "original testandassertion budgets,casecounts,retries/skips",
+    "normal app/PWA code and all independentPWA tests unchanged"
+  ]
+}

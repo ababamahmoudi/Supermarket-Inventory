@@ -75,16 +75,63 @@ for (const language of ["en", "fa"] as const) {
           for (const [rowIndex, row] of [
             ...table.querySelectorAll("tbody tr"),
           ].entries()) {
+            const compact = row.matches(".phone-list-row");
             if (
-              row.children.length !== headers.length ||
-              [...row.children].some(
-                (cell) => (cell as HTMLTableCellElement).colSpan > 1,
-              )
+              !compact &&
+              (row.children.length !== headers.length ||
+                [...row.children].some(
+                  (cell) => (cell as HTMLTableCellElement).colSpan > 1,
+                ))
             )
               continue;
             if (stacked) {
               cards++;
               const bounds = row.getBoundingClientRect();
+              if (compact) {
+                // E3 replaces repeated label/value cards with explicit list
+                // regions. Keep the same containment check on every cell.
+                for (const region of [
+                  "name",
+                  "value",
+                  "secondary",
+                  "chevron",
+                ]) {
+                  const matches = row.querySelectorAll(
+                    `:scope > .phone-list-${region}`,
+                  );
+                  const element = matches[0] as HTMLElement | undefined;
+                  if (
+                    matches.length !== 1 ||
+                    !element ||
+                    element.getBoundingClientRect().height <= 0 ||
+                    (region !== "chevron" && !element.textContent?.trim())
+                  )
+                    failures.push(
+                      `table ${tableIndex}, phone list ${rowIndex}: missing visible ${region}`,
+                    );
+                }
+                if (
+                  row.querySelectorAll(".phone-list-chevron .table-row-link")
+                    .length !== 1
+                )
+                  failures.push(
+                    `table ${tableIndex}, phone list ${rowIndex}: expected one record chevron`,
+                  );
+                if (row.querySelector(".table-details-toggle"))
+                  failures.push(
+                    `table ${tableIndex}, phone list ${rowIndex}: obsolete detail disclosure`,
+                  );
+                const selected = table.closest(".has-phone-selection");
+                if (
+                  selected &&
+                  row.querySelectorAll(
+                    ".phone-list-selection [role='checkbox']",
+                  ).length !== 1
+                )
+                  failures.push(
+                    `table ${tableIndex}, phone list ${rowIndex}: missing selection checkbox`,
+                  );
+              }
               for (const [columnIndex, cell] of [...row.children].entries()) {
                 const rect = cell.getBoundingClientRect();
                 const error = Math.max(
@@ -99,6 +146,18 @@ for (const language of ["en", "fa"] as const) {
                   failures.push(
                     `table ${tableIndex}, phone card ${rowIndex}, column ${columnIndex}: containment ${error}px`,
                   );
+                if (compact) {
+                  if (
+                    cell.getAttribute("data-column-label") ||
+                    !["none", "normal"].includes(
+                      getComputedStyle(cell, "::before").content,
+                    )
+                  )
+                    failures.push(
+                      `table ${tableIndex}, phone list ${rowIndex}: obsolete field caption`,
+                    );
+                  continue;
+                }
                 const label = cell.getAttribute("data-column-label");
                 const headerLabel = headers[columnIndex].cloneNode(
                   true,

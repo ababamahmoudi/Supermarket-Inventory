@@ -1,0 +1,9 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "lint"
+  ],
+  "actual_exit_code": 0,
+  "seconds": 60.13367819786072
+}

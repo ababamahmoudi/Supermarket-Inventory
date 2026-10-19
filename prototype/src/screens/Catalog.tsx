@@ -70,7 +70,6 @@ import {
   ManualPricePill,
 } from "../manual-price-presentation";
 import { receivedLog } from "../received";
-import { formatCasesAndUnits, formatQuantity } from "../formatters";
 import "./manual-entry.css";
 import "./c5-catalog-offers.css";
 import "../catalog-c7.css";
@@ -123,6 +122,8 @@ import {
 } from "../ui";
 
 import {
+  CasesAndUnits,
+  QuantityText,
   activityLabel,
   categoryLabel,
   demoUserLabel,
@@ -2009,19 +2010,19 @@ function ProductDetail({ product }: { product: Product }) {
                     {configuredBranchLabel(state.config, entry.branch, lang)}
                   </td>
                   <td>
-                    <LtrText>
-                      {entry.sold_by === "weight"
-                        ? formatQuantity(
-                            entry.source_quantity ?? String(entry.units),
-                            entry.source_quantity_unit ?? "lb",
-                            lang,
-                          )
-                        : formatCasesAndUnits(
-                            entry.units,
-                            entry.units_per_case,
-                            lang,
-                          )}
-                    </LtrText>
+                    {entry.sold_by === "weight" ? (
+                      <QuantityText
+                        value={entry.source_quantity ?? String(entry.units)}
+                        unit={entry.source_quantity_unit ?? "lb"}
+                        language={lang}
+                      />
+                    ) : (
+                      <CasesAndUnits
+                        units={entry.units}
+                        unitsPerCase={entry.units_per_case}
+                        language={lang}
+                      />
+                    )}
                   </td>
                   <td>
                     <LtrText>{entry.supplier}</LtrText>
@@ -3076,6 +3077,11 @@ export function Products() {
             <div className="stack">
               <DataTable
                 className={`catalog-products-table${mayReadCost ? " with-store-cost" : ""}`}
+                phoneList={{
+                  name: "name",
+                  value: "price",
+                  secondary: ["code", "status"],
+                }}
                 columns={tableColumns.columns}
               >
                 <thead>

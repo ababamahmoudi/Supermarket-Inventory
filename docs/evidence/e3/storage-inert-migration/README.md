@@ -1,0 +1,9 @@
+# Native legacy migration setup isolation
+
+Actual replay:6/6 original cases passed, zero failures/skips/retries/global errors, CLI exit0, one worker. Both Desktop and Phone exercised malformed History retention/reset, strict near-full5MiB migration and disabled file-database failure. Exact original per-test/assertion budgets remain, including the120-second near-full case.
+
+The original failing trace served the exact9039-byte production application shell at the URL intended to be an inert first-import setup page. Its real service worker bypassed the test route. A live app could therefore initialize before the prepared legacy source and fault environment existed; generic readiness accepted its older fictional SVG state. The raw prepared source contained the real408165-byte generated JPEG with invoice/legacy/logo references and exactly5MiB minus4096bytes of text storage. This evidence does not justify a production data-loss change.
+
+The test-only helper now awaits service-worker unregistration, leaves the controlled app through about:blank, then verifies the original inert title, no module scripts and no top bar before deleting the authority database or the intended business record. Legacy text, immutable files, existing backups and authority retention rules stay intact. Actual app navigation still registers its worker normally.
+
+All original raw backup/hash/source-byte, strict quota, original/legacy/logo, privacy/fail-closed, reset and reload assertions remain. The61normal-build asset hashes and all recorded source files were unchanged before/after; exact e47 production build bytes were reused explicitly. This packet is a bounded correction replay, not one clean812-case run. Exact raw reports, logs, pins, attachments, original failure context and patch are compressed to preserve original bytes through formatting hooks.

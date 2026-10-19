@@ -216,8 +216,94 @@ for (const language of ["en", "fa"] as const)
       1440,
     );
     expect(restored.failures).toEqual([]);
+    // Cover the actual seeded Persian compound too. The earlier raw oracle
+    // recognized English cm but missed the visible ۲۴ / سانتی‌متری split.
+    // This edits only the rendered negative control, then restores it exactly.
+    await page.goto("/#product?code=0012");
+    const persianText = page
+      .locator(".product-page .page-header .unit-text")
+      .filter({ hasText: "سانتی‌متری" })
+      .first();
+    const persianCompoundText = "۲۴ سانتی‌متری";
+    await expect(persianText).toBeVisible();
+    await expect(persianText.locator(".unit-fragment")).toHaveText(
+      persianCompoundText,
+    );
+    const persianTextNode = await persianText.elementHandle();
+    if (!persianTextNode)
+      throw new Error("Persian product text is unavailable");
+    const persianClean = await inspectResponsiveLayout(
+      page,
+      "persian-compound-units",
+      language,
+      1440,
+    );
+    expect(persianClean.unitFragments).toContainEqual({
+      text: persianCompoundText,
+      lines: 1,
+    });
+    expect(persianClean.failures).toEqual([]);
+    const persianSaved = await persianTextNode.evaluate((element) => {
+      const original = {
+        html: element.innerHTML,
+        style: element.getAttribute("style"),
+        text: element.textContent,
+      };
+      element.replaceChildren(
+        document.createTextNode(element.textContent ?? ""),
+      );
+      Object.assign((element as HTMLElement).style, {
+        display: "block",
+        width: "18px",
+        whiteSpace: "normal",
+      });
+      return original;
+    });
+    let persianBroken;
+    try {
+      persianBroken = await inspectResponsiveLayout(
+        page,
+        "raw-persian-compound-negative-control",
+        language,
+        1440,
+      );
+      expect(
+        persianBroken.failures.some((value) =>
+          value.includes(
+            `plain-text unit fragment broken across lines: ${persianCompoundText}`,
+          ),
+        ),
+      ).toBe(true);
+    } finally {
+      await persianTextNode.evaluate((element, original) => {
+        element.innerHTML = original.html;
+        if (original.style === null) element.removeAttribute("style");
+        else element.setAttribute("style", original.style);
+      }, persianSaved);
+    }
+    await expect(persianText).toHaveText(persianSaved.text ?? "");
+    const persianRestored = await inspectResponsiveLayout(
+      page,
+      "persian-compound-restored",
+      language,
+      1440,
+    );
+    expect(persianRestored.failures).toEqual([]);
     await info.attach("Unmarked real Activity size wrapping negative control", {
-      body: JSON.stringify({ clean, broken, restored }, null, 2),
+      body: JSON.stringify(
+        {
+          clean,
+          broken,
+          restored,
+          persianCompound: {
+            clean: persianClean,
+            broken: persianBroken,
+            restored: persianRestored,
+          },
+        },
+        null,
+        2,
+      ),
       contentType: "application/json",
     });
   });

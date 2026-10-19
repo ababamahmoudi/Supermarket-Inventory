@@ -1,0 +1,59 @@
+{
+  "commit": "90ad0f5a1bb67fbc4b56653dbdc911707c57c98d",
+  "source_unchanged": true,
+  "checks": [
+    {
+      "name": "app",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--maxWorkers=1",
+        "--reporter=json",
+        "--outputFile=/tmp/e3-combined-verified-final/app.json"
+      ],
+      "exit_code": 0,
+      "seconds": 635.97
+    },
+    {
+      "name": "sdk",
+      "command": [
+        "npm",
+        "run",
+        "test:sdk",
+        "--",
+        "--maxWorkers=1",
+        "--reporter=json",
+        "--outputFile=/tmp/e3-combined-verified-final/sdk.json"
+      ],
+      "exit_code": 0,
+      "seconds": 4.238
+    },
+    {
+      "name": "lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 0,
+      "seconds": 84.209
+    }
+  ],
+  "app": {
+    "numTotalTests": 1422,
+    "numPassedTests": 1422,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numFailedTestSuites": 0,
+    "success": true
+  },
+  "sdk": {
+    "numTotalTests": 75,
+    "numPassedTests": 75,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numFailedTestSuites": 0,
+    "success": true
+  }
+}

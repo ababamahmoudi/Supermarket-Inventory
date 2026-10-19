@@ -1,0 +1,1351 @@
+{
+  "source": "Frozen final E3 diagnostic assembly, prior to manual corrections; no committed-source claim.",
+  "all_originals_individually_opened": true,
+  "count": 79,
+  "outcomes": {
+    "issues_found": 8,
+    "passed_visual_review_with_limits": 20,
+    "pass": 46,
+    "capture_transient": 5
+  },
+  "physical_phone_installation": "NOT PERFORMED",
+  "dark_phone_display_mode": "Ordinary Chromium browser; standaloneDisplayMode:false",
+  "findings": "8 images reveal Returns key-value alignment or unprotected24cm unit;5 reveal transient popup entrance. All original files retained unchanged. Stage correction manifest separately; final Git replay/manual review pending.",
+  "entries": [
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/dashboard-en-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-en/dashboard-en-390.png",
+      "sha256": "1c35aac818441b05810b1947c9a2dfece49e9f8d2d78b5c0b81aaef06accde02",
+      "viewed": true,
+      "outcome": "issues_found",
+      "observations": [
+        "Recent invoices use transparent-appearing divided rows with supplier at start, Posted at end, one end chevron and muted reference/location/date facts.",
+        "Exactly four top KPI cards are visible; the narrow dashboard stacks without visible text/control collision or page-edge clipping.",
+        "The Supplier balances legacy cards remain unchanged and are outside the seven specified compact-list conversions.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [
+        {
+          "id": "dashboard-returns-key-position",
+          "severity": "medium",
+          "observation": "Dashboard Returns Open/Partially resolved status is below the location/product facts at the name/start edge, rather than in the logical end/value position required by requirements §37. This repeats in both languages at 390 and 430 CSS px. No collision is present."
+        }
+      ],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/labels-en-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-en/labels-en-390.png",
+      "sha256": "f0fb6983d6d2e16fc7a52a0fa9a7d8badce2923aab17730fea9903485bc51d83",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Actual row-start checkbox remains separate from the bilingual product name and the single trailing chevron; rows have quiet dividers without grey card fills.",
+        "Approved prices, offer facts, weighed prices, and the no-approved-price state are visible without price/control overlap.",
+        "No row selection is active in this still, so sticky selected-products bar positioning is not visually demonstrated here.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/payables-en-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-en/payables-en-390.png",
+      "sha256": "60f401046581460a6a0b14edb5a7ec70649f8d69a5ba5faf86c635ace208b36c",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names appear at logical start, balances at logical end, branch/date in a muted secondary line, and one end chevron per row.",
+        "Long Golden Grain Distributors and $1,260.00 fit without clipping or name/value collision.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/products-en-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-en/products-en-390.png",
+      "sha256": "39cc18251e2ad42cfa5e685af87ec4243843a3c06d9c0ae2939dc339ad045f32",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "White/transparent-appearing divided product rows retain bilingual names, prices or honest unavailable value, muted product codes/status facts, and one trailing chevron.",
+        "Sale/requested-price and weighed-price content remains visible without clipping or overlapping row controls; identifying names wrap at spaces.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/received-en-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-en/received-en-390.png",
+      "sha256": "d7308e995dc5acef835503e18ff6156e009830cbcc018bd989e302a5dc93c471",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Bilingual product names, quantity at logical end, muted location/supplier/date facts, and one end chevron sit in transparent-appearing divided rows.",
+        "Dates and case/unit quantity values remain intact; long supplier secondary facts wrap to a further line where needed rather than clip or overlap.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/returns-en-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-en/returns-en-390.png",
+      "sha256": "ee0534d23e5eff0aee2ac892236ea695dc32503086f77056145c0545152a88dd",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names and lifecycle status values occupy start/end positions, with one trailing chevron and a muted reference/location/date line.",
+        "Long supplier names wrap at spaces; statuses and dates remain intact and controls do not overlap.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-en/suppliers-en-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-en/suppliers-en-390.png",
+      "sha256": "c4008d565bc8dd7c0dfe1fb1f3d4a7acab78129ead65dfdda90dbcaaca289bc0",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names appear at logical start, balances at logical end, last-delivery date or honest dash below, and one end chevron per row.",
+        "Names and balances fit without overlap or clipping; summary money visibility is observed only for this captured view and does not prove role privacy.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/dashboard-fa-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-fa/dashboard-fa-390.png",
+      "sha256": "4b3afe8e3b8e18c43ca4f70b4851f9162989b68bc2b35b7cc11a5484d34f9e4d",
+      "viewed": true,
+      "outcome": "issues_found",
+      "observations": [
+        "Recent invoices use transparent-appearing divided rows with supplier at start, Posted at end, one end chevron and muted reference/location/date facts.",
+        "Exactly four top KPI cards are visible; the narrow dashboard stacks without visible text/control collision or page-edge clipping.",
+        "The Supplier balances legacy cards remain unchanged and are outside the seven specified compact-list conversions.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [
+        {
+          "id": "dashboard-returns-key-position",
+          "severity": "medium",
+          "observation": "Dashboard Returns Open/Partially resolved status is below the location/product facts at the name/start edge, rather than in the logical end/value position required by requirements §37. This repeats in both languages at 390 and 430 CSS px. No collision is present."
+        }
+      ],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/labels-fa-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-fa/labels-fa-390.png",
+      "sha256": "3b83dc9d94ec0a6fd04d864753fdf76f020bbb02e668488e009acb56b166f0ab",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Actual row-start checkbox remains separate from the bilingual product name and the single trailing chevron; rows have quiet dividers without grey card fills.",
+        "Approved prices, offer facts, weighed prices, and the no-approved-price state are visible without price/control overlap.",
+        "No row selection is active in this still, so sticky selected-products bar positioning is not visually demonstrated here.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/payables-fa-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-fa/payables-fa-390.png",
+      "sha256": "0d9e240a24f2dc51b2b31f02a9e49fcd74a0adf8bfa837a54c0d75bca275c5d8",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names appear at logical start, balances at logical end, branch/date in a muted secondary line, and one end chevron per row.",
+        "Long Golden Grain Distributors and $1,260.00 fit without clipping or name/value collision.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/products-fa-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-fa/products-fa-390.png",
+      "sha256": "620aac31117301cfd70039a616206baeb7e67e72b49d018bb77e38ea82d7f1ea",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "White/transparent-appearing divided product rows retain bilingual names, prices or honest unavailable value, muted product codes/status facts, and one trailing chevron.",
+        "Sale/requested-price and weighed-price content remains visible without clipping or overlapping row controls; identifying names wrap at spaces.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/received-fa-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-fa/received-fa-390.png",
+      "sha256": "e716965fd5c0acd1b8bc2bf9cebc0e75de2b2f154204b957dddfef77dd35f88e",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Bilingual product names, quantity at logical end, muted location/supplier/date facts, and one end chevron sit in transparent-appearing divided rows.",
+        "Dates and case/unit quantity values remain intact; long supplier secondary facts wrap to a further line where needed rather than clip or overlap.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/returns-fa-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-fa/returns-fa-390.png",
+      "sha256": "980bca456b034708080bbe7a43c9852d906bb78a1eda447fcb8f8bd234dbca7e",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names and lifecycle status values occupy start/end positions, with one trailing chevron and a muted reference/location/date line.",
+        "Long supplier names wrap at spaces; statuses and dates remain intact and controls do not overlap.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-390-fa/suppliers-fa-390.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-390-fa/suppliers-fa-390.png",
+      "sha256": "2606f029b71ffa4f87b3d8ae197c51fa7b01a53440906a9c38668ef34d8adb83",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names appear at logical start, balances at logical end, last-delivery date or honest dash below, and one end chevron per row.",
+        "Names and balances fit without overlap or clipping; summary money visibility is observed only for this captured view and does not prove role privacy.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/dashboard-en-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-en/dashboard-en-430.png",
+      "sha256": "e7f148e21d23fd3e2edc032c15c00481161e3e872fbd38d77c305d0cbebcb3a8",
+      "viewed": true,
+      "outcome": "issues_found",
+      "observations": [
+        "Recent invoices use transparent-appearing divided rows with supplier at start, Posted at end, one end chevron and muted reference/location/date facts.",
+        "Exactly four top KPI cards are visible; the narrow dashboard stacks without visible text/control collision or page-edge clipping.",
+        "The Supplier balances legacy cards remain unchanged and are outside the seven specified compact-list conversions.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [
+        {
+          "id": "dashboard-returns-key-position",
+          "severity": "medium",
+          "observation": "Dashboard Returns Open/Partially resolved status is below the location/product facts at the name/start edge, rather than in the logical end/value position required by requirements §37. This repeats in both languages at 390 and 430 CSS px. No collision is present."
+        }
+      ],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/labels-en-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-en/labels-en-430.png",
+      "sha256": "3c4d751677df8e56f733fa8c7104c2ba4021b340f83008e3417cbffa15f01239",
+      "viewed": true,
+      "outcome": "issues_found",
+      "observations": [
+        "Actual row-start checkbox remains separate from the bilingual product name and the single trailing chevron; rows have quiet dividers without grey card fills.",
+        "Approved prices, offer facts, weighed prices, and the no-approved-price state are visible without price/control overlap.",
+        "No row selection is active in this still, so sticky selected-products bar positioning is not visually demonstrated here.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [
+        {
+          "id": "pot-name-unit-fragment-wrap",
+          "severity": "medium",
+          "observation": "The English Stainless Steel Pot 24 cm identifying/translation text wraps between 24 and cm. The cm token is alone on the next line. Hard rule 7 requires unit fragments to remain whole. The independent size field where present does remain 24 cm, and this is not clipping."
+        }
+      ],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/payables-en-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-en/payables-en-430.png",
+      "sha256": "df8e693b0378206298875e8ddca961e78b9d6dda15e4407c26dcb178909d84e9",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names appear at logical start, balances at logical end, branch/date in a muted secondary line, and one end chevron per row.",
+        "Long Golden Grain Distributors and $1,260.00 fit without clipping or name/value collision.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/products-en-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-en/products-en-430.png",
+      "sha256": "0f14e88c597a1c694b4813c5892467e8267afa35ba8eb721f701731c66aab82f",
+      "viewed": true,
+      "outcome": "issues_found",
+      "observations": [
+        "White/transparent-appearing divided product rows retain bilingual names, prices or honest unavailable value, muted product codes/status facts, and one trailing chevron.",
+        "Sale/requested-price and weighed-price content remains visible without clipping or overlapping row controls; identifying names wrap at spaces.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [
+        {
+          "id": "pot-name-unit-fragment-wrap",
+          "severity": "medium",
+          "observation": "The English Stainless Steel Pot 24 cm identifying/translation text wraps between 24 and cm. The cm token is alone on the next line. Hard rule 7 requires unit fragments to remain whole. The independent size field where present does remain 24 cm, and this is not clipping."
+        }
+      ],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/received-en-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-en/received-en-430.png",
+      "sha256": "a91ba23fdba314a604aead29d82568ff91ebfe4a9d04e6a84294868f28333024",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Bilingual product names, quantity at logical end, muted location/supplier/date facts, and one end chevron sit in transparent-appearing divided rows.",
+        "Dates and case/unit quantity values remain intact; long supplier secondary facts wrap to a further line where needed rather than clip or overlap.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/returns-en-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-en/returns-en-430.png",
+      "sha256": "958ba2f21c857bd528b12ba498e158ce9881b1fe5deba816155e04fa649a670d",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names and lifecycle status values occupy start/end positions, with one trailing chevron and a muted reference/location/date line.",
+        "Long supplier names wrap at spaces; statuses and dates remain intact and controls do not overlap.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-en/suppliers-en-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-en/suppliers-en-430.png",
+      "sha256": "f714634bc72ce49ebad7bd4f1045b0c983281bad4d20b08b7400e446e06fcb0b",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names appear at logical start, balances at logical end, last-delivery date or honest dash below, and one end chevron per row.",
+        "Names and balances fit without overlap or clipping; summary money visibility is observed only for this captured view and does not prove role privacy.",
+        "English LTR has name at left and end value/chevron at right; the visible top bar has one account control."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/dashboard-fa-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-fa/dashboard-fa-430.png",
+      "sha256": "8892bdf94ee5597559d7997f3a5c5ae43033949ebaadda4d1ee63eb18d2a39c4",
+      "viewed": true,
+      "outcome": "issues_found",
+      "observations": [
+        "Recent invoices use transparent-appearing divided rows with supplier at start, Posted at end, one end chevron and muted reference/location/date facts.",
+        "Exactly four top KPI cards are visible; the narrow dashboard stacks without visible text/control collision or page-edge clipping.",
+        "The Supplier balances legacy cards remain unchanged and are outside the seven specified compact-list conversions.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [
+        {
+          "id": "dashboard-returns-key-position",
+          "severity": "medium",
+          "observation": "Dashboard Returns Open/Partially resolved status is below the location/product facts at the name/start edge, rather than in the logical end/value position required by requirements §37. This repeats in both languages at 390 and 430 CSS px. No collision is present."
+        }
+      ],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/labels-fa-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-fa/labels-fa-430.png",
+      "sha256": "2ca64a89458fb5674377c4a1ad4b39c7e79745f6b66086ed77871cad5450bd7f",
+      "viewed": true,
+      "outcome": "issues_found",
+      "observations": [
+        "Actual row-start checkbox remains separate from the bilingual product name and the single trailing chevron; rows have quiet dividers without grey card fills.",
+        "Approved prices, offer facts, weighed prices, and the no-approved-price state are visible without price/control overlap.",
+        "No row selection is active in this still, so sticky selected-products bar positioning is not visually demonstrated here.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [
+        {
+          "id": "pot-name-unit-fragment-wrap",
+          "severity": "medium",
+          "observation": "The English Stainless Steel Pot 24 cm identifying/translation text wraps between 24 and cm. The cm token is alone on the next line. Hard rule 7 requires unit fragments to remain whole. The independent size field where present does remain 24 cm, and this is not clipping."
+        }
+      ],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/payables-fa-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-fa/payables-fa-430.png",
+      "sha256": "e70b4e2f9023af6f24dbc9bb7926bb23ad594057890bd75f7e40312a147a24c4",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names appear at logical start, balances at logical end, branch/date in a muted secondary line, and one end chevron per row.",
+        "Long Golden Grain Distributors and $1,260.00 fit without clipping or name/value collision.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/products-fa-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-fa/products-fa-430.png",
+      "sha256": "a364faae9181cf986791ab147cc73179a6df5ef39108ce2f6584ce8cc186303e",
+      "viewed": true,
+      "outcome": "issues_found",
+      "observations": [
+        "White/transparent-appearing divided product rows retain bilingual names, prices or honest unavailable value, muted product codes/status facts, and one trailing chevron.",
+        "Sale/requested-price and weighed-price content remains visible without clipping or overlapping row controls; identifying names wrap at spaces.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [
+        {
+          "id": "pot-name-unit-fragment-wrap",
+          "severity": "medium",
+          "observation": "The English Stainless Steel Pot 24 cm identifying/translation text wraps between 24 and cm. The cm token is alone on the next line. Hard rule 7 requires unit fragments to remain whole. The independent size field where present does remain 24 cm, and this is not clipping."
+        }
+      ],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/received-fa-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-fa/received-fa-430.png",
+      "sha256": "d54e9ef85765a809c9002032535f5ac56e976521287148ad3c4efd153f1ef11f",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Bilingual product names, quantity at logical end, muted location/supplier/date facts, and one end chevron sit in transparent-appearing divided rows.",
+        "Dates and case/unit quantity values remain intact; long supplier secondary facts wrap to a further line where needed rather than clip or overlap.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/returns-fa-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-fa/returns-fa-430.png",
+      "sha256": "68b194e0f33d14951087535d0a037ed1aa6e6dc8b3297c682414eee7f9a4819c",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names and lifecycle status values occupy start/end positions, with one trailing chevron and a muted reference/location/date line.",
+        "Long supplier names wrap at spaces; statuses and dates remain intact and controls do not overlap.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-compact-phone-lists-430-fa/suppliers-fa-430.png",
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-compact-phone-lists-430-fa/suppliers-fa-430.png",
+      "sha256": "245d612db17b4d98ddaf29bda62ed3113b76a8fae3a1469bae3fdf877d965c90",
+      "viewed": true,
+      "outcome": "passed_visual_review_with_limits",
+      "observations": [
+        "Supplier names appear at logical start, balances at logical end, last-delivery date or honest dash below, and one end chevron per row.",
+        "Names and balances fit without overlap or clipping; summary money visibility is observed only for this captured view and does not prove role privacy.",
+        "Persian RTL mirrors the name/value/chevron positions; Latin proper names, prices, dates and codes remain readable."
+      ],
+      "issues": [],
+      "limitations": [
+        "Read-only review of a still PNG from the frozen E3 diagnostic assembly; no actual committed-source SHA is asserted.",
+        "Chromium CSS-width capture, not a physical phone, installed home-screen app, Safari, or deployment.",
+        "This light-theme screenshot cannot verify dark theme, keyboard/click behavior, sticky behavior during scrolling, accessibility hidden text, or current role/authority privacy."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/change-price-fa-430.png",
+      "sha256": "0a23c99fb3dc9f6237a16de0a0dbf2d526ba2819becff5fd80f9a4034eceb838",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 430 viewport dialog: RTL headings, prices and discount suggestions remain readable.",
+        "The active Undo capsule occupies its own footer row above Cancel and Start sale; neither action is covered.",
+        "The scrollable body meets the fixed footer at the bottom; this image does not show the rest of the body."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence.",
+        "Dialog image is an actual viewport capture; offscreen scrollable dialog content is not evaluated from this PNG."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/pending-tasks-fa-430.png",
+      "sha256": "9405338c1a3bd7039f2fc4210e7a9e878c4d4645ff27ef1e19e6822c7abd2d61",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 430 pending task: Black Tea bilingual name, full date and $6.99 → $6.49 remain intact.",
+        "Checkbox, end chevron, status/location/date filters and active bottom Undo occupy separate areas."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/sale-cost-alert-fa-430.png",
+      "sha256": "b9191ae2c10a8a5d0b9d9c612f422bbde965dd7c23172687d51ee76c6bce5e4c",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 430 actual Sale cost alert: old/new costs, after-sale price, invoice reference and intact date remain legible.",
+        "Keep-in-back checkbox and three sale decisions fit without colliding; Date tracking entries remain separate below."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/store-progress-fa-430.png",
+      "sha256": "6b1179bd571c6c564c011741d87e295af24afc81fdaa814557233bedc77f6e6e",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 430 Store progress: real Richmond Hill entry, $6.99 → $6.49 and Pending link remain whole.",
+        "Bottom Undo is clear of the card and its link."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--89af8-e-alert-phone-layout-430-fa/task-checkboxes-fa-430.png",
+      "sha256": "705cccf4d3d2633861c3e420ddd655d99b7c4a5faa546f70b42af9ac486f4129",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 430 task details: correct old-to-new price direction and whole YYYY-MM-DD timestamp.",
+        "Active Undo is a full separate row ABOVE register/printed-label checkboxes, printing actions, No label needed and Mark as done.",
+        "History also keeps whole date/time and $6.99 → $6.49."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/change-price-fa-390.png",
+      "sha256": "090ac5dd99fd0ba309079d03b6f2fe40f2b15e828c571420c8a025b71e539705",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 390 viewport dialog: bounded white dialog, correctly ordered RTL text and isolated prices.",
+        "The active Undo capsule reserves a separate footer row above Cancel/Start sale; no button or checkbox is covered.",
+        "Only the currently visible scrollable body is shown."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence.",
+        "Dialog image is an actual viewport capture; offscreen scrollable dialog content is not evaluated from this PNG."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/pending-tasks-fa-390.png",
+      "sha256": "880a9a6a72e7eab3a26b46d2beb7f2f2cc54a599a268aeaf4788b99f2fcdeb4d",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 390 pending task: narrower filters wrap between rows without colliding.",
+        "Bilingual task name, full date and $6.99 → $6.49 fit; checkbox and chevron are separate."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/sale-cost-alert-fa-390.png",
+      "sha256": "fe29dd186f90ed5738d5d71c33bdf78422ab79c8f6644b6fa3bf731985ed5f12",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 390 Sale-cost alert wraps prose at spaces while keeping prices and full YYYY-MM-DD date intact.",
+        "Long keep-in-back label wraps alongside its checkbox; sale decision buttons do not overlap.",
+        "Related Date tracking rows remain readable below."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/store-progress-fa-390.png",
+      "sha256": "bbd236075362b51feea0598415b57c9e1fab886529b4c33d8a37653831f194f7",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 390 Store progress: current-language product name and Richmond Hill are readable.",
+        "$6.99 → $6.49 remains left-to-right and intact; bottom Undo covers no record controls."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--c9aa0-e-alert-phone-layout-390-fa/task-checkboxes-fa-390.png",
+      "sha256": "29d0cdb627c603db880eeb6a70ee40d47121c6ce8c3ed6fe323f649bf1a0df51",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 390 task: old/new amounts and effective/history timestamps stay on single lines.",
+        "Active Undo occupies its own checklist-card row above all five checkbox/action groups; no controls are hidden or dismissed."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/change-price-en-390.png",
+      "sha256": "1c499ac47312ecac774783b178767a4ae992a0ccc3430a4107740e4b3d2bc15c",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 390 viewport dialog: current price, sale/regular choices and intrinsic price field fit.",
+        "Active Undo has its own footer row above Cancel and Start sale; footer controls remain fully visible.",
+        "The scrollable body continues below the visible margin line, so this is not proof of every body field at once."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence.",
+        "Dialog image is an actual viewport capture; offscreen scrollable dialog content is not evaluated from this PNG."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/pending-tasks-en-390.png",
+      "sha256": "6fb97255ec4bfdb5efea32200a6e8ded868e166c5297b22c50698aa4694cfa8a",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 390 pending task: name/translation, location, full date and $6.99 → $6.49 are intact.",
+        "Checkbox and single end chevron are visible independently; bottom Undo is clear of filters and row."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/sale-cost-alert-en-390.png",
+      "sha256": "40b3923df96f089bae20e9e9bdc5706df45feda9a301bce640747f9503fa7e74",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 390 genuine Sale-cost alert: $12.60 → $14.20 cost, $20.99 → $23.49 after-sale proposal and full date are readable.",
+        "Prose wraps naturally; checkbox and all three sale decisions fit without collision."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/store-progress-en-390.png",
+      "sha256": "8a7198d9724b160dcad80e7bcc30b9dc28729450a03d7f0bea2808259952e7ca",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 390 Store progress: product, Richmond Hill, price transition and Pending link fit in one card.",
+        "Bottom Undo covers no interactive record content."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--ee32f-e-alert-phone-layout-390-en/task-checkboxes-en-390.png",
+      "sha256": "b33501dc456f36b64af900247bde49c8fd6ae6c0e994782bd644831137e5cef8",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 390 task detail: price transition and both timestamps remain whole.",
+        "Active Undo reserves an explicit separate checklist row; register, label, print, waiver and Mark as done controls remain visible and separate."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/change-price-en-430.png",
+      "sha256": "753b98845df1a6eed183123952b9fa838f4f28aebda2e5d7c71ded12eafb8a39",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 430 viewport dialog: bilingual product, current sale/regular price, choices and price field fit.",
+        "Active Undo reserves the footer row above Cancel and Start sale; no action is hidden.",
+        "Viewport screenshot truthfully shows the scrollable body boundary rather than a stitched dialog."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence.",
+        "Dialog image is an actual viewport capture; offscreen scrollable dialog content is not evaluated from this PNG."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/pending-tasks-en-430.png",
+      "sha256": "58eee6b0fe131749516292da5a6cb7d4ac5362a5f8d6191b3942c15c96b03479",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 430 pending task: status/location/date filters adapt across two rows.",
+        "Bilingual product, date, prices, checkbox and end chevron remain readable and separated."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/sale-cost-alert-en-430.png",
+      "sha256": "c1815c54c03c630e9a6ea1f755bf3fa7f51a437fd3e64672f46673326e5fcdba",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 430 genuine Sale-cost alert: old/new cost, margin change and after-sale price transition fit cleanly.",
+        "Keep-in-back checkbox and all sale decisions remain distinct; Date tracking is separated below."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/store-progress-en-430.png",
+      "sha256": "b0461b67338371e0adb83d88ac67356602988b034a7ee681087bd35cf6f02719",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 430 Store progress: one Richmond Hill pending transition remains readable.",
+        "The active bottom Undo is clear of the Pending link and card."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-genuine-task--fafe3-e-alert-phone-layout-430-en/task-checkboxes-en-430.png",
+      "sha256": "74bc490d180bae2d903b3dd70672646e5e22b75121f2470d2075278ba3f8e01c",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 430 task detail: whole price/code/barcode/date fragments and bilingual product remain readable.",
+        "Active Undo is above all checklist controls in a reserved row, with no floating overlap of No label needed or Mark as done."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/add-person-en-390.png",
+      "sha256": "38d5220f44a5475194596550fa29f0bc0ae69ecd93de8bde1ed757436b881f29",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 390 Add person: bounded viewport dialog and custom Role/Locations controls fit.",
+        "Location checkboxes and full Cancel/Save footer are visible and separate."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence.",
+        "Dialog image is an actual viewport capture; offscreen scrollable dialog content is not evaluated from this PNG."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/edit-person-en-390.png",
+      "sha256": "1f0cb30fd37c2f3f056e23cd1ca7f63f814f8f75d405be803b5b8c2a574c3d33",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 390 Edit person: current bilingual name, username/email, role and locations fit without word clipping.",
+        "The assignment comparison wraps at spaces; Reason begins at the viewport bottom.",
+        "This scrolled viewport does not show the lower Reason field/footer, so their visibility cannot be judged from this PNG alone."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence.",
+        "Dialog image is an actual viewport capture; offscreen scrollable dialog content is not evaluated from this PNG."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-dashboard-en-390.png",
+      "sha256": "dabd1df52093193b42190518c513e7b96da8d5903354b22779d42606ed438784",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 390 location dashboard: exactly four KPI cards, then a normal Price updates card and operational cards.",
+        "Card headings, view-all actions and empty-state text fit without collision; only one account control is visible."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/location-picker-en-390.png",
+      "sha256": "cc3dd472ae853a08372b417638ed0c59a10d1b997e67648c512d7800a3ed7ba2",
+      "viewed": true,
+      "outcome": "capture_transient",
+      "observations": [
+        "English 390 location picker: every option is readable, but Dashboard and KPI text visibly bleed through the translucent popup in this capture.",
+        "Read-only source inspection identifies a 150 ms .ui-popover opacity0→1 entrance; the test captures immediately after visible/layout.",
+        "Treat this PNG as a transient capture requiring a new unedited screenshot after actual popup opacity reaches1, not a clean visual pass or a demonstrated persistent UI defect."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/notification-bell-en-390.png",
+      "sha256": "153aef8c496d305111d4ece84fcf50e98fac323a0e6aec072416e9825e07dd09",
+      "viewed": true,
+      "outcome": "capture_transient",
+      "observations": [
+        "English 390 empty bell: notification message fits inside the popup and the dashboard remains intact.",
+        "The popup is captured during its entrance opacity animation; this image should be recaptured after the real menu settles before final visual approval."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/price-updates-en-390.png",
+      "sha256": "8c9160b335b38231570f18de13e1882f81abb6f1bcea8df1774cdb82a5d6a87d",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 390 Price updates empty list: all toolbar actions and exact empty-state copy fit without collisions.",
+        "Store progress action remains separated from page heading and list card."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-en/settings-group-people-en-390.png",
+      "sha256": "6908fa5e5572485a1c5dfb948ccd67a80721ac3925db471616b75d4cefdd647a",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "English 390 People: retained responsive people cards keep role/status/actions distinct and readable.",
+        "Registered store computers heading wraps at words; Register computer action fits alongside it; no money fields are shown in these cards."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/add-person-fa-390.png",
+      "sha256": "a95d2ebd124de113046e50c6dbe8543c0fccb5d7cd9c48b6153328221452cb19",
+      "viewed": true,
+      "outcome": "pass",
+      "observations": [
+        "Persian 390 Add person viewport dialog: RTL labels and custom Role/Locations controls fit.",
+        "Location checkbox layout and Cancel/Save footer are separate and fully visible."
+      ],
+      "limitations": [
+        "Static screenshot review only; no new functional, authorization, keyboard, hover, print or timing tests were performed by this reviewer.",
+        "Actual Chromium screenshots of frozen final E3 assembly; not committed-source replay, installed hardware phone, Safari or external deployment evidence.",
+        "Dialog image is an actual viewport capture; offscreen scrollable dialog content is not evaluated from this PNG."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/edit-person-fa-390.png",
+      "sha256": "19e62bc727a7b920dac61d1c4a856fbe220f2d8e08f1bf6fb946c9c6aacaecd1",
+      "bytes": 40044,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/edit-person-fa-390.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian Edit person dialog uses RTL labels, one bounded column and custom role/location controls; English username/email remain legible. Visible portion has no overlapping text or controls."
+      ],
+      "limitations": [
+        "Viewport ends above lower dialog actions; scrolling/permission behavior is covered by native tests, not established by this screenshot."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-dashboard-fa-390.png",
+      "sha256": "9d96e9a5c62c8e95c1a44b072798fe47335e27368cc379b6739182ec44c6db26",
+      "bytes": 100012,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-dashboard-fa-390.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian all-locations dashboard has exactly four KPI cards in a two-column phone grid; RTL headings and empty-state cards remain within the viewport."
+      ],
+      "limitations": [
+        "Full-page capture shows empty location-scoped data, not live server or multi-device synchronization."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-picker-fa-390.png",
+      "sha256": "846524d2ebd889d5af128780308f3e2621ca46492b72e7073ce04b10747e46b3",
+      "bytes": 107694,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/location-picker-fa-390.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "capture_transient",
+      "observations": [
+        "Persian location popover stays inside390 width with readable RTL options, but background Dashboard title and KPI text visibly show through its entrance frame."
+      ],
+      "limitations": [
+        "Source uses an opacity entrance animation. Replace this capture after actual opacity1; no image edits or persistent popover-opacity defect inferred."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/notification-bell-fa-390.png",
+      "sha256": "80f060ac3e28e8c69b96dc7a6518d912d77bc16c726a430f2cd6d685065a44bb",
+      "bytes": 104774,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/notification-bell-fa-390.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian notification empty-state popover aligns below the bell inside phone width; four dashboard KPIs remain legible and the single top-bar account control remains visible."
+      ],
+      "limitations": [
+        "Empty-state screenshot does not demonstrate delivery of a notification or shared-device synchronization."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/price-updates-fa-390.png",
+      "sha256": "1b4a099cd9cc0746a1b83bbf410dea2158b99c4d257c597ecdfa05d55fdf7f65",
+      "bytes": 35550,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/price-updates-fa-390.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian Price updates heading, helper, tabs and two filter controls fit 390 px; empty state and Store progress action remain readable."
+      ],
+      "limitations": [
+        "This intentionally empty filter state does not prove populated task results; those are captured separately."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/settings-group-people-fa-390.png",
+      "sha256": "01ff4f1d1c432af407ff511cb13cb5e34ce54f06a34c171f7736111877936b7e",
+      "bytes": 100862,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-390-fa/settings-group-people-fa-390.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian People uses readable role/status/action card fields with the account/login text preserved; registered-computer section fits the phone; custom controls and focus ring are visible."
+      ],
+      "limitations": [
+        "Settings tabs expose horizontal continuation for the long final label; People is outside the seven compact-list families. Authority/privacy are not independently proven by pixels."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/add-person-en-430.png",
+      "sha256": "f71b218dc1b029140ec52b8bda6a951faf11149186ac222e98a07ce7ec282f70",
+      "bytes": 31219,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/add-person-en-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "English Add person at430 has bounded full text fields, custom role selector and four legible location checkboxes; Cancel/Save sit inside the dialog with no overlap."
+      ],
+      "limitations": [
+        "Static blank creation form does not prove invitation delivery or validation behavior."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/edit-person-en-430.png",
+      "sha256": "6e4d8f44dbdb3b6072d01e3d2832374cd6fcf9ac6c0ffc847faa151e59d6509d",
+      "bytes": 39698,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/edit-person-en-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "English Edit person at430 preserves bilingual name, readable username/email, checked allowed store locations and a visible reason field; focus ring is clear."
+      ],
+      "limitations": [
+        "Lower dialog footer extends below the captured viewport and is not independently shown here."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-dashboard-en-430.png",
+      "sha256": "a1b3e94aa0ad8510d730fb190903fdca1eadb83e8dc04936070be9cd084325d1",
+      "bytes": 89037,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-dashboard-en-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "English all-locations dashboard at430 shows four balanced KPIs, full-width empty cards and contained View all actions; one account control is visible."
+      ],
+      "limitations": [
+        "Empty dashboard evidence is a browser demo state, not a server or installed-app claim."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-picker-en-430.png",
+      "sha256": "300a83f9db848842f600ed8f6ae00c92939dbbc102a4bd6914ed013ce600fbc0",
+      "bytes": 97196,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/location-picker-en-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "capture_transient",
+      "observations": [
+        "The English location picker options fit the phone and preserve the selected All my locations row, but the Dashboard title and KPI content are visible through the menu during its entrance."
+      ],
+      "limitations": [
+        "Source uses an opacity entrance animation. Replace this capture after actual opacity reaches1; no image editing or persistent opacity defect inferred."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/notification-bell-en-430.png",
+      "sha256": "7545db84a0202eb9d7c76e274dc2077e21350315ece8c7e00be4560d2a93fdf9",
+      "bytes": 93601,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/notification-bell-en-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "English notification empty-state popover stays inside430 width, aligned below the bell; dashboard controls remain distinct."
+      ],
+      "limitations": [
+        "Static empty menu does not establish notification delivery; final capture should await popup entrance completion."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/price-updates-en-430.png",
+      "sha256": "0a134a16e51af8e093f36f12e8c203ed3831c9160b441af0d4d572728476889d",
+      "bytes": 33460,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/price-updates-en-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "English Price updates at430 keeps tabs, location filter, wrapped date filter and empty state within the card; intrinsic Store progress button is contained."
+      ],
+      "limitations": [
+        "Empty state is valid filtered demo evidence and does not itself show a populated price task."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/settings-group-people-en-430.png",
+      "sha256": "c80704e3910d4b7250df81447e64b5a49922d1727c33c31d15182fe2a907597d",
+      "bytes": 105171,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-en/settings-group-people-en-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "English People at430 has legible usernames, configured roles and Active statuses; custom search/filters, Edit actions and registered-computer card remain contained."
+      ],
+      "limitations": [
+        "Horizontal Settings tab continuation is visible; only the currently visible tab labels are shown. People retains the general card layout because it is outside the seven compact lists."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/add-person-fa-430.png",
+      "sha256": "592c464644937fc60b9cccfb258cf8a1678255b6ae8b9e5dca99afd7970bc7cf",
+      "bytes": 29923,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/add-person-fa-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian Add person at430 shows RTL labels, bounded input column, custom role selector, location checkboxes and separated Save/Cancel buttons without overlap."
+      ],
+      "limitations": [
+        "Screenshot establishes presentation only, not account creation or invitation delivery."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/edit-person-fa-430.png",
+      "sha256": "33cec453d8578715e7bb42ecf20b8bf219b486147d26fd1d0a551a05a03913f4",
+      "bytes": 39792,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/edit-person-fa-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian Edit person at430 shows bilingual fields, selected stores and readable LTR username/email; reason text area remains contained."
+      ],
+      "limitations": [
+        "Footer falls below the viewport and is not visible; genuine dialog scroll/validation are separately exercised."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-dashboard-fa-430.png",
+      "sha256": "7cd4044e141a0b2c5250609c06b75a5e104564895ade2119a614a24b8d8fd2d3",
+      "bytes": 99567,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-dashboard-fa-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian all-locations dashboard at430 preserves RTL heading/KPI order, exactly four KPIs and contained empty-state action cards."
+      ],
+      "limitations": [
+        "Empty location state does not demonstrate populated recent invoice/Returns geometry; those are reviewed in separate captures."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-picker-fa-430.png",
+      "sha256": "a93492688b83a539238b361882b56c983becb3eb80baf86f1a3d554f59c44f59",
+      "bytes": 107505,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/location-picker-fa-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "capture_transient",
+      "observations": [
+        "Persian location picker fits430 width and active choice is visible, but underlying Dashboard/KPI text shows through the entrance frame."
+      ],
+      "limitations": [
+        "Wait for real popup opacity1 before generating replacement PNG; static evidence does not establish a permanent opacity defect."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/notification-bell-fa-430.png",
+      "sha256": "4116d9b6338f779f56e45ada1292cff1f527e73823b00b9163dece6e13dbdb08",
+      "bytes": 104519,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/notification-bell-fa-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian notification empty-state popover remains bounded and legible above the dashboard; top-bar account is shown once."
+      ],
+      "limitations": [
+        "No notification delivery is demonstrated; replacement capture should wait for opacity1 consistently."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/price-updates-fa-430.png",
+      "sha256": "9c41d51ecb8ba819e69bf2bca476f19ab6b9fabead8c325ed69f7c4d68ae2adf",
+      "bytes": 35727,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/price-updates-fa-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian Price updates at430 uses RTL tabs/location control; date filter wraps as a whole control and helper/empty-state text remains readable."
+      ],
+      "limitations": [
+        "No populated task is shown in this filtered state; task scenes are reviewed separately."
+      ]
+    },
+    {
+      "path": "artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/settings-group-people-fa-430.png",
+      "sha256": "d3358224ec2c763bf2b23028cdfd03fd2bca2675ee7a76f934fc8778e051de50",
+      "bytes": 100853,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-phones-E3-new-screens-retain-genuine-phone-layout-430-fa/settings-group-people-fa-430.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian People at430 preserves configured roles/statuses and bounded Edit controls; registered-computer title and action fit the card with one account control in the top bar."
+      ],
+      "limitations": [
+        "Long Settings tab continuation is visible; permissions and device registration behavior need their native/domain checks."
+      ]
+    },
+    {
+      "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/app-phone-dark.png",
+      "sha256": "7515657808e392cb4cbf31b233363b8a4411a74bbf200e3823541ae73ffb46c7",
+      "bytes": 53045,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/app-phone-dark.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Actual dark Chromium phone viewport shows token-consistent dark shell/list, readable product/price/status and contained filter controls; one account control is visible."
+      ],
+      "limitations": [
+        "Ordinary Chromium browser capture only: standaloneDisplayMode:false. Physical phone/home-screen installation was NOT PERFORMED. Bottom row naturally continues below the viewport."
+      ]
+    },
+    {
+      "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-english.png",
+      "sha256": "23ebe500c3adc3c87a09a93d8bb3e47e3da291b208326660f6d15a71ab0f675a",
+      "bytes": 16192,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-english.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "English offline fallback shows configured own logo on white, approved No connection/Reconnect/Try again copy and a language toggle; bounded card and button remain readable."
+      ],
+      "limitations": [
+        "Availability fallback only; it contains no fabricated signed-in content and does not prove physical installation or synchronized offline business data."
+      ]
+    },
+    {
+      "path": "artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-persian.png",
+      "sha256": "ddcbce2bb0afdb2b106c6befa30221b0ee86a63a0ddb3289b08443d77e9436ab",
+      "bytes": 18062,
+      "absolute": "/tmp/e3-native-diagnostic-final/artifacts/e3-pwa-native-E3-built-man-f8ea1-bilingual-offline-reconnect/offline-persian.png",
+      "reviewer": "/root/recover_e3",
+      "viewed": true,
+      "method": "Individually opened original PNG with view_image; no contact-sheet inference or image modification.",
+      "outcome": "pass",
+      "observations": [
+        "Persian offline fallback uses RTL approved copy, own logo and bounded Try again/language controls without clipping or overlap."
+      ],
+      "limitations": [
+        "Availability fallback only; no fabricated cached signed-in page, installed-device result or shared-server result is claimed."
+      ]
+    }
+  ]
+}

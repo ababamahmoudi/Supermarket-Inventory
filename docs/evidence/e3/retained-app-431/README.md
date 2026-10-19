@@ -1,0 +1,7 @@
+# Recorded application verification at431
+
+Exact source `431bdba29e25a3b53e3acc5d7ef8ad186150ab2b` passed **1,430 application tests**, **75 permission SDK tests**, normal full lint and a fresh normal TypeScript/Vite build, with actual process exits0 and unchanged tracked inputs. The successful full application diagnostic had no global errors. All23 pricing seed cases remain included. [Verification and original-byte hashes](verification.json) retain exact commands and compressed originals.
+
+The first full application attempt on this same source genuinely failed:1,429passed/1failed, actualCLI1. Its posted-invoice heading wait expired while the protected workspace harness had not rendered. The unchanged-source complete diagnostic then genuinely passed1,430/1,430; exact431 GitHub CI also passed its combined unit/pricing step. Both actual outcomes remain preserved. No CPU cause or precise stalled bootstrap phase is claimed. A later test-only readiness barrier and subsequent Persian unit correction have separate source-specific verification.
+
+The [431 browser followup](../sale-inline-units-native/README.md) passed28 cases, but manual review rejected its Persian release-note frame: the old raw oracle missed the compound Persian unit. These recorded successes are not final acceptance of that visual issue or a new complete812-case browser pass. The [earlier full replay](../retained-native-full-f154/README.md) remains769passed/1failed/42original skips. Hardware installation, physical printing, register integration and deployment were not performed.

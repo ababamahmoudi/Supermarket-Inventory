@@ -1,0 +1,17 @@
+{
+  "base_commit": "90ad0f5a1bb67fbc4b56653dbdc911707c57c98d",
+  "manifests": {
+    "/tmp/e3-retained-native-incremental-v11/manifest.json": "3204e70cfc1fad0c2ca24a7877a3fa505f9c8474dedc51a8ddb6b5704b179308"
+  },
+  "expected_cases": {
+    "desktop": 4,
+    "phone": 6
+  },
+  "preserved": [
+    "original whole native test bodies and business/geometry oracles except documented current-contract replacements",
+    "original test and assertion time budgets",
+    "no retries or skips",
+    "same full frozen source except recorded3 native test-only files; normal production rebuild",
+    "one browser worker"
+  ]
+}

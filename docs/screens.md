@@ -299,3 +299,13 @@ These are current source screens; E1's separate **planned E2/E3** statement is h
 - **Settings → Notifications:** role/event routing for every owner-listed event, mandatory task/escalation recipients explained; price update settings include 24/48 hours and Floor Worker completion Off by default. Use current Owner/Manager settings authorization and shared filled controls.
 
 The exact business copy and Persian counterpart are in design-language's E2 table. Screenshots required in English light, English dark, Persian and phone: Branch Supervisor list/task with both boxes, Manager per-store progress, Cashier pill, dashboard card and bell. Capture and individually inspect actual current-source screens; no screenshots or real print success are claimed by this specification.
+
+## E3 current phone rows and app states
+
+This section replaces the planned E3 presentation statement. At phone widths, Products/Labels/Received/Suppliers/Payables/Dashboard Recent invoices/Returns are compact two-line list rows rather than repeated label/value cards. Current-language identifying name and other language are primary/secondary; actual price, amount or state occupies the end with one chevron. One muted fact line uses actual code/date/store/reference as appropriate; do not invent data or expose a hidden monetary field. Labels adds its existing checkbox at start with independent hit/focus handling. Wide tables, authorized Columns/expanded details and existing navigation remain.
+
+Verify People list and Add/Edit, location picker/dashboard, Price updates list/task/progress, personal bell, Change price and Sale-cost alert at 390 and 430 EN/FA, light/dark. Keep 44 px phone text actions, bounded field groups, no split price/date/code/unit, no card/table/page overflow and one reachable account control.
+
+The launch icon/name are configured company branding. Standalone view preserves the same app and data; it does not add native/backend functionality. Dedicated offline screen uses No connection, Reconnect, then try again., Try again and EN/فا. Demo's Update available/Update app appear only when a genuine new release is waiting; Finish or close your current work before updating. explains actual active work. No native browser permission prompt or new setup screen is invented.
+
+Required screenshots show compact Products and Received plus the full E proof scenes; Home Screen launch is actual hardware evidence only if executed, otherwise clearly labelled standalone emulation and a not-performed hardware limitation. No screenshots or phone outcomes are claimed by this source specification.

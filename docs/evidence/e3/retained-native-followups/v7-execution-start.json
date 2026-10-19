@@ -1,0 +1,16 @@
+{
+  "base_commit": "4524c6a025a49c0f8bc8a44bd9b1ce6f2bd92ebb",
+  "manifests": {
+    "/tmp/e3-native-followup-increment-v14/manifest.json": "a1385db01b6f7b05ddc42af90e0468bf2decf8b9ec04102195ff3c13ae016475"
+  },
+  "expected_cases": {
+    "phone": 3
+  },
+  "preserved": [
+    "original whole native test bodies and business/geometry oracles except documented current-contract replacements",
+    "original test and assertion time budgets",
+    "no retries or skips",
+    "same full frozen source except recorded3 native test-only files; normal production rebuild",
+    "one browser worker"
+  ]
+}

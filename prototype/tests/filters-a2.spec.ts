@@ -5,6 +5,19 @@ test.setTimeout(60000);
 
 async function responsiveColumn(row: Locator, label: string) {
   await expect(row).toBeVisible();
+  if (await row.evaluate((element) => element.matches(".phone-list-row"))) {
+    // E3 Payables presents the same visible balance and scope as compact
+    // value/secondary regions, with no repeated column captions.
+    if (!["Branch", "Balance"].includes(label))
+      throw new Error(`No compact field mapping for ${label}`);
+    const value =
+      label === "Balance"
+        ? row.locator(".phone-list-value")
+        : row.locator(".phone-list-secondary > span").first();
+    await expect(value).toHaveCount(1);
+    await expect(value).toBeVisible();
+    return value;
+  }
   await expect
     .poll(
       async () =>
@@ -280,9 +293,24 @@ test("Payables filters supplier totals and keeps selected report in the same bra
   await expect(
     rows.filter({ hasText: "Golden Grain Distributors" }),
   ).toContainText("$842.10");
-  await expect(
-    rows.filter({ hasText: "Golden Grain Distributors" }),
-  ).toContainText("$210.00");
+  const grain = rows.filter({ hasText: "Golden Grain Distributors" });
+  if (await grain.evaluate((element) => element.matches(".phone-list-row"))) {
+    // Compact rows keep the balance; the same supplier's actual report keeps
+    // its separate overdue amount. Do not re-add omitted private list cells.
+    await grain
+      .getByRole("link", { name: "Golden Grain Distributors", exact: true })
+      .click();
+    await expect(page.locator(".payables-report-heading h2")).toHaveText(
+      "Golden Grain Distributors",
+    );
+    await expect(
+      report.locator(".payables-summary-grid .ui-summary-tile").filter({
+        has: page.getByText("Overdue", { exact: true }),
+      }),
+    ).toContainText("$210.00");
+  } else {
+    await expect(grain).toContainText("$210.00");
+  }
   await expect(rows.filter({ hasText: "Sunrise Beverages" })).toContainText(
     "$96.40",
   );
