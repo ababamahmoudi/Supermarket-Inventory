@@ -1,3 +1,4 @@
+import { notificationReadable } from "./notification-access";
 import { freshActor } from "./authority";
 import { businessAuditRead } from "./business-audit-read";
 import type {
@@ -181,6 +182,8 @@ export type NotificationReadDTO = Pick<
   | "company_id"
   | "branch"
   | "kind"
+  | "task_id"
+  | "count"
   | "product_code"
   | "sale_id"
   | "request_id"
@@ -268,7 +271,8 @@ export function projectSalesReadView(
           (item) =>
             item.company_id === current.company_id &&
             item.recipient_user_id === current.user_id &&
-            notificationLocations.has(item.branch) &&
+            (item.branch === "all" || notificationLocations.has(item.branch)) &&
+            notificationReadable(state, current, item) &&
             can(state, current, "notifications.read", {
               ...domainScope(state, item),
               owner_user_id: item.recipient_user_id,
@@ -293,6 +297,8 @@ export function projectSalesReadView(
             company_id: item.company_id,
             branch: item.branch,
             kind: item.kind,
+            task_id: item.task_id,
+            count: item.count,
             product_code: item.product_code,
             sale_id: item.sale_id,
             request_id: item.request_id,

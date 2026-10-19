@@ -381,5 +381,22 @@
     "add_regular_labels_on_end": true,
     "quick_discount_percentages": [10, 15, 20, 25],
     "round_down_endings": ["0.49", "0.99"]
+  },
+  "price_updates": {
+    "allow_floor_worker_complete": false,
+    "remind_after_hours": 24,
+    "escalate_after_hours": 48
+  },
+  "notifications": {
+    "events": {
+      "price_updates": ["branch_supervisor", "owner", "manager"],
+      "approvals_waiting": ["owner", "manager"],
+      "branch_requests": ["branch_supervisor", "owner", "manager"],
+      "returns_waiting_for_credit": ["owner", "manager"],
+      "expiring_dates": ["branch_supervisor", "owner", "manager"],
+      "sale_requests": ["owner", "manager"],
+      "sale_decisions": ["branch_supervisor", "floor_worker"],
+      "cost_went_up_during_sale": ["owner", "manager"]
+    }
   }
 }

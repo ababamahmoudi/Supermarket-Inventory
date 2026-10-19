@@ -118,3 +118,15 @@ No blocking new business question is assumed. Record or ask about a genuinely mi
 - Registered computers were previously represented by demo recent-user configuration and a People placeholder. E1 specifies actual local device/location entries and a seed-backed fictional North York computer for fresh/reset. Preserve valid migrated registration/current-device mapping. Only Owner/Manager manages these entries; device defaults never broaden person access and cannot select North York for rh-supervisor. This is local browser registration, not discovered real hardware.
 
 These are source contracts and documented implementation boundaries, not test counts or completion claims. All new E1 evidence remains Planned until verified. E2 tasks/notification routing and E3 installation/private-hosting instructions remain Planned separate stages; no further owner approval is required between the already-authorised stacked builds.
+
+## E2 implementation defaults recorded before code
+
+No new monetary or authority rule is invented. Price updates describe outstanding physical register/label work after an actual approved public selling transition. Requirements §36 records source comparison, commercial-offer terms, current-target confirmations, last-day Sale preparation, no initial backlog, verified additive migration and all role grants.
+
+- Branch Supervisor owns their Store tasks; Owner/Manager can perform all task work. Floor Worker may acknowledge labels; completion defaults Off, and optional On never grants register acknowledgement. A label waiver needs a reason and is recorded by Owner/Manager/assigned Branch Supervisor; Floor Worker may consume an already recorded waiver when optional completion is enabled, without creating a waiver or register confirmation.
+- Effective terms include public ordinary-offer/Sale changes, not private cost-only changes. Coalescing retains real work but confirmations of a replaced target do not certify the new one. Undo cancels only before staff action; actual prints remain immutable evidence.
+- Task start/end calendars use configured IANA store time. Reminders default 24/48 elapsed hours, with mandatory actual Branch Supervisor/Owner/Manager recipients and event deduplication. New custom settings are retained on normal upgrade.
+- A Sale's last-day task is preparation for tomorrow; it does not end the current app price early. If the future regular target changes, revise that task and require fresh confirmation.
+- Real push/email delivery and shared phone data remain later server work. Route settings cannot remove the owner's mandatory minimum task/escalation recipients or the requester's own Sale decision.
+
+Later options remain different roles by location, multi-product Sale editing, until sold out after inventory, and real push/email. There is no new owner-action gate between the authorized E stages. Actual tests/screenshots remain pending until executed proof is recorded.

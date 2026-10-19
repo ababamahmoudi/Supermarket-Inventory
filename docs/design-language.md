@@ -204,3 +204,55 @@ Keep the configured built-in notebook title **For Supervisor** and the action **
 ### E1 Reset demo confirmation
 
 Use exactly: “Restore the fictional business data and the six demo people. People changes and business changes made in this browser are cleared. Your preferences and language stay the same.” Persian: “داده‌های کسب‌وکار خیالی و شش کاربر دمو بازیابی می‌شوند. تغییرات کاربران و کسب‌وکار این مرورگر پاک می‌شوند. تنظیمات شخصی و زبان شما حفظ می‌شوند.” Only explicit Reset changes the People directory; normal migration preserves it.
+
+## E2 task and notification presentation
+
+Keep every Klead Hard rule and token unchanged. Price updates is an operational list/detail using the shared FilterToolbar, DataTable, Date range, Checkbox, Dialog, What's missing and sticky action bar. No visible native checkbox/select/date/file controls. Keep register and print confirmations separate, bounded reason fields and intrinsic actions; do not stretch short numeric reminder settings. Price/offer/time/code fragments remain atomic and isolated in Persian; current-language product name is primary and the other language secondary.
+
+Pending uses amber where it means outstanding staff work; Done uses green; Cancelled grey. A Sale remains C8's Sale treatment. Last-day preparation clearly says tomorrow, not a false current price. At most four KPI cards, with Price updates to apply a normal operational card. Role-private data stays absent from DTOs, tooltip/a11y text, Columns, expanded details and exports. No copied avatars or invented business names/statistics.
+
+Canonical additional copy (interpolate real product/store/price/time values, including localized plural rules):
+
+| English | Persian |
+| --- | --- |
+| Price updates | به‌روزرسانی قیمت‌ها |
+| Price updates to apply | به‌روزرسانی قیمت‌های قابل اجرا |
+| Changed on the cash register | در صندوق فروش تغییر داده شد |
+| New label printed | برچسب جدید چاپ شد |
+| Print label now | چاپ برچسب اکنون |
+| Add to label waitlist | افزودن به فهرست انتظار برچسب‌ها |
+| No label needed | نیازی به برچسب نیست |
+| Reason | دلیل |
+| Mark as done | علامت‌گذاری انجام‌شده |
+| Print labels | چاپ برچسب‌ها |
+| Pending | در انتظار |
+| Done | انجام‌شده |
+| Price changed | قیمت تغییر کرد |
+| Mark all as read | علامت‌گذاری همه به‌عنوان خوانده‌شده |
+| Sale ends after today: back to ${{price}} tomorrow | حراج پس از امروز تمام می‌شود: فردا بازگشت به ${{price}} |
+| {{location}} has {{count}} price updates waiting | {{location}} تعداد {{count}} به‌روزرسانی قیمت در انتظار دارد |
+| Earlier changes | تغییرات قبلی |
+| No price updates | به‌روزرسانی قیمتی وجود ندارد |
+| No notifications | اعلانی وجود ندارد |
+| Store progress | پیشرفت فروشگاه‌ها |
+| Why it changed | دلیل تغییر |
+| Decided by | تصمیم‌گیرنده |
+| Effective from | اجرا از |
+| Did the labels print correctly? | آیا برچسب‌ها درست چاپ شدند؟ |
+| Price update reminders | یادآوری به‌روزرسانی قیمت‌ها |
+| Notifications | اعلان‌ها |
+| Remind after (hours) | یادآوری پس از (ساعت) |
+| Alert Owner and Manager after (hours) | هشدار به مالک و مدیر پس از (ساعت) |
+| Allow Floor Workers to mark tasks done | اجازهٔ انجام‌شده کردن کارها برای کارکنان کف فروشگاه |
+| A register confirmation is still required. | تأیید تغییر در صندوق فروش همچنان لازم است. |
+| Confirm that the label was printed. | تأیید کنید که برچسب چاپ شده است. |
+| Add a reason. | یک دلیل اضافه کنید. |
+| This price update has changed. Open it again. | این به‌روزرسانی قیمت تغییر کرده است. آن را دوباره باز کنید. |
+| The price in the app changes right away. Confirm the cash register and shelf label here. | قیمت در برنامه بلافاصله تغییر می‌کند. صندوق فروش و برچسب قفسه را اینجا تأیید کنید. |
+| No price updates match these filters. | به‌روزرسانی قیمتی با این فیلترها پیدا نشد. |
+| No pending price updates. | به‌روزرسانی قیمت در انتظار وجود ندارد. |
+| Back to Price updates | بازگشت به به‌روزرسانی قیمت‌ها |
+| Print the new label, or choose No label needed and add a reason. | برچسب جدید را چاپ کنید، یا «نیازی به برچسب نیست» را انتخاب کرده و دلیل بنویسید. |
+| Use a reminder time above zero and a later Owner and Manager alert time. | زمان یادآوری باید بیشتر از صفر و زمان هشدار مالک و مدیر دیرتر باشد. |
+
+Labels referenced from a task retain current Regular/Promo template geometry and actual print behavior. A queue/preview is not a physical print; confirm only the genuine current preparation, and retain successful output evidence if another check fails. This stage builds in-browser personal notifications only, with no browser push permission prompt.

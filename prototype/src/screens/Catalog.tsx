@@ -75,6 +75,7 @@ import "./manual-entry.css";
 import "./c5-catalog-offers.css";
 import "../catalog-c7.css";
 import { ChangePriceDialog } from "../ChangePriceDialog";
+import { PriceChangedPill } from "../price-update-presentation";
 import { SalePrice, SaleStatus, PendingSalePill } from "../sales-presentation";
 import { salesText } from "../sales-locale";
 import {
@@ -2302,6 +2303,7 @@ function LookupProductDetail({ product }: { product: Product }) {
         </div>
       ))}
       <SaleStatus product={product} />
+      <PriceChangedPill product={product} />
       <PendingSalePill product={product} />
       <ProductDates product={product} />
       {profile?.taxable && (

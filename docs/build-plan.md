@@ -193,3 +193,9 @@ The complete43-item owner mapping, required 17-scene/five-variant screenshot mat
 - [ ] Preserve Branch Supervisor allowed purchase costs without margins/balances/decisions, own pending regular-price proposals and independent delivery-hold instructions, strict pickup-only return authority, existing Floor Worker template/calibration/ordinary-offer/replacement operations and all current financial/file/sales/History guards.
 - [ ] Six-user/reset/alias/device defaults and verified normal legacy credential/person/forced-newemployee/preference/evidence migration pass. No aggregate write silently chooses a physical location.
 - [ ] Existing pricing/unit/browser checks pass; People list/Add/Edit and Branch Supervisor picker/dashboard are captured and individually reviewed in EN light/dark, Persian and phone, with exact source/results/skips in PR_E1_REVIEW. E2/E3 remain separate Planned stages until their own proof.
+
+## Authorized E2 stage (source contract saved before code)
+
+Stack E2 on final E1 without an owner-review pause. Build requirements §36 / Decision 034: canonical effective selling terms and all source adapters; one scoped task per changed selling Store, coalescing/Undo and local Sale preparation; protected register/physical-label/waiver work, bulk actions and current-source printing; personal bell/routing, mandatory 24/48 reminders, Dashboard card and Cashier pill. Preserve verified migration and all existing tests.
+
+Before Ready: run actual full app/SDK/pricing/type/lint/build and E2 native user-flow/scope tests; capture/review 24 requested E2 screenshots against final source. Publish actual outputs and pending limits in PR_E2_REVIEW.md. Then continue E3, without automatic merge or hosting account/resource creation. Do not count commands that are merely prepared as completed tests.

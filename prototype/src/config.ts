@@ -4,6 +4,7 @@ import {
   readConfiguredRoleACL,
   readConfiguredOptionalRole,
 } from "./role-config";
+import type { RoleId } from "./authority-types";
 import sourceConfig from "../../seed/arzon-config.json";
 import sourceDemo from "../../seed/demo-data.json";
 import retainedConfig from "./compat/configuration.json";
@@ -17,6 +18,13 @@ const configured = (value: string, previous: string) =>
 export const configSeed = {
   ...retainedConfig,
   ...sourceConfig,
+  notifications: {
+    events: Object.fromEntries(
+      Object.entries(sourceConfig.notifications.events).map(
+        ([event, roles]) => [event, readConfiguredRoleACL(roles)],
+      ),
+    ) as Record<keyof typeof sourceConfig.notifications.events, RoleId[]>,
+  },
   roles: normalizeRoleDefinitions(
     sourceConfig.roles,
     readConfiguredRoleDefinitions(sourceConfig.roles),

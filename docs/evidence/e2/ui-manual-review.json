@@ -1,0 +1,275 @@
+{
+  "reviewed_at": "2026-10-15T15:15:38.668173+00:00",
+  "status": "captured_states_pass",
+  "all_24_originals_personally_opened": true,
+  "all_4_supplemental_dom_details_personally_opened": true,
+  "review_method": "Every original file opened individually using view_image; no edited or recreated image.",
+  "checks": [
+    "Correct old 6.99 to new 6.49 transition in English and Persian",
+    "Current-language task product breadcrumb",
+    "History reason and money separate and readable",
+    "Manager completed Store row shows actual staff and completion time",
+    "List, task, personal bell, progress, dashboard card, and Cashier pill captured",
+    "Light, dark, Persian RTL, and 390px phone states readable without observed captured-state overlap"
+  ],
+  "limitation": "The optional Undo toast was dismissed through its real public control for the captures. These images therefore do not verify an active Undo toast at short phone heights. A real overlap with the task waiver control was separately found; E3 owns the inline reserved-host correction and its final composed-stack proof. No hardware printer was used.",
+  "final_release_ready": false,
+  "final_release_pending": [
+    "E3 active-Undo correction and composed-stack checks",
+    "Root final full-suite, CI and PR completion"
+  ],
+  "images": [
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-updates-list-en-light.png",
+      "sha256": "da253fec66a9aa787eeea3dd8e35473a1a3b1ad2411b498974fc992306a46cf3",
+      "variant": "en-light",
+      "scene": "price-updates-list",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-update-task-en-light.png",
+      "sha256": "bcc8d8fee7836f5470a06e9ce054a5362c7668eafa19bd74efdeb13bad56925c",
+      "variant": "en-light",
+      "scene": "price-update-task",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-updates-bell-en-light.png",
+      "sha256": "963743222666cca10367111782e1712e519acc45a72e4d16f1e473030066716a",
+      "variant": "en-light",
+      "scene": "price-updates-bell",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/manager-store-progress-en-light.png",
+      "sha256": "4f1529ecb11ca34db55abc18f1426aaead8fe54d772076a6b5ac98abd3f00d8d",
+      "variant": "en-light",
+      "scene": "manager-store-progress",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/dashboard-price-updates-en-light.png",
+      "sha256": "8a69dd65e3b0b856021e78b7e6694a5207ef26d39906c1889ece924bc570c0c3",
+      "variant": "en-light",
+      "scene": "dashboard-price-updates",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/cashier-price-changed-en-light.png",
+      "sha256": "9aceabbdaf805d905dd1b89a481c6b9fb0fc3feea32bf43ccabe815d129e7d93",
+      "variant": "en-light",
+      "scene": "cashier-price-changed",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/dashboard-card-detail-en-light.png",
+      "sha256": "cce4bb52e6f66e9dae1dc4b5780dd5513fc1b003aa1af878998eaf3bb9aba8c1",
+      "variant": "en-light",
+      "scene": "dashboard-card-detail",
+      "primary": false,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-updates-list-en-dark.png",
+      "sha256": "5c2790153c16ab159e2d527a647d9a8a1419b605192d3c009a9d358a2d8125bb",
+      "variant": "en-dark",
+      "scene": "price-updates-list",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-update-task-en-dark.png",
+      "sha256": "26cb5b23a8b54f23c828512fa5070eb254af19698dca42105d7cce88c7c1bd84",
+      "variant": "en-dark",
+      "scene": "price-update-task",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-updates-bell-en-dark.png",
+      "sha256": "67cd2fdb3ee20e9cf000b880716782ae5ce5a12fa36cea51d90c0dcfb33ecfac",
+      "variant": "en-dark",
+      "scene": "price-updates-bell",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/manager-store-progress-en-dark.png",
+      "sha256": "d481e885dcfa560faa66a233f3bef278905fa6b9567c20ac5cc8cc7a92dbd4c7",
+      "variant": "en-dark",
+      "scene": "manager-store-progress",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/dashboard-price-updates-en-dark.png",
+      "sha256": "3ebc41f5ec725f6fb5954c1e61b8f1fa7cb11b27c77ebdb9642769802ab9f9db",
+      "variant": "en-dark",
+      "scene": "dashboard-price-updates",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/cashier-price-changed-en-dark.png",
+      "sha256": "2c359663a34283321928a693f4c31e29ffa5b64cda6eee6d2bb7db760927aa59",
+      "variant": "en-dark",
+      "scene": "cashier-price-changed",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/dashboard-card-detail-en-dark.png",
+      "sha256": "37db1a87c16a4915bdf032685ce73f6232a602bd16d813e18929d60cd0123081",
+      "variant": "en-dark",
+      "scene": "dashboard-card-detail",
+      "primary": false,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-updates-list-fa-light.png",
+      "sha256": "64199ae135355c752c38c0977ca0db47ad56a41339e8ab310b932d1cdbc0464c",
+      "variant": "fa-light",
+      "scene": "price-updates-list",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-update-task-fa-light.png",
+      "sha256": "79ac65b7f7eec0ff22912814c61cbbd8968e709242e50b67235dcd66bdbc68ad",
+      "variant": "fa-light",
+      "scene": "price-update-task",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-updates-bell-fa-light.png",
+      "sha256": "7559b0a93ed294f085eab1a0d7efbd58ab48e1412966b03cd1ac23e9b0ed7bcd",
+      "variant": "fa-light",
+      "scene": "price-updates-bell",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/manager-store-progress-fa-light.png",
+      "sha256": "b56b9e275f27374c40d3b23558d55a8b7fa75073bb127ba9a3b8f412511b8117",
+      "variant": "fa-light",
+      "scene": "manager-store-progress",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/dashboard-price-updates-fa-light.png",
+      "sha256": "a36729b01b8038fdff9179b48748d4e5863fb9df5e4f18daf9c8730144f0a485",
+      "variant": "fa-light",
+      "scene": "dashboard-price-updates",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/cashier-price-changed-fa-light.png",
+      "sha256": "aac42b797a42d5b1966128cfb66f68375a0d0ac2ba9fcb9dfa41821799c77395",
+      "variant": "fa-light",
+      "scene": "cashier-price-changed",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/dashboard-card-detail-fa-light.png",
+      "sha256": "b205c9688d02aa5f2dbd50542e4254a16a7c770abead3c18f07bc94806805caa",
+      "variant": "fa-light",
+      "scene": "dashboard-card-detail",
+      "primary": false,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-updates-list-phone-dark.png",
+      "sha256": "0bf00bfe3644f8a3fabe6a484bcaa64c38efbf331aa850f0e9d715d16428a987",
+      "variant": "phone-dark",
+      "scene": "price-updates-list",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-update-task-phone-dark.png",
+      "sha256": "368088d434ceef66980a3e8f0520270a0a89cb0fb3f5ffb16cda993010ad9a02",
+      "variant": "phone-dark",
+      "scene": "price-update-task",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/price-updates-bell-phone-dark.png",
+      "sha256": "31a53f647542540fc6ce10b7620d2c73942faa65bcb122b0b30a339d4300318d",
+      "variant": "phone-dark",
+      "scene": "price-updates-bell",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/manager-store-progress-phone-dark.png",
+      "sha256": "15c44d692c60d23012adfe4b801c175bea358ed8fcd394b5f7e4dd42a4c24bf6",
+      "variant": "phone-dark",
+      "scene": "manager-store-progress",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/dashboard-price-updates-phone-dark.png",
+      "sha256": "7800486394b6abe0999f700a9b38c929cefc5471f2c40ef99156728c40d50e95",
+      "variant": "phone-dark",
+      "scene": "dashboard-price-updates",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/cashier-price-changed-phone-dark.png",
+      "sha256": "d04f868184153cfd2186de3f0da6169213f26466cc70f3de9e1cd2fdafc53423",
+      "variant": "phone-dark",
+      "scene": "cashier-price-changed",
+      "primary": true,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    },
+    {
+      "path": "docs/redesign-screenshots/pr-e2/dashboard-card-detail-phone-dark.png",
+      "sha256": "4eb288b0b530f4c4d8c55e59ac9c5982d18706700fb9713bcfeb1ed02c6e066f",
+      "variant": "phone-dark",
+      "scene": "dashboard-card-detail",
+      "primary": false,
+      "personally_opened": true,
+      "captured_state_review": "pass"
+    }
+  ]
+}

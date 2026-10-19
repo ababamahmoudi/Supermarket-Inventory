@@ -74,6 +74,10 @@ export interface ShellRuntimeOptions<
       controller: ReturnType<typeof createE1StoreController<State, View>>,
     ): Promise<void>;
   };
+  prepareInitialBusiness?(
+    repository: BrowserAuthorityRepository,
+    companyId: string,
+  ): Promise<void>;
   prepareCommit?(draft: State, before: State, actor: AuthenticatedActor): void;
   onCommitted?(before: State, after: State, actor: AuthenticatedActor): void;
   systemJobs?: readonly {
@@ -168,6 +172,7 @@ export async function createE1ShellRuntime<
         if (!(error instanceof NoSystemChange)) throw error;
       }
     };
+    await options.prepareInitialBusiness?.(repository, options.companyId);
     // Clock effects run only against the persisted state with a real repository witness.
     for (const job of options.systemJobs ?? [])
       await runSystemJob(job.source, job.apply);

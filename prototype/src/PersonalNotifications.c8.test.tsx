@@ -93,6 +93,13 @@ it("opens the notified location before navigating to its approval and marks the 
       "Branch 2",
     ),
   );
+  // E2 also creates current personal notices for existing pending approvals.
+  // Reading this sale request must consume exactly its one unread record,
+  // retaining every other real notification rather than assuming an empty bell.
+  const unreadBefore = Number(
+    screen.getByLabelText("Unread personal notifications").textContent,
+  );
+  expect(unreadBefore).toBeGreaterThan(0);
   fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
   fireEvent.click(
     await screen.findByRole("menuitem", { name: /Sale request.*Lavash Bread/ }),
@@ -114,7 +121,7 @@ it("opens the notified location before navigating to its approval and marks the 
           (item) => item.id === notification.id,
         )?.read_at,
       ),
-    ]).toEqual(["0", true]);
+    ]).toEqual([String(unreadBefore - 1), true]);
   });
   expect(window.location.hash).toBe(`#${notification.href}`);
   expect(window.location.hash).toMatch(/^#approvals/);

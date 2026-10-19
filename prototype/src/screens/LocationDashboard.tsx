@@ -1,5 +1,6 @@
 import { CalendarClock, PackageMinus, Tags, Truck } from "lucide-react";
 import { useDemo } from "../store";
+import { PriceUpdatesDashboardCard } from "../price-update-presentation";
 import { useProtectedQuery } from "../use-protected-query";
 import {
   locationDashboardView,
@@ -153,6 +154,7 @@ export default function LocationDashboard() {
               onClick={() => navigate("returns")}
             />
           </div>
+          <PriceUpdatesDashboardCard />
           <div className="location-dashboard-cards">
             {[
               {

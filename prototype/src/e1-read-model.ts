@@ -1,3 +1,8 @@
+import {
+  priceUpdateTasks,
+  priceChangeHints,
+  type PriceChangeHint,
+} from "./price-updates";
 import type { AuthenticatedActor } from "./authority-types";
 import type {
   DemoState,
@@ -38,6 +43,7 @@ import type {
 export type { ProductReadDTO } from "./catalog-read-model";
 export type CompanyReadConfig = Omit<
   CompanyConfig,
+  | "notifications"
   | "pricing_categories"
   | "_comment"
   | "approvals"
@@ -61,6 +67,8 @@ export type CompanyReadConfig = Omit<
 /** No canonical invoice or unavailable money is synthesized to satisfy a component. */
 export interface ScopedReadView extends Omit<
   DemoState,
+  | "price_update_baseline"
+  | "price_task_prints"
   | "config"
   | "prototype_e1_history_recovery"
   | "products"
@@ -85,6 +93,7 @@ export interface ScopedReadView extends Omit<
   | "orders"
   | "supplier_items"
 > {
+  price_change_hints?: PriceChangeHint[];
   config: CompanyReadConfig;
   products: ProductReadDTO[];
   offers: OfferReadDTO[];
@@ -196,6 +205,7 @@ function operationalConfig(config: CompanyConfig): CompanyReadConfig {
     weighed_items: source.weighed_items,
     sales: source.sales,
     orders: source.orders,
+    price_updates: source.price_updates,
   };
 }
 function configView(
@@ -258,6 +268,10 @@ export function createReadModel(projectors: ReadModelProjectors) {
     const operational = projectors.operational(state, actor);
     return {
       version: state.version,
+      price_update_tasks: allows("price_updates.read")
+        ? priceUpdateTasks(state, actor)
+        : [],
+      price_change_hints: priceChangeHints(state, actor),
       config: configView(state, actor),
       ...catalog,
       ...invoices,

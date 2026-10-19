@@ -10,6 +10,7 @@ import { createPortal, flushSync } from "react-dom";
 import logo from "../../../assets/arzon-logo.png?inline";
 import { effectiveOffer, effectivePrice, regularPrice } from "../catalog";
 import { activeSaleAt, salePriceDisplay } from "../sales";
+import { confirmPriceTaskWaitlistLabels } from "../price-updates";
 import { SalePrice, SaleStatus } from "../sales-presentation";
 import { effectiveProjectedClearanceOffers } from "../receipt-lots";
 import { useRouteParam } from "../navigation";
@@ -484,7 +485,7 @@ export function ShelfLabel({
   );
 }
 
-function PhysicalSheet({
+export function PhysicalSheet({
   template,
   products,
   state,
@@ -2325,11 +2326,14 @@ export function Labels() {
             onClick={async () => {
               if (
                 pendingPrint &&
-                !(await run(
-                  (next, freshActor) =>
-                    confirmLabelsPrinted(next, pendingPrint, freshActor),
-                  "labels.print",
-                ))
+                !(await run((next, freshActor) => {
+                  confirmLabelsPrinted(next, pendingPrint, freshActor);
+                  confirmPriceTaskWaitlistLabels(
+                    next,
+                    freshActor,
+                    pendingPrint,
+                  );
+                }, "labels.print"))
               )
                 return;
               setConfirmationOpen(false);

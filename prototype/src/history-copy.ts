@@ -4,6 +4,39 @@ import { HistoryError } from "./history";
 import type { Language } from "./types";
 
 const actions: Record<string, [string, string]> = {
+  "Create price update": ["Create price update", "ایجاد به‌روزرسانی قیمت"],
+  "Replace pending price update": [
+    "Replace pending price update",
+    "جایگزینی به‌روزرسانی قیمت در انتظار",
+  ],
+  "Cancel price update": ["Cancel price update", "لغو به‌روزرسانی قیمت"],
+  "Update price task": ["Update price task", "به‌روزرسانی کار قیمت"],
+  "Complete price update": ["Complete price update", "تکمیل به‌روزرسانی قیمت"],
+  "Print price update labels": [
+    "Print price update labels",
+    "چاپ برچسب‌های به‌روزرسانی قیمت",
+  ],
+  "Confirm price update label": [
+    "Confirm price update label",
+    "تأیید برچسب به‌روزرسانی قیمت",
+  ],
+  "Save price update settings": [
+    "Save price update settings",
+    "ذخیرهٔ تنظیمات به‌روزرسانی قیمت",
+  ],
+  "Save notification settings": [
+    "Save notification settings",
+    "ذخیرهٔ تنظیمات اعلان",
+  ],
+  "Sale ends after today": [
+    "Sale ends after today",
+    "حراج پس از امروز پایان می‌یابد",
+  ],
+  "Selling price changed": ["Selling price changed", "قیمت فروش تغییر کرد"],
+  "Apply price to all branches": [
+    "Apply price to all branches",
+    "اعمال قیمت به همهٔ شعب",
+  ],
   "Schedule sale": ["Schedule sale", "زمان‌بندی تخفیف"],
   "Start sale": ["Start sale", "شروع تخفیف"],
   "Change sale": ["Change sale", "تغییر تخفیف"],
