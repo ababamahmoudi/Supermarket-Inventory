@@ -1,12 +1,13 @@
 # Project changelog
 
-## 2026-10-19 — Align retained C9 tests with requested behavior (verification pending)
+## 2026-10-19 — Align retained C9 tests with requested behavior (CI pending at publication)
 
 - Read the return creator's expected name from the demo users, rather than copying a display name. Check the genuine Persian Search notes translation and prove search still reaches built-in and other custom notebooks.
 - Give the shared selling-price wrapper one test identity; target complete prices and verify their accessible tree has no repeated nested labels or roles. Check the stopped offer's $2.99 in Price and its “2 for $5.00” terms in Offer, including compact phone rows.
 - Retain notebook button/dialog coverage at Notes and prove its removed Settings destination is absent. Recognize counted Branch request tabs and verify the requested 20px toolbar-to-list space separately from the 12px wrapping gap; preserve other geometry and business assertions.
 - After Ali explicitly approved the real phone wrapping fix, keep the Product price explanation's invoice reference whole with a class scoped to that fragment and `white-space: nowrap`. Preserve the existing layout guard, invoice data and pricing behavior.
-- Record the owner's standing rule to update tests that only expect explicitly replaced behavior, while stopping for apparent bugs or ambiguous requirements. All four earlier C9 shards finished: two assertion failures and two time limits. The test alignments and approved wrapping fix are included; new exact-head CI is pending; C9 remains unmerged.
+- After a second explicit approval for invoice-reference layout defects, give Supplier items' Invoice column a 220px minimum and priority2. Preserve phone visibility; move lower-priority width-hidden values into the existing accessible row details when necessary. The same six original layout cases pass in English/Persian at390/900/1440, without relaxed guards. The genuine Supplier probe verifies hidden cost/date through Details.
+- Record the owner's standing rule to update tests that only expect explicitly replaced behavior, while stopping for apparent bugs or ambiguous requirements. All four earlier C9 shards finished: two assertion failures and two time limits. Test alignments and the Product wrapping fix were pushed in `c4db3b4`; the later Supplier items fix passes its local verification. Exact-head CI is pending at publication; query the final PR body/live Checks. C9 remains unmerged.
 
 ## 2026-10-19 — C9 review and faster prototype CI
 

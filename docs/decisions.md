@@ -339,3 +339,11 @@ Specification first; implementation and tests require separate actual-source evi
 
 
 C9 weighed-price boundary: a retained $22.02/kg sale can convert below $9.99/lb exactly while both display the same cents. Promotion markers/comparisons require a reduction in the displayed main-unit cents as well as the exact canonical amount. Keep the actual entered-unit display, effective price and history unchanged; never reconstruct a retained kg amount from rounded lb cents.
+
+## 043 — Retained expectations and whole invoice references (2026-10-19)
+
+**Context:** C9 explicitly replaced several old presentation expectations. The original layout guards also exposed real invoice-reference wrapping and overlap defects, which Ali separately approved fixing.
+
+**Decision:** update only obsolete expectations, preserve business/layout assertions and runner budgets, and list every changed test. Verify one shared-price announcement through the native accessibility tree and genuine Persian search across notebooks. Keep the Product provenance invoice code together. Give Supplier items' invoice column a 220px minimum and priority so lower-priority values move into the existing row details when necessary; retain its previous phone visibility and all permitted values/actions.
+
+**Why:** meet the requested presentation without restoring old behavior, clipping invoice references, shrinking typography, losing data or weakening tests. Wait for all four browser shards and all exact-head checks; leave C9 unmerged for Ali's review. Equivalent invoice-reference layout fixes are authorized; other real bugs or ambiguous requirements still require a question.

@@ -130,7 +130,13 @@ export default function SupplierItems({
                 ]
               : []),
             { width: "160px" },
-            { width: "160px" },
+            {
+              key: "invoice",
+              width: 220,
+              minWidth: 220,
+              priority: 2,
+              mobilePrimary: false,
+            },
             ...(supervisor ? [{ width: "150px", actions: true }] : []),
           ]}
         >

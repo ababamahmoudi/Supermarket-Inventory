@@ -94,6 +94,57 @@
     "earlier-ci-failures.json.gz": {
       "uncompressed_sha256": "c0e4883bf982e64a04bbaaccf57b3c603a5262fdea50f5a499aafb9019698663",
       "note": "Exact original bytes. Plain-text peer has only normal pre-commit whitespace/end-of-file normalization."
+    },
+    "supplier-items-fixed.txt.gz": {
+      "uncompressed_sha256": "7c3b1a9db20c0abf75d161a1378b567344807b8bba99529a7593050cc967dfa1",
+      "note": "Exact original bytes; plain-text peer follows repository whitespace hooks."
+    },
+    "supplier-build.txt.gz": {
+      "uncompressed_sha256": "d19c45f71c906e3891e3e081359ab1f8abfaaa2efeec9ca6cc5e06ae8bd6fa1f",
+      "note": "Exact original bytes; plain-text peer follows repository whitespace hooks."
+    },
+    "supplier-eslint.txt.gz": {
+      "uncompressed_sha256": "c884fe29effaff733ee4200ea15832ae7dbfd4e66cfb0b21656e1561b3060545",
+      "note": "Exact original bytes; plain-text peer follows repository whitespace hooks."
+    },
+    "supplier-format.txt.gz": {
+      "uncompressed_sha256": "089e19ef7048ba9410c85a6e351eef3311be518a631da6f0fee0d56684146de4",
+      "note": "Exact original bytes; plain-text peer follows repository whitespace hooks."
+    },
+    "c8-all-pages-final.txt.gz": {
+      "uncompressed_sha256": "031294aa3b5ffb11644eca9b75098dc1f7170f47b9d7dc5a81e3093f28a333c4",
+      "note": "Exact original bytes; plain-text peer follows repository whitespace hooks."
     }
+  },
+  "approved_supplier_reference_fix": {
+    "files": {
+      "prototype/src/screens/SupplierItems.tsx": "5e506452204fd90a9856c5ac4256a7a6e881ab5519ac4755e45184a18b54f6cd"
+    },
+    "executions": [
+      {
+        "file": "supplier-items-fixed.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "supplier-build.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "supplier-eslint.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "supplier-format.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "c8-all-pages-final.txt",
+        "exit_code": 0,
+        "passed": 6,
+        "failed": 0,
+        "scope": "Original all-pages layout guards, both languages at390/900/1440, desktopproject; no changed budgets or guards."
+      }
+    ],
+    "genuine_ui_result": "Full reference and Edit/history/details controls visible; original inspector failures empty before/after Details; width-hidden unit cost and date read through existing UI."
   }
 }
