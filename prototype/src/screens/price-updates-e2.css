@@ -43,7 +43,7 @@
     display: grid;
     grid-template-columns:
       28px minmax(140px, 1.3fr) minmax(90px, 0.8fr) minmax(128px, 1fr)
-      minmax(140px, 1.4fr) minmax(98px, 0.8fr) auto;
+      minmax(140px, 1.4fr) minmax(98px, 0.8fr) 160px;
     gap: 12px;
   }
   .price-updates-table-header {

@@ -145,7 +145,7 @@ for (const language of ["en", "fa"] as const) {
         ).toBeVisible();
         const change = page.locator(".price-update-change").first();
         const oldPrice = await change.locator("del").boundingBox();
-        const newPrice = await change.locator("strong").boundingBox();
+        const newPrice = await change.locator(":scope > strong").boundingBox();
         expect(oldPrice).not.toBeNull();
         expect(newPrice).not.toBeNull();
         expect(oldPrice!.x + oldPrice!.width).toBeLessThan(newPrice!.x);

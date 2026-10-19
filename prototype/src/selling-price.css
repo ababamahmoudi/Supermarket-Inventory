@@ -130,6 +130,9 @@
 }
 :root .product-page .c9-price-card-heading h2 {
   margin: 0;
+  font-size: var(--font-size-headline);
+  line-height: var(--line-height-headline);
+  font-weight: var(--font-weight-headline);
 }
 :root .product-page-price-card .c9-product-price {
   gap: 16px;
