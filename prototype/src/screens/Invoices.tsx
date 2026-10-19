@@ -471,7 +471,35 @@ function InvoicePickerList() {
           )}
         </EmptyState>
       ) : (
-        <DataTable className="invoice-picker-table">
+        <DataTable
+          className="invoice-picker-table"
+          columns={[
+            {
+              key: "invoice",
+              label: t("Invoice", "فاکتور"),
+              required: true,
+              priority: 1,
+            },
+            {
+              key: "supplier",
+              label: t("Supplier", "تأمین‌کننده"),
+              priority: 2,
+            },
+            { key: "location", label: t("Location", "مکان"), priority: 3 },
+            {
+              key: "date",
+              label: t("Invoice date", "تاریخ فاکتور"),
+              priority: 3,
+            },
+            { key: "status", label: t("Status", "وضعیت"), priority: 2 },
+            { key: "action", label: t("Action", "عملیات"), actions: true },
+          ]}
+          phoneList={{
+            name: "invoice",
+            value: "status",
+            secondary: ["supplier", "location", "date"],
+          }}
+        >
           <thead>
             <tr>
               <th scope="col">{t("Invoice", "فاکتور")}</th>
