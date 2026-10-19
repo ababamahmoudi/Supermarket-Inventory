@@ -1,5 +1,16 @@
 # Project changelog
 
+## 2026-10-19 — S1 foundation pass (Claude, built on C9)
+
+- One shared stylesheet (`src/foundation.css`, loaded last) now owns tables, fields, tabs, KPI cards, detail lists, boxed items, back links and blue clickable names. Removed the Labels table overrides that pushed prices against the edge; invoice totals read as a right-aligned summary.
+- Invoices: the Branch Supervisor's list is a real table (it was broken cards); drafts are a table; invoice lines drop the repeated "Delivered quantity" and say "Not tracked" instead of "No".
+- Price updates: only Seen and Done, each with who and when; price history is a dated table, newest first, marked Latest.
+- Notes: authors cannot mark their own notes seen; new "Who can mark notes done" setting per notebook (and for built-in tabs via Notebook settings).
+- Date tracking: Add button lines up with the fields; everyone can add dates (Cashiers add only) and the list says who added each date. Add date works from Lookup and the product page with All my locations selected.
+- Products: Manual price moved to the Status column. Supplier contact fields show "Not added" when empty. KPI numbers line up. Tabs never wrap. Dashboard approval requests are boxed.
+- Sign-in clears and refocuses a wrong password. Undo toasts show only to the person who acted. A signed-in tab shows the app frame during startup instead of a blank page.
+- Tests: updated those that asserted the old rules; added unit tests for Seen, note authors, done rules and Cashier dates.
+
 ## 2026-10-19 — Native WebKit verified; proof-helper alignment
 
 - Wait for all four shards/seven checks on be25d01c: native WebKit's one network no-reload case passes; foundation and prototype static pass. Browser totals779passed/12failed/50existing-skipped/0flaky. Every failure is the same stale Blob-only raw inspector in the shared C8 proof script, not a demonstrated missing original.
