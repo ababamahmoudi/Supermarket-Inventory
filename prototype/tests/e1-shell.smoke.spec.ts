@@ -89,7 +89,12 @@ for (const language of ["en", "fa"] as const) {
               includeHidden: true,
             })
             .getByRole("link", { includeHidden: true }),
-        ).toHaveCount(1);
+        ).toHaveText(
+          // S1 (Ali's rule): everyone, including the Cashier, adds dates.
+          language === "fa"
+            ? ["جست‌وجو", "پیگیری تاریخ"]
+            : ["Lookup", "Date tracking"],
+        );
       }
       await signOut(page, language);
     }

@@ -1490,7 +1490,36 @@ function InvoiceWorkspace({
       }
       className="invoice-saved-drafts"
     >
-      <DataTable className="invoice-saved-table">
+      <DataTable
+        className="invoice-saved-table"
+        columns={[
+          {
+            key: "invoice",
+            label: t("Invoice", "فاکتور"),
+            required: true,
+            priority: 1,
+          },
+          {
+            key: "supplier",
+            label: t("Supplier", "تأمین‌کننده"),
+            priority: 2,
+          },
+          { key: "file", label: t("Original file", "فایل اصلی"), priority: 3 },
+          {
+            key: "status",
+            label: t("Status", "وضعیت"),
+            required: true,
+            priority: 1,
+          },
+          { key: "action", label: t("Action", "عملیات"), actions: true },
+        ]}
+        phoneList={{
+          name: "invoice",
+          value: "status",
+          // The Continue / Resume button stays reachable on phones.
+          secondary: ["supplier", "file", "action"],
+        }}
+      >
         <thead>
           <tr>
             <th scope="col">{t("Invoice", "فاکتور")}</th>

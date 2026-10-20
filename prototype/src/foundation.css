@@ -83,6 +83,14 @@
   justify-items: end;
 }
 
+/* The New order footer total lines up with the table's last money column
+ * (its amount is always left-to-right, so the physical right edge is used). */
+@media (min-width: 761px) {
+  :root .order-total strong {
+    padding-inline: var(--table-cell-padding) var(--table-edge-padding);
+  }
+}
+
 /* ── Clickable names are blue (Ali's rule: blue = you can open it) ── */
 :root
   :is(

@@ -244,9 +244,19 @@ for (const language of ["en", "fa"] as const) {
     await expect(page.locator(".lookup-detail .sale-price")).toContainText(
       "$0.89",
     );
-    await expect(
-      page.locator(".lookup-detail .product-header-actions"),
-    ).toHaveCount(0);
+    // S1 (Ali's rule): everyone adds dates, so the Cashier's only product
+    // action is Add date; no price, sale or cost actions.
+    await page
+      .locator(".lookup-detail .product-header-actions")
+      .getByRole("button", {
+        name: language === "fa" ? "اقدامات کالا" : "Product actions",
+        exact: true,
+      })
+      .click();
+    await expect(page.getByRole("menuitem")).toHaveText([
+      language === "fa" ? "افزودن تاریخ" : "Add date",
+    ]);
+    await page.keyboard.press("Escape");
     await expect(page.locator(".lookup-detail")).not.toContainText(
       /Store cost|Cost and margin|Margin %|هزینهٔ فروشگاه|هزینه و حاشیه|حاشیه سود %/,
     );
