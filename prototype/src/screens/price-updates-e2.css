@@ -77,7 +77,7 @@
     gap: 6px;
     font-size: var(--font-size-caption);
   }
-  .price-updates-steps > span {
+  .price-updates-steps > span[aria-hidden="true"] {
     inline-size: 6px;
     block-size: 6px;
     border-radius: var(--radius-round);
@@ -90,13 +90,13 @@
   .price-updates-steps.is-started {
     color: var(--accent);
   }
-  .price-updates-steps.is-started > span {
+  .price-updates-steps.is-started > span[aria-hidden="true"] {
     background: var(--accent);
   }
   .price-updates-steps.is-complete {
     color: var(--approved);
   }
-  .price-updates-steps.is-complete > span {
+  .price-updates-steps.is-complete > span[aria-hidden="true"] {
     background: var(--approved);
   }
 }

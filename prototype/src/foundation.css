@@ -244,3 +244,201 @@
   border-radius: var(--radius-control);
   background: var(--surface);
 }
+
+/* ── S1 fixes from Ali's screenshots (2026-10-20) ── */
+
+/* Invoice details: header, status row and three labelled groups. */
+:root .ui-card.invoice-header-card {
+  display: grid;
+  gap: 16px;
+}
+:root .ui-card.invoice-header-card > * {
+  margin-block: 0;
+}
+:root .invoice-details-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+}
+:root .invoice-details-meta > span + span::before {
+  content: "·";
+  margin-inline: 10px;
+}
+:root .invoice-details-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+:root .invoice-workspace .invoice-details-form.invoice-details-sections {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  max-inline-size: none;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+:root .invoice-details-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 20px 24px;
+  align-items: start;
+  padding-block-start: 20px;
+  border-block-start: 1px solid var(--divider);
+}
+:root .invoice-details-group > h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--font-size-headline);
+  line-height: var(--line-height-headline);
+  font-weight: var(--font-weight-headline);
+}
+:root
+  .invoice-details-group
+  .field
+  > :is(.ui-select, .ui-date-field, .invoice-payment-terms) {
+  inline-size: 100%;
+}
+:root .invoice-supplier-review {
+  padding: 16px;
+  border: 1px solid var(--list-box-border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+:root .invoice-supplier-review .actions {
+  margin: 0;
+  gap: 12px;
+}
+:root .ui-card.invoice-header-card > .banner {
+  margin: 0;
+}
+
+/* Invoice lines: status chips breathe; numbers line up with the product name. */
+:root .invoice-line-heading .inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+:root .ui-data-table.invoice-lines-table .invoice-line-summary > td {
+  vertical-align: top;
+}
+
+/* The open line: one flat panel, fields in a tidy grid, one footer. */
+:root .invoice-line-review {
+  display: grid;
+  gap: 24px;
+}
+:root .invoice-workspace .invoice-line-form {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 20px 24px;
+  align-items: start;
+  max-inline-size: none;
+  padding: 0;
+  border-radius: 0;
+  background: var(--color-clear);
+}
+:root .invoice-line-form > .invoice-pack-equation {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+:root .invoice-line-review > fieldset.date-review {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 24px 0 0;
+  border: 0;
+  border-block-start: 1px solid var(--divider);
+}
+:root .invoice-line-review .date-review .invoice-details-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 20px 24px;
+  max-inline-size: none;
+  margin-block-start: 16px;
+}
+:root .invoice-line-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block-start: 24px;
+  border-block-start: 1px solid var(--divider);
+}
+/* Confirm is the main action of an open line, so it looks like one. */
+:root .invoice-line-actions > .invoice-line-confirm {
+  min-block-size: 44px;
+  margin-inline-start: auto;
+  padding-inline: 20px;
+  border-radius: var(--radius-control);
+  background: var(--accent-fill);
+  color: var(--primary-text);
+  font-weight: var(--font-weight-headline);
+  justify-content: center;
+}
+:root .invoice-line-confirm .ui-checkbox-box {
+  border-color: currentColor;
+  background: var(--color-clear);
+  color: inherit;
+}
+:root .invoice-line-confirm[aria-checked="true"] {
+  background: var(--approved-bg);
+  color: var(--approved);
+}
+:root .invoice-line-confirm[aria-checked="true"] .ui-checkbox-box {
+  border-color: var(--approved);
+  background: var(--approved);
+  color: var(--primary-text);
+}
+:root .invoice-line-confirm:disabled {
+  background: var(--disabled-fill);
+  color: var(--disabled-text);
+}
+
+/* Price updates: the Seen cell's name is text, only the first span is the dot. */
+:root .price-updates-steps > .price-updates-seen {
+  inline-size: auto;
+  block-size: auto;
+  border-radius: 0;
+  background: none;
+}
+
+/* Labels: the "Select all" box lines up with the row boxes below it. */
+@media (min-width: 761px) {
+  :root .labels-selection-toolbar {
+    padding-inline-start: var(--table-edge-padding);
+  }
+  :root .labels-selection-toolbar .ui-checked-control {
+    padding-inline: 11px 4px;
+  }
+}
+
+/* Product dates: the "Expiring soon" chip sits on the row's centre line. */
+:root .product-quiet-row > .ui-badge.badge {
+  align-self: center;
+}
+
+/* Offers: a lead-in sentence keeps a gap; each suggestion is a boxed item. */
+:root .card-lead {
+  margin-block: 0 16px;
+}
+:root .offer-task.list-box {
+  gap: 20px;
+}
+
+/* Dashboard "Price updates to apply": one boxed item per update, never overlapping. */
+:root .price-update-dashboard-card .card-heading {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+:root .price-update-dashboard-card .card-heading > h2 {
+  flex: 1 1 140px;
+  min-inline-size: 0;
+}
+:root .price-update-dashboard-row {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  inline-size: 100%;
+}

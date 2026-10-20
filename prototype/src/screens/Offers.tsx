@@ -589,7 +589,7 @@ export function Offers() {
           )}
           {tab === "offers" && suggestions.length > 0 && (
             <Card title={t("Offer suggestions", "پیشنهادهای پیشنهادی")}>
-              <p className="muted">
+              <p className="muted card-lead">
                 {t(
                   "Confirm an offer before it starts.",
                   "پیش از شروع، پیشنهاد را تأیید کنید.",
@@ -630,7 +630,7 @@ export function Offers() {
                       [offer.id]: { ...options, ...values },
                     });
                   return (
-                    <section className="offer-task" key={offer.id}>
+                    <section className="offer-task list-box" key={offer.id}>
                       <div className="row">
                         <h3>
                           {product ? (
