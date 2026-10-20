@@ -408,6 +408,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
                 Math.max(term.left, amount.left) <=
               0,
           endAligned: alignmentError <= 2,
+          amountEdge: rtl ? amount.left : amount.right,
           moneyWhole:
             moneyTops.length > 0 &&
             Math.max(...moneyTops) - Math.min(...moneyTops) <= 2,
@@ -424,8 +425,8 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       body: JSON.stringify(totalRows, null, 2),
       contentType: "application/json",
     });
-    // Klead replaces the old label/value rows with adjacent end-aligned totals.
-    // At phone width Payable becomes one full-width label/value row.
+    // S1: totals read like a paper invoice — one row per total, label at the
+    // start and amount at the end on a shared baseline, amounts in one column.
     for (const row of totalRows) {
       expect(
         row.contained,
@@ -437,8 +438,8 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       if (!row.column)
         expect(
           row.alignItems,
-          `${row.label}: row uses the same end alignment for both line boxes`,
-        ).toBe("flex-end");
+          `${row.label}: label and amount share a baseline`,
+        ).toBe("baseline");
       expect(row.endAligned, `${row.label}: totals remain end-aligned`).toBe(
         true,
       );
@@ -446,6 +447,11 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
         true,
       );
     }
+    const edges = totalRows.map((row) => row.amountEdge);
+    expect(
+      Math.max(...edges) - Math.min(...edges),
+      "every amount ends on the same edge",
+    ).toBeLessThanOrEqual(2);
     for (let index = 0; index < totalRows.length; index++)
       for (const next of totalRows.slice(index + 1)) {
         const bounds = totalRows[index].bounds;

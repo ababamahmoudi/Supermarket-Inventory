@@ -415,16 +415,11 @@
     :root .posted-invoice-header {
       grid-template-columns: minmax(0, 1fr);
     }
+    /* S1: the totals stay one column (label start, amount end) on narrow
+       panes too, so amounts always line up under each other. */
     :root .posted-invoice-document .posted-invoice-totals {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 20px;
-    }
-    :root .posted-invoice-totals .posted-invoice-payable {
-      grid-column: 1 / -1;
-      flex-direction: row;
-      justify-content: space-between;
-      padding-block-start: 16px;
-      border-block-start: 1px solid var(--divider);
+      grid-template-columns: minmax(0, 1fr);
+      inline-size: 100%;
     }
   }
   @media (max-width: 759px) {

@@ -17,7 +17,9 @@
   --table-cell-padding: 12px;
 }
 
-/* ── Fields: always look editable, on white cards and on grey panels ── */
+/* ── Fields: always look editable, on white cards and on grey panels ──
+ * One selector, with its states nested inside it, so a state (hover, focus,
+ * error, disabled) always outranks the resting border instead of losing to it. */
 :root
   :is(
     .field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
@@ -37,41 +39,22 @@
     .ui-select-search *
   ) {
   border: 1px solid var(--field-border);
-}
-:root
-  :is(
-    .field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
-    .field textarea,
-    .password-field input,
-    .ui-input,
-    textarea
-  ):hover:not(:disabled):not(:focus-visible) {
-  border-color: var(--field-border-hover);
-}
-:root
-  :is(
-    .field input,
-    .field textarea,
-    .password-field input,
-    .ui-input,
-    textarea
-  ):focus-visible {
-  border-color: var(--accent);
-}
-:root
-  :is(
-    .field input,
-    .field textarea,
-    .password-field input,
-    .ui-input,
-    textarea
-  )[aria-invalid="true"] {
-  border-color: var(--danger);
-  background: var(--surface);
-  box-shadow: var(--shadow-none);
-}
-:root :is(.field input, .field textarea, .ui-input, textarea):disabled {
-  border-style: dashed;
+
+  &:hover:not(:disabled):not(:focus) {
+    border-color: var(--field-border-hover);
+  }
+  &:focus,
+  &:focus-visible {
+    border-color: var(--accent);
+  }
+  &[aria-invalid="true"] {
+    border-color: var(--danger);
+    background: var(--surface);
+    box-shadow: var(--shadow-none);
+  }
+  &:disabled {
+    border-style: dashed;
+  }
 }
 
 /* ── Tables: one rhythm for every list ── */
@@ -162,6 +145,11 @@
 :root .ui-segments:not(td .ui-segments) > button {
   flex: 0 0 auto;
   white-space: nowrap;
+}
+/* A one-line tab strip is as wide as all its tabs. Let every box around it
+ * shrink to the screen, so the strip scrolls instead of widening the page. */
+:root .main-content :has(.ui-segments:not(td .ui-segments)) {
+  min-inline-size: 0;
 }
 
 /* ── KPI cards: label row, number row, detail row — numbers always line up ── */

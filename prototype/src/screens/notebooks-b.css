@@ -128,6 +128,9 @@
 .done-rule-fields {
   display: grid;
   gap: 12px;
+  /* A fieldset is min-content wide by default; let it shrink on phones so
+     the dialog never grows past the screen. */
+  min-inline-size: 0;
   margin: 0;
   padding: 16px;
   border: 1px solid var(--divider);
