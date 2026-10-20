@@ -1513,12 +1513,9 @@ function InvoiceWorkspace({
           },
           { key: "action", label: t("Action", "عملیات"), actions: true },
         ]}
-        phoneList={{
-          name: "invoice",
-          value: "status",
-          // The Continue / Resume button stays reachable on phones.
-          secondary: ["supplier", "file", "action"],
-        }}
+        // Not a phone list: a draft opens with its button (Resume draft /
+        // Continue), not a row link. Invoice, status and the button always
+        // stay visible; supplier and file fold into the row details.
       >
         <thead>
           <tr>
