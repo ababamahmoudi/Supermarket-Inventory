@@ -337,7 +337,7 @@
   align-items: start;
   max-inline-size: none;
   padding: 0;
-  border-radius: 0;
+  border-radius: var(--radius-none);
   background: var(--color-clear);
 }
 :root .invoice-line-form > .invoice-pack-equation {
@@ -379,7 +379,7 @@
   justify-content: center;
 }
 :root .invoice-line-confirm .ui-checkbox-box {
-  border-color: currentColor;
+  border-color: var(--color-current);
   background: var(--color-clear);
   color: inherit;
 }
@@ -401,7 +401,7 @@
 :root .price-updates-steps > .price-updates-seen {
   inline-size: auto;
   block-size: auto;
-  border-radius: 0;
+  border-radius: var(--radius-none);
   background: none;
 }
 
