@@ -302,7 +302,7 @@ These rules replace any earlier per-PR wording that conflicts with them. The cod
 3. **Empty values say so.** Use `<NotAdded />` or `<LtrValue value=… />` for anything that was never entered ("Not added" in muted italics). Use "—" only in table columns that mean "none" (for example no offer).
 4. **Fields look editable everywhere.** Inputs, text areas and selects have a visible border (`--field-border`), including on grey panels. Errors outline the field in red and say how to fix it. A wrong password is cleared and focused.
 5. **One item, one box.** Things that belong together in a list (queue requests, Seen/Done steps, rule choices) sit in one `list-box` with a hairline border and 16px padding.
-6. **Tabs and segmented controls never wrap.** They scroll sideways on narrow screens.
+6. **Tabs and filter segments never wrap.** They scroll sideways on narrow screens. A choice inside a table cell (such as an invoice line decision) may wrap so its full text stays visible.
 7. **KPI cards line up.** Label row, number row, detail row; numbers sit on the same line whether or not a card has an arrow button.
 8. **Detail lists** use `dl.detail-grid` (label above value, auto-fit columns).
 9. **Detail pages** start with a `back-link` ("← Back to …") above the page title, never a loose button beside it.

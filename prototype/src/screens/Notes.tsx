@@ -87,7 +87,7 @@ const noteIsDone = (item: NoteEvidenceRecord) =>
 const noteIsSeen = (item: NoteEvidenceRecord) =>
   Boolean(item.seen_receipts?.length || item.status === "read");
 
-function NoteEvidence({
+export function NoteEvidence({
   item,
   ordered = false,
 }: {

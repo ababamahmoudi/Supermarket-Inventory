@@ -143,18 +143,21 @@
   margin-block-start: 0;
 }
 
-/* ── Tabs and segmented controls never wrap onto a second line ── */
-:root .ui-segments {
+/* ── Tabs and filters never wrap onto a second line ──
+ * A segmented choice inside a table cell (for example an invoice line's
+ * "Keep it / Refused" decision) keeps wrapping, so long answers stay readable
+ * inside a narrow column instead of being cut off. */
+:root .ui-segments:not(td .ui-segments) {
   flex-wrap: nowrap;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
   max-inline-size: 100%;
 }
-:root .ui-segments::-webkit-scrollbar {
+:root .ui-segments:not(td .ui-segments)::-webkit-scrollbar {
   display: none;
 }
-:root .ui-segments > button {
+:root .ui-segments:not(td .ui-segments) > button {
   flex: 0 0 auto;
   white-space: nowrap;
 }

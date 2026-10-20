@@ -321,9 +321,12 @@ test("a manual draft detail returns to its list without losing the saved line", 
     .click();
   await expect(page.locator(".invoice-saved-drafts")).toBeVisible();
   await expect(page.locator(".invoice-lines-table")).toHaveCount(0);
+  // S1: saved drafts are a table; the new manual draft has no invoice number yet.
   await page
-    .locator(".invoice-saved-drafts .dialog-actions")
-    .filter({ has: page.getByText("Draft", { exact: true }) })
+    .locator(".invoice-saved-drafts tbody tr")
+    .filter({
+      has: page.locator("td:first-child strong", { hasText: /^Draft$/ }),
+    })
     .getByRole("button", { name: "Resume draft", exact: true })
     .click();
   await expect(page.locator(".invoice-line")).toHaveCount(1);

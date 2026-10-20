@@ -44,18 +44,29 @@ test("C9 readers keep separate receipts while Manager done, reopen and Undo pres
   await expect(
     card.getByRole("button", { name: "Mark done", exact: true }),
   ).toHaveCount(0);
-  await card.getByRole("button", { name: "Mark as seen", exact: true }).click();
+  // S1 (Ali's rule): the author can't mark their own note as seen.
   await expect(
-    card.getByRole("button", { name: "Seen by you", exact: true }),
-  ).toBeDisabled();
+    card.getByRole("button", { name: /^(Mark as seen|Seen by you)$/ }),
+  ).toHaveCount(0);
+  await expect(card.locator(".note-own-hint")).toHaveText("Your note");
   const readNote = async () =>
     (await readCanonicalBusinessEvidence(page)).notes.find(
       (note) => note.text === "C9 handover needs a manager decision",
     )!;
+  const created = await readNote();
+  expect(created.seen_receipts ?? []).toEqual([]);
+
+  await signIn(page, "Owner");
+  await setBranch(page, "Branch 1");
+  await page.goto(`/#notes?note=${encodeURIComponent(created.id)}`);
+  await card.getByRole("button", { name: "Mark as seen", exact: true }).click();
+  await expect(
+    card.getByRole("button", { name: "Seen by you", exact: true }),
+  ).toBeDisabled();
   const firstSeen = await readNote();
   expect(firstSeen.status).toBe("open");
   expect(firstSeen.seen_receipts?.map((receipt) => receipt.user_id)).toEqual([
-    configuredPersonExpectation("ny-floor").id,
+    configuredPersonExpectation("owner").id,
   ]);
 
   await signIn(page, "Manager");
@@ -115,7 +126,7 @@ test("C9 readers keep separate receipts while Manager done, reopen and Undo pres
   ).toEqual(before);
 });
 
-test("C9 four genuine readers have ordered persisted receipts, accessible full disclosure and no Cashier done grant", async ({
+test("C9 three genuine readers besides the author have ordered persisted receipts and no Cashier done grant", async ({
   page,
 }) => {
   await signIn(page, "Manager");
@@ -151,8 +162,12 @@ test("C9 four genuine readers have ordered persisted receipts, accessible full d
   const card = page
     .locator("[data-notebook-entry]")
     .filter({ hasText: "C9 four people read the same handover" });
+  // S1 (Ali's rule): the Manager wrote this note, so the Manager can't mark it seen.
+  await expect(card.locator(".note-own-hint")).toHaveText("Your note");
+  await expect(
+    card.getByRole("button", { name: "Mark as seen", exact: true }),
+  ).toHaveCount(0);
   const readers: [DemoRole, string][] = [
-    ["Manager", "manager"],
     ["Owner", "owner"],
     ["Floor Worker", "ny-floor"],
     ["Cashier", "cashier"],
@@ -186,23 +201,13 @@ test("C9 four genuine readers have ordered persisted receipts, accessible full d
   await expect(
     card.getByRole("button", { name: "Seen by you", exact: true }),
   ).toBeDisabled();
-  const disclosure = card.locator(".note-readers-details");
-  await expect(disclosure.locator("summary")).toContainText("and 1 other");
-  await expect(disclosure.locator("summary")).not.toContainText(
-    /\d{4}-\d{2}-\d{2}/,
+  // Three readers fit on one line; the "and N others" disclosure starts at four
+  // (covered by the Notes unit test, since only three people besides the author
+  // can read a North York notebook in the demo).
+  await expect(card.locator(".note-readers-details")).toHaveCount(0);
+  await expect(card.locator(".note-readers")).toContainText(
+    /Seen by .+ at \d{2}:\d{2}, .+ at \d{2}:\d{2} and you at \d{2}:\d{2}/,
   );
-  await expect(disclosure.locator("summary")).toHaveAttribute(
-    "title",
-    /you at \d{2}:\d{2}/,
-  );
-  const everyone = disclosure.getByRole("list", {
-    name: "Everyone who has seen this note",
-    exact: true,
-  });
-  await expect(everyone).toBeHidden();
-  await disclosure.locator("summary").click();
-  await expect(everyone).toBeVisible();
-  await expect(everyone.getByRole("listitem")).toHaveCount(4);
   const final = (
     await readCanonicalBusinessEvidence(page)
   ).notebook_entries!.find(
@@ -213,6 +218,6 @@ test("C9 four genuine readers have ordered persisted receipts, accessible full d
     readers.map(([, username]) => configuredPersonExpectation(username).id),
   );
   expect(new Set(final.seen_receipts?.map((receipt) => receipt.id)).size).toBe(
-    4,
+    3,
   );
 });

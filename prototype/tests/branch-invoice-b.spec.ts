@@ -121,7 +121,7 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
   await page
-    .locator(".invoice-saved-drafts .dialog-actions")
+    .locator(".invoice-saved-drafts tbody tr")
     .filter({ has: page.getByText("PRIVATE-BRANCH-2", { exact: true }) })
     .getByRole("button", { name: "Resume draft", exact: true })
     .click();

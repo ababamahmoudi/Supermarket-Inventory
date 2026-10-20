@@ -214,7 +214,7 @@ test("Supervisor rejects a worker supplier from the dashboard and keeps its invo
   await page.goto("/#invoices");
   await page.getByRole("tab", { name: "Needs review", exact: true }).click();
   await page
-    .locator(".invoice-saved-drafts .dialog-actions")
+    .locator(".invoice-saved-drafts tbody tr")
     .filter({
       has: page.getByText("Orchard Rejection Supply", { exact: true }),
     })
