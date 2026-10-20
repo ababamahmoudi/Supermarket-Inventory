@@ -167,6 +167,7 @@ async function appearance(control: Locator) {
         tint: token("--accent-soft"),
         tintInk: token("--accent-tint-text"),
         hairline: token("--page-control-border"),
+        fieldBorder: token("--field-border"),
       },
       borderColour: style.borderTopColor,
       borderWidth: style.borderTopWidth,
@@ -189,12 +190,13 @@ for (const language of ["en", "fa"] as const) {
       await expect(control).not.toHaveAttribute("aria-invalid", "true");
       const style = await appearance(control);
       report.push({ name: await control.getAttribute("id"), ...style });
+      // S1 (Ali's rule): fields look editable everywhere, so an ordinary
+      // field has a 1px foundation border, but no outline or glow at rest.
       expect
-        .soft(
-          style.borderVisible,
-          "ordinary field has no painted resting border",
-        )
-        .toBe(false);
+        .soft(style.borderVisible, "ordinary field shows its editable border")
+        .toBe(true);
+      expect.soft(style.borderWidth).toBe("1px");
+      expect.soft(style.borderColour).toBe(style.tokens.fieldBorder);
       expect
         .soft(style.outlineVisible, "ordinary field has no resting contour")
         .toBe(false);
@@ -522,7 +524,9 @@ for (const language of ["en", "fa"] as const) {
       expect
         .soft(style.surface, "nested reminder field has the surface fill")
         .toEqual(style.tokens.surfaceRgb);
-      expect.soft(style.borderVisible).toBe(false);
+      // S1: the foundation border keeps the field visibly editable.
+      expect.soft(style.borderVisible).toBe(true);
+      expect.soft(style.borderColour).toBe(style.tokens.fieldBorder);
       expect.soft(style.outlineVisible).toBe(false);
       expect.soft(style.contrast).toBeGreaterThanOrEqual(4.5);
       await page.keyboard.press("Escape");

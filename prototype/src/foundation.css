@@ -28,6 +28,8 @@
     input.ui-number[type="text"],
     textarea
   ):not(
+    .topbar *,
+    .branch-pill,
     .filter-search-pill *,
     .topbar-search *,
     .lookup-search-pill *,
