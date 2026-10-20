@@ -390,8 +390,7 @@ for (const width of [390, 430])
           // S1 (Ali's rule): a price update has only Seen and Done.
           await expect(
             page.getByRole("button", {
-              name:
-                language === "fa" ? "علامت‌گذاری دیده‌شده" : "Mark as seen",
+              name: language === "fa" ? "علامت‌گذاری دیده‌شده" : "Mark as seen",
               exact: true,
             }),
           ).toBeVisible();
