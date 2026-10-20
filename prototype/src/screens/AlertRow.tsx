@@ -77,6 +77,7 @@ export function AlertRow({
         <button
           type="button"
           className="alert-row-head"
+          data-control-kind="disclosure"
           aria-expanded={open}
           aria-controls={panelId}
           onClick={() => setOpen((current) => !current)}

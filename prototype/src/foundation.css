@@ -403,6 +403,15 @@
   block-size: auto;
   border-radius: var(--radius-none);
   background: none;
+  /* Blue is for names you can click; this name is plain text. */
+  color: var(--text);
+}
+/* The status dot sits on the name's line, not between name and time. */
+:root .price-updates-row .price-updates-steps {
+  align-items: flex-start;
+}
+:root .price-updates-row .price-updates-steps > span[aria-hidden="true"] {
+  margin-block-start: calc(0.5lh - 3px);
 }
 
 /* Labels: the "Select all" box lines up with the row boxes below it. */
@@ -426,6 +435,10 @@
 }
 :root .offer-task.list-box {
   gap: 20px;
+}
+/* The status chip and branch line up with the product's first line. */
+:root .offer-task.list-box > .row {
+  align-items: baseline;
 }
 
 /* Dashboard "Price updates to apply": one boxed item per update, never overlapping. */

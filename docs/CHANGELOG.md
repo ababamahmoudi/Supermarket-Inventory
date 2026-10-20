@@ -6,6 +6,9 @@
 - Invoices: invoice details are split into Invoice, Receiving, and Amounts and payment, with a clear summary line and status row; the supplier-review notice is a boxed item; status chips on lines have gaps and line numbers line up at the top; the open line uses one grid, and **Confirm this invoice line** is a primary button next to **Remove line**.
 - Price updates: the Seen cell no longer collapses into a dot. Dashboard price-update cards are boxed items and never overlap. Labels: the Select all box lines up with the row boxes. Product dates: the Expiring soon chip is centred on its row. Offers: the suggestion is a boxed item and the sentence above it has a gap.
 - Tests: browser tests that click an alert's actions now open the alert row first (`openAlert` helper); the order-differences check looks for the alert row's category label.
+- CI fix: an alert row's click-to-open head declares itself a disclosure (`data-control-kind="disclosure"`), so the button audit no longer measures it as a text action. `openAlert` also opens a row when it is given the row itself (the C8 sale-cost alert tests).
+- Polish: the Price updates Seen dot sits on the name's line and the name is plain text, not blue (blue means clickable). The offer suggestion's Pending chip and branch line up with the product's first line.
+- Added `CLAUDE.md` (Ali's working rules for Claude; it loads `AGENTS.md` first).
 
 ## 2026-10-19 — S1 foundation pass (Claude, built on C9)
 

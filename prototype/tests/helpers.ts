@@ -21,12 +21,18 @@ export type DemoRole =
   | "ny-floor"
   | "wh-floor";
 
-/** Alerts are one list; a row's details open when you click it. */
+/**
+ * Alerts are one list; a row's details open when you click it. `scope` is the
+ * page (pick a row by `name`, or the first row) or one alert row itself.
+ */
 export async function openAlert(scope: Page | Locator, name?: string | RegExp) {
-  const rows = scope.locator(".alert-row");
-  const row = name ? rows.filter({ hasText: name }).first() : rows.first();
-  const head = row.locator('.alert-row-head[aria-expanded="false"]');
-  if (await head.count()) await head.click();
+  const row = name
+    ? scope.locator(".alert-row").filter({ hasText: name }).first()
+    : scope;
+  const head = row.locator(".alert-row-head").first();
+  await head.waitFor();
+  if ((await head.getAttribute("aria-expanded")) === "false")
+    await head.click();
 }
 
 export async function openShellAction(page: Page, name: string) {
