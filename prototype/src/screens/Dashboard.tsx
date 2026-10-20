@@ -796,7 +796,9 @@ export function Dashboard() {
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => navigate("alerts")}
+                          onClick={() =>
+                            navigate(`alerts?id=${encodeURIComponent(item.id)}`)
+                          }
                         >
                           {t("Review", "بررسی")}
                           <ArrowRight

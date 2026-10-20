@@ -272,10 +272,7 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   ).toHaveCount(0);
   await page.goto("/#alerts");
   await expect(
-    page.getByRole("heading", {
-      name: "Invoice and order differences",
-      exact: true,
-    }),
+    page.locator(".alert-row").filter({ hasText: "Order differences" }),
   ).toBeVisible();
   await page.goto("/#received");
   await page

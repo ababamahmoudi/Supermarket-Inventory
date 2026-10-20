@@ -15,8 +15,11 @@ import {
   UnitText,
 } from "../presentation";
 import { ProductCost, ProductPrice } from "../weight-price-presentation";
-import { Badge, Button, Card, Checkbox, ConfirmDialog } from "../ui";
+import { Badge, Button, Checkbox, ConfirmDialog } from "../ui";
 import type { Alert } from "../types";
+import { AlertRow } from "./AlertRow";
+import { alertCategory } from "../alert-categories";
+import { saleAlertsFor } from "../sale-alerts";
 import "./sales-c8.css";
 
 export function SalesAlerts({
@@ -32,14 +35,7 @@ export function SalesAlerts({
   if (!historyContext || !can("alerts.read")) return null;
   const canDecide = can("sales.cost_alert_decide");
   const canHold = can("sales.delivery_hold");
-  const alerts = state.alerts.filter(
-    (alert) =>
-      alert.company_id === historyContext.company_id &&
-      historyContext.allowed_branches.includes(alert.branch) &&
-      alert.type.startsWith("sale_") &&
-      (showResolved || alert.status === "pending") &&
-      (branch === "all" || branch === alert.branch),
-  );
+  const alerts = saleAlertsFor(state, historyContext, branch, showResolved);
   const decide = async (alert: Alert, decision: "keep" | "end") => {
     const sale = state.sales?.find(
       (item) =>
@@ -128,20 +124,28 @@ export function SalesAlerts({
                     "قیمت عادی جدید از قیمت حراج کمتر خواهد بود",
                   );
         return (
-          <Card
+          <AlertRow
             key={alert.id}
-            title={title}
-            className="alert-card sales-alert-card"
+            className="sales-alert-card"
             data-sale-alert-id={alert.id}
-          >
-            <div className="sales-title-row">
-              {product && <ProductName product={product} language={lang} />}
+            title={
+              product ? (
+                <ProductName product={product} language={lang} />
+              ) : (
+                <LtrText>{alert.product_code}</LtrText>
+              )
+            }
+            summary={`${branchLabel(state.config, alert.branch, lang)} · ${title}`}
+            category={alertCategory(alert.type, t).label}
+            categoryTone={alertCategory(alert.type, t).tone}
+            status={
               <Badge tone={alert.status === "pending" ? "pending" : "approved"}>
                 {alert.status === "pending"
                   ? t("Still pending", "هنوز در انتظار")
                   : t("Resolved", "حل‌شده")}
               </Badge>
-            </div>
+            }
+          >
             <p className="muted">
               {branchLabel(state.config, alert.branch, lang)}
               {invoice && (
@@ -434,7 +438,7 @@ export function SalesAlerts({
                 )}
               </p>
             )}
-          </Card>
+          </AlertRow>
         );
       })}
       {changing && canDecide && (

@@ -309,3 +309,4 @@ These rules replace any earlier per-PR wording that conflicts with them. The cod
 10. **Status records show who and when** in one line: "Demo Richmond Hill Supervisor · 2026-10-19 14:22".
 11. **Never a blank screen.** Loading keeps the app frame visible; never show an empty page between pages.
 12. **Colors only from tokens.** New colors go into `klead-tokens.css` for both light and dark; `klead-tokens.test.ts` fails otherwise.
+13. **One list for alerts.** All alerts sit in one list of `list-box` rows (product, one-line summary, category label). Details open on click; short facts stay on the row.

@@ -1,5 +1,12 @@
 # Project changelog
 
+## 2026-10-20 — S1 fixes from Ali's screenshots (Claude)
+
+- Alerts: one list for all alerts, each with a category label; details (for example the cross-branch price table and **Mark as intentional**) open when you click the row. The Dashboard's **Review** opens that alert directly.
+- Invoices: invoice details are split into Invoice, Receiving, and Amounts and payment, with a clear summary line and status row; the supplier-review notice is a boxed item; status chips on lines have gaps and line numbers line up at the top; the open line uses one grid, and **Confirm this invoice line** is a primary button next to **Remove line**.
+- Price updates: the Seen cell no longer collapses into a dot. Dashboard price-update cards are boxed items and never overlap. Labels: the Select all box lines up with the row boxes. Product dates: the Expiring soon chip is centred on its row. Offers: the suggestion is a boxed item and the sentence above it has a gap.
+- Tests: browser tests that click an alert's actions now open the alert row first (`openAlert` helper); the order-differences check looks for the alert row's category label.
+
 ## 2026-10-19 — S1 foundation pass (Claude, built on C9)
 
 - One shared stylesheet (`src/foundation.css`, loaded last) now owns tables, fields, tabs, KPI cards, detail lists, boxed items, back links and blue clickable names. Removed the Labels table overrides that pushed prices against the edge; invoice totals read as a right-aligned summary.

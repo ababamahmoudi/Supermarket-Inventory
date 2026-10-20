@@ -9,7 +9,7 @@ import {
   readC8State,
   visitC8,
 } from "../scripts/capture-c8-proof.mjs";
-import { setBranch, setLanguage, signIn } from "./helpers";
+import { openAlert, setBranch, setLanguage, signIn } from "./helpers";
 import { configuredPersonExpectation } from "./configured-person-expectations";
 
 async function prepare(
@@ -537,6 +537,7 @@ for (const language of ["en", "fa"] as const) {
       posted.approvals.find((entry) => entry.id === alert.approval_id),
     ).toMatchObject({ product_code: "0012", status: "pending" });
     const card = page.locator(`[data-sale-alert-id="${alert.id}"]`);
+    await openAlert(card);
     await expect(card).toContainText("$12.60");
     await expect(card).toContainText("$14.20");
     await expect(card).toContainText("$16.99");
@@ -664,9 +665,11 @@ for (const language of ["en", "fa"] as const) {
         entry.type === "sale_delivery_release" &&
         entry.invoice_id === evidence.invoice_id,
     )!;
-    await expect(
-      page.locator(`[data-sale-alert-id="${release.id}"]`),
-    ).toContainText(language === "en" ? "put the held" : "کالای نگه‌داشته‌شده");
+    const releaseCard = page.locator(`[data-sale-alert-id="${release.id}"]`);
+    await openAlert(releaseCard);
+    await expect(releaseCard).toContainText(
+      language === "en" ? "put the held" : "کالای نگه‌داشته‌شده",
+    );
     const proof = await inspectC8Layout(
       page,
       "sale-delivery-release",

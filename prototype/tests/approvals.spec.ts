@@ -5,6 +5,7 @@ import {
   setBranch,
   setLanguage,
   resetDemo,
+  openAlert,
 } from "./helpers";
 
 test.setTimeout(60000);
@@ -94,6 +95,7 @@ test("intentional tea conflicts stay quiet, and applying a selected price clears
 }) => {
   await signIn(page, "supervisor");
   await page.goto("/#alerts");
+  await openAlert(page, "Black Tea");
   await expect(page.getByText("$6.49", { exact: true })).toBeVisible();
   await expect(page.getByText("$6.99", { exact: true })).toBeVisible();
   await page
@@ -110,6 +112,7 @@ test("intentional tea conflicts stay quiet, and applying a selected price clears
     .check();
   await expect(page.getByText("Intentional", { exact: true })).toBeVisible();
   await resetDemo(page);
+  await openAlert(page, "Black Tea");
   const row = page.getByRole("row").filter({
     has: page.getByRole("cell", { name: "Richmond Hill", exact: true }),
   });
