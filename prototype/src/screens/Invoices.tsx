@@ -3640,11 +3640,10 @@ function InvoiceWorkspace({
                                           "فاکتور مشمول مالیات",
                                         )}
                                       >
-                                        <select
+                                        <Select
                                           value={String(line.taxable)}
-                                          onChange={(event) => {
-                                            const value =
-                                              event.target.value === "true";
+                                          onChange={(selected) => {
+                                            const value = selected === "true";
                                             editLine(index, (item, draft) => {
                                               item.taxable = value;
                                               item.taxable_inferred = false;
@@ -3670,14 +3669,17 @@ function InvoiceWorkspace({
                                                   : "";
                                             });
                                           }}
-                                        >
-                                          <option value="true">
-                                            {t("Yes", "بله")}
-                                          </option>
-                                          <option value="false">
-                                            {t("No", "خیر")}
-                                          </option>
-                                        </select>
+                                          options={[
+                                            {
+                                              value: "true",
+                                              label: t("Yes", "بله"),
+                                            },
+                                            {
+                                              value: "false",
+                                              label: t("No", "خیر"),
+                                            },
+                                          ]}
+                                        />
                                       </Field>
 
                                       <Field

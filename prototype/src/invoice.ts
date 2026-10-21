@@ -528,7 +528,14 @@ export function recalculateInvoice(
         continue;
       }
     }
-    if (line.quantity_unit === "units")
+    // An unread imported quantity is an empty review field, not a printed zero.
+    // Unrelated edits must not replace that missing source value with the
+    // canonical zero used internally until someone enters a real quantity.
+    if (
+      line.quantity_unit === "units" &&
+      (!invoice.reading_record ||
+        String(line.quantity_entered ?? "").trim() !== "")
+    )
       line.quantity_entered = String(line.qty_invoiced);
     if (
       !validCost(line.unit_cost_before_tax) ||

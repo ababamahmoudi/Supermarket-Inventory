@@ -106,7 +106,7 @@ test("Floor Worker and Warehouse cannot mark another store's task seen or acquir
   await signIn(page, "wh-floor");
   await route(page, "price-updates");
   await expect(page.locator("main")).toContainText(
-    "No price updates match these filters.",
+    "No price updates yet; approved price changes will appear here for the register and shelf labels.",
   );
   const state = await readCanonicalBusinessEvidence(page);
   expect(

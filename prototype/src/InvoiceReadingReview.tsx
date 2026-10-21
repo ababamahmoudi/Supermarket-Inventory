@@ -10,7 +10,7 @@ import {
 } from "react";
 import Decimal from "decimal.js";
 import { useDemo } from "./store";
-import { Badge, Button, DataTable, Field as BaseField } from "./ui";
+import { Badge, Button, DataTable, Field as BaseField, Select } from "./ui";
 import { LtrValue, Money, NotAdded } from "./presentation";
 import { invoiceCheckField, invoiceTotalsCheck } from "./invoice-checks";
 import type { InvoiceReadDTO } from "./invoice-projections";
@@ -327,13 +327,14 @@ function ReadingCheckFields({
           readingField="taxable"
           label={t("Charge taxable", "هزینه مشمول مالیات")}
         >
-          <select
+          <Select
             value={String(values.taxable)}
-            onChange={(event) => onEdit("taxable", event.target.value)}
-          >
-            <option value="true">{t("Yes", "بله")}</option>
-            <option value="false">{t("No", "خیر")}</option>
-          </select>
+            onChange={(value) => onEdit("taxable", value)}
+            options={[
+              { value: "true", label: t("Yes", "بله") },
+              { value: "false", label: t("No", "خیر") },
+            ]}
+          />
         </ReadingField>
       </div>
     </ReadingCheckProvider>

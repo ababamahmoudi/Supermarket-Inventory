@@ -6,6 +6,13 @@ import { authenticatedTestActor } from "./authority-test-fixture";
 import { storeUploadedFile } from "./file-database";
 import { supplierRecords } from "./supplier-editor";
 import { weightCostPerLb, weightQuantityPerLb } from "./weighed";
+import {
+  invoiceBlockers,
+  recalculateInvoice,
+  setInvoiceLineQuantity,
+  validInvoiceLineQuantity,
+} from "./invoice";
+import { acknowledgeInvoiceCheck } from "./invoice-checks";
 import type { DemoState } from "./types";
 import {
   effectiveInvoiceReading,
@@ -475,6 +482,53 @@ describe("supplier, product, location and duplicate matching", () => {
 });
 
 describe("import prepares evidence and normal drafts only", () => {
+  it("keeps an unread quantity empty through unrelated edits until a person enters it", async () => {
+    const state = emptyBusiness(),
+      file = exported();
+    file.invoices[0].ai_reading!.lines = [
+      {
+        line_type: "item",
+        description: "Fictional unread quantity",
+        quantity: null,
+        unit: "each",
+        unit_cost_before_tax: "1.0000",
+        line_total: "3.00",
+        taxable: false,
+      },
+      {
+        line_type: "item",
+        description: "Fictional readable quantity",
+        quantity: "2",
+        unit: "each",
+        unit_cost_before_tax: "2.0000",
+        line_total: "4.00",
+        taxable: false,
+      },
+    ];
+    const summary = await importFile(state, file);
+    state.invoice = state.invoices!.find(
+      (invoice) => invoice.id === summary.imported[0],
+    )!;
+    const actor = authenticatedTestActor(state, "owner"),
+      [unread, readable] = state.invoice.lines;
+    expect(unread.quantity_entered).toBe("");
+    expect(unread.low_confidence_fields).toContain("quantity_entered");
+
+    readable.unit_cost_before_tax = "3.0000";
+    recalculateInvoice(state.invoice, state.config);
+    expect(unread.quantity_entered).toBe("");
+    expect(unread.low_confidence_fields).toContain("quantity_entered");
+    expect(validInvoiceLineQuantity(unread)).toBe(false);
+    expect(invoiceBlockers(state, actor)).toContain("quantity");
+
+    setInvoiceLineQuantity(unread, "3", "units");
+    acknowledgeInvoiceCheck(state, actor, "quantity_entered", 0);
+    recalculateInvoice(state.invoice, state.config);
+    expect(unread.quantity_entered).toBe("3");
+    expect(unread.qty_invoiced).toBe(3);
+    expect(unread.low_confidence_fields).not.toContain("quantity_entered");
+    expect(validInvoiceLineQuantity(unread)).toBe(true);
+  });
   it("retains deposit, fee, discount and credit amounts outside the item/product flow", async () => {
     const state = emptyBusiness(),
       file = exported();

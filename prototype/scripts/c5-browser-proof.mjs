@@ -482,6 +482,10 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             // The C8 details chevron reveals omitted cells; it is not a
             // business action. Audit that navigation separately below.
             .filter((element) => !element.matches(".table-details-toggle"))
+            // R1 acknowledgments belong beside their field in the expanded
+            // invoice form, rather than at the row end. The independent
+            // action/control/style/size audits above still measure them.
+            .filter((element) => !element.closest(".reading-check-actions"))
             .filter((element) => ["action", "icon"].includes(kindOf(element)));
           if (controls.length > 2)
             failures.push(
