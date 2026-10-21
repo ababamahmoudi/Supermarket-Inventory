@@ -97,8 +97,9 @@ export function allowedDateLocations(
   state: DemoState,
   context: AuthenticatedActor | null,
   includeInactive = false,
+  capability: "dates.read" | "dates.add" = "dates.read",
 ): Branch[] {
-  if (!context || !can(state, context, "dates.read").allowed) return [];
+  if (!context || !can(state, context, capability).allowed) return [];
   try {
     const actor = freshActor(state, context);
     return allowedLocationIds(state, actor, { includeInactive }).filter(
@@ -608,7 +609,12 @@ export function addTrackedDate(
       item.status !== "archived",
   );
   if (!product) throw new DateTrackingError("product");
-  if (!allowedDateLocations(state, context).includes(input.branch))
+  // Adding needs only dates.add: everyone may add a date (Ali, Oct 2026).
+  if (
+    !allowedDateLocations(state, context, false, "dates.add").includes(
+      input.branch,
+    )
+  )
     throw new DateTrackingError("location");
   if (!["expiry", "best_before"].includes(input.date_type))
     throw new DateTrackingError("date_type");

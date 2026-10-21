@@ -129,7 +129,7 @@ export function PriceUpdatesDashboardCard() {
         </Button>
       </div>
       {tasks.length ? (
-        <div className="price-update-dashboard-list">
+        <div className="price-update-dashboard-list list-box-stack">
           {tasks.slice(0, 4).map((task) => {
             const product = state.products.find(
               (item) =>
@@ -139,7 +139,7 @@ export function PriceUpdatesDashboardCard() {
             return (
               <button
                 type="button"
-                className="price-update-dashboard-row"
+                className="price-update-dashboard-row list-box"
                 key={task.id}
                 onClick={() =>
                   navigate(`price-update?id=${encodeURIComponent(task.id)}`)

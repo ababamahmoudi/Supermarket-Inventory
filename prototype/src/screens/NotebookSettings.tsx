@@ -12,6 +12,7 @@ import {
   DialogActions,
   EmptyState,
   Field,
+  Radio,
   Select,
   Menu,
   MenuItem,
@@ -25,15 +26,183 @@ import {
   newNotebookInput,
   notebookError,
   NotebookError,
+  saveBuiltInNoteDoneRule,
   type NotebookDefinition,
   type NotebookInput,
 } from "../notebooks";
+import type { NoteDoneRule } from "../note-engagement";
 import type { Role } from "../types";
 import { visibleNotebookView } from "../notes-dates-read";
 import { configuredRoleLabel } from "../role-config";
 import { branchId, branchLabel } from "../settings";
 import "./notebooks-b.css";
 
+/** Shared "Who can mark notes done" choice for notebooks and built-in notes. */
+export function DoneRuleFields({
+  value,
+  onChange,
+  error,
+}: {
+  value: NoteDoneRule | undefined;
+  onChange: (value: NoteDoneRule | undefined) => void;
+  error?: string;
+}) {
+  const { state, demoUsers, lang, t } = useDemo();
+  const chosen = value?.mode === "chosen";
+  const rule: NoteDoneRule = value ?? {
+    mode: "chosen",
+    roles: [],
+    user_ids: [],
+  };
+  const configuredRoles = state.config.roles.map((item) => item.key);
+  const toggle = <K extends "roles" | "user_ids">(
+    key: K,
+    item: NoteDoneRule[K][number],
+    checked: boolean,
+  ) =>
+    onChange({
+      ...rule,
+      mode: "chosen",
+      [key]: checked
+        ? [...new Set([...(rule[key] as string[]), item])]
+        : (rule[key] as string[]).filter((entry) => entry !== item),
+    });
+  return (
+    <fieldset className="done-rule-fields" id="notebook-done-rule">
+      <legend>
+        {t("Who can mark notes done", "چه کسی می‌تواند انجام‌شده علامت بزند")}
+      </legend>
+      <div role="radiogroup" className="done-rule-modes">
+        <Radio checked={!chosen} onChange={() => onChange(undefined)}>
+          {t(
+            "Anyone who can add notes",
+            "هر کسی که می‌تواند یادداشت اضافه کند",
+          )}
+        </Radio>
+        <Radio
+          checked={chosen}
+          onChange={() =>
+            onChange({
+              mode: "chosen",
+              roles: rule.roles,
+              user_ids: rule.user_ids,
+            })
+          }
+        >
+          {t(
+            "Only the roles and people I choose",
+            "فقط نقش‌ها و افرادی که انتخاب می‌کنم",
+          )}
+        </Radio>
+      </div>
+      {chosen && (
+        <div className="done-rule-choices">
+          <div>
+            <p className="helper">{t("Roles", "نقش‌ها")}</p>
+            {configuredRoles.map((role) => (
+              <Checkbox
+                key={role}
+                checked={rule.roles.includes(role)}
+                onChange={(checked) => toggle("roles", role, checked)}
+              >
+                {configuredRoleLabel(state.config.roles, role, lang)}
+              </Checkbox>
+            ))}
+          </div>
+          <div>
+            <p className="helper">{t("People", "افراد")}</p>
+            {demoUsers.map((person) => (
+              <Checkbox
+                key={person.id}
+                checked={rule.user_ids.includes(person.id)}
+                onChange={(checked) => toggle("user_ids", person.id, checked)}
+              >
+                {demoUserLabel(person.name, lang)}{" "}
+                <span className="muted">
+                  · {configuredRoleLabel(state.config.roles, person.role, lang)}
+                </span>
+              </Checkbox>
+            ))}
+          </div>
+        </div>
+      )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+    </fieldset>
+  );
+}
+/** Owners and Managers choose who may mark a built-in notebook's notes done. */
+export function BuiltInNoteSettings({
+  kind,
+  title,
+  onOpenChange,
+}: {
+  kind: string;
+  title: string;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { state, command, t } = useDemo();
+  const current = state.config.notebooks?.built_in?.find(
+    (item) => item.kind === kind,
+  )?.done_rule;
+  const [rule, setRule] = useState<NoteDoneRule | undefined>(() =>
+    current ? structuredClone(current) : undefined,
+  );
+  const [error, setError] = useState("");
+  return (
+    <Dialog
+      open
+      onOpenChange={onOpenChange}
+      title={t("Notebook settings", "تنظیمات دفترچه")}
+      description={title}
+      className="notebook-editor-dialog"
+    >
+      <form
+        noValidate
+        onSubmit={async (event) => {
+          event.preventDefault();
+          try {
+            await command(
+              "notebooks.definition_manage",
+              {
+                company_id: state.config.company.seed_key,
+                kind: "company_shared",
+                mutation: true,
+              },
+              (draft, freshActor) =>
+                saveBuiltInNoteDoneRule(draft, freshActor, kind, rule),
+            );
+            onOpenChange(false);
+          } catch (caught) {
+            setError(notebookError(caught, t, state.config));
+          }
+        }}
+      >
+        <DoneRuleFields
+          value={rule}
+          onChange={(value) => {
+            setRule(value);
+            setError("");
+          }}
+          error={error}
+        />
+        <DialogActions>
+          <Button
+            type="button"
+            variant="neutral"
+            onClick={() => onOpenChange(false)}
+          >
+            {t("Cancel", "انصراف")}
+          </Button>
+          <Button type="submit">{t("Save settings", "ذخیره تنظیمات")}</Button>
+        </DialogActions>
+      </form>
+    </Dialog>
+  );
+}
 export function NotebookEditor({
   notebook,
   onOpenChange,
@@ -311,8 +480,23 @@ export function NotebookEditor({
             )}
           </Checkbox>
         </div>
+        {form.status_enabled && (
+          <DoneRuleFields
+            value={form.done_rule}
+            onChange={(value) => {
+              if (errorField === "done_rule") {
+                setError("");
+                setErrorField("");
+              }
+              setForm((current) => ({ ...current, done_rule: value }));
+            }}
+            error={errorField === "done_rule" ? error : undefined}
+          />
+        )}
         {error &&
-          !["name", "duplicate", "branch", "unit"].includes(errorField) && (
+          !["name", "duplicate", "branch", "unit", "done_rule"].includes(
+            errorField,
+          ) && (
             <p className="banner danger" role="alert">
               {error}
             </p>

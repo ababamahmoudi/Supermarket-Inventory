@@ -51,3 +51,44 @@ export function recordNoteCompletion(
     delete record.done_at;
   }
 }
+
+/**
+ * Who may mark a notebook's notes done (Ali, Oct 2026). "anyone" keeps the
+ * notebook's normal rule (people who can add notes); "chosen" limits Done to
+ * the listed roles and people, who must still be able to read the note.
+ */
+export interface NoteDoneRule {
+  mode: "anyone" | "chosen";
+  roles: AuthenticatedActor["role"][];
+  user_ids: string[];
+}
+export function normalizeDoneRule(
+  rule: NoteDoneRule | undefined,
+): NoteDoneRule | undefined {
+  if (!rule || rule.mode !== "chosen") return undefined;
+  return {
+    mode: "chosen",
+    roles: [...new Set(rule.roles)],
+    user_ids: [...new Set(rule.user_ids.filter(Boolean))],
+  };
+}
+/** "default" means: use the notebook's normal permission. */
+export function doneRuleDecision(
+  rule: NoteDoneRule | undefined,
+  actor: Pick<AuthenticatedActor, "role" | "user_id">,
+): "default" | "allowed" | "denied" {
+  const chosen = normalizeDoneRule(rule);
+  if (!chosen) return "default";
+  return chosen.roles.includes(actor.role) ||
+    chosen.user_ids.includes(actor.user_id)
+    ? "allowed"
+    : "denied";
+}
+/** The author of a note cannot mark their own note as seen. */
+export function isNoteAuthor(
+  record: { by_user_id?: string; actor_user_id?: string },
+  actor: Pick<AuthenticatedActor, "user_id">,
+): boolean {
+  const author = record.by_user_id ?? record.actor_user_id;
+  return Boolean(author) && author === actor.user_id;
+}

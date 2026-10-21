@@ -1,5 +1,26 @@
 # Project changelog
 
+## 2026-10-20 — S1 fixes from Ali's screenshots (Claude)
+
+- Alerts: one list for all alerts, each with a category label; details (for example the cross-branch price table and **Mark as intentional**) open when you click the row. The Dashboard's **Review** opens that alert directly.
+- Invoices: invoice details are split into Invoice, Receiving, and Amounts and payment, with a clear summary line and status row; the supplier-review notice is a boxed item; status chips on lines have gaps and line numbers line up at the top; the open line uses one grid, and **Confirm this invoice line** is a primary button next to **Remove line**.
+- Price updates: the Seen cell no longer collapses into a dot. Dashboard price-update cards are boxed items and never overlap. Labels: the Select all box lines up with the row boxes. Product dates: the Expiring soon chip is centred on its row. Offers: the suggestion is a boxed item and the sentence above it has a gap.
+- Tests: browser tests that click an alert's actions now open the alert row first (`openAlert` helper); the order-differences check looks for the alert row's category label.
+- CI fix: an alert row's click-to-open head declares itself a disclosure (`data-control-kind="disclosure"`), so the button audit no longer measures it as a text action. `openAlert` also opens a row when it is given the row itself (the C8 sale-cost alert tests).
+- Polish: the Price updates Seen dot sits on the name's line and the name is plain text, not blue (blue means clickable). The offer suggestion's Pending chip and branch line up with the product's first line.
+- Added `CLAUDE.md` (Ali's working rules for Claude; it loads `AGENTS.md` first).
+
+## 2026-10-19 — S1 foundation pass (Claude, built on C9)
+
+- One shared stylesheet (`src/foundation.css`, loaded last) now owns tables, fields, tabs, KPI cards, detail lists, boxed items, back links and blue clickable names. Removed the Labels table overrides that pushed prices against the edge; invoice totals read as a right-aligned summary.
+- Invoices: the Branch Supervisor's list is a real table (it was broken cards); drafts are a table; invoice lines drop the repeated "Delivered quantity" and say "Not tracked" instead of "No".
+- Price updates: only Seen and Done, each with who and when; price history is a dated table, newest first, marked Latest.
+- Notes: authors cannot mark their own notes seen; new "Who can mark notes done" setting per notebook (and for built-in tabs via Notebook settings).
+- Date tracking: Add button lines up with the fields; everyone can add dates (Cashiers add only) and the list says who added each date. Add date works from Lookup and the product page with All my locations selected.
+- Products: Manual price moved to the Status column. Supplier contact fields show "Not added" when empty. KPI numbers line up. Tabs never wrap. Dashboard approval requests are boxed.
+- Sign-in clears and refocuses a wrong password. Undo toasts show only to the person who acted. A signed-in tab shows the app frame during startup instead of a blank page.
+- Tests: updated those that asserted the old rules; added unit tests for Seen, note authors, done rules and Cashier dates.
+
 ## 2026-10-19 — Native WebKit verified; proof-helper alignment
 
 - Wait for all four shards/seven checks on be25d01c: native WebKit's one network no-reload case passes; foundation and prototype static pass. Browser totals779passed/12failed/50existing-skipped/0flaky. Every failure is the same stale Blob-only raw inspector in the shared C8 proof script, not a demonstrated missing original.

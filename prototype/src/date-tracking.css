@@ -60,7 +60,9 @@
   grid-template-columns:
     minmax(240px, 360px) 168px minmax(160px, 200px)
     max-content;
-  align-items: end;
+  /* Fields line up on their inputs, so an error under one field never
+     pushes the Add button out of line. */
+  align-items: start;
   gap: 20px;
   max-inline-size: 980px;
 }
@@ -78,7 +80,12 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  padding-block-end: 2px;
+  /* Label line (20px) + field gap (8px) puts the button beside the inputs. */
+  padding-block-start: 28px;
+  min-block-size: 44px;
+}
+.date-quick-actions .ui-button {
+  min-block-size: 44px;
 }
 .date-product-picker {
   position: relative;
@@ -249,5 +256,10 @@
   }
   .date-quick-add-inline .date-quick-actions {
     grid-column: auto;
+  }
+}
+@media (max-width: 600px) {
+  .date-quick-actions {
+    padding-block-start: 0;
   }
 }

@@ -1,6 +1,12 @@
 import { writeFile } from "node:fs/promises";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { chooseOption, setBranch, signIn, uploadInvoice } from "./helpers";
+import {
+  chooseOption,
+  openAlert,
+  setBranch,
+  signIn,
+  uploadInvoice,
+} from "./helpers";
 import {
   appearance,
   inspect,
@@ -490,6 +496,7 @@ test("C5 button contract covers primary product, date, approval and invoice dial
     await closeDialog(page);
 
     await page.goto("/#alerts");
+    await openAlert(page, "Black Tea");
     await page
       .getByRole("button", { name: "Apply this price to all", exact: true })
       .first()

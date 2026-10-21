@@ -6,15 +6,9 @@
   .labels-products-card .labels-product-table th:first-child,
   .labels-products-card .labels-product-table td:first-child {
     inline-size: 48px;
-    padding-inline: 0;
-  }
-  .labels-products-card .labels-product-table th:nth-child(2),
-  .labels-products-card .labels-product-table td:nth-child(2) {
-    padding-inline-start: 0;
   }
   .labels-products-card .labels-product-table th:last-child,
   .labels-products-card .labels-product-table td:last-child {
-    padding-inline-end: 0;
     text-align: end;
   }
   :root .labels-products-card .labels-product-table .label-price-unavailable {

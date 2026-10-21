@@ -258,7 +258,8 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   const postedLine = page
     .locator(".posted-invoice-document tbody tr")
     .filter({ hasText: "Canned Fava Beans 400 g" });
-  await expect(postedLine).toContainText("Delivered quantity: 12");
+  // S1: a posted line shows "Received" only when it differs from the invoice.
+  await expect(postedLine).toContainText("Received: 12");
   await expect(postedLine).toContainText(
     "Refused / sent back with the driver · 6 · $6.60",
   );
@@ -271,10 +272,7 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   ).toHaveCount(0);
   await page.goto("/#alerts");
   await expect(
-    page.getByRole("heading", {
-      name: "Invoice and order differences",
-      exact: true,
-    }),
+    page.locator(".alert-row").filter({ hasText: "Order differences" }),
   ).toBeVisible();
   await page.goto("/#received");
   await page

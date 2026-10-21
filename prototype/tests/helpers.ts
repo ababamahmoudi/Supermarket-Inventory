@@ -21,6 +21,20 @@ export type DemoRole =
   | "ny-floor"
   | "wh-floor";
 
+/**
+ * Alerts are one list; a row's details open when you click it. `scope` is the
+ * page (pick a row by `name`, or the first row) or one alert row itself.
+ */
+export async function openAlert(scope: Page | Locator, name?: string | RegExp) {
+  const row = name
+    ? scope.locator(".alert-row").filter({ hasText: name }).first()
+    : scope;
+  const head = row.locator(".alert-row-head").first();
+  await head.waitFor();
+  if ((await head.getAttribute("aria-expanded")) === "false")
+    await head.click();
+}
+
 export async function openShellAction(page: Page, name: string) {
   const direct = page.getByRole("button", { name, exact: true });
   if (await direct.isVisible()) return direct;

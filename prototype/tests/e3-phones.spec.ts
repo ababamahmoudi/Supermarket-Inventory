@@ -387,19 +387,17 @@ for (const width of [390, 430])
           page.locator(".price-updates-page,.price-update-detail"),
         ).toBeVisible();
         if (route.startsWith("price-update?")) {
+          // S1 (Ali's rule): a price update has only Seen and Done.
           await expect(
-            page.getByRole("checkbox", {
-              name:
-                language === "fa"
-                  ? "در صندوق فروش تغییر داده شد"
-                  : "Changed on the cash register",
+            page.getByRole("button", {
+              name: language === "fa" ? "علامت‌گذاری دیده‌شده" : "Mark as seen",
               exact: true,
             }),
           ).toBeVisible();
           await expect(
-            page.getByRole("checkbox", {
+            page.getByRole("button", {
               name:
-                language === "fa" ? "برچسب جدید چاپ شد" : "New label printed",
+                language === "fa" ? "علامت‌گذاری انجام‌شده" : "Mark as done",
               exact: true,
             }),
           ).toBeVisible();
@@ -422,7 +420,7 @@ for (const width of [390, 430])
               const box = stack.getBoundingClientRect();
               return [
                 ...document.querySelectorAll<HTMLElement>(
-                  ".price-update-checks button",
+                  ".price-update-status-steps button",
                 ),
               ]
                 .filter((control) => {
@@ -444,7 +442,7 @@ for (const width of [390, 430])
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({
           path: testInfo.outputPath(
-            `${route.startsWith("price-update?") ? "task-checkboxes" : "pending-tasks"}-${language}-${width}.png`,
+            `${route.startsWith("price-update?") ? "task-seen-done" : "pending-tasks"}-${language}-${width}.png`,
           ),
           fullPage: true,
         });

@@ -97,48 +97,36 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("uses the genuine Branch Supervisor Provider to require register and a printed label or reasoned waiver, then preserves real completion actor/time", async () => {
+it("uses the genuine Branch Supervisor Provider to mark Seen and Done, each with the real person and time", async () => {
   const { task } = await mount("branch_supervisor");
-  const done = await screen.findByRole(
+  const seen = await screen.findByRole(
     "button",
-    { name: "Mark as done" },
+    { name: "Mark as seen" },
     { timeout: 10000 },
   );
-  fireEvent.click(done);
-  expect(
-    await screen.findByText("A register confirmation is still required."),
-  ).toBeVisible();
-  expect(
-    (await fixture!.readCanonical()).price_update_tasks?.find(
-      (row) => row.id === task.id,
-    )?.status,
-  ).toBe("pending");
-  fireEvent.click(
-    screen.getByRole("checkbox", { name: "Changed on the cash register" }),
-  );
-  await waitFor(() =>
-    expect(
-      screen.getByRole("checkbox", { name: "Changed on the cash register" }),
-    ).toHaveAttribute("aria-checked", "true"),
-  );
-  fireEvent.click(screen.getByRole("checkbox", { name: "No label needed" }));
-  fireEvent.change(screen.getByRole("textbox", { name: "Reason" }), {
-    target: { value: "This product has no shelf label" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Save reason" }));
+  // Ali's rule (Oct 2026): no register or label checklist; only Seen and Done.
+  expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+  expect(screen.getByText("Not seen yet")).toBeVisible();
+  fireEvent.click(seen);
   await waitFor(async () =>
     expect(
       (await fixture!.readCanonical()).price_update_tasks?.find(
         (row) => row.id === task.id,
-      )?.no_label?.reason,
-    ).toBe("This product has no shelf label"),
+      )?.seen?.by_user_id,
+    ).toBe(current().actor!.user_id),
   );
   await waitFor(() =>
     expect(
-      document.querySelector(".price-task-waiver-evidence"),
-    ).toHaveTextContent("This product has no shelf label"),
+      screen.queryByRole("button", { name: "Mark as seen" }),
+    ).not.toBeInTheDocument(),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Mark as done" }));
+  fireEvent.click(
+    await screen.findByRole(
+      "button",
+      { name: "Mark as done" },
+      { timeout: 10000 },
+    ),
+  );
   await waitFor(async () =>
     expect(
       (await fixture!.readCanonical()).price_update_tasks?.find(
@@ -151,30 +139,37 @@ it("uses the genuine Branch Supervisor Provider to require register and a printe
   )!;
   expect(saved.completed_by_user_id).toBe(current().actor!.user_id);
   expect(saved.completed_at).toBeTruthy();
-  expect(saved.no_label?.reason).toBe("This product has no shelf label");
-  expect(saved.label_printed).toBeUndefined();
+  expect(saved.seen?.version).toBe(saved.version);
+  await waitFor(() =>
+    expect(
+      document.querySelectorAll(".price-update-status-steps li.is-complete"),
+    ).toHaveLength(2),
+  );
 });
-it("lets the genuine Floor Worker view own-store tasks but denies register completion and a fake printed label", async () => {
+it("lets the genuine Floor Worker mark own-store tasks seen but not done", async () => {
   const { task } = await mount("floor_worker");
-  expect(
+  fireEvent.click(
     await screen.findByRole(
-      "checkbox",
-      { name: "Changed on the cash register" },
+      "button",
+      { name: "Mark as seen" },
       { timeout: 10000 },
     ),
-  ).toBeDisabled();
+  );
+  await waitFor(async () =>
+    expect(
+      (await fixture!.readCanonical()).price_update_tasks?.find(
+        (row) => row.id === task.id,
+      )?.seen?.by_user_id,
+    ).toBe(current().actor!.user_id),
+  );
   expect(
     screen.queryByRole("button", { name: "Mark as done" }),
   ).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("checkbox", { name: "New label printed" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent(
-    "Confirm that the label was printed.",
-  );
   const before = await fixture!.readCanonical();
   await act(async () => {
     await expect(
       current().command(
-        "price_updates.register_confirm",
+        "price_updates.complete",
         {
           company_id: task.company_id,
           kind: "location_record",

@@ -261,9 +261,14 @@ describe("E1 date tracking preparation with the real central authority", () => {
       const product = state.products.find((item) => item.status === "active")!;
       const beforeMoney = money(state);
       if (role === "cashier") {
+        // Ali's rule (Oct 2026): everyone adds dates, recorded with who added.
+        // The Cashier still cannot read the full list or remove dates.
         expect(allowedDateLocations(state, actor)).toEqual([]);
+        const entry = addTrackedDate(state, actor, newDate(product.code));
+        expect(entry.created_by_user_id).toBe(actor.user_id);
+        expect(scopedTrackedDates(state, actor)).toEqual([]);
         expect(() =>
-          addTrackedDate(state, actor, newDate(product.code)),
+          removeTrackedDate(state, actor, entry.id, "entered_by_mistake"),
         ).toThrow();
       } else {
         const entry = addTrackedDate(state, actor, newDate(product.code));

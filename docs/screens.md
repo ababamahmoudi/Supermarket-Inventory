@@ -86,6 +86,8 @@ Barcode-conflict approvals show the attempted barcode and both products; A2 reso
 
 Same-supplier lower price: item, supplier, old/new cost, worker's answers (same expiry? units left? both dates) → **Taken care of / Still pending** + note. Other-supplier price, cross-branch conflict (**Mark as intentional / Apply to all**), tax discrepancy.
 
+One list for every alert (decisions, sale alerts, date tracking), each row showing the product, a one-line summary and a category label (for example **Cross-branch price**, **Date tracking**). Date-tracking rows open the date; every other row opens its details when clicked (Ali, Oct 2026: the cross-branch price table is too detailed to show on the list). The Dashboard's **Review** button opens the page with that alert already open (`#alerts?id=…`).
+
 ### Offers
 
 Top-right Primary **Create offer** opens the dialog. Round **Current offers / Past offers** tabs: Current active/scheduled only, one row per product grouping permitted scopes; Past stopped/ended newest first. Repeated identical submissions reuse the current offer. Stop offer uses the shared destructive treatment (small row action or ⋯); rare scope actions use ⋯. Suggestions and mix-and-match remain.

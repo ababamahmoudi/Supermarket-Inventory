@@ -70,7 +70,7 @@ export function InvoiceQuantity({ line }: { line: InvoiceEditableLine }) {
           units={line.qty_invoiced}
           unitsPerCase={line.units_per_case!}
           language={lang}
-        />
+        />{" "}
         <span className="muted">
           (
           <QuantityText
@@ -346,14 +346,16 @@ export function PostedInvoice({
                   </td>
                   <td className="numeric">
                     <InvoiceQuantity line={line} />
-                    <p className="muted">
-                      {t("Delivered quantity", "تعداد تحویل‌شده")}:{" "}
-                      <LtrText>
-                        {line.sold_by === "weight"
-                          ? `${line.source_received_quantity} ${line.source_quantity_unit}`
-                          : acceptedInvoiceUnits(line)}
-                      </LtrText>
-                    </p>
+                    {(short.quantity > 0 || refusedLine.quantity > 0) && (
+                      <p className="muted">
+                        {t("Received", "دریافت‌شده")}:{" "}
+                        <LtrText>
+                          {line.sold_by === "weight"
+                            ? `${line.source_received_quantity} ${line.source_quantity_unit}`
+                            : acceptedInvoiceUnits(line)}
+                        </LtrText>
+                      </p>
+                    )}
                   </td>
                   <td className="numeric">
                     <LtrText>
@@ -390,7 +392,9 @@ export function PostedInvoice({
                         )}
                       </>
                     ) : (
-                      t("No", "خیر")
+                      <span className="value-empty">
+                        {t("Not tracked", "پیگیری نمی‌شود")}
+                      </span>
                     )}
                   </td>
                 </tr>

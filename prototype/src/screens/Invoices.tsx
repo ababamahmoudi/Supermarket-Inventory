@@ -91,7 +91,9 @@ import {
   DateText,
   demoUserLabel,
   LtrText,
+  LtrValue,
   Money,
+  NotAdded,
   ProductName,
   UnitSize,
   UnitText,
@@ -432,24 +434,7 @@ export default function Invoices() {
             </Button>
           }
         />
-        {!read.pending && (
-          <EmptyState>
-            {t(
-              "Choose an invoice in your branch, or start a new invoice.",
-              "فاکتوری در شعبه خود انتخاب کنید یا فاکتور جدید شروع کنید.",
-            )}
-          </EmptyState>
-        )}
-        {state.invoices.map((invoice) => (
-          <Card key={invoice.id}>
-            <TableRowLink
-              aria-label={t("View invoice", "مشاهده فاکتور")}
-              href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
-            >
-              {invoice.supplier_invoice_number} · {invoice.supplier}
-            </TableRowLink>
-          </Card>
-        ))}
+        {!read.pending && <InvoicePickerList />}
       </>
     );
   return (
@@ -461,6 +446,113 @@ export default function Invoices() {
         entryPending={entryPending !== null}
       />
     </div>
+  );
+}
+/** Invoices the person may open when no invoice workspace is selected yet. */
+function InvoicePickerList() {
+  const { state, t, lang } = useDemo();
+  const invoices = state.invoices ?? [];
+  const statusLabel = (status: InvoiceReadDTO["status"]) =>
+    status === "posted"
+      ? t("Posted", "ثبت‌شده")
+      : status === "review"
+        ? t("Needs review", "نیاز به بررسی")
+        : status === "reading"
+          ? t("Processing", "در حال پردازش")
+          : t("Draft", "پیش‌نویس");
+  return (
+    <Card className="invoice-picker">
+      <h2>{t("Invoices in your locations", "فاکتورهای مکان‌های شما")}</h2>
+      {!invoices.length ? (
+        <EmptyState>
+          {t(
+            "No invoices yet. Start a new invoice.",
+            "هنوز فاکتوری نیست. فاکتور جدید شروع کنید.",
+          )}
+        </EmptyState>
+      ) : (
+        <DataTable
+          className="invoice-picker-table"
+          columns={[
+            {
+              key: "invoice",
+              label: t("Invoice", "فاکتور"),
+              required: true,
+              priority: 1,
+            },
+            {
+              key: "supplier",
+              label: t("Supplier", "تأمین‌کننده"),
+              priority: 2,
+            },
+            { key: "location", label: t("Location", "مکان"), priority: 3 },
+            {
+              key: "date",
+              label: t("Invoice date", "تاریخ فاکتور"),
+              priority: 3,
+            },
+            { key: "status", label: t("Status", "وضعیت"), priority: 2 },
+            { key: "action", label: t("Action", "عملیات"), actions: true },
+          ]}
+          phoneList={{
+            name: "invoice",
+            value: "status",
+            secondary: ["supplier", "location", "date"],
+          }}
+        >
+          <thead>
+            <tr>
+              <th scope="col">{t("Invoice", "فاکتور")}</th>
+              <th scope="col">{t("Supplier", "تأمین‌کننده")}</th>
+              <th scope="col">{t("Location", "مکان")}</th>
+              <th scope="col">{t("Invoice date", "تاریخ فاکتور")}</th>
+              <th scope="col">{t("Status", "وضعیت")}</th>
+              <th scope="col">{t("Action", "عملیات")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoices.map((invoice) => {
+              const href = `#invoices?id=${encodeURIComponent(invoice.id)}`;
+              return (
+                <tr key={invoice.id} data-row-href={href}>
+                  <td>
+                    <a className="entity-link" href={href}>
+                      {invoice.supplier_invoice_number ? (
+                        <LtrText>{invoice.supplier_invoice_number}</LtrText>
+                      ) : (
+                        t("Draft", "پیش‌نویس")
+                      )}
+                    </a>
+                  </td>
+                  <td>
+                    <LtrValue value={invoice.supplier} />
+                  </td>
+                  <td>
+                    {configuredBranchLabel(state.config, invoice.branch, lang)}
+                  </td>
+                  <td>
+                    {invoice.invoice_date ? (
+                      <DateText value={invoice.invoice_date} />
+                    ) : (
+                      <NotAdded />
+                    )}
+                  </td>
+                  <td>
+                    <Badge>{statusLabel(invoice.status)}</Badge>
+                  </td>
+                  <td>
+                    <TableRowLink
+                      href={href}
+                      aria-label={`${t("Open invoice", "باز کردن فاکتور")} ${invoice.supplier_invoice_number}`}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </DataTable>
+      )}
+    </Card>
   );
 }
 function InvoiceWorkspace({
@@ -1398,27 +1490,90 @@ function InvoiceWorkspace({
       }
       className="invoice-saved-drafts"
     >
-      {savedDrafts.map((saved) => (
-        <div className="dialog-actions" key={saved.id}>
-          <LtrText>
-            {saved.supplier_invoice_number || t("Draft", "پیش‌نویس")}
-          </LtrText>
-          <LtrText>{saved.supplier}</LtrText>
-          {unreadOriginal(saved) && (
-            <>
-              <LtrText>{saved.file_name}</LtrText>
-              <span className="muted">
-                {t("Not read yet", "هنوز خوانده نشده")}
-              </span>
-            </>
-          )}
-          <Button variant="neutral" onClick={() => resume(saved)}>
-            {unreadOriginal(saved)
-              ? t("Continue", "ادامه")
-              : t("Resume draft", "ادامه پیش‌نویس")}
-          </Button>
-        </div>
-      ))}
+      <DataTable
+        className="invoice-saved-table"
+        columns={[
+          {
+            key: "invoice",
+            label: t("Invoice", "فاکتور"),
+            required: true,
+            priority: 1,
+          },
+          {
+            key: "supplier",
+            label: t("Supplier", "تأمین‌کننده"),
+            priority: 2,
+          },
+          { key: "file", label: t("Original file", "فایل اصلی"), priority: 3 },
+          {
+            key: "status",
+            label: t("Status", "وضعیت"),
+            required: true,
+            priority: 1,
+          },
+          { key: "action", label: t("Action", "عملیات"), actions: true },
+        ]}
+        // Not a phone list: a draft opens with its button (Resume draft /
+        // Continue), not a row link. Invoice, status and the button always
+        // stay visible; supplier and file fold into the row details.
+      >
+        <thead>
+          <tr>
+            <th scope="col">{t("Invoice", "فاکتور")}</th>
+            <th scope="col">{t("Supplier", "تأمین‌کننده")}</th>
+            <th scope="col">{t("Original file", "فایل اصلی")}</th>
+            <th scope="col">{t("Status", "وضعیت")}</th>
+            <th scope="col">{t("Action", "عملیات")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {savedDrafts.map((saved) => (
+            <tr key={saved.id}>
+              <td>
+                <strong>
+                  {saved.supplier_invoice_number ? (
+                    <LtrText>{saved.supplier_invoice_number}</LtrText>
+                  ) : (
+                    t("Draft", "پیش‌نویس")
+                  )}
+                </strong>
+              </td>
+              <td>
+                <LtrValue value={saved.supplier} />
+              </td>
+              <td>
+                {saved.file_name ? (
+                  <LtrText>{saved.file_name}</LtrText>
+                ) : (
+                  <NotAdded />
+                )}
+              </td>
+              <td>
+                <Badge tone={unreadOriginal(saved) ? "info" : "neutral"}>
+                  {unreadOriginal(saved)
+                    ? t("Not read yet", "هنوز خوانده نشده")
+                    : saved.status === "reading"
+                      ? t("Processing", "در حال پردازش")
+                      : saved.status === "review"
+                        ? t("In review", "در حال بررسی")
+                        : t("Draft", "پیش‌نویس")}
+                </Badge>
+              </td>
+              <td>
+                <Button
+                  variant="neutral"
+                  size="sm"
+                  onClick={() => resume(saved)}
+                >
+                  {unreadOriginal(saved)
+                    ? t("Continue", "ادامه")
+                    : t("Resume draft", "ادامه پیش‌نویس")}
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </DataTable>
     </Card>
   ) : null;
   if (!canReadWorkspace)
@@ -2135,11 +2290,24 @@ function InvoiceWorkspace({
                     </button>
                   </h2>
                   <p className="muted invoice-details-meta">
-                    <LtrText>{invoice.supplier}</LtrText> ·{" "}
-                    <LtrText>{invoice.supplier_invoice_number || "—"}</LtrText>{" "}
-                    ·{" "}
-                    {configuredBranchLabel(state.config, invoiceLocation, lang)}{" "}
-                    · <DateText value={invoice.invoice_date} />
+                    <span>
+                      <LtrText>{invoice.supplier}</LtrText>
+                    </span>
+                    <span>
+                      <LtrText>
+                        {invoice.supplier_invoice_number || "—"}
+                      </LtrText>
+                    </span>
+                    <span>
+                      {configuredBranchLabel(
+                        state.config,
+                        invoiceLocation,
+                        lang,
+                      )}
+                    </span>
+                    <span>
+                      <DateText value={invoice.invoice_date} />
+                    </span>
                   </p>
                   {locked && can("invoices.relocate", scope) && (
                     <div className="invoice-location-correction">
@@ -2196,135 +2364,142 @@ function InvoiceWorkspace({
                         </Button>
                       </div>
                     )}
-                  <p>
+                  <div className="invoice-details-status">
                     <Badge tone={locked ? "approved" : "progress"}>
                       {locked
                         ? t("Posted", "ثبت‌شده")
                         : blockers.length
                           ? t("Needs review", "نیازمند بررسی")
                           : t("Ready to post", "آماده ثبت")}
-                    </Badge>{" "}
+                    </Badge>
                     <span className="muted">
                       {t(
                         "Changes save automatically in this browser.",
                         "تغییرات در این مرورگر خودکار ذخیره می‌شوند.",
                       )}
                     </span>
-                  </p>
+                  </div>
                   {detailsOpen && (
                     <fieldset
                       id="invoice-details-fields"
                       disabled={locked}
-                      className="form-grid invoice-details-form"
+                      className="form-grid invoice-details-form invoice-details-sections"
                     >
-                      <Field
-                        label={t("Supplier", "تأمین‌کننده")}
-                        error={issue("invoice-supplier")}
-                      >
-                        <Select
-                          id="invoice-supplier"
-                          value={invoice.supplier}
-                          onChange={(value) => {
-                            if (value === "__add_supplier") {
-                              setSupplierToEdit(undefined);
-                              setSupplierEditorOpen(true);
-                              return;
-                            }
-                            updateInvoice((draft) => {
-                              const supplier = supplierRecords(draft).find(
-                                (record) =>
-                                  record.company_id ===
-                                    draft.config.company.seed_key &&
-                                  supplierMatches(record, value),
-                              );
-                              const previousSupplier = draft.invoice.supplier;
-                              draft.invoice.supplier = value;
-                              clearInvoiceOrder(draft.invoice);
-                              draft.invoice.supplier_confirmed =
-                                supplier?.status === "confirmed";
-                              setInvoicePaymentTerms(
-                                draft.invoice,
-                                supplier?.payment_terms ?? "",
-                              );
-                              if (supplier)
-                                markInvoiceSupplierReview(
-                                  draft.invoice,
-                                  supplier,
-                                  previousSupplier,
+                      <div className="invoice-details-group">
+                        <h3>{t("Invoice", "فاکتور")}</h3>
+                        <Field
+                          label={t("Supplier", "تأمین‌کننده")}
+                          error={issue("invoice-supplier")}
+                        >
+                          <Select
+                            id="invoice-supplier"
+                            value={invoice.supplier}
+                            onChange={(value) => {
+                              if (value === "__add_supplier") {
+                                setSupplierToEdit(undefined);
+                                setSupplierEditorOpen(true);
+                                return;
+                              }
+                              updateInvoice((draft) => {
+                                const supplier = supplierRecords(draft).find(
+                                  (record) =>
+                                    record.company_id ===
+                                      draft.config.company.seed_key &&
+                                    supplierMatches(record, value),
                                 );
-                              draft.invoice.lower_price_answers = undefined;
-                            });
-                          }}
+                                const previousSupplier = draft.invoice.supplier;
+                                draft.invoice.supplier = value;
+                                clearInvoiceOrder(draft.invoice);
+                                draft.invoice.supplier_confirmed =
+                                  supplier?.status === "confirmed";
+                                setInvoicePaymentTerms(
+                                  draft.invoice,
+                                  supplier?.payment_terms ?? "",
+                                );
+                                if (supplier)
+                                  markInvoiceSupplierReview(
+                                    draft.invoice,
+                                    supplier,
+                                    previousSupplier,
+                                  );
+                                draft.invoice.lower_price_answers = undefined;
+                              });
+                            }}
 
-                          disabled={locked}
-                          options={[
-                            {
-                              value: "",
-                              label: t("Choose supplier", "انتخاب تأمین‌کننده"),
-                            },
-                            ...supplierChoices(state).map((supplier) => ({
-                              value: supplier.name,
-                              label: `\u2066${supplier.name}\u2069`,
-                            })),
-                            ...(!supplierChoices(state).some((record) =>
-                              supplierMatches(record, invoice.supplier),
-                            ) && invoice.supplier
-                              ? [
-                                  {
-                                    value: invoice.supplier,
-                                    label: invoice.supplier,
-                                  },
-                                ]
-                              : []),
-                            {
-                              value: "__add_supplier",
-                              label: t(
-                                "+ Add supplier",
-                                "+ افزودن تأمین‌کننده",
-                              ),
-                            },
-                          ]}
-                        />
-                      </Field>
-                      <Field
-                        label={t(
-                          "Supplier invoice number (optional)",
-                          "شماره فاکتور تأمین‌کننده (اختیاری)",
-                        )}
-                      >
-                        <input
-                          dir="ltr"
-                          value={invoice.supplier_invoice_number}
-                          onChange={(event) => {
-                            const inputValue = event.currentTarget.value;
-                            updateInvoice((draft) => {
-                              draft.invoice.supplier_invoice_number =
-                                inputValue;
-                            });
-                          }}
-                          placeholder={t(
-                            "Assigned on posting if blank",
-                            "اگر خالی باشد هنگام ثبت تعیین می‌شود",
+                            disabled={locked}
+                            options={[
+                              {
+                                value: "",
+                                label: t(
+                                  "Choose supplier",
+                                  "انتخاب تأمین‌کننده",
+                                ),
+                              },
+                              ...supplierChoices(state).map((supplier) => ({
+                                value: supplier.name,
+                                label: `\u2066${supplier.name}\u2069`,
+                              })),
+                              ...(!supplierChoices(state).some((record) =>
+                                supplierMatches(record, invoice.supplier),
+                              ) && invoice.supplier
+                                ? [
+                                    {
+                                      value: invoice.supplier,
+                                      label: invoice.supplier,
+                                    },
+                                  ]
+                                : []),
+                              {
+                                value: "__add_supplier",
+                                label: t(
+                                  "+ Add supplier",
+                                  "+ افزودن تأمین‌کننده",
+                                ),
+                              },
+                            ]}
+                          />
+                        </Field>
+                        <Field
+                          label={t(
+                            "Supplier invoice number (optional)",
+                            "شماره فاکتور تأمین‌کننده (اختیاری)",
                           )}
-                        />
-                      </Field>
-                      <Field
-                        label={t("Invoice date", "تاریخ فاکتور")}
-                        error={issue("invoice-date")}
-                      >
-                        <DateField
-                          id="invoice-date"
-                          dir="ltr"
-                          value={invoice.invoice_date ?? ""}
-                          onChange={(value) =>
-                            updateInvoice((draft) => {
-                              draft.invoice.invoice_date = value;
-                              refreshInvoiceDueDate(draft.invoice);
-                            })
-                          }
-                        />
-                      </Field>
-                      <div className="invoice-received-fields">
+                        >
+                          <input
+                            dir="ltr"
+                            value={invoice.supplier_invoice_number}
+                            onChange={(event) => {
+                              const inputValue = event.currentTarget.value;
+                              updateInvoice((draft) => {
+                                draft.invoice.supplier_invoice_number =
+                                  inputValue;
+                              });
+                            }}
+                            placeholder={t(
+                              "Assigned on posting if blank",
+                              "اگر خالی باشد هنگام ثبت تعیین می‌شود",
+                            )}
+                          />
+                        </Field>
+                        <Field
+                          label={t("Invoice date", "تاریخ فاکتور")}
+                          error={issue("invoice-date")}
+                        >
+                          <DateField
+                            id="invoice-date"
+                            dir="ltr"
+                            value={invoice.invoice_date ?? ""}
+                            onChange={(value) =>
+                              updateInvoice((draft) => {
+                                draft.invoice.invoice_date = value;
+                                refreshInvoiceDueDate(draft.invoice);
+                              })
+                            }
+                          />
+                        </Field>
+                      </div>
+                      <div className="invoice-details-group">
+                        <h3>{t("Receiving", "دریافت")}</h3>
                         <Field
                           label={t("Received date", "تاریخ دریافت")}
                           error={
@@ -2381,169 +2556,175 @@ function InvoiceWorkspace({
                             }
                           />
                         </Field>
-                      </div>
-                      <Field
-                        label={t("Receiving employee", "کارمند دریافت‌کننده")}
-                        error={issue("invoice-employee")}
-                      >
-                        <Select
-                          id="invoice-employee"
-                          value={invoice.receiving_employee ?? ""}
-                          onChange={(value) =>
-                            updateInvoice((draft) => {
-                              draft.invoice.receiving_employee = value;
-                            })
-                          }
+                        <Field
+                          label={t("Receiving employee", "کارمند دریافت‌کننده")}
+                          error={issue("invoice-employee")}
+                        >
+                          <Select
+                            id="invoice-employee"
+                            value={invoice.receiving_employee ?? ""}
+                            onChange={(value) =>
+                              updateInvoice((draft) => {
+                                draft.invoice.receiving_employee = value;
+                              })
+                            }
 
-                          disabled={locked}
-                          options={demoUsers
-                            .filter((user) => user.role !== "cashier")
-                            .map((user) => ({
-                              value: user.name,
-                              label: demoUserLabel(user.name, lang),
+                            disabled={locked}
+                            options={demoUsers
+                              .filter((user) => user.role !== "cashier")
+                              .map((user) => ({
+                                value: user.name,
+                                label: demoUserLabel(user.name, lang),
+                              }))}
+                          />
+                        </Field>
+                        <Field
+                          label={t("Location", "مکان")}
+                          error={issue("invoice-location")}
+                        >
+                          <Select
+                            id="invoice-location"
+                            value={invoiceLocation}
+                            disabled={
+                              locked ||
+                              !can("invoices.assign_receiving_location", scope)
+                            }
+                            onChange={(value) => {
+                              updateInvoice((draft, currentActor) => {
+                                setInvoiceLocation(draft, currentActor, value);
+                              }, "invoices.assign_receiving_location");
+                            }}
+
+                            options={branches.map((item) => ({
+                              value: item,
+                              label: configuredBranchLabel(
+                                state.config,
+                                item,
+                                lang,
+                              ),
                             }))}
-                        />
-                      </Field>
-                      <Field
-                        label={t("Location", "مکان")}
-                        error={issue("invoice-location")}
-                      >
-                        <Select
-                          id="invoice-location"
-                          value={invoiceLocation}
-                          disabled={
-                            locked ||
-                            !can("invoices.assign_receiving_location", scope)
-                          }
-                          onChange={(value) => {
-                            updateInvoice((draft, currentActor) => {
-                              setInvoiceLocation(draft, currentActor, value);
-                            }, "invoices.assign_receiving_location");
-                          }}
-
-                          options={branches.map((item) => ({
-                            value: item,
-                            label: configuredBranchLabel(
-                              state.config,
-                              item,
-                              lang,
-                            ),
-                          }))}
-                        />
-                      </Field>
-                      <Field
-                        label={t("Ship to (optional)", "نشانی تحویل (اختیاری)")}
-                      >
-                        <input
-                          value={invoice.ship_to ?? ""}
+                          />
+                        </Field>
+                        <Field
+                          label={t(
+                            "Ship to (optional)",
+                            "نشانی تحویل (اختیاری)",
+                          )}
+                        >
+                          <input
+                            value={invoice.ship_to ?? ""}
+                            disabled={locked}
+                            onChange={(event) => {
+                              const inputValue = event.currentTarget.value;
+                              updateInvoice((draft) => {
+                                draft.invoice.ship_to = inputValue;
+                              });
+                            }}
+                          />
+                        </Field>
+                      </div>
+                      <div className="invoice-details-group">
+                        <h3>{t("Amounts and payment", "مبلغ‌ها و پرداخت")}</h3>
+                        <Field
+                          label={t("Subtotal", "جمع پیش از مالیات")}
+                          error={issue("invoice-subtotal")}
+                        >
+                          <input
+                            id="invoice-subtotal"
+                            dir="ltr"
+                            className="control-narrow"
+                            inputMode="decimal"
+                            value={invoice.subtotal}
+                            onChange={(event) => {
+                              const inputValue = event.currentTarget.value;
+                              updateInvoice((draft) => {
+                                setInvoiceAmount(
+                                  draft.invoice,
+                                  "subtotal",
+                                  inputValue,
+                                );
+                              });
+                            }}
+                          />
+                        </Field>
+                        <Field
+                          label={t("Tax", "مالیات")}
+                          error={issue("invoice-tax")}
+                        >
+                          <input
+                            id="invoice-tax"
+                            dir="ltr"
+                            className="control-narrow"
+                            inputMode="decimal"
+                            value={invoice.tax}
+                            onChange={(event) => {
+                              const inputValue = event.currentTarget.value;
+                              updateInvoice((draft) => {
+                                setInvoiceAmount(
+                                  draft.invoice,
+                                  "tax",
+                                  inputValue,
+                                );
+                              });
+                            }}
+                          />
+                        </Field>
+                        <Field
+                          label={t("Final total", "جمع نهایی")}
+                          error={issue("invoice-final-total")}
+                        >
+                          <input
+                            id="invoice-final-total"
+                            dir="ltr"
+                            className="control-narrow"
+                            inputMode="decimal"
+                            value={invoice.final_total}
+                            onChange={(event) => {
+                              const inputValue = event.currentTarget.value;
+                              updateInvoice((draft) => {
+                                setInvoiceAmount(
+                                  draft.invoice,
+                                  "final_total",
+                                  inputValue,
+                                );
+                              });
+                            }}
+                          />
+                        </Field>
+                        <Field
+                          label={t(
+                            "Due date (optional)",
+                            "تاریخ سررسید (اختیاری)",
+                          )}
+                        >
+                          <DateField
+                            dir="ltr"
+                            value={invoice.due_date ?? ""}
+                            onChange={(value) =>
+                              updateInvoice((draft) => {
+                                draft.invoice.due_date = value;
+                                draft.invoice.due_date_manual = true;
+                              })
+                            }
+                          />
+                        </Field>
+                        <PaymentTermsControl
+                          key={`${invoice.id}:${invoice.supplier}`}
+                          id="invoice-payment-terms"
+                          error={issue("invoice-payment-terms")}
+                          label={t(
+                            "Payment terms (optional)",
+                            "شرایط پرداخت (اختیاری)",
+                          )}
+                          value={invoice.payment_terms ?? ""}
                           disabled={locked}
-                          onChange={(event) => {
-                            const inputValue = event.currentTarget.value;
-                            updateInvoice((draft) => {
-                              draft.invoice.ship_to = inputValue;
-                            });
-                          }}
-                        />
-                      </Field>
-                      <Field
-                        label={t("Subtotal", "جمع پیش از مالیات")}
-                        error={issue("invoice-subtotal")}
-                      >
-                        <input
-                          id="invoice-subtotal"
-                          dir="ltr"
-                          className="control-narrow"
-                          inputMode="decimal"
-                          value={invoice.subtotal}
-                          onChange={(event) => {
-                            const inputValue = event.currentTarget.value;
-                            updateInvoice((draft) => {
-                              setInvoiceAmount(
-                                draft.invoice,
-                                "subtotal",
-                                inputValue,
-                              );
-                            });
-                          }}
-                        />
-                      </Field>
-                      <Field
-                        label={t("Tax", "مالیات")}
-                        error={issue("invoice-tax")}
-                      >
-                        <input
-                          id="invoice-tax"
-                          dir="ltr"
-                          className="control-narrow"
-                          inputMode="decimal"
-                          value={invoice.tax}
-                          onChange={(event) => {
-                            const inputValue = event.currentTarget.value;
-                            updateInvoice((draft) => {
-                              setInvoiceAmount(
-                                draft.invoice,
-                                "tax",
-                                inputValue,
-                              );
-                            });
-                          }}
-                        />
-                      </Field>
-                      <Field
-                        label={t("Final total", "جمع نهایی")}
-                        error={issue("invoice-final-total")}
-                      >
-                        <input
-                          id="invoice-final-total"
-                          dir="ltr"
-                          className="control-narrow"
-                          inputMode="decimal"
-                          value={invoice.final_total}
-                          onChange={(event) => {
-                            const inputValue = event.currentTarget.value;
-                            updateInvoice((draft) => {
-                              setInvoiceAmount(
-                                draft.invoice,
-                                "final_total",
-                                inputValue,
-                              );
-                            });
-                          }}
-                        />
-                      </Field>
-                      <Field
-                        label={t(
-                          "Due date (optional)",
-                          "تاریخ سررسید (اختیاری)",
-                        )}
-                      >
-                        <DateField
-                          dir="ltr"
-                          value={invoice.due_date ?? ""}
                           onChange={(value) =>
-                            updateInvoice((draft) => {
-                              draft.invoice.due_date = value;
-                              draft.invoice.due_date_manual = true;
-                            })
+                            updateInvoice((draft) =>
+                              setInvoicePaymentTerms(draft.invoice, value),
+                            )
                           }
                         />
-                      </Field>
-                      <PaymentTermsControl
-                        key={`${invoice.id}:${invoice.supplier}`}
-                        id="invoice-payment-terms"
-                        error={issue("invoice-payment-terms")}
-                        label={t(
-                          "Payment terms (optional)",
-                          "شرایط پرداخت (اختیاری)",
-                        )}
-                        value={invoice.payment_terms ?? ""}
-                        disabled={locked}
-                        onChange={(value) =>
-                          updateInvoice((draft) =>
-                            setInvoicePaymentTerms(draft.invoice, value),
-                          )
-                        }
-                      />
+                      </div>
                     </fieldset>
                   )}
                   {!locked && invoiceTotalDiffers(invoice) && (
@@ -3319,43 +3500,6 @@ function InvoiceWorkspace({
                                         />
                                       </Field>
                                     )}
-                                    <Field
-                                      label={t(
-                                        "Supplier item code (optional)",
-                                        "کد کالای تأمین‌کننده (اختیاری)",
-                                      )}
-                                    >
-                                      <input
-                                        className="control-narrow"
-                                        dir="ltr"
-                                        disabled={locked}
-                                        value={line.supplier_item_code ?? ""}
-                                        onChange={(event) => {
-                                          const inputValue =
-                                            event.currentTarget.value;
-                                          editLine(
-                                            index,
-                                            (item, draft, currentActor) => {
-                                              item.supplier_item_code =
-                                                inputValue;
-                                              item.supplier_item_id =
-                                                resolveSupplierItem(
-                                                  draft,
-                                                  currentActor,
-                                                  draft.invoice.supplier,
-                                                  draft.invoice.branch,
-                                                  {
-                                                    product_code:
-                                                      item.product_code,
-                                                    supplier_item_code:
-                                                      inputValue,
-                                                  },
-                                                )?.id;
-                                            },
-                                          );
-                                        }}
-                                      />
-                                    </Field>
                                     {line.sold_by !== "weight" &&
                                       line.quantity_unit === "cases" && (
                                         <Field
@@ -3529,6 +3673,43 @@ function InvoiceWorkspace({
                                         )}
                                       />
                                     </Field>
+                                    <Field
+                                      label={t(
+                                        "Supplier item code (optional)",
+                                        "کد کالای تأمین‌کننده (اختیاری)",
+                                      )}
+                                    >
+                                      <input
+                                        className="control-narrow"
+                                        dir="ltr"
+                                        disabled={locked}
+                                        value={line.supplier_item_code ?? ""}
+                                        onChange={(event) => {
+                                          const inputValue =
+                                            event.currentTarget.value;
+                                          editLine(
+                                            index,
+                                            (item, draft, currentActor) => {
+                                              item.supplier_item_code =
+                                                inputValue;
+                                              item.supplier_item_id =
+                                                resolveSupplierItem(
+                                                  draft,
+                                                  currentActor,
+                                                  draft.invoice.supplier,
+                                                  draft.invoice.branch,
+                                                  {
+                                                    product_code:
+                                                      item.product_code,
+                                                    supplier_item_code:
+                                                      inputValue,
+                                                  },
+                                                )?.id;
+                                            },
+                                          );
+                                        }}
+                                      />
+                                    </Field>
                                     {line.product_code === "NEW" && (
                                       <>
                                         <Field
@@ -3569,25 +3750,6 @@ function InvoiceWorkspace({
                                       </>
                                     )}
                                   </fieldset>
-                                  {!locked && (
-                                    <Button
-                                      variant="destructive"
-                                      className="invoice-remove-line"
-                                      size="sm"
-                                      onClick={() => {
-                                        updateInvoice((draft, currentActor) =>
-                                          removeInvoiceLine(
-                                            draft,
-                                            currentActor,
-                                            index,
-                                          ),
-                                        );
-                                        setOpenLines({});
-                                      }}
-                                    >
-                                      {t("Remove line", "حذف ردیف")}
-                                    </Button>
-                                  )}
                                   {!locked && (
                                     <Checkbox
                                       checked={short.quantity > 0}
@@ -3971,34 +4133,56 @@ function InvoiceWorkspace({
                                         </Field>
                                       </div>
                                     )}
-                                  <Checkbox
-                                    id={`invoice-line-${index}-confirm`}
-                                    disabled={
-                                      locked ||
-                                      (!!manualReplacement &&
-                                        acceptedInvoiceUnits(line) > 0 &&
-                                        !line.short_dated &&
-                                        !line.manual_price_decision)
-                                    }
-                                    checked={line.review_confirmed ?? false}
-                                    onChange={(checked) => {
-                                      updateInvoice((draft) => {
-                                        draft.invoice.lines[
-                                          index
-                                        ].review_confirmed = checked;
-                                      });
-                                      if (checked)
-                                        setOpenLines((current) => ({
-                                          ...current,
-                                          [lineKey]: false,
-                                        }));
-                                    }}
-                                  >
-                                    {t(
-                                      "Confirm this invoice line",
-                                      "تأیید این ردیف فاکتور",
+                                  <div className="invoice-line-actions">
+                                    {!locked && (
+                                      <Button
+                                        variant="destructive"
+                                        className="invoice-remove-line"
+                                        size="sm"
+                                        onClick={() => {
+                                          updateInvoice((draft, currentActor) =>
+                                            removeInvoiceLine(
+                                              draft,
+                                              currentActor,
+                                              index,
+                                            ),
+                                          );
+                                          setOpenLines({});
+                                        }}
+                                      >
+                                        {t("Remove line", "حذف ردیف")}
+                                      </Button>
                                     )}
-                                  </Checkbox>
+                                    <Checkbox
+                                      className="invoice-line-confirm"
+                                      id={`invoice-line-${index}-confirm`}
+                                      disabled={
+                                        locked ||
+                                        (!!manualReplacement &&
+                                          acceptedInvoiceUnits(line) > 0 &&
+                                          !line.short_dated &&
+                                          !line.manual_price_decision)
+                                      }
+                                      checked={line.review_confirmed ?? false}
+                                      onChange={(checked) => {
+                                        updateInvoice((draft) => {
+                                          draft.invoice.lines[
+                                            index
+                                          ].review_confirmed = checked;
+                                        });
+                                        if (checked)
+                                          setOpenLines((current) => ({
+                                            ...current,
+                                            [lineKey]: false,
+                                          }));
+                                      }}
+                                    >
+                                      {t(
+                                        "Confirm this invoice line",
+                                        "تأیید این ردیف فاکتور",
+                                      )}
+                                    </Checkbox>
+                                  </div>
                                   <FieldError>
                                     {issue(`invoice-line-${index}-confirm`)}
                                   </FieldError>

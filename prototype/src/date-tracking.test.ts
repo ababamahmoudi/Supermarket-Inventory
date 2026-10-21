@@ -202,12 +202,13 @@ describe("manual date evidence and preference", () => {
       branch: "Branch 1",
       allowed_branches: ["Branch 1"],
     });
-    expect(() => addTrackedDate(state, cashier, input(state))).toThrow(
-      new DateTrackingError("permission"),
-    );
+    // Ali's rule (Oct 2026): everyone, including Cashiers, adds dates and the
+    // record keeps who added each one. Removing a date stays restricted.
+    const cashierEntry = addTrackedDate(state, cashier, input(state));
+    expect(cashierEntry.created_by_user_id).toBe(cashier.user_id);
     expect(() =>
       removeTrackedDate(state, cashier, entry.id, "sold_out"),
-    ).toThrow(new DateTrackingError("permission"));
+    ).toThrow();
   });
 });
 
@@ -286,7 +287,7 @@ describe("inline tracking preference and atomic auto-enable", () => {
         }),
         state.products[0].code,
         "Branch 1",
-        new DateTrackingError("permission"),
+        new AuthorityError("capability"),
       ],
       [
         foreignContext(state),

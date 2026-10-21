@@ -292,3 +292,21 @@ These rules supersede conflicting earlier presentation and note wording. Match t
 Product uses a 3:2 Price/Cost desktop row with Dates spanning the row below, and one column on phones or without private cost. Its charge uses named 44/48 typography tokens at weight 800 and 16 px content gaps; Lookup retains 60/60. Regular comparisons stay visibly struck through inside the shared renderer. End sale now is plain danger-red text with the existing confirmation.
 
 C9 proof includes Chromium and WebKit dark-theme frame/no-reload checks at a non-localhost address. **WebKit runs only the new no-reload test**, not the existing browser suite. Keep existing Chromium projects, workers, retries and skips. Capture the requested requested scene families in EN light, EN dark, FA and phone, compare against the three supplied pictures and record every remaining difference honestly. Documentation is a contract, not a claim that these checks have run.
+
+## Foundation rules (S1, 2026-10-19 — current owner contract)
+
+These rules replace any earlier per-PR wording that conflicts with them. The code lives in `prototype/src/foundation.css` (loaded last) plus a few shared components. **Do not restyle these parts in page stylesheets.** If a page needs something new, add it to the foundation and use it everywhere.
+
+1. **Tables.** Use `DataTable`. Every row has the same rhythm: 12px cell padding, 16px at the first and last cell, header and values aligned the same way. Numbers, money and dates-as-numbers are right-aligned with tabular figures. Never set a cell's padding to 0 to make room. Give phones a `phoneList` (name, value, secondary) so rows stay readable.
+2. **Blue means you can open it.** Product, supplier and invoice names that open a page are accent blue (`--link-text`); use `a.entity-link` for new links. Plain text stays ink.
+3. **Empty values say so.** Use `<NotAdded />` or `<LtrValue value=… />` for anything that was never entered ("Not added" in muted italics). Use "—" only in table columns that mean "none" (for example no offer).
+4. **Fields look editable everywhere.** Inputs, text areas and selects have a visible border (`--field-border`), including on grey panels. Errors outline the field in red and say how to fix it. A wrong password is cleared and focused.
+5. **One item, one box.** Things that belong together in a list (queue requests, Seen/Done steps, rule choices) sit in one `list-box` with a hairline border and 16px padding.
+6. **Tabs and filter segments never wrap.** They scroll sideways on narrow screens. A choice inside a table cell (such as an invoice line decision) may wrap so its full text stays visible.
+7. **KPI cards line up.** Label row, number row, detail row; numbers sit on the same line whether or not a card has an arrow button.
+8. **Detail lists** use `dl.detail-grid` (label above value, auto-fit columns).
+9. **Detail pages** start with a `back-link` ("← Back to …") above the page title, never a loose button beside it.
+10. **Status records show who and when** in one line: "Demo Richmond Hill Supervisor · 2026-10-19 14:22".
+11. **Never a blank screen.** Loading keeps the app frame visible; never show an empty page between pages.
+12. **Colors only from tokens.** New colors go into `klead-tokens.css` for both light and dark; `klead-tokens.test.ts` fails otherwise.
+13. **One list for alerts.** All alerts sit in one list of `list-box` rows (product, one-line summary, category label). Details open on click; short facts stay on the row.

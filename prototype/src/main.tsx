@@ -15,6 +15,8 @@ import "./styles.css";
 import App from "./App";
 import { DemoProvider } from "./store";
 import { createBrowserProviderOptions } from "./e1-application-options";
+// Shared component rules load last so pages cannot restyle them by accident.
+import "./foundation.css";
 
 // Load both scripts while online so switching language needs no later requests.
 if (document.fonts) {

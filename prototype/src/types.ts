@@ -1,3 +1,4 @@
+import type { NoteDoneRule } from "./note-engagement";
 import type { configSeed, demoSeed } from "./config";
 import type { NotebookDefinition, NotebookEntry } from "./notebooks";
 import type { ReversalPatch } from "./history";
@@ -61,6 +62,8 @@ export type CompanyConfig = Omit<
       creates_stock_movement?: boolean;
       notify_supervisor?: boolean;
       notify_roles?: Role[];
+      /** Who may mark this built-in notebook's notes done. */
+      done_rule?: NoteDoneRule;
     }[];
     custom_created_by: Role[];
   };
@@ -546,6 +549,8 @@ export interface NoteRecord extends ScopedRecord, NoteEngagement {
   type: "to_order" | "store_use" | "note_to_supervisor";
   text: string;
   by: string;
+  /** Author identity, written by actorAudit when the note is added. */
+  actor_user_id?: string;
   status: "open" | "read" | "resolved" | "ordered";
   created_at: string;
   product_code?: string;

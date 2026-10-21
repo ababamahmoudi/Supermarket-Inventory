@@ -123,3 +123,46 @@
 .notebook-settings > .card > .row-between h2 {
   margin: 0;
 }
+
+/* Who can mark notes done (Ali, Oct 2026). */
+.done-rule-fields {
+  display: grid;
+  gap: 12px;
+  /* A fieldset is min-content wide by default; let it shrink on phones so
+     the dialog never grows past the screen. */
+  min-inline-size: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-control);
+}
+.done-rule-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.done-rule-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--divider);
+}
+.done-rule-choices > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.done-rule-choices .helper {
+  margin: 0 0 4px;
+}
+.note-own-hint {
+  align-self: center;
+  font-size: var(--font-size-caption);
+}
+@media (max-width: 600px) {
+  .done-rule-choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

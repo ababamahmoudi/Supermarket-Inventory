@@ -179,6 +179,12 @@ it("rechecks the original note's read location after a genuine Owner changes its
   await act(async () => {
     await current().setLocation({ kind: "location", location_id: "Branch 1" });
   });
+  // Authors cannot mark their own note seen (Ali, Oct 2026), so a Floor
+  // Worker writes the note and the Manager is its reader.
+  await act(async () => {
+    expect(await current().switchDemoUser("ny-floor")).toBeNull();
+  });
+  await waitFor(() => expect(current().actor?.role).toBe("floor_worker"));
   await act(async () => {
     await current().command(
       "notes.entry_add",
@@ -193,6 +199,13 @@ it("rechecks the original note's read location after a genuine Owner changes its
           text: "Genuine original status permission",
         }),
     );
+  });
+  await act(async () => {
+    expect(await current().switchDemoUser("manager")).toBeNull();
+  });
+  await waitFor(() => expect(current().actor?.role).toBe("manager"));
+  await act(async () => {
+    await current().setLocation({ kind: "location", location_id: "Branch 1" });
   });
   const note = (await read()).notes.find(
     (row) => row.text === "Genuine original status permission",

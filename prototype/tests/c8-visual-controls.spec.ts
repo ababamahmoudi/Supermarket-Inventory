@@ -425,7 +425,8 @@ for (const language of ["en", "fa"] as const) {
       );
     expect(inputs.length).toBeGreaterThanOrEqual(4);
     for (const input of inputs) {
-      expect(input.visibleBorder).toBe(false);
+      // S1 (Ali's rule): fields look editable everywhere, table cells included.
+      expect(input.visibleBorder).toBe(true);
       expect(input.outline).toBe("none");
       expect(input.shadow).toBe("none");
       expect(input.fill).not.toBe(input.parentFill);

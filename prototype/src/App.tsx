@@ -1,6 +1,14 @@
 import PwaMenu from "./PwaMenu";
 import { InitialSessionLoading, SessionProgress } from "./SessionProgress.c9";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { AUTH_IDENTITY_KEY } from "./auth-preferences.e1";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+  type Ref,
+} from "react";
 import {
   Archive,
   ArrowLeftRight,
@@ -154,7 +162,7 @@ export const pages: {
     fa: "پیگیری تاریخ",
     icon: Archive,
     group: "Daily",
-    capabilities: ["dates.read"],
+    capabilities: ["dates.read", "dates.add"],
   },
   {
     key: "notes",
@@ -301,6 +309,7 @@ function PasswordField({
   error,
   autoComplete = "current-password",
   autoFocus = false,
+  inputRef,
 }: {
   label: string;
   value: string;
@@ -308,6 +317,7 @@ function PasswordField({
   error?: string;
   autoComplete?: string;
   autoFocus?: boolean;
+  inputRef?: Ref<HTMLInputElement>;
 }) {
   const { t } = useDemo();
   const id = useId();
@@ -318,6 +328,7 @@ function PasswordField({
       <div className="password-field">
         <input
           id={id}
+          ref={inputRef}
           type={visible ? "text" : "password"}
           value={value}
           onChange={(event) => onChange(event.target.value)}
@@ -413,6 +424,7 @@ function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const passwordRef = useRef<HTMLInputElement>(null);
   return (
     <AuthLayout>
       <h1>{t("Sign in", "ورود")}</h1>
@@ -454,7 +466,13 @@ function SignIn() {
         onSubmit={(event) => {
           event.preventDefault();
           void signIn(username, password).then((result) => {
-            if (result) setError(authError(result));
+            if (!result) return;
+            setError(authError(result));
+            if (result === "invalid") {
+              // A wrong password is cleared so it can be retyped at once.
+              setPassword("");
+              window.requestAnimationFrame(() => passwordRef.current?.focus());
+            }
           });
         }}
       >
@@ -481,6 +499,7 @@ function SignIn() {
             setError("");
           }}
           error={error}
+          inputRef={passwordRef}
         />
         <Button type="submit" className="signin-submit">
           {t("Sign in", "ورود")}
@@ -531,7 +550,29 @@ function AuthLayout({ children }: { children: ReactNode }) {
   );
 }
 /** Only public company chrome survives a session transition; no cached actor. */
-function PendingSessionShell({ collapsed }: { collapsed: boolean }) {
+/** Display hint only: a session record exists in this tab. Never grants access. */
+function hasSessionDisplayHint() {
+  try {
+    const identity = JSON.parse(
+      sessionStorage.getItem(AUTH_IDENTITY_KEY) ?? "null",
+    ) as { company_id?: unknown; session_id?: unknown } | null;
+    return (
+      typeof identity?.company_id === "string" &&
+      identity.company_id.length > 0 &&
+      typeof identity.session_id === "string" &&
+      identity.session_id.length > 0
+    );
+  } catch {
+    return false;
+  }
+}
+function PendingSessionShell({
+  collapsed,
+  loading = false,
+}: {
+  collapsed: boolean;
+  loading?: boolean;
+}) {
   const { state, t, lang } = useDemo();
   return (
     <div
@@ -564,7 +605,15 @@ function PendingSessionShell({ collapsed }: { collapsed: boolean }) {
           <LanguageToggle />
           <SessionProgress label={t("Loading…", "در حال بارگذاری…")} />
         </header>
-        <main className="main-content" />
+        <main className="main-content">
+          {loading && (
+            <InitialSessionLoading>
+              <p role="status" className="sr-only">
+                {t("Loading…", "در حال بارگذاری…")}
+              </p>
+            </InitialSessionLoading>
+          )}
+        </main>
       </div>
     </div>
   );
@@ -884,6 +933,10 @@ export default function App() {
     authenticatedAt,
     state.config.session.reprompt_password_after_minutes,
   ]);
+  // A returning signed-in person sees the app frame at once (never a blank
+  // page), including when Safari reloads the page. The hint is display-only.
+  if (authStage === "loading" && hasSessionDisplayHint())
+    return <PendingSessionShell collapsed={effectiveCollapsed} loading />;
   if (authStage === "loading")
     return (
       <InitialSessionLoading>
@@ -912,6 +965,7 @@ export default function App() {
       moduleEnabled(state.config, page.key) &&
       (role !== "cashier" ||
         page.key === "lookup" ||
+        page.key === "expiry" ||
         // Only current protected custom-notebook DTOs establish this route.
         // The Cashier never receives built-in Notes or a general Notes grant.
         (page.key === "notes" && Boolean(state.notebooks?.length))) &&

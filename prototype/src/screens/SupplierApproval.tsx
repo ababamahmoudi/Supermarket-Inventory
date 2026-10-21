@@ -210,7 +210,7 @@ export function SupplierApproval({
         />
       )}
       {compact ? (
-        <div className="dashboard-queue-row dashboard-supplier-approval">
+        <div className="dashboard-queue-row dashboard-supplier-approval list-box">
           <div className="dashboard-queue-product">
             <strong role="heading" aria-level={3} dir="auto">
               {supplier.name}

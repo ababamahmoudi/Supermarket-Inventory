@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import { signIn, setBranch } from "./helpers";
+import { signIn, setBranch, openAlert } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 export async function route(page: Page, hash: string) {
   await page.evaluate((value) => {
@@ -11,6 +11,7 @@ export async function applyBlackTeaAcrossStores(page: Page) {
   await signIn(page, "Manager");
   await setBranch(page, "all");
   await route(page, "alerts");
+  await openAlert(page, "Black Tea");
   const card = page
     .locator("main .card")
     .filter({ hasText: "Black Tea" })

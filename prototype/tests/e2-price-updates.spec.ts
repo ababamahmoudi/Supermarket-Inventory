@@ -20,18 +20,17 @@ test("Black Tea: real approval, scoped notification, Cashier pill, physical prin
   await signIn(page, "Branch Supervisor");
   await setBranch(page, "Branch 2");
   await route(page, `price-update?id=${encodeURIComponent(task.id)}`);
+  // Ali's rule: only Seen and Done, each recorded with who and when.
+  const status = page.locator(".price-update-status-card");
+  await expect(status).toContainText("Not seen yet");
+  await expect(page.locator("main").getByRole("checkbox")).toHaveCount(0);
+  await status
+    .getByRole("button", { name: "Mark as seen", exact: true })
+    .click();
+  await expect(status).toContainText("Demo Richmond Hill Supervisor");
   await expect(
-    page.getByRole("checkbox", {
-      name: "Changed on the cash register",
-      exact: true,
-    }),
-  ).toHaveAttribute("aria-checked", "false");
-  await page.getByRole("button", { name: "Mark as done", exact: true }).click();
-  await expect(
-    page.getByText("A register confirmation is still required.", {
-      exact: true,
-    }),
-  ).toBeVisible();
+    status.getByRole("button", { name: "Mark as seen", exact: true }),
+  ).toHaveCount(0);
   await page
     .getByRole("button", { name: "Print label now", exact: true })
     .click();
@@ -41,9 +40,6 @@ test("Black Tea: real approval, scoped notification, Cashier pill, physical prin
   });
   await expect(confirm).toBeVisible();
   await confirm.getByRole("button", { name: "No", exact: true }).click();
-  await expect(
-    page.getByRole("checkbox", { name: "New label printed", exact: true }),
-  ).toHaveAttribute("aria-checked", "false");
   await page
     .getByRole("button", { name: "Print label now", exact: true })
     .click();
@@ -54,21 +50,9 @@ test("Black Tea: real approval, scoped notification, Cashier pill, physical prin
     })
     .getByRole("button", { name: "Yes", exact: true })
     .click();
-  await expect(
-    page.getByRole("checkbox", { name: "New label printed", exact: true }),
-  ).toHaveAttribute("aria-checked", "true");
-  await page
-    .getByRole("checkbox", {
-      name: "Changed on the cash register",
-      exact: true,
-    })
-    .click();
-  await expect(
-    page.getByRole("checkbox", {
-      name: "Changed on the cash register",
-      exact: true,
-    }),
-  ).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator(".price-update-label-tools")).toContainText(
+    "printed by",
+  );
   await page.getByRole("button", { name: "Mark as done", exact: true }).click();
   await expect
     .poll(async () => {
@@ -77,6 +61,10 @@ test("Black Tea: real approval, scoped notification, Cashier pill, physical prin
         ?.status;
     })
     .toBe("done");
+  await expect(status.locator("li.is-complete")).toHaveCount(2);
+  await expect(
+    page.locator(".price-update-history-table tbody tr").first(),
+  ).toContainText("Latest");
   await signIn(page, "Cashier");
   await setBranch(page, "Branch 2");
   await route(page, `lookup?search=${product.code}`);
@@ -96,11 +84,12 @@ test("Black Tea: real approval, scoped notification, Cashier pill, physical prin
   const final = await readCanonicalBusinessEvidence(page);
   const saved = final.price_update_tasks!.find((row) => row.id === task.id)!;
   expect(saved.completed_by_user_id).toBe("demo-person-rh-supervisor");
+  expect(saved.seen?.by_user_id).toBe("demo-person-rh-supervisor");
   expect(saved.label_printed?.print_id).toBeTruthy();
   expect(saved.completed_at).toBeTruthy();
 });
 
-test("Floor Worker and Warehouse cannot acknowledge another store's register or acquire a task by a direct link", async ({
+test("Floor Worker and Warehouse cannot mark another store's task seen or acquire it by a direct link", async ({
   page,
 }) => {
   const { task } = await applyBlackTeaAcrossStores(page);
@@ -112,7 +101,7 @@ test("Floor Worker and Warehouse cannot acknowledge another store's register or 
   expect(
     (await readCanonicalBusinessEvidence(page)).price_update_tasks?.find(
       (row) => row.id === task.id,
-    )?.register_changed,
+    )?.seen,
   ).toBeUndefined();
   await signIn(page, "wh-floor");
   await route(page, "price-updates");
@@ -164,7 +153,7 @@ for (const language of ["en", "fa"] as const) {
               document.documentElement,
               document.body,
               ...document.querySelectorAll<HTMLElement>(
-                "main .card,main .price-updates-row,main .price-update-check-row",
+                "main .card,main .price-updates-row,main .price-update-status-steps > li",
               ),
             ];
             return elements

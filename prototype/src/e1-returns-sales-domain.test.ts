@@ -231,14 +231,16 @@ describe("E1 return and price authority", () => {
       text: "Fictional staff instruction",
     });
     const note = state.notes[0];
-    updateNoteStatus(state, worker, note.id, "read");
+    // The author cannot mark their own note seen (Ali, Oct 2026).
+    expect(() => updateNoteStatus(state, worker, note.id, "read")).toThrow(
+      "own_note",
+    );
     expect(() =>
       updateNoteStatus(state, worker, note.id, "resolved"),
     ).toThrow();
     updateNoteStatus(state, supervisor, note.id, "read");
     expect(note.status).toBe("open");
     expect(note.seen_receipts?.map((row) => row.user_id)).toEqual([
-      worker.user_id,
       supervisor.user_id,
     ]);
   });

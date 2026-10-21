@@ -151,7 +151,9 @@ describe("E1 authentication and role-aware shell", () => {
         { timeout: 10000 },
       ),
     );
-    expect(nav.getAllByRole("link")).toHaveLength(1);
+    // Cashiers use Lookup and may add dates (Ali, Oct 2026).
+    expect(nav.getAllByRole("link")).toHaveLength(2);
+    expect(nav.getByRole("link", { name: "Date tracking" })).toBeVisible();
     expect(nav.getByRole("link", { name: "Lookup" })).toHaveAttribute(
       "aria-current",
       "page",

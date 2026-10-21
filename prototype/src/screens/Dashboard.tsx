@@ -605,7 +605,7 @@ export function Dashboard() {
                         item.type === "price_change");
                     return (
                       <div
-                        className={`dashboard-queue-row${inline ? "" : " has-review-action"}`}
+                        className={`dashboard-queue-row list-box${inline ? "" : " has-review-action"}`}
                         key={item.id}
                       >
                         <div className="dashboard-queue-product">
@@ -796,7 +796,9 @@ export function Dashboard() {
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => navigate("alerts")}
+                          onClick={() =>
+                            navigate(`alerts?id=${encodeURIComponent(item.id)}`)
+                          }
                         >
                           {t("Review", "بررسی")}
                           <ArrowRight

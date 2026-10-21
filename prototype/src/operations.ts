@@ -24,7 +24,12 @@ import { companyDate } from "./invoice";
 import { configuredBranches } from "./settings";
 import { configSeed } from "./config";
 import { configuredRoleLabel } from "./role-config";
-import { appendSeenReceipt, recordNoteCompletion } from "./note-engagement";
+import {
+  appendSeenReceipt,
+  doneRuleDecision,
+  isNoteAuthor,
+  recordNoteCompletion,
+} from "./note-engagement";
 import {
   notifyBuiltinNote,
   markLinkedNoteNotificationsRead,
@@ -141,6 +146,10 @@ export class OperationError extends Error {
 }
 function fail(key: string): never {
   throw new OperationError(key);
+}
+/** Built-in note types are configured under their notebook kind. */
+export function builtInNotebookKind(type: NoteRecord["type"]) {
+  return type === "note_to_supervisor" ? "for_supervisor" : type;
 }
 const id = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -1440,6 +1449,8 @@ export function markNoteSeen(
   if (!note || note.archived) fail("scope");
   operationGuard(state, context, "notes.read", note);
   operationGuard(state, context, "notes.mark_seen", note, true);
+  // Seen tells the author that someone else read it; authors cannot mark their own.
+  if (isNoteAuthor(note, context)) fail("own_note");
   const receipt = appendSeenReceipt(note, context, at);
   markLinkedNoteNotificationsRead(state, context, note, at);
   if (!receipt) return;
@@ -1478,15 +1489,25 @@ export function updateNoteStatus(
     (item) => item.id === noteId && belongs(item, context),
   );
   if (!note) fail("scope");
-  operationGuard(
-    state,
-    context,
-    note.type === "note_to_supervisor"
-      ? "notes.status_manage"
-      : "notes.operational_status",
-    note,
-    true,
-  );
+  const rule = state.config.notebooks?.built_in?.find(
+    (item) => item.kind === builtInNotebookKind(note.type),
+  )?.done_rule;
+  const decision = doneRuleDecision(rule, context);
+  if (decision === "denied") fail("done_permission");
+  if (decision === "allowed") {
+    // Chosen people still need to read the note at an active location.
+    operationGuard(state, context, "notes.read", note);
+    operationGuard(state, context, "notes.read", note, true);
+  } else
+    operationGuard(
+      state,
+      context,
+      note.type === "note_to_supervisor"
+        ? "notes.status_manage"
+        : "notes.operational_status",
+      note,
+      true,
+    );
   if (
     note.archived ||
     status === "ordered" ||
@@ -1976,6 +1997,14 @@ export function operationError(
     scope: [
       "Choose a record in your company and branch.",
       "یک رکورد از شرکت و شعبه خود انتخاب کنید.",
+    ],
+    own_note: [
+      "You wrote this note. Seen is for the people who read it.",
+      "این یادداشت را خودتان نوشته‌اید. «دیده‌شده» برای خوانندگان آن است.",
+    ],
+    done_permission: [
+      "Only the people chosen in this notebook's settings can mark its notes done.",
+      "فقط افرادی که در تنظیمات این دفترچه انتخاب شده‌اند می‌توانند یادداشت‌ها را انجام‌شده علامت بزنند.",
     ],
     amount: [
       "Enter a valid amount with no more than two decimal places.",

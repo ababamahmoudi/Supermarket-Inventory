@@ -21,6 +21,7 @@ import {
   DateText,
   demoUserLabel,
   LtrText,
+  LtrValue,
   Money,
   ProductName,
 } from "../presentation";
@@ -698,7 +699,7 @@ export default function Suppliers() {
           <div>
             <dt>{t("Phone", "تلفن")}</dt>
             <dd>
-              <LtrText>{current.phone ?? "—"}</LtrText>
+              <LtrValue value={current.phone} />
             </dd>
           </div>
           {current.address && (
@@ -720,25 +721,25 @@ export default function Suppliers() {
           <div>
             <dt>{t("Email", "ایمیل")}</dt>
             <dd>
-              <LtrText>{current.email ?? "—"}</LtrText>
+              <LtrValue value={current.email} />
             </dd>
           </div>
           <div>
             <dt>{t("Sales representative", "نماینده فروش")}</dt>
             <dd>
-              <LtrText>{current.sales_rep_name ?? "—"}</LtrText>
+              <LtrValue value={current.sales_rep_name} />
             </dd>
           </div>
           <div>
             <dt>{t("Sales rep phone", "تلفن نماینده فروش")}</dt>
             <dd>
-              <LtrText>{current.sales_rep_phone ?? "—"}</LtrText>
+              <LtrValue value={current.sales_rep_phone} />
             </dd>
           </div>
           <div>
             <dt>{t("Payment terms", "شرایط پرداخت")}</dt>
             <dd>
-              <LtrText>{current.payment_terms ?? "—"}</LtrText>
+              <LtrValue value={current.payment_terms} />
             </dd>
           </div>
         </dl>

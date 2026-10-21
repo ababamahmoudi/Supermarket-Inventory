@@ -16,9 +16,13 @@ import {
   ProductName,
 } from "../presentation";
 import { branchLabel } from "../settings";
+import type { Alert } from "../types";
 import { dateReminderMessage } from "../date-tracking";
 import { SalesAlerts } from "./SalesAlerts";
-import { ChevronRight } from "lucide-react";
+import { AlertRow } from "./AlertRow";
+import { alertCategory } from "../alert-categories";
+import { saleAlertsFor } from "../sale-alerts";
+import { useRouteParam } from "../navigation";
 import "./financial-polish.css";
 import {
   Badge,
@@ -33,7 +37,9 @@ import {
 } from "../ui";
 
 export function Alerts() {
-  const { state, actor, can, command, query, branch, lang, t } = useDemo();
+  const { state, actor, can, command, query, branch, lang, t, historyContext } =
+    useDemo();
+  const requestedId = useRouteParam("id");
   const [showResolved, setShowResolved] = useState(false);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
@@ -57,6 +63,47 @@ export function Alerts() {
   if (!actor || !can("alerts.read")) return null;
   const canDecide = can("alerts.decide");
   const branchName = (value: string) => branchLabel(state.config, value, lang);
+  const alertPriority: Partial<Record<Alert["type"], number>> = {
+    lower_price: 0,
+    price_conflict: 1,
+    tax_discrepancy: 2,
+    other_supplier: 3,
+    barcode_conflict: 4,
+    order_differences: 5,
+    return_credit_overdue: 6,
+  };
+  const decisionAlerts = alerts
+    .filter(
+      (alert) =>
+        alert.type !== "date_reminder" &&
+        !alert.type.startsWith("sale_") &&
+        (canDecide || alert.type === "return_credit_overdue"),
+    )
+    .sort(
+      (left, right) =>
+        (alertPriority[left.type] ?? 9) - (alertPriority[right.type] ?? 9),
+    );
+  const dateAlerts = alerts.filter((alert) => alert.type === "date_reminder");
+  const saleAlertCount = saleAlertsFor(
+    state,
+    historyContext,
+    branch,
+    showResolved,
+  ).length;
+  const alertSummary = (alert: Alert) => {
+    if (alert.type === "price_conflict") {
+      const count = Object.keys(alert.branch_prices ?? {}).filter((name) =>
+        actor.allowed_branches.includes(name),
+      ).length;
+      return t(
+        `${branchName(alert.branch)} · Prices differ across ${count} branches`,
+        `${branchName(alert.branch)} · قیمت در ${count} شعبه متفاوت است`,
+      );
+    }
+    return [alert.supplier, branchName(alert.branch)]
+      .filter(Boolean)
+      .join(" · ");
+  };
   const resolve = async (id: string, status: "pending" | "resolved") => {
     try {
       await command(
@@ -214,477 +261,451 @@ export function Alerts() {
           )}
         </EmptyState>
       )}
-      <SalesAlerts showResolved={showResolved} />
-      {alerts.some((alert) => alert.type === "date_reminder") && (
-        <Card
-          title={t("Date tracking", "پیگیری تاریخ")}
-          className="date-alerts-card"
-        >
-          <div className="date-alert-list">
-            {alerts
-              .filter((alert) => alert.type === "date_reminder")
-              .map((alert) => {
-                const product = state.products.find(
-                  (item) =>
-                    item.company_id === company &&
-                    item.code === alert.product_code,
-                );
-                const past = (alert.days_left ?? 0) < 0;
-                return (
-                  <a
-                    className="date-alert-row"
-                    key={alert.id}
-                    href={`#expiry?product=${encodeURIComponent(alert.product_code)}`}
-                  >
-                    <span>
-                      {product && (
-                        <ProductName product={product} language={lang} />
+      {(decisionAlerts.length > 0 ||
+        dateAlerts.length > 0 ||
+        saleAlertCount > 0) && (
+        <Card title={t("All alerts", "همه هشدارها")} className="alerts-card">
+          <div className="list-box-stack alert-list">
+            {decisionAlerts.map((alert) => {
+              const product = state.products.find(
+                (item) =>
+                  item.company_id === company &&
+                  item.code === alert.product_code,
+              );
+              const category = alertCategory(alert.type, t);
+              return (
+                <AlertRow
+                  key={
+                    alert.type === "price_conflict"
+                      ? `conflict-${alert.product_code}`
+                      : alert.id
+                  }
+                  data-alert-id={alert.id}
+                  defaultOpen={alert.id === requestedId}
+                  title={
+                    product ? (
+                      <ProductName product={product} language={lang} />
+                    ) : (
+                      <LtrText>{alert.product_code}</LtrText>
+                    )
+                  }
+                  summary={alertSummary(alert)}
+                  category={category.label}
+                  categoryTone={category.tone}
+                  status={
+                    alert.status === "pending" ? undefined : (
+                      <Badge
+                        tone={
+                          alert.status === "intentional" ? "info" : "approved"
+                        }
+                      >
+                        {alert.status === "intentional"
+                          ? t("Intentional", "عمدی")
+                          : t("Resolved", "حل‌شده")}
+                      </Badge>
+                    )
+                  }
+                >
+                  {alert.type === "return_credit_overdue" ? (
+                    <>
+                      <p>{alert.supplier}</p>
+                      <p className="muted">
+                        {t(
+                          "Review the retained pickup evidence and record the supplier's resolution.",
+                          "مدرک جمع‌آوری نگهداری‌شده را بررسی و نتیجه تأمین‌کننده را ثبت کنید.",
+                        )}
+                      </p>
+                      <Button asChild variant="plain">
+                        <a
+                          href={`#return?id=${encodeURIComponent(alert.return_id ?? "")}`}
+                        >
+                          {t("View return", "نمایش مرجوعی")}
+                        </a>
+                      </Button>
+                    </>
+                  ) : alert.type === "price_conflict" ? (
+                    <>
+                      <DataTable
+                        columns={[
+                          { width: "40%" },
+                          { width: 180, align: "end" },
+                          { width: 200, actions: true, align: "end" },
+                        ]}
+                      >
+                        <thead>
+                          <tr>
+                            <th>{t("Branch", "شعبه")}</th>
+                            <th className="numeric">
+                              {t(
+                                "Approved selling price",
+                                "قیمت فروش تأییدشده",
+                              )}
+                            </th>
+                            <th>{t("Action", "اقدام")}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(alert.branch_prices ?? {})
+                            .filter(([name]) =>
+                              actor.allowed_branches.includes(name),
+                            )
+                            .map(([name, price]) => (
+                              <tr key={name}>
+                                <td>{branchName(name)}</td>
+                                <td className="numeric">
+                                  <Money value={price} />
+                                </td>
+                                <td>
+                                  {canDecide && alert.status === "pending" && (
+                                    <Button
+                                      variant="neutral"
+                                      size="sm"
+                                      onClick={() =>
+                                        void reviewPrice(
+                                          alert.product_code,
+                                          price,
+                                        )
+                                      }
+                                    >
+                                      {t(
+                                        "Apply this price to all",
+                                        "اعمال این قیمت به همه",
+                                      )}
+                                    </Button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </DataTable>
+                      <p className="muted">
+                        {t(
+                          "Intentional differences stay quiet until an approved branch price changes.",
+                          "اختلاف‌های عمدی تا تغییر قیمت تأییدشده یک شعبه، دوباره هشدار نمی‌دهند.",
+                        )}
+                      </p>
+                      {canDecide && alert.status === "pending" && (
+                        <div className="actions">
+                          <Button
+                            onClick={() =>
+                              void intentional(alert.id, alert.product_code)
+                            }
+                          >
+                            {t("Mark as intentional", "ثبت به عنوان عمدی")}
+                          </Button>
+                        </div>
                       )}
-                      <small className="muted">
-                        {dateReminderMessage(state, alert, lang)}
-                      </small>
-                    </span>
+                    </>
+                  ) : (
+                    <>
+                      {alert.supplier && (
+                        <p>
+                          {t("Supplier", "تأمین‌کننده")}:{" "}
+                          <LtrText>{alert.supplier}</LtrText>
+                        </p>
+                      )}
+                      {alert.type === "order_differences" && (
+                        <>
+                          <div className="actions">
+                            <Button asChild variant="plain">
+                              <a
+                                href={`#invoices?id=${encodeURIComponent(alert.invoice_id ?? "")}`}
+                              >
+                                {t("View invoice", "مشاهده فاکتور")}
+                              </a>
+                            </Button>
+                            <Button asChild variant="plain">
+                              <a
+                                href={`#orders?id=${encodeURIComponent(alert.order_id ?? "")}`}
+                              >
+                                {t("View order", "مشاهده سفارش")}
+                              </a>
+                            </Button>
+                          </div>
+                          <DataTable
+                            columns={[
+                              { width: "25%" },
+                              { width: 180 },
+                              { width: 100, align: "end" },
+                              { width: "25%" },
+                              { width: "25%" },
+                            ]}
+                          >
+                            <thead>
+                              <tr>
+                                <th>{t("Product", "کالا")}</th>
+                                <th>{t("Difference", "اختلاف")}</th>
+                                <th>{t("Units", "واحد")}</th>
+                                <th>
+                                  {t("Before-tax cost", "هزینه پیش از مالیات")}
+                                </th>
+                                <th>{t("Decision", "تصمیم")}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(alert.order_differences ?? []).map(
+                                (difference, index) => (
+                                  <tr key={index}>
+                                    <td>
+                                      <ProductName
+                                        product={{
+                                          name_en:
+                                            difference.name_en ??
+                                            difference.product_code,
+                                          name_fa: difference.name_fa ?? "",
+                                        }}
+                                        language={lang}
+                                      />
+                                    </td>
+                                    <td>
+                                      {
+                                        {
+                                          short: t("Short", "کسری"),
+                                          not_delivered: t(
+                                            "Not delivered",
+                                            "تحویل نشده",
+                                          ),
+                                          extra: t(
+                                            "Extra delivered",
+                                            "تحویل اضافه",
+                                          ),
+                                          price_change: t(
+                                            "Unit cost changed",
+                                            "هزینه واحد تغییر کرد",
+                                          ),
+                                          short_dated: t(
+                                            "Short-dated (expiry discount)",
+                                            "نزدیک انقضا (تخفیف انقضا)",
+                                          ),
+                                        }[difference.kind]
+                                      }
+                                    </td>
+                                    <td className="numeric">
+                                      <LtrText>
+                                        {difference.units ?? "—"}
+                                      </LtrText>
+                                    </td>
+                                    <td>
+                                      {difference.new_unit_cost ? (
+                                        <>
+                                          {difference.previous_unit_cost !==
+                                          undefined ? (
+                                            <Money
+                                              value={
+                                                difference.previous_unit_cost
+                                              }
+                                              decimals={2}
+                                              currency={
+                                                state.config.company.currency
+                                              }
+                                            />
+                                          ) : (
+                                            "—"
+                                          )}{" "}
+                                          →{" "}
+                                          <Money
+                                            value={difference.new_unit_cost}
+                                            decimals={2}
+                                            currency={
+                                              state.config.company.currency
+                                            }
+                                          />
+                                        </>
+                                      ) : (
+                                        "—"
+                                      )}
+                                      {difference.expiry_date && (
+                                        <p>
+                                          <DateText
+                                            value={difference.expiry_date}
+                                          />
+                                        </p>
+                                      )}
+                                    </td>
+                                    <td>
+                                      {{
+                                        short: t("Short", "کسری"),
+                                        back_ordered: t(
+                                          "Back-ordered",
+                                          "در انتظار تحویل بعدی",
+                                        ),
+                                        cancelled: t("Cancelled", "لغوشده"),
+                                        keep: t(
+                                          "Keep it (we pay for it)",
+                                          "نگه می‌داریم (هزینه را می‌پردازیم)",
+                                        ),
+                                        refuse: t(
+                                          "Refused / sent back with the driver",
+                                          "رد شد / با راننده برگشت",
+                                        ),
+                                        accept: t(
+                                          "Accept new cost",
+                                          "پذیرش هزینه جدید",
+                                        ),
+                                        short_dated: t(
+                                          "Short-dated (expiry discount)",
+                                          "نزدیک انقضا (تخفیف انقضا)",
+                                        ),
+                                      }[difference.decision] ??
+                                        difference.decision}
+                                    </td>
+                                  </tr>
+                                ),
+                              )}
+                            </tbody>
+                          </DataTable>
+                        </>
+                      )}
+                      {alert.previous_cost && alert.new_cost && (
+                        <div className="price-change-values alert-costs">
+                          <span>
+                            {t("Old cost", "هزینه قبلی")}{" "}
+                            <Money value={alert.previous_cost} />
+                          </span>
+                          <span>
+                            {t("New cost", "هزینه جدید")}{" "}
+                            <Money value={alert.new_cost} />
+                          </span>
+                        </div>
+                      )}
+                      {(alert.type === "lower_price" ||
+                        (alert.type === "order_differences" &&
+                          alert.same_expiry)) && (
+                        <div className="grid-2">
+                          <div>
+                            <p>
+                              <strong>
+                                {t(
+                                  "Worker expiry answer",
+                                  "پاسخ کارکنان درباره تاریخ",
+                                )}
+                              </strong>
+                            </p>
+                            <p>
+                              {{
+                                yes: t("Same expiry date", "تاریخ یکسان"),
+                                no: t(
+                                  "Different expiry dates",
+                                  "تاریخ‌های متفاوت",
+                                ),
+                                no_previous_stock: t(
+                                  "No previous stock",
+                                  "موجودی قبلی ندارد",
+                                ),
+                                dates_not_tracked: t(
+                                  "Dates not tracked",
+                                  "تاریخ ثبت نمی‌شود",
+                                ),
+                                unknown: t("Unknown", "نامشخص"),
+                              }[alert.same_expiry ?? ""] ??
+                                t("Not recorded", "ثبت نشده")}
+                            </p>
+                          </div>
+                          <div>
+                            {alert.old_expiry && (
+                              <p>
+                                {t("Old stock date", "تاریخ موجودی قبلی")}:{" "}
+                                <DateText value={alert.old_expiry} />
+                              </p>
+                            )}
+                            {alert.new_expiry && (
+                              <p>
+                                {t("New delivery date", "تاریخ تحویل جدید")}:{" "}
+                                <DateText value={alert.new_expiry} />
+                              </p>
+                            )}
+                            {alert.units_left !== undefined && (
+                              <p>
+                                {t(
+                                  "Units left at higher cost",
+                                  "تعداد باقی‌مانده با هزینه بالاتر",
+                                )}
+                                : <bdi>{alert.units_left}</bdi>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {alert.note && (
+                        <p>
+                          {t("Recorded note", "یادداشت ثبت‌شده")}: {alert.note}
+                        </p>
+                      )}
+                      {canDecide && (
+                        <>
+                          <Field
+                            label={t(
+                              `${configuredRoleLabel(state.config.roles, "manager", "en")} note (optional)`,
+                              `یادداشت ${configuredRoleLabel(state.config.roles, "manager", "fa")} (اختیاری)`,
+                            )}
+                          >
+                            <input
+                              value={notes[alert.id] ?? ""}
+                              onChange={(event) =>
+                                setNotes({
+                                  ...notes,
+                                  [alert.id]: event.target.value,
+                                })
+                              }
+                            />
+                          </Field>
+                          <div className="actions">
+                            <Button
+                              onClick={() => resolve(alert.id, "resolved")}
+                            >
+                              {t("Mark as taken care of", "ثبت رسیدگی‌شده")}
+                            </Button>
+                            <Button
+                              variant="neutral"
+                              onClick={() => resolve(alert.id, "pending")}
+                            >
+                              {t("Keep as pending", "حفظ در انتظار")}
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+                </AlertRow>
+              );
+            })}
+            <SalesAlerts showResolved={showResolved} />
+            {dateAlerts.map((alert) => {
+              const product = state.products.find(
+                (item) =>
+                  item.company_id === company &&
+                  item.code === alert.product_code,
+              );
+              const past = (alert.days_left ?? 0) < 0;
+              const category = alertCategory(alert.type, t);
+              return (
+                <AlertRow
+                  key={alert.id}
+                  data-alert-id={alert.id}
+                  href={`#expiry?product=${encodeURIComponent(alert.product_code)}`}
+                  title={
+                    product ? (
+                      <ProductName product={product} language={lang} />
+                    ) : (
+                      <LtrText>{alert.product_code}</LtrText>
+                    )
+                  }
+                  summary={dateReminderMessage(state, alert, lang)}
+                  category={category.label}
+                  categoryTone={category.tone}
+                  status={
                     <Badge tone={past ? "danger" : "pending"}>
                       {past
                         ? t("Expired", "تاریخ‌گذشته")
                         : t("Expiring soon", "نزدیک انقضا")}
                     </Badge>
-                    <ChevronRight
-                      className="directional"
-                      size={20}
-                      aria-hidden="true"
-                    />
-                  </a>
-                );
-              })}
+                  }
+                />
+              );
+            })}
           </div>
         </Card>
       )}
-      {alerts
-        .filter(
-          (alert) =>
-            alert.type !== "date_reminder" &&
-            !alert.type.startsWith("sale_") &&
-            (canDecide || alert.type === "return_credit_overdue"),
-        )
-        .map((alert) => {
-          const product = state.products.find(
-            (item) =>
-              item.company_id === company && item.code === alert.product_code,
-          );
-          const title =
-            alert.type === "price_conflict"
-              ? t("Cross-branch price conflict", "اختلاف قیمت بین شعبه‌ها")
-              : alert.type === "lower_price"
-                ? t(
-                    "Same-supplier lower price",
-                    "قیمت کمتر از همان تأمین‌کننده",
-                  )
-                : alert.type === "other_supplier"
-                  ? t("Different-supplier price", "قیمت تأمین‌کننده دیگر")
-                  : alert.type === "tax_discrepancy"
-                    ? t("Tax discrepancy", "اختلاف مالیات")
-                    : alert.type === "order_differences"
-                      ? t(
-                          "Invoice and order differences",
-                          "اختلاف‌های فاکتور و سفارش",
-                        )
-                      : alert.type === "return_credit_overdue"
-                        ? t(
-                            "Return waiting for credit",
-                            "مرجوعی در انتظار اعتبار",
-                          )
-                        : alert.type === "date_reminder"
-                          ? t("Date tracking", "پیگیری تاریخ")
-                          : t("Barcode conflict", "تداخل بارکد");
-          return (
-            <Card key={alert.id} title={title} className="alert-card">
-              <div className="row">
-                {product ? (
-                  <ProductName product={product} language={lang} />
-                ) : (
-                  <LtrText>{alert.product_code}</LtrText>
-                )}
-                <Badge
-                  tone={
-                    alert.status === "pending"
-                      ? alert.type === "price_conflict" ||
-                        alert.type === "tax_discrepancy" ||
-                        alert.type === "barcode_conflict"
-                        ? "danger"
-                        : "pending"
-                      : alert.status === "intentional"
-                        ? "info"
-                        : "approved"
-                  }
-                >
-                  {alert.status === "pending"
-                    ? alert.type === "price_conflict" ||
-                      alert.type === "barcode_conflict"
-                      ? t("Conflict", "اختلاف")
-                      : alert.type === "tax_discrepancy"
-                        ? t("Tax discrepancy", "اختلاف مالیات")
-                        : t("Still pending", "هنوز در انتظار")
-                    : alert.status === "intentional"
-                      ? t("Intentional", "عمدی")
-                      : t("Resolved", "حل‌شده")}
-                </Badge>
-              </div>
-              <p className="muted alert-branch">{branchName(alert.branch)}</p>
-              {alert.type === "date_reminder" ? (
-                <>
-                  <p>{dateReminderMessage(state, alert, lang)}</p>
-                  <Button asChild variant="plain">
-                    <a
-                      href={`#expiry?product=${encodeURIComponent(alert.product_code)}`}
-                    >
-                      {t("Date tracking", "پیگیری تاریخ")}
-                    </a>
-                  </Button>
-                </>
-              ) : alert.type === "return_credit_overdue" ? (
-                <>
-                  <p>{alert.supplier}</p>
-                  <p className="muted">
-                    {t(
-                      "Review the retained pickup evidence and record the supplier's resolution.",
-                      "مدرک جمع‌آوری نگهداری‌شده را بررسی و نتیجه تأمین‌کننده را ثبت کنید.",
-                    )}
-                  </p>
-                  <Button asChild variant="plain">
-                    <a
-                      href={`#return?id=${encodeURIComponent(alert.return_id ?? "")}`}
-                    >
-                      {t("View return", "نمایش مرجوعی")}
-                    </a>
-                  </Button>
-                </>
-              ) : alert.type === "price_conflict" ? (
-                <>
-                  <DataTable
-                    columns={[
-                      { width: "40%" },
-                      { width: 180, align: "end" },
-                      { width: 200, actions: true, align: "end" },
-                    ]}
-                  >
-                    <thead>
-                      <tr>
-                        <th>{t("Branch", "شعبه")}</th>
-                        <th className="numeric">
-                          {t("Approved selling price", "قیمت فروش تأییدشده")}
-                        </th>
-                        <th>{t("Action", "اقدام")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(alert.branch_prices ?? {})
-                        .filter(([name]) =>
-                          actor.allowed_branches.includes(name),
-                        )
-                        .map(([name, price]) => (
-                          <tr key={name}>
-                            <td>{branchName(name)}</td>
-                            <td className="numeric">
-                              <Money value={price} />
-                            </td>
-                            <td>
-                              {canDecide && alert.status === "pending" && (
-                                <Button
-                                  variant="neutral"
-                                  size="sm"
-                                  onClick={() =>
-                                    void reviewPrice(alert.product_code, price)
-                                  }
-                                >
-                                  {t(
-                                    "Apply this price to all",
-                                    "اعمال این قیمت به همه",
-                                  )}
-                                </Button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </DataTable>
-                  <p className="muted">
-                    {t(
-                      "Intentional differences stay quiet until an approved branch price changes.",
-                      "اختلاف‌های عمدی تا تغییر قیمت تأییدشده یک شعبه، دوباره هشدار نمی‌دهند.",
-                    )}
-                  </p>
-                  {canDecide && alert.status === "pending" && (
-                    <Button
-                      onClick={() =>
-                        void intentional(alert.id, alert.product_code)
-                      }
-                    >
-                      {t("Mark as intentional", "ثبت به عنوان عمدی")}
-                    </Button>
-                  )}
-                </>
-              ) : (
-                <>
-                  {alert.supplier && (
-                    <p>
-                      {t("Supplier", "تأمین‌کننده")}:{" "}
-                      <LtrText>{alert.supplier}</LtrText>
-                    </p>
-                  )}
-                  {alert.type === "order_differences" && (
-                    <>
-                      <div className="actions">
-                        <Button asChild variant="plain">
-                          <a
-                            href={`#invoices?id=${encodeURIComponent(alert.invoice_id ?? "")}`}
-                          >
-                            {t("View invoice", "مشاهده فاکتور")}
-                          </a>
-                        </Button>
-                        <Button asChild variant="plain">
-                          <a
-                            href={`#orders?id=${encodeURIComponent(alert.order_id ?? "")}`}
-                          >
-                            {t("View order", "مشاهده سفارش")}
-                          </a>
-                        </Button>
-                      </div>
-                      <DataTable
-                        columns={[
-                          { width: "25%" },
-                          { width: 180 },
-                          { width: 100, align: "end" },
-                          { width: "25%" },
-                          { width: "25%" },
-                        ]}
-                      >
-                        <thead>
-                          <tr>
-                            <th>{t("Product", "کالا")}</th>
-                            <th>{t("Difference", "اختلاف")}</th>
-                            <th>{t("Units", "واحد")}</th>
-                            <th>
-                              {t("Before-tax cost", "هزینه پیش از مالیات")}
-                            </th>
-                            <th>{t("Decision", "تصمیم")}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(alert.order_differences ?? []).map(
-                            (difference, index) => (
-                              <tr key={index}>
-                                <td>
-                                  <ProductName
-                                    product={{
-                                      name_en:
-                                        difference.name_en ??
-                                        difference.product_code,
-                                      name_fa: difference.name_fa ?? "",
-                                    }}
-                                    language={lang}
-                                  />
-                                </td>
-                                <td>
-                                  {
-                                    {
-                                      short: t("Short", "کسری"),
-                                      not_delivered: t(
-                                        "Not delivered",
-                                        "تحویل نشده",
-                                      ),
-                                      extra: t(
-                                        "Extra delivered",
-                                        "تحویل اضافه",
-                                      ),
-                                      price_change: t(
-                                        "Unit cost changed",
-                                        "هزینه واحد تغییر کرد",
-                                      ),
-                                      short_dated: t(
-                                        "Short-dated (expiry discount)",
-                                        "نزدیک انقضا (تخفیف انقضا)",
-                                      ),
-                                    }[difference.kind]
-                                  }
-                                </td>
-                                <td className="numeric">
-                                  <LtrText>{difference.units ?? "—"}</LtrText>
-                                </td>
-                                <td>
-                                  {difference.new_unit_cost ? (
-                                    <>
-                                      {difference.previous_unit_cost !==
-                                      undefined ? (
-                                        <Money
-                                          value={difference.previous_unit_cost}
-                                          decimals={2}
-                                          currency={
-                                            state.config.company.currency
-                                          }
-                                        />
-                                      ) : (
-                                        "—"
-                                      )}{" "}
-                                      →{" "}
-                                      <Money
-                                        value={difference.new_unit_cost}
-                                        decimals={2}
-                                        currency={state.config.company.currency}
-                                      />
-                                    </>
-                                  ) : (
-                                    "—"
-                                  )}
-                                  {difference.expiry_date && (
-                                    <p>
-                                      <DateText
-                                        value={difference.expiry_date}
-                                      />
-                                    </p>
-                                  )}
-                                </td>
-                                <td>
-                                  {{
-                                    short: t("Short", "کسری"),
-                                    back_ordered: t(
-                                      "Back-ordered",
-                                      "در انتظار تحویل بعدی",
-                                    ),
-                                    cancelled: t("Cancelled", "لغوشده"),
-                                    keep: t(
-                                      "Keep it (we pay for it)",
-                                      "نگه می‌داریم (هزینه را می‌پردازیم)",
-                                    ),
-                                    refuse: t(
-                                      "Refused / sent back with the driver",
-                                      "رد شد / با راننده برگشت",
-                                    ),
-                                    accept: t(
-                                      "Accept new cost",
-                                      "پذیرش هزینه جدید",
-                                    ),
-                                    short_dated: t(
-                                      "Short-dated (expiry discount)",
-                                      "نزدیک انقضا (تخفیف انقضا)",
-                                    ),
-                                  }[difference.decision] ?? difference.decision}
-                                </td>
-                              </tr>
-                            ),
-                          )}
-                        </tbody>
-                      </DataTable>
-                    </>
-                  )}
-                  {alert.previous_cost && alert.new_cost && (
-                    <div className="price-change-values alert-costs">
-                      <span>
-                        {t("Old cost", "هزینه قبلی")}{" "}
-                        <Money value={alert.previous_cost} />
-                      </span>
-                      <span>
-                        {t("New cost", "هزینه جدید")}{" "}
-                        <Money value={alert.new_cost} />
-                      </span>
-                    </div>
-                  )}
-                  {(alert.type === "lower_price" ||
-                    (alert.type === "order_differences" &&
-                      alert.same_expiry)) && (
-                    <div className="grid-2">
-                      <div>
-                        <p>
-                          <strong>
-                            {t(
-                              "Worker expiry answer",
-                              "پاسخ کارکنان درباره تاریخ",
-                            )}
-                          </strong>
-                        </p>
-                        <p>
-                          {{
-                            yes: t("Same expiry date", "تاریخ یکسان"),
-                            no: t("Different expiry dates", "تاریخ‌های متفاوت"),
-                            no_previous_stock: t(
-                              "No previous stock",
-                              "موجودی قبلی ندارد",
-                            ),
-                            dates_not_tracked: t(
-                              "Dates not tracked",
-                              "تاریخ ثبت نمی‌شود",
-                            ),
-                            unknown: t("Unknown", "نامشخص"),
-                          }[alert.same_expiry ?? ""] ??
-                            t("Not recorded", "ثبت نشده")}
-                        </p>
-                      </div>
-                      <div>
-                        {alert.old_expiry && (
-                          <p>
-                            {t("Old stock date", "تاریخ موجودی قبلی")}:{" "}
-                            <DateText value={alert.old_expiry} />
-                          </p>
-                        )}
-                        {alert.new_expiry && (
-                          <p>
-                            {t("New delivery date", "تاریخ تحویل جدید")}:{" "}
-                            <DateText value={alert.new_expiry} />
-                          </p>
-                        )}
-                        {alert.units_left !== undefined && (
-                          <p>
-                            {t(
-                              "Units left at higher cost",
-                              "تعداد باقی‌مانده با هزینه بالاتر",
-                            )}
-                            : <bdi>{alert.units_left}</bdi>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {alert.note && (
-                    <p>
-                      {t("Recorded note", "یادداشت ثبت‌شده")}: {alert.note}
-                    </p>
-                  )}
-                  {canDecide && (
-                    <>
-                      <Field
-                        label={t(
-                          `${configuredRoleLabel(state.config.roles, "manager", "en")} note (optional)`,
-                          `یادداشت ${configuredRoleLabel(state.config.roles, "manager", "fa")} (اختیاری)`,
-                        )}
-                      >
-                        <input
-                          value={notes[alert.id] ?? ""}
-                          onChange={(event) =>
-                            setNotes({
-                              ...notes,
-                              [alert.id]: event.target.value,
-                            })
-                          }
-                        />
-                      </Field>
-                      <div className="actions">
-                        <Button onClick={() => resolve(alert.id, "resolved")}>
-                          {t("Mark as taken care of", "ثبت رسیدگی‌شده")}
-                        </Button>
-                        <Button
-                          variant="neutral"
-                          onClick={() => resolve(alert.id, "pending")}
-                        >
-                          {t("Keep as pending", "حفظ در انتظار")}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
-            </Card>
-          );
-        })}
       {confirm && (
         <ConfirmDialog
           open

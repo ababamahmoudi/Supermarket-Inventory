@@ -1,0 +1,533 @@
+/*
+ * Klead foundation — the one place for shared component rules.
+ *
+ * This file loads last (see main.tsx). Page stylesheets may arrange a page,
+ * but they must not restyle shared components (tables, fields, tabs, KPI
+ * cards, detail lists, list boxes, links). Change shared looks here only.
+ * Rules are documented in docs/design-language.md → "Foundation rules".
+ */
+
+:root {
+  --field-border: var(--klead-field-border);
+  --field-border-hover: var(--klead-field-border-hover);
+  --link-text: var(--accent-tint-text);
+  --list-box-border: var(--klead-hairline);
+  --empty-value: var(--text-muted);
+  --table-edge-padding: 16px;
+  --table-cell-padding: 12px;
+}
+
+/* ── Fields: always look editable, on white cards and on grey panels ──
+ * One selector, with its states nested inside it, so a state (hover, focus,
+ * error, disabled) always outranks the resting border instead of losing to it. */
+:root
+  :is(
+    .field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+    .field textarea,
+    .password-field input,
+    .ui-input,
+    input.ui-input[type="text"],
+    input.ui-number[type="text"],
+    textarea
+  ):not(
+    .topbar *,
+    .branch-pill,
+    .filter-search-pill *,
+    .topbar-search *,
+    .lookup-search-pill *,
+    .lookup-search *,
+    .ui-select-search *
+  ) {
+  border: 1px solid var(--field-border);
+
+  &:hover:not(:disabled):not(:focus) {
+    border-color: var(--field-border-hover);
+  }
+  &:focus,
+  &:focus-visible {
+    border-color: var(--accent);
+  }
+  &[aria-invalid="true"] {
+    border-color: var(--danger);
+    background: var(--surface);
+    box-shadow: var(--shadow-none);
+  }
+  &:disabled {
+    border-style: dashed;
+  }
+}
+
+/* ── Tables: one rhythm for every list ── */
+@media (min-width: 761px) {
+  :root .ui-data-table:not(.is-phone-list) tr > :is(th, td) {
+    padding-block: 12px;
+    padding-inline: var(--table-cell-padding);
+    vertical-align: middle;
+  }
+  :root .ui-data-table:not(.is-phone-list) tr > :is(th, td):first-child {
+    padding-inline-start: var(--table-edge-padding);
+  }
+  :root .ui-data-table:not(.is-phone-list) tr > :is(th, td):last-child {
+    padding-inline-end: var(--table-edge-padding);
+  }
+  :root .ui-data-table:not(.is-phone-list) thead th {
+    padding-block: 10px;
+  }
+}
+:root .ui-data-table :is(td, th).numeric,
+:root .ui-data-table :is(td, th)[style*="text-align: end"] {
+  font-variant-numeric: tabular-nums;
+}
+:root .ui-data-table td.numeric > :is(div, span):only-child {
+  justify-content: flex-end;
+  justify-items: end;
+}
+
+/* The New order footer total lines up with the table's last money column
+ * (its amount is always left-to-right, so the physical right edge is used). */
+@media (min-width: 761px) {
+  :root .order-total strong {
+    padding-inline: var(--table-cell-padding) var(--table-edge-padding);
+  }
+}
+
+/* ── Clickable names are blue (Ali's rule: blue = you can open it) ── */
+:root
+  :is(
+    a.entity-link,
+    .catalog-product-link,
+    .invoice-list-number-link,
+    .ui-data-table tr.is-navigable .product-name > strong,
+    .ui-data-table tr.is-navigable .table-identity > a,
+    a > .product-name > strong
+  ) {
+  color: var(--link-text);
+}
+:root
+  :is(a.entity-link, .catalog-product-link, .invoice-list-number-link):hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Values that were never filled in ── */
+.value-empty {
+  color: var(--empty-value);
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* ── Boxed list items: everything that belongs to one item sits in one box ── */
+.list-box {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--list-box-border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+.list-box + .list-box {
+  margin-block-start: 12px;
+}
+.list-box-stack {
+  display: grid;
+  gap: 12px;
+}
+.list-box-stack > .list-box + .list-box {
+  margin-block-start: 0;
+}
+
+/* ── Tabs and filters never wrap onto a second line ──
+ * A segmented choice inside a table cell (for example an invoice line's
+ * "Keep it / Refused" decision) keeps wrapping, so long answers stay readable
+ * inside a narrow column instead of being cut off. */
+:root .ui-segments:not(td .ui-segments) {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  max-inline-size: 100%;
+}
+:root .ui-segments:not(td .ui-segments)::-webkit-scrollbar {
+  display: none;
+}
+:root .ui-segments:not(td .ui-segments) > button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+/* A one-line tab strip is as wide as all its tabs. Let every box around it
+ * shrink to the screen, so the strip scrolls instead of widening the page. */
+:root .main-content :has(.ui-segments:not(td .ui-segments)) {
+  min-inline-size: 0;
+}
+
+/* ── KPI cards: label row, number row, detail row — numbers always line up ── */
+:root .ui-kpi {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(2.25rem, auto) 1fr auto;
+  align-content: stretch;
+  min-block-size: 8.5rem;
+}
+:root .ui-kpi-label {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+}
+:root .ui-kpi-icon {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+}
+:root .ui-kpi-number {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  align-self: end;
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+}
+:root .ui-kpi-breakdown {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
+/* ── Detail lists (label above value) ── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 16px 24px;
+  margin: 0;
+}
+.detail-grid > div {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+.detail-grid dt {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+}
+.detail-grid dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* ── Back links above a detail page ── */
+:root .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  inline-size: fit-content;
+  min-block-size: 32px;
+  color: var(--link-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+:root .back-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+:root [dir="rtl"] .back-link > svg {
+  transform: scaleX(-1);
+}
+
+/* Dashboard approvals queue: each request is one boxed item (Ali, Oct 2026). */
+:root .dashboard-queue {
+  display: grid;
+  gap: 12px;
+}
+:root .dashboard-queue .dashboard-queue-row.list-box,
+:root .dashboard-queue .sale-request-card.is-compact {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--list-box-border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+
+/* ── S1 fixes from Ali's screenshots (2026-10-20) ── */
+
+/* Invoice details: header, status row and three labelled groups. */
+:root .ui-card.invoice-header-card {
+  display: grid;
+  gap: 16px;
+}
+:root .ui-card.invoice-header-card > * {
+  margin-block: 0;
+}
+:root .invoice-details-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+}
+:root .invoice-details-meta > span + span::before {
+  content: "·";
+  margin-inline: 10px;
+}
+:root .invoice-details-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+:root .invoice-workspace .invoice-details-form.invoice-details-sections {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  max-inline-size: none;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+:root .invoice-details-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 20px 24px;
+  align-items: start;
+  padding-block-start: 20px;
+  border-block-start: 1px solid var(--divider);
+}
+:root .invoice-details-group > h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--font-size-headline);
+  line-height: var(--line-height-headline);
+  font-weight: var(--font-weight-headline);
+}
+:root
+  .invoice-details-group
+  .field
+  > :is(.ui-select, .ui-date-field, .invoice-payment-terms) {
+  inline-size: 100%;
+}
+:root .invoice-supplier-review {
+  padding: 16px;
+  border: 1px solid var(--list-box-border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+:root .invoice-supplier-review .actions {
+  margin: 0;
+  gap: 12px;
+}
+:root .ui-card.invoice-header-card > .banner {
+  margin: 0;
+}
+
+/* Invoice lines: status chips breathe; numbers line up with the product name. */
+:root .invoice-line-heading .inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+:root .ui-data-table.invoice-lines-table .invoice-line-summary > td {
+  vertical-align: top;
+}
+
+/* The open line: one flat panel, fields in a tidy grid, one footer. */
+:root .invoice-line-review {
+  display: grid;
+  gap: 24px;
+}
+:root .invoice-workspace .invoice-line-form {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 20px 24px;
+  align-items: start;
+  max-inline-size: none;
+  padding: 0;
+  border-radius: var(--radius-none);
+  background: var(--color-clear);
+}
+:root .invoice-line-form > .invoice-pack-equation {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+:root .invoice-line-review > fieldset.date-review {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 24px 0 0;
+  border: 0;
+  border-block-start: 1px solid var(--divider);
+}
+:root .invoice-line-review .date-review .invoice-details-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 20px 24px;
+  max-inline-size: none;
+  margin-block-start: 16px;
+}
+:root .invoice-line-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block-start: 24px;
+  border-block-start: 1px solid var(--divider);
+}
+/* Confirm is the main action of an open line, so it looks like one. */
+:root .invoice-line-actions > .invoice-line-confirm {
+  min-block-size: 44px;
+  margin-inline-start: auto;
+  padding-inline: 20px;
+  border-radius: var(--radius-control);
+  background: var(--accent-fill);
+  color: var(--primary-text);
+  font-weight: var(--font-weight-headline);
+  justify-content: center;
+}
+:root .invoice-line-confirm .ui-checkbox-box {
+  border-color: var(--color-current);
+  background: var(--color-clear);
+  color: inherit;
+}
+:root .invoice-line-confirm[aria-checked="true"] {
+  background: var(--approved-bg);
+  color: var(--approved);
+}
+:root .invoice-line-confirm[aria-checked="true"] .ui-checkbox-box {
+  border-color: var(--approved);
+  background: var(--approved);
+  color: var(--primary-text);
+}
+:root .invoice-line-confirm:disabled {
+  background: var(--disabled-fill);
+  color: var(--disabled-text);
+}
+
+/* Price updates: the Seen cell's name is text, only the first span is the dot. */
+:root .price-updates-steps > .price-updates-seen {
+  inline-size: auto;
+  block-size: auto;
+  border-radius: var(--radius-none);
+  background: none;
+  /* Blue is for names you can click; this name is plain text. */
+  color: var(--text);
+}
+/* The status dot sits on the name's line, not between name and time. */
+:root .price-updates-row .price-updates-steps {
+  align-items: flex-start;
+}
+:root .price-updates-row .price-updates-steps > span[aria-hidden="true"] {
+  margin-block-start: calc(0.5lh - 3px);
+}
+
+/* Labels: the "Select all" box lines up with the row boxes below it. */
+@media (min-width: 761px) {
+  :root .labels-selection-toolbar {
+    padding-inline-start: var(--table-edge-padding);
+  }
+  :root .labels-selection-toolbar .ui-checked-control {
+    padding-inline: 11px 4px;
+  }
+}
+
+/* Product dates: the "Expiring soon" chip sits on the row's centre line. */
+:root .product-quiet-row > .ui-badge.badge {
+  align-self: center;
+}
+
+/* Offers: a lead-in sentence keeps a gap; each suggestion is a boxed item. */
+:root .card-lead {
+  margin-block: 0 16px;
+}
+:root .offer-task.list-box {
+  gap: 20px;
+}
+/* The status chip and branch line up with the product's first line. */
+:root .offer-task.list-box > .row {
+  align-items: baseline;
+}
+
+/* Dashboard "Price updates to apply": one boxed item per update, never overlapping. */
+:root .price-update-dashboard-card .card-heading {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+:root .price-update-dashboard-card .card-heading > h2 {
+  flex: 1 1 140px;
+  min-inline-size: 0;
+}
+:root .price-update-dashboard-row {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  inline-size: 100%;
+}
+
+/* ── Alerts: one list, one row per alert; details open on click ── */
+:root .alert-row {
+  gap: 0;
+}
+:root .alert-row-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px 16px;
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: 0;
+  border: 0;
+  background: var(--color-clear);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+:root .alert-row-head:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius-small);
+}
+:root .alert-row-main {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+:root .alert-row-summary {
+  overflow-wrap: anywhere;
+}
+:root .alert-row-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+:root .alert-row-chevron {
+  color: var(--text-muted);
+  transition: transform 150ms;
+}
+:root .alert-row-head[aria-expanded="true"] .alert-row-chevron {
+  transform: rotate(180deg);
+}
+:root .alert-row-details {
+  display: grid;
+  gap: 16px;
+  margin-block-start: 16px;
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--divider);
+  min-inline-size: 0;
+}
+:root .alert-row-details > * {
+  margin-block: 0;
+}
+:root .alert-row-details .actions {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+@media (max-width: 760px) {
+  :root .alert-row-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  :root .alert-row-tags {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+  :root .alert-row-chevron {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}

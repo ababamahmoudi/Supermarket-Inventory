@@ -103,7 +103,14 @@ const floorWorker = new Set<Capability>([
   "orders.cost_read",
   "price_updates.complete",
 ]);
-const cashier = new Set<Capability>([...common, "history.undo_own"]);
+// Ali's rule: everyone adds dates; the record keeps who added each one.
+// Cashiers add dates but still receive only the public date hint, never
+// other people's quantities, lots, notes or supplier invoice evidence.
+const cashier = new Set<Capability>([
+  ...common,
+  "history.undo_own",
+  "dates.add",
+]);
 const orderCapabilities = new Set<Capability>([
   "orders.read",
   "orders.write",

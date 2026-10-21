@@ -85,12 +85,15 @@ it("announces a stale price comparison at its alert and clears it when a fresh p
     </DemoProvider>,
   );
   await user.click(
+    await screen.findByRole(
+      "button",
+      { name: /Black Tea/ },
+      { timeout: 10000 },
+    ),
+  );
+  await user.click(
     (
-      await screen.findAllByRole(
-        "button",
-        { name: "Apply this price to all" },
-        { timeout: 10000 },
-      )
+      await screen.findAllByRole("button", { name: "Apply this price to all" })
     )[0],
   );
   const dialog = await screen.findByRole("dialog", {
