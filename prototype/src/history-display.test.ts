@@ -19,6 +19,23 @@ const activity = (values: Partial<Activity> = {}): Activity => ({
 });
 
 describe("History presentation uses recorded evidence", () => {
+  it.each([
+    "Imported 12 invoice readings from fictional-readings-2026-10-21.json",
+    "Create invoice draft",
+    "Removed fictional data",
+  ])(
+    "shows the recorded R1 action instead of a generic activity: %s",
+    (action) => {
+      expect(historyActionLabel(action, "en")).toBe(action);
+      const persian = historyActionLabel(action, "fa");
+      expect(persian).not.toBe("فعالیت ثبت‌شده");
+      expect(persian).not.toBe(action);
+      if (action.startsWith("Imported ")) {
+        expect(persian).toContain("۱۲");
+        expect(persian).toContain("fictional-readings-2026-10-21.json");
+      }
+    },
+  );
   it("shows a legacy product price change without making it reversible", () => {
     const entry = activity({
       before: { product: { code: "0004", selling_price: "6.99" } },
