@@ -539,8 +539,11 @@
   gap: 8px;
   align-items: center;
 }
-.please-check-field input,
-.please-check-field select {
+:root .field.please-check-field > :is(input, select, textarea, .ui-input),
+:root
+  .invoice-lines-table
+  .field.please-check-field
+  > :is(input, select, textarea, .ui-input) {
   outline: 2px solid var(--pending-dot);
   outline-offset: 1px;
 }

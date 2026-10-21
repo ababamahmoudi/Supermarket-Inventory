@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -19,6 +19,26 @@ const twoPageFile = fileURLToPath(
 );
 const fictionalNumber = "R1-2026-002";
 const fictionalSupplier = "Maple Test Produce Ltd.";
+
+async function expectWarningOutline(control: Locator) {
+  const actual = await control.evaluate((element) => {
+    const warning = document.createElement("span");
+    warning.style.color = "var(--pending-dot)";
+    document.body.append(warning);
+    const warningColor = getComputedStyle(warning).color;
+    warning.remove();
+    const style = getComputedStyle(element);
+    return {
+      style: style.outlineStyle,
+      width: style.outlineWidth,
+      color: style.outlineColor,
+      warningColor,
+    };
+  });
+  expect(actual.style).toBe("solid");
+  expect(actual.width).toBe("2px");
+  expect(actual.color).toBe(actual.warningColor);
+}
 
 async function openData(page: Page) {
   await page.goto("/#settings");
@@ -151,6 +171,12 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
   await expect(page.locator(".invoice-line").first()).not.toContainText(
     "Enter a cost of zero or more up to four decimal places.",
   );
+  await expectWarningOutline(importedCost);
+  await (await openShellAction(page, "Switch to dark theme")).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expectWarningOutline(importedCost);
+  await (await openShellAction(page, "Switch to light theme")).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
