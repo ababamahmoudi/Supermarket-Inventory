@@ -6,6 +6,23 @@ import {
   useState,
 } from "react";
 import Decimal from "decimal.js";
+import {
+  ImportedReadingNote,
+  InvoiceOtherCharges,
+  InvoiceTotalsWarnings,
+  ReadingField as Field,
+  ReadingCheckProvider,
+  ReadingUnknownChecks,
+  ReadingMoney,
+} from "../InvoiceReadingReview";
+import {
+  acknowledgeInvoiceCheck,
+  confirmInvoiceLineChecks,
+  invoiceCheckCount,
+  invoiceTotalsCheck,
+  setInvoiceLineCategory,
+} from "../invoice-checks";
+import { conflictingBarcodeProduct } from "../catalog";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { configSeed, demoSeed as demo } from "../config";
 import { sha256Bytes } from "../sha256";
@@ -70,7 +87,6 @@ import {
   Card,
   DataTable,
   EmptyState,
-  Field,
   PageHeader,
   Checkbox,
   DateField,
@@ -92,7 +108,6 @@ import {
   demoUserLabel,
   LtrText,
   LtrValue,
-  Money,
   NotAdded,
   ProductName,
   UnitSize,
@@ -190,6 +205,11 @@ type InvoiceTab =
   | "posted"
   | "cancelled";
 const blockerCopy: Record<InvoiceBlocker, [string, string]> = {
+  barcode: [
+    "This barcode already belongs to another product. Correct it before posting.",
+    "این بارکد به کالای دیگری تعلق دارد. پیش از ثبت آن را اصلاح کنید.",
+  ],
+  checks: ["Fields still need checking", "هنوز فیلدهایی نیاز به بررسی دارند"],
   permission: [
     "Sign in as a Floor Worker, Branch Supervisor, Owner or Manager to receive invoices.",
     "برای دریافت فاکتور به عنوان کارمند فروشگاه، سرپرست شعبه، مالک یا مدیر وارد شوید.",
@@ -656,11 +676,15 @@ function InvoiceWorkspace({
   };
   const canReadWorkspace = true;
   const [message, setMessage] = useState("");
+  const readingEdit = useRef<{ field: string; lineIndex?: number } | null>(
+    null,
+  );
   const updateInvoice = useCallback(
     async <T,>(
       mutator: (draft: DemoState, currentActor: AuthenticatedActor) => T,
       capability: InvoiceCapability | "suppliers.confirm" = "invoices.edit",
     ): Promise<T | undefined> => {
+      const editedCheck = readingEdit.current;
       try {
         return await command(
           capability,
@@ -680,6 +704,13 @@ function InvoiceWorkspace({
               capability !== "suppliers.confirm",
             );
             const result = mutator(draft, currentActor);
+            if (editedCheck && capability === "invoices.edit")
+              acknowledgeInvoiceCheck(
+                draft,
+                currentActor,
+                editedCheck.field,
+                editedCheck.lineIndex,
+              );
             if (
               draft.invoice.status !== "posted" &&
               capability === "invoices.edit"
@@ -706,6 +737,9 @@ function InvoiceWorkspace({
   const [moveAttempted, setMoveAttempted] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(!invoice.original_available);
   const [postOpen, setPostOpen] = useState(false);
+  const [confirmChecksLine, setConfirmChecksLine] = useState<number | null>(
+    null,
+  );
   const [uploadError, setUploadError] = useState("");
   const [uploadPending, setUploadPending] = useState(false);
   const [manualCode, setManualCode] = useState("0002");
@@ -718,6 +752,7 @@ function InvoiceWorkspace({
     Record<string, { quantity?: string; reference?: string }>
   >({});
   const blockers = workspace.blockers;
+  const readingTotals = invoiceTotalsCheck(invoice);
   const currentTab: InvoiceTab =
     invoice.status === "reading"
       ? "processing"
@@ -741,8 +776,12 @@ function InvoiceWorkspace({
     "drafts",
   );
   useEffect(() => {
-    if (!routeId && tabFilter === "posted" && listTab !== "posted")
-      setListTab("posted");
+    if (
+      !routeId &&
+      (tabFilter === "posted" || tabFilter === "needs_review") &&
+      listTab !== tabFilter
+    )
+      setListTab(tabFilter);
   }, [routeId, tabFilter, listTab, setListTab]);
   const tab = routeId
     ? validSelection
@@ -876,6 +915,8 @@ function InvoiceWorkspace({
     manual_price: "invoice-line-0-detail",
     order: "invoice-order-review",
     order_decisions: "invoice-order-review",
+    checks: "invoice-check-summary",
+    barcode: "invoice-line-0-detail",
   };
   const postIssues: ValidationIssue[] = [];
   if (attemptedPost) {
@@ -886,12 +927,14 @@ function InvoiceWorkspace({
       "review",
       "date",
       "manual_price",
+      "barcode",
     ]);
     for (const blocker of blockers) {
       if (
         lineBlockers.has(blocker) ||
         blocker === "money" ||
-        blocker === "header"
+        blocker === "header" ||
+        blocker === "checks"
       )
         continue;
       if (
@@ -903,6 +946,39 @@ function InvoiceWorkspace({
         id: `invoice-${blocker}-missing`,
         message: t(...blockerCopy[blocker]),
         fieldId: issueTargets[blocker],
+      });
+    }
+    if (invoiceCheckCount(invoice)) {
+      const count = invoiceCheckCount(invoice);
+      postIssues.push({
+        id: "invoice-check-summary",
+        fieldId: "invoice-details-fields",
+        message: t(
+          `${count} fields still need checking`,
+          `هنوز ${count} فیلد نیاز به بررسی دارد`,
+        ),
+      });
+      for (const field of invoice.low_confidence_fields ?? [])
+        postIssues.push({
+          id: `header-check-${field}`,
+          fieldId: `invoice-check-header-${field}`,
+          message: `${t("Please check", "لطفاً بررسی کنید")}: ${field.replaceAll("_", " ")}`,
+        });
+      invoice.lines.forEach((line, index) => {
+        for (const field of line.low_confidence_fields ?? [])
+          postIssues.push({
+            id: `line-check-${index}-${field}`,
+            fieldId: `invoice-check-line-${index}-${field}`,
+            message: `${t("Line", "ردیف")} ${index + 1}: ${t("Please check", "لطفاً بررسی کنید")} ${field.replaceAll("_", " ")}`,
+          });
+      });
+      (invoice.other_charges ?? []).forEach((charge, index) => {
+        for (const field of charge.low_confidence_fields ?? [])
+          postIssues.push({
+            id: `charge-check-${index}-${field}`,
+            fieldId: `invoice-check-charge-${index}-${field}`,
+            message: `${t("Other charges and credits", "هزینه‌ها و اعتبارهای دیگر")}: ${t("Please check", "لطفاً بررسی کنید")} ${field.replaceAll("_", " ")}`,
+          });
       });
     }
     for (const [field, label] of [
@@ -976,7 +1052,29 @@ function InvoiceWorkspace({
         add("matching", "matching");
       if (!validInvoiceLineQuantity(line)) add("quantity", "invoiced");
       else if (!validInvoiceLineReceived(line)) add("quantity", "delivered");
-      if (!workspace.lineDetails[index]?.costValid) add("cost", "cost");
+      if (
+        !state.config.pricing_categories.some(
+          (category) =>
+            category.key ===
+            (line.pricing_category ?? product?.pricing_category),
+        )
+      )
+        postIssues.push({
+          id: `invoice-${index}-category-missing`,
+          fieldId: `invoice-line-${index}-category`,
+          message: `${t("Line", "ردیف")} ${index + 1}: ${t("Choose a pricing category.", "دسته قیمت‌گذاری را انتخاب کنید.")}`,
+        });
+      else if (!workspace.lineDetails[index]?.costValid) add("cost", "cost");
+      if (
+        line.product_code === "NEW" &&
+        line.barcode &&
+        conflictingBarcodeProduct(
+          state.products,
+          invoice.company_id,
+          line.barcode,
+        )
+      )
+        add("barcode", "barcode");
       if (!line.review_confirmed) add("review", "confirm");
       if (!line.date_confirmed) add("date", "track");
       else if (line.date_tracking && !line.date_value) add("date", "date");
@@ -994,7 +1092,7 @@ function InvoiceWorkspace({
     postIssues.find((item) => item.fieldId === fieldId)?.message;
   const previewMoney = (value: string) =>
     /^\d+(?:\.\d{1,2})?$/.test(value) ? (
-      <Money value={value} currency={state.config.company.currency} />
+      <ReadingMoney value={value} currency={state.config.company.currency} />
     ) : (
       <span className="muted">—</span>
     );
@@ -1287,6 +1385,11 @@ function InvoiceWorkspace({
     if (blockers.length) {
       setAttemptedPost(true);
       setDetailsOpen(true);
+      setOpenLines(
+        Object.fromEntries(
+          invoice.lines.map((_, index) => [`${invoice.id}:${index}`, true]),
+        ),
+      );
       setMessage(
         t(
           "Complete the highlighted requirements before posting.",
@@ -1731,7 +1834,7 @@ function InvoiceWorkspace({
                     <p key={entry.id}>
                       <LtrText>{entry.reference}</LtrText> ·{" "}
                       {t("Restored:", "بازگردانده شد:")}{" "}
-                      <Money
+                      <ReadingMoney
                         value={entry.amount}
                         currency={state.config.company.currency}
                       />
@@ -2129,6 +2232,7 @@ function InvoiceWorkspace({
             </Card>
           </aside>
           <div className="invoice-review-pane">
+            <ImportedReadingNote invoice={invoice} />
             <div id="invoice-missing-list" tabIndex={-1}>
               <WhatsMissing issues={postIssues} />
             </div>
@@ -2235,7 +2339,7 @@ function InvoiceWorkspace({
                         "کسر کسری و اقلام برگشتی",
                       )}
                       value={
-                        <Money
+                        <ReadingMoney
                           value={new Decimal(totals.total)
                             .plus(refused.total)
                             .negated()
@@ -2248,7 +2352,7 @@ function InvoiceWorkspace({
                     <SummaryTile
                       label={t("Payable", "قابل پرداخت")}
                       value={
-                        <Money
+                        <ReadingMoney
                           currency={state.config.company.currency}
                           value={
                             /^[0-9]+(?:\.[0-9]{1,2})?$/.test(
@@ -2380,353 +2484,427 @@ function InvoiceWorkspace({
                     </span>
                   </div>
                   {detailsOpen && (
-                    <fieldset
-                      id="invoice-details-fields"
-                      disabled={locked}
-                      className="form-grid invoice-details-form invoice-details-sections"
+                    <ReadingCheckProvider
+                      fields={invoice.low_confidence_fields}
+                      idPrefix="invoice-check-header"
+                      onEdit={(field, change) => {
+                        readingEdit.current = { field };
+                        try {
+                          change();
+                        } finally {
+                          readingEdit.current = null;
+                        }
+                      }}
+                      onAcknowledge={(field) => {
+                        updateInvoice((draft, currentActor) =>
+                          acknowledgeInvoiceCheck(draft, currentActor, field),
+                        );
+                      }}
                     >
-                      <div className="invoice-details-group">
-                        <h3>{t("Invoice", "فاکتور")}</h3>
-                        <Field
-                          label={t("Supplier", "تأمین‌کننده")}
-                          error={issue("invoice-supplier")}
-                        >
-                          <Select
-                            id="invoice-supplier"
-                            value={invoice.supplier}
-                            onChange={(value) => {
-                              if (value === "__add_supplier") {
-                                setSupplierToEdit(undefined);
-                                setSupplierEditorOpen(true);
-                                return;
-                              }
-                              updateInvoice((draft) => {
-                                const supplier = supplierRecords(draft).find(
-                                  (record) =>
-                                    record.company_id ===
-                                      draft.config.company.seed_key &&
-                                    supplierMatches(record, value),
-                                );
-                                const previousSupplier = draft.invoice.supplier;
-                                draft.invoice.supplier = value;
-                                clearInvoiceOrder(draft.invoice);
-                                draft.invoice.supplier_confirmed =
-                                  supplier?.status === "confirmed";
-                                setInvoicePaymentTerms(
-                                  draft.invoice,
-                                  supplier?.payment_terms ?? "",
-                                );
-                                if (supplier)
-                                  markInvoiceSupplierReview(
-                                    draft.invoice,
-                                    supplier,
-                                    previousSupplier,
-                                  );
-                                draft.invoice.lower_price_answers = undefined;
-                              });
-                            }}
-
-                            disabled={locked}
-                            options={[
-                              {
-                                value: "",
-                                label: t(
-                                  "Choose supplier",
-                                  "انتخاب تأمین‌کننده",
-                                ),
-                              },
-                              ...supplierChoices(state).map((supplier) => ({
-                                value: supplier.name,
-                                label: `\u2066${supplier.name}\u2069`,
-                              })),
-                              ...(!supplierChoices(state).some((record) =>
-                                supplierMatches(record, invoice.supplier),
-                              ) && invoice.supplier
-                                ? [
-                                    {
-                                      value: invoice.supplier,
-                                      label: invoice.supplier,
-                                    },
-                                  ]
-                                : []),
-                              {
-                                value: "__add_supplier",
-                                label: t(
-                                  "+ Add supplier",
-                                  "+ افزودن تأمین‌کننده",
-                                ),
-                              },
+                      <fieldset
+                        id="invoice-details-fields"
+                        disabled={locked}
+                        className="form-grid invoice-details-form invoice-details-sections"
+                      >
+                        <div className="invoice-details-group">
+                          <h3>{t("Invoice", "فاکتور")}</h3>
+                          <ReadingUnknownChecks
+                            fields={invoice.low_confidence_fields}
+                            record={invoice}
+                            known={[
+                              "supplier",
+                              "supplier_invoice_number",
+                              "invoice_date",
+                              "due_date",
+                              "subtotal",
+                              "tax",
+                              "final_total",
                             ]}
                           />
-                        </Field>
-                        <Field
-                          label={t(
-                            "Supplier invoice number (optional)",
-                            "شماره فاکتور تأمین‌کننده (اختیاری)",
-                          )}
-                        >
-                          <input
-                            dir="ltr"
-                            value={invoice.supplier_invoice_number}
-                            onChange={(event) => {
-                              const inputValue = event.currentTarget.value;
-                              updateInvoice((draft) => {
-                                draft.invoice.supplier_invoice_number =
-                                  inputValue;
-                              });
-                            }}
-                            placeholder={t(
-                              "Assigned on posting if blank",
-                              "اگر خالی باشد هنگام ثبت تعیین می‌شود",
+                          <Field
+                            label={t("Supplier", "تأمین‌کننده")}
+                            error={issue("invoice-supplier")}
+                          >
+                            <Select
+                              id="invoice-supplier"
+                              value={invoice.supplier}
+                              onChange={(value) => {
+                                if (value === "__add_supplier") {
+                                  setSupplierToEdit(undefined);
+                                  setSupplierEditorOpen(true);
+                                  return;
+                                }
+                                updateInvoice((draft) => {
+                                  const supplier = supplierRecords(draft).find(
+                                    (record) =>
+                                      record.company_id ===
+                                        draft.config.company.seed_key &&
+                                      supplierMatches(record, value),
+                                  );
+                                  const previousSupplier =
+                                    draft.invoice.supplier;
+                                  draft.invoice.supplier = value;
+                                  clearInvoiceOrder(draft.invoice);
+                                  draft.invoice.supplier_confirmed =
+                                    supplier?.status === "confirmed";
+                                  setInvoicePaymentTerms(
+                                    draft.invoice,
+                                    supplier?.payment_terms ?? "",
+                                  );
+                                  if (supplier)
+                                    markInvoiceSupplierReview(
+                                      draft.invoice,
+                                      supplier,
+                                      previousSupplier,
+                                    );
+                                  draft.invoice.lower_price_answers = undefined;
+                                });
+                              }}
+
+                              disabled={locked}
+                              options={[
+                                {
+                                  value: "",
+                                  label: t(
+                                    "Choose supplier",
+                                    "انتخاب تأمین‌کننده",
+                                  ),
+                                },
+                                ...supplierChoices(state).map((supplier) => ({
+                                  value: supplier.name,
+                                  label: `\u2066${supplier.name}\u2069`,
+                                })),
+                                ...(!supplierChoices(state).some((record) =>
+                                  supplierMatches(record, invoice.supplier),
+                                ) && invoice.supplier
+                                  ? [
+                                      {
+                                        value: invoice.supplier,
+                                        label: invoice.supplier,
+                                      },
+                                    ]
+                                  : []),
+                                {
+                                  value: "__add_supplier",
+                                  label: t(
+                                    "+ Add supplier",
+                                    "+ افزودن تأمین‌کننده",
+                                  ),
+                                },
+                              ]}
+                            />
+                          </Field>
+                          <Field
+                            label={t(
+                              "Supplier invoice number (optional)",
+                              "شماره فاکتور تأمین‌کننده (اختیاری)",
                             )}
-                          />
-                        </Field>
-                        <Field
-                          label={t("Invoice date", "تاریخ فاکتور")}
-                          error={issue("invoice-date")}
-                        >
-                          <DateField
-                            id="invoice-date"
-                            dir="ltr"
-                            value={invoice.invoice_date ?? ""}
-                            onChange={(value) =>
-                              updateInvoice((draft) => {
-                                draft.invoice.invoice_date = value;
-                                refreshInvoiceDueDate(draft.invoice);
-                              })
+                          >
+                            <input
+                              id="invoice-number"
+                              dir="ltr"
+                              value={invoice.supplier_invoice_number}
+                              onChange={(event) => {
+                                const inputValue = event.currentTarget.value;
+                                updateInvoice((draft) => {
+                                  draft.invoice.supplier_invoice_number =
+                                    inputValue;
+                                });
+                              }}
+                              placeholder={t(
+                                "Assigned on posting if blank",
+                                "اگر خالی باشد هنگام ثبت تعیین می‌شود",
+                              )}
+                            />
+                          </Field>
+                          <Field
+                            label={t(
+                              "Order reference (optional)",
+                              "مرجع سفارش (اختیاری)",
+                            )}
+                          >
+                            <input
+                              dir="ltr"
+                              value={invoice.order_reference ?? ""}
+                              onChange={(event) => {
+                                const value = event.target.value;
+                                updateInvoice((draft) => {
+                                  draft.invoice.order_reference = value;
+                                });
+                              }}
+                            />
+                          </Field>
+                          <Field
+                            label={t("Invoice date", "تاریخ فاکتور")}
+                            error={issue("invoice-date")}
+                          >
+                            <DateField
+                              id="invoice-date"
+                              dir="ltr"
+                              value={invoice.invoice_date ?? ""}
+                              onChange={(value) =>
+                                updateInvoice((draft) => {
+                                  draft.invoice.invoice_date = value;
+                                  refreshInvoiceDueDate(draft.invoice);
+                                })
+                              }
+                            />
+                          </Field>
+                        </div>
+                        <div className="invoice-details-group">
+                          <h3>{t("Receiving", "دریافت")}</h3>
+                          <Field
+                            label={t("Received date", "تاریخ دریافت")}
+                            error={
+                              receivedError === "date"
+                                ? t(
+                                    "Choose a valid received date.",
+                                    "تاریخ دریافت معتبر انتخاب کنید.",
+                                  )
+                                : issue("invoice-received-date")
                             }
-                          />
-                        </Field>
-                      </div>
-                      <div className="invoice-details-group">
-                        <h3>{t("Receiving", "دریافت")}</h3>
-                        <Field
-                          label={t("Received date", "تاریخ دریافت")}
-                          error={
-                            receivedError === "date"
-                              ? t(
-                                  "Choose a valid received date.",
-                                  "تاریخ دریافت معتبر انتخاب کنید.",
+                          >
+                            <DateField
+                              id="invoice-received-date"
+                              value={receivedLocal.date}
+                              disabled={locked}
+                              onChange={(value) =>
+                                editReceived(value, receivedLocal.time)
+                              }
+                            />
+                          </Field>
+                          <Field
+                            label={t("Received time", "زمان دریافت")}
+                            hint={t(
+                              "Store local time, 24-hour HH:mm",
+                              "زمان محلی فروشگاه، ۲۴ ساعته HH:mm",
+                            )}
+                            error={
+                              receivedError === "nonexistent"
+                                ? t(
+                                    "This time does not exist when daylight saving starts. Choose another time.",
+                                    "این زمان هنگام شروع ساعت تابستانی وجود ندارد. زمان دیگری انتخاب کنید.",
+                                  )
+                                : receivedError === "time"
+                                  ? t(
+                                      "Enter a valid time using HH:mm.",
+                                      "زمان معتبر به صورت HH:mm وارد کنید.",
+                                    )
+                                  : undefined
+                            }
+                          >
+                            <input
+                              id="invoice-received-time"
+                              className="control-narrow"
+                              type="text"
+                              dir="ltr"
+                              inputMode="numeric"
+                              placeholder="HH:mm"
+                              value={receivedLocal.time}
+                              onChange={(event) =>
+                                editReceived(
+                                  receivedLocal.date,
+                                  event.target.value,
                                 )
-                              : issue("invoice-received-date")
-                          }
-                        >
-                          <DateField
-                            id="invoice-received-date"
-                            value={receivedLocal.date}
+                              }
+                            />
+                          </Field>
+                          <Field
+                            label={t(
+                              "Receiving employee",
+                              "کارمند دریافت‌کننده",
+                            )}
+                            error={issue("invoice-employee")}
+                          >
+                            <Select
+                              id="invoice-employee"
+                              value={invoice.receiving_employee ?? ""}
+                              onChange={(value) =>
+                                updateInvoice((draft) => {
+                                  draft.invoice.receiving_employee = value;
+                                })
+                              }
+
+                              disabled={locked}
+                              options={demoUsers
+                                .filter((user) => user.role !== "cashier")
+                                .map((user) => ({
+                                  value: user.name,
+                                  label: demoUserLabel(user.name, lang),
+                                }))}
+                            />
+                          </Field>
+                          <Field
+                            label={t("Location", "مکان")}
+                            error={issue("invoice-location")}
+                          >
+                            <Select
+                              id="invoice-location"
+                              value={invoiceLocation}
+                              disabled={
+                                locked ||
+                                !can(
+                                  "invoices.assign_receiving_location",
+                                  scope,
+                                )
+                              }
+                              onChange={(value) => {
+                                updateInvoice((draft, currentActor) => {
+                                  setInvoiceLocation(
+                                    draft,
+                                    currentActor,
+                                    value,
+                                  );
+                                }, "invoices.assign_receiving_location");
+                              }}
+
+                              options={branches.map((item) => ({
+                                value: item,
+                                label: configuredBranchLabel(
+                                  state.config,
+                                  item,
+                                  lang,
+                                ),
+                              }))}
+                            />
+                          </Field>
+                          <Field
+                            label={t(
+                              "Ship to (optional)",
+                              "نشانی تحویل (اختیاری)",
+                            )}
+                          >
+                            <input
+                              value={invoice.ship_to ?? ""}
+                              disabled={locked}
+                              onChange={(event) => {
+                                const inputValue = event.currentTarget.value;
+                                updateInvoice((draft) => {
+                                  draft.invoice.ship_to = inputValue;
+                                });
+                              }}
+                            />
+                          </Field>
+                        </div>
+                        <div className="invoice-details-group">
+                          <h3>
+                            {t("Amounts and payment", "مبلغ‌ها و پرداخت")}
+                          </h3>
+                          <Field
+                            label={t("Subtotal", "جمع پیش از مالیات")}
+                            className={
+                              readingTotals.subtotalDifference
+                                ? "please-check-field"
+                                : undefined
+                            }
+                            error={issue("invoice-subtotal")}
+                          >
+                            <input
+                              id="invoice-subtotal"
+                              dir="ltr"
+                              className="control-narrow"
+                              inputMode="decimal"
+                              value={invoice.subtotal}
+                              onChange={(event) => {
+                                const inputValue = event.currentTarget.value;
+                                updateInvoice((draft) => {
+                                  setInvoiceAmount(
+                                    draft.invoice,
+                                    "subtotal",
+                                    inputValue,
+                                  );
+                                });
+                              }}
+                            />
+                          </Field>
+                          <Field
+                            label={t("Tax", "مالیات")}
+                            error={issue("invoice-tax")}
+                          >
+                            <input
+                              id="invoice-tax"
+                              dir="ltr"
+                              className="control-narrow"
+                              inputMode="decimal"
+                              value={invoice.tax}
+                              onChange={(event) => {
+                                const inputValue = event.currentTarget.value;
+                                updateInvoice((draft) => {
+                                  setInvoiceAmount(
+                                    draft.invoice,
+                                    "tax",
+                                    inputValue,
+                                  );
+                                });
+                              }}
+                            />
+                          </Field>
+                          <Field
+                            label={t("Final total", "جمع نهایی")}
+                            className={
+                              readingTotals.totalDifference
+                                ? "please-check-field"
+                                : undefined
+                            }
+                            error={issue("invoice-final-total")}
+                          >
+                            <input
+                              id="invoice-final-total"
+                              dir="ltr"
+                              className="control-narrow"
+                              inputMode="decimal"
+                              value={invoice.final_total}
+                              onChange={(event) => {
+                                const inputValue = event.currentTarget.value;
+                                updateInvoice((draft) => {
+                                  setInvoiceAmount(
+                                    draft.invoice,
+                                    "final_total",
+                                    inputValue,
+                                  );
+                                });
+                              }}
+                            />
+                          </Field>
+                          <Field
+                            label={t(
+                              "Due date (optional)",
+                              "تاریخ سررسید (اختیاری)",
+                            )}
+                          >
+                            <DateField
+                              id="invoice-due-date"
+                              dir="ltr"
+                              value={invoice.due_date ?? ""}
+                              onChange={(value) =>
+                                updateInvoice((draft) => {
+                                  draft.invoice.due_date = value;
+                                  draft.invoice.due_date_manual = true;
+                                })
+                              }
+                            />
+                          </Field>
+                          <PaymentTermsControl
+                            key={`${invoice.id}:${invoice.supplier}`}
+                            id="invoice-payment-terms"
+                            error={issue("invoice-payment-terms")}
+                            label={t(
+                              "Payment terms (optional)",
+                              "شرایط پرداخت (اختیاری)",
+                            )}
+                            value={invoice.payment_terms ?? ""}
                             disabled={locked}
                             onChange={(value) =>
-                              editReceived(value, receivedLocal.time)
-                            }
-                          />
-                        </Field>
-                        <Field
-                          label={t("Received time", "زمان دریافت")}
-                          hint={t(
-                            "Store local time, 24-hour HH:mm",
-                            "زمان محلی فروشگاه، ۲۴ ساعته HH:mm",
-                          )}
-                          error={
-                            receivedError === "nonexistent"
-                              ? t(
-                                  "This time does not exist when daylight saving starts. Choose another time.",
-                                  "این زمان هنگام شروع ساعت تابستانی وجود ندارد. زمان دیگری انتخاب کنید.",
-                                )
-                              : receivedError === "time"
-                                ? t(
-                                    "Enter a valid time using HH:mm.",
-                                    "زمان معتبر به صورت HH:mm وارد کنید.",
-                                  )
-                                : undefined
-                          }
-                        >
-                          <input
-                            id="invoice-received-time"
-                            className="control-narrow"
-                            type="text"
-                            dir="ltr"
-                            inputMode="numeric"
-                            placeholder="HH:mm"
-                            value={receivedLocal.time}
-                            onChange={(event) =>
-                              editReceived(
-                                receivedLocal.date,
-                                event.target.value,
+                              updateInvoice((draft) =>
+                                setInvoicePaymentTerms(draft.invoice, value),
                               )
                             }
                           />
-                        </Field>
-                        <Field
-                          label={t("Receiving employee", "کارمند دریافت‌کننده")}
-                          error={issue("invoice-employee")}
-                        >
-                          <Select
-                            id="invoice-employee"
-                            value={invoice.receiving_employee ?? ""}
-                            onChange={(value) =>
-                              updateInvoice((draft) => {
-                                draft.invoice.receiving_employee = value;
-                              })
-                            }
-
-                            disabled={locked}
-                            options={demoUsers
-                              .filter((user) => user.role !== "cashier")
-                              .map((user) => ({
-                                value: user.name,
-                                label: demoUserLabel(user.name, lang),
-                              }))}
-                          />
-                        </Field>
-                        <Field
-                          label={t("Location", "مکان")}
-                          error={issue("invoice-location")}
-                        >
-                          <Select
-                            id="invoice-location"
-                            value={invoiceLocation}
-                            disabled={
-                              locked ||
-                              !can("invoices.assign_receiving_location", scope)
-                            }
-                            onChange={(value) => {
-                              updateInvoice((draft, currentActor) => {
-                                setInvoiceLocation(draft, currentActor, value);
-                              }, "invoices.assign_receiving_location");
-                            }}
-
-                            options={branches.map((item) => ({
-                              value: item,
-                              label: configuredBranchLabel(
-                                state.config,
-                                item,
-                                lang,
-                              ),
-                            }))}
-                          />
-                        </Field>
-                        <Field
-                          label={t(
-                            "Ship to (optional)",
-                            "نشانی تحویل (اختیاری)",
-                          )}
-                        >
-                          <input
-                            value={invoice.ship_to ?? ""}
-                            disabled={locked}
-                            onChange={(event) => {
-                              const inputValue = event.currentTarget.value;
-                              updateInvoice((draft) => {
-                                draft.invoice.ship_to = inputValue;
-                              });
-                            }}
-                          />
-                        </Field>
-                      </div>
-                      <div className="invoice-details-group">
-                        <h3>{t("Amounts and payment", "مبلغ‌ها و پرداخت")}</h3>
-                        <Field
-                          label={t("Subtotal", "جمع پیش از مالیات")}
-                          error={issue("invoice-subtotal")}
-                        >
-                          <input
-                            id="invoice-subtotal"
-                            dir="ltr"
-                            className="control-narrow"
-                            inputMode="decimal"
-                            value={invoice.subtotal}
-                            onChange={(event) => {
-                              const inputValue = event.currentTarget.value;
-                              updateInvoice((draft) => {
-                                setInvoiceAmount(
-                                  draft.invoice,
-                                  "subtotal",
-                                  inputValue,
-                                );
-                              });
-                            }}
-                          />
-                        </Field>
-                        <Field
-                          label={t("Tax", "مالیات")}
-                          error={issue("invoice-tax")}
-                        >
-                          <input
-                            id="invoice-tax"
-                            dir="ltr"
-                            className="control-narrow"
-                            inputMode="decimal"
-                            value={invoice.tax}
-                            onChange={(event) => {
-                              const inputValue = event.currentTarget.value;
-                              updateInvoice((draft) => {
-                                setInvoiceAmount(
-                                  draft.invoice,
-                                  "tax",
-                                  inputValue,
-                                );
-                              });
-                            }}
-                          />
-                        </Field>
-                        <Field
-                          label={t("Final total", "جمع نهایی")}
-                          error={issue("invoice-final-total")}
-                        >
-                          <input
-                            id="invoice-final-total"
-                            dir="ltr"
-                            className="control-narrow"
-                            inputMode="decimal"
-                            value={invoice.final_total}
-                            onChange={(event) => {
-                              const inputValue = event.currentTarget.value;
-                              updateInvoice((draft) => {
-                                setInvoiceAmount(
-                                  draft.invoice,
-                                  "final_total",
-                                  inputValue,
-                                );
-                              });
-                            }}
-                          />
-                        </Field>
-                        <Field
-                          label={t(
-                            "Due date (optional)",
-                            "تاریخ سررسید (اختیاری)",
-                          )}
-                        >
-                          <DateField
-                            dir="ltr"
-                            value={invoice.due_date ?? ""}
-                            onChange={(value) =>
-                              updateInvoice((draft) => {
-                                draft.invoice.due_date = value;
-                                draft.invoice.due_date_manual = true;
-                              })
-                            }
-                          />
-                        </Field>
-                        <PaymentTermsControl
-                          key={`${invoice.id}:${invoice.supplier}`}
-                          id="invoice-payment-terms"
-                          error={issue("invoice-payment-terms")}
-                          label={t(
-                            "Payment terms (optional)",
-                            "شرایط پرداخت (اختیاری)",
-                          )}
-                          value={invoice.payment_terms ?? ""}
-                          disabled={locked}
-                          onChange={(value) =>
-                            updateInvoice((draft) =>
-                              setInvoicePaymentTerms(draft.invoice, value),
-                            )
-                          }
-                        />
-                      </div>
-                    </fieldset>
+                        </div>
+                      </fieldset>
+                    </ReadingCheckProvider>
                   )}
+                  <InvoiceTotalsWarnings invoice={invoice} />
                   {!locked && invoiceTotalDiffers(invoice) && (
                     <p className="banner pending" role="status">
                       {t(
@@ -2785,6 +2963,14 @@ function InvoiceWorkspace({
                         )}
                       </div>
                     )}
+                  {supplierRecord?.created_from_import && (
+                    <p className="muted">
+                      {t(
+                        "Created from an imported reading",
+                        "از یک خوانش واردشده ایجاد شده است",
+                      )}
+                    </p>
+                  )}
                   {invoice.number_is_system_assigned && (
                     <p className="muted">
                       {t(
@@ -2894,1306 +3080,1596 @@ function InvoiceWorkspace({
                           [lineKey]: !expanded,
                         }));
                       return (
-                        <tbody
-                          className={`invoice-line${expanded ? " is-expanded" : " is-collapsed"}`}
-                          data-expanded={expanded}
+                        <ReadingCheckProvider
                           key={`${index}-${line.product_code}`}
-                          aria-label={`${t("Line", "ردیف")} ${index + 1}: ${name}`}
+                          fields={line.low_confidence_fields}
+                          idPrefix={`invoice-check-line-${index}`}
+                          onEdit={(field, change) => {
+                            readingEdit.current = { field, lineIndex: index };
+                            try {
+                              change();
+                            } finally {
+                              readingEdit.current = null;
+                            }
+                          }}
+                          onAcknowledge={(field) => {
+                            updateInvoice((draft, currentActor) =>
+                              acknowledgeInvoiceCheck(
+                                draft,
+                                currentActor,
+                                field,
+                                index,
+                              ),
+                            );
+                          }}
                         >
-                          <tr
-                            className="invoice-line-summary"
-                            onClick={(event) => {
-                              if (
-                                (event.target as HTMLElement).closest(
-                                  "button,input,textarea,[role=combobox],[role=checkbox]",
-                                )
-                              )
-                                return;
-                              toggleLine();
-                            }}
+                          <tbody
+                            className={`invoice-line${expanded ? " is-expanded" : " is-collapsed"}`}
+                            data-expanded={expanded}
+                            key={`${index}-${line.product_code}`}
+                            aria-label={`${t("Line", "ردیف")} ${index + 1}: ${name}`}
                           >
-                            <td>
-                              {" "}
-                              <div className="invoice-line-heading">
-                                <h3>
-                                  <button
-                                    type="button"
-                                    className="invoice-line-toggle"
-                                    aria-expanded={expanded}
-                                    aria-controls={`invoice-line-${index}-detail`}
-                                    onClick={toggleLine}
-                                  >
-                                    <LtrText>{index + 1}.</LtrText>{" "}
-                                    <ProductName
-                                      product={{
-                                        name_en:
-                                          product?.name_en ??
-                                          line.new_name_en ??
-                                          line.description,
-                                        name_fa:
-                                          product?.name_fa ??
-                                          line.new_name_fa ??
-                                          "",
-                                      }}
-                                      language={lang}
-                                    />
-                                    <ChevronDown size={16} aria-hidden="true" />
-                                  </button>
-                                </h3>
+                            <tr
+                              className="invoice-line-summary"
+                              onClick={(event) => {
+                                if (
+                                  (event.target as HTMLElement).closest(
+                                    "button,input,textarea,[role=combobox],[role=checkbox]",
+                                  )
+                                )
+                                  return;
+                                toggleLine();
+                              }}
+                            >
+                              <td>
+                                {" "}
+                                <div className="invoice-line-heading">
+                                  <h3>
+                                    <button
+                                      type="button"
+                                      className="invoice-line-toggle"
+                                      aria-expanded={expanded}
+                                      aria-controls={`invoice-line-${index}-detail`}
+                                      onClick={toggleLine}
+                                    >
+                                      <LtrText>{index + 1}.</LtrText>{" "}
+                                      <ProductName
+                                        product={{
+                                          name_en:
+                                            product?.name_en ??
+                                            line.new_name_en ??
+                                            line.description,
+                                          name_fa:
+                                            product?.name_fa ??
+                                            line.new_name_fa ??
+                                            "",
+                                        }}
+                                        language={lang}
+                                      />
+                                      <ChevronDown
+                                        size={16}
+                                        aria-hidden="true"
+                                      />
+                                    </button>
+                                  </h3>
 
-                                <p className="muted">
-                                  {line.product_code === "NEW" ? (
-                                    t(
-                                      "No Product Code yet",
-                                      "هنوز کد کالا ندارد",
-                                    )
-                                  ) : (
-                                    <LtrText>{line.product_code}</LtrText>
-                                  )}
-                                  {product?.unit_size && (
-                                    <>
-                                      {" "}
-                                      · <UnitSize value={product.unit_size} />
-                                    </>
-                                  )}
-                                </p>
-                                <div className="inline-actions">
-                                  {line.product_code === "NEW" ||
-                                  product?.status === "pending_approval" ? (
-                                    <Badge tone="pending">
-                                      {t(
-                                        "Pending new product",
-                                        "کالای جدید در انتظار",
-                                      )}
-                                    </Badge>
-                                  ) : (
-                                    <Badge tone="info">
-                                      {t("Matched", "تطبیق داده شد")}
-                                    </Badge>
-                                  )}
-                                  {refusedLine.quantity > 0 && (
-                                    <Badge tone="info">
-                                      {t("Refused", "ردشده")}:{" "}
-                                      <LtrText>{refusedLine.quantity}</LtrText>
-                                    </Badge>
-                                  )}
-                                  {short.quantity > 0 && (
-                                    <Badge tone="danger">
-                                      {t("Short", "کسری")}: {short.quantity}
-                                    </Badge>
-                                  )}
-                                  {line.taxable && (
-                                    <Badge tone="info">
-                                      {t("Taxable", "مشمول مالیات")}
-                                    </Badge>
-                                  )}
-                                  {line.review_confirmed && (
-                                    <Badge tone="approved">
-                                      {t("Confirmed", "تأیید شد")}
-                                    </Badge>
-                                  )}
+                                  <p className="muted">
+                                    {line.product_code === "NEW" ? (
+                                      t(
+                                        "No Product Code yet",
+                                        "هنوز کد کالا ندارد",
+                                      )
+                                    ) : (
+                                      <LtrText>{line.product_code}</LtrText>
+                                    )}
+                                    {product?.unit_size && (
+                                      <>
+                                        {" "}
+                                        · <UnitSize value={product.unit_size} />
+                                      </>
+                                    )}
+                                  </p>
+                                  <div className="inline-actions">
+                                    {line.product_code === "NEW" ||
+                                    product?.status === "pending_approval" ? (
+                                      <Badge tone="pending">
+                                        {t(
+                                          "Pending new product",
+                                          "کالای جدید در انتظار",
+                                        )}
+                                      </Badge>
+                                    ) : (
+                                      <Badge tone="info">
+                                        {t("Matched", "تطبیق داده شد")}
+                                      </Badge>
+                                    )}
+                                    {refusedLine.quantity > 0 && (
+                                      <Badge tone="info">
+                                        {t("Refused", "ردشده")}:{" "}
+                                        <LtrText>
+                                          {refusedLine.quantity}
+                                        </LtrText>
+                                      </Badge>
+                                    )}
+                                    {short.quantity > 0 && (
+                                      <Badge tone="danger">
+                                        {t("Short", "کسری")}: {short.quantity}
+                                      </Badge>
+                                    )}
+                                    {line.taxable && (
+                                      <Badge tone="info">
+                                        {t("Taxable", "مشمول مالیات")}
+                                      </Badge>
+                                    )}
+                                    {!!line.low_confidence_fields?.length && (
+                                      <Badge tone="pending">
+                                        {line.low_confidence_fields.length}{" "}
+                                        {t("to check", "برای بررسی")}
+                                      </Badge>
+                                    )}
+                                    {line.review_confirmed && (
+                                      <Badge tone="approved">
+                                        {t("Confirmed", "تأیید شد")}
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="numeric">
-                              {" "}
-                              {!expanded && (
-                                <>
-                                  <span className="invoice-line-mobile-caption">
-                                    {t("Quantity", "تعداد")}
-                                  </span>
-                                  <LtrText>
-                                    {line.sold_by === "weight"
-                                      ? line.source_received_quantity
-                                      : line.qty_received_at_posting}{" "}
-                                    /{" "}
-                                    {line.sold_by === "weight"
-                                      ? `${line.source_quantity} ${line.source_quantity_unit}`
-                                      : line.qty_invoiced}
-                                  </LtrText>
-                                </>
-                              )}
-                              {expanded && (
-                                <>
-                                  <Field
-                                    label={t("Invoiced", "فاکتور شده")}
-                                    error={issue(
-                                      `invoice-line-${index}-invoiced`,
-                                    )}
-                                  >
-                                    <NumberField
-                                      id={`invoice-line-${index}-invoiced`}
-                                      disabled={locked}
-                                      className="control-narrow"
-
-                                      min="1"
-                                      step={
-                                        line.sold_by === "weight"
-                                          ? "0.001"
-                                          : line.quantity_unit === "cases"
-                                            ? "0.01"
-                                            : "1"
-                                      }
-                                      dir="ltr"
-                                      value={
-                                        line.sold_by === "weight"
-                                          ? line.quantity_unit === "cases"
-                                            ? (line.quantity_entered ?? "")
-                                            : (line.source_quantity ?? "")
-                                          : (line.quantity_entered ??
-                                            line.qty_invoiced)
-                                      }
-                                      onChange={(value) =>
-                                        editLine(
-                                          index,
-                                          (item) => {
-                                            setInvoiceLineQuantity(
-                                              item,
-                                              value,
-                                              item.quantity_unit ?? "units",
-                                            );
-                                          },
-                                          true,
-                                        )
-                                      }
-                                    />
-                                  </Field>{" "}
-                                  <Field
-                                    label={t("Delivered", "تحویل شده")}
-                                    error={issue(
-                                      `invoice-line-${index}-delivered`,
-                                    )}
-                                  >
-                                    <NumberField
-                                      id={`invoice-line-${index}-delivered`}
-                                      disabled={locked}
-                                      className="control-narrow"
-
-                                      min="0"
-                                      max={
-                                        line.sold_by === "weight"
-                                          ? line.source_quantity
-                                          : line.qty_invoiced
-                                      }
-                                      step={
-                                        line.sold_by === "weight"
-                                          ? "0.001"
-                                          : "1"
-                                      }
-                                      dir="ltr"
-                                      value={
-                                        line.sold_by === "weight"
-                                          ? (line.source_received_quantity ??
-                                            "")
-                                          : line.qty_received_at_posting
-                                      }
-                                      onChange={(value) =>
-                                        editLine(index, (item) => {
-                                          if (item.sold_by === "weight")
-                                            setInvoiceWeightReceived(
-                                              item,
-                                              value,
-                                              state.config,
-                                            );
-                                          else
-                                            item.qty_received_at_posting =
-                                              Number(value);
-                                        })
-                                      }
-                                    />
-                                  </Field>
-                                </>
-                              )}
-                            </td>
-                            <td className="numeric">
-                              {!expanded && (
-                                <>
-                                  <span className="invoice-line-mobile-caption">
-                                    {t(
-                                      "Unit cost before tax",
-                                      "هزینه هر واحد پیش از مالیات",
-                                    )}
-                                  </span>
-                                  <LtrText>
-                                    <Money
-                                      value={
-                                        line.sold_by === "weight"
-                                          ? (line.source_cost_before_tax ??
-                                            line.unit_cost_before_tax)
-                                          : line.unit_cost_before_tax
-                                      }
-
-                                      currency={state.config.company.currency}
-                                    />
-                                    {line.sold_by === "weight" &&
-                                      `/${line.source_cost_unit}`}
-                                  </LtrText>
-                                </>
-                              )}
-                              {expanded && (
-                                <Field
-                                  label={t(
-                                    "Unit cost before tax",
-                                    "هزینه هر واحد پیش از مالیات",
-                                  )}
-                                  error={
-                                    !costValid
-                                      ? t(
-                                          "Enter a cost of zero or more with up to four decimal places.",
-                                          "هزینه صفر یا بیشتر با حداکثر چهار رقم اعشار وارد کنید.",
-                                        )
-                                      : undefined
-                                  }
-                                >
-                                  <input
-                                    id={`invoice-line-${index}-cost`}
-                                    disabled={locked}
-                                    dir="ltr"
-                                    className="control-narrow"
-                                    inputMode="decimal"
-                                    value={
-                                      line.sold_by === "weight"
-                                        ? (line.source_cost_before_tax ?? "")
-                                        : line.unit_cost_before_tax
-                                    }
-                                    onChange={(event) => {
-                                      const inputValue =
-                                        event.currentTarget.value;
-                                      editLine(
-                                        index,
-                                        (item) => {
-                                          if (item.sold_by === "weight") {
-                                            setInvoiceWeightCost(
-                                              item,
-                                              inputValue,
-                                              item.source_cost_unit ?? "lb",
-                                              state.config,
-                                            );
-                                            return;
-                                          }
-                                          item.unit_cost_before_tax =
-                                            inputValue;
-                                          if (
-                                            item.quantity_unit === "cases" &&
-                                            /^\d+(?:\.\d{1,4})?$/.test(
-                                              item.unit_cost_before_tax,
-                                            )
-                                          )
-                                            item.case_cost_before_tax =
-                                              costPerCase(
-                                                item.unit_cost_before_tax,
-                                                item.units_per_case ?? 1,
-                                              );
-                                        },
-                                        true,
-                                      );
-                                    }}
-                                  />
-                                </Field>
-                              )}
-                            </td>
-                            <td className="numeric">
-                              <span className="invoice-line-mobile-caption">
-                                {t("Line total", "جمع ردیف")}
-                              </span>
-                              <Money
-                                value={line.line_total}
-                                currency={state.config.company.currency}
-                              />
-                            </td>
-                            <td className="numeric">
-                              {" "}
-                              <div className="field invoice-line-price">
-                                <span className="invoice-line-mobile-caption">
-                                  {t("Selling price", "قیمت فروش")}
-                                </span>
-                                <strong
-                                  className="price-display numeric"
-                                  dir="ltr"
-                                >
-                                  {price ? (
-                                    <ProductPrice
-                                      product={{
-                                        sold_by: line.sold_by ?? "each",
-                                      }}
-                                      config={state.config}
-                                      value={
-                                        line.short_dated
-                                          ? (oldPrice ?? price)
-                                          : (manual?.price ?? price)
-                                      }
-                                    />
-                                  ) : (
-                                    "—"
-                                  )}
-                                </strong>
-
-                                {product && manual && (
+                              </td>
+                              <td className="numeric">
+                                {" "}
+                                {!expanded && (
                                   <>
-                                    <ManualPricePill
-                                      product={product}
-                                      branch={invoice.branch}
-                                    />
-                                    <ManualPriceDetails
-                                      product={product}
-                                      branch={invoice.branch}
-                                      cost={line.unit_cost_before_tax}
-                                    />
+                                    <span className="invoice-line-mobile-caption">
+                                      {t("Quantity", "تعداد")}
+                                    </span>
+                                    <LtrText>
+                                      {line.sold_by === "weight"
+                                        ? line.source_received_quantity
+                                        : line.qty_received_at_posting}{" "}
+                                      /{" "}
+                                      {line.sold_by === "weight"
+                                        ? `${line.source_quantity} ${line.source_quantity_unit}`
+                                        : line.qty_invoiced}
+                                    </LtrText>
                                   </>
                                 )}
-                                {line.short_dated && (
-                                  <small className="muted">
-                                    {t(
-                                      "Regular cost and selling price stay unchanged.",
-                                      "هزینه عادی و قیمت فروش بدون تغییر می‌مانند.",
-                                    )}
-                                  </small>
-                                )}
-                                {price &&
-                                  !line.short_dated &&
-                                  acceptedInvoiceUnits(line) > 0 &&
-                                  (manual
-                                    ? line.manual_price_decision === "rule"
-                                    : oldPrice !== price) && (
-                                    <>
-                                      <Badge tone="pending">
-                                        {t("Pending", "در انتظار")}
-                                      </Badge>
-                                      {!locked && (
-                                        <small className="muted">
-                                          {t(
-                                            "Goes to approval when posted",
-                                            "هنگام ثبت برای تأیید ارسال می‌شود",
-                                          )}
-                                        </small>
-                                      )}
-                                    </>
-                                  )}
-                                {expanded &&
-                                  (oldPrice ? (
-                                    <p className="muted">
-                                      {t("Approved:", "تأییدشده:")}{" "}
-                                      <Money
-                                        value={oldPrice}
-                                        currency={state.config.company.currency}
-                                      />
-                                    </p>
-                                  ) : (
-                                    <p className="muted">
-                                      {t(
-                                        "No approved price yet",
-                                        "هنوز قیمت تأییدشده‌ای نیست",
-                                      )}
-                                    </p>
-                                  ))}
-                              </div>
-                            </td>
-                          </tr>
-                          {expanded && (
-                            <tr
-                              className="invoice-line-detail"
-                              id={`invoice-line-${index}-detail`}
-                            >
-                              <td colSpan={5}>
-                                <div className="invoice-line-review">
-                                  <fieldset
-                                    disabled={locked}
-                                    className="form-grid invoice-line-form"
-                                  >
+                                {expanded && (
+                                  <>
                                     <Field
-                                      label={t("Quantity unit", "واحد تعداد")}
+                                      label={t("Invoiced", "فاکتور شده")}
+                                      error={issue(
+                                        `invoice-line-${index}-invoiced`,
+                                      )}
                                     >
-                                      <Select
-                                        value={line.quantity_unit ?? "units"}
+                                      <NumberField
+                                        id={`invoice-line-${index}-invoiced`}
                                         disabled={locked}
+                                        className="control-narrow"
+
+                                        min="1"
+                                        step={
+                                          line.sold_by === "weight"
+                                            ? "0.001"
+                                            : line.quantity_unit === "cases"
+                                              ? "0.01"
+                                              : "1"
+                                        }
+                                        dir="ltr"
+                                        value={
+                                          line.sold_by === "weight"
+                                            ? line.quantity_unit === "cases"
+                                              ? (line.quantity_entered ?? "")
+                                              : (line.source_quantity ?? "")
+                                            : (line.quantity_entered ??
+                                              line.qty_invoiced)
+                                        }
                                         onChange={(value) =>
                                           editLine(
                                             index,
                                             (item) => {
-                                              const quantity =
-                                                item.sold_by === "weight"
-                                                  ? value === "cases"
-                                                    ? item.case_weight
-                                                      ? new Decimal(
-                                                          weightQuantityFromLb(
-                                                            item.qty_invoiced,
-                                                            item.case_weight_unit ??
-                                                              "kg",
-                                                            item.weight_conversion_factor ??
-                                                              state.config,
-                                                          ),
-                                                        )
-                                                          .div(item.case_weight)
-                                                          .toString()
-                                                      : "1"
-                                                    : weightQuantityFromLb(
-                                                        item.qty_invoiced,
-                                                        value as "kg" | "lb",
-                                                        item.weight_conversion_factor ??
-                                                          state.config,
-                                                      )
-                                                  : value === "cases"
-                                                    ? new Decimal(
-                                                        item.qty_invoiced,
-                                                      )
-                                                        .div(
-                                                          item.units_per_case ??
-                                                            1,
-                                                        )
-                                                        .toString()
-                                                    : String(item.qty_invoiced);
                                               setInvoiceLineQuantity(
                                                 item,
-                                                quantity,
-                                                value as "cases" | "units",
+                                                value,
+                                                item.quantity_unit ?? "units",
                                               );
                                             },
                                             true,
                                           )
                                         }
-                                        options={
+                                      />
+                                    </Field>{" "}
+                                    <Field
+                                      label={t("Delivered", "تحویل شده")}
+                                      error={issue(
+                                        `invoice-line-${index}-delivered`,
+                                      )}
+                                    >
+                                      <NumberField
+                                        id={`invoice-line-${index}-delivered`}
+                                        disabled={locked}
+                                        className="control-narrow"
+
+                                        min="0"
+                                        max={
                                           line.sold_by === "weight"
-                                            ? [
-                                                { value: "kg", label: "kg" },
-                                                { value: "lb", label: "lb" },
-                                                {
-                                                  value: "cases",
-                                                  label: t("Cases", "کارتن"),
-                                                },
-                                              ]
-                                            : [
-                                                {
-                                                  value: "units",
-                                                  label: t("Units", "واحد"),
-                                                },
-                                                {
-                                                  value: "cases",
-                                                  label: t("Cases", "کارتن"),
-                                                },
-                                              ]
+                                            ? line.source_quantity
+                                            : line.qty_invoiced
+                                        }
+                                        step={
+                                          line.sold_by === "weight"
+                                            ? "0.001"
+                                            : "1"
+                                        }
+                                        dir="ltr"
+                                        value={
+                                          line.sold_by === "weight"
+                                            ? (line.source_received_quantity ??
+                                              "")
+                                            : line.qty_received_at_posting
+                                        }
+                                        onChange={(value) =>
+                                          editLine(index, (item) => {
+                                            if (item.sold_by === "weight")
+                                              setInvoiceWeightReceived(
+                                                item,
+                                                value,
+                                                state.config,
+                                              );
+                                            else
+                                              item.qty_received_at_posting =
+                                                Number(value);
+                                          })
                                         }
                                       />
                                     </Field>
-                                    {line.sold_by === "weight" ? (
-                                      <>
-                                        <Field
-                                          label={t("Case weight", "وزن کارتن")}
-                                        >
-                                          <NumberField
-                                            step="0.001"
-                                            min="0"
-                                            value={line.case_weight ?? ""}
-                                            onChange={(value) =>
-                                              editLine(
-                                                index,
-                                                (item) => {
-                                                  item.case_weight = value;
-                                                  if (
-                                                    item.quantity_unit ===
-                                                    "cases"
-                                                  )
-                                                    setInvoiceWeightQuantity(
-                                                      item,
-                                                      item.quantity_entered ??
-                                                        "1",
-                                                      "cases",
-                                                      state.config,
-                                                    );
-                                                },
-                                                true,
+                                  </>
+                                )}
+                              </td>
+                              <td className="numeric">
+                                {!expanded && (
+                                  <>
+                                    <span className="invoice-line-mobile-caption">
+                                      {t(
+                                        "Unit cost before tax",
+                                        "هزینه هر واحد پیش از مالیات",
+                                      )}
+                                    </span>
+                                    <LtrText>
+                                      <ReadingMoney
+                                        value={
+                                          line.sold_by === "weight"
+                                            ? (line.source_cost_before_tax ??
+                                              line.unit_cost_before_tax)
+                                            : line.unit_cost_before_tax
+                                        }
+
+                                        currency={state.config.company.currency}
+                                      />
+                                      {line.sold_by === "weight" &&
+                                        `/${line.source_cost_unit}`}
+                                    </LtrText>
+                                  </>
+                                )}
+                                {expanded && (
+                                  <Field
+                                    label={t(
+                                      "Unit cost before tax",
+                                      "هزینه هر واحد پیش از مالیات",
+                                    )}
+                                    error={
+                                      !costValid
+                                        ? t(
+                                            "Enter a cost of zero or more with up to four decimal places.",
+                                            "هزینه صفر یا بیشتر با حداکثر چهار رقم اعشار وارد کنید.",
+                                          )
+                                        : undefined
+                                    }
+                                  >
+                                    <input
+                                      id={`invoice-line-${index}-cost`}
+                                      disabled={locked}
+                                      dir="ltr"
+                                      className="control-narrow"
+                                      inputMode="decimal"
+                                      value={
+                                        line.sold_by === "weight"
+                                          ? (line.source_cost_before_tax ?? "")
+                                          : line.unit_cost_before_tax
+                                      }
+                                      onChange={(event) => {
+                                        const inputValue =
+                                          event.currentTarget.value;
+                                        editLine(
+                                          index,
+                                          (item) => {
+                                            if (item.sold_by === "weight") {
+                                              setInvoiceWeightCost(
+                                                item,
+                                                inputValue,
+                                                item.source_cost_unit ?? "lb",
+                                                state.config,
+                                              );
+                                              return;
+                                            }
+                                            item.unit_cost_before_tax =
+                                              inputValue;
+                                            if (
+                                              item.quantity_unit === "cases" &&
+                                              /^\d+(?:\.\d{1,4})?$/.test(
+                                                item.unit_cost_before_tax,
                                               )
-                                            }
-                                          />
-                                        </Field>
-                                        <Field
-                                          label={t(
-                                            "Case weight unit",
-                                            "واحد وزن کارتن",
-                                          )}
-                                        >
-                                          <Select
-                                            value={
-                                              line.case_weight_unit ?? "kg"
-                                            }
-                                            options={[
-                                              { value: "kg", label: "kg" },
-                                              { value: "lb", label: "lb" },
-                                            ]}
-                                            onChange={(value) =>
-                                              editLine(
-                                                index,
-                                                (item) => {
-                                                  item.case_weight_unit =
-                                                    value as "kg" | "lb";
-                                                  if (
-                                                    item.quantity_unit ===
-                                                    "cases"
-                                                  )
-                                                    setInvoiceWeightQuantity(
-                                                      item,
-                                                      item.quantity_entered ??
-                                                        "1",
-                                                      "cases",
-                                                      state.config,
-                                                    );
-                                                },
-                                                true,
-                                              )
-                                            }
-                                          />
-                                        </Field>
-                                        <Field
-                                          label={t("Cost unit", "واحد هزینه")}
-                                        >
-                                          <Select
-                                            value={
-                                              line.source_cost_unit ?? "lb"
-                                            }
-                                            options={[
-                                              { value: "kg", label: "kg" },
-                                              { value: "lb", label: "lb" },
-                                            ]}
-                                            onChange={(value) =>
-                                              editLine(
-                                                index,
-                                                (item) =>
-                                                  setInvoiceWeightCost(
-                                                    item,
-                                                    item.source_cost_before_tax ??
-                                                      "0",
-                                                    value as "kg" | "lb",
-                                                    state.config,
-                                                  ),
-                                                true,
-                                              )
-                                            }
-                                          />
-                                        </Field>
-                                      </>
+                                            )
+                                              item.case_cost_before_tax =
+                                                costPerCase(
+                                                  item.unit_cost_before_tax,
+                                                  item.units_per_case ?? 1,
+                                                );
+                                          },
+                                          true,
+                                        );
+                                      }}
+                                    />
+                                  </Field>
+                                )}
+                              </td>
+                              <td className="numeric">
+                                <span className="invoice-line-mobile-caption">
+                                  {t("Line total", "جمع ردیف")}
+                                </span>
+                                <ReadingMoney
+                                  value={line.line_total}
+                                  currency={state.config.company.currency}
+                                />
+                              </td>
+                              <td className="numeric">
+                                {" "}
+                                <div className="field invoice-line-price">
+                                  <span className="invoice-line-mobile-caption">
+                                    {t("Selling price", "قیمت فروش")}
+                                  </span>
+                                  <strong
+                                    className="price-display numeric"
+                                    dir="ltr"
+                                  >
+                                    {price ? (
+                                      <ProductPrice
+                                        product={{
+                                          sold_by: line.sold_by ?? "each",
+                                        }}
+                                        config={state.config}
+                                        value={
+                                          line.short_dated
+                                            ? (oldPrice ?? price)
+                                            : (manual?.price ?? price)
+                                        }
+                                      />
                                     ) : (
+                                      "—"
+                                    )}
+                                  </strong>
+
+                                  {product && manual && (
+                                    <>
+                                      <ManualPricePill
+                                        product={product}
+                                        branch={invoice.branch}
+                                      />
+                                      <ManualPriceDetails
+                                        product={product}
+                                        branch={invoice.branch}
+                                        cost={line.unit_cost_before_tax}
+                                      />
+                                    </>
+                                  )}
+                                  {line.short_dated && (
+                                    <small className="muted">
+                                      {t(
+                                        "Regular cost and selling price stay unchanged.",
+                                        "هزینه عادی و قیمت فروش بدون تغییر می‌مانند.",
+                                      )}
+                                    </small>
+                                  )}
+                                  {price &&
+                                    !line.short_dated &&
+                                    acceptedInvoiceUnits(line) > 0 &&
+                                    (manual
+                                      ? line.manual_price_decision === "rule"
+                                      : oldPrice !== price) && (
+                                      <>
+                                        <Badge tone="pending">
+                                          {t("Pending", "در انتظار")}
+                                        </Badge>
+                                        {!locked && (
+                                          <small className="muted">
+                                            {t(
+                                              "Goes to approval when posted",
+                                              "هنگام ثبت برای تأیید ارسال می‌شود",
+                                            )}
+                                          </small>
+                                        )}
+                                      </>
+                                    )}
+                                  {expanded &&
+                                    (oldPrice ? (
+                                      <p className="muted">
+                                        {t("Approved:", "تأییدشده:")}{" "}
+                                        <ReadingMoney
+                                          value={oldPrice}
+                                          currency={
+                                            state.config.company.currency
+                                          }
+                                        />
+                                      </p>
+                                    ) : (
+                                      <p className="muted">
+                                        {t(
+                                          "No approved price yet",
+                                          "هنوز قیمت تأییدشده‌ای نیست",
+                                        )}
+                                      </p>
+                                    ))}
+                                </div>
+                              </td>
+                            </tr>
+                            {expanded && (
+                              <tr
+                                className="invoice-line-detail"
+                                id={`invoice-line-${index}-detail`}
+                              >
+                                <td colSpan={5}>
+                                  <div className="invoice-line-review">
+                                    {(line.handwritten_note ||
+                                      line.expiry_as_printed ||
+                                      line.lot_number ||
+                                      line.barcode) && (
+                                      <div className="list-box">
+                                        <p>
+                                          <LtrValue value={line.description} />
+                                        </p>
+                                        {line.handwritten_note && (
+                                          <p>{line.handwritten_note}</p>
+                                        )}
+                                        {line.expiry_as_printed && (
+                                          <p>
+                                            {t(
+                                              "Expiry as printed",
+                                              "تاریخ چاپ‌شده",
+                                            )}
+                                            :{" "}
+                                            <LtrValue
+                                              value={line.expiry_as_printed}
+                                            />
+                                          </p>
+                                        )}
+                                        {line.lot_number && (
+                                          <p>
+                                            {t("Lot number", "شماره سری")}:{" "}
+                                            <LtrValue value={line.lot_number} />
+                                          </p>
+                                        )}
+                                        {line.barcode && (
+                                          <p>
+                                            {t("Barcode", "بارکد")}:{" "}
+                                            <LtrValue value={line.barcode} />
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
+                                    <fieldset
+                                      disabled={locked}
+                                      className="form-grid invoice-line-form"
+                                    >
+                                      <ReadingUnknownChecks
+                                        fields={line.low_confidence_fields}
+                                        record={line}
+                                        known={[
+                                          "description",
+                                          "barcode",
+                                          "quantity_entered",
+                                          "quantity_unit",
+                                          ...(line.sold_by === "weight"
+                                            ? []
+                                            : ["units_per_case"]),
+                                          "unit_cost_before_tax",
+                                          "supplier_item_code",
+                                          "line_total",
+                                          "taxable",
+                                        ]}
+                                      />
                                       <Field
+                                        readingField="description"
                                         label={t(
-                                          "Units per case",
-                                          "واحد در هر کارتن",
+                                          "Printed description",
+                                          "شرح چاپ‌شده",
                                         )}
                                       >
-                                        <NumberField
-                                          className="control-narrow"
-                                          min="1"
-                                          step="1"
-                                          value={line.units_per_case ?? 1}
+                                        <input
+                                          value={line.description}
+                                          onChange={(event) => {
+                                            const value = event.target.value;
+                                            editLine(index, (item) => {
+                                              item.description = value;
+                                              if (item.product_code === "NEW")
+                                                item.new_name_en = value;
+                                            });
+                                          }}
+                                        />
+                                      </Field>
+                                      <Field
+                                        readingField="barcode"
+                                        label={t(
+                                          "Invoice barcode",
+                                          "بارکد فاکتور",
+                                        )}
+                                      >
+                                        <input
+                                          id={`invoice-line-${index}-barcode`}
+                                          dir="ltr"
+                                          value={line.barcode ?? ""}
+                                          onChange={(event) => {
+                                            const value = event.target.value;
+                                            editLine(index, (item) => {
+                                              item.barcode = value;
+                                            });
+                                          }}
+                                        />
+                                      </Field>
+                                      <Field
+                                        readingField="line_total"
+                                        label={t(
+                                          "Printed line total",
+                                          "جمع چاپ‌شده ردیف",
+                                        )}
+                                      >
+                                        <input
+                                          dir="ltr"
+                                          inputMode="decimal"
+                                          value={line.line_total}
+                                          onChange={(event) => {
+                                            const value = event.target.value;
+                                            editLine(index, (item) => {
+                                              item.line_total = value;
+                                            });
+                                          }}
+                                        />
+                                      </Field>
+                                      <Field
+                                        readingField="taxable"
+                                        label={t(
+                                          "Invoice taxable",
+                                          "فاکتور مشمول مالیات",
+                                        )}
+                                      >
+                                        <select
+                                          value={String(line.taxable)}
+                                          onChange={(event) => {
+                                            const value =
+                                              event.target.value === "true";
+                                            editLine(index, (item, draft) => {
+                                              item.taxable = value;
+                                              item.taxable_inferred = false;
+                                              item.tax_profile =
+                                                draft.config.tax.profiles.find(
+                                                  (profile) =>
+                                                    new Decimal(
+                                                      profile.rate,
+                                                    ).gt(0) === value,
+                                                )?.key ?? item.tax_profile;
+                                              item.line_tax =
+                                                /^\d+(?:\.\d{1,2})?$/.test(
+                                                  item.line_total,
+                                                )
+                                                  ? new Decimal(item.line_total)
+                                                      .times(
+                                                        value
+                                                          ? draft.config.tax
+                                                              .rate
+                                                          : "0",
+                                                      )
+                                                      .toFixed(2)
+                                                  : "";
+                                            });
+                                          }}
+                                        >
+                                          <option value="true">
+                                            {t("Yes", "بله")}
+                                          </option>
+                                          <option value="false">
+                                            {t("No", "خیر")}
+                                          </option>
+                                        </select>
+                                      </Field>
+
+                                      <Field
+                                        readingField="quantity_unit"
+                                        label={t("Quantity unit", "واحد تعداد")}
+                                      >
+                                        <Select
+                                          value={line.quantity_unit ?? "units"}
                                           disabled={locked}
                                           onChange={(value) =>
                                             editLine(
                                               index,
-                                              (item) =>
+                                              (item) => {
+                                                const quantity =
+                                                  item.sold_by === "weight"
+                                                    ? value === "cases"
+                                                      ? item.case_weight
+                                                        ? new Decimal(
+                                                            weightQuantityFromLb(
+                                                              item.qty_invoiced,
+                                                              item.case_weight_unit ??
+                                                                "kg",
+                                                              item.weight_conversion_factor ??
+                                                                state.config,
+                                                            ),
+                                                          )
+                                                            .div(
+                                                              item.case_weight,
+                                                            )
+                                                            .toString()
+                                                        : "1"
+                                                      : weightQuantityFromLb(
+                                                          item.qty_invoiced,
+                                                          value as "kg" | "lb",
+                                                          item.weight_conversion_factor ??
+                                                            state.config,
+                                                        )
+                                                    : value === "cases"
+                                                      ? new Decimal(
+                                                          item.qty_invoiced,
+                                                        )
+                                                          .div(
+                                                            item.units_per_case ??
+                                                              1,
+                                                          )
+                                                          .toString()
+                                                      : String(
+                                                          item.qty_invoiced,
+                                                        );
                                                 setInvoiceLineQuantity(
                                                   item,
-                                                  item.quantity_entered ??
-                                                    item.qty_invoiced,
-                                                  item.quantity_unit ?? "units",
-                                                  Number(value),
-                                                ),
+                                                  quantity,
+                                                  value as "cases" | "units",
+                                                );
+                                              },
                                               true,
                                             )
                                           }
+                                          options={
+                                            line.sold_by === "weight"
+                                              ? [
+                                                  { value: "kg", label: "kg" },
+                                                  { value: "lb", label: "lb" },
+                                                  {
+                                                    value: "cases",
+                                                    label: t("Cases", "کارتن"),
+                                                  },
+                                                ]
+                                              : [
+                                                  {
+                                                    value: "units",
+                                                    label: t("Units", "واحد"),
+                                                  },
+                                                  {
+                                                    value: "cases",
+                                                    label: t("Cases", "کارتن"),
+                                                  },
+                                                ]
+                                          }
                                         />
                                       </Field>
-                                    )}
-                                    {line.sold_by !== "weight" &&
-                                      line.quantity_unit === "cases" && (
+                                      {line.sold_by === "weight" ? (
+                                        <>
+                                          <Field
+                                            label={t(
+                                              "Case weight",
+                                              "وزن کارتن",
+                                            )}
+                                          >
+                                            <NumberField
+                                              step="0.001"
+                                              min="0"
+                                              value={line.case_weight ?? ""}
+                                              onChange={(value) =>
+                                                editLine(
+                                                  index,
+                                                  (item) => {
+                                                    item.case_weight = value;
+                                                    if (
+                                                      item.quantity_unit ===
+                                                      "cases"
+                                                    )
+                                                      setInvoiceWeightQuantity(
+                                                        item,
+                                                        item.quantity_entered ??
+                                                          "1",
+                                                        "cases",
+                                                        state.config,
+                                                      );
+                                                  },
+                                                  true,
+                                                )
+                                              }
+                                            />
+                                          </Field>
+                                          <Field
+                                            label={t(
+                                              "Case weight unit",
+                                              "واحد وزن کارتن",
+                                            )}
+                                          >
+                                            <Select
+                                              value={
+                                                line.case_weight_unit ?? "kg"
+                                              }
+                                              options={[
+                                                { value: "kg", label: "kg" },
+                                                { value: "lb", label: "lb" },
+                                              ]}
+                                              onChange={(value) =>
+                                                editLine(
+                                                  index,
+                                                  (item) => {
+                                                    item.case_weight_unit =
+                                                      value as "kg" | "lb";
+                                                    if (
+                                                      item.quantity_unit ===
+                                                      "cases"
+                                                    )
+                                                      setInvoiceWeightQuantity(
+                                                        item,
+                                                        item.quantity_entered ??
+                                                          "1",
+                                                        "cases",
+                                                        state.config,
+                                                      );
+                                                  },
+                                                  true,
+                                                )
+                                              }
+                                            />
+                                          </Field>
+                                          <Field
+                                            label={t("Cost unit", "واحد هزینه")}
+                                          >
+                                            <Select
+                                              value={
+                                                line.source_cost_unit ?? "lb"
+                                              }
+                                              options={[
+                                                { value: "kg", label: "kg" },
+                                                { value: "lb", label: "lb" },
+                                              ]}
+                                              onChange={(value) =>
+                                                editLine(
+                                                  index,
+                                                  (item) =>
+                                                    setInvoiceWeightCost(
+                                                      item,
+                                                      item.source_cost_before_tax ??
+                                                        "0",
+                                                      value as "kg" | "lb",
+                                                      state.config,
+                                                    ),
+                                                  true,
+                                                )
+                                              }
+                                            />
+                                          </Field>
+                                        </>
+                                      ) : (
                                         <Field
+                                          readingField="units_per_case"
                                           label={t(
-                                            "Case cost before tax",
-                                            "هزینه کارتن پیش از مالیات",
+                                            "Units per case",
+                                            "واحد در هر کارتن",
                                           )}
                                         >
-                                          <input
+                                          <NumberField
                                             className="control-narrow"
-                                            dir="ltr"
-                                            inputMode="decimal"
+                                            min="1"
+                                            step="1"
+                                            value={line.units_per_case ?? 1}
                                             disabled={locked}
-                                            value={
-                                              line.case_cost_before_tax ?? ""
-                                            }
-                                            onChange={(event) => {
-                                              const inputValue =
-                                                event.currentTarget.value;
+                                            onChange={(value) =>
                                               editLine(
                                                 index,
-                                                (item) => {
-                                                  item.case_cost_before_tax =
-                                                    inputValue;
-                                                  try {
-                                                    item.unit_cost_before_tax =
-                                                      costPerUnit(
-                                                        inputValue,
-                                                        item.units_per_case ??
-                                                          1,
-                                                      );
-                                                  } catch {
-                                                    item.unit_cost_before_tax =
-                                                      "";
-                                                  }
-                                                },
+                                                (item) =>
+                                                  setInvoiceLineQuantity(
+                                                    item,
+                                                    item.quantity_entered ??
+                                                      item.qty_invoiced,
+                                                    item.quantity_unit ??
+                                                      "units",
+                                                    Number(value),
+                                                  ),
                                                 true,
-                                              );
-                                            }}
+                                              )
+                                            }
                                           />
                                         </Field>
                                       )}
-                                    <p className="invoice-pack-equation muted">
-                                      <LtrText>
-                                        {line.sold_by === "weight"
-                                          ? line.quantity_unit === "cases"
-                                            ? `${line.quantity_entered ?? ""} × ${line.case_weight ?? ""} ${line.case_weight_unit ?? "kg"} = ${line.source_quantity ?? ""} ${line.source_quantity_unit ?? ""}`
-                                            : `${line.source_quantity ?? ""} ${line.source_quantity_unit ?? ""}`
-                                          : line.quantity_unit === "cases"
-                                            ? `${line.quantity_entered ?? ""} × ${line.units_per_case ?? 1} = ${line.qty_invoiced}`
-                                            : line.qty_invoiced}
-                                      </LtrText>{" "}
                                       {line.sold_by !== "weight" &&
-                                        tCount(
-                                          "unit",
-                                          "units",
-                                          "واحد",
-                                          "واحد",
-                                          line.qty_invoiced,
+                                        line.quantity_unit === "cases" && (
+                                          <Field
+                                            label={t(
+                                              "Case cost before tax",
+                                              "هزینه کارتن پیش از مالیات",
+                                            )}
+                                          >
+                                            <input
+                                              className="control-narrow"
+                                              dir="ltr"
+                                              inputMode="decimal"
+                                              disabled={locked}
+                                              value={
+                                                line.case_cost_before_tax ?? ""
+                                              }
+                                              onChange={(event) => {
+                                                const inputValue =
+                                                  event.currentTarget.value;
+                                                editLine(
+                                                  index,
+                                                  (item) => {
+                                                    item.case_cost_before_tax =
+                                                      inputValue;
+                                                    try {
+                                                      item.unit_cost_before_tax =
+                                                        costPerUnit(
+                                                          inputValue,
+                                                          item.units_per_case ??
+                                                            1,
+                                                        );
+                                                    } catch {
+                                                      item.unit_cost_before_tax =
+                                                        "";
+                                                    }
+                                                  },
+                                                  true,
+                                                );
+                                              }}
+                                            />
+                                          </Field>
                                         )}
-                                    </p>
-                                    <Field
-                                      error={issue(
-                                        `invoice-line-${index}-matching`,
-                                      )}
-                                      label={t(
-                                        "Matched product",
-                                        "کالای تطبیق‌یافته",
-                                      )}
-                                    >
-                                      <Select
-                                        id={`invoice-line-${index}-matching`}
-                                        value={line.product_code}
-                                        onChange={(value) =>
-                                          editLine(
-                                            index,
-                                            (item, draft) => {
-                                              item.product_code = value;
-                                              const chosen =
-                                                draft.products.find(
-                                                  (entry) =>
-                                                    entry.code === value &&
-                                                    entry.company_id ===
-                                                      draft.invoice
-                                                        .company_id &&
-                                                    entry.status !== "archived",
-                                                );
-                                              if (value !== "NEW" && !chosen)
-                                                throw new Error(
-                                                  "Choose a product.",
-                                                );
-                                              if (chosen) {
-                                                item.pricing_category =
-                                                  chosen.pricing_category;
-                                                item.taxable = chosen.taxable;
-                                                item.tax_profile =
-                                                  chosen.tax_profile;
-                                              }
-                                              item.sold_by =
-                                                chosen?.sold_by ?? "each";
-                                              if (item.sold_by === "weight")
-                                                initializeInvoiceWeight(
-                                                  item,
-                                                  draft.config,
-                                                );
-                                              else {
-                                                item.quantity_unit = "units";
-                                                item.quantity_entered =
-                                                  item.qty_invoiced;
-                                              }
-                                              const preference =
-                                                trackingChoiceForProduct(
-                                                  chosen,
-                                                );
-                                              item.date_tracking =
-                                                preference === "yes";
-                                              item.date_confirmed =
-                                                preference !== undefined;
-                                            },
-                                            true,
-                                          )
-                                        }
-
-                                        disabled={locked}
-                                        options={[
-                                          {
-                                            value: "NEW",
-                                            label: t(
-                                              "Create pending new product",
-                                              "ایجاد کالای جدید در انتظار",
-                                            ),
-                                          },
-                                          ...state.products
-                                            .filter(
-                                              (item) =>
-                                                item.company_id ===
-                                                  invoice.company_id &&
-                                                item.status !== "archived",
+                                      <p className="invoice-pack-equation muted">
+                                        <LtrText>
+                                          {line.sold_by === "weight"
+                                            ? line.quantity_unit === "cases"
+                                              ? `${line.quantity_entered ?? ""} × ${line.case_weight ?? ""} ${line.case_weight_unit ?? "kg"} = ${line.source_quantity ?? ""} ${line.source_quantity_unit ?? ""}`
+                                              : `${line.source_quantity ?? ""} ${line.source_quantity_unit ?? ""}`
+                                            : line.quantity_unit === "cases"
+                                              ? `${line.quantity_entered ?? ""} × ${line.units_per_case ?? 1} = ${line.qty_invoiced}`
+                                              : line.qty_invoiced}
+                                        </LtrText>{" "}
+                                        {line.sold_by !== "weight" &&
+                                          tCount(
+                                            "unit",
+                                            "units",
+                                            "واحد",
+                                            "واحد",
+                                            line.qty_invoiced,
+                                          )}
+                                      </p>
+                                      <Field
+                                        error={issue(
+                                          `invoice-line-${index}-matching`,
+                                        )}
+                                        label={t(
+                                          "Matched product",
+                                          "کالای تطبیق‌یافته",
+                                        )}
+                                      >
+                                        <Select
+                                          id={`invoice-line-${index}-matching`}
+                                          value={line.product_code}
+                                          onChange={(value) =>
+                                            editLine(
+                                              index,
+                                              (item, draft) => {
+                                                item.product_code = value;
+                                                const chosen =
+                                                  draft.products.find(
+                                                    (entry) =>
+                                                      entry.code === value &&
+                                                      entry.company_id ===
+                                                        draft.invoice
+                                                          .company_id &&
+                                                      entry.status !==
+                                                        "archived",
+                                                  );
+                                                if (value !== "NEW" && !chosen)
+                                                  throw new Error(
+                                                    "Choose a product.",
+                                                  );
+                                                if (chosen) {
+                                                  item.pricing_category =
+                                                    chosen.pricing_category;
+                                                  item.taxable = chosen.taxable;
+                                                  item.tax_profile =
+                                                    chosen.tax_profile;
+                                                }
+                                                item.sold_by =
+                                                  chosen?.sold_by ?? "each";
+                                                if (item.sold_by === "weight")
+                                                  initializeInvoiceWeight(
+                                                    item,
+                                                    draft.config,
+                                                  );
+                                                else {
+                                                  item.quantity_unit = "units";
+                                                  item.quantity_entered =
+                                                    item.qty_invoiced;
+                                                }
+                                                const preference =
+                                                  trackingChoiceForProduct(
+                                                    chosen,
+                                                  );
+                                                item.date_tracking =
+                                                  preference === "yes";
+                                                item.date_confirmed =
+                                                  preference !== undefined;
+                                              },
+                                              true,
                                             )
-                                            .map((item) =>
-                                              invoiceProductOption(item, lang),
+                                          }
+
+                                          disabled={locked}
+                                          options={[
+                                            {
+                                              value: "NEW",
+                                              label: t(
+                                                "Create pending new product",
+                                                "ایجاد کالای جدید در انتظار",
+                                              ),
+                                            },
+                                            ...state.products
+                                              .filter(
+                                                (item) =>
+                                                  item.company_id ===
+                                                    invoice.company_id &&
+                                                  item.status !== "archived",
+                                              )
+                                              .map((item) =>
+                                                invoiceProductOption(
+                                                  item,
+                                                  lang,
+                                                ),
+                                              ),
+                                          ]}
+                                        />
+                                      </Field>
+                                      <Field
+                                        label={t(
+                                          "Pricing category",
+                                          "دسته قیمت‌گذاری",
+                                        )}
+                                      >
+                                        <Select
+                                          id={`invoice-line-${index}-category`}
+                                          value={category?.key ?? ""}
+                                          onChange={(value) =>
+                                            editLine(index, (item, draft) =>
+                                              setInvoiceLineCategory(
+                                                item,
+                                                value,
+                                                draft.config,
+                                              ),
+                                            )
+                                          }
+
+                                          disabled={locked}
+                                          options={[
+                                            {
+                                              value: "",
+                                              label: t(
+                                                "Choose pricing category",
+                                                "انتخاب دسته قیمت‌گذاری",
+                                              ),
+                                            },
+                                            ...state.config.pricing_categories.map(
+                                              (item) => ({
+                                                value: item.key,
+                                                label: categoryText(
+                                                  item.key,
+                                                  item.label,
+                                                  t,
+                                                ),
+                                              }),
                                             ),
-                                        ]}
-                                      />
-                                    </Field>
-                                    <Field
-                                      label={t(
-                                        "Pricing category",
-                                        "دسته قیمت‌گذاری",
+                                          ]}
+                                        />
+                                      </Field>
+                                      <Field
+                                        label={t(
+                                          "Supplier item code (optional)",
+                                          "کد کالای تأمین‌کننده (اختیاری)",
+                                        )}
+                                      >
+                                        <input
+                                          className="control-narrow"
+                                          dir="ltr"
+                                          disabled={locked}
+                                          id={`invoice-line-${index}-supplier-code`}
+                                          value={line.supplier_item_code ?? ""}
+                                          onChange={(event) => {
+                                            const inputValue =
+                                              event.currentTarget.value;
+                                            editLine(
+                                              index,
+                                              (item, draft, currentActor) => {
+                                                item.supplier_item_code =
+                                                  inputValue;
+                                                item.supplier_item_id =
+                                                  resolveSupplierItem(
+                                                    draft,
+                                                    currentActor,
+                                                    draft.invoice.supplier,
+                                                    draft.invoice.branch,
+                                                    {
+                                                      product_code:
+                                                        item.product_code,
+                                                      supplier_item_code:
+                                                        inputValue,
+                                                    },
+                                                  )?.id;
+                                              },
+                                            );
+                                          }}
+                                        />
+                                      </Field>
+                                      {line.product_code === "NEW" && (
+                                        <>
+                                          <Field
+                                            label={t(
+                                              "New product name (English)",
+                                              "نام کالای جدید (انگلیسی)",
+                                            )}
+                                          >
+                                            <input
+                                              value={line.new_name_en ?? ""}
+                                              onChange={(event) => {
+                                                const inputValue =
+                                                  event.currentTarget.value;
+                                                editLine(index, (item) => {
+                                                  item.new_name_en = inputValue;
+                                                });
+                                              }}
+                                            />
+                                          </Field>
+                                          <Field
+                                            label={t(
+                                              "New product name (Persian) (optional)",
+                                              "نام کالای جدید (فارسی) (اختیاری)",
+                                            )}
+                                          >
+                                            <input
+                                              dir="rtl"
+                                              value={line.new_name_fa ?? ""}
+                                              onChange={(event) => {
+                                                const inputValue =
+                                                  event.currentTarget.value;
+                                                editLine(index, (item) => {
+                                                  item.new_name_fa = inputValue;
+                                                });
+                                              }}
+                                            />
+                                          </Field>
+                                        </>
                                       )}
-                                    >
-                                      <Select
-                                        value={category.key}
-                                        onChange={(value) =>
+                                    </fieldset>
+                                    {!locked && (
+                                      <Checkbox
+                                        checked={short.quantity > 0}
+                                        onChange={(checked) =>
                                           editLine(index, (item) => {
-                                            item.pricing_category = value;
-                                            item.date_confirmed = false;
+                                            if (item.sold_by === "weight") {
+                                              setInvoiceWeightReceived(
+                                                item,
+                                                checked
+                                                  ? Decimal.max(
+                                                      0,
+                                                      new Decimal(
+                                                        item.source_quantity ??
+                                                          "0",
+                                                      ).minus(
+                                                        Decimal.min(
+                                                          4,
+                                                          item.source_quantity ??
+                                                            "0",
+                                                        ),
+                                                      ),
+                                                    ).toString()
+                                                  : (item.source_quantity ??
+                                                      "0"),
+                                                state.config,
+                                              );
+                                              return;
+                                            }
+                                            item.qty_received_at_posting =
+                                              checked
+                                                ? Math.max(
+                                                    0,
+                                                    item.qty_invoiced -
+                                                      Math.min(
+                                                        4,
+                                                        item.qty_invoiced,
+                                                      ),
+                                                  )
+                                                : item.qty_invoiced;
                                           })
                                         }
 
                                         disabled={locked}
-                                        options={state.config.pricing_categories.map(
-                                          (item) => ({
-                                            value: item.key,
-                                            label: categoryText(
-                                              item.key,
-                                              item.label,
-                                              t,
-                                            ),
-                                          }),
-                                        )}
-                                      />
-                                    </Field>
-                                    <Field
-                                      label={t(
-                                        "Supplier item code (optional)",
-                                        "کد کالای تأمین‌کننده (اختیاری)",
-                                      )}
-                                    >
-                                      <input
-                                        className="control-narrow"
-                                        dir="ltr"
-                                        disabled={locked}
-                                        value={line.supplier_item_code ?? ""}
-                                        onChange={(event) => {
-                                          const inputValue =
-                                            event.currentTarget.value;
-                                          editLine(
-                                            index,
-                                            (item, draft, currentActor) => {
-                                              item.supplier_item_code =
-                                                inputValue;
-                                              item.supplier_item_id =
-                                                resolveSupplierItem(
-                                                  draft,
-                                                  currentActor,
-                                                  draft.invoice.supplier,
-                                                  draft.invoice.branch,
-                                                  {
-                                                    product_code:
-                                                      item.product_code,
-                                                    supplier_item_code:
-                                                      inputValue,
-                                                  },
-                                                )?.id;
-                                            },
-                                          );
-                                        }}
-                                      />
-                                    </Field>
-                                    {line.product_code === "NEW" && (
-                                      <>
-                                        <Field
-                                          label={t(
-                                            "New product name (English)",
-                                            "نام کالای جدید (انگلیسی)",
-                                          )}
-                                        >
-                                          <input
-                                            value={line.new_name_en ?? ""}
-                                            onChange={(event) => {
-                                              const inputValue =
-                                                event.currentTarget.value;
-                                              editLine(index, (item) => {
-                                                item.new_name_en = inputValue;
-                                              });
-                                            }}
-                                          />
-                                        </Field>
-                                        <Field
-                                          label={t(
-                                            "New product name (Persian) (optional)",
-                                            "نام کالای جدید (فارسی) (اختیاری)",
-                                          )}
-                                        >
-                                          <input
-                                            dir="rtl"
-                                            value={line.new_name_fa ?? ""}
-                                            onChange={(event) => {
-                                              const inputValue =
-                                                event.currentTarget.value;
-                                              editLine(index, (item) => {
-                                                item.new_name_fa = inputValue;
-                                              });
-                                            }}
-                                          />
-                                        </Field>
-                                      </>
-                                    )}
-                                  </fieldset>
-                                  {!locked && (
-                                    <Checkbox
-                                      checked={short.quantity > 0}
-                                      onChange={(checked) =>
-                                        editLine(index, (item) => {
-                                          if (item.sold_by === "weight") {
-                                            setInvoiceWeightReceived(
-                                              item,
-                                              checked
-                                                ? Decimal.max(
-                                                    0,
-                                                    new Decimal(
-                                                      item.source_quantity ??
-                                                        "0",
-                                                    ).minus(
-                                                      Decimal.min(
-                                                        4,
-                                                        item.source_quantity ??
-                                                          "0",
-                                                      ),
-                                                    ),
-                                                  ).toString()
-                                                : (item.source_quantity ?? "0"),
-                                              state.config,
-                                            );
-                                            return;
-                                          }
-                                          item.qty_received_at_posting = checked
-                                            ? Math.max(
-                                                0,
-                                                item.qty_invoiced -
-                                                  Math.min(
-                                                    4,
-                                                    item.qty_invoiced,
-                                                  ),
-                                              )
-                                            : item.qty_invoiced;
-                                        })
-                                      }
-
-                                      disabled={locked}
-                                    >
-                                      {t("Mark as short", "ثبت کسری")}
-                                    </Checkbox>
-                                  )}
-                                  {short.quantity > 0 && (
-                                    <p className="banner danger">
-                                      {t("Missing units:", "واحدهای کمبود:")}{" "}
-                                      {short.quantity} ·{" "}
-                                      {t("Deduction:", "کسر مبلغ:")}{" "}
-                                      <Money
-                                        value={short.total}
-                                        currency={state.config.company.currency}
-                                      />{" "}
-                                      <LtrText>
-                                        (
-                                        <Money
-                                          value={short.beforeTax}
-                                          currency={
-                                            state.config.company.currency
-                                          }
-                                        />{" "}
-                                        +{" "}
-                                        <Money
-                                          value={short.tax}
-                                          currency={
-                                            state.config.company.currency
-                                          }
-                                        />{" "}
-                                        )
-                                      </LtrText>{" "}
-                                      {t("tax", "مالیات")}
-                                    </p>
-                                  )}
-                                  {(() => {
-                                    const previous =
-                                      workspace.lineDetails[index]?.previous;
-                                    const lower =
-                                      previous &&
-                                      /^\d+(?:\.\d{1,4})?$/.test(
-                                        line.unit_cost_before_tax,
-                                      ) &&
-                                      new Decimal(line.unit_cost_before_tax).lt(
-                                        previous.cost,
-                                      );
-                                    return lower &&
-                                      acceptedInvoiceUnits(line) > 0 ? (
-                                      <Field
-                                        label={t(
-                                          "Lower-cost receipt",
-                                          "دریافت با هزینه کمتر",
-                                        )}
                                       >
-                                        <SegmentedControl
-                                          aria-label={t(
+                                        {t("Mark as short", "ثبت کسری")}
+                                      </Checkbox>
+                                    )}
+                                    {short.quantity > 0 && (
+                                      <p className="banner danger">
+                                        {t("Missing units:", "واحدهای کمبود:")}{" "}
+                                        {short.quantity} ·{" "}
+                                        {t("Deduction:", "کسر مبلغ:")}{" "}
+                                        <ReadingMoney
+                                          value={short.total}
+                                          currency={
+                                            state.config.company.currency
+                                          }
+                                        />{" "}
+                                        <LtrText>
+                                          (
+                                          <ReadingMoney
+                                            value={short.beforeTax}
+                                            currency={
+                                              state.config.company.currency
+                                            }
+                                          />{" "}
+                                          +{" "}
+                                          <ReadingMoney
+                                            value={short.tax}
+                                            currency={
+                                              state.config.company.currency
+                                            }
+                                          />{" "}
+                                          )
+                                        </LtrText>{" "}
+                                        {t("tax", "مالیات")}
+                                      </p>
+                                    )}
+                                    {(() => {
+                                      const previous =
+                                        workspace.lineDetails[index]?.previous;
+                                      const lower =
+                                        previous &&
+                                        /^\d+(?:\.\d{1,4})?$/.test(
+                                          line.unit_cost_before_tax,
+                                        ) &&
+                                        new Decimal(
+                                          line.unit_cost_before_tax,
+                                        ).lt(previous.cost);
+                                      return lower &&
+                                        acceptedInvoiceUnits(line) > 0 ? (
+                                        <Field
+                                          label={t(
                                             "Lower-cost receipt",
                                             "دریافت با هزینه کمتر",
                                           )}
-                                          value={
-                                            line.short_dated
-                                              ? "short_dated"
-                                              : "regular"
+                                        >
+                                          <SegmentedControl
+                                            aria-label={t(
+                                              "Lower-cost receipt",
+                                              "دریافت با هزینه کمتر",
+                                            )}
+                                            value={
+                                              line.short_dated
+                                                ? "short_dated"
+                                                : "regular"
+                                            }
+                                            onChange={(value) =>
+                                              editLine(index, (item) => {
+                                                item.short_dated =
+                                                  value === "short_dated";
+                                                if (item.short_dated) {
+                                                  item.date_tracking = true;
+                                                  item.date_confirmed = true;
+                                                  item.date_type = "expiry";
+                                                  item.order_price_decision =
+                                                    "short_dated";
+                                                } else {
+                                                  item.order_price_decision =
+                                                    undefined;
+                                                }
+                                              })
+                                            }
+                                            options={[
+                                              {
+                                                value: "regular",
+                                                label: t(
+                                                  "Regular receipt",
+                                                  "دریافت عادی",
+                                                ),
+                                                disabled: locked,
+                                              },
+                                              {
+                                                value: "short_dated",
+                                                label: t(
+                                                  "Short-dated (expiry discount)",
+                                                  "نزدیک انقضا (تخفیف انقضا)",
+                                                ),
+                                                disabled: locked,
+                                              },
+                                            ]}
+                                          />
+                                        </Field>
+                                      ) : null;
+                                    })()}
+                                    {refusedLine.quantity > 0 && (
+                                      <p className="banner info">
+                                        {t(
+                                          "Refused / sent back with the driver",
+                                          "رد شد / با راننده برگشت",
+                                        )}{" "}
+                                        · {t("Deduction:", "کسر مبلغ:")}{" "}
+                                        <ReadingMoney
+                                          value={refusedLine.total}
+                                          currency={
+                                            state.config.company.currency
                                           }
-                                          onChange={(value) =>
-                                            editLine(index, (item) => {
-                                              item.short_dated =
-                                                value === "short_dated";
-                                              if (item.short_dated) {
-                                                item.date_tracking = true;
-                                                item.date_confirmed = true;
-                                                item.date_type = "expiry";
-                                                item.order_price_decision =
-                                                  "short_dated";
-                                              } else {
-                                                item.order_price_decision =
-                                                  undefined;
-                                              }
-                                            })
-                                          }
-                                          options={[
-                                            {
-                                              value: "regular",
-                                              label: t(
-                                                "Regular receipt",
-                                                "دریافت عادی",
-                                              ),
-                                              disabled: locked,
-                                            },
-                                            {
-                                              value: "short_dated",
-                                              label: t(
-                                                "Short-dated (expiry discount)",
-                                                "نزدیک انقضا (تخفیف انقضا)",
-                                              ),
-                                              disabled: locked,
-                                            },
-                                          ]}
                                         />
-                                      </Field>
-                                    ) : null;
-                                  })()}
-                                  {refusedLine.quantity > 0 && (
-                                    <p className="banner info">
-                                      {t(
-                                        "Refused / sent back with the driver",
-                                        "رد شد / با راننده برگشت",
-                                      )}{" "}
-                                      · {t("Deduction:", "کسر مبلغ:")}{" "}
-                                      <Money
-                                        value={refusedLine.total}
-                                        currency={state.config.company.currency}
-                                      />
-                                    </p>
-                                  )}
-                                  {
-                                    <fieldset
-                                      disabled={locked}
-                                      className="date-review"
-                                    >
-                                      <div
-                                        className="invoice-date-choice"
-                                        id={`invoice-line-${index}-track`}
+                                      </p>
+                                    )}
+                                    {
+                                      <fieldset
+                                        disabled={locked}
+                                        className="date-review"
                                       >
-                                        <span className="field-label">
-                                          {t("Track date", "پیگیری تاریخ")}
-                                        </span>
-                                        <SegmentedControl
-                                          aria-label={t(
-                                            "Track date",
-                                            "پیگیری تاریخ",
-                                          )}
-                                          value={
-                                            line.date_confirmed
-                                              ? line.date_tracking
-                                                ? "yes"
-                                                : "no"
-                                              : ""
-                                          }
-                                          onChange={(value) =>
-                                            editLine(index, (item) => {
-                                              item.date_tracking =
-                                                value === "yes";
-                                              item.date_confirmed = true;
-                                            })
-                                          }
-                                          options={[
-                                            {
-                                              value: "yes",
-                                              label: t("Yes", "بله"),
-                                              disabled: locked,
-                                            },
-                                            {
-                                              value: "no",
-                                              label: t("No", "خیر"),
-                                              disabled:
-                                                locked || !!line.short_dated,
-                                            },
-                                          ]}
-                                        />
-                                      </div>
-                                      <FieldError>
-                                        {issue(`invoice-line-${index}-track`)}
-                                      </FieldError>
-                                      {line.date_tracking && (
-                                        <div className="form-grid invoice-details-form">
-                                          <Field
-                                            label={t(
-                                              "Date tracking",
+                                        <div
+                                          className="invoice-date-choice"
+                                          id={`invoice-line-${index}-track`}
+                                        >
+                                          <span className="field-label">
+                                            {t("Track date", "پیگیری تاریخ")}
+                                          </span>
+                                          <SegmentedControl
+                                            aria-label={t(
+                                              "Track date",
                                               "پیگیری تاریخ",
                                             )}
+                                            value={
+                                              line.date_confirmed
+                                                ? line.date_tracking
+                                                  ? "yes"
+                                                  : "no"
+                                                : ""
+                                            }
+                                            onChange={(value) =>
+                                              editLine(index, (item) => {
+                                                item.date_tracking =
+                                                  value === "yes";
+                                                item.date_confirmed = true;
+                                              })
+                                            }
+                                            options={[
+                                              {
+                                                value: "yes",
+                                                label: t("Yes", "بله"),
+                                                disabled: locked,
+                                              },
+                                              {
+                                                value: "no",
+                                                label: t("No", "خیر"),
+                                                disabled:
+                                                  locked || !!line.short_dated,
+                                              },
+                                            ]}
+                                          />
+                                        </div>
+                                        <FieldError>
+                                          {issue(`invoice-line-${index}-track`)}
+                                        </FieldError>
+                                        {line.date_tracking && (
+                                          <div className="form-grid invoice-details-form">
+                                            <Field
+                                              label={t(
+                                                "Date tracking",
+                                                "پیگیری تاریخ",
+                                              )}
+                                            >
+                                              <Select
+                                                value={
+                                                  line.date_type ?? "expiry"
+                                                }
+                                                onChange={(value) =>
+                                                  editLine(index, (item) => {
+                                                    item.date_type = value as
+                                                      "expiry" | "best_before";
+                                                  })
+                                                }
+
+                                                disabled={
+                                                  locked || !!line.short_dated
+                                                }
+                                                options={[
+                                                  {
+                                                    value: "expiry",
+                                                    label: t("Expiry", "انقضا"),
+                                                  },
+                                                  {
+                                                    value: "best_before",
+                                                    label: t(
+                                                      "Best before",
+                                                      "بهترین زمان مصرف",
+                                                    ),
+                                                  },
+                                                ]}
+                                              />
+                                            </Field>
+                                            <Field
+                                              label={t("Date", "تاریخ")}
+                                              error={issue(
+                                                `invoice-line-${index}-date`,
+                                              )}
+                                            >
+                                              <DateField
+                                                dir="ltr"
+                                                id={`invoice-line-${index}-date`}
+                                                value={line.date_value ?? ""}
+                                                min="1900-01-01"
+                                                onChange={(value) =>
+                                                  editLine(index, (item) => {
+                                                    item.date_value = value;
+                                                    item.date_confirmed = true;
+                                                  })
+                                                }
+                                              />
+                                            </Field>
+                                            <Field
+                                              label={t(
+                                                "Lot number (optional)",
+                                                "شماره بچ (اختیاری)",
+                                              )}
+                                            >
+                                              <input
+                                                dir="ltr"
+                                                value={line.lot_number ?? ""}
+                                                onChange={(event) => {
+                                                  const inputValue =
+                                                    event.currentTarget.value;
+                                                  editLine(index, (item) => {
+                                                    item.lot_number =
+                                                      inputValue;
+                                                  });
+                                                }}
+                                              />
+                                            </Field>
+                                          </div>
+                                        )}
+                                        {dateSuggestions.length > 0 && (
+                                          <div className="invoice-date-suggestions">
+                                            {dateSuggestions.map((entry) => (
+                                              <div
+                                                key={entry.id}
+                                                className="invoice-date-suggestion"
+                                              >
+                                                <span>
+                                                  {configuredBranchLabel(
+                                                    state.config,
+                                                    entry.branch,
+                                                    lang,
+                                                  )}{" "}
+                                                  ·{" "}
+                                                  {entry.entered_date ===
+                                                  companyDate(state.config) ? (
+                                                    t("Today", "امروز")
+                                                  ) : (
+                                                    <DateText
+                                                      value={entry.entered_date}
+                                                    />
+                                                  )}{" "}
+                                                  ·{" "}
+                                                  {entry.date_type ===
+                                                  "best_before"
+                                                    ? t(
+                                                        "Best before",
+                                                        "بهترین زمان مصرف",
+                                                      )
+                                                    : t(
+                                                        "Expires",
+                                                        "انقضا",
+                                                      )}{" "}
+                                                  <DateText
+                                                    value={entry.date}
+                                                  />
+                                                </span>
+                                                <Button
+                                                  variant="plain"
+                                                  size="sm"
+                                                  onClick={() =>
+                                                    editLine(index, (item) => {
+                                                      item.date_type =
+                                                        entry.date_type;
+                                                      item.date_value =
+                                                        entry.date;
+                                                      item.lot_number =
+                                                        entry.lot_number;
+                                                      item.date_confirmed = true;
+                                                    })
+                                                  }
+                                                >
+                                                  {t(
+                                                    "Use this date",
+                                                    "استفاده از این تاریخ",
+                                                  )}
+                                                </Button>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </fieldset>
+                                    }
+                                    {manualReplacement &&
+                                      !locked &&
+                                      !line.short_dated &&
+                                      acceptedInvoiceUnits(line) > 0 && (
+                                        <div
+                                          className="invoice-manual-choice"
+                                          id={`invoice-line-${index}-manual`}
+                                        >
+                                          <Field
+                                            label={t(
+                                              "Manual price",
+                                              "قیمت دستی",
+                                            )}
+                                            error={issue(
+                                              `invoice-line-${index}-manual`,
+                                            )}
                                           >
-                                            <Select
-                                              value={line.date_type ?? "expiry"}
+                                            <SegmentedControl
+                                              aria-label={t(
+                                                "Manual price decision",
+                                                "تصمیم قیمت دستی",
+                                              )}
+                                              value={
+                                                line.manual_price_decision ?? ""
+                                              }
                                               onChange={(value) =>
                                                 editLine(index, (item) => {
-                                                  item.date_type = value as
-                                                    "expiry" | "best_before";
+                                                  item.manual_price_decision =
+                                                    value as "keep" | "rule";
                                                 })
-                                              }
-
-                                              disabled={
-                                                locked || !!line.short_dated
                                               }
                                               options={[
                                                 {
-                                                  value: "expiry",
-                                                  label: t("Expiry", "انقضا"),
+                                                  value: "keep",
+                                                  label: t(
+                                                    `Keep ${money(manualReplacement.price)}`,
+                                                    `حفظ \u2066${money(manualReplacement.price)}\u2069`,
+                                                  ),
                                                 },
                                                 {
-                                                  value: "best_before",
+                                                  value: "rule",
                                                   label: t(
-                                                    "Best before",
-                                                    "بهترین زمان مصرف",
+                                                    `Use the new calculated price${price ? ` ${money(price)}` : ""}`,
+                                                    `استفاده از قیمت محاسبه‌شده جدید${price ? ` \u2066${money(price)}\u2069` : ""}`,
                                                   ),
                                                 },
                                               ]}
                                             />
                                           </Field>
-                                          <Field
-                                            label={t("Date", "تاریخ")}
-                                            error={issue(
-                                              `invoice-line-${index}-date`,
-                                            )}
-                                          >
-                                            <DateField
-                                              dir="ltr"
-                                              id={`invoice-line-${index}-date`}
-                                              value={line.date_value ?? ""}
-                                              min="1900-01-01"
-                                              onChange={(value) =>
-                                                editLine(index, (item) => {
-                                                  item.date_value = value;
-                                                  item.date_confirmed = true;
-                                                })
-                                              }
-                                            />
-                                          </Field>
-                                          <Field
-                                            label={t(
-                                              "Lot number (optional)",
-                                              "شماره بچ (اختیاری)",
-                                            )}
-                                          >
-                                            <input
-                                              dir="ltr"
-                                              value={line.lot_number ?? ""}
-                                              onChange={(event) => {
-                                                const inputValue =
-                                                  event.currentTarget.value;
-                                                editLine(index, (item) => {
-                                                  item.lot_number = inputValue;
-                                                });
-                                              }}
-                                            />
-                                          </Field>
                                         </div>
                                       )}
-                                      {dateSuggestions.length > 0 && (
-                                        <div className="invoice-date-suggestions">
-                                          {dateSuggestions.map((entry) => (
-                                            <div
-                                              key={entry.id}
-                                              className="invoice-date-suggestion"
-                                            >
-                                              <span>
-                                                {configuredBranchLabel(
-                                                  state.config,
-                                                  entry.branch,
-                                                  lang,
-                                                )}{" "}
-                                                ·{" "}
-                                                {entry.entered_date ===
-                                                companyDate(state.config) ? (
-                                                  t("Today", "امروز")
-                                                ) : (
-                                                  <DateText
-                                                    value={entry.entered_date}
-                                                  />
-                                                )}{" "}
-                                                ·{" "}
-                                                {entry.date_type ===
-                                                "best_before"
-                                                  ? t(
-                                                      "Best before",
-                                                      "بهترین زمان مصرف",
-                                                    )
-                                                  : t("Expires", "انقضا")}{" "}
-                                                <DateText value={entry.date} />
-                                              </span>
-                                              <Button
-                                                variant="plain"
-                                                size="sm"
-                                                onClick={() =>
-                                                  editLine(index, (item) => {
-                                                    item.date_type =
-                                                      entry.date_type;
-                                                    item.date_value =
-                                                      entry.date;
-                                                    item.lot_number =
-                                                      entry.lot_number;
-                                                    item.date_confirmed = true;
-                                                  })
-                                                }
-                                              >
-                                                {t(
-                                                  "Use this date",
-                                                  "استفاده از این تاریخ",
-                                                )}
-                                              </Button>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </fieldset>
-                                  }
-                                  {manualReplacement &&
-                                    !locked &&
-                                    !line.short_dated &&
-                                    acceptedInvoiceUnits(line) > 0 && (
-                                      <div
-                                        className="invoice-manual-choice"
-                                        id={`invoice-line-${index}-manual`}
-                                      >
-                                        <Field
-                                          label={t("Manual price", "قیمت دستی")}
-                                          error={issue(
-                                            `invoice-line-${index}-manual`,
-                                          )}
+                                    <div className="invoice-line-actions">
+                                      {!locked && (
+                                        <Button
+                                          variant="destructive"
+                                          className="invoice-remove-line"
+                                          size="sm"
+                                          onClick={() => {
+                                            updateInvoice(
+                                              (draft, currentActor) =>
+                                                removeInvoiceLine(
+                                                  draft,
+                                                  currentActor,
+                                                  index,
+                                                ),
+                                            );
+                                            setOpenLines({});
+                                          }}
                                         >
-                                          <SegmentedControl
-                                            aria-label={t(
-                                              "Manual price decision",
-                                              "تصمیم قیمت دستی",
-                                            )}
-                                            value={
-                                              line.manual_price_decision ?? ""
-                                            }
-                                            onChange={(value) =>
-                                              editLine(index, (item) => {
-                                                item.manual_price_decision =
-                                                  value as "keep" | "rule";
-                                              })
-                                            }
-                                            options={[
-                                              {
-                                                value: "keep",
-                                                label: t(
-                                                  `Keep ${money(manualReplacement.price)}`,
-                                                  `حفظ \u2066${money(manualReplacement.price)}\u2069`,
-                                                ),
-                                              },
-                                              {
-                                                value: "rule",
-                                                label: t(
-                                                  `Use the new calculated price${price ? ` ${money(price)}` : ""}`,
-                                                  `استفاده از قیمت محاسبه‌شده جدید${price ? ` \u2066${money(price)}\u2069` : ""}`,
-                                                ),
-                                              },
-                                            ]}
-                                          />
-                                        </Field>
-                                      </div>
-                                    )}
-                                  <div className="invoice-line-actions">
-                                    {!locked && (
-                                      <Button
-                                        variant="destructive"
-                                        className="invoice-remove-line"
-                                        size="sm"
-                                        onClick={() => {
-                                          updateInvoice((draft, currentActor) =>
-                                            removeInvoiceLine(
-                                              draft,
-                                              currentActor,
-                                              index,
-                                            ),
+                                          {t("Remove line", "حذف ردیف")}
+                                        </Button>
+                                      )}
+                                      <Checkbox
+                                        className="invoice-line-confirm"
+                                        id={`invoice-line-${index}-confirm`}
+                                        disabled={
+                                          locked ||
+                                          (!!manualReplacement &&
+                                            acceptedInvoiceUnits(line) > 0 &&
+                                            !line.short_dated &&
+                                            !line.manual_price_decision)
+                                        }
+                                        checked={line.review_confirmed ?? false}
+                                        onChange={(checked) => {
+                                          if (
+                                            checked &&
+                                            line.low_confidence_fields?.length
+                                          ) {
+                                            setConfirmChecksLine(index);
+                                            return;
+                                          }
+                                          updateInvoice(
+                                            (draft, currentActor) => {
+                                              if (checked)
+                                                confirmInvoiceLineChecks(
+                                                  draft,
+                                                  currentActor,
+                                                  index,
+                                                );
+                                              else
+                                                draft.invoice.lines[
+                                                  index
+                                                ].review_confirmed = false;
+                                            },
                                           );
-                                          setOpenLines({});
+                                          if (checked)
+                                            setOpenLines((current) => ({
+                                              ...current,
+                                              [lineKey]: false,
+                                            }));
                                         }}
                                       >
-                                        {t("Remove line", "حذف ردیف")}
-                                      </Button>
-                                    )}
-                                    <Checkbox
-                                      className="invoice-line-confirm"
-                                      id={`invoice-line-${index}-confirm`}
-                                      disabled={
-                                        locked ||
-                                        (!!manualReplacement &&
-                                          acceptedInvoiceUnits(line) > 0 &&
-                                          !line.short_dated &&
-                                          !line.manual_price_decision)
-                                      }
-                                      checked={line.review_confirmed ?? false}
-                                      onChange={(checked) => {
-                                        updateInvoice((draft) => {
-                                          draft.invoice.lines[
-                                            index
-                                          ].review_confirmed = checked;
-                                        });
-                                        if (checked)
-                                          setOpenLines((current) => ({
-                                            ...current,
-                                            [lineKey]: false,
-                                          }));
-                                      }}
-                                    >
-                                      {t(
-                                        "Confirm this invoice line",
-                                        "تأیید این ردیف فاکتور",
-                                      )}
-                                    </Checkbox>
+                                        {t(
+                                          "Confirm this invoice line",
+                                          "تأیید این ردیف فاکتور",
+                                        )}
+                                      </Checkbox>
+                                    </div>
+                                    <FieldError>
+                                      {issue(`invoice-line-${index}-confirm`)}
+                                    </FieldError>
                                   </div>
-                                  <FieldError>
-                                    {issue(`invoice-line-${index}-confirm`)}
-                                  </FieldError>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </ReadingCheckProvider>
                       );
                     })}
                   </DataTable>
+                  <InvoiceOtherCharges
+                    invoice={invoice}
+                    onAcknowledge={
+                      locked
+                        ? undefined
+                        : (index, field) => {
+                            updateInvoice((draft) => {
+                              const charge =
+                                draft.invoice.other_charges?.[index];
+                              if (charge)
+                                charge.low_confidence_fields =
+                                  charge.low_confidence_fields?.filter(
+                                    (key) => key !== field,
+                                  );
+                            });
+                          }
+                    }
+                    onEdit={(index, field, value) => {
+                      updateInvoice((draft) => {
+                        const charge = draft.invoice.other_charges?.[index];
+                        if (!charge) return;
+                        if (field === "line_total") charge.amount = value;
+                        else if (field === "taxable")
+                          charge.taxable = value === "true";
+                        else if (field === "description")
+                          charge.description = value;
+                        charge.low_confidence_fields =
+                          charge.low_confidence_fields?.filter(
+                            (key) => key !== field,
+                          );
+                      });
+                    }}
+                  />
                   {!locked && (
                     <div className="invoice-manual-line">
                       <Field
@@ -4293,7 +4769,7 @@ function InvoiceWorkspace({
                           · <LtrText>{invoice.supplier}</LtrText> ·{" "}
                           {t("Old", "قبلی")}{" "}
                           {workspace.lineDetails[index]?.previous ? (
-                            <Money
+                            <ReadingMoney
                               value={
                                 workspace.lineDetails[index]!.previous!.cost
                               }
@@ -4303,7 +4779,7 @@ function InvoiceWorkspace({
                             <span className="muted">—</span>
                           )}{" "}
                           · {t("New", "جدید")}{" "}
-                          <Money
+                          <ReadingMoney
                             value={line.unit_cost_before_tax}
                             currency={state.config.company.currency}
                           />
@@ -4498,6 +4974,14 @@ function InvoiceWorkspace({
                     if (blockers.length) {
                       setAttemptedPost(true);
                       setDetailsOpen(true);
+                      setOpenLines(
+                        Object.fromEntries(
+                          invoice.lines.map((_, index) => [
+                            `${invoice.id}:${index}`,
+                            true,
+                          ]),
+                        ),
+                      );
                       requestAnimationFrame(() =>
                         focusValidationField("invoice-missing-list"),
                       );
@@ -4511,6 +4995,32 @@ function InvoiceWorkspace({
           )}
         </div>
       )}
+      <ConfirmDialog
+        open={confirmChecksLine !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmChecksLine(null);
+        }}
+        title={t(
+          "This line has fields to check. Confirm all of them?",
+          "این ردیف فیلدهایی برای بررسی دارد. همه را تأیید می‌کنید؟",
+        )}
+        description={t(
+          "Compare the highlighted fields with the original invoice before confirming.",
+          "پیش از تأیید، فیلدهای مشخص‌شده را با اصل فاکتور مقایسه کنید.",
+        )}
+        confirmLabel={t("Confirm all fields", "تأیید همه فیلدها")}
+        onConfirm={() => {
+          if (confirmChecksLine === null) return;
+          const index = confirmChecksLine;
+          updateInvoice((draft, currentActor) =>
+            confirmInvoiceLineChecks(draft, currentActor, index, true),
+          );
+          setOpenLines((current) => ({
+            ...current,
+            [`${invoice.id}:${index}`]: false,
+          }));
+        }}
+      />
       <ConfirmDialog
         open={postOpen}
         onOpenChange={setPostOpen}
@@ -4529,7 +5039,10 @@ function InvoiceWorkspace({
         </p>
         <p>
           {t("Payable", "قابل پرداخت")}:{" "}
-          <Money value={payable} currency={state.config.company.currency} />
+          <ReadingMoney
+            value={payable}
+            currency={state.config.company.currency}
+          />
         </p>
       </ConfirmDialog>
       <Dialog
@@ -4607,7 +5120,7 @@ function InvoiceWorkspace({
               <div>
                 <dt>{t("Outstanding", "مانده پرداخت")}</dt>
                 <dd>
-                  <Money
+                  <ReadingMoney
                     value={movePreview.outstanding_amount}
                     currency={movePreview.currency}
                   />
@@ -4636,7 +5149,7 @@ function InvoiceWorkspace({
               <ul>
                 {movePreview.allocations.map((allocation) => (
                   <li key={allocation.ledger_id}>
-                    <Money
+                    <ReadingMoney
                       value={allocation.amount}
                       currency={movePreview.currency}
                     />{" "}

@@ -1,0 +1,30 @@
+.invoice-readings-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-block: 16px;
+}
+.invoice-reading-thumbnail {
+  display: block;
+  inline-size: 56px;
+  block-size: 72px;
+  object-fit: contain;
+}
+.invoice-reading-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.invoice-reading-summary {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+@media (max-width: 759px) {
+  .invoice-readings-mode {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

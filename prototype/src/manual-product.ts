@@ -10,7 +10,7 @@ import { configuredBranches, activePricingCategories } from "./settings";
 import { supplierChoices, supplierMatches } from "./supplier-editor";
 import { reconcileOffers } from "./approvals";
 import { setManualPriceMarker } from "./manual-prices";
-import { normalizeSearch, lookupBranch } from "./catalog";
+import { lookupBranch, conflictingBarcodeProduct } from "./catalog";
 import {
   applyProductDateDrafts,
   validateProductDateDrafts,
@@ -154,12 +154,7 @@ export function addProduct(
   )
     fail("supplier");
   if (
-    edits.barcode.trim() &&
-    state.products.some(
-      (product) =>
-        product.company_id === context.company_id &&
-        normalizeSearch(product.barcode) === normalizeSearch(edits.barcode),
-    )
+    conflictingBarcodeProduct(state.products, context.company_id, edits.barcode)
   )
     fail("barcode_conflict");
   if (

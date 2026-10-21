@@ -293,6 +293,12 @@ export type InvoiceLine = Omit<
   company_id: string;
   confidence?: number;
   low_confidence_fields?: string[];
+  taxable_inferred?: boolean;
+  barcode?: string;
+  handwritten_note?: string;
+  expiry_as_printed?: string;
+  pack_size?: string;
+  import_line_index?: number;
   pricing_category?: string;
   date_tracking?: boolean;
   date_type?: "expiry" | "best_before";
@@ -348,6 +354,35 @@ export type DemoInvoice = Omit<
     file_data?: string;
     file_size?: number;
     original_file_invoice_id?: string;
+    original_pages?: {
+      file_name: string;
+      file_type: string;
+      file_data: string;
+      file_size: number;
+      original_sha256: string;
+    }[];
+    low_confidence_fields?: string[];
+    reading_record?: {
+      source: "imported";
+      file_name: string;
+      page_sha256s: string[];
+      models: string[];
+      reading_cost_usd: string;
+      exported_at: string;
+      ai_source: string;
+    };
+    import_currency?: string;
+    import_warnings?: string[];
+    import_handwritten_notes?: string[];
+    order_reference?: string;
+    other_charges?: {
+      line_no?: number;
+      line_type: "deposit" | "fee" | "discount" | "credit" | "other";
+      description: string;
+      amount: string;
+      taxable: boolean;
+      low_confidence_fields?: string[];
+    }[];
     demo_original_snapshot?: true;
     legacy_demo_original?: {
       file_name?: string;
@@ -613,6 +648,8 @@ export interface SupplierRecord {
   payment_terms: string;
   invoice_review_required?: boolean;
   address?: string;
+  tax_number?: string;
+  created_from_import?: true;
   notes?: string;
   status: "confirmed" | "proposed";
   active: boolean;

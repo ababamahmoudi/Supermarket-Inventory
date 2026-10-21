@@ -315,3 +315,20 @@ export async function uploadInvoice(page: Page) {
     timeout: remaining(),
   });
 }
+
+/** R1 asks a person before confirming all remaining AI checks on a line. */
+export async function confirmInvoiceLine(page: Page, line: Locator) {
+  const hasChecks = (await line.locator(".reading-check-chip").count()) > 0;
+  await line
+    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+    .click();
+  if (!hasChecks) return;
+  const confirmation = page.getByRole("dialog", {
+    name: "This line has fields to check. Confirm all of them?",
+    exact: true,
+  });
+  await expect(confirmation).toBeVisible();
+  await confirmation
+    .getByRole("button", { name: "Confirm all fields", exact: true })
+    .click();
+}

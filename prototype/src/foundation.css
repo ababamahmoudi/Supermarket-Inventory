@@ -531,3 +531,58 @@
     grid-row: 1 / span 2;
   }
 }
+
+/* Imported reading checks share the foundation field and warning tokens. */
+.reading-check-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.please-check-field input,
+.please-check-field select {
+  outline: 2px solid var(--pending-dot);
+  outline-offset: 1px;
+}
+.reading-check-chip:focus-visible {
+  outline: 2px solid var(--pending-dot);
+  outline-offset: 3px;
+}
+.invoice-other-charges {
+  margin-block: 16px;
+}
+
+/* Shared composed-dialog layouts retain ordinary field and table foundations. */
+:root .ui-dialog.dialog-wide {
+  inline-size: min(1440px, calc(100vw - 32px));
+  max-inline-size: min(1440px, calc(100vw - 32px));
+}
+@media (max-width: 759px) {
+  :root .ui-dialog.dialog-phone-fullscreen {
+    inline-size: 100vw;
+    max-inline-size: 100vw;
+    block-size: 100dvh;
+    max-block-size: 100dvh;
+    margin: 0;
+    border-radius: var(--radius-none);
+  }
+}
+
+/* Numeric cells keep their amounts on one line; composed fields still need
+ * wrapping labels, validation messages and review actions on narrow screens. */
+:root .numeric .field {
+  min-inline-size: 0;
+  white-space: normal;
+}
+
+.reading-check-tooltip {
+  flex-basis: 100%;
+  min-inline-size: 0;
+  padding: 8px;
+  border: 1px solid var(--pending-dot);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--text);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

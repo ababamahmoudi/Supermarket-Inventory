@@ -28,6 +28,7 @@ import {
   recalculateInvoice,
 } from "./invoice";
 import { initialState } from "./store";
+import { confirmInvoiceLineChecks } from "./invoice-checks";
 import type { Approval, DemoState, Offer, Product } from "./types";
 
 function fixture(): DemoState {
@@ -110,8 +111,10 @@ function prepareInvoice(state: DemoState, cost?: string): void {
         .toFixed(4);
     recalculateInvoice(state.invoice, state.config);
   }
-  state.invoice.lines.forEach((line) => {
-    line.review_confirmed = true;
+  state.invoice.lines.forEach((line, index) => {
+    // This fixture represents a person's completed review, including the R1
+    // explicit acknowledgement of all remaining AI checks.
+    confirmInvoiceLineChecks(state, worker(state), index, true);
     line.date_confirmed = true;
     if (line.date_tracking)
       line.date_value = new Date(

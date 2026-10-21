@@ -231,3 +231,21 @@ export function searchProducts<P extends ProductSearchFields>(
   }
   return products.filter((product) => matchesProduct(product, query));
 }
+
+/** Shared barcode collision rule for catalog edits, invoice proposals and approval. */
+export function conflictingBarcodeProduct(
+  products: readonly Pick<Product, "company_id" | "code" | "barcode">[],
+  companyId: string,
+  barcode: string,
+  excludingCode?: string,
+) {
+  const normalized = normalizeSearch(barcode);
+  return normalized
+    ? products.find(
+        (product) =>
+          product.company_id === companyId &&
+          product.code !== excludingCode &&
+          normalizeSearch(product.barcode) === normalized,
+      )
+    : undefined;
+}

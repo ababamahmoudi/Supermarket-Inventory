@@ -4,7 +4,7 @@ import { loadInvoiceOriginal } from "./invoice-file-access";
 import type { InvoiceReadDTO } from "./invoice-projections";
 
 /** Original bytes are loaded outside the authority lock, then revalidated. */
-export function useInvoiceOriginal(invoice: InvoiceReadDTO) {
+export function useInvoiceOriginal(invoice: InvoiceReadDTO, page = 0) {
   const {
     actor,
     can,
@@ -33,6 +33,8 @@ export function useInvoiceOriginal(invoice: InvoiceReadDTO) {
     invoice.file_name,
     invoice.file_type,
     invoice.file_size,
+    invoice.original_page_count,
+    page,
     actor?.user_id,
     actor?.session_id,
     actor?.authority_epoch,
@@ -56,6 +58,8 @@ export function useInvoiceOriginal(invoice: InvoiceReadDTO) {
     url?: string;
     source?: Blob;
     size?: number;
+    name?: string;
+    type?: string;
     error?: boolean;
   } | null>(null);
   useEffect(() => {
@@ -69,6 +73,7 @@ export function useInvoiceOriginal(invoice: InvoiceReadDTO) {
     void loadInvoiceOriginal(latest.current, {
       company_id: invoice.company_id,
       invoice_id: invoice.id,
+      page,
     }).then(
       (record) => {
         if (!active) return;
@@ -79,6 +84,8 @@ export function useInvoiceOriginal(invoice: InvoiceReadDTO) {
           url,
           source: record.source,
           size: record.source_size,
+          name: record.name,
+          type: record.type,
         });
       },
       () => {
@@ -89,7 +96,7 @@ export function useInvoiceOriginal(invoice: InvoiceReadDTO) {
       active = false;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [key, request, permitted, invoice.company_id, invoice.id]);
+  }, [key, request, permitted, invoice.company_id, invoice.id, page]);
   const visible =
     snapshot?.key === key && snapshot.request === request && permitted
       ? snapshot
@@ -99,6 +106,8 @@ export function useInvoiceOriginal(invoice: InvoiceReadDTO) {
     url: visible?.url,
     source: visible?.source,
     size: visible?.size,
+    name: visible?.name,
+    type: visible?.type,
     loading: permitted && !visible,
     error: Boolean(visible?.error),
   };

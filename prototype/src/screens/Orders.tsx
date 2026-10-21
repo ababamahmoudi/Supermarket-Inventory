@@ -2003,10 +2003,15 @@ export default function Orders() {
           </FilterToolbar>
           {!visible.length ? (
             <EmptyState>
-              {t(
-                "No orders match these filters.",
-                "سفارشی با این فیلترها پیدا نشد.",
-              )}
+              {all.length === 0
+                ? t(
+                    "No orders yet; create an order when you are ready to request goods from a supplier.",
+                    "هنوز سفارشی وجود ندارد؛ برای درخواست کالا از تأمین‌کننده، یک سفارش ایجاد کنید.",
+                  )
+                : t(
+                    "No orders match these filters.",
+                    "سفارشی با این فیلترها پیدا نشد.",
+                  )}
             </EmptyState>
           ) : (
             <DataTable

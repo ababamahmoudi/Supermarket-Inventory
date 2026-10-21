@@ -108,10 +108,15 @@ export function ReceivedTable({
   if (!rows.length)
     return (
       <EmptyState>
-        {t(
-          "No deliveries match these filters.",
-          "تحویلی با این فیلترها پیدا نشد.",
-        )}
+        {state.invoices.length === 0 && state.invoice?.status !== "posted"
+          ? t(
+              "No deliveries yet; post an invoice to record received goods here.",
+              "هنوز تحویلی وجود ندارد؛ برای ثبت کالای دریافتی در اینجا یک فاکتور ثبت کنید.",
+            )
+          : t(
+              "No deliveries match these filters.",
+              "تحویلی با این فیلترها پیدا نشد.",
+            )}
       </EmptyState>
     );
   return (

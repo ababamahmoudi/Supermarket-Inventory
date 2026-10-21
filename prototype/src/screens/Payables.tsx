@@ -772,10 +772,15 @@ function PayablesContent({
               <tr>
                 <td colSpan={6}>
                   <EmptyState>
-                    {t(
-                      "No suppliers match these filters. Clear filters to see all suppliers.",
-                      "هیچ تأمین‌کننده‌ای با این فیلترها مطابقت ندارد. برای نمایش همه، فیلترها را پاک کنید.",
-                    )}
+                    {financialRead.overview.length === 0
+                      ? t(
+                          "No payables yet; post an invoice to start a supplier balance.",
+                          "هنوز پرداختنی‌ای وجود ندارد؛ برای شروع ماندهٔ تأمین‌کننده، یک فاکتور ثبت کنید.",
+                        )
+                      : t(
+                          "No suppliers match these filters. Clear filters to see all suppliers.",
+                          "هیچ تأمین‌کننده‌ای با این فیلترها مطابقت ندارد. برای نمایش همه، فیلترها را پاک کنید.",
+                        )}
                   </EmptyState>
                 </td>
               </tr>

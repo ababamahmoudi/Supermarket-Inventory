@@ -22,12 +22,24 @@ export function OriginalInvoice({
   children?: ReactNode;
   bare?: boolean;
 }) {
-  const file = useInvoiceOriginal(invoice);
+  const [imageSelection, setImageSelection] = useState({
+    invoiceId: invoice.id,
+    page: 0,
+  });
+  const imagePage =
+    imageSelection.invoiceId === invoice.id ? imageSelection.page : 0;
+  const currentImagePage = Math.min(
+    imagePage,
+    Math.max(0, (invoice.original_page_count ?? 1) - 1),
+  );
+  const file = useInvoiceOriginal(invoice, currentImagePage);
   return (
     <OriginalInvoiceContent
       key={file.key}
       invoice={invoice}
       file={file}
+      imagePage={currentImagePage}
+      onImagePage={(page) => setImageSelection({ invoiceId: invoice.id, page })}
       onAttach={onAttach}
       bare={bare}
     >
@@ -39,12 +51,16 @@ export function OriginalInvoice({
 function OriginalInvoiceContent({
   invoice,
   file,
+  imagePage,
+  onImagePage,
   onAttach,
   children,
   bare,
 }: {
   invoice: InvoiceReadDTO;
   file: ReturnType<typeof useInvoiceOriginal>;
+  imagePage: number;
+  onImagePage: (page: number) => void;
   onAttach?: () => void;
   children?: ReactNode;
   bare: boolean;
@@ -166,6 +182,7 @@ function OriginalInvoiceContent({
         await loadInvoiceOriginal(query, {
           company_id: invoice.company_id,
           invoice_id: invoice.id,
+          page: imagePage,
         })
       ).source;
     } catch {
@@ -175,7 +192,7 @@ function OriginalInvoiceContent({
     const anchor = window.document.createElement("a");
     const url = URL.createObjectURL(source);
     anchor.href = url;
-    anchor.download = invoice.file_name ?? "invoice";
+    anchor.download = file.name ?? invoice.file_name ?? "invoice";
     window.document.body.append(anchor);
     anchor.click();
     anchor.remove();
@@ -198,7 +215,7 @@ function OriginalInvoiceContent({
       ) : (
         <>
           <p className="invoice-original-name">
-            <LtrText>{invoice.file_name}</LtrText>
+            <LtrText>{file.name ?? invoice.file_name}</LtrText>
           </p>
           <div
             className="invoice-original-controls"
@@ -240,24 +257,45 @@ function OriginalInvoiceContent({
               {t("Download", "دانلود")}
             </Button>
           </div>
-          {document && (
+          {(document || (invoice.original_page_count ?? 0) > 1) && (
             <div className="invoice-pdf-pages">
               <IconButton
-                disabled={page <= 1}
-                onClick={() => setPage((value) => value - 1)}
+                disabled={document ? page <= 1 : imagePage <= 0}
+                onClick={() =>
+                  document
+                    ? setPage((value) => value - 1)
+                    : onImagePage(imagePage - 1)
+                }
                 aria-label={t("Previous page", "صفحه قبل")}
               >
                 <ChevronLeft size={16} />
               </IconButton>
-              <span>
-                {t("Page", "صفحه")}{" "}
-                <LtrText>
-                  {page} / {document.numPages}
-                </LtrText>
+              <span aria-live="polite">
+                {document ? (
+                  <>
+                    {t("Page", "صفحه")}{" "}
+                    <LtrText>
+                      {page} / {document.numPages}
+                    </LtrText>
+                  </>
+                ) : (
+                  t(
+                    `Page ${imagePage + 1} of ${invoice.original_page_count}`,
+                    `صفحه ${imagePage + 1} از ${invoice.original_page_count}`,
+                  )
+                )}
               </span>
               <IconButton
-                disabled={page >= document.numPages}
-                onClick={() => setPage((value) => value + 1)}
+                disabled={
+                  document
+                    ? page >= document.numPages
+                    : imagePage >= (invoice.original_page_count ?? 1) - 1
+                }
+                onClick={() =>
+                  document
+                    ? setPage((value) => value + 1)
+                    : onImagePage(imagePage + 1)
+                }
                 aria-label={t("Next page", "صفحه بعد")}
               >
                 <ChevronRight size={16} />
@@ -297,6 +335,7 @@ function OriginalInvoiceContent({
             ) : invoice.file_type?.startsWith("image/") ? (
               <img
                 src={file.url}
+                key={file.key}
                 alt={t("Original invoice image", "تصویر اصل فاکتور")}
                 style={{ width: `${zoom * 100}%` }}
                 onLoad={(event) => {
