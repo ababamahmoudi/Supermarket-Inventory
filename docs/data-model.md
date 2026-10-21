@@ -1,5 +1,15 @@
 # Data model
 
+## R1 imported reading contract (2026-10-21)
+
+The local file envelope has `format: "super-arzon-invoice-readings"`, `version: 1`, `reading_schema: "invoice-reading-v2"`, `exported_at`, and `invoices`. Each export invoice contains ordered base64 image pages, `original_sha256`, AI reading/statuses/source/models, optional partially populated `checked_answer`, and `reading_cost_usd`. It is an input format, not a second business invoice model. All monetary normalization uses Decimal, with four decimal places for costs.
+
+The existing invoice retains `reading_record: { source: "imported", file_name, page_sha256s, models, reading_cost_usd, exported_at, ai_source }`, `original_pages`, `low_confidence_fields`, `other_charges`, `import_currency`, `import_warnings`, `import_handwritten_notes` and `order_reference`. Each original page has `file_name`, `file_type`, `file_data` (a durable reference), `file_size` and `original_sha256`. Originals are written through the existing versioned ArrayBuffer repository; base64 photographs never enter the canonical business JSON. Each page retains its source SHA separately from the stored upright-image byte digest.
+
+Other charges retain `line_type`, description, signed amount, taxable choice and `low_confidence_fields`; a null input taxable value requires a check. They participate in subtotal/total/payable reconciliation only. Item records retain supplier item code, barcode, printed lot/expiry/note, source line index, pack quantities, source kg/lb fields and existing date confirmation. `taxable_inferred` tracks a null input until a person confirms/edits the category-derived default. Header and line check lists address canonical editable fields; `ai_statuses` maps `header.*` and original `lines[i].*` paths into those lists. Checked values overlay only supplied keys and clear only their corresponding AI checks; changing checked quantity/unit/pack/cost basis invalidates dependent AI calculations unless the checked answer supplies its own derived values. Existing invoice/product/supplier/history and approval entities remain authoritative.
+
+The empty-store command clears company business collections and the current invoice workspace, retains configuration/templates/notebook definitions and product-code high-water mark, and records one non-reversible History event. It does not alter authority credentials or sessions. Historical demo balance snapshots are disabled when starting empty.
+
 Current contracts include C6/C7/C8 and the source-first E1 authority specification (2026-10-12). E1 implementation/evidence is Planned until verified. Earlier C3/C4/C5 compatibility notes are historical where superseded by the C6 section below.
 
 Database: PostgreSQL. This document defines entities and rules, not exact column types; the AI developer finalizes migrations and records changes here.

@@ -1,5 +1,11 @@
 # Screens and navigation
 
+## R1: Settings → Data and imported invoice review
+
+Owner/Manager Data replaces planned CSV items with **Import invoice readings** (Choose file…) and **Start with an empty store** (Remove fictional data…). The import dialog uses DataTable and fills the phone screen. Rows show selection, page-one thumbnail, supplier, number/date, editable destination, item count, total, checked badge, check count and status. Duplicates say Already in the app and cannot be selected. Checked-values mode explains rows that still use AI. A summary lists imports, skips, new suppliers and missing locations with Open Needs review.
+
+Draft and posted invoices display the kit-source label, original-page navigation, boxed notes/warnings and Other charges and credits. Please check uses warning tokens in both themes, field outline, chip, focus/hover explanation and Looks right. Rows count unresolved checks; What's missing links each field. Use foundation fields/tables/detail-grid/back-link/list-box/NotAdded. Empty lists use normal bilingual EmptyState with a useful next action; Dashboard KPIs show zero.
+
 Current visual language is Klead v1. C6 changes functional screens below; C7 applies its tokens/components across every retained screen, without altering approved business behavior.
 
 Layout follows `design-language.md`. Menus, protected routes and field projections use the current E1 capability/actor layer. E1 is the source specification; implementation/test/screenshot evidence remains Planned until verified.
