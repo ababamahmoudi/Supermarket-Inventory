@@ -11,6 +11,10 @@ export function shouldShowUndoNotification(action: string): boolean {
     ) ||
     [
       "note_resolved",
+      "note_seen",
+      "note_reopened",
+      "notebook_entry_seen",
+      "notebook_entry_reopened",
       "notebook_entry_done",
       "notebook_archived",
       "expiry_cleared",

@@ -9,6 +9,7 @@ import {
   effectivePrice,
   lookupBranch,
   pendingPrice,
+  regularPrice,
   searchProducts,
 } from "../catalog";
 import { useDemo } from "../store";
@@ -75,10 +76,17 @@ import "./c5-catalog-offers.css";
 import "../catalog-c7.css";
 import { ChangePriceDialog } from "../ChangePriceDialog";
 import { PriceChangedPill } from "../price-update-presentation";
-import { SalePrice, SaleStatus, PendingSalePill } from "../sales-presentation";
-import { salesText } from "../sales-locale";
+import {
+  SalePrice,
+  PendingSalePill,
+  ProductOfferStatus,
+} from "../sales-presentation";
+import { saleCalendarDate, salesText } from "../sales-locale";
 import {
   activeSaleAt,
+  discountSaleAt,
+  saleCanonicalPrice,
+  saleStoreDate,
   pendingSaleRequest,
   endSale,
   withdrawSaleRequest,
@@ -106,6 +114,7 @@ import {
   Button,
   Card,
   Checkbox,
+  FilterChip,
   DataTable,
   EmptyState,
   Field,
@@ -130,6 +139,7 @@ import {
   DateText,
   LtrText,
   OfferLabel,
+  Money,
   UnitSize,
   UnitText,
 } from "../presentation";
@@ -152,15 +162,34 @@ function ProductProvenance({ product }: { product: Product }) {
     financial.data?.price_provenance?.[lookupBranch(branch)] ??
     financial.data?.price_provenance?.all;
   if (!source) return null;
+  const sourceCost = financial.data?.costs.find(
+    (row) =>
+      row.invoice_number === source.invoice_number &&
+      row.branch === lookupBranch(branch),
+  );
   return (
-    <p className="helper product-price-provenance">
-      {t("Calculated from invoice", "محاسبه‌شده از فاکتور")}{" "}
-      <LtrText>{source.invoice_number}</LtrText>:{" "}
-      <SellingPrice
-        value={source.calculated_price}
-        product={product}
-        config={state.config}
-      />
+    <p className="helper product-price-provenance c9-regular-provenance">
+      {t(
+        "Regular price worked out from Invoice",
+        "قیمت عادی محاسبه‌شده از فاکتور",
+      )}{" "}
+      <LtrText className="c9-provenance-invoice-reference">
+        {source.invoice_number}
+      </LtrText>{" "}
+      ·{" "}
+      <LtrText>
+        {sourceCost && financial.data?.category && (
+          <>
+            <Money value={sourceCost.unit_cost_before_tax} decimals={2} />{" "}
+            <LtrText>÷ {financial.data.category.cost_divisor} →</LtrText>{" "}
+          </>
+        )}
+        <SellingPrice
+          value={source.calculated_price}
+          product={product}
+          config={state.config}
+        />
+      </LtrText>
       {source.changed_price && (
         <>
           {" "}
@@ -1536,59 +1565,226 @@ function ProductHeaderActions({ product }: { product: Product }) {
   );
 }
 
-function ProductPrice({ product }: { product: Product }) {
-  const { state, branch, t, lang } = useDemo();
-  const approved = effectivePrice(state, product, branch);
-  const pending = pendingPrice(state, product, branch);
-  const offer = effectiveOffer(state, product, branch);
-  const profile = state.config.tax.profiles.find(
-    (item) => item.key === product.tax_profile,
+function ProductSalePanel({ product }: { product: Product }) {
+  const { state, branch, can, command, lang, t } = useDemo();
+  const location = lookupBranch(branch);
+  const sale = discountSaleAt(state, product, location);
+  const [changing, setChanging] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const [error, setError] = useState("");
+  const storesRead = useCatalogQuery(
+    "sales.read",
+    {
+      company_id: product.company_id,
+      kind: "company_shared",
+      entity_id: product.code,
+    },
+    sale?.group_id ?? "none",
+    (canonical, freshActor) =>
+      (canonical.sales ?? [])
+        .filter(
+          (row) =>
+            row.company_id === freshActor.company_id &&
+            row.group_id === sale?.group_id &&
+            row.status !== "ended" &&
+            freshActor.allowed_branches.includes(row.branch),
+        )
+        .map((row) => row.branch),
   );
+  if (!sale) return null;
+  const regular = regularPrice(state, product, location);
+  const stores =
+    storesRead.data ??
+    (state.sales ?? [])
+      .filter(
+        (row) =>
+          row.company_id === sale.company_id &&
+          row.group_id === sale.group_id &&
+          row.status !== "ended",
+      )
+      .map((row) => row.branch);
+  const scope: ResourceScope = {
+    company_id: sale.company_id,
+    kind: "location_record",
+    location_ids: [sale.branch],
+    entity_id: sale.id,
+    version: sale.revision,
+  };
+  const mayManage = can("sales.manage", scope);
+  const today = saleStoreDate(state.config, location);
+  const days = sale.last_day
+    ? Math.max(
+        0,
+        Math.round((Date.parse(sale.last_day) - Date.parse(today)) / 86400000),
+      )
+    : null;
   return (
-    <div className="stack">
-      <div>
-        <p className="muted">
-          {!approved && pending
-            ? t("Proposed price before tax", "قیمت پیشنهادی پیش از مالیات")
-            : product.sold_by === "weight"
-              ? weighedSettings(state.config).main_display_unit === "lb"
-                ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
-                : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
-              : t("Selling price before tax", "قیمت فروش پیش از مالیات")}
-        </p>
-        <div className="actions">
-          <strong className="price" dir="ltr">
-            {approved || pending ? (
-              approved ? (
-                <SalePrice product={product} />
-              ) : (
-                <SellingPrice
-                  value={pending!}
-                  product={product}
-                  config={state.config}
-                />
-              )
+    <section className="c9-sale-details">
+      <dl>
+        <div>
+          <dt>{t("Ends", "پایان")}</dt>
+          <dd>
+            {sale.last_day ? (
+              <>
+                <bdi>{saleCalendarDate(sale.last_day, lang)}</bdi> ·{" "}
+                {translateCount(
+                  "{{count}} day left",
+                  "{{count}} days left",
+                  "{{count}} روز باقی‌مانده",
+                  "{{count}} روز باقی‌مانده",
+                  days!,
+                  lang,
+                )}
+              </>
             ) : (
-              "—"
+              t("No end date", "بدون تاریخ پایان")
             )}
-          </strong>
-          <ManualPricePill product={product} />
-          {profile?.taxable && (
-            <Badge tone="neutral">
-              {t(
-                state.config.tax.label_text_en,
-                state.config.tax.label_text_fa,
-              )}
-            </Badge>
-          )}
-          {offer && (
-            <Badge tone="info" className="offer-pill">
-              <OfferLabel label={offer.label} language={lang} />
-            </Badge>
-          )}
+          </dd>
         </div>
+        <div>
+          <dt>{t("Stores", "فروشگاه‌ها")}</dt>
+          <dd>
+            {stores
+              .map((store) => configuredBranchLabel(state.config, store, lang))
+              .join(" · ")}
+          </dd>
+        </div>
+        <div>
+          <dt>{t("Started", "شروع")}</dt>
+          <dd>
+            <DateText value={sale.starts_on} /> {t("by", "توسط")}{" "}
+            <bdi>{demoUserLabel(sale.created_by, lang)}</bdi>
+          </dd>
+        </div>
+        <div>
+          <dt>{t("After the sale", "پس از حراج")}</dt>
+          <dd>
+            {regular === sale.regular_price_snapshot && (
+              <>{t("Back to", "بازگشت به")} </>
+            )}
+            {regular && (
+              <SellingPrice
+                value={regular}
+                product={product}
+                config={state.config}
+              />
+            )}
+          </dd>
+        </div>
+      </dl>
+      {mayManage && (
+        <div className="actions">
+          <Button variant="neutral" size="sm" onClick={() => setChanging(true)}>
+            {salesText(t, "changeSale")}
+          </Button>
+          <Button
+            variant="plain"
+            size="sm"
+            className="c9-end-sale-action"
+            onClick={() => setEnding(true)}
+          >
+            {salesText(t, "endNow")}
+          </Button>
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="form-error">
+          {error}
+        </p>
+      )}
+      {changing && (
+        <ChangePriceDialog
+          product_code={product.code}
+          branch={sale.branch}
+          onClose={() => setChanging(false)}
+        />
+      )}
+      <ConfirmDialog
+        open={ending}
+        onOpenChange={setEnding}
+        title={salesText(t, "endNow")}
+        description={t(
+          "The current regular price comes back now.",
+          "قیمت عادی فعلی اکنون برمی‌گردد.",
+        )}
+        confirmLabel={salesText(t, "endNow")}
+        onConfirm={async () => {
+          try {
+            await command(
+              "sales.manage",
+              { ...scope, mutation: true },
+              (draft, freshActor) =>
+                endSale(draft, freshActor, sale.id, {
+                  expected_revision: sale.revision,
+                }),
+            );
+            setEnding(false);
+          } catch {
+            setError(
+              t(
+                "This sale changed. Close the dialog and open it again.",
+                "این حراج تغییر کرده است. پنجره را ببندید و دوباره باز کنید.",
+              ),
+            );
+          }
+        }}
+      />
+    </section>
+  );
+}
+
+function ProductPrice({ product }: { product: Product }) {
+  const { state, branch, t } = useDemo();
+  const location = lookupBranch(branch);
+  const approved = effectivePrice(state, product, location);
+  const pending = pendingPrice(state, product, location);
+  const sale = discountSaleAt(state, product, location);
+  const regular = regularPrice(state, product, location);
+  const savings =
+    sale && regular
+      ? new Decimal(regular)
+          .minus(saleCanonicalPrice(sale, state.config))
+          .div(regular)
+          .times(100)
+          .toFixed(0, Decimal.ROUND_HALF_UP)
+      : null;
+  return (
+    <div className="stack c9-product-price">
+      <div className="c9-hero-price">
+        {approved ? (
+          <SalePrice product={product} comparison={false} />
+        ) : pending ? (
+          <SellingPrice
+            value={pending}
+            product={product}
+            config={state.config}
+          />
+        ) : (
+          <span>{t("No price yet", "هنوز قیمتی ندارد")}</span>
+        )}
+        {sale && (
+          <Badge tone="info" className="sale-pill">
+            {t("Sale", "حراج")} · <LtrText>{savings}%</LtrText>{" "}
+            {t("off", "تخفیف")}
+          </Badge>
+        )}
       </div>
-      <ManualPriceDetails product={product} />
+      {sale && regular ? (
+        <p className="muted c9-regular-line">
+          {t("Regular price", "قیمت عادی")}{" "}
+          <del className="sale-regular-price">
+            <SellingPrice
+              value={regular}
+              product={product}
+              config={state.config}
+            />
+          </del>
+        </p>
+      ) : (
+        <ManualPricePill product={product} />
+      )}
+      {sale && <ProductSalePanel product={product} />}
+      {!sale && <ManualPriceDetails product={product} />}
       {pending && (
         <div className="banner pending" role="status">
           <Badge tone="pending">
@@ -1596,38 +1792,22 @@ function ProductPrice({ product }: { product: Product }) {
               ? t("New price pending", "قیمت جدید در انتظار تأیید")
               : t("Pending", "در انتظار تأیید")}
           </Badge>{" "}
-          {approved ? (
-            <span>
-              {t("Proposed price", "قیمت پیشنهادی")}:{" "}
-              <strong>
-                <SellingPrice
-                  value={pending}
-                  product={product}
-                  config={state.config}
-                />
-              </strong>
-              .{" "}
-              {t(
-                "Keep charging the approved price shown above.",
-                "تا زمان تأیید، قیمت تأییدشدهٔ بالا را دریافت کنید.",
-              )}
-            </span>
-          ) : (
-            <span>
-              {t(
-                `Pending: confirm with a ${configuredRoleLabel(state.config.roles, "manager", "en")} before selling`,
-                `در انتظار تأیید: پیش از فروش با ${configuredRoleLabel(state.config.roles, "manager", "fa")} تأیید کنید`,
-              )}
-            </span>
-          )}
-        </div>
-      )}
-      {!approved && !pending && (
-        <div className="banner pending">
-          {t(
-            `No approved price in this branch. Confirm with a ${configuredRoleLabel(state.config.roles, "manager", "en")} before selling.`,
-            `در این شعبه قیمت تأییدشده‌ای وجود ندارد. پیش از فروش با ${configuredRoleLabel(state.config.roles, "manager", "fa")} تأیید کنید.`,
-          )}
+          <SellingPrice
+            value={pending}
+            product={product}
+            config={state.config}
+          />
+          <p>
+            {approved
+              ? t(
+                  "Keep charging the approved price shown above.",
+                  "تا زمان تأیید، قیمت تأییدشدهٔ بالا را دریافت کنید.",
+                )
+              : t(
+                  `Pending: confirm with a ${configuredRoleLabel(state.config.roles, "manager", "en")} before selling`,
+                  `در انتظار تأیید: پیش از فروش با ${configuredRoleLabel(state.config.roles, "manager", "fa")} تأیید کنید`,
+                )}
+          </p>
         </div>
       )}
     </div>
@@ -1665,6 +1845,9 @@ function ProductDetail({ product }: { product: Product }) {
   const cost = financial.data?.cost ?? null;
   const price = effectivePrice(state, product, location);
   const margin = cost && price ? sellingMargin(price, cost) : null;
+  const sale = discountSaleAt(state, product, location);
+  const regular = regularPrice(state, product, location);
+  const regularMargin = cost && regular ? sellingMargin(regular, cost) : null;
   const deliveryQuery = useCatalogQuery(
     "received.read",
     {
@@ -1740,13 +1923,28 @@ function ProductDetail({ product }: { product: Product }) {
   return (
     <>
       <div
-        className={`product-page-top-cards${!mayReadCost ? " without-private-cost" : ""}`}
+        className={`product-page-top-cards${!mayReadCost || location === "all" ? " without-private-cost" : ""}`}
       >
         <Card className="product-page-price-card">
-          <h2>
-            {t("Price at", "قیمت در")}{" "}
-            {configuredBranchLabel(state.config, location, lang)}
-          </h2>
+          <div className="c9-price-card-heading">
+            <h2>
+              {t("Price at", "قیمت در")}{" "}
+              {configuredBranchLabel(state.config, location, lang)}
+            </h2>
+            <span className="helper">
+              {t("Before tax", "پیش از مالیات")}
+              {profile?.taxable && (
+                <>
+                  {" "}
+                  ·{" "}
+                  {t(
+                    state.config.tax.label_text_en,
+                    state.config.tax.label_text_fa,
+                  )}
+                </>
+              )}
+            </span>
+          </div>
           {location === "all" ? (
             <Field label={t("Location", "مکان")}>
               <Select
@@ -1766,7 +1964,6 @@ function ProductDetail({ product }: { product: Product }) {
           ) : (
             <>
               <ProductPrice product={product} />
-              <SaleStatus product={product} />
               <PendingSalePill product={product} />
               <p className="muted">
                 {product.branch_prices?.[location]
@@ -1811,9 +2008,27 @@ function ProductDetail({ product }: { product: Product }) {
                 </dd>
               </div>
               <div>
-                <dt>{t("Margin %", "حاشیه سود %")}</dt>
+                <dt>
+                  {sale
+                    ? t("Margin at the sale price", "حاشیه سود در قیمت حراج")
+                    : t("Margin %", "حاشیه سود %")}
+                </dt>
                 <dd>{margin !== null ? <LtrText>{margin}%</LtrText> : "—"}</dd>
               </div>
+              {sale && (
+                <div>
+                  <dt>
+                    {t("Margin at the regular price", "حاشیه سود در قیمت عادی")}
+                  </dt>
+                  <dd>
+                    {regularMargin !== null ? (
+                      <LtrText>{regularMargin}%</LtrText>
+                    ) : (
+                      "—"
+                    )}
+                  </dd>
+                </div>
+              )}
               <div>
                 <dt>{t("Pricing category", "دستهٔ قیمت‌گذاری")}</dt>
                 <dd>
@@ -1912,6 +2127,7 @@ function ProductDetail({ product }: { product: Product }) {
                 align: "end",
                 priority: 2,
               },
+              { key: "offer", label: t("Offer", "پیشنهاد"), priority: 3 },
               {
                 key: "scope",
                 label: t("Price scope", "محدودهٔ قیمت"),
@@ -1923,6 +2139,7 @@ function ProductDetail({ product }: { product: Product }) {
               <tr>
                 <th>{t("Location", "مکان")}</th>
                 <th className="numeric">{t("Selling price", "قیمت فروش")}</th>
+                <th>{t("Offer", "پیشنهاد")}</th>
                 <th>{t("Price scope", "محدودهٔ قیمت")}</th>
               </tr>
             </thead>
@@ -1932,9 +2149,9 @@ function ProductDetail({ product }: { product: Product }) {
                   <td>{configuredBranchLabel(state.config, store, lang)}</td>
                   <td className="numeric">
                     <SalePrice product={product} branch={store} stacked />
-                    <SaleStatus product={product} branch={store} compact />
-                    <PendingSalePill product={product} branch={store} compact />
-                    <ManualPricePill product={product} branch={store} />
+                  </td>
+                  <td>
+                    <ProductOfferStatus product={product} branch={store} />
                   </td>
                   <td>
                     {product.branch_prices?.[store]
@@ -2195,6 +2412,9 @@ function LookupProductDetail({ product }: { product: Product }) {
   const offer = effectiveOffer(state, product, branch);
   const clearances = effectiveProjectedClearanceOffers(state, product, branch);
   const firstAdded = product.first_added_branch;
+  const location = lookupBranch(branch);
+  const sale = discountSaleAt(state, product, location);
+  const regular = regularPrice(state, product, location);
   const profile = state.config.tax.profiles.find(
     (item) => item.key === product.tax_profile,
   );
@@ -2236,12 +2456,11 @@ function LookupProductDetail({ product }: { product: Product }) {
         </div>
         <ProductHeaderActions product={product} />
       </div>
-      <ProductProvenance product={product} />
       <div className="lookup-price-block">
         <div className="lookup-approved-price">
           {approved ? (
             <strong className="price" dir="ltr">
-              <SalePrice product={product} />
+              <SalePrice product={product} comparison={false} />
             </strong>
           ) : (
             <p className="muted lookup-missing-price">
@@ -2249,28 +2468,53 @@ function LookupProductDetail({ product }: { product: Product }) {
             </p>
           )}
           <div className="lookup-price-context">
-            <p className="muted">
-              {product.sold_by === "weight"
-                ? weighedSettings(state.config).main_display_unit === "lb"
-                  ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
-                  : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
-                : t(
-                    state.config.terminology.selling_price.replace(
-                      /^Selling Price$/,
-                      "Selling price",
-                    ),
-                    "قیمت فروش",
-                  )}
-            </p>
-            {offer && (
+            {sale && (
+              <Badge tone="info" className="sale-pill">
+                {t("Sale", "حراج")}
+              </Badge>
+            )}
+            {!sale && offer && (
               <Badge tone="info" className="offer-pill">
                 <OfferLabel label={offer.label} language={lang} />
               </Badge>
             )}
-            <p className="helper">{t("Before tax", "پیش از مالیات")}</p>
-            <ManualPricePill product={product} />
+            <p className="helper">
+              {t("Before tax", "پیش از مالیات")}
+              {profile?.taxable && (
+                <>
+                  {" "}
+                  ·{" "}
+                  {t(
+                    state.config.tax.label_text_en,
+                    state.config.tax.label_text_fa,
+                  )}
+                </>
+              )}
+            </p>
+            {!sale && <ManualPricePill product={product} />}
           </div>
         </div>
+        {sale && regular && (
+          <p className="c9-regular-line">
+            {t("Regular", "عادی")}{" "}
+            <del className="sale-regular-price">
+              <SellingPrice
+                value={regular}
+                product={product}
+                config={state.config}
+              />
+            </del>{" "}
+            ·{" "}
+            {sale.last_day ? (
+              <>
+                {t("Ends", "پایان")}{" "}
+                <bdi>{saleCalendarDate(sale.last_day, lang)}</bdi>
+              </>
+            ) : (
+              t("No end date", "بدون تاریخ پایان")
+            )}
+          </p>
+        )}
         {pending && (
           <div className="lookup-pending-price">
             <Badge tone="pending">
@@ -2303,17 +2547,9 @@ function LookupProductDetail({ product }: { product: Product }) {
           </span>
         </div>
       ))}
-      <SaleStatus product={product} />
       <PriceChangedPill product={product} />
       <PendingSalePill product={product} />
       <ProductDates product={product} />
-      {profile?.taxable && (
-        <div className="lookup-price-tags actions">
-          <Badge tone="neutral">
-            {t(state.config.tax.label_text_en, state.config.tax.label_text_fa)}
-          </Badge>
-        </div>
-      )}
       {pending && (
         <p className="helper" role="status">
           {approved
@@ -2596,7 +2832,6 @@ export function Lookup() {
               {results.map((product) => {
                 const price = effectivePrice(state, product, branch);
                 const pending = pendingPrice(state, product, branch);
-                const offer = effectiveOffer(state, product, branch);
                 const taxable = state.config.tax.profiles.find(
                   (item) => item.key === product.tax_profile,
                 )?.taxable;
@@ -2670,26 +2905,17 @@ export function Lookup() {
                         </span>
                       )}
                       <span className="lookup-result-pills actions">
-                        <SaleStatus product={product} compact />
-                        <PendingSalePill product={product} compact />
-                        <ManualPricePill product={product} />
-                        {pending && (
-                          <Badge tone="pending">
-                            {t("Pending", "در انتظار تأیید")}
-                          </Badge>
-                        )}
+                        <ProductOfferStatus product={product} empty={false} />
                         {taxable && (
-                          <Badge tone="neutral">
+                          <small className="muted">
                             {t(
                               state.config.tax.label_text_en,
                               state.config.tax.label_text_fa,
                             )}
-                          </Badge>
+                          </small>
                         )}
-                        {offer && (
-                          <Badge tone="info" className="offer-pill">
-                            <OfferLabel label={offer.label} language={lang} />
-                          </Badge>
+                        {pending && (
+                          <small>{t("Pending", "در انتظار تأیید")}</small>
                         )}
                       </span>
                     </span>
@@ -2782,16 +3008,23 @@ export function Products() {
       : []),
     {
       key: "price",
-      label: t("Approved price", "قیمت تأییدشده"),
-      width: 112,
+      label: t("Price", "قیمت"),
+      width: 180,
       align: "end",
       priority: 2,
-      minWidth: 112,
+      minWidth: 150,
+    },
+    {
+      key: "offer",
+      label: t("Offer", "پیشنهاد"),
+      width: 220,
+      priority: 3,
+      minWidth: 170,
     },
     {
       key: "status",
-      label: t("Status and offer", "وضعیت و پیشنهاد"),
-      width: 240,
+      label: t("Status", "وضعیت"),
+      width: 180,
       priority: 4,
       minWidth: 190,
     },
@@ -3015,7 +3248,7 @@ export function Products() {
             ]}
           />
 
-          <Checkbox
+          <FilterChip
             checked={onlyPending}
             onChange={(value) => {
               setOnlyPending(value);
@@ -3024,8 +3257,8 @@ export function Products() {
             aria-label={t("Has pending price", "دارای قیمت در انتظار تأیید")}
           >
             {t("Has pending price", "دارای قیمت در انتظار تأیید")}
-          </Checkbox>
-          <Checkbox
+          </FilterChip>
+          <FilterChip
             checked={onlyOffers}
             onChange={(value) => {
               setOnlyOffers(value);
@@ -3034,8 +3267,8 @@ export function Products() {
             aria-label={t("Has offer", "دارای پیشنهاد")}
           >
             {t("Has offer", "دارای پیشنهاد")}
-          </Checkbox>
-          <Checkbox
+          </FilterChip>
+          <FilterChip
             checked={onlyManual}
             onChange={(value) => {
               setOnlyManual(value);
@@ -3044,8 +3277,8 @@ export function Products() {
             aria-label={t("Manual prices", "قیمت‌های دستی")}
           >
             {t("Manual prices", "قیمت‌های دستی")}
-          </Checkbox>
-          <Checkbox
+          </FilterChip>
+          <FilterChip
             checked={onlySale}
             onChange={(value) => {
               setOnlySale(value);
@@ -3054,10 +3287,20 @@ export function Products() {
             aria-label={salesText(t, "onSale")}
           >
             {salesText(t, "onSale")}
-          </Checkbox>
-          <Button variant="ghost" onClick={clear}>
-            {t("Clear filters", "پاک کردن فیلترها")}
-          </Button>
+          </FilterChip>
+          {(search ||
+            pricingCategory ||
+            aiCategory ||
+            status ||
+            supplier ||
+            onlyPending ||
+            onlyOffers ||
+            onlyManual ||
+            onlySale) && (
+            <Button variant="plain" onClick={clear}>
+              {t("Clear filters", "پاک کردن فیلترها")}
+            </Button>
+          )}
         </FilterToolbar>
         {!results.length ? (
           <EmptyState
@@ -3080,7 +3323,7 @@ export function Products() {
                 phoneList={{
                   name: "name",
                   value: "price",
-                  secondary: ["code", "status"],
+                  secondary: ["offer", "code", "status"],
                 }}
                 columns={tableColumns.columns}
               >
@@ -3144,11 +3387,12 @@ export function Products() {
                         data-control-kind="widget"
                         onClick={() => sortBy("price")}
                       >
-                        {t("Approved price", "قیمت تأییدشده")}
+                        {t("Price", "قیمت")}
                         {sort === "price" ? (ascending ? " ↑" : " ↓") : ""}
                       </Button>
                     </th>
-                    <th>{t("Status and offer", "وضعیت و پیشنهاد")}</th>
+                    <th>{t("Offer", "پیشنهاد")}</th>
+                    <th>{t("Status", "وضعیت")}</th>
                     <th>{t("Details", "جزئیات")}</th>
                   </tr>
                 </thead>
@@ -3156,7 +3400,6 @@ export function Products() {
                   {pageResults.map((product) => {
                     const price = effectivePrice(state, product, branch);
                     const pending = pendingPrice(state, product, branch);
-                    const offer = effectiveOffer(state, product, branch);
                     const cost = financial.data?.[product.code] ?? null;
                     const margin = cost ? sellingMargin(price, cost) : null;
                     return (
@@ -3234,13 +3477,18 @@ export function Products() {
                             ) : (
                               "—"
                             )}
-                            <SaleStatus product={product} compact />
-                            <PendingSalePill product={product} />
+                            {!discountSaleAt(
+                              state,
+                              product,
+                              lookupBranch(branch),
+                            ) && <ManualPricePill product={product} />}
                           </div>
                         </td>
                         <td>
+                          <ProductOfferStatus product={product} />
+                        </td>
+                        <td>
                           <div className="actions">
-                            <ManualPricePill product={product} />
                             {pending && (
                               <Badge tone="pending">
                                 {t("Pending", "در انتظار تأیید")}{" "}
@@ -3262,14 +3510,6 @@ export function Products() {
                                 {product.status === "archived"
                                   ? t("Archived", "بایگانی‌شده")
                                   : t("Approved", "تأییدشده")}
-                              </Badge>
-                            )}
-                            {offer && (
-                              <Badge tone="info" className="offer-pill">
-                                <OfferLabel
-                                  label={offer.label}
-                                  language={lang}
-                                />
                               </Badge>
                             )}
                           </div>

@@ -328,8 +328,15 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const fieldAlignedAdd = element.matches(
             ".date-quick-actions > button[type='submit'], .product-editor-date-add > button",
           );
-          const expectedHeight =
-            phone || fieldAlignedAdd ? 44 : small ? 32 : 40;
+          const expectedHeight = element.closest(".c9-filter-toolbar")
+            ? element.closest(".ui-segments")
+              ? 32
+              : 40
+            : phone || fieldAlignedAdd
+              ? 44
+              : small
+                ? 32
+                : 40;
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {

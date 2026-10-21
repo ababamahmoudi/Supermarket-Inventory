@@ -233,7 +233,7 @@
         "Branch 2": 0,
         "Branch 3": 0
       },
-      "note": "Quick-added by a Floor Worker; waiting for Supervisor confirmation."
+      "note": "Quick-added by a Floor Worker; waiting for Owner or Manager confirmation."
     }
   ],
   "products": [
@@ -593,7 +593,7 @@
         "taxable": false,
         "calculated_selling_price": "2.99",
         "current_selling_price": "2.99",
-        "demo_note": "Cheaper than last time from the SAME supplier (1.95): worker answers the expiry questions, supervisor is alerted.",
+        "demo_note": "Cheaper than last time from the SAME supplier (1.95): worker answers the expiry questions, Owner or Manager is alerted.",
         "confidence": 0.71,
         "low_confidence_fields": ["unit_cost_before_tax"],
         "units_per_case": 12,
@@ -723,17 +723,17 @@
     {
       "type": "to_order",
       "text": "Sunflower oil 1.8 L is out of stock",
-      "by": "Demo Floor Worker"
+      "by": "Demo North York Floor Worker"
     },
     {
       "type": "store_use",
       "text": "2 Lavash Bread taken for staff lunch",
-      "by": "Demo Floor Worker"
+      "by": "Demo North York Floor Worker"
     },
     {
       "type": "note_to_supervisor",
       "text": "Customer asked about the tea glass set price; please confirm.",
-      "by": "Demo Floor Worker",
+      "by": "Demo North York Floor Worker",
       "status": "open"
     }
   ],
@@ -743,7 +743,7 @@
   },
   "_demo_passwords_note": "Demo-only credentials for the browser prototype. Never reuse them in the real app.",
   "supplier_balances_demo": {
-    "_comment": "Supervisor-only demo figures for the Suppliers overview and Payables. Fresh Valley's Branch 1 balance comes from the demo invoice after posting (payable after open shorts).",
+    "_comment": "Owner/Manager-only demo figures for the Suppliers overview and Payables. Fresh Valley's Branch 1 balance comes from the demo invoice after posting (payable after open shorts).",
     "Branch 1": {
       "Fresh Valley Foods": {
         "balance": "169.79",
@@ -782,13 +782,13 @@
         {
           "text": "Morning check",
           "measurement": "3.5",
-          "by": "Demo Floor Worker",
+          "by": "Demo North York Floor Worker",
           "relative_hours": -3
         },
         {
           "text": "Afternoon check",
           "measurement": "4.0",
-          "by": "Demo Floor Worker",
+          "by": "Demo North York Floor Worker",
           "relative_hours": -1
         }
       ]

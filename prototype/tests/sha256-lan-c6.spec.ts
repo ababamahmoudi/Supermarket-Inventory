@@ -141,6 +141,25 @@ async function photoFixture(page: Page, large: boolean) {
 async function retained(page: Page, reference: string) {
   const record = await page.evaluate(
     async ({ reference, databaseName }) => {
+      const storedBlob = (
+        record: object,
+        field: "source" | "preview" | "raw",
+      ): Blob => {
+        const fields = record as Record<string, unknown>;
+        const value = fields[field];
+        if (!("binary_encoding" in fields) && value instanceof Blob)
+          return value;
+        const mime = fields[`${field}_mime_type`];
+        if (
+          fields.binary_encoding === "array-buffer-v1" &&
+          value instanceof ArrayBuffer &&
+          typeof mime === "string"
+        ) {
+          const blob = new Blob([value], { type: mime });
+          if (blob.type === mime) return blob;
+        }
+        throw new Error("Unexpected retained binary encoding.");
+      };
       const database = await new Promise<IDBDatabase>((resolve, reject) => {
         const request = indexedDB.open(databaseName, 1);
         request.onsuccess = () => resolve(request.result);
@@ -151,8 +170,11 @@ async function retained(page: Page, reference: string) {
           company_id: string;
           sha256: string;
           source_size: number;
-          source: Blob;
-          preview: Blob;
+          source: Blob | ArrayBuffer;
+          source_mime_type?: string;
+          binary_encoding?: "array-buffer-v1";
+          preview: Blob | ArrayBuffer;
+          preview_mime_type?: string;
         }>((resolve, reject) => {
           const request = database
             .transaction("files")
@@ -164,10 +186,10 @@ async function retained(page: Page, reference: string) {
         const base64 = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result).split(",")[1]);
-          reader.readAsDataURL(record.source);
+          reader.readAsDataURL(storedBlob(record, "source"));
         });
         const image = new Image();
-        const url = URL.createObjectURL(record.preview);
+        const url = URL.createObjectURL(storedBlob(record, "preview"));
         try {
           await new Promise<void>((resolve, reject) => {
             image.onload = () => resolve();
@@ -375,6 +397,24 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
     legacy.buffer,
   );
   const backups = await page.evaluate(async (databaseName) => {
+    const storedBlob = (
+      record: object,
+      field: "source" | "preview" | "raw",
+    ): Blob => {
+      const fields = record as Record<string, unknown>;
+      const value = fields[field];
+      if (!("binary_encoding" in fields) && value instanceof Blob) return value;
+      const mime = fields[`${field}_mime_type`];
+      if (
+        fields.binary_encoding === "array-buffer-v1" &&
+        value instanceof ArrayBuffer &&
+        typeof mime === "string"
+      ) {
+        const blob = new Blob([value], { type: mime });
+        if (blob.type === mime) return blob;
+      }
+      throw new Error("Unexpected retained binary encoding.");
+    };
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open(databaseName, 1);
       request.onsuccess = () => resolve(request.result);
@@ -382,7 +422,13 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
     });
     try {
       const records = await new Promise<
-        { storage_key: string; sha256: string; raw: Blob }[]
+        {
+          storage_key: string;
+          sha256: string;
+          raw: Blob | ArrayBuffer;
+          raw_mime_type?: string;
+          binary_encoding?: "array-buffer-v1";
+        }[]
       >((resolve, reject) => {
         const request = database
           .transaction("backups")
@@ -395,7 +441,7 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
         records.map(async (record) => ({
           key: record.storage_key,
           sha256: record.sha256,
-          raw: await record.raw.text(),
+          raw: await storedBlob(record, "raw").text(),
         })),
       );
     } finally {

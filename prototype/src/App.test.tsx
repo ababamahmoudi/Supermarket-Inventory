@@ -514,7 +514,7 @@ describe("E1 authentication and role-aware shell", () => {
         <App />
       </DemoProvider>,
     );
-    expect(screen.getByRole("status")).toHaveTextContent("در حال بارگذاری");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.queryByText("Loading…")).toBeNull();
     expect(
       await screen.findByRole(
@@ -522,6 +522,70 @@ describe("E1 authentication and role-aware shell", () => {
         { name: "جست‌وجوی صندوق‌دار" },
         { timeout: 10000 },
       ),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("heading", { name: "Cashier lookup" }),
+    ).toBeNull();
+  });
+  it("shows delayed initial Loading in restored Persian while genuine startup publication is pending", async () => {
+    const fixture = await signedInFixture("cashier");
+    localStorage.setItem(LANGUAGE_KEY, "fa");
+    window.location.hash = "lookup";
+    let announcePrepared!: () => void;
+    let releasePrepared!: () => void;
+    const prepared = new Promise<void>((resolve) => {
+      announcePrepared = resolve;
+    });
+    const publication = new Promise<void>((resolve) => {
+      releasePrepared = resolve;
+    });
+    const options: ProviderOptions = {
+      ...fixture.options,
+      prepareInitialBusiness: async (repository, companyId) => {
+        await fixture.options.prepareInitialBusiness?.(repository, companyId);
+        announcePrepared();
+        await publication;
+      },
+    };
+    vi.useFakeTimers({
+      toFake: [
+        "Date",
+        "setTimeout",
+        "clearTimeout",
+        "setInterval",
+        "clearInterval",
+      ],
+    });
+    vi.stubGlobal("setImmediate", nativeSetImmediate);
+    try {
+      render(
+        <DemoProvider options={options}>
+          <App />
+        </DemoProvider>,
+      );
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading…")).toBeNull();
+      await act(async () => {
+        await prepared;
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(299);
+      });
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading…")).toBeNull();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+      expect(screen.getByRole("status")).toHaveTextContent("در حال بارگذاری");
+      expect(screen.queryByText("Loading…")).toBeNull();
+    } finally {
+      releasePrepared();
+    }
+    await actualReady(() =>
+      screen.queryByRole("heading", { name: "جست‌وجوی صندوق‌دار" }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "جست‌وجوی صندوق‌دار" }),
     ).toBeVisible();
     expect(
       screen.queryByRole("heading", { name: "Cashier lookup" }),

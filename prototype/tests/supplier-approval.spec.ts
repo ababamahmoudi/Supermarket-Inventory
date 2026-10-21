@@ -166,7 +166,7 @@ test("Supervisor confirms a worker supplier from Approvals without product-price
       (record: { action: string }) => record.action === "Confirm supplier",
     ).by,
   ).toBe(configuredPersonExpectation("manager").name_en);
-  await page.getByRole("tab", { name: "Approved", exact: true }).click();
+  await page.getByRole("tab", { name: /^Approved\s+\d+$/ }).click();
   await expect(
     page
       .locator(".supplier-approval-card")

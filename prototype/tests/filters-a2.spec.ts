@@ -6,14 +6,20 @@ test.setTimeout(60000);
 async function responsiveColumn(row: Locator, label: string) {
   await expect(row).toBeVisible();
   if (await row.evaluate((element) => element.matches(".phone-list-row"))) {
-    // E3 Payables presents the same visible balance and scope as compact
-    // value/secondary regions, with no repeated column captions.
-    if (!["Branch", "Balance"].includes(label))
+    // Compact rows keep the real column values without repeating captions.
+    // C9 Offers places price at the end, then offer, scope and status below;
+    // E3 Payables keeps balance at the end and branch below.
+    const selectors: Record<string, string> = {
+      Price: ".phone-list-value",
+      Offer: ".phone-list-secondary > span:nth-child(1)",
+      Scope: ".phone-list-secondary > span:nth-child(2)",
+      Status: ".phone-list-secondary > span:nth-child(3)",
+      Balance: ".phone-list-value",
+      Branch: ".phone-list-secondary > span:first-child",
+    };
+    if (!selectors[label])
       throw new Error(`No compact field mapping for ${label}`);
-    const value =
-      label === "Balance"
-        ? row.locator(".phone-list-value")
-        : row.locator(".phone-list-secondary > span").first();
+    const value = row.locator(selectors[label]);
     await expect(value).toHaveCount(1);
     await expect(value).toBeVisible();
     return value;
@@ -126,7 +132,9 @@ test("Offers combines name/code/label search, category, supplier, type and statu
   await expect(stoppedOffer).toContainText("Sour Cherry Juice");
   const stoppedOfferValue = await responsiveColumn(stoppedOffer, "Offer");
   await expect(stoppedOfferValue).toContainText("2 for $5.00");
-  await expect(stoppedOfferValue).toContainText("$2.99");
+  const stoppedOfferPrice = await responsiveColumn(stoppedOffer, "Price");
+  await expect(stoppedOfferPrice).toContainText("$2.99");
+  await expect(stoppedOfferValue).not.toContainText("$2.99");
   const stoppedStatus = await responsiveColumn(stoppedOffer, "Status");
   await expect(
     stoppedStatus.getByText("Stopped", { exact: true }),

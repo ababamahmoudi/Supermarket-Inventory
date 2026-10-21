@@ -1,0 +1,41 @@
+/* Session transitions retain the workspace frame, never a prior private view. */
+.initial-session-loading {
+  min-block-size: 100dvh;
+  background: var(--page);
+}
+.session-progress {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: -2px;
+  block-size: 2px;
+  overflow: hidden;
+  background: var(--accent-soft);
+}
+.session-progress > span {
+  display: block;
+  inline-size: 35%;
+  block-size: 100%;
+  background: var(--accent);
+  animation: session-progress-c9 1.2s ease-in-out infinite;
+}
+.session-pending-shell .main-content {
+  inline-size: 100%;
+  min-block-size: calc(100dvh - 60px);
+}
+@keyframes session-progress-c9 {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(385%);
+  }
+}
+[dir="rtl"] .session-progress > span {
+  animation-direction: reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+  .session-progress > span {
+    animation: none;
+    inline-size: 100%;
+  }
+}

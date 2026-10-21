@@ -1,6 +1,7 @@
 import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import {
   chooseOption,
   setBranch,
@@ -300,8 +301,12 @@ test("Returns starts with all suppliers and Open records, and opens each return 
   await expect(page.locator(".return-detail-subtitle")).toContainText(
     "created",
   );
+  const returnAuthor = demoSeed.demo_users.find(
+    (user) => user.id === "demo-person-ny-floor",
+  );
+  expect(returnAuthor, "The seeded North York worker must exist").toBeDefined();
   await expect(page.locator(".return-detail-subtitle")).toContainText(
-    "Demo Floor Worker",
+    returnAuthor!.name_en,
   );
   await expect(page.locator(".return-detail-subtitle")).not.toContainText("—");
   await expect(

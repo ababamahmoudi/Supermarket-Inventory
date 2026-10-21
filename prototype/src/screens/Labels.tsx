@@ -12,7 +12,8 @@ import logo from "../../../assets/arzon-logo.png?inline";
 import { effectiveOffer, effectivePrice, regularPrice } from "../catalog";
 import { activeSaleAt, salePriceDisplay } from "../sales";
 import { confirmPriceTaskWaitlistLabels } from "../price-updates";
-import { SalePrice, SaleStatus } from "../sales-presentation";
+import { SalePrice, ProductOfferStatus } from "../sales-presentation";
+import { SellingPriceValue } from "../selling-price-presentation";
 import { effectiveProjectedClearanceOffers } from "../receipt-lots";
 import { useRouteParam } from "../navigation";
 import { ProductPrice } from "../weight-price-presentation";
@@ -76,18 +77,13 @@ import {
   EmptyState,
   Field,
   FilterToolbar,
+  FilterChip,
   NumberField,
   PageHeader,
   Select,
   Tabs,
 } from "../ui";
-import {
-  LtrText,
-  Money,
-  OfferLabel,
-  ProductName,
-  UnitSize,
-} from "../presentation";
+import { LtrText, OfferLabel, ProductName, UnitSize } from "../presentation";
 import "./invoice-settings-labels.css";
 import "./labels-a2.css";
 import "./labels-b.css";
@@ -251,26 +247,11 @@ export function ShelfLabel({
     : effectivePrice(state, product, branch);
   const saleDisplay = sale ? salePriceDisplay(sale, state.config) : null;
   const saleAmount = saleDisplay && (
-    <span className={product.sold_by === "weight" ? "weight-price" : undefined}>
-      <LtrText>
-        <Money
-          value={saleDisplay.main.amount}
-          currency={state.config.company.currency}
-        />
-        {saleDisplay.main.unit !== "each" && `/${saleDisplay.main.unit}`}
-      </LtrText>
-      {saleDisplay.secondary && (
-        <LtrText className="weight-price-secondary">
-          {" "}
-          ·{" "}
-          <Money
-            value={saleDisplay.secondary.amount}
-            currency={state.config.company.currency}
-          />
-          /{saleDisplay.secondary.unit}
-        </LtrText>
-      )}
-    </span>
+    <SellingPriceValue
+      current={saleDisplay}
+      currency={state.config.company.currency}
+      comparison={false}
+    />
   );
   const taxable = state.config.tax.profiles.find(
     (profile) => profile.key === product.tax_profile,
@@ -1606,30 +1587,6 @@ export function Labels() {
                 lang,
               )}
             >
-              <Checkbox
-                checked={filters.arrived}
-                onChange={(checked) =>
-                  setFilters({ ...filters, arrived: checked })
-                }
-              >
-                {t("Arrived today", "رسیده امروز")}
-              </Checkbox>
-              <Checkbox
-                checked={filters.changed}
-                onChange={(checked) =>
-                  setFilters({ ...filters, changed: checked })
-                }
-              >
-                {t("Price changed recently", "قیمت اخیراً تغییر کرده")}
-              </Checkbox>
-              <Checkbox
-                checked={filters.onOffer}
-                onChange={(checked) =>
-                  setFilters({ ...filters, onOffer: checked })
-                }
-              >
-                {t("On offer", "دارای پیشنهاد")}
-              </Checkbox>
               <Select
                 aria-label={t("Pricing category", "دسته قیمت‌گذاری")}
                 value={filters.pricing}
@@ -1698,12 +1655,42 @@ export function Labels() {
                     .map((value) => ({ value, label: value })),
                 ]}
               />
-              <Button
-                variant="ghost"
-                onClick={() => setFilters(emptyLabelFilters)}
+              <FilterChip
+                checked={filters.arrived}
+                onChange={(checked) =>
+                  setFilters({ ...filters, arrived: checked })
+                }
               >
-                {t("Clear filters", "پاک کردن فیلترها")}
-              </Button>
+                {t("Arrived today", "رسیده امروز")}
+              </FilterChip>
+              <FilterChip
+                checked={filters.changed}
+                onChange={(checked) =>
+                  setFilters({ ...filters, changed: checked })
+                }
+              >
+                {t("Price changed recently", "قیمت اخیراً تغییر کرده")}
+              </FilterChip>
+              <FilterChip
+                checked={filters.onOffer}
+                onChange={(checked) =>
+                  setFilters({ ...filters, onOffer: checked })
+                }
+              >
+                {t("On offer", "دارای پیشنهاد")}
+              </FilterChip>
+              {Object.keys(emptyLabelFilters).some(
+                (key) =>
+                  filters[key as keyof typeof filters] !==
+                  emptyLabelFilters[key as keyof typeof emptyLabelFilters],
+              ) && (
+                <Button
+                  variant="plain"
+                  onClick={() => setFilters(emptyLabelFilters)}
+                >
+                  {t("Clear filters", "پاک کردن فیلترها")}
+                </Button>
+              )}
             </FilterToolbar>
             <div className="labels-selection-toolbar">
               <Checkbox
@@ -1715,7 +1702,7 @@ export function Labels() {
               </Checkbox>
             </div>
             <DataTable
-              className="labels-product-table"
+              className="labels-product-table c9-labels-products-table"
               phoneList={{
                 name: "product",
                 value: "price",
@@ -1725,8 +1712,8 @@ export function Labels() {
               columns={[
                 {
                   key: "selection",
-                  width: 48,
-                  minWidth: 48,
+                  width: 52,
+                  minWidth: 52,
                   fixedWidth: true,
                   required: true,
                   mobilePrimary: true,
@@ -1739,7 +1726,7 @@ export function Labels() {
                 },
                 {
                   key: "code",
-                  width: 104,
+                  width: 140,
                   minWidth: 104,
                   fixedWidth: true,
                   priority: 3,
@@ -1747,7 +1734,7 @@ export function Labels() {
                 },
                 {
                   key: "offer",
-                  width: 150,
+                  width: 240,
                   minWidth: 150,
                   fixedWidth: true,
                   priority: 4,
@@ -1755,8 +1742,8 @@ export function Labels() {
                 },
                 {
                   key: "price",
-                  width: 156,
-                  minWidth: 156,
+                  width: 180,
+                  minWidth: 150,
                   fixedWidth: true,
                   priority: 2,
                   mobilePrimary: true,
@@ -1811,19 +1798,7 @@ export function Labels() {
                       <LtrText>{product.code}</LtrText>
                     </td>
                     <td>
-                      {activeSaleAt(state, product, branch) ? (
-                        <Badge tone="info">{t("Sale", "حراج")}</Badge>
-                      ) : (
-                        effectiveOffer(state, product, branch) && (
-                          <OfferLabel
-                            label={
-                              effectiveOffer(state, product, branch)!.label
-                            }
-                            language={lang}
-                            currency={state.config.company.currency}
-                          />
-                        )
-                      )}
+                      <ProductOfferStatus product={product} branch={branch} />
                     </td>
                     <td>
                       {effectivePrice(state, product, branch) ? (
@@ -1833,12 +1808,6 @@ export function Labels() {
                             branch={branch}
                             stacked
                           />
-                          <SaleStatus
-                            product={product}
-                            branch={branch}
-                            compact
-                          />
-                          <ManualPricePill product={product} branch={branch} />
                         </div>
                       ) : (
                         <span className="muted label-price-unavailable">

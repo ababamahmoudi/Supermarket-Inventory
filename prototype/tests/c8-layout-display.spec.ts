@@ -21,13 +21,35 @@ const saved = (page: Page): Promise<DemoState> =>
 
 async function retainedOriginalHash(page: Page, reference: string) {
   const bytes = await page.evaluate(async (id) => {
+    const storedBlob = (
+      record: object,
+      field: "source" | "preview" | "raw",
+    ): Blob => {
+      const fields = record as Record<string, unknown>;
+      const value = fields[field];
+      if (!("binary_encoding" in fields) && value instanceof Blob) return value;
+      const mime = fields[`${field}_mime_type`];
+      if (
+        fields.binary_encoding === "array-buffer-v1" &&
+        value instanceof ArrayBuffer &&
+        typeof mime === "string"
+      ) {
+        const blob = new Blob([value], { type: mime });
+        if (blob.type === mime) return blob;
+      }
+      throw new Error("Unexpected retained binary encoding.");
+    };
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open("supermarket-prototype-files-v1", 1);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
     try {
-      const record = await new Promise<{ source: Blob }>((resolve, reject) => {
+      const record = await new Promise<{
+        source: Blob | ArrayBuffer;
+        source_mime_type?: string;
+        binary_encoding?: "array-buffer-v1";
+      }>((resolve, reject) => {
         const request = db
           .transaction("files", "readonly")
           .objectStore("files")
@@ -35,9 +57,10 @@ async function retainedOriginalHash(page: Page, reference: string) {
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });
-      if (!(record?.source instanceof Blob))
-        throw new Error("Original evidence is missing");
-      return Array.from(new Uint8Array(await record.source.arrayBuffer()));
+      if (!record) throw new Error("Original evidence is missing");
+      return Array.from(
+        new Uint8Array(await storedBlob(record, "source").arrayBuffer()),
+      );
     } finally {
       db.close();
     }

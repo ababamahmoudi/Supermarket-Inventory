@@ -10,7 +10,7 @@ const config = {
 };
 
 it.each(["en", "fa"])(
-  "retains a four-decimal weighed cost with its complete amount/unit isolated in %s",
+  "shows cents for a weighed read-only cost with its complete amount/unit isolated in %s",
   async (language) => {
     await i18n.changeLanguage(language);
     const { container } = render(
@@ -23,10 +23,10 @@ it.each(["en", "fa"])(
       </div>,
     );
     const cost = container.querySelector(".weight-cost");
-    expect(cost).toHaveTextContent("$4.9895/lb");
+    expect(cost).toHaveTextContent("$4.99/lb");
     expect(cost).toHaveAttribute("dir", "ltr");
     expect(cost?.tagName).toBe("BDI");
-    expect(screen.getByText("$4.9895")).toBeInTheDocument();
-    expect(screen.queryByText("$4.99")).not.toBeInTheDocument();
+    expect(screen.getByText("$4.99")).toBeInTheDocument();
+    expect(screen.queryByText("$4.9895")).not.toBeInTheDocument();
   },
 );

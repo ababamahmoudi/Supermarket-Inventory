@@ -1,4 +1,4 @@
-# Requirements (current owner workflow, C8/E — 2026-10-12)
+# Requirements (current owner workflow, C9 — 2026-10-19)
 
 E1 replaces the active three-role/location/account rules in §2, §3 and §16. Owner/Manager now carry former Supervisor company authority; historical C3–C8 sections retain their original wording. C6/C7/C8 supersede earlier presentation and interaction requirements where explicitly stated below. Historical acceptance sections record prior releases, not current defaults. Klead design language v1 is the sole current visual specification.
 
@@ -258,7 +258,7 @@ Every entry is stamped with author, branch, and time. Three **built-in notebooks
 
 - **To order**: "we're out of this" reminders. Status open / ordered.
 - **Store use**: items taken from the floor for the store's own use. Records a physical movement for later inventory, without displaying or calculating a stock level.
-- **For Supervisor**: reminders and hand-over notes (status open / seen / done). The Owner/Manager is notified.
+- **For Owner/Manager**: reminders and hand-over notes (status open / seen / done). The Owner/Manager is notified.
 
 **Custom notebooks** are the requested **custom note categories**. Only the Owner/Manager can create, edit the definition/settings of, and archive them; allowed readers/contributors cannot change the notebook definition. The Owner/Manager creates notebooks such as "Cleaning log", "Deli temperatures", or "Lost and found". Settings per notebook: English name required, Persian name optional (fall back to English when absent), branch (one branch or all), which roles can read and which can add, optional fields (product, quantity, date, a number with unit such as a temperature), whether entries have a status (open/done), and whether the Owner/Manager is notified. Notebooks can be archived and restored (entries stay searchable for authorized readers); editing a definition preserves existing entries and records before/after History. Search across all notebooks the user can read. New custom notebooks default to allowing **Owner/Manager and Floor Worker** to read/add. From an aggregate selection, any permitted Owner/Manager, Branch Supervisor, Floor Worker or explicitly allowed Cashier custom-notebook contributor must choose an assigned/allowed concrete active location before saving; never silently select the first store. The entry always has a concrete location. Owner/Manager may correct retained inactive-location Notebook entries through notebooks.entry_edit_any with the narrow retained-correction policy; this grants no new inactive entry and no operational-role correction outside assignment. If adding is unavailable, explain the actual cause (archived notebook, read-only permission, no allowed location, or location outside notebook scope). Never hide the form silently.
 
@@ -419,7 +419,7 @@ Screenshots in English light, English dark, Persian and phone: Suppliers/Product
 
 **Company product, location prices and lots.** A delivery-created product belongs to the company and appears in Lookup/Products at every allowed location with **First added at North York** provenance; dates stay at their entered location. One company-wide barcode maps to one catalog product. Lots are keyed by company, product, supplier, location and actual expiry date; same key merges identity, not immutable invoice evidence. Retain supplier, date, source quantity received and exact cost history. No stock balance/estimate is introduced. Different regular branch prices retain cross-branch alerts. A short-dated lot may have one current clearance offer for that product/location, linked to its lot and expiry, separate from ordinary offers. Current-location Lookup shows its approved regular price and eligible clearance/expiry, never another store's prices/lots. Promo labels print the actual lot clearance. Do not infer sales depletion or change a regular price because a date is entered.
 
-**Pickup and partial item outcomes.** Record actual quantity per item. If below return quantity, require a reason and disposition: **Keep for next pickup · Put back on the shelf · Throw away**. Keep permits a new later signed pickup event; it never edits the earlier event. Once recorded, pickup quantities/representative/evidence are locked. Only authorized **Correct pickup** with reason can append a correction; Owner/Manager only: current Supervisor represents them until E1; no worker or cashier receives the permission. Coverage of credits/replacements/write-offs cannot exceed actual cumulative pickup. Each item shows settled and outstanding quantities. Partial resolution supports credit note/amount, actual replacement quantity/covered original units, or still outstanding with expected date/note. Return stays **Waiting for credit** until every picked-up claim is credited/replaced/written off and any kept next-pickup remainder is dealt with. Financial authorization stays Supervisor-only. Multiple credits use distinct notes and non-overlapping coverage; actual money may differ from the expected before-tax estimate and follows existing tax/allocation/unapplied-credit rules. Preserve immutable pickup/resolution/physical/ledger evidence and release provisional expected credit only for settled coverage.
+**Pickup and partial item outcomes.** Record actual quantity per item. If below return quantity, require a reason and disposition: **Keep for next pickup · Put back on the shelf · Throw away**. Keep permits a new later signed pickup event; it never edits the earlier event. Once recorded, pickup quantities/representative/evidence are locked. Only authorized **Correct pickup** with reason can append a correction; Owner/Manager only: current Owner/Manager represents them until E1; no worker or cashier receives the permission. Coverage of credits/replacements/write-offs cannot exceed actual cumulative pickup. Each item shows settled and outstanding quantities. Partial resolution supports credit note/amount, actual replacement quantity/covered original units, or still outstanding with expected date/note. Return stays **Waiting for credit** until every picked-up claim is credited/replaced/written off and any kept next-pickup remainder is dealt with. Financial authorization stays Owner/Manager-only. Multiple credits use distinct notes and non-overlapping coverage; actual money may differ from the expected before-tax estimate and follows existing tax/allocation/unapplied-credit rules. Preserve immutable pickup/resolution/physical/ledger evidence and release provisional expected credit only for settled coverage.
 
 **Supplier documents.** `supplier_documents.return_memo` and `.supplier_order` independently select `en` (default) or `bilingual`; internal picking lists remain bilingual. Return memo uses store/address/RM number/date, supplier details, product/code/quantity/unit cost/expected credit, total, and driver/store-staff signature lines with name/date. No internal ID or accidental Persian in default supplier output.
 
@@ -433,9 +433,9 @@ Screenshots in English light, English dark, Persian and phone: Suppliers/Product
 
 **C6 exact implementation defaults:** Selecting payment terms deliberately recomputes due date and resumes automatic mode. A manual due-date edit survives ordinary edits; changing invoice date recomputes only in automatic mode. Custom days allow nonnegative whole values producing a valid due date. Subtotal/Tax/line edits keep a deliberately different entered Final total, with warning. Parse ambiguous daylight-saving local time using the earlier occurrence unless editing the same stored wall time can preserve its prior offset; nonexistent local time shows a precise field error and blocks saving. Product form's EN/pricing-category requirement and FA/category optional change does not waive existing real supplier/cost/unit/price validation where pricing needs it; never invent zero cost/price.
 
-Every **new** pickup/resolution/credit/replacement write requires actual retained signed pickup evidence and quantity coverage; legacy imported settled records remain readable without invented pickup events or new-write bypass. Browser files use database `supermarket-prototype-files-v1`, stores `files` and `backups`; verified old state/backups migrate to immutable Blob backups before localStorage rewrite. Reset demo does not delete file evidence/history. Exact original invoice PDFs **and original invoice photos** remain downloadable; reduced image derivatives are separate.
+Every **new** pickup/resolution/credit/replacement write requires actual retained signed pickup evidence and quantity coverage; legacy imported settled records remain readable without invented pickup events or new-write bypass. Browser files use database `supermarket-prototype-files-v1`, stores `files` and `backups`; verified old state/backups migrate to immutable binary backups before localStorage rewrite. New private file/backup rows store versioned ArrayBuffer bytes and MIME metadata; the public file API still returns Blobs. Existing Blob rows remain readable without rewriting them. Reset demo does not delete file evidence/history. Exact original invoice PDFs **and original invoice photos** remain downloadable; reduced image derivatives are separate.
 
-**C6 working Settings:** Returns/date tracking/labels exposes **Default date reminder (days)**, audited Supervisor/company-scoped nonnegative whole value, updating the existing expiry default(30). Product reminder overrides remain independent. Author note-edit permission remains its existing10second window, separate from the new8second Undo display.
+**C6 working Settings:** Returns/date tracking/labels exposes **Default date reminder (days)**, audited Owner/Manager/company-scoped nonnegative whole value, updating the existing expiry default(30). Product reminder overrides remain independent. Author note-edit permission remains its existing10second window, separate from the new8second Undo display.
 
 ## 34. C8: fixes, sales and new regular prices (2026-10-12)
 
@@ -445,7 +445,7 @@ C6 and C7 were approved and merged in that order, preserving history, after requ
 
 ### Resolved owner choices
 
-- Correcting a signed pickup is Owner/Manager only. Until E1 exists, today's Supervisor represents them for this permission. Nobody else gains it. Keep required reasons, settled-quantity checks, impact review and append-only evidence.
+- Correcting a signed pickup is Owner/Manager only. Until E1 exists, today's Owner/Manager represents them for this permission. Nobody else gains it. Keep required reasons, settled-quantity checks, impact review and append-only evidence.
 - Dark filled Primary buttons and solid blue summary cards use **#2B59C3 with white text**. **#7397F0** is reserved for links, icons, selected tabs and focus rings on dark surfaces. Keep the accessible green adjustment and all actual 4.5:1 text checks.
 
 ### Five annotated layout fixes
@@ -473,7 +473,7 @@ C6 and C7 were approved and merged in that order, preserving history, after requ
    - Header: the name and Persian name, then chips for Product Code, size (or "Sold by weight"), tax and status. On the right: Change price (Part 3), Edit and ⋯.
    - A row of three cards, stacked when narrow:
      - Price at [location]: big price, scope, any offer or sale, "Calculated from invoice FV-20417", and Last received with its date and invoice.
-     - Cost and margin (Supervisor only): store cost, margin, pricing category with its divisor, and the minimum margin.
+     - Cost and margin (Owner/Manager only): store cost, margin, pricing category with its divisor, and the minimum margin.
      - Dates at [location]: open dates with their dots, and an Add date button.
    - Then full-width cards, each with its own title: Details (two columns with a hairline between rows: barcode, AI category, pricing category, tax, supplier, sold by, unit size, first added at), Prices by store, Deliveries, Lots, Cost history and History.
    - An empty section shows one short muted line inside its card.
@@ -530,7 +530,7 @@ Two words, used the same way everywhere:
 - A "sale" is a temporary lower price. The regular price comes back by itself.
 - A "new regular price" is a permanent change. It is today's manual price.
 
-1. One "Change price" dialog for the Supervisor (Floor Workers get a request version of it, item 9), opened from:
+1. One "Change price" dialog for the Owner/Manager (Floor Workers get a request version of it, item 9), opened from:
    - the product page header
    - the Lookup product card, and Products' ⋯ menu
    - Offers → Create offer → "Sale price"
@@ -540,7 +540,7 @@ Two words, used the same way everywhere:
    - Two large choices, with Sale selected by default:
      - "Sale, for a while": "The regular price comes back by itself."
      - "New regular price": "Stays until a new invoice changes the cost."
-   - The price: an input, plus quick picks for 10%, 15%, 20% and 25% off, each rounded down to the store's .49 or .99 endings (for $20.99: $18.49, $17.49, $16.49 and $15.49). Under it, for example at $16.99: "Customers save $4.00 (19% off)" and, for the Supervisor only, "Margin at this price 26%".
+   - The price: an input, plus quick picks for 10%, 15%, 20% and 25% off, each rounded down to the store's .49 or .99 endings (for $20.99: $18.49, $17.49, $16.49 and $15.49). Under it, for example at $16.99: "Customers save $4.00 (19% off)" and, for the Owner/Manager only, "Margin at this price 26%".
    - Stores: All stores (the default), Only [current location], or Choose stores (checkboxes). Never the Warehouse or any other location that doesn't sell to customers.
    - For a sale only:
      - Starts: Today (the default), Tomorrow, or a date.
@@ -562,14 +562,14 @@ Two words, used the same way everywhere:
    - A lot's clearance price stays separate, as in C6. Lookup shows both.
    - Weighed items: the sale price is per main unit, and the second unit is worked out as today.
 5. Changing and ending a sale:
-   - On the product page, in Offers and in Lookup (Supervisor only): "Change sale" (price, last day, stores) and "End sale now", with a confirmation.
+   - On the product page, in Offers and in Lookup (Owner/Manager only): "Change sale" (price, last day, stores) and "End sale now", with a confirmation.
    - After the last day, at the start of the next day in the store's time zone, the price goes back to the regular price by itself. If a new regular price was approved during the sale, that one applies.
-   - A sale with no end date: remind the Supervisor every 14 days (a setting): "Stainless Steel Pot has been on sale at North York for 14 days." with Keep it and End sale.
+   - A sale with no end date: remind the Owner/Manager every 14 days (a setting): "Stainless Steel Pot has been on sale at North York for 14 days." with Keep it and End sale.
    - Every start, change and end goes to History with its before and after values, and can be reverted from History.
 6. New regular price (permanent). This is today's manual price, set through the same dialog. It stays until a regular invoice brings a different cost. Then the approval offers "Use the new calculated price $X" (selected by default) or "Keep $Y". An invoice at the same cost changes nothing.
 7. When an invoice changes the cost during a sale (a receipt at that store):
    - The regular price proposal goes to Approvals as usual, marked "Applies after the sale". Customers keep paying the sale price.
-   - If the cost went up, the Supervisor gets an alert, "Cost went up during a sale", in Alerts, the bell and the dashboard. It shows:
+   - If the cost went up, the Owner/Manager gets an alert, "Cost went up during a sale", in Alerts, the bell and the dashboard. It shows:
      - Stainless Steel Pot 24 cm · North York · invoice HW-5012
      - Cost $12.60 → $14.20 · Sale $16.99 until Oct 31 · Margin at the sale price 26% → 16% (minimum 25%)
      - After the sale: $20.99 → $23.49 (waiting in Approvals)
@@ -584,7 +584,7 @@ Two words, used the same way everywhere:
    - add Promo labels when a sale starts (on)
    - add regular labels when a sale ends (on)
 9. Who:
-   - The Supervisor starts, changes and ends sales and new regular prices. Saving is the approval, as with manual prices today.
+   - The Owner/Manager starts, changes and ends sales and new regular prices. Saving is the approval, as with manual prices today.
    - Floor Workers can request a sale for their own location. They use the same dialog in request mode:
      - the title is "Request a sale", with only the Sale choice
      - no cost or margin is shown
@@ -640,7 +640,7 @@ Two words, used the same way everywhere:
 
 ## 35. E stages: current E1 contract and planned E2/E3
 
-E1 is the active source specification in §2, §3, §16 and §17, saved before implementation. It replaces the prior Supervisor/Floor Worker/Cashier authority model. E1 implementation/test/screenshot statuses remain **Planned** until actual evidence is recorded. Read [the retained owner request](owner-requests/C8-E1-E2-E3-2026-10-12.md) for the original clauses; historical wording there is not a second active permission table.
+E1 is the active source specification in §2, §3, §16 and §17, saved before implementation. It replaces the prior Owner/Manager/Floor Worker/Cashier authority model. E1 implementation/test/screenshot statuses remain **Planned** until actual evidence is recorded. Read [the retained owner request](owner-requests/C8-E1-E2-E3-2026-10-12.md) for the original clauses; historical wording there is not a second active permission table.
 
 E2 below is the current source specification; E3 remains an authorised **Planned** stage. They stack on E1 in order, without an intermediate owner-review pause. This remains a browser prototype: Demo switching shows local person flows, while each separate browser/phone has independent records. No real invitations, authenticated server, push/email service or hosting resource is created.
 
@@ -797,3 +797,16 @@ This section makes the owner's E3 clauses current before code, superseding the e
 - Each phone/browser/origin keeps separate demo business and people records. Cloudflare Access email gates delivery of built files; prototype username/password and simulated second step remain local flows, with no server database. Updates do not transfer or erase local data. Camera capture may use the existing device file picker. Current **Scan barcode** focuses product search; a live camera barcode decoder is not implemented, and HTTPS alone does not add one. iPhone/Android home-screen support and cookie behavior need real-device confirmation; browser emulation must be labelled as such.
 
 Required proof: valid generated manifest/icons/theme/scope, actual production service worker allowlist/negative-cache/update-safety regressions, genuine pending operations and editor states, all seven phone families and new screens in EN/FA390/430 plus desktop retained checks, fresh company/role privacy and all existing pricing/workflow tests. Photograph/capture an actual installed device only if one is genuinely used; otherwise report installed-phone evidence as not performed and supply exact owner instructions. No real Safari/hardware, paid resource, deployment or shared-server result may be invented.
+
+## 38. C9 current corrections and presentation
+
+The owner approved C8/E1/E2/E3, then requested one C9 pull request. Preserve all authority, company/location scope, pricing algorithms, financial/physical evidence, source files and existing functions. Only prototype/, docs/ and seed/ change. Settings is reserved for the next request except removing its Notes destination. The current C9 section of design-language.md is the visual/copy contract.
+
+- Session refresh, Demo user switch and business actions must not replace the app with transient sign-in/loading. Retain shell chrome while clearing invalid protected content immediately; delayed progress starts after 300 ms. Initial loading alone may show a delayed card. Bootstrap the real saved light/dark theme before app code. Final explicit lock/sign-out and denied authority remain enforced.
+- Approvals includes sale requests in Pending, Approved, Rejected and Superseded counts and lists. Approved retains approved terms, dates and decider; Rejected retains actor/time/reason; expired and withdrawn requests appear as Expired or Withdrawn under Superseded. Decided cards have no decision actions. Each empty decided tab describes its contents; the receive-an-invoice proposal hint belongs only to empty Pending.
+- New regular price during a sale sets the post-sale amount. If it is at or below the sale, explain “The sale price $21.49 isn’t lower than the new regular price $20.99.” using actual amounts, and offer “End the sale now” (default) or “Change the sale price”. Validate and execute the selected decision atomically under existing Owner/Manager permissions and guarded versions. Never advertise Sale/struck regular unless the effective sale is lower. Repair pre-existing invalid fictional sale state additively with verified preservation, and make explicit Reset clean; do not reset custom records or rewrite historical evidence.
+- Every built-in note and status-enabled notebook entry has independent per-person seen receipts, recording actual identity/time. Anyone with current read permission may mark seen, once; doing so marks their linked personal notification read. Existing status permissions control Done/Ordered/Reopen. Record completion actor/time, seen/status History and conflict-aware eight-second Undo without granting new edit or supervisory rights. Preserve the existing author edit window and notebook ACLs. Legacy seen state must not invent a reader or timestamp.
+- All notebook definition management is on Notes, with archived notebooks discoverable and restorable. E1 configured person names and Owner/Manager roles replace obsolete active Owner/Manager-role wording; retain Branch Supervisor and historical quoted evidence.
+- Shared price display, list filters and Branch request layout follow the new design-language rules in both languages/themes/phone layouts. Preserve Decimal values and frozen Price update targets, permission masking and actual printing geometry. Read-only cost cents never change stored four-decimal cost.
+
+Proof is required before declaring completion: the new no-reload test in Chromium and a WebKit project scoped to only that test; decided sale requests; above/equal/below regular-price conflicts; valid atomic inline price display; multi-reader seen/done/reopen/Undo; twelve list filter bars at 1440/900/390. Existing checks remain. The C9 review includes real screenshots, reference comparisons, Ubuntu/device-access instructions and limitations. No hosting account, deployment or paid resource is authorized.

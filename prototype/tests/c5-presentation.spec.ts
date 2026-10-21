@@ -232,7 +232,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
             "$16.51/kg",
           );
         }
-        await expect(cost).toHaveText("$4.9895/lb");
+        await expect(cost).toHaveText("$4.99/lb");
         await expect(cost).toHaveAttribute("dir", "ltr");
         proofs.push(
           await assertContract(page, "Products weighed item", variant),

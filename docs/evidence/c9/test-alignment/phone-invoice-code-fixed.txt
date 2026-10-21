@@ -1,0 +1,349 @@
+{
+  "reference": "C8-QA-SHORT-LAYOUT",
+  "lineProof": {
+    "text": "C8-QA-SHORT-LAYOUT",
+    "lines": [
+      {
+        "top": 632.71875,
+        "text": "C8-QA-SHORT-LAYOUT",
+        "characters": [
+          {
+            "index": 0,
+            "left": 36,
+            "right": 46.125
+          },
+          {
+            "index": 1,
+            "left": 46.109375,
+            "right": 54.8125
+          },
+          {
+            "index": 2,
+            "left": 54.796875,
+            "right": 60.6875
+          },
+          {
+            "index": 3,
+            "left": 60.671875,
+            "right": 70.65625
+          },
+          {
+            "index": 4,
+            "left": 70.640625,
+            "right": 79.703125
+          },
+          {
+            "index": 5,
+            "left": 79.6875,
+            "right": 85.578125
+          },
+          {
+            "index": 6,
+            "left": 85.5625,
+            "right": 94.40625
+          },
+          {
+            "index": 7,
+            "left": 94.390625,
+            "right": 104.15625
+          },
+          {
+            "index": 8,
+            "left": 104.140625,
+            "right": 114.40625
+          },
+          {
+            "index": 9,
+            "left": 114.390625,
+            "right": 123.375
+          },
+          {
+            "index": 10,
+            "left": 123.359375,
+            "right": 131.78125
+          },
+          {
+            "index": 11,
+            "left": 131.765625,
+            "right": 137.65625
+          },
+          {
+            "index": 12,
+            "left": 137.640625,
+            "right": 144.90625
+          },
+          {
+            "index": 13,
+            "left": 144.890625,
+            "right": 153.109375
+          },
+          {
+            "index": 14,
+            "left": 153.09375,
+            "right": 160.59375
+          },
+          {
+            "index": 15,
+            "left": 160.578125,
+            "right": 170.84375
+          },
+          {
+            "index": 16,
+            "left": 170.828125,
+            "right": 180.75
+          },
+          {
+            "index": 17,
+            "left": 180.734375,
+            "right": 189.15625
+          }
+        ]
+      }
+    ],
+    "ancestry": [
+      {
+        "tag": "BDI",
+        "className": "ltr-fragment",
+        "width": 153.15625,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "inline"
+      },
+      {
+        "tag": "A",
+        "className": "",
+        "width": 153.15625,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "block"
+      },
+      {
+        "tag": "DIV",
+        "className": "product-last-received-summary",
+        "width": 318,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "flex"
+      },
+      {
+        "tag": "SECTION",
+        "className": "card ui-card product-page-price-card",
+        "width": 358,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "block"
+      },
+      {
+        "tag": "DIV",
+        "className": "product-page-top-cards",
+        "width": 358,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "grid"
+      },
+      {
+        "tag": "DIV",
+        "className": "stack product-page",
+        "width": 358,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "flex"
+      },
+      {
+        "tag": "MAIN",
+        "className": "main-content",
+        "width": 390,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "block"
+      },
+      {
+        "tag": "DIV",
+        "className": "workspace",
+        "width": 390,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "block"
+      },
+      {
+        "tag": "DIV",
+        "className": "app-shell  ",
+        "width": 390,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "flex"
+      },
+      {
+        "tag": "DIV",
+        "className": "",
+        "width": 390,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "block"
+      }
+    ]
+  },
+  "codeOccurrences": [
+    {
+      "text": "C8-QA-SHORT-LAYOUT",
+      "rects": [
+        {
+          "top": 568.71875,
+          "left": 58.90625,
+          "right": 178.21875,
+          "width": 119.3125,
+          "height": 18
+        }
+      ],
+      "lines": [
+        [
+          569,
+          "QA-SHORT-LAYOUT"
+        ]
+      ],
+      "ancestry": [
+        {
+          "tag": "BDI",
+          "className": "ltr-fragment c9-provenance-invoice-reference",
+          "width": 142.21875,
+          "whiteSpace": "nowrap",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "inline"
+        },
+        {
+          "tag": "P",
+          "className": "helper product-price-provenance c9-regular-provenance",
+          "width": 318,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "block"
+        },
+        {
+          "tag": "SECTION",
+          "className": "card ui-card product-page-price-card",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "block"
+        },
+        {
+          "tag": "DIV",
+          "className": "product-page-top-cards",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "grid"
+        },
+        {
+          "tag": "DIV",
+          "className": "stack product-page",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "flex"
+        }
+      ]
+    },
+    {
+      "text": "C8-QA-SHORT-LAYOUT",
+      "rects": [
+        {
+          "top": 632.71875,
+          "left": 60.671875,
+          "right": 189.15625,
+          "width": 128.484375,
+          "height": 19
+        }
+      ],
+      "lines": [
+        [
+          633,
+          "QA-SHORT-LAYOUT"
+        ]
+      ],
+      "ancestry": [
+        {
+          "tag": "BDI",
+          "className": "ltr-fragment",
+          "width": 153.15625,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "inline"
+        },
+        {
+          "tag": "A",
+          "className": "",
+          "width": 153.15625,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "block"
+        },
+        {
+          "tag": "DIV",
+          "className": "product-last-received-summary",
+          "width": 318,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "flex"
+        },
+        {
+          "tag": "SECTION",
+          "className": "card ui-card product-page-price-card",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "block"
+        },
+        {
+          "tag": "DIV",
+          "className": "product-page-top-cards",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "grid"
+        },
+        {
+          "tag": "DIV",
+          "className": "stack product-page",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "flex"
+        }
+      ]
+    }
+  ],
+  "failures": [],
+  "destination": "/tmp/c9-code-wrap-fixed"
+}

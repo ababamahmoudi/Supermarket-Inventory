@@ -1,8 +1,10 @@
-# Supermarket browser prototype — E1 review
+# Supermarket browser prototype — C9 review
 
 This demo runs in your browser. All supplier records, documents and people are fictional; invoice reading and the privileged second sign-in step are simulated. There is no backend or real AI. Canonical business and people/session records are in browser-local IndexedDB, with uploaded files in a separate IndexedDB store and interface preferences in browser settings storage. No Docker or Python is needed. Each browser and phone keeps its own separate data.
 
-Current E1 branch: **`feat/prototype-e1-location-roles`**, stacked on C8. It is still being verified; the [E1 review guide](../docs/PR_E1_REVIEW.md) records actual results and pending browser/recovery/screenshots work. [C8](../docs/PR_C8_REVIEW.md) covers the retained fixes and sales. E2 price updates and E3 phone installation follow without a review pause, and the final joint guide will name E3's combined branch. No owner action is needed during development.
+Current review branch: **`feat/prototype-c9`**, based on main after C8, E1, E2 and E3 merged with passing CI. Use the [C9 review guide](../docs/PR_C9_REVIEW.md) for its click paths, screenshots and actual test results; the [prior combined review](../docs/PR_C8_E1_E2_E3_REVIEW.md) retains earlier evidence. The [device-access guide](../docs/phone-demo-hosting.md) explains same-Wi-Fi access, virtual machines and optional private Internet hosting.
+
+`npm run preview` already listens on `0.0.0.0:5174`. Use its **Local** address on the serving computer and its **Network** address on other devices on the same Wi-Fi. Do not override it with `--host 127.0.0.1`, which prevents those other devices from connecting. A public Internet address requires a hosted HTTPS deployment; running preview alone does not publish the app.
 
 ## Fresh Ubuntu Desktop
 
@@ -36,12 +38,12 @@ Expect **`v22.23.3`** and an npm version. Any Node 22 version at least 22.22.2 a
 
 ```bash
 cd ~
-git clone --branch feat/prototype-e1-location-roles https://github.com/ababamahmoudi/Supermarket-Inventory.git
+git clone --branch feat/prototype-c9 https://github.com/ababamahmoudi/Supermarket-Inventory.git
 cd Supermarket-Inventory
 git branch --show-current
 ```
 
-Expect **`feat/prototype-e1-location-roles`**. If the folder already exists, use the update instructions below.
+Expect **`feat/prototype-c9`**. If the folder already exists, use the update instructions below.
 
 4. Install, build and start:
 
@@ -85,7 +87,7 @@ Expect `v22.23.3` and an npm version. Download and run:
 
 ```bash
 cd ~
-git clone --branch feat/prototype-e1-location-roles https://github.com/ababamahmoudi/Supermarket-Inventory.git
+git clone --branch feat/prototype-c9 https://github.com/ababamahmoudi/Supermarket-Inventory.git
 cd Supermarket-Inventory/prototype
 npm ci
 npm run build
@@ -101,8 +103,8 @@ Stop the old server with **Ctrl+C** in its terminal. In a new terminal:
 ```bash
 cd ~/Supermarket-Inventory
 git fetch origin
-git switch feat/prototype-e1-location-roles
-git pull --ff-only origin feat/prototype-e1-location-roles
+git switch feat/prototype-c9
+git pull --ff-only origin feat/prototype-c9
 git branch --show-current
 cd prototype
 export NVM_DIR="$HOME/.nvm"
@@ -113,7 +115,7 @@ npm run build
 npm run preview
 ```
 
-Expect the E1 branch name, then `Already up to date` or downloaded changes, a successful build and port 5174. This branch includes C8 and the approved earlier work, so there is no manual combining of branches. If Git says local changes would be overwritten, stop and preserve them; do not reset or delete the folder. If the branch is unknown, keep the `git fetch` error and check that you are using the repository above.
+Expect the C9 branch name, then `Already up to date` or downloaded changes, a successful build and port 5174. This branch includes the merged C8, E1, E2 and E3, so there is no manual combining of branches. If Git says local changes would be overwritten, stop and preserve them; do not reset or delete the folder. If the branch is unknown, keep the `git fetch` error and check that you are using the repository above.
 
 ## Sign in, reset and test
 
@@ -141,9 +143,9 @@ Start with these checks; the [E1 review guide](../docs/PR_E1_REVIEW.md) includes
 5. Returns → open a waiting-pickup return → Record pickup. Enter a smaller actual quantity: reason and remaining-unit outcome are required. Saved pickup is locked. Record a partial item resolution; still-outstanding quantities remain visible. Return memo uses its RM number and default English supplier layout.
 6. Attach a fictional invoice photo/PDF, refresh and open Original invoice → Download. It should still preview and download the original. Existing files migrate automatically without deleting source evidence. Automated storage checks below create their own fictional 20-photo set; you do not have to prepare files.
 7. Received → one From/To range and Today/This week/This month. Supplier page → Last delivery, Deliveries this month and Open returns open their actual records; Balance is static. Payables ledger Columns is in its title row.
-8. Open Orders and Payables. Detail rows have a chevron and open by clicking the row or pressing Enter on it. Columns still exposes allowed hidden facts; private money remains Supervisor-only. Labels → select a product → Add to waitlist → Waitlist → choose a saved template → preview. Print controls are tinted; Remove/Archive remain clearly destructive. Cancel the system print dialog if you do not want paper.
+8. Open Orders and Payables. Detail rows have a chevron and open by clicking the row or pressing Enter on it. Columns still exposes allowed hidden facts; private money remains Owner/Manager-only. Labels → select a product → Add to waitlist → Waitlist → choose a saved template → preview. Print controls are tinted; Remove/Archive remain clearly destructive. Cancel the system print dialog if you do not want paper.
 
-Owner and Manager see Payables, margins and supplier money. Branch Supervisors see purchase costs on allowed invoices, Orders and Supplier items, but no supplier balances or margins. Floor Workers retain their permitted operational workflows; Cashier Lookup has no catalog or date editing. Only Owner/Manager can correct a signed pickup or financially settle returns. See [the current permission table](../docs/requirements.md#2-people-roles-and-location-access).
+Owner and Manager see Payables, margins and supplier money. Branch Supervisors see purchase costs on allowed invoices, Orders and Supplier items, but no supplier balances or margins. Floor Workers retain their permitted operational workflows; Cashier Lookup has no catalog or date editing. Only Owner/Manager can correct a signed pickup or financially settle returns. See [the current permission table](../docs/requirements.md#3-roles-and-permissions).
 
 ## Automated checks
 
@@ -208,4 +210,4 @@ nvm use 22.23.3
 npm run preview
 ```
 
-Build again after pulling code changes. The demo is local; hosting, real authentication, real AI, production storage and physical-printer alignment remain separate work. Earlier review guides retain historical proof; the E1 guide records current verification. You do not need to install or test locally unless you want to; the review guides will contain the automated evidence and screenshots when those checks finish.
+Build again after pulling code changes. The preview supports this computer and other devices on the same network; a private Internet link requires HTTPS hosting. Real authentication, real AI, production storage and physical-printer alignment remain separate work. The combined review guide records source-specific automated results and screenshots. Each device/browser/site address keeps separate fictional records.

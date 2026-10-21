@@ -1,5 +1,58 @@
 # Project changelog
 
+## 2026-10-19 — Native WebKit verified; proof-helper alignment
+
+- Wait for all four shards/seven checks on be25d01c: native WebKit's one network no-reload case passes; foundation and prototype static pass. Browser totals779passed/12failed/50existing-skipped/0flaky. Every failure is the same stale Blob-only raw inspector in the shared C8 proof script, not a demonstrated missing original.
+- Align only `readC8OriginalSHA` with legacy Blob and valid versioned ArrayBuffer rows, retaining the native SHA-256 oracle, all35existing assertion/poll calls, controls and fail-closed handling. App, tests, worker/retry/skip/time budgets and workflow are unchanged. Original12affected native cases pass12/12 with no retries/skips, actual exit0; scoped lint/formatting pass. Retain the exact failed CI, native success proof and source-bound local verification; require new exact-head CI and leave C9 unmerged. [Follow-up evidence](evidence/c9/webkit-startup/capture-helper/README.md).
+
+## 2026-10-19 — WebKit attachment persistence repair (verification in progress)
+
+- The completed f371 diagnostic identifies IndexedDB's Blob/File preparation failure during startup. Its dates were valid ISO dates; the earlier date repair is separate hardening. All four browser shards finished: 790 passed, 50 existing skips, one WebKit failure, no flaky cases; foundation and prototype static/unit/pricing/build passed. Correct the earlier apparent queue interpretation using actual job-step timestamps.
+- Keep the public Blob file API and existing database/version/references. Write new file/preview/backup rows as versioned ArrayBuffers with MIME metadata, and read old Blob rows without rewriting them. Preserve exact bytes, hashes, metadata, company access, commit/read-back verification, recovery and authentication. Invalid encodings fail integrity checks.
+- Align six raw-IDB browser inspectors with both retained formats, keeping all 413 original assertion/poll calls and 22 test declarations, including backup-before-publication and quota-failure/recovery checks. The adapter regression passes18/18; the same test against isolated old source passes one legacy-read case and fails17 write-dependent cases. Initial observed145/145 unit and12/12 browser passes precede an execution transport interruption that lost their temporary logs. Persistent repeats are mixed:144unit passes/one startup wait failure, then unchanged14/14;11browser passes/one phone wait failure, then unchanged1/1; four storage passes/one photo predicate failure, repeated in isolation. Build/lint pass. Original logs, source hashes, later correct UI evidence and limits are retained; scopes overlap and no CPU cause is claimed. New exact-head CI must still establish the full result; C9 stays unmerged. [Source-bound evidence](evidence/c9/webkit-startup/blob-storage/README.md).
+
+## 2026-10-19 — Portable startup dates; exact-head CI pending
+
+- Reuse the existing ISO company-date assembler for initial relative dates; retain Date construction/day offsets, configuration, existing records and normal authentication. Controlled valid slash-formatted dates reproduce the original startup RangeError; the same new regressions change from seven failures/one pass on the original source to eight passes on the repair. Native WebKit's specific cause remains unconfirmed.
+- Preserve mixed full application runs: first1,513passed/3failed, actual exit1; second reported1,512passed/4failed plus one unhandled session-changed rejection, with process status unavailable after transport disconnection. Unchanged focused reruns passed11/11 and27/27; isolated SDK75/75, pricing68/68 including all23 seed cases, build and lint exited0. No complete-suite success or CPU-cause claim.
+- Correct the earlier queued-status interpretation: lagged GitHub high-level statuses did not reflect actual execution; detailed f371 job steps showed shards1/2/3 succeeded and4failed. Publish the [source-specific repair evidence](evidence/c9/webkit-startup/date-format/README.md). C9 remains unmerged, with new exact-head CI required.
+
+## 2026-10-19 — Diagnose WebKit startup after complete C9 CI
+
+- Wait for all four `ac10919` shards: 1/2/3 passed, 4 failed only the new WebKit case during initial sign-in with a browser-storage error. Totals are 789 passed, one flaky, 50 existing skips and one failed; foundation and prototype static/unit/pricing/build checks passed. The browser gate failed, so C9 remains open and unmerged.
+- Record Ali's explicit approval to fix WebKit startup while preserving data and authentication rules. This iteration adds bounded native exception metadata to the WebKit test's diagnostics, not an application fix or an authentication/storage workaround; no configuration, data or runner budgets change.
+- Await the real Sign-in heading before the retained 1080p sidebar/form measurement. Preserve its geometry assertions and phone skip; local before/after each passed the desktop case with the existing phone skip. Publish original CI assessment, native synthetic semantic controls and source/hash provenance in [the diagnostic packet](evidence/c9/webkit-startup/README.md); new exact-head CI remains pending.
+
+## 2026-10-19 — Follow-up after all four C9 shards completed (new CI pending)
+
+- Preserve the complete27361bb run: all four browser shards failed assertions/locators, no30-minute job timeouts; foundation and prototype lint/unit/pricing/build passed. C9 stays open/unmerged.
+- Align retained catalog tax/shared-price/offer-dot and Approved-count selectors. Await the real Sign-in view or populated Supplier row before unchanged layout, purchase-cost, no-invented-purchases and permission assertions.
+- Measure dark backgrounds on every actual animation-frame callback; retain mutation/frame sign-in/workspace guards and all original clicks/assertions. Isolated synthetic controls verify light frames and forbidden auth transitions still fail.
+- Add safe public auth diagnostics to the new WebKit test for its unresolved initial passkey-stage wait. Do not claim an auth fix or LAN/WebKit success from localhost diagnostics. No app, helper, credential, workflow, worker, retry, skip or budget changes.
+
+## 2026-10-19 — Align retained C9 tests with requested behavior (CI pending at publication)
+
+- Read the return creator's expected name from the demo users, rather than copying a display name. Check the genuine Persian Search notes translation and prove search still reaches built-in and other custom notebooks.
+- Give the shared selling-price wrapper one test identity; target complete prices and verify their accessible tree has no repeated nested labels or roles. Check the stopped offer's $2.99 in Price and its “2 for $5.00” terms in Offer, including compact phone rows.
+- Retain notebook button/dialog coverage at Notes and prove its removed Settings destination is absent. Recognize counted Branch request tabs and verify the requested 20px toolbar-to-list space separately from the 12px wrapping gap; preserve other geometry and business assertions.
+- After Ali explicitly approved the real phone wrapping fix, keep the Product price explanation's invoice reference whole with a class scoped to that fragment and `white-space: nowrap`. Preserve the existing layout guard, invoice data and pricing behavior.
+- After a second explicit approval for invoice-reference layout defects, give Supplier items' Invoice column a 220px minimum and priority2. Preserve phone visibility; move lower-priority width-hidden values into the existing accessible row details when necessary. The same six original layout cases pass in English/Persian at390/900/1440, without relaxed guards. The genuine Supplier probe verifies hidden cost/date through Details.
+- Record the owner's standing rule to update tests that only expect explicitly replaced behavior, while stopping for apparent bugs or ambiguous requirements. All four earlier C9 shards finished: two assertion failures and two time limits. Test alignments and the Product wrapping fix were pushed in `c4db3b4`; the later Supplier items fix passes its local verification. Exact-head CI is pending at publication; query the final PR body/live Checks. C9 remains unmerged.
+
+## 2026-10-19 — C9 review and faster prototype CI
+
+- Complete separate CI PR25: static prototype checks plus four independent30-minute Playwright shards and the required aggregate browser check; foundation and original runner settings unchanged. Merge green C8,E1,E2,E3 in order after ordinary main integrations; preserve their commit histories.
+- Keep public shell chrome and restored theme during session changes; add the dark non-localhost frame/no-reload test, with WebKit scoped only to that test. Retain decided sale requests, immutable decision terms and explicit regular-price/sale conflict resolution with verified additive legacy repair.
+- Add per-person Notes seen receipts, completion attribution, independent eight-second Undo, reopen, filters and in-page notebook management. Use shared selling prices, real sale terms, cents-only read-only costs, consistent40px filters, compact request rows and one combined request item field; retain all physical, financial and permission behavior.
+- Correct reference Product/Lookup/table layouts, phone Labels allocation and Notes dates, RTL formula/date ordering and live translated decision messages. Restore Wi-Fi/VM/Network guidance without localhost-only overrides; no Internet hosting was created.
+- Publish40untouched screenshots with references, manual comparisons, source/asset hashes and source-specific local verification. C9 remains for owner review, unmerged; live GitHub Checks supply its exact-head CI result. Preserve and describe earlier failed/interrupted local attempts; no physical Safari/phone/printer claim.
+
+## 2026-10-18 — Restore device access in the startup instructions
+
+- Remove the localhost-only override from the current Ubuntu and phone guides. The existing preview command already listens on all network interfaces; no application or pricing change is required.
+- Make the Wi-Fi Network address part of the main quick-start, retain VM/firewall troubleshooting, and distinguish it from an Internet HTTPS deployment.
+- Point the prototype README at the combined E3 review branch and current guides. No hosting account or Internet site has been created.
+
 ## 2026-10-15 — Combined review verification and remaining CI boundaries
 
 - Record source-specific `0786ea2` application 1,444/1,444, separate SDK75/75, normal full lint and a fresh build, actual exits0 and unchanged source. Preserve earlier failing and successful attempts separately.

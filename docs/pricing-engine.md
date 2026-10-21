@@ -158,3 +158,8 @@ Add both source-unit cases to seed/pricing-test-cases.json and test conversion p
 The configured Decimal category algorithm and every existing seed case remain unchanged. A sale is a separate effective-price overlay; regular receipt comparisons and proposals still use the regular approved price/cost. On a different regular cost, manual-price review defaults to Use the new calculated price; the reviewer confirms that decision before posting. Same cost and short-dated receipts do not replace manual price.
 
 Currency displays use at least two and at most four decimals, trimming only zeros after the second:18.4000 → 18.40 and 1.5525 → 1.5525. This applies to read-only costs and printed invoice/order/supplier amounts, without changing four-decimal storage or cent allocations. Weighed sale entry retains exact current-main-unit cents; full-precision conversion handles comparisons and secondary display without changing canonical regular prices. Sale quick picks round down to configured .49/.99 endings, independently of the normal category rounding/special-correction engine.
+
+
+### C9 presentation clarification
+
+The shared read-only product unit-cost display shows cents, including $4.99/lb; underlying source/canonical cost, editable inputs, calculations and retained financial/printed evidence keep their existing precision. Selling-price rendering is shared and atomic: struck regular before bold current only for a genuine lower sale; main/secondary weight units remain separate end-aligned lines. Frozen Price update snapshots do not adopt later live prices. No pricing-engine algorithm or seed expected value changes.

@@ -41,10 +41,14 @@ test("C5 conditional request decisions and later lifecycle actions", async ({
   await page.getByRole("button", { name: "New request", exact: true }).click();
   await chooseOption(
     page,
-    page.getByLabel("Sending location", { exact: true }),
+    page.getByLabel("Ask this location", { exact: true }),
     "Warehouse",
   );
-  await page.getByLabel("Search products", { exact: true }).fill("0003");
+  await page
+    .getByLabel("Add a product, or type an item that isn't in the catalog", {
+      exact: true,
+    })
+    .fill("0003");
   await measure(page, "Request catalog search result", "floor_worker");
   await page
     .locator(".request-search-results")
@@ -55,17 +59,17 @@ test("C5 conditional request decisions and later lifecycle actions", async ({
     .first()
     .getByLabel("Quantity", { exact: true })
     .fill("2");
-  await page.getByRole("button", { name: "Send", exact: true }).click();
+  await page.getByRole("button", { name: "Send request", exact: true }).click();
   const reference = await page.locator(".request-detail h2").innerText();
   await measure(page, "Requested branch request", "floor_worker");
   await signIn(page, "Manager");
   await setBranch(page, "Warehouse");
   await page.goto("/#requests");
-  await page.getByRole("tab", { name: "Incoming", exact: true }).click();
+  await page.getByRole("tab", { name: /^Incoming(?: \d+)?$/ }).click();
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: reference, exact: true })
+    .getByRole("link", { name: reference, exact: true })
     .click();
   await page.getByRole("button", { name: "Short", exact: true }).click();
   await page.getByLabel("Quantity being sent", { exact: true }).fill("1");
@@ -79,7 +83,7 @@ test("C5 conditional request decisions and later lifecycle actions", async ({
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: reference, exact: true })
+    .getByRole("link", { name: reference, exact: true })
     .click();
   await page.getByRole("button", { name: "Missing", exact: true }).click();
   await page.getByLabel("Quantity arrived", { exact: true }).fill("0");
@@ -213,45 +217,42 @@ test("C5 conditional note editing and seen/done/open actions", async ({
     .getByRole("form", { name: "Edit note", exact: true })
     .getByRole("button", { name: "Cancel", exact: true })
     .click();
-  await page.getByRole("tab", { name: /For Supervisor/ }).click();
-  await measure(page, "Supervisor note Mark seen and Mark done actions");
-  const supervisorNote = page
-    .locator(".notebook-entry-card")
-    .filter({
-      has: page.getByRole("button", { name: "More actions", exact: true }),
-    })
-    .first();
-  const supervisorNoteText = await supervisorNote
+  await page.getByRole("tab", { name: /For managers/ }).click();
+  await measure(page, "Manager note Mark as seen and Mark done actions");
+  const managerNote = page.locator("[data-note]").first();
+  const managerNoteText = await managerNote
     .locator(".row-between > strong")
     .innerText();
-  const retainedSupervisorNote = page
-    .locator(".notebook-entry-card")
-    .filter({ hasText: supervisorNoteText });
-  await supervisorNote
-    .getByRole("button", { name: "More actions", exact: true })
+  const retainedManagerNote = page
+    .locator("[data-note]")
+    .filter({ hasText: managerNoteText });
+  await managerNote
+    .getByRole("button", { name: "Mark as seen", exact: true })
     .click();
-  await measure(page, "Supervisor note More actions menu");
-  await page.getByRole("menuitem", { name: "Mark seen", exact: true }).click();
-  await expect(retainedSupervisorNote.locator(".badge")).toHaveText("Seen");
-  await retainedSupervisorNote
+  await expect(retainedManagerNote.locator(".badge")).toHaveText("Seen");
+  await expect(
+    retainedManagerNote.getByRole("button", {
+      name: "Seen by you",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await measure(page, "Manager note seen receipt and disabled seen action");
+  await retainedManagerNote
     .getByRole("button", { name: "Mark done", exact: true })
     .click();
   await page
-    .getByRole("checkbox", {
-      name: "Include done and ordered notes",
-      exact: true,
-    })
-    .check();
-  await expect(retainedSupervisorNote.locator(".badge")).toHaveText("Done");
-  await measure(page, "Completed notebook entry Mark open action");
+    .getByRole("group", { name: "Note status", exact: true })
+    .getByRole("button", { name: "All", exact: true })
+    .click();
+  await expect(retainedManagerNote.locator(".badge")).toHaveText("Done");
+  await measure(page, "Completed manager note Reopen action");
   await page.getByRole("tab", { name: /^Deli temperatures(?: \d+)?$/ }).click();
   await card.getByRole("button", { name: "Mark done", exact: true }).click();
-  await card.getByRole("button", { name: "More actions", exact: true }).click();
   await expect(
-    page.getByRole("menuitem", { name: "Mark open", exact: true }),
+    card.getByRole("button", { name: "Reopen", exact: true }),
   ).toBeVisible();
-  await measure(page, "Completed notebook entry More actions menu");
-  await page.getByRole("menuitem", { name: "Mark open", exact: true }).click();
+  await measure(page, "Completed notebook entry Reopen action");
+  await card.getByRole("button", { name: "Reopen", exact: true }).click();
   await expect(card.locator(".badge")).toHaveText("Open");
 });
 

@@ -1,0 +1,15 @@
+{
+  "report": "reference-final-native",
+  "source": "3a2fa25",
+  "stats": {
+    "startTime": "2026-10-19T04:45:21.318Z",
+    "duration": 140303.587,
+    "expected": 18,
+    "skipped": 2,
+    "unexpected": 4,
+    "flaky": 0
+  },
+  "global_errors": 0,
+  "report_sha256": "33f631af1b510c0321f3c943fd5a3bb806c3d19199c995858ce8f74b1776a2c9",
+  "cli_exit": 1
+}

@@ -1,10 +1,18 @@
-# Test the phone demo from Ubuntu
+# Test the prototype on Ubuntu and other devices
 
 This is a browser prototype with fictional data. No cloud account, site, email policy or other resource has been created for you. The first two options below run on your own Ubuntu computer. The optional Cloudflare option is a procedure you may choose to follow later; it is not needed to review the app on Ubuntu.
 
+| Where you want to test | Address to open | What must be running |
+| --- | --- | --- |
+| On the Ubuntu computer | `http://localhost:5174` | `npm run preview` on Ubuntu |
+| Phone/tablet/computer on the same Wi-Fi | Ubuntu's **Network** address, such as `http://192.168.1.20:5174` | The same preview; Ubuntu stays on |
+| A device anywhere on the Internet | A deployed HTTPS address | A hosting service; see option 3 |
+
+The normal preview command already listens on `0.0.0.0` for same-network access. Earlier instructions added `--host 127.0.0.1`, which overrode that setting and blocked other devices. Omit that override. `0.0.0.0` itself is not a website address, and changing the listener does not create an Internet link.
+
 Every phone, browser profile and site address keeps its **own separate demo records**. A change on your Ubuntu computer does not appear on a phone. Switching people from **Demo** demonstrates colleagues sharing that one browser; it does not send data to another device. The local address, a Cloudflare production address and a preview address are different browser storage areas. Use fictional information only. App updates preserve that address's local data; changing to another address may look like a fresh demo.
 
-The combined review branch is **`feat/prototype-e3-phones`**, stacked on E2, E1 and C8. It is available in [pull request #24](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/24) and includes all four review branches. After the approved pull requests are merged in order, use `main` for later hosted updates. This guide describes intended owner steps; actual automated test and screenshot results belong in the PR review documents.
+The current review branch is **`feat/prototype-c9`**, created from main after C8, E1, E2 and E3 were merged in order with passing checks. Its [C9 review guide](PR_C9_REVIEW.md) lists exact click paths and actual results. Use this branch while reviewing C9; after its later approval and merge, use `main` for hosted updates. This guide describes owner-run steps, not a completed hosting setup.
 
 ## 1. Start it in a browser inside Ubuntu Desktop
 
@@ -38,7 +46,7 @@ If this repository is not already downloaded:
 
 ```bash
 cd ~
-git clone --branch feat/prototype-e3-phones https://github.com/ababamahmoudi/Supermarket-Inventory.git
+git clone --branch feat/prototype-c9 https://github.com/ababamahmoudi/Supermarket-Inventory.git
 cd Supermarket-Inventory
 ```
 
@@ -53,11 +61,11 @@ No output means there are no changed files. If files are listed, keep them and s
 
 ```bash
 git fetch origin
-git switch feat/prototype-e3-phones
-git pull --ff-only origin feat/prototype-e3-phones
+git switch feat/prototype-c9
+git pull --ff-only origin feat/prototype-c9
 ```
 
-`git status --short` should show no changed files. If it lists changes or switching is refused, keep those files and the message. Do not run `git reset --hard`, delete the folder or choose a discard option. `--ff-only` also refuses to overwrite different local history. If the branch is not found, check that `git fetch origin` succeeded and that you are in this repository; compare the branch name with [pull request #24](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/24) and retain the error.
+`git status --short` should show no changed files. If it lists changes or switching is refused, keep those files and the message. Do not run `git reset --hard`, delete the folder or choose a discard option. `--ff-only` also refuses to overwrite different local history. If the branch is not found, check that `git fetch origin` succeeded and that you are in this repository; compare the branch name with the [C9 review guide](PR_C9_REVIEW.md) and retain the error.
 
 Check the branch, build, and start:
 
@@ -66,10 +74,10 @@ git branch --show-current
 cd prototype
 npm ci
 npm run build
-npm run preview -- --host 127.0.0.1 --port 5174 --strictPort
+npm run preview
 ```
 
-Expect **`feat/prototype-e3-phones`**, a completed dependency installation, a successful TypeScript/Vite build and **`http://127.0.0.1:5174/`**. Leave this Terminal open. In Chrome or Firefox **inside Ubuntu**, enter **http://localhost:5174**. The sign-in page should open. A funding notice or build chunk-size warning is not a failure when the command ends successfully.
+Expect **`feat/prototype-c9`**, a completed dependency installation, a successful TypeScript/Vite build, and **Local** plus **Network** addresses on port **5174**. Leave this Terminal open. Inside Ubuntu, open **http://localhost:5174** in Chrome or Firefox. For your other devices, continue directly to option 2 and open Ubuntu's Network address on the same Wi-Fi. The sign-in page should open. A funding notice or build chunk-size warning is not a failure when the command ends successfully.
 
 For a fresh/reset fictional demo, use **manager / demo1234**. The privileged second step is simulated; follow the prompt. Open **Demo** and choose the direct **Switch to…** item for the supplied person. At phone width, open **More (⋯) → Demo** first. The supplied usernames are owner, manager, rh-supervisor, ny-floor, wh-floor and cashier. Existing saved/custom passwords are preserved during normal upgrades; the fresh-demo password is not a promise to overwrite them. **Reset demo** explicitly clears fictional business/People changes in this browser, as its confirmation explains.
 
@@ -89,11 +97,11 @@ If the browser is blank, check the server Terminal first. If port 5174 is in use
 
 This option is for checking layout and tapping through flows. Your computer must stay on and keep serving the app. Both devices must be on the same trusted local network, not guest Wi-Fi which blocks devices from one another.
 
-In the preview Terminal, press **Ctrl+C**, then run:
+If the preview from option 1 is still running, keep it running; it already accepts network connections. If you started it using the old `--host 127.0.0.1` command, press **Ctrl+C** in that Terminal and restart it with:
 
 ```bash
 cd ~/Supermarket-Inventory/prototype
-npm run preview -- --host 0.0.0.0 --port 5174 --strictPort
+npm run preview
 ```
 
 Expect a Local address and one or more Network addresses. `0.0.0.0` makes this test server listen on your computer's network interfaces; it is not the address to type into the phone.

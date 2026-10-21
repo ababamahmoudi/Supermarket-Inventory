@@ -1,0 +1,172 @@
+{
+  "base": "390fec0ea8d4e259d577b69844cc0924e6a5469a",
+  "changed_browser_tests": [
+    "prototype/tests/b-polish.spec.ts",
+    "prototype/tests/c5-button-audit.spec.ts",
+    "prototype/tests/c8-layout-proof.spec.ts",
+    "prototype/tests/filters-a2.spec.ts",
+    "prototype/tests/klead-retouch-controls.spec.ts",
+    "prototype/tests/manual-prices-c1.spec.ts",
+    "prototype/tests/notebooks-b.spec.ts",
+    "prototype/tests/returns-a2.spec.ts"
+  ],
+  "no_workflow_or_runner_config_delta": true,
+  "budgets_and_rules": {
+    "prototype/tests/b-polish.spec.ts": {
+      "timeouts": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "skip_rules": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "worker_retry_settings": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      }
+    },
+    "prototype/tests/c5-button-audit.spec.ts": {
+      "timeouts": {
+        "unchanged": true,
+        "before": [
+          "test.setTimeout(180000);"
+        ],
+        "after": [
+          "test.setTimeout(180000);"
+        ]
+      },
+      "skip_rules": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "worker_retry_settings": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      }
+    },
+    "prototype/tests/c8-layout-proof.spec.ts": {
+      "timeouts": {
+        "unchanged": true,
+        "before": [
+          "test.setTimeout(240000);"
+        ],
+        "after": [
+          "test.setTimeout(240000);"
+        ]
+      },
+      "skip_rules": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "worker_retry_settings": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      }
+    },
+    "prototype/tests/filters-a2.spec.ts": {
+      "timeouts": {
+        "unchanged": true,
+        "before": [
+          "test.setTimeout(60000);"
+        ],
+        "after": [
+          "test.setTimeout(60000);"
+        ]
+      },
+      "skip_rules": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "worker_retry_settings": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      }
+    },
+    "prototype/tests/klead-retouch-controls.spec.ts": {
+      "timeouts": {
+        "unchanged": true,
+        "before": [
+          "test.setTimeout(90000);"
+        ],
+        "after": [
+          "test.setTimeout(90000);"
+        ]
+      },
+      "skip_rules": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "worker_retry_settings": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      }
+    },
+    "prototype/tests/manual-prices-c1.spec.ts": {
+      "timeouts": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "skip_rules": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "worker_retry_settings": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      }
+    },
+    "prototype/tests/notebooks-b.spec.ts": {
+      "timeouts": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "skip_rules": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "worker_retry_settings": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      }
+    },
+    "prototype/tests/returns-a2.spec.ts": {
+      "timeouts": {
+        "unchanged": true,
+        "before": [
+          "test.setTimeout(60000);"
+        ],
+        "after": [
+          "test.setTimeout(60000);"
+        ]
+      },
+      "skip_rules": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      },
+      "worker_retry_settings": {
+        "unchanged": true,
+        "before": [],
+        "after": []
+      }
+    }
+  }
+}

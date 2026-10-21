@@ -101,7 +101,7 @@ export interface E1DemoContextValue {
   authorityDirectoryVersion: number;
   secondStepMethod: "passkey" | "authenticator" | null;
   reauthenticate(password: string): Promise<string | null>;
-  authStage: SignInResult["next"] | "signed_out" | "loading";
+  authStage: SignInResult["next"] | "signed_out" | "loading" | "refreshing";
   signIn(username: string, password: string): Promise<string | null>;
   choosePassword(password: string): Promise<string | null>;
   setupSecondStep(method: "passkey" | "authenticator"): Promise<string | null>;

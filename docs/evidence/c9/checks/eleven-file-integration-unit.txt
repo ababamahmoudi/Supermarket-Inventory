@@ -1,0 +1,17 @@
+
+ RUN  v5.0.3 /workspace/Supermarket-Inventory/prototype
+
+
+ Test Files  7 passed (7)
+      Tests  27 passed (27)
+   Start at  04:18:26
+   Duration  50.24s (tests 75%, environment 11%, transform 7%, import 4%, setup 2%)
+
+    Isolate  7 workers spawned · ~1.78s startup each (spawn + environment, per file)
+             at least ~4.45s faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

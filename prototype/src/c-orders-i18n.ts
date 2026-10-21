@@ -9,8 +9,8 @@ export const orderStatusCopy: Record<OrderStatus, [string, string]> = {
 };
 const errors: Record<string, [string, string]> = {
   permission: [
-    "Orders are not enabled for your role. Ask your Supervisor to check Settings.",
-    "سفارش‌ها برای نقش شما فعال نیست. از سرپرست بخواهید تنظیمات را بررسی کند.",
+    "Orders are not enabled for your role. Ask an Owner or Manager to check Settings.",
+    "سفارش‌ها برای نقش شما فعال نیست. از مالک یا مدیر بخواهید تنظیمات را بررسی کند.",
   ],
   scope: [
     "This order is outside your company or assigned locations.",

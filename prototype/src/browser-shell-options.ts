@@ -19,7 +19,7 @@ import {
   migrateE1BusinessState,
 } from "./e1-state-migration";
 import { autoAddApprovedLabelChanges } from "./label-workflow";
-import { evaluateSales } from "./sales";
+import { evaluateSales, migrateSalePriceInvariants } from "./sales";
 import { syncReturnCreditAlerts } from "./return-workflow";
 import { syncDateReminderAlerts } from "./date-tracking";
 import type { DemoState } from "./types";
@@ -39,7 +39,12 @@ export function browserShellOptions(projectors: ReadModelProjectors) {
   return {
     companyId: configSeed.company.seed_key,
     loadInitialBusiness,
-    prepareInitialBusiness: migratePriceUpdates,
+    prepareInitialBusiness: async (
+      ...args: Parameters<typeof migratePriceUpdates>
+    ) => {
+      await migratePriceUpdates(...args);
+      await migrateSalePriceInvariants(...args);
+    },
     historyRecovery: {
       status: historyRecoveryStatus,
       prepareReset: prepareHistoryRecoveryReset,

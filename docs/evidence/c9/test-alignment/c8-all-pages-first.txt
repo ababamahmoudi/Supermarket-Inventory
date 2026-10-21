@@ -1,0 +1,61 @@
+
+Running 6 tests using 2 workers
+
+(node:185076) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:185077) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [desktop] › tests/c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 900px (49.5s)
+  ✓  1 [desktop] › tests/c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 390px (51.9s)
+  ✘  3 [desktop] › tests/c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px (36.7s)
+(node:185672) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  4 [desktop] › tests/c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards fa 390px (47.5s)
+  ✓  5 [desktop] › tests/c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards fa 900px (47.8s)
+  ✓  6 [desktop] › tests/c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards fa 1440px (44.5s)
+
+
+  1) [desktop] › tests/c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px
+
+    Error: supplier:Supplier items
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   "supplier:Supplier items: text leaves cell: QA-SHORT-LAYOUT",
+    +   "supplier:Supplier items: neighboring values overlap: QA-SHORT-LAYOUT/Edit",
+    +   "supplier:Supplier items: controls overlap: C8-QA-SHORT-LAYOUT/Edit",
+    + ]
+
+      245 |             ).toBeGreaterThan(0);
+      246 |           }
+    > 247 |           expect(proof.failures, scene).toEqual([]);
+          |                                         ^
+      248 |         };
+      249 |         for (const entry of pages) {
+      250 |           await visitC8(page, entry.route);
+        at inspect (/workspace/Supermarket-Inventory/prototype/tests/c8-layout-proof.spec.ts:247:41)
+        at /workspace/Supermarket-Inventory/prototype/tests/c8-layout-proof.spec.ts:337:15
+
+    Error Context: test-results/c8-layout-proof-C8-every-p-77f57-ph-control-guards-en-1440px-desktop/error-context.md
+
+    attachment #25: trace (application/zip) ────────────────────────────────────────────────────────
+    test-results/c8-layout-proof-C8-every-p-77f57-ph-control-guards-en-1440px-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/c8-layout-proof-C8-every-p-77f57-ph-control-guards-en-1440px-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [desktop] › tests/c8-layout-proof.spec.ts:163:5 › C8 every page keeps rows inside their cards and retains glyph/control guards en 1440px
+  5 passed (2.4m)
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -315,9 +315,7 @@ test("Columns keeps mandatory names, persists by user and never exposes Supervis
   await expect(
     dialog.getByRole("checkbox", { name: "Product", exact: true }),
   ).toBeDisabled();
-  await dialog
-    .getByRole("checkbox", { name: "Approved price", exact: true })
-    .uncheck();
+  await dialog.getByRole("checkbox", { name: "Price", exact: true }).uncheck();
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(
     page.locator(".catalog-products-table th[data-column-key=price]"),

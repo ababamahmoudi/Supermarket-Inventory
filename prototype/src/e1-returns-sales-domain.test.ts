@@ -231,9 +231,16 @@ describe("E1 return and price authority", () => {
       text: "Fictional staff instruction",
     });
     const note = state.notes[0];
-    expect(() => updateNoteStatus(state, worker, note.id, "read")).toThrow();
+    updateNoteStatus(state, worker, note.id, "read");
+    expect(() =>
+      updateNoteStatus(state, worker, note.id, "resolved"),
+    ).toThrow();
     updateNoteStatus(state, supervisor, note.id, "read");
-    expect(note.status).toBe("read");
+    expect(note.status).toBe("open");
+    expect(note.seen_receipts?.map((row) => row.user_id)).toEqual([
+      worker.user_id,
+      supervisor.user_id,
+    ]);
   });
   it.each(["branch_supervisor", "floor_worker"] as RoleId[])(
     "%s gets operational memo and print with retained money kept private",

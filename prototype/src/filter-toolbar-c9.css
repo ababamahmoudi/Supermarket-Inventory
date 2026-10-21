@@ -1,0 +1,103 @@
+/* One list toolbar; ordinary form fields and dialog actions retain their sizes. */
+@media screen {
+  :root .ui-card.card:has(> .filter-toolbar.c9-filter-toolbar) {
+    padding: 20px;
+  }
+  :root .filter-toolbar.c9-filter-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 20px;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .field {
+    margin: 0;
+    gap: 0;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    align-self: center;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .field > label {
+    display: none;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .filter-search-pill {
+    flex: 0 1 280px;
+    inline-size: 280px;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    block-size: 40px;
+    min-block-size: 40px;
+    border-radius: var(--radius-control);
+  }
+  :root .filter-toolbar.c9-filter-toolbar .filter-search-pill input,
+  :root .filter-toolbar.c9-filter-toolbar .filter-search-pill input.ui-input,
+  :root .filter-toolbar.c9-filter-toolbar .ui-select,
+  :root .filter-toolbar.c9-filter-toolbar .ui-button.button,
+  :root .filter-toolbar.c9-filter-toolbar .ui-checked-control,
+  :root .filter-toolbar.c9-filter-toolbar .supplier-filter-chip {
+    block-size: 40px;
+    min-block-size: 40px;
+    max-block-size: 40px;
+    margin-block: 0;
+    padding-block: 0;
+    align-items: center;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .ui-select {
+    min-inline-size: 0;
+    max-inline-size: min(320px, 100%);
+  }
+  :root .filter-toolbar.c9-filter-toolbar .ui-segments {
+    margin: 0;
+    align-self: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    block-size: 40px;
+    min-block-size: 40px;
+    max-block-size: 40px;
+    padding: 4px;
+    gap: 2px;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .ui-segments button {
+    block-size: 32px;
+    min-block-size: 32px;
+    max-block-size: 32px;
+    padding-block: 0;
+    font-size: var(--font-size-label);
+    white-space: nowrap;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .filter-toolbar-end {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    max-inline-size: 100%;
+  }
+  :root .filter-toolbar.c9-filter-toolbar > .filter-toolbar-trailing {
+    margin-inline-start: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .filter-count {
+    margin: 0;
+    white-space: nowrap;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .filter-chip.ui-button,
+  :root .filter-toolbar.c9-filter-toolbar .supplier-filter-chip.ui-button {
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-round);
+    background: var(--surface);
+    color: var(--text);
+    white-space: nowrap;
+  }
+  :root
+    .filter-toolbar.c9-filter-toolbar
+    .filter-chip.ui-button[aria-pressed="true"],
+  :root
+    .filter-toolbar.c9-filter-toolbar
+    .supplier-filter-chip.ui-button[aria-pressed="true"] {
+    background: var(--accent-soft);
+    color: var(--accent-tint-text);
+    border-color: var(--accent-soft);
+  }
+}

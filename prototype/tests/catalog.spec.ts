@@ -29,7 +29,11 @@ test("cashier finds English, Persian, code and barcode results with approved pri
   await search.fill("0009");
   await expect(page.locator(".price")).toHaveText("$2.99");
   await expect(
-    page.locator(".lookup-detail").getByText("Taxable", { exact: true }),
+    page
+      .locator(".lookup-detail")
+      .getByText(`Before tax · ${configuration.tax.label_text_en}`, {
+        exact: true,
+      }),
   ).toBeVisible();
   await search.fill("0006");
   await expect(page.locator(".price")).toHaveText("$1.99");
@@ -114,7 +118,9 @@ test("Floor Worker filters Products and opens details without seeing catalog sup
 }) => {
   await signIn(page, "Floor Worker");
   await visit(page, "products", "Products");
-  await page.getByLabel("Has pending price", { exact: true }).check();
+  await page
+    .getByRole("button", { name: "Has pending price", exact: true })
+    .click();
   await expect(
     page.getByText("Page 1 of 1 · 3 products", { exact: true }),
   ).toBeVisible();
@@ -144,7 +150,9 @@ test("Floor Worker filters Products and opens details without seeing catalog sup
   await expect(
     page.getByRole("heading", { name: lavash.name_en, exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".price")).toHaveText("$1.99");
+  await expect(
+    page.locator(".c9-hero-price").getByTestId("selling-price"),
+  ).toHaveText("$1.99");
   await expect(page.getByText("Store cost", { exact: false })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Stock estimate", exact: true }),

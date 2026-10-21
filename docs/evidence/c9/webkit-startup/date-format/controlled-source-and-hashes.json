@@ -1,0 +1,35 @@
+{
+  "kind": "controlled hypothesis proof; not native WebKit evidence",
+  "source_commit_captured_after_run": "f3718812a6c7824a6c202198742ac1f43d7683db",
+  "source_file_hashes": {
+    "prototype/src/e1-bootstrap.ts": "8483a84615e67aaba6c20aeb60d787b8c1d531abd59bab03c434be3e506d799f",
+    "prototype/src/demo-fixtures.ts": "8da54dbc6f5b36f2902fd4fa7439c8222c3e285a0db14857e21445319d909504",
+    "prototype/src/invoice.ts": "dab8dbdab851ab666ab2d7f5048839fffc28408332760a16580b44fe2aeac3e9",
+    "prototype/src/e1-shell-runtime.ts": "e0958d86dc8ae5a5e96063a172df113dd6b2370c92a28b785724d63bba0adb54",
+    "prototype/src/e1-application-options.ts": "32839011e6ba707acafaf1ab18814b203e80fbaed8b3a42ef0b76e6cc307c900",
+    "prototype/src/browser-shell-options.ts": "f2a8cb2ed446feeacc46ba8611be1e37eadbb9bd353989cd35b8754cc1625526",
+    "prototype/src/authority-repository.ts": "5feb61fd964ef85a1f542989ef4bec98a09ac8a09db45d8f3675e08785d8cc9e",
+    "prototype/src/config.ts": "b467e11d3af513e29b6d7fc247e556b484d4e2073bee7e10d77a38cd32a599f6",
+    "seed/arzon-config.json": "7f539395e87df312a8b18fc66344889de34e40404193b61656dfc19a3adfb3bd",
+    "seed/demo-data.json": "ef244665bc838f3575eff2e86ab1a345c5adf94f34863f8eca65b023bb1c9e7c"
+  },
+  "proof_file_hashes": {
+    "controlled-hypothesis.json": "494ddb35308c188c16feb9f72581f511791b36bad6d2a5334a31ff1e5c11ecb4",
+    "date-format.proof.test.ts": "bcf3dc06d6c0592443bc2f6333afff36e3437aa603b7c9bb260c0a39d87eadc9",
+    "vitest-with-evidence.log": "d902d728199e42de7da18469e4f339f5f1157958d72920cd98d24d89ea1fc578",
+    "vitest.config.mts": "e906774a9023f9757c5f3f03a7be5d0d4749931bbf10d4d2f44c5d799646381d",
+    "vitest.log": "50ce46ab496fcabd2c34726a0b815d4c7ca3a374b346bd4a19146b38a5eb9e79"
+  },
+  "node": "v22.23.3",
+  "result": {
+    "test_files_passed": 1,
+    "tests_passed": 4,
+    "tests_failed": 0,
+    "last_run_exit_code": 0
+  },
+  "limits": [
+    "Intl.format ordering is deliberately simulated; actual formatToParts and configured timezone are retained.",
+    "Uses actual initialState and createE1ShellRuntime with disposable fake-indexeddb storage.",
+    "No production source edits, browser reset, auth bypass, credential output or real WebKit execution."
+  ]
+}

@@ -1,0 +1,28 @@
+
+Running 10 tests using 2 workers
+
+(node:183618) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:183619) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › tests/b-polish.spec.ts:74:3 › C9 filter controls are 40px, readable, searchable and compact in en (10.4s)
+  ✓   2 [desktop] › tests/b-polish.spec.ts:74:3 › C9 filter controls are 40px, readable, searchable and compact in fa (12.6s)
+  ✓   3 [desktop] › tests/klead-retouch-controls.spec.ts:537:3 › Klead retouch: shared controls and a real partial return retain their surface hierarchy (en) (11.6s)
+  ✓   4 [desktop] › tests/klead-retouch-controls.spec.ts:537:3 › Klead retouch: shared controls and a real partial return retain their surface hierarchy (fa) (12.0s)
+(node:184039) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   5 [desktop] › tests/manual-prices-c1.spec.ts:15:1 › manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only (11.7s)
+(node:184173) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   6 [phone] › tests/b-polish.spec.ts:74:3 › C9 filter controls are 40px, readable, searchable and compact in en (8.6s)
+  ✓   7 [phone] › tests/b-polish.spec.ts:74:3 › C9 filter controls are 40px, readable, searchable and compact in fa (9.1s)
+  ✓   8 [phone] › tests/klead-retouch-controls.spec.ts:537:3 › Klead retouch: shared controls and a real partial return retain their surface hierarchy (en) (10.9s)
+  ✓   9 [phone] › tests/klead-retouch-controls.spec.ts:537:3 › Klead retouch: shared controls and a real partial return retain their surface hierarchy (fa) (13.0s)
+  ✓  10 [phone] › tests/manual-prices-c1.spec.ts:15:1 › manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only (12.3s)
+
+  10 passed (1.0m)
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

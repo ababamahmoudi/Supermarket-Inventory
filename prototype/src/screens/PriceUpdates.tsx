@@ -62,7 +62,7 @@ function taskScope(
   };
 }
 export function PriceUpdates() {
-  const { state, actor, can, lang, t, navigate } = useDemo();
+  const { state, actor, can, lang, t, tCount, navigate } = useDemo();
   const requestedId = useRouteParam("id");
   const progress = useRouteParam("view") === "progress";
   const requestedLocation = useRouteParam("location") ?? "all";
@@ -182,7 +182,7 @@ export function PriceUpdates() {
           "قیمت در برنامه بلافاصله تغییر می‌کند. صندوق فروش و برچسب قفسه را اینجا تأیید کنید.",
         )}
         actions={
-          isManager ? (
+          isManager && progress ? (
             <Button
               variant="neutral"
               onClick={() =>
@@ -207,15 +207,46 @@ export function PriceUpdates() {
         <PriceUpdateProgress tasks={tasks} />
       ) : (
         <Card>
-          <FilterToolbar>
-            <Tabs
-              value={status}
-              onChange={setStatus}
-              options={[
-                { value: "pending", label: t("Pending", "در انتظار") },
-                { value: "done", label: t("Done", "انجام‌شده") },
-              ]}
-            />
+          <FilterToolbar
+            aria-label={t("Price update filters", "فیلترهای به‌روزرسانی قیمت")}
+            count={tCount(
+              "{{count}} price update",
+              "{{count}} price updates",
+              "{{count}} به‌روزرسانی قیمت",
+              "{{count}} به‌روزرسانی قیمت",
+              visible.length,
+            )}
+            actions={
+              isManager ? (
+                <Button
+                  variant="neutral"
+                  onClick={() => navigate("price-updates?view=progress")}
+                >
+                  {t("Store progress", "پیشرفت فروشگاه‌ها")}
+                </Button>
+              ) : undefined
+            }
+            leading={
+              <Tabs
+                value={status}
+                onChange={setStatus}
+                options={[
+                  {
+                    value: "pending",
+                    label: t("Pending", "در انتظار"),
+                    count: tasks.filter((item) => item.status === "pending")
+                      .length,
+                  },
+                  {
+                    value: "done",
+                    label: t("Done", "انجام‌شده"),
+                    count: tasks.filter((item) => item.status === "done")
+                      .length,
+                  },
+                ]}
+              />
+            }
+          >
             <Field label={t("Location", "مکان")}>
               <Select
                 value={location}
@@ -240,11 +271,15 @@ export function PriceUpdates() {
                 setTo(nextTo);
               }}
             />
-            {(location !== "all" || from || to) && (
+            {(status !== "pending" || location !== "all" || from || to) && (
               <Button
                 variant="plain"
                 onClick={() => {
-                  setLocation("all");
+                  setFilters({
+                    key: filterKey,
+                    location: "all",
+                    status: "pending",
+                  });
                   setFrom("");
                   setTo("");
                 }}
@@ -271,12 +306,30 @@ export function PriceUpdates() {
             </EmptyState>
           ) : (
             <div className="price-updates-list">
+              <div className="price-updates-table-header" aria-hidden="true">
+                <span />
+                <span>{t("Product", "کالا")}</span>
+                <span>{t("Store", "فروشگاه")}</span>
+                <span className="price-updates-price-heading">
+                  {t("Price", "قیمت")}
+                </span>
+                <span>{t("Why", "دلیل")}</span>
+                <span>{t("Done so far", "انجام‌شده تا کنون")}</span>
+                <span />
+              </div>
               {visible.map((task) => {
                 const product = state.products.find(
                   (item) =>
                     item.company_id === task.company_id &&
                     item.code === task.product_code,
                 );
+                const completedSteps =
+                  Number(task.register_changed?.version === task.version) +
+                  Number(
+                    task.label_printed?.version === task.version ||
+                      task.no_label?.version === task.version,
+                  );
+                const scope = taskScope(task.company_id, task.branch);
                 return (
                   <div
                     className="price-updates-row"
@@ -321,13 +374,13 @@ export function PriceUpdates() {
                     ) : (
                       <Badge tone="approved">{t("Done", "انجام‌شده")}</Badge>
                     )}
-                    <div>
+                    <div className="price-updates-product">
                       {product ? (
                         <ProductName product={product} language={lang} />
                       ) : (
                         <LtrText>{task.product_code}</LtrText>
                       )}
-                      <small className="muted">
+                      <small className="muted price-updates-compact-meta">
                         {branchLabel(state.config, task.branch, lang)} ·{" "}
                         <DateText value={task.effective_at} />
                       </small>
@@ -350,19 +403,60 @@ export function PriceUpdates() {
                         </small>
                       )}
                     </div>
+                    <div className="price-updates-store price-updates-wide-cell">
+                      {branchLabel(state.config, task.branch, lang)}
+                    </div>
                     <PriceUpdateChange task={task} />
-                    <Button
-                      variant="plain"
-                      className="price-update-open"
-                      aria-label={`${t("Open price update", "باز کردن به‌روزرسانی قیمت")} ${product?.name_en ?? task.product_code}`}
-                      onClick={() =>
-                        navigate(
-                          `price-update?id=${encodeURIComponent(task.id)}`,
-                        )
-                      }
+                    <div className="price-updates-reason price-updates-wide-cell muted">
+                      {historyActionLabel(task.reason, lang)}
+                      {task.decided_by && (
+                        <>
+                          {" "}
+                          · <bdi>{task.decided_by}</bdi>
+                        </>
+                      )}
+                    </div>
+                    <div
+                      className={`price-updates-steps price-updates-wide-cell ${completedSteps === 2 ? "is-complete" : completedSteps ? "is-started" : "is-pending"}`}
                     >
-                      <ChevronRight className="directional" size={20} />
-                    </Button>
+                      <span aria-hidden="true" />
+                      {tCount(
+                        "{{count}} of 2 steps",
+                        "{{count}} of 2 steps",
+                        "{{count}} از ۲ مرحله",
+                        "{{count}} از ۲ مرحله",
+                        completedSteps,
+                      )}
+                    </div>
+                    <div className="price-updates-row-actions">
+                      {task.status === "pending" && (
+                        <Button
+                          variant="tinted"
+                          size="sm"
+                          className="price-updates-wide-cell"
+                          disabled={!can("labels.print", scope)}
+                          onClick={() =>
+                            navigate(
+                              `price-update?id=${encodeURIComponent(task.id)}`,
+                            )
+                          }
+                        >
+                          {t("Print label", "چاپ برچسب")}
+                        </Button>
+                      )}
+                      <Button
+                        variant="plain"
+                        className="price-update-open"
+                        aria-label={`${t("Open price update", "باز کردن به‌روزرسانی قیمت")} ${product?.name_en ?? task.product_code}`}
+                        onClick={() =>
+                          navigate(
+                            `price-update?id=${encodeURIComponent(task.id)}`,
+                          )
+                        }
+                      >
+                        <ChevronRight className="directional" size={20} />
+                      </Button>
+                    </div>
                   </div>
                 );
               })}

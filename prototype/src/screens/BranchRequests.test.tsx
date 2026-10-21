@@ -55,16 +55,18 @@ describe("Branch requests presentation", () => {
     fireEvent.click(screen.getByText("Worker session"));
     await waitForSharedUiActor("floor_worker", undefined, sessionBeforeSwitch1);
     await userEvent.click(screen.getByRole("button", { name: "New request" }));
-    await choose("Sending location", "Warehouse");
+    await choose("Ask this location", "Warehouse");
     await userEvent.type(
-      screen.getByLabelText("Free-text item"),
+      screen.getByLabelText(
+        "Add a product, or type an item that isn't in the catalog",
+      ),
       "Small paper bags",
     );
-    await userEvent.click(screen.getByRole("button", { name: "Add item" }));
+    await userEvent.click(screen.getByRole("button", { name: /^Add item/ }));
     await choose("Units / Cases", "Cases");
     await userEvent.clear(screen.getByLabelText("Quantity"));
     await userEvent.type(screen.getByLabelText("Quantity"), "3");
-    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    await userEvent.click(screen.getByRole("button", { name: "Send request" }));
     await waitFor(() =>
       expect(screen.getByText("Requested")).toBeInTheDocument(),
     );
@@ -88,6 +90,47 @@ describe("Branch requests presentation", () => {
     expect(
       screen.queryByText(/Store cost|Selling price|Balance/),
     ).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Back to requests" }),
+    );
+    const reference = state.branch_requests!.at(-1)!.reference;
+    const rowLink = screen.getByRole("link", { name: reference });
+    const row = rowLink.closest("tr")!;
+    expect(row).toHaveTextContent("1 item · Small paper bags");
+    expect(rowLink.closest("td")).toBe(row.lastElementChild);
+    const desktopWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 390,
+    });
+    fireEvent(window, new Event("resize"));
+    try {
+      for (const key of ["{Enter}", " "]) {
+        const phoneRow = screen
+          .getByRole("link", { name: reference })
+          .closest("tr")!;
+        expect(phoneRow).toHaveClass("phone-list-row");
+        expect(phoneRow).toHaveAttribute("tabindex", "0");
+        phoneRow.focus();
+        expect(phoneRow).toHaveFocus();
+        await userEvent.keyboard(key);
+        await waitFor(() =>
+          expect(
+            screen.getByRole("heading", { name: reference }),
+          ).toBeInTheDocument(),
+        );
+        if (key === "{Enter}")
+          await userEvent.click(
+            screen.getByRole("button", { name: "Back to requests" }),
+          );
+      }
+    } finally {
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: desktopWidth,
+      });
+      fireEvent(window, new Event("resize"));
+    }
   });
   it("keeps invalid quantities unposted and explains the blocker", async () => {
     await mount();
@@ -95,12 +138,17 @@ describe("Branch requests presentation", () => {
     fireEvent.click(screen.getByText("Worker session"));
     await waitForSharedUiActor("floor_worker", undefined, sessionBeforeSwitch2);
     await userEvent.click(screen.getByRole("button", { name: "New request" }));
-    await choose("Sending location", "Warehouse");
-    await userEvent.type(screen.getByLabelText("Free-text item"), "Bread");
-    await userEvent.click(screen.getByRole("button", { name: "Add item" }));
+    await choose("Ask this location", "Warehouse");
+    await userEvent.type(
+      screen.getByLabelText(
+        "Add a product, or type an item that isn't in the catalog",
+      ),
+      "Bread",
+    );
+    await userEvent.click(screen.getByRole("button", { name: /^Add item/ }));
     await userEvent.clear(screen.getByLabelText("Quantity"));
     await userEvent.type(screen.getByLabelText("Quantity"), "1.5");
-    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    await userEvent.click(screen.getByRole("button", { name: "Send request" }));
     expect(
       screen.getByRole("alert", { name: "What's missing" }),
     ).toHaveTextContent("positive whole number of units");
@@ -129,10 +177,12 @@ describe("Branch requests presentation", () => {
     await waitForSharedUiActor("manager", "Branch 2");
     await userEvent.click(screen.getByRole("button", { name: "New request" }));
     await userEvent.type(
-      screen.getByLabelText("Free-text item"),
+      screen.getByLabelText(
+        "Add a product, or type an item that isn't in the catalog",
+      ),
       "Other location private draft",
     );
-    await userEvent.click(screen.getByRole("button", { name: "Add item" }));
+    await userEvent.click(screen.getByRole("button", { name: /^Add item/ }));
     expect(
       screen.getByText("Other location private draft"),
     ).toBeInTheDocument();
@@ -142,7 +192,11 @@ describe("Branch requests presentation", () => {
     expect(
       screen.queryByText("Other location private draft"),
     ).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Free-text item")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(
+        "Add a product, or type an item that isn't in the catalog",
+      ),
+    ).not.toBeInTheDocument();
     const sessionBeforeSwitch5 = sharedUiSessionId();
     fireEvent.click(screen.getByText("Cashier session"));
     await waitForSharedUiActor("cashier", undefined, sessionBeforeSwitch5);

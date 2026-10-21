@@ -1,0 +1,1090 @@
+{
+  "reference": "C8-QA-SHORT-LAYOUT",
+  "geometry": {
+    "row": {
+      "left": 296,
+      "right": 1392,
+      "top": 873.5,
+      "bottom": 963,
+      "width": 1096,
+      "height": 89.5
+    },
+    "cells": [
+      {
+        "index": 0,
+        "text": "Canned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی\n0002 · 400 g",
+        "label": "Product",
+        "rect": {
+          "left": 296,
+          "right": 521.15625,
+          "top": 873.5,
+          "bottom": 963,
+          "width": 225.15625,
+          "height": 89.5
+        },
+        "style": {
+          "display": "table-cell",
+          "inlineSize": "225.156px",
+          "minInlineSize": "0px",
+          "maxInlineSize": "none",
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "overflow": "visible",
+          "paddingInlineStart": "12px",
+          "paddingInlineEnd": "12px",
+          "tableLayout": "auto"
+        },
+        "controls": [
+          {
+            "tag": "A",
+            "text": "Canned Fava Beans 400 g\nباقالا کنسرو شده ۴۰۰ گرمی",
+            "ariaLabel": null,
+            "className": "",
+            "rect": {
+              "left": 308,
+              "right": 509.15625,
+              "top": 885.5,
+              "bottom": 931,
+              "width": 201.15625,
+              "height": 45.5
+            },
+            "style": {
+              "display": "inline",
+              "inlineSize": "auto",
+              "minInlineSize": "0px",
+              "maxInlineSize": "none",
+              "whiteSpace": "normal",
+              "overflowWrap": "normal",
+              "wordBreak": "normal",
+              "overflow": "visible",
+              "paddingInlineStart": "0px",
+              "paddingInlineEnd": "0px",
+              "tableLayout": "auto"
+            }
+          }
+        ]
+      },
+      {
+        "index": 1,
+        "text": "—",
+        "label": "Supplier code",
+        "rect": {
+          "left": 521.15625,
+          "right": 673.609375,
+          "top": 873.5,
+          "bottom": 963,
+          "width": 152.453125,
+          "height": 89.5
+        },
+        "style": {
+          "display": "table-cell",
+          "inlineSize": "152.453px",
+          "minInlineSize": "0px",
+          "maxInlineSize": "none",
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "overflow": "visible",
+          "paddingInlineStart": "12px",
+          "paddingInlineEnd": "12px",
+          "tableLayout": "auto"
+        },
+        "controls": []
+      },
+      {
+        "index": 2,
+        "text": "Case of 12",
+        "label": "Pack",
+        "rect": {
+          "left": 673.609375,
+          "right": 822.296875,
+          "top": 873.5,
+          "bottom": 963,
+          "width": 148.6875,
+          "height": 89.5
+        },
+        "style": {
+          "display": "table-cell",
+          "inlineSize": "148.688px",
+          "minInlineSize": "0px",
+          "maxInlineSize": "none",
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "overflow": "visible",
+          "paddingInlineStart": "12px",
+          "paddingInlineEnd": "12px",
+          "tableLayout": "auto"
+        },
+        "controls": []
+      },
+      {
+        "index": 3,
+        "text": "$11.76",
+        "label": "Last bought / case",
+        "rect": {
+          "left": 822.296875,
+          "right": 973.578125,
+          "top": 873.5,
+          "bottom": 963,
+          "width": 151.28125,
+          "height": 89.5
+        },
+        "style": {
+          "display": "table-cell",
+          "inlineSize": "151.281px",
+          "minInlineSize": "0px",
+          "maxInlineSize": "none",
+          "whiteSpace": "nowrap",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "overflow": "visible",
+          "paddingInlineStart": "12px",
+          "paddingInlineEnd": "12px",
+          "tableLayout": "auto"
+        },
+        "controls": []
+      },
+      {
+        "index": 4,
+        "text": "C8-QA-SHORT-LAYOUT",
+        "label": "Last invoice",
+        "rect": {
+          "left": 973.578125,
+          "right": 1234.96875,
+          "top": 873.5,
+          "bottom": 963,
+          "width": 261.390625,
+          "height": 89.5
+        },
+        "style": {
+          "display": "table-cell",
+          "inlineSize": "261.391px",
+          "minInlineSize": "0px",
+          "maxInlineSize": "none",
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "overflow": "visible",
+          "paddingInlineStart": "12px",
+          "paddingInlineEnd": "12px",
+          "tableLayout": "auto"
+        },
+        "controls": [
+          {
+            "tag": "BUTTON",
+            "text": "C8-QA-SHORT-LAYOUT",
+            "ariaLabel": null,
+            "className": "ui-button button button-plain button-sm",
+            "rect": {
+              "left": 985.578125,
+              "right": 1153.515625,
+              "top": 902.25,
+              "bottom": 934.25,
+              "width": 167.9375,
+              "height": 32
+            },
+            "style": {
+              "display": "inline-flex",
+              "inlineSize": "167.938px",
+              "minInlineSize": "0px",
+              "maxInlineSize": "none",
+              "whiteSpace": "nowrap",
+              "overflowWrap": "normal",
+              "wordBreak": "normal",
+              "overflow": "visible",
+              "paddingInlineStart": "12px",
+              "paddingInlineEnd": "12px",
+              "tableLayout": "auto"
+            }
+          }
+        ]
+      },
+      {
+        "index": 5,
+        "text": "Edit",
+        "label": "Actions",
+        "rect": {
+          "left": 1234.96875,
+          "right": 1392,
+          "top": 873.5,
+          "bottom": 963,
+          "width": 157.03125,
+          "height": 89.5
+        },
+        "style": {
+          "display": "table-cell",
+          "inlineSize": "157.031px",
+          "minInlineSize": "0px",
+          "maxInlineSize": "none",
+          "whiteSpace": "nowrap",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "overflow": "visible",
+          "paddingInlineStart": "12px",
+          "paddingInlineEnd": "12px",
+          "tableLayout": "auto"
+        },
+        "controls": [
+          {
+            "tag": "BUTTON",
+            "text": "Edit",
+            "ariaLabel": null,
+            "className": "ui-button button button-neutral button-sm",
+            "rect": {
+              "left": 1247.609375,
+              "right": 1292,
+              "top": 902.25,
+              "bottom": 934.25,
+              "width": 44.390625,
+              "height": 32
+            },
+            "style": {
+              "display": "flex",
+              "inlineSize": "44.3906px",
+              "minInlineSize": "0px",
+              "maxInlineSize": "200px",
+              "whiteSpace": "normal",
+              "overflowWrap": "normal",
+              "wordBreak": "normal",
+              "overflow": "visible",
+              "paddingInlineStart": "10px",
+              "paddingInlineEnd": "10px",
+              "tableLayout": "auto"
+            }
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "ariaLabel": "Price history",
+            "className": "ui-button button button-plain button-sm ui-icon-button table-row-link",
+            "rect": {
+              "left": 1300,
+              "right": 1336,
+              "top": 900.25,
+              "bottom": 936.25,
+              "width": 36,
+              "height": 36
+            },
+            "style": {
+              "display": "flex",
+              "inlineSize": "36px",
+              "minInlineSize": "36px",
+              "maxInlineSize": "none",
+              "whiteSpace": "nowrap",
+              "overflowWrap": "normal",
+              "wordBreak": "normal",
+              "overflow": "visible",
+              "paddingInlineStart": "0px",
+              "paddingInlineEnd": "0px",
+              "tableLayout": "auto"
+            }
+          },
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "ariaLabel": "Show details",
+            "className": "ui-button button button-secondary ui-icon-button table-details-toggle",
+            "rect": {
+              "left": 1344,
+              "right": 1380,
+              "top": 900.25,
+              "bottom": 936.25,
+              "width": 36,
+              "height": 36
+            },
+            "style": {
+              "display": "flex",
+              "inlineSize": "36px",
+              "minInlineSize": "36px",
+              "maxInlineSize": "none",
+              "whiteSpace": "nowrap",
+              "overflowWrap": "normal",
+              "wordBreak": "normal",
+              "overflow": "visible",
+              "paddingInlineStart": "0px",
+              "paddingInlineEnd": "0px",
+              "tableLayout": "auto"
+            }
+          }
+        ]
+      }
+    ],
+    "table": {
+      "rect": {
+        "left": 296,
+        "right": 1392,
+        "top": 832.359375,
+        "bottom": 1410.5,
+        "width": 1096,
+        "height": 578.140625
+      },
+      "style": {
+        "display": "table",
+        "inlineSize": "1096px",
+        "minInlineSize": "0px",
+        "maxInlineSize": "100%",
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "overflow": "visible",
+        "paddingInlineStart": "0px",
+        "paddingInlineEnd": "0px",
+        "tableLayout": "fixed"
+      },
+      "columns": [
+        {
+          "inlineStyle": "width: 225.16px;",
+          "rect": {
+            "left": 296,
+            "right": 521.15625,
+            "top": 832.359375,
+            "bottom": 1410.5,
+            "width": 225.15625,
+            "height": 578.140625
+          },
+          "style": {
+            "display": "table-column",
+            "inlineSize": "225.156px",
+            "minInlineSize": "0px",
+            "maxInlineSize": "none",
+            "whiteSpace": "normal",
+            "overflowWrap": "normal",
+            "wordBreak": "normal",
+            "overflow": "visible",
+            "paddingInlineStart": "0px",
+            "paddingInlineEnd": "0px",
+            "tableLayout": "auto"
+          }
+        },
+        {
+          "inlineStyle": "width: 152.462px;",
+          "rect": {
+            "left": 521.15625,
+            "right": 673.609375,
+            "top": 832.359375,
+            "bottom": 1410.5,
+            "width": 152.453125,
+            "height": 578.140625
+          },
+          "style": {
+            "display": "table-column",
+            "inlineSize": "152.453px",
+            "minInlineSize": "0px",
+            "maxInlineSize": "none",
+            "whiteSpace": "normal",
+            "overflowWrap": "normal",
+            "wordBreak": "normal",
+            "overflow": "visible",
+            "paddingInlineStart": "0px",
+            "paddingInlineEnd": "0px",
+            "tableLayout": "auto"
+          }
+        },
+        {
+          "inlineStyle": "width: 148.698px;",
+          "rect": {
+            "left": 673.609375,
+            "right": 822.296875,
+            "top": 832.359375,
+            "bottom": 1410.5,
+            "width": 148.6875,
+            "height": 578.140625
+          },
+          "style": {
+            "display": "table-column",
+            "inlineSize": "148.688px",
+            "minInlineSize": "0px",
+            "maxInlineSize": "none",
+            "whiteSpace": "normal",
+            "overflowWrap": "normal",
+            "wordBreak": "normal",
+            "overflow": "visible",
+            "paddingInlineStart": "0px",
+            "paddingInlineEnd": "0px",
+            "tableLayout": "auto"
+          }
+        },
+        {
+          "inlineStyle": "width: 151.284px;",
+          "rect": {
+            "left": 822.296875,
+            "right": 973.578125,
+            "top": 832.359375,
+            "bottom": 1410.5,
+            "width": 151.28125,
+            "height": 578.140625
+          },
+          "style": {
+            "display": "table-column",
+            "inlineSize": "151.281px",
+            "minInlineSize": "0px",
+            "maxInlineSize": "none",
+            "whiteSpace": "normal",
+            "overflowWrap": "normal",
+            "wordBreak": "normal",
+            "overflow": "visible",
+            "paddingInlineStart": "0px",
+            "paddingInlineEnd": "0px",
+            "tableLayout": "auto"
+          }
+        },
+        {
+          "inlineStyle": "width: 261.396px;",
+          "rect": {
+            "left": 973.578125,
+            "right": 1234.96875,
+            "top": 832.359375,
+            "bottom": 1410.5,
+            "width": 261.390625,
+            "height": 578.140625
+          },
+          "style": {
+            "display": "table-column",
+            "inlineSize": "261.391px",
+            "minInlineSize": "0px",
+            "maxInlineSize": "none",
+            "whiteSpace": "normal",
+            "overflowWrap": "normal",
+            "wordBreak": "normal",
+            "overflow": "visible",
+            "paddingInlineStart": "0px",
+            "paddingInlineEnd": "0px",
+            "tableLayout": "auto"
+          }
+        },
+        {
+          "inlineStyle": "width: 157px;",
+          "rect": {
+            "left": 1234.96875,
+            "right": 1392,
+            "top": 832.359375,
+            "bottom": 1410.5,
+            "width": 157.03125,
+            "height": 578.140625
+          },
+          "style": {
+            "display": "table-column",
+            "inlineSize": "157.031px",
+            "minInlineSize": "0px",
+            "maxInlineSize": "none",
+            "whiteSpace": "normal",
+            "overflowWrap": "normal",
+            "wordBreak": "normal",
+            "overflow": "visible",
+            "paddingInlineStart": "0px",
+            "paddingInlineEnd": "0px",
+            "tableLayout": "auto"
+          }
+        }
+      ]
+    },
+    "ancestry": [
+      {
+        "className": "table-wrap ui-data-table is-responsive supplier-items-table supervisor",
+        "rect": {
+          "left": 296,
+          "right": 1392,
+          "top": 832.359375,
+          "bottom": 1410.5,
+          "width": 1096,
+          "height": 578.140625
+        },
+        "style": {
+          "display": "block",
+          "inlineSize": "1096px",
+          "minInlineSize": "0px",
+          "maxInlineSize": "100%",
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "overflow": "visible",
+          "paddingInlineStart": "0px",
+          "paddingInlineEnd": "0px",
+          "tableLayout": "auto"
+        }
+      },
+      {
+        "className": "card ui-card supplier-tab-card",
+        "rect": {
+          "left": 276,
+          "right": 1412,
+          "top": 706.359375,
+          "bottom": 1430.5,
+          "width": 1136,
+          "height": 724.140625
+        },
+        "style": {
+          "display": "block",
+          "inlineSize": "1136px",
+          "minInlineSize": "0px",
+          "maxInlineSize": "none",
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "overflow": "visible",
+          "paddingInlineStart": "20px",
+          "paddingInlineEnd": "20px",
+          "tableLayout": "auto"
+        }
+      }
+    ]
+  },
+  "layout": {
+    "scene": "supplier:Supplier items",
+    "language": "en",
+    "width": 1440,
+    "actualWidth": 1440,
+    "words": 187,
+    "contentWords": 66,
+    "unitFragments": [
+      {
+        "text": "400 g",
+        "lines": 1
+      },
+      {
+        "text": "۴۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "400 g",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "100 g",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "۵۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "500 g",
+        "lines": 1
+      },
+      {
+        "text": "150 g",
+        "lines": 1
+      },
+      {
+        "text": "۱۵۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "150 g",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      },
+      {
+        "text": "۱ لیتری",
+        "lines": 1
+      },
+      {
+        "text": "1 L",
+        "lines": 1
+      }
+    ],
+    "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+    "cells": 42,
+    "tables": [
+      {
+        "className": "table-wrap ui-data-table is-responsive supplier-items-table supervisor",
+        "rows": [
+          {
+            "cells": 6,
+            "words": 10
+          },
+          {
+            "cells": 6,
+            "words": 21
+          },
+          {
+            "cells": 6,
+            "words": 18
+          },
+          {
+            "cells": 6,
+            "words": 17
+          },
+          {
+            "cells": 6,
+            "words": 18
+          },
+          {
+            "cells": 6,
+            "words": 18
+          },
+          {
+            "cells": 6,
+            "words": 19
+          }
+        ],
+        "scrollWidth": 1096,
+        "clientWidth": 1096
+      }
+    ],
+    "forms": [],
+    "sidebar": {
+      "width": 248,
+      "clientHeight": 1080,
+      "scrollHeight": 1080,
+      "navClientHeight": 912,
+      "navScrollHeight": 912
+    },
+    "topbar": [
+      {
+        "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "breadcrumbs",
+        "width": 324.34375,
+        "height": 18.5625
+      },
+      {
+        "className": "topbar-search",
+        "width": 280,
+        "height": 36
+      },
+      {
+        "className": "ui-select ui-input has-leading-icon branch-pill",
+        "width": 165.046875,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button language-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+        "width": 90.609375,
+        "height": 36
+      }
+    ],
+    "failures": [],
+    "containment": {
+      "tableCount": 1,
+      "rowCount": 6,
+      "tables": [
+        {
+          "className": "table-wrap ui-data-table is-responsive supplier-items-table supervisor",
+          "cardClassName": "card ui-card supplier-tab-card",
+          "card": {
+            "left": 276,
+            "right": 1412,
+            "top": 706.359375,
+            "bottom": 1430.5
+          },
+          "rows": [
+            {
+              "text": "Canned Fava Beans 400 gباقالا کنسرو شده ۴۰۰ گرمی0002 · 400 g—Case of 12$11.76C8-QA-SHORT-LAYOUTEdit",
+              "expanded": false,
+              "row": {
+                "left": 296,
+                "right": 1392,
+                "top": 873.5,
+                "bottom": 963
+              },
+              "contained": true
+            },
+            {
+              "text": "Dried Barberries 100 gزرشک خشک ۱۰۰ گرمی0015 · 100 g—Case of 6$20.40FV-20390Edit",
+              "expanded": false,
+              "row": {
+                "left": 296,
+                "right": 1392,
+                "top": 963,
+                "bottom": 1052.5
+              },
+              "contained": true
+            },
+            {
+              "text": "Ground Sumac 100 gسماق ۱۰۰ گرمی0005 · 100 g—Case of 12$14.40FV-20390Edit",
+              "expanded": false,
+              "row": {
+                "left": 296,
+                "right": 1392,
+                "top": 1052.5,
+                "bottom": 1142
+              },
+              "contained": true
+            },
+            {
+              "text": "Lavash Bread 500 gنان لواش ۵۰۰ گرمی0006 · 500 g—Case of 10$15.50FV-20390Edit",
+              "expanded": false,
+              "row": {
+                "left": 296,
+                "right": 1392,
+                "top": 1142,
+                "bottom": 1231.5
+              },
+              "contained": true
+            },
+            {
+              "text": "Potato Chips 150 gچیپس سیب‌زمینی ۱۵۰ گرمی0009 · 150 g—Case of 12$19.20FV-20390Edit",
+              "expanded": false,
+              "row": {
+                "left": 296,
+                "right": 1392,
+                "top": 1231.5,
+                "bottom": 1321
+              },
+              "contained": true
+            },
+            {
+              "text": "Sour Cherry Juice 1 Lآب آلبالو ۱ لیتری0003 · 1 L—Case of 12$23.40FV-20390Edit",
+              "expanded": false,
+              "row": {
+                "left": 296,
+                "right": 1392,
+                "top": 1321,
+                "bottom": 1410.5
+              },
+              "contained": true
+            }
+          ]
+        }
+      ],
+      "failures": []
+    }
+  },
+  "detailsProof": {
+    "hiddenHeaders": [
+      "Last bought / unit",
+      "Date last bought"
+    ],
+    "rows": [
+      {
+        "label": "Last bought / unit",
+        "value": "$0.98"
+      },
+      {
+        "label": "Date last bought",
+        "value": "2026-10-19"
+      }
+    ],
+    "layout": {
+      "scene": "supplier:Supplier items details",
+      "language": "en",
+      "width": 1440,
+      "actualWidth": 1440,
+      "words": 187,
+      "contentWords": 66,
+      "unitFragments": [
+        {
+          "text": "400 g",
+          "lines": 1
+        },
+        {
+          "text": "۴۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "400 g",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "۱۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "۱۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "100 g",
+          "lines": 1
+        },
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "۵۰۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "500 g",
+          "lines": 1
+        },
+        {
+          "text": "150 g",
+          "lines": 1
+        },
+        {
+          "text": "۱۵۰ گرمی",
+          "lines": 1
+        },
+        {
+          "text": "150 g",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1
+        },
+        {
+          "text": "۱ لیتری",
+          "lines": 1
+        },
+        {
+          "text": "1 L",
+          "lines": 1
+        }
+      ],
+      "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+      "cells": 42,
+      "tables": [
+        {
+          "className": "table-wrap ui-data-table is-responsive supplier-items-table supervisor",
+          "rows": [
+            {
+              "cells": 6,
+              "words": 10
+            },
+            {
+              "cells": 6,
+              "words": 21
+            },
+            {
+              "cells": 1,
+              "words": 0
+            },
+            {
+              "cells": 6,
+              "words": 18
+            },
+            {
+              "cells": 6,
+              "words": 17
+            },
+            {
+              "cells": 6,
+              "words": 18
+            },
+            {
+              "cells": 6,
+              "words": 18
+            },
+            {
+              "cells": 6,
+              "words": 19
+            }
+          ],
+          "scrollWidth": 1096,
+          "clientWidth": 1096
+        }
+      ],
+      "forms": [],
+      "sidebar": {
+        "width": 248,
+        "clientHeight": 1080,
+        "scrollHeight": 1080,
+        "navClientHeight": 912,
+        "navScrollHeight": 912
+      },
+      "topbar": [
+        {
+          "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "breadcrumbs",
+          "width": 324.34375,
+          "height": 18.5625
+        },
+        {
+          "className": "topbar-search",
+          "width": 280,
+          "height": 36
+        },
+        {
+          "className": "ui-select ui-input has-leading-icon branch-pill",
+          "width": 165.046875,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button language-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button theme-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-secondary ui-icon-button text-size-toggle",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+          "width": 36,
+          "height": 36
+        },
+        {
+          "className": "ui-button button button-neutral ui-menu-trigger demo-menu",
+          "width": 90.609375,
+          "height": 36
+        }
+      ],
+      "failures": [],
+      "containment": {
+        "tableCount": 1,
+        "rowCount": 7,
+        "tables": [
+          {
+            "className": "table-wrap ui-data-table is-responsive supplier-items-table supervisor",
+            "cardClassName": "card ui-card supplier-tab-card",
+            "card": {
+              "left": 276,
+              "right": 1412,
+              "top": 706.359375,
+              "bottom": 1529.640625
+            },
+            "rows": [
+              {
+                "text": "Canned Fava Beans 400 gباقالا کنسرو شده ۴۰۰ گرمی0002 · 400 g—Case of 12$11.76C8-QA-SHORT-LAYOUTEdit",
+                "expanded": false,
+                "row": {
+                  "left": 296,
+                  "right": 1392,
+                  "top": 873.5,
+                  "bottom": 963
+                },
+                "contained": true
+              },
+              {
+                "text": "Last bought / unit$0.98Date last bought2026-10-19",
+                "expanded": true,
+                "row": {
+                  "left": 296,
+                  "right": 1392,
+                  "top": 963,
+                  "bottom": 1062.140625
+                },
+                "contained": true
+              },
+              {
+                "text": "Dried Barberries 100 gزرشک خشک ۱۰۰ گرمی0015 · 100 g—Case of 6$20.40FV-20390Edit",
+                "expanded": false,
+                "row": {
+                  "left": 296,
+                  "right": 1392,
+                  "top": 1062.140625,
+                  "bottom": 1151.640625
+                },
+                "contained": true
+              },
+              {
+                "text": "Ground Sumac 100 gسماق ۱۰۰ گرمی0005 · 100 g—Case of 12$14.40FV-20390Edit",
+                "expanded": false,
+                "row": {
+                  "left": 296,
+                  "right": 1392,
+                  "top": 1151.640625,
+                  "bottom": 1241.140625
+                },
+                "contained": true
+              },
+              {
+                "text": "Lavash Bread 500 gنان لواش ۵۰۰ گرمی0006 · 500 g—Case of 10$15.50FV-20390Edit",
+                "expanded": false,
+                "row": {
+                  "left": 296,
+                  "right": 1392,
+                  "top": 1241.140625,
+                  "bottom": 1330.640625
+                },
+                "contained": true
+              },
+              {
+                "text": "Potato Chips 150 gچیپس سیب‌زمینی ۱۵۰ گرمی0009 · 150 g—Case of 12$19.20FV-20390Edit",
+                "expanded": false,
+                "row": {
+                  "left": 296,
+                  "right": 1392,
+                  "top": 1330.640625,
+                  "bottom": 1420.140625
+                },
+                "contained": true
+              },
+              {
+                "text": "Sour Cherry Juice 1 Lآب آلبالو ۱ لیتری0003 · 1 L—Case of 12$23.40FV-20390Edit",
+                "expanded": false,
+                "row": {
+                  "left": 296,
+                  "right": 1392,
+                  "top": 1420.140625,
+                  "bottom": 1509.640625
+                },
+                "contained": true
+              }
+            ]
+          }
+        ],
+        "failures": []
+      }
+    }
+  },
+  "fixture": "Exact prepareSupplierShorts from prototype/tests/c8-layout-proof.spec.ts; all normal UI and real posting guards. Fresh browser context. No injected data or styles."
+}

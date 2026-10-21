@@ -1,0 +1,406 @@
+{
+  "config": {
+    "argv": [
+      "/workspace/scratch/node-install/node-v22.23.3-linux-x64/bin/node",
+      "/workspace/Supermarket-Inventory/prototype/node_modules/.bin/playwright",
+      "test",
+      "--config=/tmp/c9-supplier-c2-ready-diag/playwright.config.mts",
+      "--workers=1",
+      "--output=/tmp/c9-supplier-c2-ready-diag/results"
+    ],
+    "configFile": "/tmp/c9-supplier-c2-ready-diag/playwright.config.mts",
+    "rootDir": "/tmp/c9-supplier-c2-ready-diag",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/c9-supplier-c2-ready-diag/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/tmp/c9-supplier-c2-ready-diag",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/tmp/c9-supplier-c2-ready-diag/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "phone",
+        "name": "phone",
+        "testDir": "/tmp/c9-supplier-c2-ready-diag",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run preview",
+      "url": "http://127.0.0.1:5174",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "diagnose.spec.ts",
+      "file": "diagnose.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "observe actual Supplier items mounting at CPU rate 1",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5710,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T14:59:21.622Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "Actual protected-tab/column readiness",
+                      "contentType": "application/json",
+                      "path": "/tmp/c9-supplier-c2-ready-diag/results/diagnose-observe-actual-Su-fe2cd-tems-mounting-at-CPU-rate-1-desktop/attachments/Actual-protected-tab-column-readiness-7987d3ee8fb91fe7d8ea17d49c16d660e5a76316.json"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8a7ff944faaba737bf75-dd22ac0d7d5a9c08903c",
+          "file": "diagnose.spec.ts",
+          "line": 6,
+          "column": 7
+        },
+        {
+          "title": "observe actual Supplier items mounting at CPU rate 4",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 18489,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T14:59:28.404Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "Actual protected-tab/column readiness",
+                      "contentType": "application/json",
+                      "path": "/tmp/c9-supplier-c2-ready-diag/results/diagnose-observe-actual-Su-2c483-tems-mounting-at-CPU-rate-4-desktop/attachments/Actual-protected-tab-column-readiness-009238fb1c6e865ce73db3e2f80c98460e94cd03.json"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8a7ff944faaba737bf75-16f06493b03b71d68aac",
+          "file": "diagnose.spec.ts",
+          "line": 6,
+          "column": 7
+        },
+        {
+          "title": "observe actual Supplier items mounting at CPU rate 8",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 30430,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeEnabled\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('.topbar').getByRole('combobox', { name: 'Location', exact: true })\nExpected: enabled\nReceived: disabled\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeEnabled\" locator('.topbar').getByRole('combobox', { name: 'Location', exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.topbar').getByRole('combobox', { name: 'Location', exact: true })\u001b[22m\n\u001b[2m    3 \u00d7 locator resolved to <button disabled type=\"button\" role=\"combobox\" aria-label=\"Location\" aria-expanded=\"false\" aria-controls=\"_r_3_\" aria-haspopup=\"listbox\" class=\"ui-select ui-input has-leading-icon branch-pill\">\u2026</button>\u001b[22m\n\u001b[2m      - unexpected value \"disabled\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeEnabled\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('.topbar').getByRole('combobox', { name: 'Location', exact: true })\nExpected: enabled\nReceived: disabled\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeEnabled\" locator('.topbar').getByRole('combobox', { name: 'Location', exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.topbar').getByRole('combobox', { name: 'Location', exact: true })\u001b[22m\n\u001b[2m    3 \u00d7 locator resolved to <button disabled type=\"button\" role=\"combobox\" aria-label=\"Location\" aria-expanded=\"false\" aria-controls=\"_r_3_\" aria-haspopup=\"listbox\" class=\"ui-select ui-input has-leading-icon branch-pill\">\u2026</button>\u001b[22m\n\u001b[2m      - unexpected value \"disabled\"\u001b[22m\n\n    at setBranch (/workspace/Supermarket-Inventory/prototype/tests/helpers.ts:146:27)\n    at /tmp/c9-supplier-c2-ready-diag/diagnose.spec.ts:17:7",
+                    "location": {
+                      "file": "/workspace/Supermarket-Inventory/prototype/tests/helpers.ts",
+                      "column": 27,
+                      "line": 146
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39m../../workspace/Supermarket-Inventory/prototype/tests/helpers.ts:146\n\n  144 |       })\n  145 |       .click();\n> 146 |     await expect(control).toBeEnabled();\n      |                           ^\n  147 |     return;\n  148 |   }\n  149 |   const location = configuration.branches.find((row) => row.id === branch);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/Supermarket-Inventory/prototype/tests/helpers.ts",
+                        "column": 27,
+                        "line": 146
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeEnabled\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('.topbar').getByRole('combobox', { name: 'Location', exact: true })\nExpected: enabled\nReceived: disabled\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeEnabled\" locator('.topbar').getByRole('combobox', { name: 'Location', exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.topbar').getByRole('combobox', { name: 'Location', exact: true })\u001b[22m\n\u001b[2m    3 \u00d7 locator resolved to <button disabled type=\"button\" role=\"combobox\" aria-label=\"Location\" aria-expanded=\"false\" aria-controls=\"_r_3_\" aria-haspopup=\"listbox\" class=\"ui-select ui-input has-leading-icon branch-pill\">\u2026</button>\u001b[22m\n\u001b[2m      - unexpected value \"disabled\"\u001b[22m\n\n\n   at ../../workspace/Supermarket-Inventory/prototype/tests/helpers.ts:146\n\n  144 |       })\n  145 |       .click();\n> 146 |     await expect(control).toBeEnabled();\n      |                           ^\n  147 |     return;\n  148 |   }\n  149 |   const location = configuration.branches.find((row) => row.id === branch);\n    at setBranch (/workspace/Supermarket-Inventory/prototype/tests/helpers.ts:146:27)\n    at /tmp/c9-supplier-c2-ready-diag/diagnose.spec.ts:17:7"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T14:59:46.926Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "Actual protected-tab/column readiness",
+                      "contentType": "application/json",
+                      "path": "/tmp/c9-supplier-c2-ready-diag/results/diagnose-observe-actual-Su-f8708-tems-mounting-at-CPU-rate-8-desktop/attachments/Actual-protected-tab-column-readiness-f5366cac88ec57f54d2b5742076bd7bd3d0f8ac5.json"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/c9-supplier-c2-ready-diag/results/diagnose-observe-actual-Su-f8708-tems-mounting-at-CPU-rate-8-desktop/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/c9-supplier-c2-ready-diag/results/diagnose-observe-actual-Su-f8708-tems-mounting-at-CPU-rate-8-desktop/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/Supermarket-Inventory/prototype/tests/helpers.ts",
+                    "column": 27,
+                    "line": 146
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8a7ff944faaba737bf75-62fe28a06a222e1b63bb",
+          "file": "diagnose.spec.ts",
+          "line": 6,
+          "column": 7
+        },
+        {
+          "title": "observe actual Supplier items mounting at CPU rate 1",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5120,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T15:00:18.159Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "Actual protected-tab/column readiness",
+                      "contentType": "application/json",
+                      "path": "/tmp/c9-supplier-c2-ready-diag/results/diagnose-observe-actual-Su-fe2cd-tems-mounting-at-CPU-rate-1-phone/attachments/Actual-protected-tab-column-readiness-a67bde3f87c6b6131411f91d3406445fc9db5b27.json"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8a7ff944faaba737bf75-0195f88cb3f17b92e66f",
+          "file": "diagnose.spec.ts",
+          "line": 6,
+          "column": 7
+        },
+        {
+          "title": "observe actual Supplier items mounting at CPU rate 4",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 25043,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T15:00:23.995Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "Actual protected-tab/column readiness",
+                      "contentType": "application/json",
+                      "path": "/tmp/c9-supplier-c2-ready-diag/results/diagnose-observe-actual-Su-2c483-tems-mounting-at-CPU-rate-4-phone/attachments/Actual-protected-tab-column-readiness-2105179e7e80c713f03649614a5233300ee0a327.json"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8a7ff944faaba737bf75-a2d3e039248c55e02893",
+          "file": "diagnose.spec.ts",
+          "line": 6,
+          "column": 7
+        },
+        {
+          "title": "observe actual Supplier items mounting at CPU rate 8",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "interrupted",
+                  "duration": 33483,
+                  "error": {
+                    "message": "Error: locator.click: Test ended.\nCall log:\n\u001b[2m  - waiting for locator('.supplier-items-table').getByRole('button', { name: 'Show details', exact: true }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" title=\"Show details\" aria-expanded=\"false\" data-control-kind=\"icon\" aria-label=\"Show details\" class=\"ui-button button button-secondary ui-icon-button table-details-toggle\" aria-controls=\"_r_e_-supplier-item%3Asuper-arzon%3Aseed-supplier-1%3A%255B%25220002%2522%252C%2522%2522%255D\">\u2026</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - performing click action\u001b[22m\n",
+                    "stack": "Error: locator.click: Test ended.\nCall log:\n\u001b[2m  - waiting for locator('.supplier-items-table').getByRole('button', { name: 'Show details', exact: true }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" title=\"Show details\" aria-expanded=\"false\" data-control-kind=\"icon\" aria-label=\"Show details\" class=\"ui-button button button-secondary ui-icon-button table-details-toggle\" aria-controls=\"_r_e_-supplier-item%3Asuper-arzon%3Aseed-supplier-1%3A%255B%25220002%2522%252C%2522%2522%255D\">\u2026</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - performing click action\u001b[22m\n\n    at /tmp/c9-supplier-c2-ready-diag/diagnose.spec.ts:26:58",
+                    "location": {
+                      "file": "/tmp/c9-supplier-c2-ready-diag/diagnose.spec.ts",
+                      "column": 58,
+                      "line": 26
+                    },
+                    "snippet": "  24 |       const initialCount=await details.count();\n  25 |       evidence.push({stage:'old helper optional count', count:initialCount});\n> 26 |       while(await details.count()) await details.first().click();\n     |                                                          ^\n  27 |       await record('after old helper');\n  28 |       await expect(table.locator('tbody tr:not(.table-expanded-row)').first()).toBeVisible();\n  29 |       await expect(table).toHaveAttribute('data-width-hidden-column-count', /\\d+/);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/tmp/c9-supplier-c2-ready-diag/diagnose.spec.ts",
+                        "column": 58,
+                        "line": 26
+                      },
+                      "message": "Error: locator.click: Test ended.\nCall log:\n\u001b[2m  - waiting for locator('.supplier-items-table').getByRole('button', { name: 'Show details', exact: true }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" title=\"Show details\" aria-expanded=\"false\" data-control-kind=\"icon\" aria-label=\"Show details\" class=\"ui-button button button-secondary ui-icon-button table-details-toggle\" aria-controls=\"_r_e_-supplier-item%3Asuper-arzon%3Aseed-supplier-1%3A%255B%25220002%2522%252C%2522%2522%255D\">\u2026</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - performing click action\u001b[22m\n\n\n  24 |       const initialCount=await details.count();\n  25 |       evidence.push({stage:'old helper optional count', count:initialCount});\n> 26 |       while(await details.count()) await details.first().click();\n     |                                                          ^\n  27 |       await record('after old helper');\n  28 |       await expect(table.locator('tbody tr:not(.table-expanded-row)').first()).toBeVisible();\n  29 |       await expect(table).toHaveAttribute('data-width-hidden-column-count', /\\d+/);\n    at /tmp/c9-supplier-c2-ready-diag/diagnose.spec.ts:26:58"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T15:00:49.060Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "Actual protected-tab/column readiness",
+                      "contentType": "application/json",
+                      "path": "/tmp/c9-supplier-c2-ready-diag/results/diagnose-observe-actual-Su-f8708-tems-mounting-at-CPU-rate-8-phone/attachments/Actual-protected-tab-column-readiness-7c3f30da32a0329b98468169d162b55653fd2630.json"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/c9-supplier-c2-ready-diag/results/diagnose-observe-actual-Su-f8708-tems-mounting-at-CPU-rate-8-phone/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/tmp/c9-supplier-c2-ready-diag/diagnose.spec.ts",
+                    "column": 58,
+                    "line": 26
+                  }
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "8a7ff944faaba737bf75-a899e069e375fe637d6e",
+          "file": "diagnose.spec.ts",
+          "line": 6,
+          "column": 7
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-19T14:59:20.158Z",
+    "duration": 122942.04599999999,
+    "expected": 4,
+    "skipped": 1,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

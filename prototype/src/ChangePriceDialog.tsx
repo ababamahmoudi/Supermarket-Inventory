@@ -6,7 +6,11 @@ import { branchLabel } from "./settings";
 import { productEditSnapshot } from "./product-editor";
 import { ProductName, DateText, LtrText, Money } from "./presentation";
 import { ProductPrice } from "./weight-price-presentation";
-import { weightPriceDisplay, weighedSettings } from "./weighed";
+import {
+  weightPriceDisplay,
+  weightConversionFactor,
+  weighedSettings,
+} from "./weighed";
 import { formatMoney } from "./formatters";
 import {
   activeSaleAt,
@@ -25,6 +29,8 @@ import {
   SalesError,
   type ChangePriceInput,
   type SalesValidationIssue,
+  type RegularSaleConflict,
+  type RegularSaleResolution,
 } from "./sales";
 import { salesText, saleCalendarDate } from "./sales-locale";
 import { SalePrice, SaleStatus } from "./sales-presentation";
@@ -268,7 +274,31 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
       queryPriceChangePreview(freshState, freshActor, input, location),
     )
       .then((value) => {
-        if (current) setPreviewRecord({ key: inputKey, value });
+        if (!current) return;
+        setPreviewRecord({ key: inputKey, value });
+        if (input.mode === "regular") {
+          const missing = value.effects.flatMap((effect) => {
+            const conflict = effect.regular_sale_conflict;
+            return conflict &&
+              !input.regular_sale_resolutions?.some(
+                (item) => item.sale_id === conflict.sale_id,
+              )
+              ? [conflict]
+              : [];
+          });
+          if (missing.length)
+            setInput((previous) => ({
+              ...previous,
+              regular_sale_resolutions: [
+                ...(previous.regular_sale_resolutions ?? []),
+                ...missing.map((conflict) => ({
+                  sale_id: conflict.sale_id,
+                  expected_revision: conflict.revision,
+                  action: "end" as const,
+                })),
+              ],
+            }));
+        }
       })
       .catch(() => {
         if (current) setPreviewRecord(null);
@@ -287,6 +317,43 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     query,
   ]);
   const preview = previewRecord?.key === inputKey ? previewRecord.value : null;
+  // Retain the controls while their next protected preview is being checked.
+  const displayedEffects = (preview ?? previewRecord?.value)?.effects ?? [];
+  const changeRegularResolution = (
+    conflict: RegularSaleConflict,
+    update: Partial<RegularSaleResolution>,
+  ) => {
+    setInput((previous) => {
+      const existing = previous.regular_sale_resolutions?.find(
+        (item) => item.sale_id === conflict.sale_id,
+      );
+      return {
+        ...previous,
+        accept_below_margin: false,
+        regular_sale_resolutions: [
+          ...(previous.regular_sale_resolutions ?? []).filter(
+            (item) => item.sale_id !== conflict.sale_id,
+          ),
+          {
+            sale_id: conflict.sale_id,
+            expected_revision: conflict.revision,
+            action: "end",
+            price_unit: previous.price_unit,
+            ...existing,
+            ...update,
+          },
+        ],
+      };
+    });
+    setIssues((previous) =>
+      previous.filter(
+        (issue) =>
+          issue.fieldId !== fieldId(`sale_price_${conflict.sale_id}`) &&
+          issue.fieldId !== fieldId("price"),
+      ),
+    );
+    setTransactionError("");
+  };
   const current =
     preview?.effects.find((effect) => effect.branch === location) ??
     preview?.effects[0];
@@ -355,6 +422,10 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
         "This sale changed. Close the dialog and open it again.",
         "این حراج تغییر کرده است. پنجره را ببندید و دوباره باز کنید.",
       ],
+      regular_sale_conflict: [
+        "Choose how to update the running sale.",
+        "روش تغییر حراج در حال اجرا را انتخاب کنید.",
+      ],
       request_decided: [
         "This request has already been decided. Close the dialog and refresh.",
         "این درخواست قبلاً تصمیم‌گیری شده است. پنجره را ببندید و تازه‌سازی کنید.",
@@ -364,6 +435,11 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
         "فقط درخواست‌کننده می‌تواند این درخواست را تغییر دهد.",
       ],
     };
+    if (issue.code === "replacement_sale_price_not_lower")
+      return t(
+        `The sale price must be lower than the new regular price ${formatMoney(issue.regular_price ?? input.price, { currency: state.config.company.currency })}.`,
+        `قیمت حراج باید کمتر از قیمت عادی جدید ${formatMoney(issue.regular_price ?? input.price, { currency: state.config.company.currency })} باشد.`,
+      );
     if (issue.code === "sale_price_not_lower") {
       const amount = issue.regular_price
         ? formatMoney(issue.regular_price, {
@@ -525,8 +601,22 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
       : null;
   const regularWaitsForSale =
     !isSale &&
-    input.branches.some((store) =>
-      Boolean(activeSaleAt(state, product, store)),
+    displayedEffects.some(
+      (effect) =>
+        Boolean(effect.existing_sale_id) &&
+        (!effect.regular_sale_conflict ||
+          input.regular_sale_resolutions?.find(
+            (item) => item.sale_id === effect.regular_sale_conflict?.sale_id,
+          )?.action === "change"),
+    );
+  const endingSale =
+    !isSale &&
+    displayedEffects.some(
+      (effect) =>
+        effect.regular_sale_conflict &&
+        input.regular_sale_resolutions?.find(
+          (item) => item.sale_id === effect.regular_sale_conflict?.sale_id,
+        )?.action !== "change",
     );
   const storeNames = input.branches
     .map((item) => branchLabel(state.config, item, lang))
@@ -617,6 +707,20 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                     setInput((previous) => ({
                       ...previous,
                       mode,
+                      existing_sale_id:
+                        mode === "sale" ? originalSale?.id : undefined,
+                      expected_revision:
+                        mode === "sale" ? originalSale?.revision : undefined,
+                      expected_revisions:
+                        mode === "sale"
+                          ? Object.fromEntries(
+                              originalGroup.map((sale) => [
+                                sale.id,
+                                sale.revision,
+                              ]),
+                            )
+                          : undefined,
+                      regular_sale_resolutions: [],
                       add_labels:
                         mode === "regular" ||
                         settings.add_promo_labels_on_start,
@@ -658,6 +762,96 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
               autoFocus
             />
           </Field>
+          {!isSale &&
+            displayedEffects.map((effect) => {
+              const conflict = effect.regular_sale_conflict;
+              if (!conflict) return null;
+              const resolution = input.regular_sale_resolutions?.find(
+                (item) => item.sale_id === conflict.sale_id,
+              );
+              const regularAmount = effect.proposed_price
+                ? new Decimal(effect.proposed_price)
+                    .times(
+                      input.price_unit === "kg"
+                        ? weightConversionFactor(state.config)
+                        : 1,
+                    )
+                    .toFixed(2)
+                : input.price;
+              const saleAmount = formatMoney(conflict.display_price, {
+                currency: state.config.company.currency,
+              });
+              const newRegular = formatMoney(regularAmount, {
+                currency: state.config.company.currency,
+              });
+              return (
+                <section
+                  key={conflict.sale_id}
+                  className="stack"
+                  aria-label={t("Sale and regular price", "قیمت حراج و عادی")}
+                >
+                  {input.branches.length > 1 && (
+                    <strong>
+                      {branchLabel(state.config, effect.branch, lang)}
+                    </strong>
+                  )}
+                  <p>
+                    {t("The sale price", "قیمت حراج")}{" "}
+                    <LtrText>{saleAmount}</LtrText>{" "}
+                    {t(
+                      "isn't lower than the new regular price",
+                      "کمتر از قیمت عادی جدید",
+                    )}{" "}
+                    <LtrText>{newRegular}</LtrText>
+                    {t(".", " نیست.")}
+                  </p>
+                  <div
+                    role="radiogroup"
+                    aria-label={t(
+                      "Update the running sale",
+                      "تغییر حراج در حال اجرا",
+                    )}
+                    className="stack"
+                  >
+                    <Radio
+                      checked={resolution?.action !== "change"}
+                      onChange={() =>
+                        changeRegularResolution(conflict, { action: "end" })
+                      }
+                    >
+                      {t("End the sale now", "حراج را اکنون پایان بده")}
+                    </Radio>
+                    <Radio
+                      checked={resolution?.action === "change"}
+                      onChange={() =>
+                        changeRegularResolution(conflict, { action: "change" })
+                      }
+                    >
+                      {t("Change the sale price", "تغییر قیمت حراج")}
+                    </Radio>
+                  </div>
+                  {resolution?.action === "change" && (
+                    <Field
+                      label={t("New sale price", "قیمت جدید حراج")}
+                      error={error(`sale_price_${conflict.sale_id}`)}
+                    >
+                      <NumberField
+                        id={fieldId(`sale_price_${conflict.sale_id}`)}
+                        value={resolution.sale_price ?? ""}
+                        min="0"
+                        step="0.01"
+                        onChange={(value) =>
+                          changeRegularResolution(conflict, {
+                            sale_price: value,
+                            price_unit: input.price_unit,
+                          })
+                        }
+                      />
+                    </Field>
+                  )}
+                </section>
+              );
+            })}
           <div className="change-price-quick-picks actions">
             {regularDisplay &&
               quickSalePrices(regularDisplay, state).map((pick) => (
@@ -1011,6 +1205,14 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
             {!isSale && (
               <>
                 <p>{salesText(t, "regularHint")}</p>
+                {endingSale && (
+                  <p>
+                    {t(
+                      "The sale ends now. Customers pay the new regular price.",
+                      "حراج اکنون پایان می‌یابد. مشتریان قیمت عادی جدید را پرداخت می‌کنند.",
+                    )}
+                  </p>
+                )}
                 {regularWaitsForSale && (
                   <p>
                     {salesText(t, "afterSale")} ·{" "}

@@ -1,6 +1,7 @@
 import type { HTMLAttributes } from "react";
 import { LtrText, Money } from "./presentation";
 import { weightPriceDisplay } from "./weighed";
+import { SellingPriceValue } from "./selling-price-presentation";
 import type { CompanyConfig, Product } from "./types";
 import "./weight-price.css";
 
@@ -17,38 +18,23 @@ export function ProductPrice({
   config: Pick<CompanyConfig, "company" | "weighed_items">;
   stacked?: boolean;
 }) {
-  if (product.sold_by !== "weight")
-    return (
-      <Money
-        value={value}
-        currency={config.company.currency}
-        className={className}
-        {...props}
-      />
-    );
-  const display = weightPriceDisplay(value, config);
+  const display =
+    product.sold_by === "weight"
+      ? weightPriceDisplay(value, config)
+      : { main: { amount: value, unit: "each" as const } };
   return (
-    <span
+    <SellingPriceValue
       {...props}
-      className={["weight-price", stacked && "weight-price-stacked", className]
+      className={[
+        product.sold_by === "weight" && "weight-price",
+        product.sold_by === "weight" && stacked && "weight-price-stacked",
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
-    >
-      <LtrText className="weight-price-main">
-        <Money value={display.main.amount} currency={config.company.currency} />
-        /{display.main.unit}
-      </LtrText>
-      {display.secondary && (
-        <LtrText className="weight-price-secondary">
-          {!stacked && <> · </>}
-          <Money
-            value={display.secondary.amount}
-            currency={config.company.currency}
-          />
-          /{display.secondary.unit}
-        </LtrText>
-      )}
-    </span>
+      current={display}
+      currency={config.company.currency}
+    />
   );
 }
 
@@ -62,11 +48,13 @@ export function ProductCost({
   config: Pick<CompanyConfig, "company" | "weighed_items">;
 }) {
   if (product.sold_by !== "weight")
-    return <Money value={value} currency={config.company.currency} />;
+    return (
+      <Money value={value} currency={config.company.currency} decimals={2} />
+    );
   return (
     <LtrText className="weight-cost">
       <span className="weight-price-main">
-        <Money value={value} currency={config.company.currency} />
+        <Money value={value} currency={config.company.currency} decimals={2} />
         /lb
       </span>
     </LtrText>

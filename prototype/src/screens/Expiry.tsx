@@ -40,6 +40,7 @@ import {
   TableRowLink,
   Tabs,
   useTableColumns,
+  useListFilterOrigin,
 } from "../ui";
 export function Expiry() {
   const {
@@ -62,6 +63,8 @@ export function Expiry() {
   const [category, setCategory] = useListState("expiry.category", "all");
   const [search, setSearch] = useListState("expiry.search", "");
   const [sort, setSort] = useListState<"date" | "name">("expiry.sort", "date");
+  const { locationChanged: locationFilterChanged, resetLocation } =
+    useListFilterOrigin("expiry");
   const [message, setMessage] = useState("");
   const [newDateId, setNewDateId] = useState("");
   const requestedProduct = useRouteParam("product");
@@ -308,7 +311,9 @@ export function Expiry() {
           <Select
             aria-label={t("Date tracking location", "مکان پیگیری تاریخ")}
             value={branch}
-            onChange={(value) => setBranch(value as Branch)}
+            onChange={(value) => {
+              void setBranch(value as Branch);
+            }}
             disabled={branches.length < 2}
             options={
               branches.length > 1
@@ -336,18 +341,29 @@ export function Expiry() {
               { value: "name", label: t("Product", "محصول") },
             ]}
           />
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setSearch("");
-              setCategory("all");
-              setWindow("soon");
-              setSort("date");
-              if (branches.length > 1) setBranch("all");
-            }}
-          >
-            {t("Clear filters", "پاک کردن فیلترها")}
-          </Button>
+          {(search ||
+            category !== "all" ||
+            window !== "soon" ||
+            sort !== "date" ||
+            locationFilterChanged) && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setSearch("");
+                setCategory("all");
+                setWindow("soon");
+                setSort("date");
+                void resetLocation({
+                  "expiry.search": "",
+                  "expiry.category": "all",
+                  "expiry.window": "soon",
+                  "expiry.sort": "date",
+                });
+              }}
+            >
+              {t("Clear filters", "پاک کردن فیلترها")}
+            </Button>
+          )}
         </FilterToolbar>
         {message && (
           <div className="banner approved" role="status">

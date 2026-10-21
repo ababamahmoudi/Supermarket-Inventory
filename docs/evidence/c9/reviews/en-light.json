@@ -1,0 +1,260 @@
+{
+  "reviewed_utc": "2026-10-19T04:52:26.937096+00:00",
+  "reviewer": "/root/monitor_e2_shards",
+  "variant": "en-light",
+  "source_commit_observed": "882a381908b6a39c0f883319cb1a6062708b92c8",
+  "capture_directory": "/tmp/c9-release-captures",
+  "review_method": "Each of all 10 actual complete PNGs opened with view_image(detail=original). Matching Prices/Notes/Lists references were reviewed in full earlier; copied reference hashes were verified identical. No repository, DOM, screenshot or business-data edits and no browser/build/test launches.",
+  "reviewed_scene_count": 10,
+  "reference_sha256": {
+    "Lists.png": "6ccfc490ed393d5d085ca4261fdcea9b934c429197f9fa4815f65dc12905a44e",
+    "Notes.png": "04da1723ad0bbf36d21833ead1cd8a081ddabbf6bfec2bc3d50be2bb7436dd85",
+    "Prices.png": "516bd65297ade3879e8da78bc340c43c1c97a65ec6d1ffeed654087bbb452671"
+  },
+  "blocking_visible_defects": [],
+  "visible_clipping_or_overlap_found": false,
+  "resolved_prior_findings": [
+    "Lookup actual Sale scene selected with query0012, hero16.99 and below-hero regular line.",
+    "Lookup result price now precedes terms.",
+    "Product Price heading matches headline scale and includes configured tax note.",
+    "Price updates header and row tracks now visibly align."
+  ],
+  "scope": "Manual EN-light visual review only; other variants and native checks remain separately owned by Root/reviewers.",
+  "scenes": [
+    {
+      "scene": "products",
+      "reference": "Prices.png / Products list",
+      "observations": [
+        "Full image visibly contains the Pot running Sale, active multi-buy offers, and Sunflower Oil sale request.",
+        "Struck $20.99 and bold $16.99 share one Price line; Offer is its own column. Almonds retains whole /lb and /kg lines.",
+        "Filter controls and chips wrap cleanly inside the card; prices, names and end controls are legible."
+      ],
+      "remaining_differences": [
+        "All 16 real products are shown in actual order rather than the six reference examples. Basmati retains its real $23.99 regular price, with no invented sale.",
+        "At this shell/content width, Store cost and Margin are available through actual Details disclosures instead of occupying the reference’s wider visible columns.",
+        "Primary names appear lighter and include an extra unit-size line compared with the reference’s compact bold two-line rows."
+      ],
+      "defects": [],
+      "image": "/tmp/c9-release-captures/products-en-light.png",
+      "sha256": "5a77c8aefb94413cac91d6b326f3bd1d86538a3ae4e171d86d884fd41b8cc5da",
+      "dimensions": [
+        1440,
+        1961
+      ],
+      "viewed_full_image": true,
+      "manifest_hash_matches": true,
+      "reference_image": "/tmp/c9-release-captures/references/Prices.png"
+    },
+    {
+      "scene": "product-sale",
+      "reference": "Prices.png / Product sale detail",
+      "observations": [
+        "Price and Cost occupy the dominant 3:2 row; Dates spans the row below. Product hero is visibly smaller than Lookup and consistent with the 44/48 source role.",
+        "Price heading is restored to the headline scale with Before tax · Taxable at its end. Regular $20.99 is visibly struck through; End sale now is plain red.",
+        "Grey rounded Sale terms panel, provenance, Last received and permitted cost/margins remain readable; no overlapping or clipped content is visible."
+      ],
+      "remaining_differences": [
+        "Tax copy uses the actual configured Taxable wording instead of the reference’s HST added at the till.",
+        "Actual sale is for North York, ending Oct 29 and started 2026-10-15; reference dates and all-three-store terms differ.",
+        "Cost divisor remains its own row and financial margins retain two decimals. Reference combines divisor with category and displays one decimal.",
+        "Provenance and Last received retain the existing prose/date/source layout rather than the reference’s paired end-aligned fact rows; Company default remains visible."
+      ],
+      "defects": [],
+      "image": "/tmp/c9-release-captures/product-sale-en-light.png",
+      "sha256": "68d232aa6850337ce99c121995b53457e96af1f72ccf6125e6202c348abee4bd",
+      "dimensions": [
+        1440,
+        2237
+      ],
+      "viewed_full_image": true,
+      "manifest_hash_matches": true,
+      "reference_image": "/tmp/c9-release-captures/references/Prices.png"
+    },
+    {
+      "scene": "lookup-sale",
+      "reference": "Prices.png / Lookup",
+      "observations": [
+        "Actual input contains 0012 and the selected hero is Stainless Steel Pot 24 cm at $16.99 with a Sale pill.",
+        "The complete Regular $20.99 · Ends Oct 29 line is below the large hero; the genuine regular amount is visibly struck through.",
+        "Selected search result shows struck $20.99 and current $16.99 ABOVE Sale/end-date/Taxable terms. No word or price clipping is visible."
+      ],
+      "remaining_differences": [
+        "Detail and Search results are vertically stacked within the app shell rather than side by side as in the shell-free reference.",
+        "The genuine search has one result rather than the reference’s three sample products. Real sale dates and delivery evidence differ.",
+        "Existing Edit/More, search/filter controls and delivery icon remain."
+      ],
+      "defects": [],
+      "image": "/tmp/c9-release-captures/lookup-sale-en-light.png",
+      "sha256": "a76919de4caef1e56f062191be5606c9d6f88d2dd2cc5625ef854bea5674222b",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "viewed_full_image": true,
+      "manifest_hash_matches": true,
+      "reference_image": "/tmp/c9-release-captures/references/Prices.png"
+    },
+    {
+      "scene": "labels",
+      "reference": "Prices.png / Labels list",
+      "observations": [
+        "Checkbox, flexible Product, Product Code, Offer and end-aligned Selling price columns remain distinct and legible.",
+        "Pot Sale comparison, Sunflower request, real multi-buy offers and Almonds main/secondary unit prices are visible.",
+        "Filter rows and count fit within the card; every row remains within its surface without visible text or control collision."
+      ],
+      "remaining_differences": [
+        "The image contains all 16 actual products, not the reference’s three examples. Actual Basmati has no running sale.",
+        "Existing Products/Waitlist/Templates tabs and Select all filtered remain; price heading says Selling price rather than Price."
+      ],
+      "defects": [],
+      "image": "/tmp/c9-release-captures/labels-en-light.png",
+      "sha256": "bebad88e8bfddf2e9acc4f89c4381d82293725615891606b9a0f6e9f2abed2bb",
+      "dimensions": [
+        1440,
+        1664
+      ],
+      "viewed_full_image": true,
+      "manifest_hash_matches": true,
+      "reference_image": "/tmp/c9-release-captures/references/Prices.png"
+    },
+    {
+      "scene": "notes-seen-done",
+      "reference": "Notes.png",
+      "observations": [
+        "For managers and Open/Done/All plus Not seen by me controls are clear.",
+        "Done pill and actor/time line are visibly green; Seen by you check/text is also green.",
+        "Read receipts, footer hairlines, explicit Mark as seen/Mark done and plain Reopen are visible with no clipping or overlap."
+      ],
+      "remaining_differences": [
+        "The genuine view contains two actual notes, one Done and one Seen, with All selected; reference combines four example/custom notebook cards.",
+        "Body sentences are medium weight and Seen by you retains its disabled neutral fill, compared with the reference’s bold sentence and plain green treatment.",
+        "No inline Edit notebook link is visible for the selected built-in notebook, unlike the reference example.",
+        "The Done note independently remains Not seen yet and offers Mark as seen; status does not fabricate a reader receipt."
+      ],
+      "defects": [],
+      "image": "/tmp/c9-release-captures/notes-seen-done-en-light.png",
+      "sha256": "619541366502d2271808e118494a0a71f2f65661bee7076acf6bcd7f719520a7",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "viewed_full_image": true,
+      "manifest_hash_matches": true,
+      "reference_image": "/tmp/c9-release-captures/references/Notes.png"
+    },
+    {
+      "scene": "price-updates",
+      "reference": "Lists.png / Price updates",
+      "observations": [
+        "Shared filter row contains Pending/Done, location, date, count and Store progress with clean spacing.",
+        "Wide rows now show Product, Store, Price, Why, Done so far, Print label and one end chevron.",
+        "Store, end-aligned Price, Why and progress headers now visibly align with their row values. Old/new prices and 0 of 2 steps are unbroken and readable."
+      ],
+      "remaining_differences": [
+        "There is one actual pending Black Tea task rather than the reference’s three-count/two examples.",
+        "Existing selection checkbox and old-to-new arrow remain; the reference omits the arrow. Actual reason/decider evidence is retained."
+      ],
+      "defects": [],
+      "image": "/tmp/c9-release-captures/price-updates-en-light.png",
+      "sha256": "fb45b33e151ba9ba2cf6249a122657427e9b264cc927023b93feb5537edd7cbe",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "viewed_full_image": true,
+      "manifest_hash_matches": true,
+      "reference_image": "/tmp/c9-release-captures/references/Lists.png"
+    },
+    {
+      "scene": "dates",
+      "reference": "Lists.png / Date tracking bar",
+      "observations": [
+        "Search, Due soon/All dates/Removed, category, location, date sorting, count and Columns all remain within the list card.",
+        "Count/Columns wrap onto a clean second row without collisions; actual date/source rows and end controls remain readable."
+      ],
+      "remaining_differences": [
+        "The app shell leaves less width than the shell-free single-line reference, so count/Columns wrap.",
+        "The real Add date card, source/invoice and operational action columns remain; the reference illustrates only its filter bar.",
+        "Sort label is Date instead of Sort: Date."
+      ],
+      "defects": [],
+      "image": "/tmp/c9-release-captures/dates-en-light.png",
+      "sha256": "fc614561b89d5282ac84f854e2aaab3fab8e8a62a2f4ded77785c4ec3980998c",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "viewed_full_image": true,
+      "manifest_hash_matches": true,
+      "reference_image": "/tmp/c9-release-captures/references/Lists.png"
+    },
+    {
+      "scene": "branch-requests",
+      "reference": "Lists.png / Branch requests",
+      "observations": [
+        "Outgoing count, search, status, location and count form one clear filter row.",
+        "Bold REQ-0001 has item count/name below, From → To, dot-and-words Requested, date and exactly one visible end chevron.",
+        "No clipped words or overlapping controls are visible."
+      ],
+      "remaining_differences": [
+        "The actual request date is 2026-10-19 instead of the reference’s 2026-10-18; real company shell/data remain."
+      ],
+      "defects": [],
+      "image": "/tmp/c9-release-captures/branch-requests-en-light.png",
+      "sha256": "2abaaa240bf8de3c4b1f30e74a6fecf480fc01ef9569fabd0ac07653e38ed296",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "viewed_full_image": true,
+      "manifest_hash_matches": true,
+      "reference_image": "/tmp/c9-release-captures/references/Lists.png"
+    },
+    {
+      "scene": "new-branch-request",
+      "reference": "Lists.png / New request",
+      "observations": [
+        "Ask this location and Deliver to are side by side and now fill their half-column widths.",
+        "One Items section and combined catalog/free-text input are present.",
+        "Footer hairline, Cancel / Save as draft / Send request and end alignment are clear without overlap."
+      ],
+      "remaining_differences": [
+        "The preserved item editor includes bilingual name/code/unit metadata, separate Quantity and Units/Cases, optional Note and tinted Remove, instead of the reference’s compact product / 2 cases / plain Remove row.",
+        "Actual quantity is 2 Units and destination remains a genuine permitted dropdown, rather than copying the reference’s 2 cases and fixed your-location field."
+      ],
+      "defects": [],
+      "image": "/tmp/c9-release-captures/new-branch-request-en-light.png",
+      "sha256": "83fc5a0668fe8d15f3d4c14eb21bee80a94f6c318b66b7572f0231e868cdc7d3",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "viewed_full_image": true,
+      "manifest_hash_matches": true,
+      "reference_image": "/tmp/c9-release-captures/references/Lists.png"
+    },
+    {
+      "scene": "approvals-rejected",
+      "reference": "Lists.png / Decided sale request",
+      "observations": [
+        "All four tabs have actual counts, including zero Approved/Superseded and Rejected 1.",
+        "Rejected card retains product names, requested $7.99, store, dates, requester, decider/time and reason. It is read-only with no approval/rejection buttons.",
+        "No Pending-only receive-invoice hint, clipped text or overlapping values is visible."
+      ],
+      "remaining_differences": [
+        "This historical request has no retained regular-price snapshot. It therefore omits the reference’s instead of $9.49 comparison; original data is preserved and no comparison is invented from today’s price.",
+        "Card uses Sale requests / Rejected headings with a Rejected pill rather than the reference’s pair of small Sale request / Rejected badges. Real request/rejection dates and reason differ."
+      ],
+      "defects": [],
+      "image": "/tmp/c9-release-captures/approvals-rejected-en-light.png",
+      "sha256": "86118fb4b381cca6b05d1de0f431a76a8d82a656115a6ef0ba388ac22046a4f7",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "viewed_full_image": true,
+      "manifest_hash_matches": true,
+      "reference_image": "/tmp/c9-release-captures/references/Lists.png"
+    }
+  ]
+}

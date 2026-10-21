@@ -1,0 +1,332 @@
+[
+  {
+    "pr": 25,
+    "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/25",
+    "source_head": "78c5ba69f44686ad4990f8de7069d683e4022da1",
+    "main_before": "3b6da31d84afa6bb8b454320bb26b4cc6b5454d2",
+    "main_after": "3525734e9e60acd7bdd11808b7003774632bbd84",
+    "merge_parents": [
+      "3b6da31d84afa6bb8b454320bb26b4cc6b5454d2",
+      "78c5ba69f44686ad4990f8de7069d683e4022da1"
+    ],
+    "history_preserved": true,
+    "merged_utc": "2026-10-19T00:08:03.768353+00:00",
+    "checks": [
+      {
+        "name": "Prototype browsers",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39178864059/job/117828399795"
+      },
+      {
+        "name": "Prototype browser shard 4/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39178864059/job/117827156755"
+      },
+      {
+        "name": "Prototype browser shard 1/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39178864059/job/117827156710"
+      },
+      {
+        "name": "Prototype browser shard 2/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39178864059/job/117827156666"
+      },
+      {
+        "name": "Prototype browser shard 3/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39178864059/job/117827156617"
+      },
+      {
+        "name": "Lint, tests, build, and service smoke checks",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39178864059/job/117827156610"
+      },
+      {
+        "name": "Prototype lint, pricing and unit tests, and build",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39178864059/job/117827156454"
+      }
+    ],
+    "latest_ci_run": {
+      "id": 39178864059,
+      "head_sha": "78c5ba69f44686ad4990f8de7069d683e4022da1",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39178864059",
+      "created_at": "2026-10-19T00:00:54Z",
+      "updated_at": "2026-10-19T00:06:47Z"
+    }
+  },
+  {
+    "pr": 21,
+    "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/21",
+    "source_head": "1b6e3dd68da8fe783ec343e531db1387d37c4a1f",
+    "main_before": "3525734e9e60acd7bdd11808b7003774632bbd84",
+    "main_after": "f99a88d4b91b654520a6a7ddc1ae60222f64267a",
+    "merge_parents": [
+      "3525734e9e60acd7bdd11808b7003774632bbd84",
+      "1b6e3dd68da8fe783ec343e531db1387d37c4a1f"
+    ],
+    "history_preserved": true,
+    "merged_utc": "2026-10-19T00:27:01.275288+00:00",
+    "checks": [
+      {
+        "name": "Prototype browsers",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495166/job/117830562359"
+      },
+      {
+        "name": "Prototype browser shard 2/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495166/job/117829012087"
+      },
+      {
+        "name": "Prototype browser shard 4/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495166/job/117829012082"
+      },
+      {
+        "name": "Prototype browser shard 1/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495166/job/117829012033"
+      },
+      {
+        "name": "Prototype lint, pricing and unit tests, and build",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495166/job/117829011981"
+      },
+      {
+        "name": "Prototype browser shard 3/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495166/job/117829011965"
+      },
+      {
+        "name": "Lint, tests, build, and service smoke checks",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495166/job/117829011780"
+      }
+    ],
+    "latest_ci_run": {
+      "id": 39179495166,
+      "head_sha": "1b6e3dd68da8fe783ec343e531db1387d37c4a1f",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495166",
+      "created_at": "2026-10-19T00:09:27Z",
+      "updated_at": "2026-10-19T00:16:15Z"
+    }
+  },
+  {
+    "pr": 22,
+    "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/22",
+    "source_head": "af64f3a6ef4ed26e4716f28ab8fba6d59cf0ccc6",
+    "main_before": "f99a88d4b91b654520a6a7ddc1ae60222f64267a",
+    "main_after": "df8ef1d3950e1dea33e26121f199e6fd208d8d47",
+    "merge_parents": [
+      "f99a88d4b91b654520a6a7ddc1ae60222f64267a",
+      "af64f3a6ef4ed26e4716f28ab8fba6d59cf0ccc6"
+    ],
+    "history_preserved": true,
+    "merged_utc": "2026-10-19T00:27:13.864009+00:00",
+    "checks": [
+      {
+        "name": "Prototype browsers",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179496106/job/117831845162"
+      },
+      {
+        "name": "Lint, tests, build, and service smoke checks",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179496106/job/117829015023"
+      },
+      {
+        "name": "Prototype browser shard 4/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179496106/job/117829015001"
+      },
+      {
+        "name": "Prototype browser shard 1/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179496106/job/117829014979"
+      },
+      {
+        "name": "Prototype browser shard 3/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179496106/job/117829014963"
+      },
+      {
+        "name": "Prototype browser shard 2/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179496106/job/117829014950"
+      },
+      {
+        "name": "Prototype lint, pricing and unit tests, and build",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179496106/job/117829014881"
+      }
+    ],
+    "latest_ci_run": {
+      "id": 39179496106,
+      "head_sha": "af64f3a6ef4ed26e4716f28ab8fba6d59cf0ccc6",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179496106",
+      "created_at": "2026-10-19T00:09:28Z",
+      "updated_at": "2026-10-19T00:22:00Z"
+    }
+  },
+  {
+    "pr": 23,
+    "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/23",
+    "source_head": "e38264c67a549ad049c374e9e15abf2e3e0528aa",
+    "main_before": "df8ef1d3950e1dea33e26121f199e6fd208d8d47",
+    "main_after": "cb399bfeeaea09462a6ae4c87e239dd619cebb7e",
+    "merge_parents": [
+      "df8ef1d3950e1dea33e26121f199e6fd208d8d47",
+      "e38264c67a549ad049c374e9e15abf2e3e0528aa"
+    ],
+    "history_preserved": true,
+    "merged_utc": "2026-10-19T00:27:27.132545+00:00",
+    "checks": [
+      {
+        "name": "Prototype browsers",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495741/job/117832038937"
+      },
+      {
+        "name": "Prototype browser shard 2/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495741/job/117829013901"
+      },
+      {
+        "name": "Lint, tests, build, and service smoke checks",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495741/job/117829013882"
+      },
+      {
+        "name": "Prototype browser shard 1/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495741/job/117829013879"
+      },
+      {
+        "name": "Prototype lint, pricing and unit tests, and build",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495741/job/117829013761"
+      },
+      {
+        "name": "Prototype browser shard 3/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495741/job/117829013722"
+      },
+      {
+        "name": "Prototype browser shard 4/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495741/job/117829013711"
+      }
+    ],
+    "latest_ci_run": {
+      "id": 39179495741,
+      "head_sha": "e38264c67a549ad049c374e9e15abf2e3e0528aa",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179495741",
+      "created_at": "2026-10-19T00:09:28Z",
+      "updated_at": "2026-10-19T00:22:51Z"
+    }
+  },
+  {
+    "pr": 24,
+    "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/pull/24",
+    "source_head": "592369e43ca3045efdd70372315d52c6b8d718af",
+    "main_before": "cb399bfeeaea09462a6ae4c87e239dd619cebb7e",
+    "main_after": "d1fcb4ffdf55e4bb33792aa2564790dbac473e0b",
+    "merge_parents": [
+      "cb399bfeeaea09462a6ae4c87e239dd619cebb7e",
+      "592369e43ca3045efdd70372315d52c6b8d718af"
+    ],
+    "history_preserved": true,
+    "merged_utc": "2026-10-19T00:27:40.642818+00:00",
+    "checks": [
+      {
+        "name": "Prototype browsers",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179497043/job/117832845978"
+      },
+      {
+        "name": "Prototype browser shard 1/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179497043/job/117829017367"
+      },
+      {
+        "name": "Prototype browser shard 4/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179497043/job/117829017366"
+      },
+      {
+        "name": "Lint, tests, build, and service smoke checks",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179497043/job/117829017358"
+      },
+      {
+        "name": "Prototype browser shard 2/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179497043/job/117829017357"
+      },
+      {
+        "name": "Prototype browser shard 3/4",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179497043/job/117829017318"
+      },
+      {
+        "name": "Prototype lint, pricing and unit tests, and build",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179497043/job/117829017168"
+      }
+    ],
+    "latest_ci_run": {
+      "id": 39179497043,
+      "head_sha": "592369e43ca3045efdd70372315d52c6b8d718af",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39179497043",
+      "created_at": "2026-10-19T00:09:29Z",
+      "updated_at": "2026-10-19T00:26:28Z"
+    }
+  }
+]

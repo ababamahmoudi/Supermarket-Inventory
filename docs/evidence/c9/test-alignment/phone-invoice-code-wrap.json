@@ -1,0 +1,560 @@
+{
+  "reference": "C8-QA-SHORT-LAYOUT",
+  "lineProof": {
+    "text": "C8-QA-SHORT-LAYOUT",
+    "lines": [
+      {
+        "top": 632.71875,
+        "text": "C8-QA-SHORT-LAYOUT",
+        "characters": [
+          {
+            "index": 0,
+            "left": 36,
+            "right": 46.125
+          },
+          {
+            "index": 1,
+            "left": 46.109375,
+            "right": 54.8125
+          },
+          {
+            "index": 2,
+            "left": 54.796875,
+            "right": 60.6875
+          },
+          {
+            "index": 3,
+            "left": 60.671875,
+            "right": 70.65625
+          },
+          {
+            "index": 4,
+            "left": 70.640625,
+            "right": 79.703125
+          },
+          {
+            "index": 5,
+            "left": 79.6875,
+            "right": 85.578125
+          },
+          {
+            "index": 6,
+            "left": 85.5625,
+            "right": 94.40625
+          },
+          {
+            "index": 7,
+            "left": 94.390625,
+            "right": 104.15625
+          },
+          {
+            "index": 8,
+            "left": 104.140625,
+            "right": 114.40625
+          },
+          {
+            "index": 9,
+            "left": 114.390625,
+            "right": 123.375
+          },
+          {
+            "index": 10,
+            "left": 123.359375,
+            "right": 131.78125
+          },
+          {
+            "index": 11,
+            "left": 131.765625,
+            "right": 137.65625
+          },
+          {
+            "index": 12,
+            "left": 137.640625,
+            "right": 144.90625
+          },
+          {
+            "index": 13,
+            "left": 144.890625,
+            "right": 153.109375
+          },
+          {
+            "index": 14,
+            "left": 153.09375,
+            "right": 160.59375
+          },
+          {
+            "index": 15,
+            "left": 160.578125,
+            "right": 170.84375
+          },
+          {
+            "index": 16,
+            "left": 170.828125,
+            "right": 180.75
+          },
+          {
+            "index": 17,
+            "left": 180.734375,
+            "right": 189.15625
+          }
+        ]
+      }
+    ],
+    "ancestry": [
+      {
+        "tag": "BDI",
+        "className": "ltr-fragment",
+        "width": 153.15625,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "inline"
+      },
+      {
+        "tag": "A",
+        "className": "",
+        "width": 153.15625,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "block"
+      },
+      {
+        "tag": "DIV",
+        "className": "product-last-received-summary",
+        "width": 318,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "flex"
+      },
+      {
+        "tag": "SECTION",
+        "className": "card ui-card product-page-price-card",
+        "width": 358,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "block"
+      },
+      {
+        "tag": "DIV",
+        "className": "product-page-top-cards",
+        "width": 358,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "grid"
+      },
+      {
+        "tag": "DIV",
+        "className": "stack product-page",
+        "width": 358,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "flex"
+      },
+      {
+        "tag": "MAIN",
+        "className": "main-content",
+        "width": 390,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "block"
+      },
+      {
+        "tag": "DIV",
+        "className": "workspace",
+        "width": 390,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "block"
+      },
+      {
+        "tag": "DIV",
+        "className": "app-shell  ",
+        "width": 390,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "flex"
+      },
+      {
+        "tag": "DIV",
+        "className": "",
+        "width": 390,
+        "whiteSpace": "normal",
+        "overflowWrap": "normal",
+        "wordBreak": "normal",
+        "hyphens": "manual",
+        "display": "block"
+      }
+    ]
+  },
+  "codeOccurrences": [
+    {
+      "text": "C8-QA-SHORT-LAYOUT",
+      "rects": [
+        {
+          "top": 548.71875,
+          "left": 289.71875,
+          "right": 312.328125,
+          "width": 22.609375,
+          "height": 18
+        },
+        {
+          "top": 568.71875,
+          "left": 36,
+          "right": 132.1875,
+          "width": 96.1875,
+          "height": 18
+        }
+      ],
+      "lines": [
+        [
+          549,
+          "QA-"
+        ],
+        [
+          569,
+          "SHORT-LAYOUT"
+        ]
+      ],
+      "ancestry": [
+        {
+          "tag": "BDI",
+          "className": "ltr-fragment",
+          "width": 276.328125,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "inline"
+        },
+        {
+          "tag": "P",
+          "className": "helper product-price-provenance c9-regular-provenance",
+          "width": 318,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "block"
+        },
+        {
+          "tag": "SECTION",
+          "className": "card ui-card product-page-price-card",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "block"
+        },
+        {
+          "tag": "DIV",
+          "className": "product-page-top-cards",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "grid"
+        },
+        {
+          "tag": "DIV",
+          "className": "stack product-page",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "flex"
+        }
+      ]
+    },
+    {
+      "text": "C8-QA-SHORT-LAYOUT",
+      "rects": [
+        {
+          "top": 632.71875,
+          "left": 60.671875,
+          "right": 189.15625,
+          "width": 128.484375,
+          "height": 19
+        }
+      ],
+      "lines": [
+        [
+          633,
+          "QA-SHORT-LAYOUT"
+        ]
+      ],
+      "ancestry": [
+        {
+          "tag": "BDI",
+          "className": "ltr-fragment",
+          "width": 153.15625,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "inline"
+        },
+        {
+          "tag": "A",
+          "className": "",
+          "width": 153.15625,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "block"
+        },
+        {
+          "tag": "DIV",
+          "className": "product-last-received-summary",
+          "width": 318,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "flex"
+        },
+        {
+          "tag": "SECTION",
+          "className": "card ui-card product-page-price-card",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "block"
+        },
+        {
+          "tag": "DIV",
+          "className": "product-page-top-cards",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "grid"
+        },
+        {
+          "tag": "DIV",
+          "className": "stack product-page",
+          "width": 358,
+          "whiteSpace": "normal",
+          "overflowWrap": "normal",
+          "wordBreak": "normal",
+          "display": "flex"
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "scene": "product?code=0002",
+    "language": "en",
+    "width": 390,
+    "actualWidth": 390,
+    "words": 146,
+    "contentWords": 121,
+    "unitFragments": [
+      {
+        "text": "400 g",
+        "lines": 1
+      },
+      {
+        "text": "۴۰۰ گرمی",
+        "lines": 1
+      },
+      {
+        "text": "400 g",
+        "lines": 1
+      },
+      {
+        "text": "400 g",
+        "lines": 1
+      }
+    ],
+    "collisionGeometry": "loaded-font actual glyph ink; DOM ranges for wrapping and containment",
+    "cells": 20,
+    "tables": [
+      {
+        "className": "table-wrap ui-data-table is-responsive is-mobile",
+        "rows": [
+          {
+            "cells": 4,
+            "words": 5
+          }
+        ],
+        "scrollWidth": 318,
+        "clientWidth": 318
+      },
+      {
+        "className": "table-wrap ui-data-table is-responsive is-mobile product-last-received-table",
+        "rows": [
+          {
+            "cells": 4,
+            "words": 5
+          },
+          {
+            "cells": 4,
+            "words": 5
+          }
+        ],
+        "scrollWidth": 318,
+        "clientWidth": 318
+      },
+      {
+        "className": "table-wrap ui-data-table is-responsive is-mobile product-cost-history-table",
+        "rows": [
+          {
+            "cells": 4,
+            "words": 5
+          },
+          {
+            "cells": 4,
+            "words": 5
+          }
+        ],
+        "scrollWidth": 318,
+        "clientWidth": 318
+      }
+    ],
+    "forms": [],
+    "sidebar": null,
+    "topbar": [
+      {
+        "className": "ui-button button button-secondary ui-icon-button sidebar-toggle",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-select ui-input has-leading-icon branch-pill",
+        "width": 180,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button notifications-menu",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button mobile-account-menu",
+        "width": 36,
+        "height": 36
+      },
+      {
+        "className": "ui-button button button-neutral ui-menu-trigger ui-icon-button mobile-more-menu",
+        "width": 36,
+        "height": 36
+      }
+    ],
+    "failures": [
+      "product?code=0002: content word broken in middle: QA-SHORT-LAYOUT"
+    ],
+    "containment": {
+      "tableCount": 3,
+      "rowCount": 5,
+      "tables": [
+        {
+          "className": "table-wrap ui-data-table is-responsive is-mobile",
+          "cardClassName": "card ui-card",
+          "card": {
+            "left": 16,
+            "right": 374,
+            "top": 1614.28125,
+            "bottom": 1890.5625
+          },
+          "rows": [
+            {
+              "text": "North York$1.49—Company default",
+              "expanded": false,
+              "row": {
+                "left": 36,
+                "right": 354,
+                "top": 1680.28125,
+                "bottom": 1870.5625
+              },
+              "contained": true
+            }
+          ]
+        },
+        {
+          "className": "table-wrap ui-data-table is-responsive is-mobile product-last-received-table",
+          "cardClassName": "card ui-card",
+          "card": {
+            "left": 16,
+            "right": 374,
+            "top": 1906.5625,
+            "bottom": 2417.125
+          },
+          "rows": [
+            {
+              "text": "2026-10-19North York2 units",
+              "expanded": false,
+              "row": {
+                "left": 36,
+                "right": 354,
+                "top": 1972.5625,
+                "bottom": 2178.84375
+              },
+              "contained": true
+            },
+            {
+              "text": "2026-10-18North York2 cases",
+              "expanded": false,
+              "row": {
+                "left": 36,
+                "right": 354,
+                "top": 2190.84375,
+                "bottom": 2397.125
+              },
+              "contained": true
+            }
+          ]
+        },
+        {
+          "className": "table-wrap ui-data-table is-responsive is-mobile product-cost-history-table",
+          "cardClassName": "card ui-card",
+          "card": {
+            "left": 16,
+            "right": 374,
+            "top": 2549.6875,
+            "bottom": 3060.25
+          },
+          "rows": [
+            {
+              "text": "Fresh Valley Foods2026-10-19$0.98",
+              "expanded": false,
+              "row": {
+                "left": 36,
+                "right": 354,
+                "top": 2615.6875,
+                "bottom": 2821.96875
+              },
+              "contained": true
+            },
+            {
+              "text": "Fresh Valley Foods2026-10-18$0.98",
+              "expanded": false,
+              "row": {
+                "left": 36,
+                "right": 354,
+                "top": 2833.96875,
+                "bottom": 3040.25
+              },
+              "contained": true
+            }
+          ]
+        }
+      ],
+      "failures": []
+    }
+  },
+  "fixture": "Exact prepareSupplierShorts from prototype/tests/c8-layout-proof.spec.ts; all normal UI and real posting guards. Fresh browser context. No injected data or styles."
+}

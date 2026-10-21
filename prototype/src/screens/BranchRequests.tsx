@@ -7,7 +7,7 @@ import {
 import type { AuthenticatedActor } from "../authority-types";
 import { actorAtLocation } from "../authority";
 import Decimal from "decimal.js";
-import { Plus, Printer, ArrowLeft, ChevronRight } from "lucide-react";
+import { Plus, Printer, ArrowLeft } from "lucide-react";
 import { useDemo } from "../store";
 import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
 import { useListState, useRouteParam } from "../navigation";
@@ -24,6 +24,7 @@ import {
   PageHeader,
   Select,
   Tabs,
+  TableRowLink,
 } from "../ui";
 import { configuredBranches, branchLabel } from "../settings";
 import { searchProducts } from "../catalog";
@@ -108,10 +109,16 @@ const errorText: Record<BranchRequestError["code"], [string, string]> = {
     "مورد کسری یا نرسیده‌ای برای کپی باقی نمانده است.",
   ],
 };
-function RequestItemName({ item }: { item: BranchRequestItem }) {
+function RequestItemName({
+  item,
+  language,
+}: {
+  item: BranchRequestItem;
+  language: Language;
+}) {
   return item.kind === "catalog" ? (
     <span>
-      <ProductName product={item} />
+      <ProductName product={item} language={language} />
       <span className="helper">
         <LtrText>{item.product_code}</LtrText> ·{" "}
         <UnitSize value={item.unit_size ?? ""} />
@@ -267,6 +274,7 @@ export default function BranchRequests() {
     branch,
     lang,
     t,
+    tCount,
     navigate,
   } = useDemo();
   const active = configuredBranches(state.config);
@@ -290,8 +298,7 @@ export default function BranchRequests() {
     [source, setSource] = useState(branch === "all" ? "" : branch),
     [destination, setDestination] = useState("");
   const [lines, setLines] = useState<DraftLine[]>([]),
-    [productSearch, setProductSearch] = useState(""),
-    [freeText, setFreeText] = useState("");
+    [productSearch, setProductSearch] = useState("");
   const [actingLocation, setActingLocation] = useState(""),
     [decisions, setDecisions] = useState<
       Record<string, { decision: string; quantity: string }>
@@ -337,7 +344,6 @@ export default function BranchRequests() {
     setLines([]);
     setSelected(null);
     setProductSearch("");
-    setFreeText("");
     setError("");
     setMessage("");
   }
@@ -471,6 +477,23 @@ export default function BranchRequests() {
     setSelected(null);
     setError("");
     setMessage("");
+    setProductSearch("");
+  };
+  const addFreeItem = () => {
+    if (!productSearch.trim()) return;
+    clearError("items");
+    clearMissingField("request-products");
+    setLines((previous) => [
+      ...previous,
+      {
+        key: createId("request-form-item"),
+        kind: "free_text",
+        free_text: productSearch.trim(),
+        quantity: "1",
+        quantity_unit: "units",
+      },
+    ]);
+    setProductSearch("");
   };
   const save = async (send: boolean) => {
     const next: ValidationIssue[] = [];
@@ -639,34 +662,7 @@ export default function BranchRequests() {
           <WhatsMissing issues={missing} />
           <div className="request-location-fields">
             <Field
-              label={t("Requesting location", "محل درخواست‌کننده")}
-              error={
-                missingFor("request-source") ??
-                (!active.includes(source) ? fieldError("location") : undefined)
-              }
-            >
-              <Select
-                id="request-source"
-                value={source}
-                onChange={(value) => {
-                  setSource(value);
-                  clearMissingField("request-source");
-                  clearError("location");
-                }}
-                disabled={branch !== "all" || Boolean(editing)}
-                options={[
-                  { value: "", label: t("Choose location", "انتخاب محل") },
-                  ...active
-                    .filter((location) => allowed.includes(location))
-                    .map((location) => ({
-                      value: location,
-                      label: branchLabel(state.config, location, lang),
-                    })),
-                ]}
-              />
-            </Field>
-            <Field
-              label={t("Sending location", "محل ارسال‌کننده")}
+              label={t("Ask this location", "درخواست از این مکان")}
               error={
                 missingFor("request-destination") ??
                 (!active.includes(destination) || destination === source
@@ -693,251 +689,259 @@ export default function BranchRequests() {
                 ]}
               />
             </Field>
-          </div>
-          <Field
-            label={t("Search products", "جستجوی کالا")}
-            error={missingFor("request-products") ?? fieldError("items")}
-          >
-            <input
-              id="request-products"
-              className="ui-input"
-              value={productSearch}
-              onChange={(event) => setProductSearch(event.target.value)}
-            />
-          </Field>
-          {productSearch.trim() && (
-            <div className="request-search-results">
-              {searchProducts(
-                state.products.filter(
-                  (product) =>
-                    product.company_id === context?.company_id &&
-                    product.status !== "archived",
-                ),
-                productSearch,
-              )
-                .slice(0, 8)
-                .map((product) => (
-                  <div key={product.code}>
-                    <span>
-                      <ProductName product={product} />
-                      <span className="helper">
-                        <LtrText>{product.code}</LtrText> ·{" "}
-                        <UnitSize value={product.unit_size} />
-                      </span>
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="plain"
-                      onClick={() => {
-                        const packs = [
-                          ...new Set(
-                            (state.supplier_items ?? [])
-                              .filter(
-                                (item) =>
-                                  item.company_id === context?.company_id &&
-                                  item.product_code === product.code &&
-                                  !item.archived,
-                              )
-                              .map((item) => item.units_per_case),
-                          ),
-                        ];
-                        clearError("items");
-                        clearMissingField("request-products");
-                        setLines([
-                          ...lines,
-                          {
-                            key: createId("request-form-item"),
-                            kind: "catalog",
-                            product_code: product.code,
-                            quantity: "1",
-                            quantity_unit: "units",
-                            units_per_case:
-                              packs.length === 1 ? packs[0] : undefined,
-                          },
-                        ]);
-                        setProductSearch("");
-                      }}
-                    >
-                      {t("Add", "افزودن")}
-                    </Button>
-                  </div>
-                ))}
-            </div>
-          )}
-          <div className="request-free-item">
             <Field
-              label={t("Free-text item", "مورد با نام دلخواه")}
-              error={missingFor("request-free-item")}
+              label={t("Deliver to", "تحویل به")}
+              error={
+                missingFor("request-source") ??
+                (!active.includes(source) ? fieldError("location") : undefined)
+              }
+            >
+              <Select
+                id="request-source"
+                value={source}
+                onChange={(value) => {
+                  setSource(value);
+                  clearMissingField("request-source");
+                  clearError("location");
+                }}
+                disabled={branch !== "all" || Boolean(editing)}
+                options={[
+                  { value: "", label: t("Choose location", "انتخاب محل") },
+                  ...active
+                    .filter((location) => allowed.includes(location))
+                    .map((location) => ({
+                      value: location,
+                      label: branchLabel(state.config, location, lang),
+                    })),
+                ]}
+              />
+            </Field>
+          </div>
+          <div className="request-items-section">
+            <h3>{t("Items", "موارد")}</h3>
+            <div className="request-draft-lines">
+              {lines.map((line, index) => {
+                const product = state.products.find(
+                  (item) =>
+                    item.company_id === context?.company_id &&
+                    item.code === line.product_code,
+                );
+                const change = (patch: Partial<DraftLine>) => {
+                  if (
+                    "quantity" in patch ||
+                    "quantity_unit" in patch ||
+                    "units_per_case" in patch
+                  )
+                    clearMissingField(`request-quantity-${line.key}`);
+                  if ("units_per_case" in patch)
+                    clearMissingField(`request-pack-${line.key}`);
+                  if ("quantity" in patch || "quantity_unit" in patch)
+                    clearError("quantity");
+                  if ("units_per_case" in patch) clearError("pack", "quantity");
+                  setLines(
+                    lines.map((entry, i) =>
+                      i === index ? { ...entry, ...patch } : entry,
+                    ),
+                  );
+                };
+                return (
+                  <div className="request-draft-line" key={line.key}>
+                    <div className="request-line-heading">
+                      {product ? (
+                        <span>
+                          <ProductName product={product} language={lang} />
+                          <span className="helper">
+                            <LtrText>{product.code}</LtrText> ·{" "}
+                            <UnitSize value={product.unit_size} />
+                          </span>
+                        </span>
+                      ) : (
+                        <bdi dir="auto">{line.free_text}</bdi>
+                      )}
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() =>
+                          setLines(lines.filter((_, i) => i !== index))
+                        }
+                      >
+                        {t("Remove", "حذف")}
+                      </Button>
+                    </div>
+                    <div className="request-quantity-fields">
+                      <Field
+                        label={t("Quantity", "تعداد")}
+                        error={
+                          missingFor(`request-quantity-${line.key}`) ??
+                          fieldError("quantity")
+                        }
+                      >
+                        <NumberField
+                          id={`request-quantity-${line.key}`}
+                          value={line.quantity}
+                          onChange={(quantity) => change({ quantity })}
+                        />
+                      </Field>
+                      <Field label={t("Units / Cases", "واحد / کارتن")}>
+                        <Select
+                          value={line.quantity_unit}
+                          onChange={(value) =>
+                            change({
+                              quantity_unit: value as "units" | "cases",
+                            })
+                          }
+                          options={[
+                            { value: "units", label: t("Units", "واحد") },
+                            { value: "cases", label: t("Cases", "کارتن") },
+                          ]}
+                        />
+                      </Field>
+                      {line.quantity_unit === "cases" && (
+                        <Field
+                          label={t("Units per case", "تعداد در کارتن")}
+                          error={
+                            missingFor(`request-pack-${line.key}`) ??
+                            fieldError("pack")
+                          }
+                          hint={
+                            line.kind === "free_text"
+                              ? t(
+                                  "Leave blank if the pack is unknown.",
+                                  "اگر تعداد در کارتن مشخص نیست، خالی بگذارید.",
+                                )
+                              : undefined
+                          }
+                        >
+                          <NumberField
+                            id={`request-pack-${line.key}`}
+                            value={line.units_per_case ?? ""}
+                            step={1}
+                            onChange={(value) =>
+                              change({
+                                units_per_case: value
+                                  ? Number(value)
+                                  : undefined,
+                              })
+                            }
+                          />
+                        </Field>
+                      )}
+                    </div>
+                    <Field label={t("Note (optional)", "یادداشت (اختیاری)")}>
+                      <input
+                        className="ui-input"
+                        value={line.note ?? ""}
+                        onChange={(event) =>
+                          change({ note: event.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                );
+              })}
+            </div>
+            <Field
+              label={t(
+                "Add a product, or type an item that isn't in the catalog",
+                "کالایی اضافه کنید یا نام موردی خارج از فهرست را بنویسید",
+              )}
+              error={missingFor("request-products") ?? fieldError("items")}
             >
               <input
-                id="request-free-item"
+                id="request-products"
                 className="ui-input"
-                value={freeText}
+                placeholder={t(
+                  "Add a product, or type an item that isn't in the catalog",
+                  "کالایی اضافه کنید یا نام موردی خارج از فهرست را بنویسید",
+                )}
+                value={productSearch}
                 onChange={(event) => {
-                  setFreeText(event.target.value);
-                  clearMissingField("request-free-item");
+                  setProductSearch(event.target.value);
+                  clearMissingField("request-products");
                   clearError("items");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addFreeItem();
+                  }
                 }}
               />
             </Field>
-            <Button
-              variant="plain"
-              onClick={() => {
-                if (!freeText.trim()) {
-                  setMissing([
-                    {
-                      id: "items:free",
-                      fieldId: "request-free-item",
-                      message: t(
-                        "Enter an item name.",
-                        "نام مورد را وارد کنید.",
-                      ),
-                    },
-                  ]);
-                  return;
-                }
-                clearError("items");
-                clearMissingField("request-free-item");
-                clearMissingField("request-products");
-                setLines([
-                  ...lines,
-                  {
-                    key: createId("request-form-item"),
-                    kind: "free_text",
-                    free_text: freeText.trim(),
-                    quantity: "1",
-                    quantity_unit: "units",
-                  },
-                ]);
-                setFreeText("");
-              }}
-            >
-              {t("Add item", "افزودن مورد")}
-            </Button>
-          </div>
-          <div className="request-draft-lines">
-            {lines.map((line, index) => {
-              const product = state.products.find(
-                (item) =>
-                  item.company_id === context?.company_id &&
-                  item.code === line.product_code,
-              );
-              const change = (patch: Partial<DraftLine>) => {
-                if (
-                  "quantity" in patch ||
-                  "quantity_unit" in patch ||
-                  "units_per_case" in patch
-                )
-                  clearMissingField(`request-quantity-${line.key}`);
-                if ("units_per_case" in patch)
-                  clearMissingField(`request-pack-${line.key}`);
-                if ("quantity" in patch || "quantity_unit" in patch)
-                  clearError("quantity");
-                if ("units_per_case" in patch) clearError("pack", "quantity");
-                setLines(
-                  lines.map((entry, i) =>
-                    i === index ? { ...entry, ...patch } : entry,
+            {productSearch.trim() && (
+              <div className="request-search-results">
+                {searchProducts(
+                  state.products.filter(
+                    (product) =>
+                      product.company_id === context?.company_id &&
+                      product.status !== "archived",
                   ),
-                );
-              };
-              return (
-                <div className="request-draft-line" key={line.key}>
-                  <div className="request-line-heading">
-                    {product ? (
+                  productSearch,
+                )
+                  .slice(0, 8)
+                  .map((product) => (
+                    <div key={product.code}>
                       <span>
-                        <ProductName product={product} />
+                        <ProductName product={product} language={lang} />
                         <span className="helper">
                           <LtrText>{product.code}</LtrText> ·{" "}
                           <UnitSize value={product.unit_size} />
                         </span>
                       </span>
-                    ) : (
-                      <bdi dir="auto">{line.free_text}</bdi>
-                    )}
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() =>
-                        setLines(lines.filter((_, i) => i !== index))
-                      }
-                    >
-                      {t("Remove item", "حذف مورد")}
-                    </Button>
-                  </div>
-                  <div className="request-quantity-fields">
-                    <Field
-                      label={t("Quantity", "تعداد")}
-                      error={
-                        missingFor(`request-quantity-${line.key}`) ??
-                        fieldError("quantity")
-                      }
-                    >
-                      <NumberField
-                        id={`request-quantity-${line.key}`}
-                        value={line.quantity}
-                        onChange={(quantity) => change({ quantity })}
-                      />
-                    </Field>
-                    <Field label={t("Units / Cases", "واحد / کارتن")}>
-                      <Select
-                        value={line.quantity_unit}
-                        onChange={(value) =>
-                          change({ quantity_unit: value as "units" | "cases" })
-                        }
-                        options={[
-                          { value: "units", label: t("Units", "واحد") },
-                          { value: "cases", label: t("Cases", "کارتن") },
-                        ]}
-                      />
-                    </Field>
-                    {line.quantity_unit === "cases" && (
-                      <Field
-                        label={t("Units per case", "تعداد در کارتن")}
-                        error={
-                          missingFor(`request-pack-${line.key}`) ??
-                          fieldError("pack")
-                        }
-                        hint={
-                          line.kind === "free_text"
-                            ? t(
-                                "Leave blank if the pack is unknown.",
-                                "اگر تعداد در کارتن مشخص نیست، خالی بگذارید.",
-                              )
-                            : undefined
-                        }
+                      <Button
+                        size="sm"
+                        variant="plain"
+                        onClick={() => {
+                          const packs = [
+                            ...new Set(
+                              (state.supplier_items ?? [])
+                                .filter(
+                                  (item) =>
+                                    item.company_id === context?.company_id &&
+                                    item.product_code === product.code &&
+                                    !item.archived,
+                                )
+                                .map((item) => item.units_per_case),
+                            ),
+                          ];
+                          clearError("items");
+                          clearMissingField("request-products");
+                          setLines([
+                            ...lines,
+                            {
+                              key: createId("request-form-item"),
+                              kind: "catalog",
+                              product_code: product.code,
+                              quantity: "1",
+                              quantity_unit: "units",
+                              units_per_case:
+                                packs.length === 1 ? packs[0] : undefined,
+                            },
+                          ]);
+                          setProductSearch("");
+                        }}
                       >
-                        <NumberField
-                          id={`request-pack-${line.key}`}
-                          value={line.units_per_case ?? ""}
-                          step={1}
-                          onChange={(value) =>
-                            change({
-                              units_per_case: value ? Number(value) : undefined,
-                            })
-                          }
-                        />
-                      </Field>
-                    )}
-                  </div>
-                  <Field label={t("Note (optional)", "یادداشت (اختیاری)")}>
-                    <input
-                      className="ui-input"
-                      value={line.note ?? ""}
-                      onChange={(event) => change({ note: event.target.value })}
-                    />
-                  </Field>
-                </div>
-              );
-            })}
+                        {t("Add", "افزودن")}
+                      </Button>
+                    </div>
+                  ))}
+                <Button variant="plain" onClick={addFreeItem}>
+                  {t("Add item", "افزودن مورد")}:{" "}
+                  <bdi dir="auto">{productSearch.trim()}</bdi>
+                </Button>
+              </div>
+            )}
           </div>
-          <div className="dialog-actions">
+          <div className="dialog-actions request-form-actions">
             <Button variant="neutral" onClick={() => setFormOpen(false)}>
               {t("Cancel", "انصراف")}
             </Button>
             <Button variant="neutral" onClick={() => save(false)}>
               {t("Save as draft", "ذخیره پیش‌نویس")}
             </Button>
-            <Button onClick={() => save(true)}>{t("Send", "ارسال")}</Button>
+            <Button onClick={() => save(true)}>
+              {t("Send request", "ارسال درخواست")}
+            </Button>
           </div>
         </Card>
       ) : request ? (
@@ -1109,7 +1113,7 @@ export default function BranchRequests() {
                       </p>
                     )}
                     <div className="request-checklist-heading">
-                      <RequestItemName item={item} />
+                      <RequestItemName item={item} language={lang} />
                       <strong>
                         <LtrText>{item.quantity}</LtrText> {quantityLabel(item)}
                       </strong>
@@ -1445,16 +1449,40 @@ export default function BranchRequests() {
           </Card>
         </>
       ) : (
-        <>
-          <Tabs
-            value={tab}
-            onChange={setTab}
-            options={[
-              { value: "incoming", label: t("Incoming", "ورودی") },
-              { value: "outgoing", label: t("Outgoing", "خروجی") },
-            ]}
-          />
+        <Card className="requests-list-card">
           <FilterToolbar
+            aria-label={t("Branch request filters", "فیلترهای درخواست شعب")}
+            count={tCount(
+              "{{count}} request",
+              "{{count}} requests",
+              "{{count}} درخواست",
+              "{{count}} درخواست",
+              listed.length,
+            )}
+            leading={
+              <Tabs
+                value={tab}
+                onChange={setTab}
+                options={[
+                  {
+                    value: "incoming",
+                    label: t("Incoming", "ورودی"),
+                    count: branchRequestView(state, context, {
+                      tab: "incoming",
+                      status: "open",
+                    }).length,
+                  },
+                  {
+                    value: "outgoing",
+                    label: t("Outgoing", "خروجی"),
+                    count: branchRequestView(state, context, {
+                      tab: "outgoing",
+                      status: "open",
+                    }).length,
+                  },
+                ]}
+              />
+            }
             search={
               <input
                 aria-label={t("Search requests", "جستجوی درخواست‌ها")}
@@ -1489,111 +1517,173 @@ export default function BranchRequests() {
                 })),
               ]}
             />
+            {(query ||
+              statusFilter !== "open" ||
+              locationFilter ||
+              tab !== "outgoing") && (
+              <Button
+                variant="plain"
+                onClick={() => {
+                  setQuery("");
+                  setStatusFilter("open");
+                  setLocationFilter("");
+                  setTab("outgoing");
+                }}
+              >
+                {t("Clear filters", "پاک کردن فیلترها")}
+              </Button>
+            )}
           </FilterToolbar>
           {listed.length ? (
-            <Card>
-              <DataTable>
-                <thead>
-                  <tr>
-                    <th>{t("Request", "درخواست")}</th>
-                    <th>{t("Requesting location", "محل درخواست‌کننده")}</th>
-                    <th>{t("Sending location", "محل ارسال‌کننده")}</th>
-                    <th>{t("Status", "وضعیت")}</th>
-                    <th>{t("Date", "تاریخ")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {listed.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="clickable-row"
-                      tabIndex={0}
-                      onClick={(event) => {
-                        if (
-                          (event.target as HTMLElement).closest(
-                            "button, a, input, select, textarea, [role='menuitem']",
-                          )
+            <DataTable
+              className="requests-list-table"
+              phoneList={{
+                name: "request",
+                value: "status",
+                secondary: ["route", "date"],
+              }}
+              columns={[
+                {
+                  key: "request",
+                  required: true,
+                  width: 320,
+                  minWidth: 240,
+                  priority: 1,
+                },
+                { key: "route", width: 300, minWidth: 210, priority: 4 },
+                { key: "status", width: 150, minWidth: 120, priority: 2 },
+                { key: "date", width: 140, minWidth: 120, priority: 5 },
+                {
+                  key: "action",
+                  actions: true,
+                  width: 48,
+                  minWidth: 48,
+                  priority: 3,
+                },
+              ]}
+            >
+              <thead>
+                <tr>
+                  <th>{t("Request", "درخواست")}</th>
+                  <th>{t("From → To", "از ← به")}</th>
+                  <th>{t("Status", "وضعیت")}</th>
+                  <th>{t("Date", "تاریخ")}</th>
+                  <th aria-label={t("Open request", "باز کردن درخواست")} />
+                </tr>
+              </thead>
+              <tbody>
+                {listed.map((item) => (
+                  <tr
+                    key={item.id}
+                    data-row-href={`#requests?id=${encodeURIComponent(item.id)}`}
+                    className="clickable-row"
+                    tabIndex={0}
+                    onClick={(event) => {
+                      if (
+                        (event.target as HTMLElement).closest(
+                          "button, a, input, select, textarea, [role='menuitem']",
                         )
-                          return;
+                      )
+                        return;
+                      openRequest(item.id);
+                      setError("");
+                      setMessage("");
+                    }}
+                    onKeyDown={(event) => {
+                      if (
+                        event.target === event.currentTarget &&
+                        (event.key === "Enter" || event.key === " ")
+                      ) {
+                        event.preventDefault();
                         openRequest(item.id);
                         setError("");
                         setMessage("");
-                      }}
-                      onKeyDown={(event) => {
-                        if (
-                          event.target === event.currentTarget &&
-                          (event.key === "Enter" || event.key === " ")
-                        ) {
+                      }
+                    }}
+                  >
+                    <td>
+                      <strong>
+                        <LtrText>{item.reference}</LtrText>
+                      </strong>
+                      <span className="helper">
+                        {tCount(
+                          "{{count}} item",
+                          "{{count}} items",
+                          "{{count}} مورد",
+                          "{{count}} مورد",
+                          item.items.length,
+                        )}
+                        {item.items[0] && (
+                          <>
+                            {" "}
+                            ·{" "}
+                            <bdi dir="auto">
+                              {item.items[0].kind === "free_text"
+                                ? item.items[0].free_text
+                                : lang === "fa"
+                                  ? item.items[0].name_fa ||
+                                    item.items[0].name_en
+                                  : item.items[0].name_en}
+                            </bdi>
+                          </>
+                        )}
+                      </span>
+                    </td>
+                    <td>
+                      <bdi dir="auto">
+                        {branchLabel(state.config, item.from_branch, lang)}
+                      </bdi>
+                      <span className="request-route-arrow" aria-hidden="true">
+                        {" "}
+                        →{" "}
+                      </span>
+                      <bdi dir="auto">
+                        {branchLabel(state.config, item.to_branch, lang)}
+                      </bdi>
+                    </td>
+                    <td>
+                      <Badge
+                        tone={
+                          item.status === "requested" || item.status === "sent"
+                            ? "info"
+                            : item.status === "received" ||
+                                item.status === "closed"
+                              ? "approved"
+                              : "neutral"
+                        }
+                      >
+                        {translatedStatus(item.status)}
+                      </Badge>
+                      {item.items.some(
+                        (line) =>
+                          new Decimal(line.short_quantity ?? "0").gt(0) ||
+                          new Decimal(line.missing_quantity ?? "0").gt(0),
+                      ) && (
+                        <span className="helper">
+                          {t("Short or missing items", "موارد کسری یا نرسیده")}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <DateText value={item.created_at} />
+                    </td>
+                    <td className="table-actions">
+                      <TableRowLink
+                        aria-label={item.reference}
+                        href={`#requests?id=${encodeURIComponent(item.id)}`}
+                        onClick={(event) => {
                           event.preventDefault();
+                          event.stopPropagation();
                           openRequest(item.id);
                           setError("");
                           setMessage("");
-                        }
-                      }}
-                    >
-                      <td>
-                        <Button
-                          variant="plain"
-                          size="sm"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openRequest(item.id);
-                            setError("");
-                            setMessage("");
-                          }}
-                        >
-                          <LtrText>{item.reference}</LtrText>
-                          <ChevronRight
-                            size={16}
-                            strokeWidth={1.5}
-                            className="row-chevron"
-                            aria-hidden="true"
-                          />
-                        </Button>
-                        <span className="helper">
-                          {t("Items", "موارد")}:{" "}
-                          <LtrText>{item.items.length}</LtrText>
-                        </span>
-                      </td>
-                      <td>
-                        {branchLabel(state.config, item.from_branch, lang)}
-                      </td>
-                      <td>{branchLabel(state.config, item.to_branch, lang)}</td>
-                      <td>
-                        <Badge
-                          tone={
-                            item.status === "requested" ||
-                            item.status === "sent"
-                              ? "info"
-                              : item.status === "received" ||
-                                  item.status === "closed"
-                                ? "approved"
-                                : "neutral"
-                          }
-                        >
-                          {translatedStatus(item.status)}
-                        </Badge>
-                        {item.items.some(
-                          (line) =>
-                            new Decimal(line.short_quantity ?? "0").gt(0) ||
-                            new Decimal(line.missing_quantity ?? "0").gt(0),
-                        ) && (
-                          <span className="helper">
-                            {t(
-                              "Short or missing items",
-                              "موارد کسری یا نرسیده",
-                            )}
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <DateText value={item.created_at} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </DataTable>
-            </Card>
+                        }}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </DataTable>
           ) : (
             <EmptyState>
               {t("No requests", "درخواستی وجود ندارد")}.{" "}
@@ -1603,7 +1693,7 @@ export default function BranchRequests() {
               )}
             </EmptyState>
           )}
-        </>
+        </Card>
       )}
       {printOutput}
     </div>

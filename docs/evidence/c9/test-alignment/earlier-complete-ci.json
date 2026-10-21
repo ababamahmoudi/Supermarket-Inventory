@@ -1,0 +1,347 @@
+{
+  "head": "390fec0ea8d4e259d577b69844cc0924e6a5469a",
+  "run_id": 39202246797,
+  "observed_utc": "20261019T141650Z",
+  "all_four_browser_shards_completed": true,
+  "checks": [
+    {
+      "name": "Prototype browsers",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117905427714"
+    },
+    {
+      "name": "Prototype browser shard 1/4",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505987"
+    },
+    {
+      "name": "Prototype browser shard 4/4",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505964"
+    },
+    {
+      "name": "Prototype browser shard 2/4",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505945"
+    },
+    {
+      "name": "Prototype lint, pricing and unit tests, and build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505906"
+    },
+    {
+      "name": "Prototype browser shard 3/4",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505899"
+    },
+    {
+      "name": "Lint, tests, build, and service smoke checks",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505754"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 117897505754,
+      "name": "Lint, tests, build, and service smoke checks",
+      "conclusion": "success",
+      "started_at": "2026-10-19T04:59:48Z",
+      "completed_at": "2026-10-19T05:03:20Z"
+    },
+    {
+      "id": 117897505899,
+      "name": "Prototype browser shard 3/4",
+      "conclusion": "cancelled",
+      "started_at": "2026-10-19T04:59:48Z",
+      "completed_at": "2026-10-19T05:30:04Z"
+    },
+    {
+      "id": 117897505906,
+      "name": "Prototype lint, pricing and unit tests, and build",
+      "conclusion": "success",
+      "started_at": "2026-10-19T04:59:49Z",
+      "completed_at": "2026-10-19T05:06:49Z"
+    },
+    {
+      "id": 117897505945,
+      "name": "Prototype browser shard 2/4",
+      "conclusion": "failure",
+      "started_at": "2026-10-19T04:59:48Z",
+      "completed_at": "2026-10-19T05:16:03Z"
+    },
+    {
+      "id": 117897505964,
+      "name": "Prototype browser shard 4/4",
+      "conclusion": "failure",
+      "started_at": "2026-10-19T04:59:48Z",
+      "completed_at": "2026-10-19T05:18:25Z"
+    },
+    {
+      "id": 117897505987,
+      "name": "Prototype browser shard 1/4",
+      "conclusion": "cancelled",
+      "started_at": "2026-10-19T04:59:48Z",
+      "completed_at": "2026-10-19T05:30:02Z"
+    },
+    {
+      "id": 117905427714,
+      "name": "Prototype browsers",
+      "conclusion": "failure",
+      "started_at": "2026-10-19T05:30:06Z",
+      "completed_at": "2026-10-19T05:30:08Z"
+    }
+  ],
+  "classified_failures": [
+    {
+      "shard": "Prototype browser shard 1/4",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505987",
+      "path": ".github",
+      "line": 1,
+      "title": "",
+      "message": "The job has exceeded the maximum execution time of 30m0s",
+      "annotations": 1,
+      "classification": {
+        "status": "job_time_limit",
+        "contract": "Shards1 and3 hit original30m; do not raisebudget. Stale waits/retries consume time; no changedworker/retry/skip authorized."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 1/4",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505987",
+      "path": "prototype/tests/c8-layout-proof.spec.ts",
+      "line": 257,
+      "title": "[desktop] \u203a tests/c8-layout-proof.spec.ts:163:5 \u203a C8 every page keeps rows inside their cards and retains glyph/control guards en 900px",
+      "message": "  3) [desktop] \u203a tests/c8-layout-proof.spec.ts:163:5 \u203a C8 every page keeps rows inside their cards and retains glyph/control guards en 900px \n    Error: locator.click: Test timeout of 240000ms exceeded.\n    Call log:\n      - waiting for getByRole('tab', { name: 'Outgoing', exact: true })\n\n\n      255 |                 exact: true,\n      256 |               })\n    > 257 |               .click();\n          |                ^\n      258 |             await choose(\n      259 |               page,\n      260 |               field(page, \"Status\", \"\u0648\u0636\u0639\u06cc\u062a\"),\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/c8-layout-proof.spec.ts:257:16",
+      "annotations": 2,
+      "classification": {
+        "status": "mixed_needs_geometry_investigation",
+        "contract": "Outgoing locator must allow preserved accessible count (actual UI renders Outgoing 1). Independently phone product QA-SHORT-LAYOUT wordbreak is not authorized old wording: no instruction requests breaking identifiers; may be true wrapping bug or false-positive hyphen tokenization. Preserve guard and investigate; do not classify as safe stale test without actual geometry proof."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 1/4",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505987",
+      "path": "prototype/tests/c8-layout-proof.spec.ts",
+      "line": 0,
+      "title": "[desktop] \u203a tests/c8-layout-proof.spec.ts:163:5 \u203a C8 every page keeps rows inside their cards and retains glyph/control guards en 900px",
+      "message": "  3) [desktop] \u203a tests/c8-layout-proof.spec.ts:163:5 \u203a C8 every page keeps rows inside their cards and retains glyph/control guards en 900px \n    Test timeout of 240000ms exceeded.",
+      "annotations": 2,
+      "classification": {
+        "status": "mixed_needs_geometry_investigation",
+        "contract": "Outgoing locator must allow preserved accessible count (actual UI renders Outgoing 1). Independently phone product QA-SHORT-LAYOUT wordbreak is not authorized old wording: no instruction requests breaking identifiers; may be true wrapping bug or false-positive hyphen tokenization. Preserve guard and investigate; do not classify as safe stale test without actual geometry proof."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 1/4",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505987",
+      "path": "prototype/tests/c8-layout-proof.spec.ts",
+      "line": 247,
+      "title": "[desktop] \u203a tests/c8-layout-proof.spec.ts:163:5 \u203a C8 every page keeps rows inside their cards and retains glyph/control guards en 390px",
+      "message": "  2) [desktop] \u203a tests/c8-layout-proof.spec.ts:163:5 \u203a C8 every page keeps rows inside their cards and retains glyph/control guards en 390px \n    Error: product?code=0002\n\n    expect(received).toEqual(expected) // deep equality\n\n    - Expected  - 1\n    + Received  + 3\n\n    - Array []\n    + Array [\n    +   \"product?code=0002: content word broken in middle: QA-SHORT-LAYOUT\",\n    + ]\n\n      245 |             ).toBeGreaterThan(0);\n      246 |           }\n    > 247 |           expect(proof.failures, scene).toEqual([]);\n          |                                         ^\n      248 |         };\n      249 |         for (const entry of pages) {\n      250 |           await visitC8(page, entry.route);\n        at inspect (/home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/c8-layout-proof.spec.ts:247:41)\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/c8-layout-proof.spec.ts:285:11",
+      "annotations": 3,
+      "classification": {
+        "status": "mixed_needs_geometry_investigation",
+        "contract": "Outgoing locator must allow preserved accessible count (actual UI renders Outgoing 1). Independently phone product QA-SHORT-LAYOUT wordbreak is not authorized old wording: no instruction requests breaking identifiers; may be true wrapping bug or false-positive hyphen tokenization. Preserve guard and investigate; do not classify as safe stale test without actual geometry proof."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 1/4",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505987",
+      "path": "prototype/tests/c5-button-audit.spec.ts",
+      "line": 161,
+      "title": "[desktop] \u203a tests/c5-button-audit.spec.ts:133:1 \u203a C5 button contract covers working Settings groups and their dialogs",
+      "message": "  1) [desktop] \u203a tests/c5-button-audit.spec.ts:133:1 \u203a C5 button contract covers working Settings groups and their dialogs \n    TimeoutError: locator.click: Timeout 10000ms exceeded.\n    Call log:\n      - waiting for getByRole('navigation', { name: 'Settings groups' }).getByRole('button', { name: 'Notes', exact: true })\n\n\n      159 |       await navigation\n      160 |         .getByRole(\"button\", { name: group, exact: true })\n    > 161 |         .click();\n          |          ^\n      162 |       await proof.check(`Settings: ${group}`);\n      163 |     }\n      164 |     await navigation\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/c5-button-audit.spec.ts:161:10",
+      "annotations": 3,
+      "classification": {
+        "status": "clear_requested_c9_old_expectation",
+        "contract": "C9 item5 explicitly removes Settings -> Notes and moves notebook management to Notes; retain management/dialog/button audit at its new location."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 4/4",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505964",
+      "path": "prototype/tests/klead-retouch-controls.spec.ts",
+      "line": 597,
+      "title": "[phone] \u203a tests/klead-retouch-controls.spec.ts:537:3 \u203a Klead retouch: shared controls and a real partial return retain their surface hierarchy (fa)",
+      "message": "  4) [phone] \u203a tests/klead-retouch-controls.spec.ts:537:3 \u203a Klead retouch: shared controls and a real partial return retain their surface hierarchy (fa) \n    Error: expect(received).toBeLessThanOrEqual(expected)\n\n    Expected: <= 16\n    Received:    20\n\n      595 |     expect\n      596 |       .soft(columnsContainment.tableGap)\n    > 597 |       .toBeLessThanOrEqual(page.viewportSize()!.width < 760 ? 16 : 24);\n          |        ^\n      598 |\n      599 |     await page.goto(\"/#suppliers\");\n      600 |     const search = page.locator(\".suppliers-overview .filter-search-pill\");\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/klead-retouch-controls.spec.ts:597:8",
+      "annotations": 1,
+      "classification": {
+        "status": "clear_requested_c9_old_expectation",
+        "contract": "C9 item7 says filters 20px from list card edges. Existing phone max16 for filter/table gap observes20."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 4/4",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505964",
+      "path": "prototype/tests/klead-retouch-controls.spec.ts",
+      "line": 597,
+      "title": "[phone] \u203a tests/klead-retouch-controls.spec.ts:537:3 \u203a Klead retouch: shared controls and a real partial return retain their surface hierarchy (en)",
+      "message": "  3) [phone] \u203a tests/klead-retouch-controls.spec.ts:537:3 \u203a Klead retouch: shared controls and a real partial return retain their surface hierarchy (en) \n    Error: expect(received).toBeLessThanOrEqual(expected)\n\n    Expected: <= 16\n    Received:    20\n\n      595 |     expect\n      596 |       .soft(columnsContainment.tableGap)\n    > 597 |       .toBeLessThanOrEqual(page.viewportSize()!.width < 760 ? 16 : 24);\n          |        ^\n      598 |\n      599 |     await page.goto(\"/#suppliers\");\n      600 |     const search = page.locator(\".suppliers-overview .filter-search-pill\");\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/klead-retouch-controls.spec.ts:597:8",
+      "annotations": 3,
+      "classification": {
+        "status": "clear_requested_c9_old_expectation",
+        "contract": "C9 item7 says filters 20px from list card edges. Existing phone max16 for filter/table gap observes20."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 4/4",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505964",
+      "path": "prototype/tests/filters-a2.spec.ts",
+      "line": 12,
+      "title": "[phone] \u203a tests/filters-a2.spec.ts:48:1 \u203a Offers combines name/code/label search",
+      "message": "  2) [phone] \u203a tests/filters-a2.spec.ts:48:1 \u203a Offers combines name/code/label search, category, supplier, type and status without changing prices \n    Error: No compact field mapping for Offer\n\n      10 |     // value/secondary regions, with no repeated column captions.\n      11 |     if (![\"Branch\", \"Balance\"].includes(label))\n    > 12 |       throw new Error(`No compact field mapping for ${label}`);\n         |             ^\n      13 |     const value =\n      14 |       label === \"Balance\"\n      15 |         ? row.locator(\".phone-list-value\")\n        at responsiveColumn (/home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/filters-a2.spec.ts:12:13)\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/filters-a2.spec.ts:127:29",
+      "annotations": 3,
+      "classification": {
+        "status": "clear_requested_c9_old_expectation",
+        "contract": "C9 item6 separate Price and Offer columns and compact phone presentation. Desktop price belongs Price; phone helper lacks Offer/Scope mapping."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 4/4",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505964",
+      "path": "prototype/tests/filters-a2.spec.ts",
+      "line": 12,
+      "title": "[phone] \u203a tests/filters-a2.spec.ts:157:1 \u203a Offers branch filtering never lets a Floor Worker read another branch offer",
+      "message": "  1) [phone] \u203a tests/filters-a2.spec.ts:157:1 \u203a Offers branch filtering never lets a Floor Worker read another branch offer \n    Error: No compact field mapping for Scope\n\n      10 |     // value/secondary regions, with no repeated column captions.\n      11 |     if (![\"Branch\", \"Balance\"].includes(label))\n    > 12 |       throw new Error(`No compact field mapping for ${label}`);\n         |             ^\n      13 |     const value =\n      14 |       label === \"Balance\"\n      15 |         ? row.locator(\".phone-list-value\")\n        at responsiveColumn (/home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/filters-a2.spec.ts:12:13)\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/filters-a2.spec.ts:193:22",
+      "annotations": 3,
+      "classification": {
+        "status": "clear_requested_c9_old_expectation",
+        "contract": "C9 item6 separate Price and Offer columns and compact phone presentation. Desktop price belongs Price; phone helper lacks Offer/Scope mapping."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 2/4",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505945",
+      "path": "prototype/tests/returns-a2.spec.ts",
+      "line": 303,
+      "title": "[desktop] \u203a tests/returns-a2.spec.ts:270:1 \u203a Returns starts with all suppliers and Open records",
+      "message": "  4) [desktop] \u203a tests/returns-a2.spec.ts:270:1 \u203a Returns starts with all suppliers and Open records, and opens each return as its own page \n    Error: expect(locator).toContainText(expected) failed\n\n    Locator: locator('.return-detail-subtitle')\n    Expected substring: \"Demo Floor Worker\"\n    Received string:    \"created 2026-10-18 by Demo North York Floor Worker \u00b7 Fresh Valley Foods \u00b7 North York\"\n    Timeout: 5000ms\n\n    Call log:\n      - Expect \"toContainText\" locator('.return-detail-subtitle') with timeout 5000ms\n      - waiting for locator('.return-detail-subtitle')\n        14 \u00d7 locator resolved to <p class=\"muted return-detail-subtitle\">\u2026</p>\n           - unexpected value \"created 2026-10-18 by Demo North York Floor Worker \u00b7 Fresh Valley Foods \u00b7 North York\"\n\n\n      301 |     \"created\",\n      302 |   );\n    > 303 |   await expect(page.locator(\".return-detail-subtitle\")).toContainText(\n          |                                                         ^\n      304 |     \"Demo Floor Worker\",\n      305 |   );\n      306 |   await expect(page.locator(\".return-detail-subtitle\")).not.toContainText(\"\u2014\");\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/returns-a2.spec.ts:303:57",
+      "annotations": 1,
+      "classification": {
+        "status": "explicit_owner_authorized_old_expectation",
+        "contract": "C9 item10/E1 configured demo names. Expected Demo Floor Worker; actual Demo North York Floor Worker. Read configured demo user name."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 2/4",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505945",
+      "path": "prototype/tests/notebooks-b.spec.ts",
+      "line": 309,
+      "title": "[desktop] \u203a tests/notebooks-b.spec.ts:299:1 \u203a Persian Deli notebook uses custom controls and keeps the measurement and dates readable",
+      "message": "  3) [desktop] \u203a tests/notebooks-b.spec.ts:299:1 \u203a Persian Deli notebook uses custom controls and keeps the measurement and dates readable \n    Error: expect(locator).toHaveAttribute(expected) failed\n\n    Locator:  getByLabel('\u062c\u0633\u062a\u062c\u0648\u06cc \u06cc\u0627\u062f\u062f\u0627\u0634\u062a\u200c\u0647\u0627', { exact: true })\n    Expected: \"\u062c\u0633\u062a\u062c\u0648 \u062f\u0631 \u0647\u0645\u0647 \u062f\u0641\u062a\u0631\u0686\u0647\u200c\u0647\u0627\"\n    Received: \"\u062c\u0633\u062a\u062c\u0648\u06cc \u06cc\u0627\u062f\u062f\u0627\u0634\u062a\u200c\u0647\u0627\"\n    Timeout:  5000ms\n\n    Call log:\n      - Expect \"toHaveAttribute\" getByLabel('\u062c\u0633\u062a\u062c\u0648\u06cc \u06cc\u0627\u062f\u062f\u0627\u0634\u062a\u200c\u0647\u0627', { exact: true }) with timeout 5000ms\n      - waiting for getByLabel('\u062c\u0633\u062a\u062c\u0648\u06cc \u06cc\u0627\u062f\u062f\u0627\u0634\u062a\u200c\u0647\u0627', { exact: true })\n        14 \u00d7 locator resolved to <input value=\"\" aria-label=\"\u062c\u0633\u062a\u062c\u0648\u06cc \u06cc\u0627\u062f\u062f\u0627\u0634\u062a\u200c\u0647\u0627\" placeholder=\"\u062c\u0633\u062a\u062c\u0648\u06cc \u06cc\u0627\u062f\u062f\u0627\u0634\u062a\u200c\u0647\u0627\"/>\n           - unexpected value \"\u062c\u0633\u062a\u062c\u0648\u06cc \u06cc\u0627\u062f\u062f\u0627\u0634\u062a\u200c\u0647\u0627\"\n\n\n      307 |   await expect(\n      308 |     page.getByLabel(\"\u062c\u0633\u062a\u062c\u0648\u06cc \u06cc\u0627\u062f\u062f\u0627\u0634\u062a\u200c\u0647\u0627\", { exact: true }),\n    > 309 |   ).toHaveAttribute(\"placeholder\", \"\u062c\u0633\u062a\u062c\u0648 \u062f\u0631 \u0647\u0645\u0647 \u062f\u0641\u062a\u0631\u0686\u0647\u200c\u0647\u0627\");\n          |     ^\n      310 |   await expect(\n      311 |     page.locator(\n      312 |       \".notebooks-page select,.notebooks-page input[type=checkbox],.notebooks-page input[type=number],.notebooks-page input[type=date]\",\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/notebooks-b.spec.ts:309:5",
+      "annotations": 3,
+      "classification": {
+        "status": "explicit_owner_authorized_old_expectation",
+        "contract": "C9 Notes reference Search notes; user now requires Persian \u062c\u0633\u062a\u062c\u0648 \u062f\u0631 \u06cc\u0627\u062f\u062f\u0627\u0634\u062a\u200c\u0647\u0627 and global notebook search."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 2/4",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505945",
+      "path": "prototype/tests/manual-prices-c1.spec.ts",
+      "line": 169,
+      "title": "[desktop] \u203a tests/manual-prices-c1.spec.ts:15:1 \u203a manual price stays visible to staff while catalog cost",
+      "message": "  2) [desktop] \u203a tests/manual-prices-c1.spec.ts:15:1 \u203a manual price stays visible to staff while catalog cost, margin and cost history stay Supervisor-only \n    Error: expect(locator).toHaveText(expected) failed\n\n    Locator: locator('.lookup-detail .manual-price-comparison bdi')\n    Timeout: 5000ms\n    - Expected  - 0\n    + Received  + 2\n\n      Array [\n        \"$2.99\",\n    +   \"$2.99\",\n    +   \"$3.29\",\n        \"$3.29\",\n      ]\n\n    Call log:\n      - Expect \"toHaveText\" locator('.lookup-detail .manual-price-comparison bdi') with timeout 5000ms\n      - waiting for locator('.lookup-detail .manual-price-comparison bdi')\n        14 \u00d7 locator resolved to 4 elements\n\n\n      167 |   await expect(\n      168 |     page.locator(\".lookup-detail .manual-price-comparison bdi\"),\n    > 169 |   ).toHaveText([\"$2.99\", \"$3.29\"]);\n          |     ^\n      170 |   await setLanguage(page, \"en\");\n      171 |   await resetDemo(page);\n      172 |   await page.goto(\"/#lookup\");\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/manual-prices-c1.spec.ts:169:5",
+      "annotations": 3,
+      "classification": {
+        "status": "explicit_owner_authorized_old_expectation",
+        "contract": "C9 shared outer selling price component; nested bdi selector duplicates two semantic prices into four. User requires outer test id and once-only screen-reader reading."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 2/4",
+      "conclusion": "failure",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505945",
+      "path": "prototype/tests/filters-a2.spec.ts",
+      "line": 129,
+      "title": "[desktop] \u203a tests/filters-a2.spec.ts:48:1 \u203a Offers combines name/code/label search",
+      "message": "  1) [desktop] \u203a tests/filters-a2.spec.ts:48:1 \u203a Offers combines name/code/label search, category, supplier, type and status without changing prices \n    Error: expect(locator).toContainText(expected) failed\n\n    Locator: locator('section.card').filter({ has: getByRole('heading', { name: 'Past offers', exact: true }) }).locator('tr[data-product-code=\"0003\"]').locator('td[data-column-label=\"Offer\"]')\n    Expected substring: \"$2.99\"\n    Received string:    \"2 for $5.00Mix-and-match\"\n    Timeout: 5000ms\n\n    Call log:\n      - Expect \"toContainText\" locator('section.card').filter({ has: getByRole('heading', { name: 'Past offers', exact: true }) }).locator('tr[data-product-code=\"0003\"]').locator('td[data-column-label=\"Offer\"]') with timeout 5000ms\n      - waiting for locator('section.card').filter({ has: getByRole('heading', { name: 'Past offers', exact: true }) }).locator('tr[data-product-code=\"0003\"]').locator('td[data-column-label=\"Offer\"]')\n        14 \u00d7 locator resolved to <td class=\"\" data-column-key=\"offer\" data-column-label=\"Offer\">\u2026</td>\n           - unexpected value \"2 for $5.00Mix-and-match\"\n\n\n      127 |   const stoppedOfferValue = await responsiveColumn(stoppedOffer, \"Offer\");\n      128 |   await expect(stoppedOfferValue).toContainText(\"2 for $5.00\");\n    > 129 |   await expect(stoppedOfferValue).toContainText(\"$2.99\");\n          |                                   ^\n      130 |   const stoppedStatus = await responsiveColumn(stoppedOffer, \"Status\");\n      131 |   await expect(\n      132 |     stoppedStatus.getByText(\"Stopped\", { exact: true }),\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/filters-a2.spec.ts:129:35",
+      "annotations": 3,
+      "classification": {
+        "status": "clear_requested_c9_old_expectation",
+        "contract": "C9 item6 separate Price and Offer columns and compact phone presentation. Desktop price belongs Price; phone helper lacks Offer/Scope mapping."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 3/4",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505899",
+      "path": ".github",
+      "line": 1,
+      "title": "",
+      "message": "The job has exceeded the maximum execution time of 30m0s",
+      "annotations": 1,
+      "classification": {
+        "status": "job_time_limit",
+        "contract": "Shards1 and3 hit original30m; do not raisebudget. Stale waits/retries consume time; no changedworker/retry/skip authorized."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 3/4",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505899",
+      "path": "prototype/tests/c8-layout-proof.spec.ts",
+      "line": 247,
+      "title": "[phone] \u203a tests/c8-layout-proof.spec.ts:163:5 \u203a C8 every page keeps rows inside their cards and retains glyph/control guards en 390px",
+      "message": "  4) [phone] \u203a tests/c8-layout-proof.spec.ts:163:5 \u203a C8 every page keeps rows inside their cards and retains glyph/control guards en 390px \n    Error: product?code=0002\n\n    expect(received).toEqual(expected) // deep equality\n\n    - Expected  - 1\n    + Received  + 3\n\n    - Array []\n    + Array [\n    +   \"product?code=0002: content word broken in middle: QA-SHORT-LAYOUT\",\n    + ]\n\n      245 |             ).toBeGreaterThan(0);\n      246 |           }\n    > 247 |           expect(proof.failures, scene).toEqual([]);\n          |                                         ^\n      248 |         };\n      249 |         for (const entry of pages) {\n      250 |           await visitC8(page, entry.route);\n        at inspect (/home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/c8-layout-proof.spec.ts:247:41)\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/c8-layout-proof.spec.ts:285:11",
+      "annotations": 1,
+      "classification": {
+        "status": "mixed_needs_geometry_investigation",
+        "contract": "Outgoing locator must allow preserved accessible count (actual UI renders Outgoing 1). Independently phone product QA-SHORT-LAYOUT wordbreak is not authorized old wording: no instruction requests breaking identifiers; may be true wrapping bug or false-positive hyphen tokenization. Preserve guard and investigate; do not classify as safe stale test without actual geometry proof."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 3/4",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505899",
+      "path": "prototype/tests/c5-button-audit.spec.ts",
+      "line": 161,
+      "title": "[phone] \u203a tests/c5-button-audit.spec.ts:133:1 \u203a C5 button contract covers working Settings groups and their dialogs",
+      "message": "  3) [phone] \u203a tests/c5-button-audit.spec.ts:133:1 \u203a C5 button contract covers working Settings groups and their dialogs \n    TimeoutError: locator.click: Timeout 10000ms exceeded.\n    Call log:\n      - waiting for getByRole('navigation', { name: 'Settings groups' }).getByRole('button', { name: 'Notes', exact: true })\n\n\n      159 |       await navigation\n      160 |         .getByRole(\"button\", { name: group, exact: true })\n    > 161 |         .click();\n          |          ^\n      162 |       await proof.check(`Settings: ${group}`);\n      163 |     }\n      164 |     await navigation\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/c5-button-audit.spec.ts:161:10",
+      "annotations": 3,
+      "classification": {
+        "status": "clear_requested_c9_old_expectation",
+        "contract": "C9 item5 explicitly removes Settings -> Notes and moves notebook management to Notes; retain management/dialog/button audit at its new location."
+      }
+    },
+    {
+      "shard": "Prototype browser shard 3/4",
+      "conclusion": "cancelled",
+      "url": "https://github.com/ababamahmoudi/Supermarket-Inventory/actions/runs/39202246797/job/117897505899",
+      "path": "prototype/tests/b-polish.spec.ts",
+      "line": 213,
+      "title": "[phone] \u203a tests/b-polish.spec.ts:74:3 \u203a C9 filter controls are 40px",
+      "message": "  2) [phone] \u203a tests/b-polish.spec.ts:74:3 \u203a C9 filter controls are 40px, readable, searchable and compact in fa \n    Error: expect(received).toBeLessThanOrEqual(expected)\n\n    Expected: <= 16\n    Received:    20\n\n      211 |     expect(spacing.toolbarInsideCard).toBe(true);\n      212 |     expect(spacing.gap).toBeGreaterThanOrEqual(0);\n    > 213 |     expect(spacing.gap).toBeLessThanOrEqual(isMobile ? 16 : 24);\n          |                         ^\n      214 |     expect(spacing.toolbarTopInset).toBeGreaterThanOrEqual(\n      215 |       spacing.cardPadding - 1,\n      216 |     );\n        at /home/runner/work/Supermarket-Inventory/Supermarket-Inventory/prototype/tests/b-polish.spec.ts:213:25",
+      "annotations": 6,
+      "classification": {
+        "status": "clear_requested_c9_old_expectation",
+        "contract": "C9 item7 says filters 20px from list card edges. Existing phone max16 for filter/table gap observes20."
+      }
+    }
+  ],
+  "no_reload_status": {
+    "failed_annotation_found": false,
+    "pass_claim": "unverified: no failure annotation is not proof of success; timed-out shards can leave tests unexecuted",
+    "blocked_log_access": "GitHub log redirect destination denied by environment proxy (403); no bypass attempted"
+  },
+  "mutations": "none; read-only API and source audit; no tests, retries, pushes, reruns, merges or source changes"
+}

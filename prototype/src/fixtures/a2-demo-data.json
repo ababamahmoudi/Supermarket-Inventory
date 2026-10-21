@@ -62,7 +62,7 @@
       "relative_days": -52,
       "due_relative_days": -22,
       "payment_terms": "Net 30",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "0.00",
       "lines": [
         {
@@ -79,7 +79,7 @@
       "relative_days": -45,
       "due_relative_days": -38,
       "payment_terms": "Net 7",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "0.00",
       "lines": [
         {
@@ -101,7 +101,7 @@
       "relative_days": -38,
       "due_relative_days": -24,
       "payment_terms": "Net 14",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "0.00",
       "lines": [
         {
@@ -123,7 +123,7 @@
       "relative_days": -31,
       "due_relative_days": -1,
       "payment_terms": "Net 30",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "0.00",
       "lines": [
         {
@@ -145,7 +145,7 @@
       "relative_days": -24,
       "due_relative_days": -10,
       "payment_terms": "Net 14",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "0.00",
       "lines": [
         {
@@ -167,7 +167,7 @@
       "relative_days": -17,
       "due_relative_days": 13,
       "payment_terms": "Net 30",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "0.00",
       "lines": [
         {
@@ -189,7 +189,7 @@
       "relative_days": -10,
       "due_relative_days": -3,
       "payment_terms": "Net 7",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "0.00",
       "lines": [
         {
@@ -206,7 +206,7 @@
       "relative_days": -35,
       "due_relative_days": -5,
       "payment_terms": "Net 30",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "210.00",
       "lines": [
         {
@@ -223,7 +223,7 @@
       "relative_days": -21,
       "due_relative_days": 9,
       "payment_terms": "Net 30",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "1260.00",
       "lines": [
         {
@@ -255,7 +255,7 @@
       "relative_days": -9,
       "due_relative_days": -2,
       "payment_terms": "Net 7",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "96.40",
       "lines": [
         {
@@ -277,7 +277,7 @@
       "relative_days": -5,
       "due_relative_days": 3,
       "payment_terms": "Net 8",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "632.10",
       "lines": [
         {
@@ -299,7 +299,7 @@
       "relative_days": -1,
       "due_relative_days": 13,
       "payment_terms": "Net 14",
-      "posted_by": "Demo Floor Worker",
+      "posted_by": "Demo North York Floor Worker",
       "outstanding": "169.79",
       "lines": [
         {
@@ -339,13 +339,13 @@
     {
       "id": "demo-return-1",
       "created_relative_days": -1,
-      "created_by": "Demo Floor Worker",
+      "created_by": "Demo North York Floor Worker",
       "invoice_number": "FV-20390"
     },
     {
       "id": "demo-return-2",
       "created_relative_days": -4,
-      "created_by": "Demo Floor Worker",
+      "created_by": "Demo North York Floor Worker",
       "invoice_number": "GG-11842"
     }
   ],
@@ -363,13 +363,13 @@
     {
       "product_code": "0004",
       "relative_days": -1,
-      "by": "Demo Supervisor",
+      "by": "Demo Manager",
       "branch": "Branch 1"
     },
     {
       "product_code": "0007",
       "relative_days": -2,
-      "by": "Demo Supervisor",
+      "by": "Demo Manager",
       "branch": "Branch 1"
     }
   ]

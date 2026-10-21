@@ -62,7 +62,7 @@ git pull --ff-only origin feat/prototype-e3-phones
 
 `--ff-only` refuses to overwrite different local history. If Git refuses the switch or pull, save the complete message; do not use `reset --hard` to force it.
 
-## 3. Build and open the app
+## 3. Build and open the app on your computer and other devices
 
 From `~/Supermarket-Inventory` run:
 
@@ -71,10 +71,16 @@ git branch --show-current
 cd prototype
 npm ci
 npm run build
-npm run preview -- --host 127.0.0.1 --port 5174 --strictPort
+npm run preview
 ```
 
-Expect the branch name **`feat/prototype-e3-phones`**, a completed dependency installation, a successful TypeScript/Vite build and **`http://127.0.0.1:5174/`**. Leave Terminal open. Open Chrome or Firefox **inside Ubuntu Desktop** and enter **http://localhost:5174**. A fresh browser should show Sign in; an existing browser keeps its saved demo account and records. A funding notice or chunk-size warning is harmless when the command succeeds.
+Expect the branch name **`feat/prototype-e3-phones`**, a completed dependency installation, a successful TypeScript/Vite build and both **Local** and **Network** addresses on port **5174**. Leave Terminal open. `npm run preview` already listens on `0.0.0.0`, which allows connections through Ubuntu's network interfaces. Do not add `--host 127.0.0.1`: that overrides the network setting and allows only Ubuntu itself to connect.
+
+On Ubuntu, open Chrome or Firefox and enter **http://localhost:5174**. On a phone, tablet or another computer **on the same Wi-Fi**, open the **Network** address printed in Terminal, for example **http://192.168.1.20:5174**, using your actual address. `localhost` on a phone means that phone; `0.0.0.0` is a listening setting, not an address to type. A fresh browser should show Sign in; an existing browser keeps its saved demo account and records. A funding notice or chunk-size warning is harmless when the command succeeds.
+
+If you cannot identify the right address, open a second Ubuntu Terminal and run `ip -brief -4 address show scope global`; use the address of the active Wi-Fi/Ethernet interface. If Ubuntu is a virtual machine, its default NAT address may be unreachable from your phone: follow the [bridged-network or VM port-forwarding steps](phone-demo-hosting.md#if-ubuntu-is-inside-virtualbox-vmware-or-another-vm). The same guide covers a narrowly scoped firewall rule if needed.
+
+**For an Internet link that works away from your Wi-Fi**, the built app needs HTTPS hosting. Starting preview does not publish a website. Follow the [private Cloudflare Pages and Access option](phone-demo-hosting.md#3-optional-private-https-link-with-cloudflare-pages-and-access) or connect a hosting account so deployment can be configured. No public site has been created. Local HTTP is enough to test phone layouts and demo flows; HTTPS is needed for the intended installed-app/service-worker checks.
 
 If the port is occupied, stop your earlier demo Terminal with **Ctrl+C**, then start preview again. If installation/build fails or the page is blank, keep the full Terminal error together with `node --version` and the branch name. Do not proceed past a failed build. The [phone guide](phone-demo-hosting.md) has VM, Wi-Fi and firewall troubleshooting.
 

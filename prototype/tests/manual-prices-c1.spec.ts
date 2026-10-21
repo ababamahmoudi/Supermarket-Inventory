@@ -97,7 +97,9 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
   await page
     .getByRole("link", { name: "Back to Products", exact: true })
     .click();
-  await page.getByLabel("Manual prices", { exact: true }).check();
+  await page
+    .getByRole("button", { name: "Manual prices", exact: true })
+    .click();
   await expect(page.locator(".catalog-products-table tbody tr")).toHaveCount(1);
   await showManualPrice(page);
   await page
@@ -162,9 +164,19 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
   await expect(page.locator(".lookup-detail .manual-price-pill")).toHaveText(
     "قیمت دستی",
   );
-  await expect(
-    page.locator(".lookup-detail .manual-price-comparison bdi"),
-  ).toHaveText(["$2.99", "$3.29"]);
+  const comparisonPrices = page
+    .locator(".lookup-detail .manual-price-comparison")
+    .getByTestId("selling-price");
+  await expect(comparisonPrices).toHaveText(["$2.99", "$3.29"]);
+  for (const [index, amount] of ["$2.99", "$3.29"].entries()) {
+    const price = comparisonPrices.nth(index);
+    // Inspect the browser's accessible tree, not the repeated textContent of
+    // nested bidi-isolation elements. Each charge must be announced once.
+    await expect(price).toMatchAriaSnapshot(`- strong: ${amount}`);
+    await expect(
+      price.locator("[aria-label], [aria-labelledby], [role]"),
+    ).toHaveCount(0);
+  }
   await setLanguage(page, "en");
   await resetDemo(page);
   await page.goto("/#lookup");

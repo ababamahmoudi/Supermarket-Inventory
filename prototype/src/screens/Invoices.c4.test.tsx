@@ -287,9 +287,11 @@ it("shows retained superseded proposals without mislabelling or approval actions
   );
   await user.click(screen.getByRole("button", { name: "Load posted invoice" }));
   await renderedUiReady(() =>
-    Boolean(screen.queryByRole("tab", { name: "Superseded" })),
+    Boolean(screen.queryByRole("tab", { name: /^Superseded(?:\s*\d+)?$/ })),
   );
-  await user.click(await screen.findByRole("tab", { name: "Superseded" }));
+  await user.click(
+    await screen.findByRole("tab", { name: /^Superseded(?:\s*\d+)?$/ }),
+  );
   expect(screen.getAllByText("Superseded").length).toBeGreaterThan(1);
   expect(
     screen.queryByRole("button", { name: "Approve price" }),

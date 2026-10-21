@@ -161,7 +161,7 @@ function originalInvoice(
   if (context.company_id !== state.config.company.seed_key || !original)
     throw new InvoiceCorrectionError(
       "scope",
-      "Only the Supervisor can correct a posted invoice in this company.",
+      "Only an Owner or Manager can correct a posted invoice in this company.",
     );
   const location = effectiveInvoiceLocation(state, original);
   if (

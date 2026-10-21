@@ -1,0 +1,32 @@
+{
+  "observed_utc": "2026-10-19T16:40:43.525069+00:00",
+  "before_test_sha256": "f9f60624a138ae4daded54db58ecec2dccab07251a9e0e7e65f0c770d22ad707",
+  "after_test_sha256": "f9f60624a138ae4daded54db58ecec2dccab07251a9e0e7e65f0c770d22ad707",
+  "source_unchanged": true,
+  "checks": [
+    {
+      "name": "scoped-eslint",
+      "command": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "src/file-database.webkit.c9.test.ts",
+        "--max-warnings",
+        "0"
+      ],
+      "exit_code": 0,
+      "stdout_stderr": "/tmp/c9-file-bytes-unit-package/capture/scoped-eslint.log"
+    },
+    {
+      "name": "scoped-prettier",
+      "command": [
+        "node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "src/file-database.webkit.c9.test.ts"
+      ],
+      "exit_code": 0,
+      "stdout_stderr": "/tmp/c9-file-bytes-unit-package/capture/scoped-prettier.log"
+    }
+  ],
+  "qualification": "Original scoped checks already passed; their stdout was not retained as files. Repeated these two lightweight scoped checks only to capture auditable logs for the requested package. No unit/native/build/typecheck rerun."
+}

@@ -197,7 +197,7 @@ test("date removal, notes store-use, and unread Supervisor actions survive refre
   expect((await stored(page)).stock["Branch 1:0006"]).toBe(
     beforeStoreUse.stock["Branch 1:0006"] - 2,
   );
-  await page.getByRole("tab", { name: "For Supervisor", exact: true }).click();
+  await page.getByRole("tab", { name: "For managers", exact: true }).click();
   await page.getByRole("button", { name: "Add note", exact: true }).click();
   await page
     .getByLabel("Note", { exact: true })
@@ -208,34 +208,44 @@ test("date removal, notes store-use, and unread Supervisor actions survive refre
   ).toHaveCount(0);
   await signIn(page, "Supervisor");
   await visit(page, "Notes");
-  await page.getByRole("tab", { name: /For Supervisor/ }).click();
+  await page.getByRole("tab", { name: /For managers/ }).click();
   await expect(
-    page.getByRole("button", { name: "More actions", exact: true }),
+    page.getByRole("button", { name: "Mark as seen", exact: true }),
   ).toHaveCount(2);
-  await page
-    .getByRole("button", { name: "More actions", exact: true })
-    .first()
+  const managerNote = page
+    .locator("[data-note]")
+    .filter({ hasText: "Fictional supervisor check requested" });
+  await managerNote
+    .getByRole("button", { name: "Mark as seen", exact: true })
     .click();
-  await page.getByRole("menuitem", { name: "Mark seen", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "More actions", exact: true }),
+    managerNote.getByRole("button", { name: "Seen by you", exact: true }),
+  ).toBeDisabled();
+  await expect(managerNote.locator(".badge")).toHaveText("Seen");
+  await expect(
+    page.getByRole("button", { name: "Mark as seen", exact: true }),
   ).toHaveCount(1);
-  await page
+  await managerNote
     .getByRole("button", { name: "Mark done", exact: true })
-    .first()
     .click();
   await expect(
     page.getByText("Fictional supervisor check requested", { exact: true }),
   ).toHaveCount(0);
   await page
-    .getByRole("checkbox", {
-      name: "Include done and ordered notes",
-      exact: true,
-    })
-    .check();
+    .getByRole("group", { name: "Note status", exact: true })
+    .getByRole("button", { name: "All", exact: true })
+    .click();
+  await expect(managerNote.locator(".badge")).toHaveText("Done");
+  await page.reload();
+  await page.getByRole("tab", { name: /For managers/ }).click();
+  await page
+    .getByRole("group", { name: "Note status", exact: true })
+    .getByRole("button", { name: "All", exact: true })
+    .click();
+  await expect(managerNote.locator(".badge")).toHaveText("Done");
   await expect(
-    page.getByText("Fictional supervisor check requested", { exact: true }),
-  ).toBeVisible();
+    managerNote.getByRole("button", { name: "Seen by you", exact: true }),
+  ).toBeDisabled();
 });
 
 test("Supervisor ledger records a partial cheque, preserves outstanding and exports month-end; workers have no Payables", async ({

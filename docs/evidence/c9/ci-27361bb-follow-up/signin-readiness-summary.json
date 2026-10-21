@@ -1,0 +1,42 @@
+{
+  "scope": "only original four redesigned screens styled-controls, borderless cards and no-overflow case, desktop+phone",
+  "baseline": {
+    "exit_code": 0,
+    "stats": {
+      "startTime": "2026-10-19T14:58:52.916Z",
+      "duration": 22644.400999999998,
+      "expected": 2,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "note": "Both local baseline cases passed; earlier exact-head CI initial card0 failure is retained, not falsely claimed locally reproduced."
+  },
+  "passive_startup_proof": {
+    "fresh_contexts": 6,
+    "all_load_events_initial_cardless": true,
+    "immediate_after_goto_cardless": 5,
+    "all_genuine_signin_final_cards_one": true,
+    "app_storage_style_modified": false
+  },
+  "change": "Await actual Sign in heading visibility before original unchanged controls/card/overflow checks; no sleeps/budgets/retries/workers/skips or app changes.",
+  "validation": {
+    "exit_code": 0,
+    "stats": {
+      "startTime": "2026-10-19T15:00:23.293Z",
+      "duration": 25359.234,
+      "expected": 2,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "scoped_eslint_exit_code": 0,
+    "scoped_prettier_check_exit_code": 0,
+    "git_diff_check_exit_code": 0
+  },
+  "file": "prototype/tests/design-v2.spec.ts",
+  "file_sha256": "612b7ea159b2b91a2204102ac56de0ca39205cb0cc9473f163af38f6d97f58d0",
+  "head": "27361bbf2cfcad02e674539b3431587b36aa65f4",
+  "committed": false,
+  "pushed": false
+}

@@ -339,13 +339,35 @@ test("Supplier invoice links open the actual posted document and retained origin
   expect(invoice.file_type).toBe("image/svg+xml");
   expect(invoice.file_data).toMatch(/^idb-file:v1:/);
   const retainedSource = await page.evaluate(async (reference: string) => {
+    const storedBlob = (
+      record: object,
+      field: "source" | "preview" | "raw",
+    ): Blob => {
+      const fields = record as Record<string, unknown>;
+      const value = fields[field];
+      if (!("binary_encoding" in fields) && value instanceof Blob) return value;
+      const mime = fields[`${field}_mime_type`];
+      if (
+        fields.binary_encoding === "array-buffer-v1" &&
+        value instanceof ArrayBuffer &&
+        typeof mime === "string"
+      ) {
+        const blob = new Blob([value], { type: mime });
+        if (blob.type === mime) return blob;
+      }
+      throw new Error("Unexpected retained binary encoding.");
+    };
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open("supermarket-prototype-files-v1", 1);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
     try {
-      const record = await new Promise<{ source: Blob }>((resolve, reject) => {
+      const record = await new Promise<{
+        source: Blob | ArrayBuffer;
+        source_mime_type?: string;
+        binary_encoding?: "array-buffer-v1";
+      }>((resolve, reject) => {
         const request = database
           .transaction("files", "readonly")
           .objectStore("files")
@@ -353,7 +375,7 @@ test("Supplier invoice links open the actual posted document and retained origin
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });
-      return record.source.text();
+      return storedBlob(record, "source").text();
     } finally {
       database.close();
     }

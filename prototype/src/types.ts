@@ -28,6 +28,7 @@ import type {
   NotificationSettings,
 } from "./price-updates";
 import type { RoleDefinition } from "./role-config";
+import type { NoteEngagement } from "./note-engagement";
 export type Role = RoleId;
 /** Old serialized input only; never a current authority role. */
 export type LegacyRole = "supervisor" | "floor_worker" | "cashier";
@@ -536,7 +537,7 @@ export interface ExpiryRecord extends ScopedRecord {
   reminder_alert_id?: string;
   reminded_at?: string;
 }
-export interface NoteRecord extends ScopedRecord {
+export interface NoteRecord extends ScopedRecord, NoteEngagement {
   id: string;
   /** Generated bilingual instruction only; user-entered note text remains original. */
   text_fa?: string;

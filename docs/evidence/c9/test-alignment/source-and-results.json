@@ -1,0 +1,150 @@
+{
+  "base_head": "390fec0ea8d4e259d577b69844cc0924e6a5469a",
+  "source_state": "Uncommitted authorized expectation-alignment patch on base_head; no invoice-code wrapping fix applied.",
+  "files": {
+    "prototype/src/screens/Notes.tsx": "3ad634d43253b1b32488d6b354f2bca2edb719bd047dec4c2e08f6077f6644cf",
+    "prototype/src/selling-price-presentation.tsx": "ffd52b2f492f0813aa55df1bee87c3a42662ff0154a26fcdef7ce0b1e0baf7f4",
+    "prototype/src/selling-price.c9.test.tsx": "76ef8d61a28d6cc4070a5b4614c76cda1e672a859df6f8acdc84de314c726947",
+    "prototype/tests/b-polish.spec.ts": "d366e034ac0240b0e9084277bf1991a3d6aaed455baab3fccc5ecdfb7ded0182",
+    "prototype/tests/c5-button-audit.spec.ts": "6dada95a5bd38548e7d91d369985ff88ea92e4eb1a86ece0b6219a9212fb4b64",
+    "prototype/tests/c8-layout-proof.spec.ts": "4ee114c79325990a53780eba4631094aff7b3f72c96dba857537e18045ed3df3",
+    "prototype/tests/filters-a2.spec.ts": "0df87c387e938baba86b1a19792948c96a4929f44005dab8dec56cdd0e8e00c7",
+    "prototype/tests/klead-retouch-controls.spec.ts": "b4360dfdc60051012104d7c7430fa0c2a3f5408f14438bdf0a83468f0cff096f",
+    "prototype/tests/manual-prices-c1.spec.ts": "bb4e19901fbf8c8f0252a14cc3e5e1e71aa5292d4515a18e8cabd8365429f7e4",
+    "prototype/tests/notebooks-b.spec.ts": "1cebad36d150a1cfbf1f94d1814e7dd79c113ac8b749b4761dea05e174f6ea65",
+    "prototype/tests/returns-a2.spec.ts": "303f53a29854afb05b44af10bf788fbe09ac1b226eebcb12b18c554571ee5cc2"
+  },
+  "executions": [
+    {
+      "file": "price-unit.txt",
+      "exit_code": 0,
+      "passed": 6
+    },
+    {
+      "file": "manual-price-browser.txt",
+      "exit_code": 0,
+      "passed": 2
+    },
+    {
+      "file": "focused-browser.txt",
+      "exit_code": 0,
+      "passed": 8
+    },
+    {
+      "file": "spacing-browser.txt",
+      "exit_code": 0,
+      "passed": 10
+    },
+    {
+      "file": "lint.txt",
+      "exit_code": 0
+    },
+    {
+      "file": "build.txt",
+      "exit_code": 0
+    }
+  ],
+  "scope_note": "Overlapping browser scopes are separate executions, not a sum of unique coverage. Original workers/retries/skips/time budgets and code-wrap guard retained. New exact-head GitHub CI not yet run.",
+  "approved_wrap_fix": {
+    "source_state": "Owner approved narrow invoice-code nowrap fix after the initial expectation-alignment checks.",
+    "files": {
+      "prototype/src/screens/Catalog.tsx": "d63b67cf481d063e3ca6b9c0174247f358c9a5e6237de40065249ac076db7c87",
+      "prototype/src/selling-price.css": "b44be7e3a681581b39594e5bf34ddab2a536fb42af52fdc23c32e478db1d1c3f"
+    },
+    "executions": [
+      {
+        "file": "phone-invoice-code-fixed.txt",
+        "exit_code": 0,
+        "original_layout_failures": []
+      },
+      {
+        "file": "wrap-build.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "wrap-format.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "wrap-eslint.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "c8-all-pages-first.txt",
+        "exit_code": 1,
+        "passed": 5,
+        "failed": 1,
+        "failure": "EN1440 supplier:Supplier items invoice-reference text/control overlaps Edit. Original test assertions retained; diagnosis/owner direction required."
+      }
+    ]
+  },
+  "unaltered_originals": {
+    "build.txt.gz": {
+      "uncompressed_sha256": "164cb1123845efe571b23282483f925734fb7ac72697e28f412c08ac55dd5e16",
+      "note": "Exact original bytes. Plain-text peer has only normal pre-commit whitespace/end-of-file normalization."
+    },
+    "c8-all-pages-first.txt.gz": {
+      "uncompressed_sha256": "7c49d59dc3ee0cdd7e41a9a3f3023b92f06157699c50a45ba75464f5f4eebbe0",
+      "note": "Exact original bytes. Plain-text peer has only normal pre-commit whitespace/end-of-file normalization."
+    },
+    "wrap-build.txt.gz": {
+      "uncompressed_sha256": "5aff312380ed72ac0d8ec37d90232d1fd3c4f6997d514252cd30617f3dd263da",
+      "note": "Exact original bytes. Plain-text peer has only normal pre-commit whitespace/end-of-file normalization."
+    },
+    "earlier-ci-failures.json.gz": {
+      "uncompressed_sha256": "c0e4883bf982e64a04bbaaccf57b3c603a5262fdea50f5a499aafb9019698663",
+      "note": "Exact original bytes. Plain-text peer has only normal pre-commit whitespace/end-of-file normalization."
+    },
+    "supplier-items-fixed.txt.gz": {
+      "uncompressed_sha256": "7c3b1a9db20c0abf75d161a1378b567344807b8bba99529a7593050cc967dfa1",
+      "note": "Exact original bytes; plain-text peer follows repository whitespace hooks."
+    },
+    "supplier-build.txt.gz": {
+      "uncompressed_sha256": "d19c45f71c906e3891e3e081359ab1f8abfaaa2efeec9ca6cc5e06ae8bd6fa1f",
+      "note": "Exact original bytes; plain-text peer follows repository whitespace hooks."
+    },
+    "supplier-eslint.txt.gz": {
+      "uncompressed_sha256": "c884fe29effaff733ee4200ea15832ae7dbfd4e66cfb0b21656e1561b3060545",
+      "note": "Exact original bytes; plain-text peer follows repository whitespace hooks."
+    },
+    "supplier-format.txt.gz": {
+      "uncompressed_sha256": "089e19ef7048ba9410c85a6e351eef3311be518a631da6f0fee0d56684146de4",
+      "note": "Exact original bytes; plain-text peer follows repository whitespace hooks."
+    },
+    "c8-all-pages-final.txt.gz": {
+      "uncompressed_sha256": "031294aa3b5ffb11644eca9b75098dc1f7170f47b9d7dc5a81e3093f28a333c4",
+      "note": "Exact original bytes; plain-text peer follows repository whitespace hooks."
+    }
+  },
+  "approved_supplier_reference_fix": {
+    "files": {
+      "prototype/src/screens/SupplierItems.tsx": "5e506452204fd90a9856c5ac4256a7a6e881ab5519ac4755e45184a18b54f6cd"
+    },
+    "executions": [
+      {
+        "file": "supplier-items-fixed.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "supplier-build.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "supplier-eslint.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "supplier-format.txt",
+        "exit_code": 0
+      },
+      {
+        "file": "c8-all-pages-final.txt",
+        "exit_code": 0,
+        "passed": 6,
+        "failed": 0,
+        "scope": "Original all-pages layout guards, both languages at390/900/1440, desktopproject; no changed budgets or guards."
+      }
+    ],
+    "genuine_ui_result": "Full reference and Edit/history/details controls visible; original inspector failures empty before/after Details; width-hidden unit cost and date read through existing UI."
+  }
+}

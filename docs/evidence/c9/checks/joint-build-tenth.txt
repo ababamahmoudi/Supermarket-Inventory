@@ -1,0 +1,50 @@
+
+> supermarket-browser-prototype@0.2.0 build
+> tsc --noEmit && vite build
+
+vite v8.3.3 building client environment for production...
+transforming...
+✓ 2214 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/manifest.webmanifest                                   0.50 kB
+dist/offline.html                                           1.61 kB │ gzip:   0.80 kB
+dist/service-worker.js                                      5.14 kB
+dist/index.html                                            12.05 kB │ gzip:   7.68 kB
+dist/assets/manrope-latin-800-normal-BfWYOv1c.woff2        13.64 kB
+dist/assets/manrope-latin-500-normal-BYYD-dBL.woff2        14.04 kB
+dist/assets/manrope-latin-400-normal-PaqtzbVb.woff2        14.10 kB
+dist/assets/manrope-latin-600-normal-4f0koTD-.woff2        14.17 kB
+dist/assets/manrope-latin-700-normal-BZp_XxE4.woff2        14.21 kB
+dist/assets/manrope-latin-800-normal-uHUdIJgA.woff         17.91 kB
+dist/assets/manrope-latin-500-normal-DMZssgOp.woff         18.24 kB
+dist/assets/manrope-latin-400-normal-8tf8FM3T.woff         18.29 kB
+dist/assets/manrope-latin-600-normal-BqgrALkZ.woff         18.38 kB
+dist/assets/manrope-latin-700-normal-DGRFkw-m.woff         18.41 kB
+dist/assets/vazirmatn-arabic-400-normal-DMZFCm7K.woff2     21.08 kB
+dist/assets/vazirmatn-arabic-700-normal-Dge_DOjm.woff2     21.72 kB
+dist/assets/vazirmatn-arabic-500-normal-C_lbnnKa.woff2     21.79 kB
+dist/assets/vazirmatn-arabic-600-normal-CPKvAnd1.woff2     21.79 kB
+dist/assets/vazirmatn-arabic-800-normal-Bwnt96zj.woff2     21.81 kB
+dist/assets/vazirmatn-arabic-400-normal-C4W5XURk.woff      27.30 kB
+dist/assets/vazirmatn-arabic-600-normal-CWYTfCgi.woff      27.88 kB
+dist/assets/vazirmatn-arabic-700-normal-B5nPuCFv.woff      27.88 kB
+dist/assets/vazirmatn-arabic-800-normal-BH12s3-y.woff      27.99 kB
+dist/assets/vazirmatn-arabic-500-normal-Dqq3-xo3.woff      28.01 kB
+dist/assets/pdf.worker.min-wgc6bjNh.mjs                 1,078.61 kB
+dist/offline.css                                           10.84 kB │ gzip:   2.36 kB
+dist/assets/index-CQNfyAVe.css                            275.04 kB │ gzip:  44.87 kB
+dist/assets/pdf-D9XzrJ8F.js                               398.13 kB │ gzip: 117.72 kB
+dist/assets/index-DqLnEYDB.js                           1,892.08 kB │ gzip: 528.73 kB
+
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.45s
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

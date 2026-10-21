@@ -19,6 +19,16 @@ export default defineConfig({
       name: "phone",
       use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
     },
+    {
+      name: "webkit-no-reload",
+      testMatch: "c9-no-reload.spec.ts",
+      use: {
+        ...devices["Desktop Safari"],
+        browserName: "webkit",
+        // The existing optional system Chromium executable is not WebKit.
+        launchOptions: {},
+      },
+    },
   ],
   webServer: {
     command: "npm run preview",

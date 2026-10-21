@@ -1,0 +1,120 @@
+{
+  "reviewer": "/root",
+  "source_commit": "882a381908b6a39c0f883319cb1a6062708b92c8",
+  "variant": "phone390",
+  "reviewed_utc": "2026-10-19T04:55:57.589254+00:00",
+  "method": "Root personally opened all10 untouched native PNGs at original detail after capture; compared against the three supplied desktop references. This is emulated Chromium390x844, not a physical phone.",
+  "blocking_visible_defects": [],
+  "scenes": [
+    {
+      "scene": "products",
+      "sha256": "e18b6de54fc6f7668cc692d6732d9d5a3114cd7887d54c0acc22e67ec3a8377b",
+      "path": "products-phone390.png",
+      "dimensions": [
+        390,
+        3090
+      ],
+      "visible_clipping_or_overlap": false,
+      "remaining_differences": "The phone presents compact rows instead of the reference desktop table. Filters wrap vertically with count and Columns at the end; preserved package-size, code, approval status, pagination and row actions remain. All 16 genuine products are shown; the pot sale, oil request and configured multi-buy offers use actual terms and dates."
+    },
+    {
+      "scene": "product-sale",
+      "sha256": "0687b0dfe3c8498ca8e1526ba0bb3379394a1388e75549339bbeb7ac8b805bf4",
+      "path": "product-sale-phone390.png",
+      "dimensions": [
+        390,
+        3166
+      ],
+      "visible_clipping_or_overlap": false,
+      "remaining_differences": "Price, Cost and Dates stack into one column. The real sale is North York only, ends Oct 29 and started Oct 15; reference shows three stores and different dates. Company default, two-decimal margins, separate divisor, Dates, Details, per-store prices, deliveries, lots, cost history and history are preserved. Provenance and Last received retain their existing prose/link layout rather than the reference paired fact rows."
+    },
+    {
+      "scene": "lookup-sale",
+      "sha256": "55b231bb550dd4dc0875f878d685735103c9088ef3ac46849bac6871636dae16",
+      "path": "lookup-sale-phone390.png",
+      "dimensions": [
+        390,
+        1208
+      ],
+      "visible_clipping_or_overlap": false,
+      "remaining_differences": "The narrow card stacks its 60px charge and context. Search-result names retain the existing ellipsis at phone width while the full selected name is visible above. Genuine query0012, sale16.99, regular20.99 and endOct29 remain. Existing category chips, action buttons, dates and last-received evidence remain; the reference is a shorter desktop excerpt. Taxable is a separate wrapped small line in the result."
+    },
+    {
+      "scene": "labels",
+      "sha256": "6e1b85d003ee66227c730be39d0f4aa6f6009091f083a217ac07be40a5f2af85",
+      "path": "labels-phone390.png",
+      "dimensions": [
+        390,
+        2794
+      ],
+      "visible_clipping_or_overlap": false,
+      "remaining_differences": "Phone rows replace the desktop fixed-width table while keeping custom selection checkboxes, all 16 real products, separate weight-unit lines and single end arrows. Products/Waitlist/Templates and filter chips are retained. Longer product names wrap at word boundaries; the pending product has the genuine No approved price yet state. Reference shows selected table rows and fewer surrounding controls."
+    },
+    {
+      "scene": "notes-seen-done",
+      "sha256": "02c209a7fcb7ca6bb411d84ea58e3aef3b6d4d67c52276845d085000d93217b6",
+      "path": "notes-seen-done-phone390.png",
+      "dimensions": [
+        390,
+        1262
+      ],
+      "visible_clipping_or_overlap": false,
+      "remaining_differences": "Notebook tabs wrap; All is selected so a Done note and a separately Seen note appear together. Reference uses a composite Open view with different examples, readers and times. Real feedback Marked done, New notebook, Add note, archived-notebook link and genuine note text remain. Authored timestamps stay together; green Seen by you and completion are visible."
+    },
+    {
+      "scene": "price-updates",
+      "sha256": "ea2eadadf6164bb78b0e42524637bf297befad543f9d62ddf83226bc92f8cfb3",
+      "path": "price-updates-phone390.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "visible_clipping_or_overlap": false,
+      "remaining_differences": "At phone width the existing compact task row is retained; desktop Why/Done so far/Print label columns are available in a sufficiently wide card, with phone detail behind the arrow. Actual Black Tea task is0of2 and6.99\u21926.49, not two example tasks. The transition arrow and real register/label workflow remain; no physical print is claimed."
+    },
+    {
+      "scene": "dates",
+      "sha256": "609d62abe9a0cc74209a71af71ef2e68b45163abbb843e5b8702b520b22ca1af",
+      "path": "dates-phone390.png",
+      "dimensions": [
+        390,
+        1525
+      ],
+      "visible_clipping_or_overlap": false,
+      "remaining_differences": "The genuine Add date form and two complete date cards remain above/below the wrapped40px filter bar; reference illustrates only the toolbar. Existing Remove/menu/detail controls, two real reminder dates and stock clarification remain. Columns/count stay at the end."
+    },
+    {
+      "scene": "branch-requests",
+      "sha256": "0001a6fa9fb6741c32eaaf034b7ea3c017e106fe50a3c57845c3098b62b9d9d0",
+      "path": "branch-requests-phone390.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "visible_clipping_or_overlap": false,
+      "remaining_differences": "One real REQ-0001 appears as a compact phone row with Requested pill, item summary, route and date. Reference shows wide separate columns and a different date; current request is created through the UI with original endpoint meaning. Search/filter/count and one end arrow remain."
+    },
+    {
+      "scene": "new-branch-request",
+      "sha256": "9d9c1972d79e76352979457ad937458d0eec78b4321f11b6aa914db69429695c",
+      "path": "new-branch-request-phone390.png",
+      "dimensions": [
+        390,
+        1009
+      ],
+      "visible_clipping_or_overlap": false,
+      "remaining_differences": "Locations stack on the phone and fill the bounded form. Actual catalog item retains translation, code/package, quantity, Units/Cases, conditional pack validation and optional note beyond the compact reference example. Long combined-input placeholder is clipped within the input at phone width; the full accessible label remains. Footer wraps to two lines with12px gaps; no controls were removed."
+    },
+    {
+      "scene": "approvals-rejected",
+      "sha256": "1046c18db94adebf39a861501fa88100f4066b38ebf46a24344f11fba548571c",
+      "path": "approvals-rejected-phone390.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "visible_clipping_or_overlap": false,
+      "remaining_differences": "Tabs wrap and show all four actual counts, including zero. The actual rejection reason, actor and timestamp differ from the reference; the genuine success status and Sale requests heading remain. Card contains no decision actions. Historical regular-price comparison is omitted because SaleRequest/ApprovedSaleTerms have no frozen original regular price; current mutable price would be misleading."
+    }
+  ]
+}

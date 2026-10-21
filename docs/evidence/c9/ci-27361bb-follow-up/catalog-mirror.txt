@@ -1,0 +1,8 @@
+
+Running 1 test using 1 worker
+
+(node:190192) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [phone] › tests/catalog-a2.spec.ts:208:1 › Lookup columns mirror in Persian, with selected row distinct from offer dot and terms (2.5s)
+
+  1 passed (4.1s)

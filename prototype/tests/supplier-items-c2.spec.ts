@@ -37,6 +37,11 @@ test("Supervisor adds a quoted supplier item without invented purchases and work
   await page.goto("/#suppliers?name=Fresh%20Valley%20Foods");
   await page.getByRole("tab", { name: "Supplier items", exact: true }).click();
   const table = page.locator(".supplier-items-table");
+  // The protected read mounts this table asynchronously. Wait for a real row
+  // before counting optional disclosures for width-hidden purchase columns.
+  await expect(
+    table.locator("tbody > tr:not(.table-expanded-row)").first(),
+  ).toBeVisible();
   await expandDetails(table);
   if (
     await table

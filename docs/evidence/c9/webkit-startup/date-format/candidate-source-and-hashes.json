@@ -1,0 +1,28 @@
+{
+  "kind": "uncommitted candidate regression; native WebKit cause still unconfirmed",
+  "head": "f3718812a6c7824a6c202198742ac1f43d7683db",
+  "source_sha256": {
+    "prototype/src/e1-bootstrap.ts": "d70854b2b916de38124871acc1cfa6c532cfe875c4e6c86c4a5346330a280335",
+    "prototype/src/e1-bootstrap.c9.test.ts": "f34e47f79a7048a58983a2527372d11d031be72c140989c5ca3953daa0b34ff8"
+  },
+  "negative_control": {
+    "original_production_source": true,
+    "tests_passed": 1,
+    "tests_failed": 7,
+    "exit_code": 1,
+    "log_sha256": "291ef4b3be0118245d9bcbabc22f20fd58986b78f0f056b08d9cd85d1ed9e587"
+  },
+  "candidate_result": {
+    "tests_passed": 8,
+    "tests_failed": 0,
+    "exit_code": 0,
+    "log_sha256": "7d4f1f08bb14337779c93dc54d7e5da88c7fb147df55e406c74b87fc306cc2e9"
+  },
+  "implementation": "Reuse companyDate(configSeed, now); existing Date construction and setDate day offset remain unchanged.",
+  "limits": [
+    "Localized format ordering is simulated; native formatToParts and configured timezone remain real.",
+    "Actual runtime/services and disposable fake-indexeddb are used; no production/browser reset or authority bypass.",
+    "No passwords, setup codes, session identities, or authority records are printed.",
+    "No app build, commit, push, merge or confirmed WebKit-fix claim."
+  ]
+}

@@ -6,6 +6,7 @@ import {
 } from "../WhatsMissing";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useListState, useRouteParam } from "../navigation";
+import { configuredRoleLabel } from "../role-config";
 import Decimal from "decimal.js";
 import { Plus, Printer, ArrowLeft, X } from "lucide-react";
 import { useDemo } from "../store";
@@ -1039,8 +1040,8 @@ export default function Orders() {
                   {!candidates.length && !form.newItems.length ? (
                     <EmptyState>
                       {t(
-                        "No supplier items yet. Ask your Supervisor to add items on the supplier page.",
-                        "هنوز کالایی برای این تأمین‌کننده ثبت نشده است. از سرپرست بخواهید در صفحهٔ تأمین‌کننده کالا اضافه کند.",
+                        `No supplier items yet. Ask your ${configuredRoleLabel(state.config.roles, "owner", "en")} or ${configuredRoleLabel(state.config.roles, "manager", "en")} to add items on the supplier page.`,
+                        `هنوز کالایی برای این تأمین‌کننده ثبت نشده است. از ${configuredRoleLabel(state.config.roles, "owner", "fa")} یا ${configuredRoleLabel(state.config.roles, "manager", "fa")} بخواهید در صفحهٔ تأمین‌کننده کالا اضافه کند.`,
                       )}
                     </EmptyState>
                   ) : (
@@ -1979,19 +1980,26 @@ export default function Orders() {
                 setTo(nextTo);
               }}
             />
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setSearch("");
-                setStatus("all");
-                setSupplierFilter("all");
-                setLocationFilter("all");
-                setFrom("");
-                setTo("");
-              }}
-            >
-              {t("Clear filters", "پاک کردن فیلترها")}
-            </Button>
+            {(search ||
+              status !== "all" ||
+              supplierFilter !== "all" ||
+              locationFilter !== "all" ||
+              from ||
+              to) && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setSearch("");
+                  setStatus("all");
+                  setSupplierFilter("all");
+                  setLocationFilter("all");
+                  setFrom("");
+                  setTo("");
+                }}
+              >
+                {t("Clear filters", "پاک کردن فیلترها")}
+              </Button>
+            )}
           </FilterToolbar>
           {!visible.length ? (
             <EmptyState>

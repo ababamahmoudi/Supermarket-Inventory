@@ -1,0 +1,56 @@
+{
+  "scope": "SYNTHETIC SELECTOR CONTROLS ONLY; runs exact current new-test diagnostic callback on isolated about:blank markup using real AuthLayout/SecondSignInStep class nesting. Not the app, no WebKit/LAN/authentication-success claim.",
+  "results": [
+    {
+      "name": "Synthetic username/password AuthLayout public labels, validation, storage status; excludes input values and demo-password hint",
+      "passed": true,
+      "evidence": {
+        "url": "nullblank",
+        "readyState": "complete",
+        "headings": [
+          "Sign in"
+        ],
+        "fieldLabels": [
+          "Username",
+          "Password"
+        ],
+        "buttons": [
+          "Show password",
+          "Sign in"
+        ],
+        "alerts": [
+          "The username or password is incorrect. Try again."
+        ],
+        "statuses": [
+          "Browser storage could not be read or updated."
+        ],
+        "hasWorkspace": false,
+        "secureContext": false,
+        "indexedDBAvailable": true,
+        "secureRandomAvailable": true
+      }
+    },
+    {
+      "name": "Synthetic actual second-step class nesting: public heading and simulated-passkey action captured once",
+      "passed": true,
+      "evidence": {
+        "url": "nullblank",
+        "readyState": "complete",
+        "headings": [
+          "Second sign-in step"
+        ],
+        "fieldLabels": [],
+        "buttons": [
+          "Use simulated passkey",
+          "Sign out"
+        ],
+        "alerts": [],
+        "statuses": [],
+        "hasWorkspace": false,
+        "secureContext": false,
+        "indexedDBAvailable": true,
+        "secureRandomAvailable": true
+      }
+    }
+  ]
+}

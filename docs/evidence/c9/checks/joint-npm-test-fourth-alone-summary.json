@@ -1,0 +1,23 @@
+{
+  "code_commit": "10d2667db9a8db6097251986c298ca57180bae26",
+  "command": "npm test",
+  "node": "22.23.3",
+  "exit_code": 0,
+  "application": {
+    "test_files_passed": 155,
+    "tests_passed": 1504,
+    "failed": 0,
+    "duration_seconds": 332.33
+  },
+  "sdk": {
+    "test_files_passed": 6,
+    "tests_passed": 75,
+    "failed": 0,
+    "duration_seconds": 3.22
+  },
+  "pricing_seed_cases": 23,
+  "source_inputs": 623,
+  "source_unchanged": true,
+  "log_sha256": "937c18d840f1d4ac5109ac0e30d1d7682ed138b599771e037ec3cf2ec960a917",
+  "execution": "Full normal npm test ran alone with original configured two workers; no timeouts/retries/skips changed."
+}

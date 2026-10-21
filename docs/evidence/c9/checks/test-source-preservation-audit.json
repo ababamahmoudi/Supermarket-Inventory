@@ -1,0 +1,188 @@
+{
+  "base": "d1fcb4ffdf55e4bb33792aa2564790dbac473e0b",
+  "original_test_files": 213,
+  "original_static_test_declarations": 1387,
+  "changes": [
+    {
+      "file": "prototype/src/App.test.tsx",
+      "main_declarations": 15,
+      "current_declarations": 16,
+      "renamed_or_missing": [],
+      "renamed_or_added": [
+        {
+          "title": "shows delayed initial Loading in restored Persian while genuine startup publication is pending",
+          "mode": "it"
+        }
+      ],
+      "modeChanges": []
+    },
+    {
+      "file": "prototype/src/ChangePriceDialog.c8.test.tsx",
+      "main_declarations": 7,
+      "current_declarations": 11,
+      "renamed_or_missing": [],
+      "renamed_or_added": [
+        {
+          "title": "saves the after-sale regular price while the running sale keeps its customer charge",
+          "mode": "it"
+        },
+        {
+          "title": "saves a regular price from one store of a multi-store sale without a false sale revision error",
+          "mode": "it"
+        },
+        {
+          "title": "defaults to ending a sale when the new regular price is %s",
+          "mode": "it.each"
+        },
+        {
+          "title": "can lower the running sale price together with the new regular price",
+          "mode": "it"
+        }
+      ],
+      "modeChanges": []
+    },
+    {
+      "file": "prototype/src/NoteStatusUndo.e1.test.tsx",
+      "main_declarations": 2,
+      "current_declarations": 2,
+      "renamed_or_missing": [
+        {
+          "title": "rechecks the original Mark seen capability after a genuine Owner changes its actor from Manager to Floor Worker",
+          "mode": "it"
+        }
+      ],
+      "renamed_or_added": [
+        {
+          "title": "rechecks the original note's read location after a genuine Owner changes its reader's role and assignment",
+          "mode": "it"
+        }
+      ],
+      "modeChanges": []
+    },
+    {
+      "file": "prototype/src/operations.test.ts",
+      "main_declarations": 29,
+      "current_declarations": 29,
+      "renamed_or_missing": [
+        {
+          "title": "keeps unread Supervisor notes restricted and history remains after seen/done",
+          "mode": "it"
+        }
+      ],
+      "renamed_or_added": [
+        {
+          "title": "lets note readers mark seen while keeping manager-note completion restricted and retaining history",
+          "mode": "it"
+        }
+      ],
+      "modeChanges": []
+    },
+    {
+      "file": "prototype/src/products-sale-cell.c8.test.tsx",
+      "main_declarations": 1,
+      "current_declarations": 1,
+      "renamed_or_missing": [
+        {
+          "title": "retains the requested-sale amount beside the current charge when Status is omitted for %s",
+          "mode": "it.each"
+        }
+      ],
+      "renamed_or_added": [
+        {
+          "title": "retains the request in its own Offer column when Status is omitted for %s",
+          "mode": "it.each"
+        }
+      ],
+      "modeChanges": []
+    },
+    {
+      "file": "prototype/src/sales.c8.test.ts",
+      "main_declarations": 47,
+      "current_declarations": 47,
+      "renamed_or_missing": [
+        {
+          "title": "does not create a same-cost lower-regular alert or another manual approval even when regular is below the current Sale",
+          "mode": "it"
+        }
+      ],
+      "renamed_or_added": [
+        {
+          "title": "keeps a same-cost manual regular price after the conflicting sale is explicitly ended",
+          "mode": "it"
+        }
+      ],
+      "modeChanges": []
+    },
+    {
+      "file": "prototype/src/weight-price-presentation.test.tsx",
+      "main_declarations": 1,
+      "current_declarations": 1,
+      "renamed_or_missing": [
+        {
+          "title": "retains a four-decimal weighed cost with its complete amount/unit isolated in %s",
+          "mode": "it.each"
+        }
+      ],
+      "renamed_or_added": [
+        {
+          "title": "shows cents for a weighed read-only cost with its complete amount/unit isolated in %s",
+          "mode": "it.each"
+        }
+      ],
+      "modeChanges": []
+    },
+    {
+      "file": "prototype/tests/b-polish.spec.ts",
+      "main_declarations": 7,
+      "current_declarations": 7,
+      "renamed_or_missing": [
+        {
+          "title": "`Filter fields are 44px and actions are 40px, readable, searchable and compact in ${language}`",
+          "mode": "test"
+        }
+      ],
+      "renamed_or_added": [
+        {
+          "title": "`C9 filter controls are 40px, readable, searchable and compact in ${language}`",
+          "mode": "test"
+        }
+      ],
+      "modeChanges": []
+    },
+    {
+      "file": "prototype/tests/settings-b.spec.ts",
+      "main_declarations": 5,
+      "current_declarations": 5,
+      "renamed_or_missing": [
+        {
+          "title": "Settings presents the exact 13 groups and unfinished groups cannot save",
+          "mode": "test"
+        }
+      ],
+      "renamed_or_added": [
+        {
+          "title": "Settings presents the exact 12 groups and unfinished groups cannot save",
+          "mode": "test"
+        }
+      ],
+      "modeChanges": []
+    }
+  ],
+  "native_current_discovery": {
+    "desktop": {
+      "existing_main_file": 406,
+      "new_c9_file": 14
+    },
+    "phone": {
+      "existing_main_file": 406,
+      "new_c9_file": 14
+    },
+    "webkit-no-reload": {
+      "new_c9_file": 1
+    }
+  },
+  "baseline_reconstruction": "406 cases per original Chromium project reconstructed from current native cases in unchanged original-file declaration/loop matrices; no baseline checkout or execution.",
+  "existing_runner_budgets": "Playwright timeout/retries, Vitest testTimeout/hookTimeout/maxWorkers and CI workflow unchanged. Temporary explicit10s initial-role assertion wait removed; original3s default restored.",
+  "authorized_audit_fix": "Restored only Labels product search locator in c5-conditional-audit.spec.ts to Search products; Branch combined-search locators retained.",
+  "new_only_skips": "New C9 explicit-width price and filter proofs skip duplicate phone project instances; those tests explicitly cover1440/900/390 themselves. No original skips added."
+}

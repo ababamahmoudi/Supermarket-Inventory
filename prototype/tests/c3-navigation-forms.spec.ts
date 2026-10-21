@@ -126,22 +126,24 @@ test("request detail Back and browser Back retain tab and search, with actionabl
   await page.goto("/#requests");
   await page.getByRole("button", { name: "New request", exact: true }).click();
   await page
-    .getByLabel("Free-text item", { exact: true })
+    .getByLabel("Add a product, or type an item that isn't in the catalog", {
+      exact: true,
+    })
     .fill("Fictional paper bags");
-  await page.getByRole("button", { name: "Add item", exact: true }).click();
+  await page.getByRole("button", { name: /^Add item/ }).click();
   await page
     .getByRole("button", { name: "Save as draft", exact: true })
     .click();
   await expect(
-    page.getByLabel("Sending location", { exact: true }),
+    page.getByLabel("Ask this location", { exact: true }),
   ).toHaveAttribute("aria-invalid", "true");
   await chooseOption(
     page,
-    page.getByLabel("Sending location", { exact: true }),
+    page.getByLabel("Ask this location", { exact: true }),
     "Warehouse",
   );
   await expect(
-    page.getByLabel("Sending location", { exact: true }),
+    page.getByLabel("Ask this location", { exact: true }),
   ).toHaveAttribute("aria-invalid", "false");
   await page
     .getByRole("button", { name: "Save as draft", exact: true })
@@ -155,7 +157,7 @@ test("request detail Back and browser Back retain tab and search, with actionabl
   await page
     .getByRole("row")
     .filter({ hasText: reference })
-    .getByRole("button", { name: reference, exact: true })
+    .getByRole("link", { name: reference, exact: true })
     .click();
   const crumbs = page.getByRole("navigation", {
     name: "Breadcrumbs",
@@ -179,7 +181,7 @@ test("request detail Back and browser Back retain tab and search, with actionabl
     reference,
   );
   await expect(
-    page.getByRole("tab", { name: "Outgoing", exact: true }),
+    page.getByRole("tab", { name: /^Outgoing(?: \d+)?$/ }),
   ).toHaveAttribute("aria-selected", "true");
   await expect(page.locator(".request-detail")).toHaveCount(0);
 });

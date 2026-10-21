@@ -15,6 +15,7 @@ import {
   historyFieldLabel,
   historyErrorMessage,
 } from "../history-copy";
+import { configuredRoleLabel } from "../role-config";
 import { branchLabel } from "../settings";
 import {
   demoUserLabel,
@@ -223,7 +224,7 @@ export default function History() {
         }
       })
       .catch((caught) => {
-        if (current) setError(historyErrorMessage(caught, t));
+        if (current) setError(historyErrorMessage(caught, t, state.config));
       });
     return () => {
       current = false;
@@ -260,7 +261,7 @@ export default function History() {
         if (current) setPreviewSnapshot({ key: previewKey, changes: result });
       })
       .catch((caught) => {
-        if (current) setError(historyErrorMessage(caught, t));
+        if (current) setError(historyErrorMessage(caught, t, state.config));
       });
     return () => {
       current = false;
@@ -282,8 +283,8 @@ export default function History() {
     return (
       <EmptyState>
         {t(
-          "History is available to the Supervisor and Floor Workers.",
-          "سابقه برای سرپرست و کارکنان سالن در دسترس است.",
+          `History is available to ${configuredRoleLabel(state.config.roles, "owner", "en")}, ${configuredRoleLabel(state.config.roles, "manager", "en")}, ${configuredRoleLabel(state.config.roles, "branch_supervisor", "en")} and ${configuredRoleLabel(state.config.roles, "floor_worker", "en")}.`,
+          `سابقه برای ${configuredRoleLabel(state.config.roles, "owner", "fa")}، ${configuredRoleLabel(state.config.roles, "manager", "fa")}، ${configuredRoleLabel(state.config.roles, "branch_supervisor", "fa")} و ${configuredRoleLabel(state.config.roles, "floor_worker", "fa")} در دسترس است.`,
         )}
       </EmptyState>
     );
@@ -313,6 +314,7 @@ export default function History() {
           ? previous
           : "record",
       lang,
+      state.config,
     );
   };
   const value = (
@@ -414,7 +416,7 @@ export default function History() {
     const changes = historyDisplayChanges(entry);
     const expanded = expandedChanges.includes(entry.id);
     const displayChange = (change: HistoryDisplayChange, index: number) => {
-      const label = historyFieldLabel(change.field, lang);
+      const label = historyFieldLabel(change.field, lang, state.config);
       return (
         <div className="history-recorded-change" key={index}>
           {label !== t("Recorded values", "مقادیر ثبت‌شده") && (
@@ -546,18 +548,25 @@ export default function History() {
               }))
             }
           />
-          <Button
-            variant="plain"
-            onClick={() => {
-              setPerson("all");
-              setBranch("all");
-              setAction("all");
-              setFilters((current) => ({ ...current, from: "", to: "" }));
-              setSearch("");
-            }}
-          >
-            {t("Clear filters", "پاک کردن فیلترها")}
-          </Button>
+          {(person !== "all" ||
+            branch !== "all" ||
+            action !== "all" ||
+            from ||
+            to ||
+            search) && (
+            <Button
+              variant="plain"
+              onClick={() => {
+                setPerson("all");
+                setBranch("all");
+                setAction("all");
+                setFilters((current) => ({ ...current, from: "", to: "" }));
+                setSearch("");
+              }}
+            >
+              {t("Clear filters", "پاک کردن فیلترها")}
+            </Button>
+          )}
         </FilterToolbar>
         {!visible.length ? (
           <EmptyState>
@@ -794,7 +803,7 @@ export default function History() {
                     setSelected(null);
                     setMessage(t("Change reverted", "تغییر بازگردانده شد"));
                   } catch (caught) {
-                    setError(historyErrorMessage(caught, t));
+                    setError(historyErrorMessage(caught, t, state.config));
                   }
                 }}
               >

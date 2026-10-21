@@ -1,0 +1,1249 @@
+{
+  "generated_at": "2026-10-19T04:45:28.477Z",
+  "base": "http://127.0.0.1:5174",
+  "browser": "Native Chromium, phone viewport emulation",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "scenario": "Real Manager UI: kg main unit + secondary lb, active sale for weighed product 0016; Labels Products EN/FA",
+  "assets": [
+    {
+      "path": "/assets/index-Bk2vBWIs.js",
+      "sha256": "c6b68e810884e53f1ea22ed88d026a66ac3494b23c015955ae1e8d0a80770120"
+    },
+    {
+      "path": "/assets/index-Cpag4Tvt.css",
+      "sha256": "6d82ada70437841f7b4f4f181536caf378f03f4d30ce6124778af280e826bfa5"
+    }
+  ],
+  "measurements": [
+    {
+      "language": "en",
+      "direction": "ltr",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "page_width": 390,
+      "row": {
+        "left": 36,
+        "right": 354,
+        "top": 702.5625,
+        "bottom": 842.0625,
+        "width": 318,
+        "height": 139.5
+      },
+      "cell": {
+        "left": 169.625,
+        "right": 306,
+        "top": 728.8125,
+        "bottom": 769.8125,
+        "width": 136.375,
+        "height": 41
+      },
+      "price": {
+        "left": 169.625,
+        "right": 306,
+        "top": 728.8125,
+        "bottom": 769.8125,
+        "width": 136.375,
+        "height": 41
+      },
+      "name": {
+        "left": 100,
+        "right": 161.625,
+        "top": 716.5625,
+        "bottom": 782.0625,
+        "width": 61.625,
+        "height": 65.5
+      },
+      "selection": {
+        "left": 48,
+        "right": 92,
+        "top": 752.3125,
+        "bottom": 792.3125,
+        "width": 44,
+        "height": 40
+      },
+      "chevron": {
+        "left": 314,
+        "right": 342,
+        "top": 750.3125,
+        "bottom": 794.3125,
+        "width": 28,
+        "height": 44
+      },
+      "lines": [
+        {
+          "text": "$16.51/kg$14.86/kg",
+          "box": {
+            "left": 169.625,
+            "right": 306,
+            "top": 728.8125,
+            "bottom": 748.8125,
+            "width": 136.375,
+            "height": 20
+          },
+          "previous": {
+            "left": 169.625,
+            "right": 228.015625,
+            "top": 730.8125,
+            "bottom": 747.953125,
+            "width": 58.390625,
+            "height": 17.140625
+          },
+          "current": {
+            "left": 236.015625,
+            "right": 306,
+            "top": 728.8125,
+            "bottom": 748.8125,
+            "width": 69.984375,
+            "height": 20
+          },
+          "whitespace": "nowrap",
+          "wrap": "nowrap",
+          "scroll_width": 136,
+          "client_width": 136,
+          "ink": [
+            {
+              "text": "$16.51",
+              "client": {
+                "left": 169.625,
+                "right": 209.859375,
+                "top": 730.8125,
+                "bottom": 747.8125,
+                "width": 40.234375,
+                "height": 17
+              },
+              "ink": {
+                "left": 169.625,
+                "right": 203.37921142578125,
+                "top": 732.8125,
+                "bottom": 744.8125
+              }
+            },
+            {
+              "text": "/kg",
+              "client": {
+                "left": 209.859375,
+                "right": 228.015625,
+                "top": 730.8125,
+                "bottom": 747.8125,
+                "width": 18.15625,
+                "height": 17
+              },
+              "ink": {
+                "left": 209.859375,
+                "right": 227.8094482421875,
+                "top": 734.8125,
+                "bottom": 746.8125
+              }
+            },
+            {
+              "text": "$14.86",
+              "client": {
+                "left": 236.015625,
+                "right": 283.78125,
+                "top": 728.8125,
+                "bottom": 747.8125,
+                "width": 47.765625,
+                "height": 19
+              },
+              "ink": {
+                "left": 236.015625,
+                "right": 280.0024719238281,
+                "top": 731.8125,
+                "bottom": 744.8125
+              }
+            },
+            {
+              "text": "/kg",
+              "client": {
+                "left": 283.78125,
+                "right": 306,
+                "top": 728.8125,
+                "bottom": 747.8125,
+                "width": 22.21875,
+                "height": 19
+              },
+              "ink": {
+                "left": 283.78125,
+                "right": 305.3751983642578,
+                "top": 733.8125,
+                "bottom": 746.8125
+              }
+            }
+          ]
+        },
+        {
+          "text": "$7.49/lb$6.74/lb",
+          "box": {
+            "left": 198.359375,
+            "right": 306,
+            "top": 752.8125,
+            "bottom": 769.8125,
+            "width": 107.640625,
+            "height": 17
+          },
+          "previous": {
+            "left": 198.359375,
+            "right": 246.1875,
+            "top": 753.8125,
+            "bottom": 769.8125,
+            "width": 47.828125,
+            "height": 16
+          },
+          "current": {
+            "left": 254.1875,
+            "right": 306,
+            "top": 752.8125,
+            "bottom": 768.8125,
+            "width": 51.8125,
+            "height": 16
+          },
+          "whitespace": "nowrap",
+          "wrap": "nowrap",
+          "scroll_width": 108,
+          "client_width": 108,
+          "ink": [
+            {
+              "text": "$7.49",
+              "client": {
+                "left": 198.359375,
+                "right": 231.15625,
+                "top": 752.8125,
+                "bottom": 769.8125,
+                "width": 32.796875,
+                "height": 17
+              },
+              "ink": {
+                "left": 198.359375,
+                "right": 228.3455352783203,
+                "top": 754.8125,
+                "bottom": 766.8125
+              }
+            },
+            {
+              "text": "/lb",
+              "client": {
+                "left": 231.15625,
+                "right": 246.1875,
+                "top": 752.8125,
+                "bottom": 769.8125,
+                "width": 15.03125,
+                "height": 17
+              },
+              "ink": {
+                "left": 231.15625,
+                "right": 245.97430419921875,
+                "top": 756.8125,
+                "bottom": 765.8125
+              }
+            },
+            {
+              "text": "$6.74",
+              "client": {
+                "left": 254.1875,
+                "right": 289.71875,
+                "top": 751.8125,
+                "bottom": 769.8125,
+                "width": 35.53125,
+                "height": 18
+              },
+              "ink": {
+                "left": 254.1875,
+                "right": 287.73902893066406,
+                "top": 754.8125,
+                "bottom": 766.8125
+              }
+            },
+            {
+              "text": "/lb",
+              "client": {
+                "left": 289.71875,
+                "right": 306,
+                "top": 751.8125,
+                "bottom": 769.8125,
+                "width": 16.28125,
+                "height": 18
+              },
+              "ink": {
+                "left": 289.71875,
+                "right": 306.18824768066406,
+                "top": 756.8125,
+                "bottom": 765.8125
+              }
+            }
+          ]
+        }
+      ],
+      "cell_contains_price_box": true,
+      "cell_contains_ink": true,
+      "pair_overlaps_name": false,
+      "pair_overlaps_selection": false,
+      "pair_overlaps_chevron": false,
+      "ancestors": [
+        {
+          "tag": "SPAN",
+          "class": "selling-price-value has-secondary sale-price weight-price weight-price-stacked",
+          "box": {
+            "left": 169.625,
+            "right": 306,
+            "top": 728.8125,
+            "bottom": 769.8125,
+            "width": 136.375,
+            "height": 41
+          },
+          "client_width": 136,
+          "scroll_width": 136,
+          "max_inline_size": "100%",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 169.625,
+            "right": 305.625,
+            "top": 728.8125,
+            "bottom": 769.8125
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "label-price-display",
+          "box": {
+            "left": 169.625,
+            "right": 306,
+            "top": 728.8125,
+            "bottom": 769.8125,
+            "width": 136.375,
+            "height": 41
+          },
+          "client_width": 136,
+          "scroll_width": 136,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 169.625,
+            "right": 305.625,
+            "top": 728.8125,
+            "bottom": 769.8125
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "TD",
+          "class": "phone-list-value",
+          "box": {
+            "left": 169.625,
+            "right": 306,
+            "top": 728.8125,
+            "bottom": 769.8125,
+            "width": 136.375,
+            "height": 41
+          },
+          "client_width": 136,
+          "scroll_width": 136,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 169.625,
+            "right": 305.625,
+            "top": 728.8125,
+            "bottom": 769.8125
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "TR",
+          "class": "phone-list-row",
+          "box": {
+            "left": 36,
+            "right": 354,
+            "top": 702.5625,
+            "bottom": 842.0625,
+            "width": 318,
+            "height": 139.5
+          },
+          "client_width": 318,
+          "scroll_width": 318,
+          "max_inline_size": "100%",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 36,
+            "right": 354,
+            "top": 702.5625,
+            "bottom": 842.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "TBODY",
+          "class": "",
+          "box": {
+            "left": 36,
+            "right": 354,
+            "top": 702.5625,
+            "bottom": 842.0625,
+            "width": 318,
+            "height": 139.5
+          },
+          "client_width": 318,
+          "scroll_width": 318,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 36,
+            "right": 354,
+            "top": 702.5625,
+            "bottom": 842.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "TABLE",
+          "class": "has-defined-columns",
+          "box": {
+            "left": 36,
+            "right": 354,
+            "top": 702.5625,
+            "bottom": 842.0625,
+            "width": 318,
+            "height": 139.5
+          },
+          "client_width": 318,
+          "scroll_width": 318,
+          "max_inline_size": "100%",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 36,
+            "right": 354,
+            "top": 702.5625,
+            "bottom": 842.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "table-wrap ui-data-table is-responsive is-mobile is-phone-list has-phone-selection labels-product-table c9-labels-products-table",
+          "box": {
+            "left": 36,
+            "right": 354,
+            "top": 702.5625,
+            "bottom": 842.0625,
+            "width": 318,
+            "height": 139.5
+          },
+          "client_width": 318,
+          "scroll_width": 318,
+          "max_inline_size": "100%",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 36,
+            "right": 354,
+            "top": 702.5625,
+            "bottom": 842.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "SECTION",
+          "class": "card ui-card labels-products-card",
+          "box": {
+            "left": 16,
+            "right": 374,
+            "top": 254.5625,
+            "bottom": 862.0625,
+            "width": 358,
+            "height": 607.5
+          },
+          "client_width": 358,
+          "scroll_width": 358,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 16,
+            "right": 374,
+            "top": 254.5625,
+            "bottom": 862.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "labels-b-content",
+          "box": {
+            "left": 16,
+            "right": 374,
+            "top": 254.5625,
+            "bottom": 862.0625,
+            "width": 358,
+            "height": 607.5
+          },
+          "client_width": 358,
+          "scroll_width": 358,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 16,
+            "right": 374,
+            "top": 254.5625,
+            "bottom": 862.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "MAIN",
+          "class": "main-content",
+          "box": {
+            "left": 0,
+            "right": 390,
+            "top": 60,
+            "bottom": 878.0625,
+            "width": 390,
+            "height": 818.0625
+          },
+          "client_width": 390,
+          "scroll_width": 390,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 0,
+            "right": 390,
+            "top": 60,
+            "bottom": 878
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "workspace",
+          "box": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 878.0625,
+            "width": 390,
+            "height": 878.0625
+          },
+          "client_width": 390,
+          "scroll_width": 390,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 878
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "app-shell  ",
+          "box": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 878.0625,
+            "width": 390,
+            "height": 878.0625
+          },
+          "client_width": 390,
+          "scroll_width": 390,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 878
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "",
+          "box": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 878.0625,
+            "width": 390,
+            "height": 878.0625
+          },
+          "client_width": 390,
+          "scroll_width": 390,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 878
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "BODY",
+          "class": "",
+          "box": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 878.0625,
+            "width": 390,
+            "height": 878.0625
+          },
+          "client_width": 390,
+          "scroll_width": 390,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 878
+          },
+          "clipped_ink": []
+        }
+      ],
+      "failures": []
+    },
+    {
+      "language": "fa",
+      "direction": "rtl",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "page_width": 390,
+      "row": {
+        "left": 36,
+        "right": 354,
+        "top": 650.5625,
+        "bottom": 787.5625,
+        "width": 318,
+        "height": 137
+      },
+      "cell": {
+        "left": 84,
+        "right": 220.375,
+        "top": 676.0625,
+        "bottom": 716.0625,
+        "width": 136.375,
+        "height": 40
+      },
+      "price": {
+        "left": 84,
+        "right": 220.375,
+        "top": 676.0625,
+        "bottom": 716.0625,
+        "width": 136.375,
+        "height": 40
+      },
+      "name": {
+        "left": 228.375,
+        "right": 290,
+        "top": 664.5625,
+        "bottom": 727.5625,
+        "width": 61.625,
+        "height": 63
+      },
+      "selection": {
+        "left": 298,
+        "right": 342,
+        "top": 699.0625,
+        "bottom": 739.0625,
+        "width": 44,
+        "height": 40
+      },
+      "chevron": {
+        "left": 48,
+        "right": 76,
+        "top": 697.0625,
+        "bottom": 741.0625,
+        "width": 28,
+        "height": 44
+      },
+      "lines": [
+        {
+          "text": "$16.51/kg$14.86/kg",
+          "box": {
+            "left": 84,
+            "right": 220.375,
+            "top": 676.0625,
+            "bottom": 696.0625,
+            "width": 136.375,
+            "height": 20
+          },
+          "previous": {
+            "left": 84,
+            "right": 142.390625,
+            "top": 678.0625,
+            "bottom": 695.203125,
+            "width": 58.390625,
+            "height": 17.140625
+          },
+          "current": {
+            "left": 150.390625,
+            "right": 220.375,
+            "top": 676.0625,
+            "bottom": 696.0625,
+            "width": 69.984375,
+            "height": 20
+          },
+          "whitespace": "nowrap",
+          "wrap": "nowrap",
+          "scroll_width": 136,
+          "client_width": 136,
+          "ink": [
+            {
+              "text": "$16.51",
+              "client": {
+                "left": 84,
+                "right": 124.234375,
+                "top": 677.0625,
+                "bottom": 695.0625,
+                "width": 40.234375,
+                "height": 18
+              },
+              "ink": {
+                "left": 84,
+                "right": 117.75421142578125,
+                "top": 678.0625,
+                "bottom": 690.0625
+              }
+            },
+            {
+              "text": "/kg",
+              "client": {
+                "left": 124.234375,
+                "right": 142.390625,
+                "top": 677.0625,
+                "bottom": 695.0625,
+                "width": 18.15625,
+                "height": 18
+              },
+              "ink": {
+                "left": 124.234375,
+                "right": 142.1844482421875,
+                "top": 680.0625,
+                "bottom": 692.0625
+              }
+            },
+            {
+              "text": "$14.86",
+              "client": {
+                "left": 150.390625,
+                "right": 198.15625,
+                "top": 675.0625,
+                "bottom": 697.0625,
+                "width": 47.765625,
+                "height": 22
+              },
+              "ink": {
+                "left": 150.390625,
+                "right": 194.37747192382812,
+                "top": 677.0625,
+                "bottom": 690.0625
+              }
+            },
+            {
+              "text": "/kg",
+              "client": {
+                "left": 198.15625,
+                "right": 220.375,
+                "top": 675.0625,
+                "bottom": 697.0625,
+                "width": 22.21875,
+                "height": 22
+              },
+              "ink": {
+                "left": 198.15625,
+                "right": 219.7501983642578,
+                "top": 679.0625,
+                "bottom": 692.0625
+              }
+            }
+          ]
+        },
+        {
+          "text": "$7.49/lb$6.74/lb",
+          "box": {
+            "left": 84,
+            "right": 191.640625,
+            "top": 700.0625,
+            "bottom": 716.0625,
+            "width": 107.640625,
+            "height": 16
+          },
+          "previous": {
+            "left": 84,
+            "right": 131.828125,
+            "top": 700.0625,
+            "bottom": 716.0625,
+            "width": 47.828125,
+            "height": 16
+          },
+          "current": {
+            "left": 139.828125,
+            "right": 191.640625,
+            "top": 700.0625,
+            "bottom": 716.0625,
+            "width": 51.8125,
+            "height": 16
+          },
+          "whitespace": "nowrap",
+          "wrap": "nowrap",
+          "scroll_width": 108,
+          "client_width": 108,
+          "ink": [
+            {
+              "text": "$7.49",
+              "client": {
+                "left": 84,
+                "right": 116.796875,
+                "top": 699.0625,
+                "bottom": 717.0625,
+                "width": 32.796875,
+                "height": 18
+              },
+              "ink": {
+                "left": 84,
+                "right": 113.98616027832031,
+                "top": 700.0625,
+                "bottom": 712.0625
+              }
+            },
+            {
+              "text": "/lb",
+              "client": {
+                "left": 116.796875,
+                "right": 131.828125,
+                "top": 699.0625,
+                "bottom": 717.0625,
+                "width": 15.03125,
+                "height": 18
+              },
+              "ink": {
+                "left": 116.796875,
+                "right": 131.61492919921875,
+                "top": 702.0625,
+                "bottom": 711.0625
+              }
+            },
+            {
+              "text": "$6.74",
+              "client": {
+                "left": 139.828125,
+                "right": 175.359375,
+                "top": 698.0625,
+                "bottom": 718.0625,
+                "width": 35.53125,
+                "height": 20
+              },
+              "ink": {
+                "left": 139.828125,
+                "right": 173.37965393066406,
+                "top": 700.0625,
+                "bottom": 712.0625
+              }
+            },
+            {
+              "text": "/lb",
+              "client": {
+                "left": 175.359375,
+                "right": 191.640625,
+                "top": 698.0625,
+                "bottom": 718.0625,
+                "width": 16.28125,
+                "height": 20
+              },
+              "ink": {
+                "left": 175.359375,
+                "right": 191.82887268066406,
+                "top": 702.0625,
+                "bottom": 711.0625
+              }
+            }
+          ]
+        }
+      ],
+      "cell_contains_price_box": true,
+      "cell_contains_ink": true,
+      "pair_overlaps_name": false,
+      "pair_overlaps_selection": false,
+      "pair_overlaps_chevron": false,
+      "ancestors": [
+        {
+          "tag": "SPAN",
+          "class": "selling-price-value has-secondary sale-price weight-price weight-price-stacked",
+          "box": {
+            "left": 84,
+            "right": 220.375,
+            "top": 676.0625,
+            "bottom": 716.0625,
+            "width": 136.375,
+            "height": 40
+          },
+          "client_width": 136,
+          "scroll_width": 136,
+          "max_inline_size": "100%",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 84,
+            "right": 220,
+            "top": 676.0625,
+            "bottom": 716.0625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "label-price-display",
+          "box": {
+            "left": 84,
+            "right": 220.375,
+            "top": 676.0625,
+            "bottom": 716.0625,
+            "width": 136.375,
+            "height": 40
+          },
+          "client_width": 136,
+          "scroll_width": 136,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 84,
+            "right": 220,
+            "top": 676.0625,
+            "bottom": 716.0625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "TD",
+          "class": "phone-list-value",
+          "box": {
+            "left": 84,
+            "right": 220.375,
+            "top": 676.0625,
+            "bottom": 716.0625,
+            "width": 136.375,
+            "height": 40
+          },
+          "client_width": 136,
+          "scroll_width": 136,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 84,
+            "right": 220,
+            "top": 676.0625,
+            "bottom": 716.0625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "TR",
+          "class": "phone-list-row",
+          "box": {
+            "left": 36,
+            "right": 354,
+            "top": 650.5625,
+            "bottom": 787.5625,
+            "width": 318,
+            "height": 137
+          },
+          "client_width": 318,
+          "scroll_width": 318,
+          "max_inline_size": "100%",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 36,
+            "right": 354,
+            "top": 650.5625,
+            "bottom": 787.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "TBODY",
+          "class": "",
+          "box": {
+            "left": 36,
+            "right": 354,
+            "top": 650.5625,
+            "bottom": 787.5625,
+            "width": 318,
+            "height": 137
+          },
+          "client_width": 318,
+          "scroll_width": 318,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 36,
+            "right": 354,
+            "top": 650.5625,
+            "bottom": 787.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "TABLE",
+          "class": "has-defined-columns",
+          "box": {
+            "left": 36,
+            "right": 354,
+            "top": 650.5625,
+            "bottom": 787.5625,
+            "width": 318,
+            "height": 137
+          },
+          "client_width": 318,
+          "scroll_width": 318,
+          "max_inline_size": "100%",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 36,
+            "right": 354,
+            "top": 650.5625,
+            "bottom": 787.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "table-wrap ui-data-table is-responsive is-mobile is-phone-list has-phone-selection labels-product-table c9-labels-products-table",
+          "box": {
+            "left": 36,
+            "right": 354,
+            "top": 650.5625,
+            "bottom": 787.5625,
+            "width": 318,
+            "height": 137
+          },
+          "client_width": 318,
+          "scroll_width": 318,
+          "max_inline_size": "100%",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 36,
+            "right": 354,
+            "top": 650.5625,
+            "bottom": 787.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "SECTION",
+          "class": "card ui-card labels-products-card",
+          "box": {
+            "left": 16,
+            "right": 374,
+            "top": 254.5625,
+            "bottom": 807.5625,
+            "width": 358,
+            "height": 553
+          },
+          "client_width": 358,
+          "scroll_width": 358,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 16,
+            "right": 374,
+            "top": 254.5625,
+            "bottom": 807.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "labels-b-content",
+          "box": {
+            "left": 16,
+            "right": 374,
+            "top": 254.5625,
+            "bottom": 807.5625,
+            "width": 358,
+            "height": 553
+          },
+          "client_width": 358,
+          "scroll_width": 358,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 16,
+            "right": 374,
+            "top": 254.5625,
+            "bottom": 807.5625
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "MAIN",
+          "class": "main-content",
+          "box": {
+            "left": 0,
+            "right": 390,
+            "top": 60,
+            "bottom": 823.5625,
+            "width": 390,
+            "height": 763.5625
+          },
+          "client_width": 390,
+          "scroll_width": 390,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 0,
+            "right": 390,
+            "top": 60,
+            "bottom": 824
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "workspace",
+          "box": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844,
+            "width": 390,
+            "height": 844
+          },
+          "client_width": 390,
+          "scroll_width": 390,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "app-shell  ",
+          "box": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844,
+            "width": 390,
+            "height": 844
+          },
+          "client_width": 390,
+          "scroll_width": 390,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "DIV",
+          "class": "",
+          "box": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844,
+            "width": 390,
+            "height": 844
+          },
+          "client_width": 390,
+          "scroll_width": 390,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844
+          },
+          "clipped_ink": []
+        },
+        {
+          "tag": "BODY",
+          "class": "",
+          "box": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844,
+            "width": 390,
+            "height": 844
+          },
+          "client_width": 390,
+          "scroll_width": 390,
+          "max_inline_size": "none",
+          "overflow_x": "visible",
+          "overflow_y": "visible",
+          "clip": {
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "bottom": 844
+          },
+          "clipped_ink": []
+        }
+      ],
+      "failures": []
+    }
+  ],
+  "failures": [],
+  "errors": [],
+  "public_scenario": {
+    "product_code": "0016",
+    "regular_lb": "7.49",
+    "conversion_factor": "2.20462",
+    "sale": {
+      "id": "sale-0cc05769-1afb-4a95-a845-383d69a2e668",
+      "sale_price": "14.86",
+      "price_unit": "kg",
+      "starts_on": "2026-10-19",
+      "last_day": "2026-11-01"
+    },
+    "main_display_unit": "kg",
+    "show_second_unit": true
+  },
+  "finished_at": "2026-10-19T04:45:44.996Z"
+}

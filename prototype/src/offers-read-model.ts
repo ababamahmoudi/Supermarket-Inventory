@@ -81,6 +81,11 @@ export type SaleRequestReadDTO = Pick<
       | "decided_at"
       | "decision_reason"
       | "approved_sale_id"
+      | "approved_terms"
+      | "decided_by"
+      | "decided_by_user_id"
+      | "decided_by_role_snapshot"
+      | "decision_attribution"
     >
   >;
 export function projectOfferReadDTO(offer: Offer): OfferReadDTO {
@@ -164,6 +169,11 @@ export function projectSaleRequestReadDTO(
         decided_at: request.decided_at,
         decision_reason: request.decision_reason,
         approved_sale_id: request.approved_sale_id,
+        approved_terms: request.approved_terms && { ...request.approved_terms },
+        decided_by: request.decided_by,
+        decided_by_user_id: request.decided_by_user_id,
+        decided_by_role_snapshot: request.decided_by_role_snapshot,
+        decision_attribution: request.decision_attribution,
       }
     : visible;
 }

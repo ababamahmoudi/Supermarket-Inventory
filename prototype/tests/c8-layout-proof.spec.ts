@@ -40,7 +40,7 @@ const pages = [
   { route: "settings?group=pricing", table: false },
   { route: "settings?group=offers", table: false },
   { route: "settings?group=returns", table: false },
-  { route: "settings?group=notes", table: false },
+  { route: "notes?entry=demo-deli-temperature-1", table: false },
   { route: "settings?group=modules", table: false },
 ] as const;
 
@@ -187,10 +187,14 @@ for (const language of ["en", "fa"] as const)
         await button(page, "New request", "درخواست جدید").click();
         await choose(
           page,
-          field(page, "Sending location", "محل ارسال‌کننده"),
+          field(page, "Ask this location", "درخواست از این مکان"),
           "Warehouse",
         );
-        await field(page, "Search products", "جستجوی کالا").fill("0003");
+        await field(
+          page,
+          "Add a product, or type an item that isn't in the catalog",
+          "کالایی اضافه کنید یا نام موردی خارج از فهرست را بنویسید",
+        ).fill("0003");
         await page
           .locator(".request-search-results")
           .getByRole("button", { name: "Add", exact: true })
@@ -247,8 +251,10 @@ for (const language of ["en", "fa"] as const)
           if (entry.route === "requests") {
             await page
               .getByRole("tab", {
-                name: language === "en" ? "Outgoing" : "خروجی",
-                exact: true,
+                name:
+                  language === "en"
+                    ? /^Outgoing(?:\s+\d+)?$/
+                    : /^خروجی(?:\s+[\d۰-۹]+)?$/,
               })
               .click();
             await choose(
@@ -266,6 +272,17 @@ for (const language of ["en", "fa"] as const)
                 .locator("main .ui-data-table tbody > tr")
                 .filter({ hasText: requested.branch_requests![0].reference }),
             ).toHaveCount(1);
+          }
+          if (entry.route === "notes?entry=demo-deli-temperature-1") {
+            await expect(
+              page.locator('[data-notebook-entry="demo-deli-temperature-1"]'),
+            ).toBeVisible();
+            await expect(
+              page.getByRole("button", {
+                name: language === "en" ? "Edit notebook" : "ویرایش دفترچه",
+                exact: true,
+              }),
+            ).toBeVisible();
           }
           await inspect(entry.route, entry.table);
           if (entry.route === "labels") {

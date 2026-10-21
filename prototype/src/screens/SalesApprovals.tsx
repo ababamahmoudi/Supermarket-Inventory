@@ -1,3 +1,7 @@
+import { companyTimestampText } from "../company-time";
+import { saleRequestTab, type SaleRequestTab } from "../sale-request-status";
+import { SellingPriceValue } from "../selling-price-presentation";
+import { salePriceDisplay } from "../sales";
 import { useProtectedQuery } from "../use-protected-query";
 import type { SaleRequestReadDTO } from "../offers-read-model";
 import { domainScope } from "../domain-authority";
@@ -14,13 +18,7 @@ import {
   type ChangePriceInput,
   type PriceChangePreview,
 } from "../sales";
-import {
-  Money,
-  DateText,
-  ProductName,
-  LtrText,
-  demoUserLabel,
-} from "../presentation";
+import { DateText, ProductName, LtrText, demoUserLabel } from "../presentation";
 import { WhatsMissing } from "../WhatsMissing";
 import {
   Badge,
@@ -33,7 +31,13 @@ import {
 } from "../ui";
 import "./sales-c8.css";
 
-export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
+export function SaleRequestCards({
+  compact = false,
+  status = "pending",
+}: {
+  compact?: boolean;
+  status?: SaleRequestTab;
+}) {
   const { state, command, query, can, branch, historyContext, lang, t } =
     useDemo();
   const [acknowledgments, setAcknowledgments] = useState<
@@ -45,16 +49,14 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
   const [rejecting, setRejecting] = useState<SaleRequestReadDTO | null>(null);
   const [reason, setReason] = useState("");
   const [rejectAttempted, setRejectAttempted] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<[string, string] | null>(null);
   const canDecide = Boolean(historyContext && can("approvals.decide"));
   const requests = (state.sale_requests ?? []).filter(
     (request) =>
       request.company_id === historyContext?.company_id &&
       historyContext.allowed_branches.includes(request.branch) &&
-      request.status === "pending" &&
-      (branch === "all" || request.branch === branch) &&
-      (!request.last_day ||
-        request.last_day >= saleStoreDate(state.config, request.branch)),
+      saleRequestTab(request.status) === status &&
+      (branch === "all" || request.branch === branch),
   );
   const requestInput = (request: SaleRequestReadDTO): ChangePriceInput => ({
     product_code: request.product_code,
@@ -76,11 +78,13 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
     expected_revision: request.expected_sale_revision,
   });
   const previewInputs = JSON.stringify(
-    requests.map((request) => ({
-      id: request.id,
-      revision: request.revision,
-      input: requestInput(request),
-    })),
+    requests
+      .filter((request) => request.status === "pending")
+      .map((request) => ({
+        id: request.id,
+        revision: request.revision,
+        input: requestInput(request),
+      })),
   );
   const requestPreviews = useProtectedQuery(
     canDecide ? "approvals.decide" : null,
@@ -131,18 +135,18 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
             input,
           }),
       );
-      setMessage(t("Approved", "تأیید شد"));
+      setMessage(["Approved", "تأیید شد"]);
     } catch (error) {
       setMessage(
         error instanceof SalesError && error.code === "revision"
-          ? t(
+          ? [
               "This request changed. Review it again.",
               "این درخواست تغییر کرده است. دوباره آن را بررسی کنید.",
-            )
-          : t(
+            ]
+          : [
               "Open the request again to review its price, stores and dates.",
               "برای بررسی قیمت، فروشگاه‌ها و تاریخ‌ها درخواست را دوباره باز کنید.",
-            ),
+            ],
       );
     }
   };
@@ -161,26 +165,27 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
       );
       setRejecting(null);
       setReason("");
-      setMessage(t("Rejected", "رد شد"));
+      setMessage(["Rejected", "رد شد"]);
     } catch {
-      setMessage(
-        t(
-          "This request changed. Review it again.",
-          "این درخواست تغییر کرده است. دوباره آن را بررسی کنید.",
-        ),
-      );
+      setMessage([
+        "This request changed. Review it again.",
+        "این درخواست تغییر کرده است. دوباره آن را بررسی کنید.",
+      ]);
     }
   };
   const content = (
     <>
-      {message && <p role="status">{message}</p>}
+      {message && <p role="status">{t(...message)}</p>}
       {requests.map((request) => {
         const product = state.products.find(
           (item) =>
             item.company_id === request.company_id &&
             item.code === request.product_code,
         );
-        const preview = canDecide ? previews[request.id] : undefined;
+        const pending = request.status === "pending";
+        const terms =
+          request.status === "approved" ? request.approved_terms : undefined;
+        const preview = canDecide && pending ? previews[request.id] : undefined;
         const effect = preview?.effects[0];
         const issues = attempted[request.id]
           ? (preview?.issues ?? []).map((issue) => ({
@@ -222,28 +227,60 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
                   <LtrText>{request.product_code}</LtrText>
                 )}
               </h3>
-              <Badge tone="pending">{t("Sale request", "درخواست حراج")}</Badge>
+              <Badge
+                tone={
+                  pending
+                    ? "pending"
+                    : request.status === "approved"
+                      ? "approved"
+                      : request.status === "expired"
+                        ? "danger"
+                        : "neutral"
+                }
+              >
+                {pending
+                  ? t("Sale request", "درخواست حراج")
+                  : request.status === "approved"
+                    ? t("Approved sale request", "درخواست حراج تأییدشده")
+                    : request.status === "rejected"
+                      ? t("Rejected", "ردشده")
+                      : request.status === "expired"
+                        ? t("Expired", "منقضی‌شده")
+                        : t("Withdrawn", "پس‌گرفته‌شده")}
+              </Badge>
             </div>
             <WhatsMissing issues={issues} />
             <div className="sale-request-facts">
               <strong>
-                <Money
-                  value={request.requested_price}
+                {request.status === "approved" && !terms && (
+                  <small>{t("Requested price", "قیمت درخواستی")} </small>
+                )}
+                <SellingPriceValue
+                  current={salePriceDisplay(
+                    {
+                      sale_price: terms?.sale_price ?? request.requested_price,
+                      price_unit: terms?.price_unit ?? request.price_unit,
+                    },
+                    state.config,
+                  )}
                   currency={state.config.company.currency}
                 />
-                {request.price_unit !== "each" && (
-                  <LtrText>/{request.price_unit}</LtrText>
-                )}
               </strong>
               <span>{branchLabel(state.config, request.branch, lang)}</span>
               <span>
-                <DateText value={request.starts_on} />
-                {request.last_day ? (
-                  <>
-                    {" "}
-                    – <DateText value={request.last_day} />
-                  </>
-                ) : (
+                <LtrText>
+                  <DateText value={terms?.starts_on ?? request.starts_on} />
+                  {(terms ? terms.last_day : request.last_day) && (
+                    <>
+                      {" "}
+                      –{" "}
+                      <DateText
+                        value={(terms ? terms.last_day : request.last_day)!}
+                      />
+                    </>
+                  )}
+                </LtrText>
+                {!(terms ? terms.last_day : request.last_day) && (
                   <> · {t("No end date", "بدون تاریخ پایان")}</>
                 )}
               </span>
@@ -259,6 +296,39 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
                   </>
                 )}
               </p>
+            )}
+            {!pending && (
+              <div className="sale-request-decision">
+                <p className="muted">
+                  {request.status === "rejected"
+                    ? t("Rejected by", "ردشده توسط")
+                    : request.status === "approved"
+                      ? t("Approved by", "تأییدشده توسط")
+                      : request.status === "withdrawn"
+                        ? t("Withdrawn by", "پس‌گرفته‌شده توسط")
+                        : t("Expired", "منقضی‌شده")}
+                  {request.decided_by && (
+                    <>
+                      {" "}
+                      <bdi>{demoUserLabel(request.decided_by, lang)}</bdi>
+                    </>
+                  )}
+                  {request.decided_at && (
+                    <>
+                      {" "}
+                      ·{" "}
+                      <LtrText>
+                        {companyTimestampText(state.config, request.decided_at)}
+                      </LtrText>
+                    </>
+                  )}
+                </p>
+                {request.decision_reason && (
+                  <p>
+                    {t("Reason", "دلیل")}: {request.decision_reason}
+                  </p>
+                )}
+              </div>
             )}
             {effect?.margin && (
               <p>
@@ -328,7 +398,7 @@ export function SaleRequestCards({ compact = false }: { compact?: boolean }) {
                 </Field>
               </section>
             )}
-            {canDecide && (
+            {canDecide && pending && (
               <div className="actions sale-request-actions">
                 <Button disabled={!preview} onClick={() => approve(request)}>
                   {t("Approve", "تأیید")}

@@ -41,7 +41,6 @@ import {
 import type { CompanyConfig } from "../types";
 import PricingSettings from "./PricingSettings";
 import WeighedItemsSettings from "./WeighedItemsSettings";
-import { NotebookSettings } from "./NotebookSettings";
 import { LabelsSettings } from "./Labels";
 import { ReturnsSettings } from "./ReturnsSettings";
 import { WhatsMissing } from "../WhatsMissing";
@@ -60,7 +59,6 @@ type Group =
   | "taxes"
   | "receiving"
   | "returns"
-  | "notes"
   | "notifications"
   | "modules"
   | "data";
@@ -170,14 +168,6 @@ const groups: {
     description: [
       "Pending return credits, reminders, label waitlist preferences and A4 templates.",
       "اعتبار مرجوعی در انتظار، یادآوری‌ها، فهرست انتظار برچسب و قالب‌های A4.",
-    ],
-  },
-  {
-    key: "notes",
-    label: ["Notes", "یادداشت‌ها"],
-    description: [
-      "Custom notebooks, permissions and entry fields.",
-      "دفترهای سفارشی، مجوزها و فیلدهای ثبت یادداشت.",
     ],
   },
   {
@@ -1414,8 +1404,6 @@ function SettingsContent() {
             </>
           ) : selected === "offers" ? (
             <OfferSettings key={JSON.stringify(configuration.promotions)} />
-          ) : selected === "notes" ? (
-            <NotebookSettings />
           ) : selected === "returns" ? (
             <>
               <ReturnsSettings />

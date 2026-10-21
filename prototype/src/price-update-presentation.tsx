@@ -11,25 +11,16 @@ import {
   OfferLabel,
 } from "./presentation";
 import { branchLabel } from "./settings";
+import { SnapshotSellingPrice } from "./selling-price-presentation";
+import { snapshotHasDiscount } from "./selling-price-model";
 
 export function PriceUpdateValue({ value }: { value: PriceSnapshot }) {
   const { t, lang } = useDemo();
   if (!value.price) return <LtrText>—</LtrText>;
   return (
     <span className="price-update-value">
-      <LtrText>
-        <Money value={value.price} />
-        {value.unit !== "each" && `/${value.unit}`}
-      </LtrText>
-      {value.secondary_price && (
-        <small className="muted">
-          <LtrText>
-            <Money value={value.secondary_price.price} />
-            {`/${value.secondary_price.unit}`}
-          </LtrText>
-        </small>
-      )}
-      {value.sale_id && (
+      <SnapshotSellingPrice value={value} />
+      {snapshotHasDiscount(value) && (
         <>
           <Badge tone="info">{t("Sale", "حراج")}</Badge>
           <small className="muted">

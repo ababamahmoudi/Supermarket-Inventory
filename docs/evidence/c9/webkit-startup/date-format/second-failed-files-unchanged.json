@@ -1,0 +1,28 @@
+{
+  "command": [
+    "npx",
+    "vitest",
+    "run",
+    "src/AddDateDialog.test.tsx",
+    "src/offers-c8-ui.test.tsx",
+    "src/App.test.tsx"
+  ],
+  "start_utc": "2026-10-19T16:06:58.362885+00:00",
+  "duration_seconds": 37.903,
+  "exit_code": 0,
+  "source_before": {
+    "src/e1-bootstrap.ts": "d70854b2b916de38124871acc1cfa6c532cfe875c4e6c86c4a5346330a280335",
+    "src/e1-bootstrap.c9.test.ts": "f34e47f79a7048a58983a2527372d11d031be72c140989c5ca3953daa0b34ff8",
+    "vite.config.ts": "d1622d456048d8751257f8bbe82713659bbc9056e647c1ce3c622af854fa915c",
+    "package.json": "65b19d966ffa93bcee4a46c05a3bc42c234d835dc2a276ee0eaa4cfcecb185d9",
+    "playwright.config.ts": "6995ebd4764ccadf5ec7be68970f33de0b6d1c485ef1c87eb8a1145125c87679"
+  },
+  "source_after": {
+    "src/e1-bootstrap.ts": "d70854b2b916de38124871acc1cfa6c532cfe875c4e6c86c4a5346330a280335",
+    "src/e1-bootstrap.c9.test.ts": "f34e47f79a7048a58983a2527372d11d031be72c140989c5ca3953daa0b34ff8",
+    "vite.config.ts": "d1622d456048d8751257f8bbe82713659bbc9056e647c1ce3c622af854fa915c",
+    "package.json": "65b19d966ffa93bcee4a46c05a3bc42c234d835dc2a276ee0eaa4cfcecb185d9",
+    "playwright.config.ts": "6995ebd4764ccadf5ec7be68970f33de0b6d1c485ef1c87eb8a1145125c87679"
+  },
+  "log_sha256": "92a7b5a089ec65e0f21c2652a6c7f5b90c5a9c3777ddc4f803fd05ce3704fcf1"
+}

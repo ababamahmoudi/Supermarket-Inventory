@@ -308,6 +308,25 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
   const storedPdf = () =>
     page.evaluate(
       async ({ reference, companyId }) => {
+        const storedBlob = (
+          record: object,
+          field: "source" | "preview" | "raw",
+        ): Blob => {
+          const fields = record as Record<string, unknown>;
+          const value = fields[field];
+          if (!("binary_encoding" in fields) && value instanceof Blob)
+            return value;
+          const mime = fields[`${field}_mime_type`];
+          if (
+            fields.binary_encoding === "array-buffer-v1" &&
+            value instanceof ArrayBuffer &&
+            typeof mime === "string"
+          ) {
+            const blob = new Blob([value], { type: mime });
+            if (blob.type === mime) return blob;
+          }
+          throw new Error("Unexpected retained binary encoding.");
+        };
         const database = await new Promise<IDBDatabase>((resolve, reject) => {
           const request = indexedDB.open("supermarket-prototype-files-v1", 1);
           request.onsuccess = () => resolve(request.result);
@@ -319,7 +338,9 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
             type: string;
             sha256: string;
             source_size: number;
-            source: Blob;
+            source: Blob | ArrayBuffer;
+            source_mime_type?: string;
+            binary_encoding?: "array-buffer-v1";
           }>((resolve, reject) => {
             const request = database
               .transaction("files", "readonly")
@@ -339,7 +360,7 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
             sha256: record.sha256,
             size: record.source_size,
             bytes: Array.from(
-              new Uint8Array(await record.source.arrayBuffer()),
+              new Uint8Array(await storedBlob(record, "source").arrayBuffer()),
             ),
           };
         } finally {

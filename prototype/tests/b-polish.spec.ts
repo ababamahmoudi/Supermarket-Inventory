@@ -71,7 +71,7 @@ async function visibleGeometry(page: Page, route: string) {
 }
 
 for (const language of ["en", "fa"] as const) {
-  test(`Filter fields are 44px and actions are 40px, readable, searchable and compact in ${language}`, async ({
+  test(`C9 filter controls are 40px, readable, searchable and compact in ${language}`, async ({
     page,
     isMobile,
   }) => {
@@ -86,20 +86,7 @@ for (const language of ["en", "fa"] as const) {
           `${route}: ${control.name} has a defined control kind`,
         ).toContain(control.kind);
         expect(
-          Math.abs(
-            control.height -
-              (control.kind === "field"
-                ? 44
-                : control.kind === "icon"
-                  ? 36
-                  : control.kind === "choice"
-                    ? 40
-                    : isMobile
-                      ? 44
-                      : control.small
-                        ? 32
-                        : 40),
-          ),
+          Math.abs(control.height - (control.kind === "choice" ? 32 : 40)),
           `${route}: ${control.name}`,
         ).toBeLessThanOrEqual(1);
       }
@@ -172,10 +159,11 @@ for (const language of ["en", "fa"] as const) {
         const textBounds = text.getBoundingClientRect();
         const firstCellStyle = getComputedStyle(firstCell);
         return {
-          // C8 puts filters inside their list card; measure the real gap to
-          // the table and keep both regions inside the card's content edges.
+          // C9 keeps filters inside the list card, with 20px below the
+          // toolbar and a separate 12px gap between wrapped controls.
           toolbarInsideCard: card.contains(toolbar),
           gap: tableBounds.top - toolbarBounds.bottom,
+          controlWrapGap: parseFloat(getComputedStyle(toolbar).rowGap),
           toolbarTopInset: toolbarBounds.top - cardBounds.top,
           cardPadding: parseFloat(cardStyle.paddingBlockStart),
           horizontalInsets: [
@@ -223,7 +211,8 @@ for (const language of ["en", "fa"] as const) {
       });
     expect(spacing.toolbarInsideCard).toBe(true);
     expect(spacing.gap).toBeGreaterThanOrEqual(0);
-    expect(spacing.gap).toBeLessThanOrEqual(isMobile ? 16 : 24);
+    expect(spacing.gap).toBeCloseTo(20, 0);
+    expect(spacing.controlWrapGap).toBeCloseTo(12, 0);
     expect(spacing.toolbarTopInset).toBeGreaterThanOrEqual(
       spacing.cardPadding - 1,
     );

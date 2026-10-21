@@ -1,0 +1,393 @@
+{
+  "source": "882a381908b6a39c0f883319cb1a6062708b92c8",
+  "variant": "en-dark",
+  "review_method": "All ten unedited RELEASE PNGs must be freshly viewed with tools.view_image against supplied Prices/Notes/Lists references. No browser/build/tests/repository edits.",
+  "status": "COMPLETE: all ten RELEASE English-dark PNGs freshly viewed; no blocking visual defect found",
+  "references": [
+    {
+      "reference": "Prices",
+      "sha256": "516bd65297ade3879e8da78bc340c43c1c97a65ec6d1ffeed654087bbb452671",
+      "matches_supplied_original": true
+    },
+    {
+      "reference": "Notes",
+      "sha256": "04da1723ad0bbf36d21833ead1cd8a081ddabbf6bfec2bc3d50be2bb7436dd85",
+      "matches_supplied_original": true
+    },
+    {
+      "reference": "Lists",
+      "sha256": "6ccfc490ed393d5d085ca4261fdcea9b934c429197f9fa4815f65dc12905a44e",
+      "matches_supplied_original": true
+    }
+  ],
+  "reviews": [
+    {
+      "scene": "products",
+      "reference": "Prices",
+      "visual_result": "No clipping, overlap or visibly unreadable contrast found. Required sale, active multi-buy offer and sale request are all visibly present.",
+      "verified_visible": [
+        "Stainless Steel Pot: struck $20.99 before bold $16.99 on one line; separate blue Sale \u00b7 ends Oct 29 offer line",
+        "Dried Red Kidney Beans: separate blue 2 for $7.00 offer line",
+        "Sunflower Oil: separate amber Sale requested \u00b7 $7.99 line; current $9.49 remains in Price",
+        "Bulk Almonds: $7.49/lb over $16.51/kg, aligned to the price-column end",
+        "Boolean chips are round with hairline borders; count and Columns align at toolbar end; wrapped control rows do not collide"
+      ],
+      "remaining_differences": [
+        "Configured dark theme and full sidebar/topbar frame replace the light content-only board.",
+        "Full 16-product alphabetical catalogue replaces six selected reference rows; Basmati Rice has actual regular $23.99 without a sale, while the reference depicts a rice sale.",
+        "Actual default visible columns omit Store cost and Margin; the existing Columns chooser remains.",
+        "Actual list retains search/category/status/supplier filters, boolean chips, pagination, row overflow menu and row expansion affordance beyond the compact reference table.",
+        "Product names use regular weight and retain pack-size detail lines; reference names are bold with fewer details.",
+        "Sale end date is Oct 29 instead of reference Oct 28 because the fictional fixture is relative to the capture date."
+      ],
+      "image": "products-en-dark.png",
+      "sha256": "4ab34da8090f349baff6e317a7fee13abde071db9c3ea21aaed37b02beda14eb",
+      "dimensions": [
+        1440,
+        1961
+      ],
+      "manually_viewed": true,
+      "defects": [],
+      "review_basis": "RELEASE PNG freshly viewed in full; required sale, offer and requested-price lines visibly reconfirmed.",
+      "recorded_diagnostics": {
+        "page_errors": [],
+        "console_errors": [],
+        "request_failures": [],
+        "page_overflow": false,
+        "panel_overflow_count": 0,
+        "layout_failures": []
+      }
+    },
+    {
+      "scene": "product-sale",
+      "reference": "Prices",
+      "visual_result": "No clipping, overlap or visibly unreadable contrast found. Bold Product price header and end-aligned tax hint now match the requested structure. Product hero is visibly smaller than Lookup, consistent with the 44px-versus-60px targets; exact CSS pixels were not measured from the PNG.",
+      "verified_visible": [
+        "$16.99 hero with adjacent Sale \u00b7 19% off pill; struck regular $20.99 on its own explanatory line",
+        "Ends, Stores, Started and After the sale fields remain legible in the grey/dark panel",
+        "End sale now uses red treatment; Change sale remains distinct",
+        "Cost and margin shows both sale and regular margins; source invoice formula and Last received are visible below a hairline",
+        "Bold Price at North York header with Before tax \u00b7 Taxable at the end",
+        "Compact Price at North York header and right-aligned tax hint fit on one line; Cost and margin heading remains aligned"
+      ],
+      "remaining_differences": [
+        "Configured dark theme and full app shell replace the light content-only board.",
+        "Actual sale is North York only, ends Oct 29 and started 2026-10-15; reference uses All 3 stores, Oct 28 and Oct 14. Last received is Sep 28 instead of Sep 27.",
+        "Actual margin precision is 25.84% and 39.97%, rather than the reference 25.8% and 40.0%.",
+        "Cost divisor is a separate retained row; reference combines it with Pricing category. Actual label is Minimum margin, versus Lowest margin allowed.",
+        "Actual invoice calculation is a single text line and Last received includes its invoice link; reference uses two aligned label/value rows and a supplier name.",
+        "Dates and the existing Details, Prices by store, Deliveries, Lots, Cost history and History panels continue below the designed top cards.",
+        "Company default remains below the sale panel. Actual tax wording is Before tax \u00b7 Taxable, rather than the illustrative Before tax \u00b7 HST added at the till; HST 13% is retained in the product badge."
+      ],
+      "image": "product-sale-en-dark.png",
+      "sha256": "d5420a9d23eececa87b09bc98458c36ca09c243492ebb1477e15fb4bdc5df9c3",
+      "dimensions": [
+        1440,
+        2237
+      ],
+      "manually_viewed": true,
+      "defects": [],
+      "review_basis": "RELEASE PNG freshly viewed in full; displayed values, placement and preserved controls independently reconfirmed.",
+      "recorded_diagnostics": {
+        "page_errors": [],
+        "console_errors": [],
+        "request_failures": [],
+        "page_overflow": false,
+        "panel_overflow_count": 0,
+        "layout_failures": []
+      }
+    },
+    {
+      "scene": "lookup-sale",
+      "reference": "Prices",
+      "visual_result": "No clipping, overlap or visibly unreadable contrast. Large Lookup hero is visibly larger than Product hero. Both previously reported placement defects are resolved in this final PNG.",
+      "verified_visible": [
+        "$16.99 large hero, adjacent Sale pill and Before tax \u00b7 Taxable",
+        "Struck regular $20.99 and Oct 29 end date remain readable",
+        "Search result includes product name/code, struck regular and current price, sale/end date and Taxable",
+        "Regular struck $20.99 \u00b7 Ends Oct 29 now occupies one line beneath the hero",
+        "Result struck/bold price pair is now above its blue sale/end/tax line",
+        "0012 query remains visible; real sale detail and result survive capture cleanup"
+      ],
+      "remaining_differences": [
+        "Configured dark theme/full app shell and retained Cashier lookup heading, search/scanner/category controls frame the card.",
+        "Only the queried pot appears in results, rather than the three example records in the reference.",
+        "Actual result card is below the detail card instead of alongside it.",
+        "Dates and last-received display retained wording/icon; real receipt is Sep 28 and sale end Oct 29 rather than reference Sep 27/Oct 28."
+      ],
+      "defects": [],
+      "image": "lookup-sale-en-dark.png",
+      "sha256": "8bb9ca4ecc598f4c7568aacd926c5fe53f86ead7682c075c497177aafb261a14",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "manually_viewed": true,
+      "review_basis": "RELEASE PNG freshly viewed in full; displayed values, placement and preserved controls independently reconfirmed.",
+      "recorded_diagnostics": {
+        "page_errors": [],
+        "console_errors": [],
+        "request_failures": [],
+        "page_overflow": false,
+        "panel_overflow_count": 0,
+        "layout_failures": []
+      }
+    },
+    {
+      "scene": "labels",
+      "reference": "Prices",
+      "visual_result": "No clipping, overlap or visibly unreadable contrast. Fixed-looking Product Code/Offer/Price spacing stays consistent; price is end-aligned.",
+      "verified_visible": [
+        "Pot sale strike/current pair stays on one line",
+        "Oil amber requested price and blue multi-buy offers occupy the Offer column",
+        "Bulk Almonds main/alternate weight prices remain end-aligned",
+        "All three boolean chips are round and outlined; toolbar wraps cleanly with count at the end"
+      ],
+      "remaining_differences": [
+        "Configured dark theme and app shell replace the light board.",
+        "Full 16-product list replaces three example rows; actual Basmati Rice has $23.99 regular price without a sale.",
+        "Products/Waitlist/Templates tabs, filtering controls and Select all filtered are retained above the table.",
+        "Price column label remains Selling price, versus Price in the picture.",
+        "Pending product retains No approved price yet and a disabled selector; sample records, dates and row order differ from the picture."
+      ],
+      "defects": [],
+      "image": "labels-en-dark.png",
+      "sha256": "86c6acfee0fb10c36d6449249e496e692f0360e503321581c02dbd6a31c9826c",
+      "dimensions": [
+        1440,
+        1664
+      ],
+      "manually_viewed": true,
+      "review_basis": "RELEASE PNG freshly viewed in full; visible price/offer/selection or seen/done receipt details independently reconfirmed.",
+      "recorded_diagnostics": {
+        "page_errors": [],
+        "console_errors": [],
+        "request_failures": [],
+        "page_overflow": false,
+        "panel_overflow_count": 0,
+        "layout_failures": []
+      }
+    },
+    {
+      "scene": "notes-seen-done",
+      "reference": "Notes",
+      "visual_result": "No clipping, overlap or visibly unreadable contrast. Seen-by-you text/check and Done receipt are visibly green.",
+      "verified_visible": [
+        "Separate Done note has manager/timestamp and Reopen link",
+        "Other note has ordered two-person seen receipt, disabled green Seen by you and Mark done",
+        "Round Not seen by me chip and Open/Done/All track are aligned",
+        "Footer actions sit beneath a hairline"
+      ],
+      "remaining_differences": [
+        "Configured dark theme/full app shell replace the light board.",
+        "Actual two-note manager conversation replaces the reference composite of open, seen, ordered and custom-notebook examples. Ordered/custom-entry examples are not in this capture.",
+        "All is selected to keep completed and seen notes together; reference shows Open.",
+        "Retained success message Marked done remains above the filter bar, and Show archived notebooks remains below cards.",
+        "Actual note titles use regular weight, versus bold reference titles; card contents and timestamps are genuine capture data.",
+        "For managers count is 1 open item while the list shows 2 total notes; reference uses different example counts."
+      ],
+      "defects": [],
+      "image": "notes-seen-done-en-dark.png",
+      "sha256": "fbb1512d70969d9d82a928307f9b9d5aad0259087ce720b5f8c1d8faaa075d82",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "manually_viewed": true,
+      "review_basis": "RELEASE PNG freshly viewed in full; visible price/offer/selection or seen/done receipt details independently reconfirmed.",
+      "recorded_diagnostics": {
+        "page_errors": [],
+        "console_errors": [],
+        "request_failures": [],
+        "page_overflow": false,
+        "panel_overflow_count": 0,
+        "layout_failures": []
+      }
+    },
+    {
+      "scene": "price-updates",
+      "reference": "Lists",
+      "visual_result": "No clipping, overlap or visibly unreadable contrast. The previous compact-desktop/grid-alignment finding is resolved in this release PNG.",
+      "verified_visible": [
+        "Aligned Product, Store, end-aligned Price, Why, Done so far and Print label columns",
+        "Actual Black Tea Richmond Hill task with struck $6.99, arrow and bold $6.49",
+        "Why text and Demo Manager fit in their own two-line cell; amber dot 0 of 2 steps fits its column",
+        "Per-row Print label and existing selection checkbox/end chevron remain visible without colliding",
+        "Pending/location/Any date/total count/Store progress share an aligned toolbar inside the card"
+      ],
+      "remaining_differences": [
+        "Configured dark theme/full app shell, page heading and explanatory subtitle replace the light content-only board.",
+        "One genuine Black Tea task and Pending 1 replace the two example rows, illustrative Pending 3 and pot sale task.",
+        "Existing row selection checkbox and end navigation chevron are retained beyond the reference Print label action.",
+        "The existing old-to-new transition arrow remains between the struck old amount and bold current amount; reference omits that arrow.",
+        "Why uses the actual history wording Apply price to all branches \u00b7 Demo Manager instead of the illustrative Apply this price to all \u00b7 Demo Manager.",
+        "The screenshot verifies appearance only; physical printing, confirmation and completion are not inferred from the visible button."
+      ],
+      "defects": [],
+      "image": "price-updates-en-dark.png",
+      "sha256": "30d1d477219d63a15d9180bc6684ab83f2ce01b1dc5095a1eeb49e21c3dd58e1",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "manually_viewed": true,
+      "review_basis": "RELEASE PNG freshly viewed in full; all visible columns/controls/row text independently checked.",
+      "recorded_diagnostics": {
+        "page_errors": [],
+        "console_errors": [],
+        "request_failures": [],
+        "page_overflow": false,
+        "panel_overflow_count": 0,
+        "layout_failures": []
+      }
+    },
+    {
+      "scene": "dates",
+      "reference": "Lists",
+      "visual_result": "No clipping, overlap or visibly unreadable contrast. Filter controls are even in height; wrapping keeps count/Columns at the end.",
+      "verified_visible": [
+        "Search, Due soon/All dates/Removed, categories, location and date-sort controls align on first row",
+        "Count/Columns wrap together to a second end-aligned row within the card",
+        "Two real rows retain source/invoice detail without cell collisions"
+      ],
+      "remaining_differences": [
+        "Configured dark theme/full app shell and page heading replace the light board.",
+        "Retained Add date form is above the list; source picture only illustrates the list toolbar.",
+        "At the app-shell content width the count/Columns wrap to a second row, while the full-width reference keeps one line.",
+        "Actual sort reads Date, not Sort: Date; count reads 2 entries, not 2 dates.",
+        "Real rows, Remove/overflow/chevron/expand actions and the stock/balance disclaimer remain below the toolbar; they are absent from the reference excerpt."
+      ],
+      "defects": [],
+      "image": "dates-en-dark.png",
+      "sha256": "3ed4d054c5fdbb2868c93e98f38fb8faef7857ca075fb2d3ae8ad4dbbe0ac091",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "manually_viewed": true,
+      "review_basis": "RELEASE PNG freshly viewed in full; all visible columns/controls/row text independently checked.",
+      "recorded_diagnostics": {
+        "page_errors": [],
+        "console_errors": [],
+        "request_failures": [],
+        "page_overflow": false,
+        "panel_overflow_count": 0,
+        "layout_failures": []
+      }
+    },
+    {
+      "scene": "branch-requests",
+      "reference": "Lists",
+      "visual_result": "No clipping, overlap or visibly unreadable contrast. Normal row structure matches the requested reference.",
+      "verified_visible": [
+        "REQ-0001 is bold above 1 item \u00b7 Sunflower Oil 1.8 L",
+        "North York \u2192 Richmond Hill, blue dot Requested, date and one end chevron are present",
+        "Outgoing count, search, Open, All locations and total count are aligned inside the card"
+      ],
+      "remaining_differences": [
+        "Configured dark theme/full app shell and retained page heading/New request action replace the light board.",
+        "Actual request creation date is 2026-10-19 rather than 2026-10-18; real capture notification counts differ.",
+        "Otherwise the pictured row structure is retained; screenshot itself does not prove whole-row keyboard/click behavior."
+      ],
+      "defects": [],
+      "image": "branch-requests-en-dark.png",
+      "sha256": "14ae0aa7da1827423731c1799ed1239ad1c9997542611f577a44d20fde22b514",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "manually_viewed": true,
+      "review_basis": "RELEASE PNG freshly viewed in full; endpoint fields/row or decided-card details independently checked.",
+      "recorded_diagnostics": {
+        "page_errors": [],
+        "console_errors": [],
+        "request_failures": [],
+        "page_overflow": false,
+        "panel_overflow_count": 0,
+        "layout_failures": []
+      }
+    },
+    {
+      "scene": "new-branch-request",
+      "reference": "Lists",
+      "visual_result": "No clipping, overlap or visibly unreadable contrast. Endpoint labels, unified Items/input and footer align correctly.",
+      "verified_visible": [
+        "Ask this location Richmond Hill and Deliver to North York sit side by side",
+        "One Sunflower Oil line, unified catalog/free-text input, Remove, and Cancel/Save as draft/Send request footer are visible",
+        "Footer has hairline and end alignment",
+        "Both endpoint controls fill their equal side-by-side columns"
+      ],
+      "remaining_differences": [
+        "Configured dark theme/full app shell, page heading and Back to requests remain.",
+        "Item line retains Persian name, code, Quantity, Units/Cases and optional Note, producing a much taller panel than the compact name/2 cases/Remove reference.",
+        "Actual quantity is 2 Units, not the illustrative 2 cases.",
+        "Remove retains tinted destructive button styling instead of a plain red link; quantity field uses the established dark form styling.",
+        "This is an actual unsaved draft; no goods movement is implied.",
+        "Endpoint controls now fill their equal columns as pictured. Deliver to retains North York without the reference (your location) suffix."
+      ],
+      "defects": [],
+      "image": "new-branch-request-en-dark.png",
+      "sha256": "06355beb031c1b2905a32860b58b8624674aff12ca07d183c91a98a2ceba1795",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "manually_viewed": true,
+      "review_basis": "RELEASE PNG freshly viewed in full; endpoint fields/row or decided-card details independently checked.",
+      "recorded_diagnostics": {
+        "page_errors": [],
+        "console_errors": [],
+        "request_failures": [],
+        "page_overflow": false,
+        "panel_overflow_count": 0,
+        "layout_failures": []
+      }
+    },
+    {
+      "scene": "approvals-rejected",
+      "reference": "Lists",
+      "visual_result": "No clipping, overlap or visibly unreadable contrast. Decided request remains visible without action controls.",
+      "verified_visible": [
+        "Rejected tab selected with count1; Approved/Superseded zero counts shown",
+        "Oil request has $7.99, North York, start/end dates, requester, rejector, timestamp and full reason",
+        "No approve/reject/change decision buttons are present on decided card"
+      ],
+      "remaining_differences": [
+        "Configured dark theme/full app shell and retained page heading/description replace the light board.",
+        "Sale requests and Rejected section headings remain above the card; reference uses a more compact card with two pills.",
+        "Actual card shows one Rejected pill and $7.99, not the reference Sale request pill plus Rejected pill and $7.99 instead of $9.49.",
+        "Actual reason is Keep the current price until the next delivery is reviewed, with Oct19\u2013Nov1 dates; reference uses Not now and Oct18\u2013Oct31.",
+        "Requester/decision/reason wrap to separate readable lines instead of the reference single compact metadata line."
+      ],
+      "defects": [],
+      "image": "approvals-rejected-en-dark.png",
+      "sha256": "92eadc0103927ce2a348d9f2e977a89a3680cd2058a4708c583c546be351144a",
+      "dimensions": [
+        1440,
+        1080
+      ],
+      "manually_viewed": true,
+      "review_basis": "RELEASE PNG freshly viewed in full; endpoint fields/row or decided-card details independently checked.",
+      "recorded_diagnostics": {
+        "page_errors": [],
+        "console_errors": [],
+        "request_failures": [],
+        "page_overflow": false,
+        "panel_overflow_count": 0,
+        "layout_failures": []
+      }
+    }
+  ],
+  "pending_scenes": [],
+  "defects": [],
+  "resolved_prior_findings": [
+    "Lookup result price before offer line",
+    "Lookup Regular/Ends beneath hero",
+    "Product price/tax header",
+    "PriceUpdates wide columns and shared header/row tracks"
+  ],
+  "reviewed_capture_count": 10,
+  "all_release_images_freshly_viewed": true,
+  "review_scope": "Visual appearance and the recorded individual-image diagnostics only. No click/keyboard/printing behavior, exact CSS pixel sizes, numerical contrast ratio, owner approval or full-40 completion is inferred.",
+  "completed_at": "2026-10-19T04:53:35.739013+00:00"
+}

@@ -150,7 +150,7 @@ it("links the real Manager's new note status audit to its exact source and safel
   expect(physicalAndMoney(undone)).toBe(physicalAndMoney(before));
 });
 
-it("rechecks the original Mark seen capability after a genuine Owner changes its actor from Manager to Floor Worker", async () => {
+it("rechecks the original note's read location after a genuine Owner changes its reader's role and assignment", async () => {
   const state = initialState();
   fixture = shellProviderFixture(state);
   const repository = fixture.repository;
@@ -199,7 +199,7 @@ it("rechecks the original Mark seen capability after a genuine Owner changes its
   )!;
   await act(async () => {
     await current().command(
-      "notes.status_manage",
+      "notes.mark_seen",
       {
         company_id: company,
         kind: "location_record",
@@ -240,9 +240,9 @@ it("rechecks the original Mark seen capability after a genuine Owner changes its
       phone: manager!.phone,
       email: manager!.email,
       role: "floor_worker",
-      location_scope: { kind: "assigned", location_ids: ["Branch 1"] },
+      location_scope: { kind: "assigned", location_ids: ["Branch 2"] },
       reason:
-        "Verify current original-action permission after a real role change",
+        "Verify current original-note read scope after a real role and location change",
     });
   });
   await act(async () => {
@@ -264,7 +264,10 @@ it("rechecks the original Mark seen capability after a genuine Owner changes its
     action,
   );
   expect((await read()).notes.find((row) => row.id === note.id)).toMatchObject({
-    status: "read",
+    status: "open",
+    seen_receipts: [
+      expect.objectContaining({ user_id: "demo-person-manager" }),
+    ],
   });
   expect(physicalAndMoney(await read())).toBe(physicalAndMoney(seen));
 });

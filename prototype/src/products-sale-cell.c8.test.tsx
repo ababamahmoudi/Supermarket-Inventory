@@ -23,7 +23,7 @@ beforeEach(async () => {
     function (this: HTMLElement) {
       return {
         width: this.classList.contains("ui-data-table")
-          ? 600
+          ? 850
           : this.classList.contains("ui-button") ||
               this.classList.contains("ui-menu-trigger") ||
               this.classList.contains("table-row-link")
@@ -45,7 +45,7 @@ function Harness() {
   return actor ? <Products /> : null;
 }
 it.each(["manager", "floor_worker"] as const)(
-  "retains the requested-sale amount beside the current charge when Status is omitted for %s",
+  "retains the request in its own Offer column when Status is omitted for %s",
   async (role) => {
     const user = userEvent.setup();
     fixture = await authenticatedProviderFixture({
@@ -66,7 +66,7 @@ it.each(["manager", "floor_worker"] as const)(
       "0008",
     );
     expect(
-      screen.queryByRole("columnheader", { name: "Status and offer" }),
+      screen.queryByRole("columnheader", { name: "Status" }),
     ).not.toBeInTheDocument();
     await waitFor(() =>
       expect(
@@ -80,12 +80,20 @@ it.each(["manager", "floor_worker"] as const)(
     ) as HTMLElement;
     expect(priceCell).toBeInTheDocument();
     expect(priceCell).toHaveTextContent("$9.49");
-    const request = priceCell.querySelector(".sale-request-pill")!;
+    expect(priceCell).not.toHaveTextContent("Sale requested");
+    const offerCell = document.querySelector(
+      '.catalog-products-table tbody td[data-column-key="offer"]',
+    ) as HTMLElement;
+    const request = offerCell.querySelector(
+      ".product-offer-line.is-requested",
+    )!;
     expect(request).toHaveTextContent("Sale requested");
     expect(request).toHaveTextContent("$7.99");
-    expect(priceCell).toHaveTextContent("Waiting for approval");
+    expect(offerCell).toHaveTextContent("$7.99");
     expect(
-      document.querySelectorAll(".catalog-products-table .sale-request-pill"),
+      document.querySelectorAll(
+        ".catalog-products-table .product-offer-line.is-requested",
+      ),
     ).toHaveLength(1);
     if (role === "floor_worker") {
       expect(

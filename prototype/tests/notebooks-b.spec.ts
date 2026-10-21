@@ -50,7 +50,7 @@ test("Notes search has a search icon, a placeholder, bounded fields and touch ac
   await signIn(page, "Floor Worker");
   await page.goto("/#notes");
   const search = page.getByLabel("Search notes", { exact: true });
-  await expect(search).toHaveAttribute("placeholder", "Search all notebooks");
+  await expect(search).toHaveAttribute("placeholder", "Search notes");
   await expect(page.locator(".filter-search-pill svg")).toBeVisible();
   await search.fill("Sunflower oil");
   await expect(page.locator(".filter-count")).toHaveText("1 note");
@@ -60,16 +60,18 @@ test("Notes search has a search icon, a placeholder, bounded fields and touch ac
       .filter((control) => control.getBoundingClientRect().height > 0)
       .map((control) => ({
         height: control.getBoundingClientRect().height,
-        kind: control.matches("input,.ui-input,.ui-checked-control")
-          ? "field"
-          : control.getAttribute("data-control-kind"),
+        kind: control.closest(".ui-segments")
+          ? "segment"
+          : control.matches("input,.ui-input,.ui-checked-control")
+            ? "field"
+            : control.getAttribute("data-control-kind"),
       })),
   );
   for (const control of controls) {
-    expect(["field", "action", "icon"]).toContain(control.kind);
-    const actionHeight = page.viewportSize()!.width < 760 ? 44 : 40;
+    expect(["field", "action", "icon", "segment"]).toContain(control.kind);
+    // C9 list controls are 40px; the segmented track contains 32px choices.
     expect(
-      Math.abs(control.height - (control.kind === "field" ? 44 : actionHeight)),
+      Math.abs(control.height - (control.kind === "segment" ? 32 : 40)),
     ).toBeLessThanOrEqual(1);
   }
 });
@@ -127,7 +129,10 @@ test("archive retains authorized search results, restore keeps entries, and work
     .fill("Retained cleaning entry");
   await page.getByRole("button", { name: "Save note", exact: true }).click();
   await page
-    .getByRole("button", { name: "Archive notebook", exact: true })
+    .getByRole("button", { name: "Notebook actions", exact: true })
+    .click();
+  await page
+    .getByRole("menuitem", { name: "Archive notebook", exact: true })
     .click();
   await page
     .getByRole("dialog", { name: "Archive notebook", exact: true })
@@ -142,18 +147,16 @@ test("archive retains authorized search results, restore keeps entries, and work
       .locator(".notebook-entry-card")
       .filter({ hasText: "Retained cleaning entry" }),
   ).toContainText("Archived");
-  await page.goto("/#settings?group=notes");
+  await page
+    .getByRole("button", { name: "Show archived notebooks", exact: true })
+    .click();
   const definition = page
-    .locator(".notebook-definition-row")
+    .locator("#archived-notebooks .notebook-definition-row")
     .filter({ hasText: "Cleaning log" });
   await definition
-    .getByRole("button", { name: "More actions", exact: true })
+    .getByRole("button", { name: "Restore notebook", exact: true })
     .click();
-  await page
-    .getByRole("menu", { name: "More actions", exact: true })
-    .getByRole("menuitem", { name: "Restore notebook", exact: true })
-    .click();
-  await page.goto("/#notes");
+  await expect(page).toHaveURL(/#notes$/);
   await notebookTab(page, "Cleaning log");
   await expect(
     page
@@ -198,7 +201,7 @@ test("Cashier gets only granted custom notebook reads and cannot add or read bui
   ).toBeVisible();
   await expect(
     page.getByRole("tab", {
-      name: /^(To order|Store use|For Supervisor|Deli temperatures)/,
+      name: /^(To order|Store use|For managers|Deli temperatures)/,
     }),
   ).toHaveCount(0);
   await expect(
@@ -206,6 +209,23 @@ test("Cashier gets only granted custom notebook reads and cannot add or read bui
       name: /^(Save note|New notebook|Edit notebook|Archive notebook|Mark done)$/,
     }),
   ).toHaveCount(0);
+  const readableEntry = page
+    .locator("[data-notebook-entry]")
+    .filter({ hasText: "Cashier-readable check" });
+  await readableEntry
+    .getByRole("button", { name: "Mark as seen", exact: true })
+    .click();
+  await expect(
+    readableEntry.getByRole("button", { name: "Seen by you", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    readableEntry.getByRole("button", { name: /^(Mark done|Reopen)$/ }),
+  ).toHaveCount(0);
+  await page.reload();
+  await notebookTab(page, "Cleaning log");
+  await expect(
+    readableEntry.getByRole("button", { name: "Seen by you", exact: true }),
+  ).toBeDisabled();
   await expect(page.getByLabel("Note", { exact: true })).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Add note", exact: true }),
@@ -280,13 +300,35 @@ test("Persian Deli notebook uses custom controls and keeps the measurement and d
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await page.goto("/#notes");
+  await createCleaningNotebook(page);
+  await page
+    .getByLabel("Note", { exact: true })
+    .fill("Sunflower oil cleaning check");
+  await page.getByRole("button", { name: "Save note", exact: true }).click();
   await setLanguage(page, "fa");
   await notebookTab(page, "دمای اغذیه");
   await expect(page.locator(".notebook-entry-card")).toContainText("3.2 °C");
+  const search = page.getByLabel("جستجوی یادداشت‌ها", { exact: true });
+  await expect(search).toHaveAttribute("placeholder", "جستجو در یادداشت‌ها");
+  // The shorter translated prompt does not narrow search to the active tab:
+  // both a built-in note and another custom notebook remain searchable.
+  await search.fill("Sunflower oil");
   await expect(
-    page.getByLabel("جستجوی یادداشت‌ها", { exact: true }),
-  ).toHaveAttribute("placeholder", "جستجو در همه دفترچه‌ها");
+    page.getByRole("tab", { name: /^دمای اغذیه( \d+)?$/ }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page
+      .locator(".notebook-entry-card")
+      .filter({ hasText: "روغن آفتابگردان ۱٫۸ لیتری موجود نیست" }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator(".notebook-entry-card")
+      .filter({ hasText: "Sunflower oil cleaning check" }),
+  ).toBeVisible();
+  await expect(page.locator(".filter-count")).toHaveText("2 یادداشت");
+  await search.clear();
+  await expect(page.locator(".notebook-entry-card")).toContainText("3.2 °C");
   await expect(
     page.locator(
       ".notebooks-page select,.notebooks-page input[type=checkbox],.notebooks-page input[type=number],.notebooks-page input[type=date]",

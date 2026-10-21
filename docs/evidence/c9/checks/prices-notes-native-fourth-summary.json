@@ -1,0 +1,15 @@
+{
+  "report": "prices-notes-native-fourth",
+  "source": "f4111e3",
+  "stats": {
+    "startTime": "2026-10-19T04:21:37.701Z",
+    "duration": 238722.556,
+    "expected": 22,
+    "skipped": 2,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "global_errors": 0,
+  "report_sha256": "8601ba8fd07ad6909452af783d33364763fa753471374cf007b2ac7b227487fd",
+  "cli_exit": 0
+}

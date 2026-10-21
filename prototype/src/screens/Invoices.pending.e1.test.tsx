@@ -17,6 +17,10 @@ import { readStoredFile, INCLUDED_COST_INVOICE_SHA256 } from "../file-database";
 import { demoSeed } from "../config";
 import i18n from "../i18n";
 import LocationPicker from "../LocationPicker.e1";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "../test/rendered-ui-readiness";
 import Invoices from "./Invoices";
 
 const fixtures: ReturnType<typeof shellProviderFixture>[] = [];
@@ -28,6 +32,7 @@ beforeEach(async () => {
   await i18n.changeLanguage("en");
 });
 afterEach(() => {
+  clearRenderedUiReadiness();
   cleanup();
   for (const fixture of fixtures.splice(0)) fixture.dispose();
   vi.unstubAllGlobals();
@@ -85,6 +90,19 @@ async function show() {
   expect(screen.getByTestId("sign-in-error")).toBeEmptyDOMElement();
   fireEvent.click(screen.getByRole("combobox", { name: "Location" }));
   fireEvent.click(await screen.findByRole("option", { name: "North York" }));
+  // Publishing the accepted location precedes LocationPicker's own finally.
+  // Exercise invoices only once the actual control and protected workspace settle.
+  await renderedUiReady(() => {
+    const picker = screen.queryByRole("combobox", { name: "Location" });
+    return (
+      picker instanceof HTMLButtonElement &&
+      !picker.disabled &&
+      picker.textContent!.includes("North York") &&
+      screen
+        .getByTestId("selection")
+        .textContent!.includes('"kind":"location","location_id":"Branch 1"')
+    );
+  });
   await waitFor(() =>
     expect(
       screen.getByRole("combobox", { name: "Location" }),
@@ -96,6 +114,9 @@ async function show() {
       '"kind":"location","location_id":"Branch 1"',
     );
   });
+  await renderedUiReady(
+    () => screen.queryByLabelText("Invoice views") !== null && entryIsReady(),
+  );
   await screen.findByRole("button", { name: "New invoice" });
   const read = async () =>
     (
@@ -140,12 +161,21 @@ async function entryReady() {
   // A retained original is committed before the real controller finishes its
   // derived reconciliation. Wait for the same public entry readiness used by
   // New/Manual, then keep the canonical file/hash assertions independent below.
+  await renderedUiReady(entryIsReady);
   await waitFor(
     () => {
       expect(screen.getByRole("button", { name: "New invoice" })).toBeEnabled();
       expect(document.querySelector('[aria-busy="true"][inert]')).toBeNull();
     },
     { timeout: 10000 },
+  );
+}
+function entryIsReady() {
+  const button = screen.queryByRole("button", { name: "New invoice" });
+  return (
+    button instanceof HTMLButtonElement &&
+    !button.disabled &&
+    document.querySelector('[aria-busy="true"][inert]') === null
   );
 }
 async function manual(read: () => Promise<ReturnType<typeof initialState>>) {

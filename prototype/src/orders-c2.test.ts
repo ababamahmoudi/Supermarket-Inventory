@@ -265,9 +265,27 @@ describe("C2 order drafts and placement", () => {
       "status",
     );
     expect(state).toEqual(after);
-    expect(() =>
-      updateNoteStatus(state, managerActor(state, "Branch 1"), note.id, "open"),
-    ).toThrow("status");
+    const retainedOrder = structuredClone(order);
+    const retainedMoneyAndPhysical = JSON.stringify({
+      ledger: state.ledger,
+      stock: state.stock,
+      stock_movements: state.stock_movements,
+      request_transfer_events: state.request_transfer_events,
+      invoices: state.invoices,
+    });
+    updateNoteStatus(state, managerActor(state, "Branch 1"), note.id, "open");
+    expect(note.status).toBe("open");
+    expect(order).toEqual(retainedOrder);
+    expect(order.source_note_ids).toContain(note.id);
+    expect(
+      JSON.stringify({
+        ledger: state.ledger,
+        stock: state.stock,
+        stock_movements: state.stock_movements,
+        request_transfer_events: state.request_transfer_events,
+        invoices: state.invoices,
+      }),
+    ).toBe(retainedMoneyAndPhysical);
   });
   it("scopes every read and transition and grants opted-in workers costs only inside their own Orders", () => {
     const { state, input } = fixture();

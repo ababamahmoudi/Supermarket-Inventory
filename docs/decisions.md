@@ -325,3 +325,51 @@ Specification first; implementation and tests require separate actual-source evi
 **Decision:** ignore the unchanged location when the action is an ordinary location selection. Explicit Clear filters and actual location changes keep their existing behavior. Every query, financial action and current-authority check remains on its original protected path.
 
 **Why:** a no-op location choice must preserve live filter input. A genuine Provider regression delays delivery of the real refreshed projection and reproduces the old empty input; the repair retains typed text, focus, matching supplier and financial records. Companion cases retain Clear filters and the actual Floor Worker Payables denial.
+
+
+## 042 — C9 session presentation and shared display contracts (2026-10-19)
+
+**Context:** the owner found transient light/sign-in frames, missing decided sale requests, conflicting regular/sale prices, ambiguous note status and inconsistent lists. The four approved feature PRs were merged in order only after all seven checks passed, following the separate CI sharding PR.
+
+**Decision:** preserve authority invalidation while retaining sanitized shell chrome; delay progress/first-start loading 300 ms and initialize saved theme before app code. Separate per-person note receipts from completion, use protected action-specific Undo, and retain immutable sale decisions and price-update snapshots. Reuse one selling-price component and one 40 px filter toolbar. Existing pricing/financial/physical/permission contracts stay in force. Notebook definitions live on Notes.
+
+**Decision:** WebKit runs only the new non-localhost dark-theme no-reload test; existing Chromium projects retain their suite, workers, retries and skip rules. C9 includes the restored device-access instructions, with no hosting resource/deployment or claimed real Safari/phone evidence.
+
+**Why:** correct the observed interactions without presenting stale private information, recalculating retained targets or implying remote synchronization. Source contracts precede code; executed evidence is recorded separately in PR_C9_REVIEW.md.
+
+
+C9 weighed-price boundary: a retained $22.02/kg sale can convert below $9.99/lb exactly while both display the same cents. Promotion markers/comparisons require a reduction in the displayed main-unit cents as well as the exact canonical amount. Keep the actual entered-unit display, effective price and history unchanged; never reconstruct a retained kg amount from rounded lb cents.
+
+## 043 — Retained expectations and whole invoice references (2026-10-19)
+
+**Context:** C9 explicitly replaced several old presentation expectations. The original layout guards also exposed real invoice-reference wrapping and overlap defects, which Ali separately approved fixing.
+
+**Decision:** update only obsolete expectations, preserve business/layout assertions and runner budgets, and list every changed test. Verify one shared-price announcement through the native accessibility tree and genuine Persian search across notebooks. Keep the Product provenance invoice code together. Give Supplier items' invoice column a 220px minimum and priority so lower-priority values move into the existing row details when necessary; retain its previous phone visibility and all permitted values/actions.
+
+**Why:** meet the requested presentation without restoring old behavior, clipping invoice references, shrinking typography, losing data or weakening tests. Wait for all four browser shards and all exact-head checks; leave C9 unmerged for Ali's review. Equivalent invoice-reference layout fixes are authorized; other real bugs or ambiguous requirements still require a question.
+
+## 044 — Observe ready views and actual rendering opportunities (2026-10-19)
+
+**Context:** the complete 27361bb browser run exposed more old markup assumptions, a pre-mount inspection and a frame watcher that also classified unpainted parser mutations as frames. The app's intended delayed startup and approved responsive data allocation remain.
+
+**Decision:** await the real Sign-in heading or populated supplier row before inspecting their unchanged layout/data contracts. Test the new shared-price/offer/tax markup and counted tabs. Check dark backgrounds on every animation frame; keep sign-in/workspace guards on both mutation and frame observations. Record only public auth labels, errors and capability flags when diagnosing the unresolved WebKit initial sign-in, with no input values or authority/session records.
+
+**Why:** verify the requested visible behavior without restoring obsolete presentation, weakening financial/permission assertions, counting pre-paint CSS loading as a displayed flash or changing workers, retries, skips and budgets. All four next-head shards and the final browser gate still must pass; C9 remains unmerged.
+
+**WebKit startup diagnostic amendment:** after all four `ac10919` shards completed, the only unexpected failure remained WebKit's initial sign-in/storage error. Ali explicitly authorized fixing startup while preserving data and authentication rules. First collect bounded native exception metadata from the WebKit test only: exception name/code, limited message and app-frame locations, with no input values, records or credentials. Synthetic native Promise/IndexedDB controls check that observation preserves rejection/handler identity and default abort behavior. This diagnostic iteration changes no application authentication, storage, configuration, business data or runner budgets and is not an app fix. Await a real Sign-in heading before the original 1080p card geometry check; retain its assertions and phone skip. Exact-head WebKit/LAN proof still requires all four CI shards and the final browser gate.
+
+## 045 — Assemble machine dates independently of localized display order (2026-10-19)
+
+**Context:** controlled valid localized slash ordering caused the real initial fixture/runtime path to throw an invalid-time RangeError. A localized formatter's display string is not an ISO date contract. The owner has authorized startup repairs that preserve data and authentication; native WebKit's actual cause remains unconfirmed.
+
+**Decision:** have initial relative dates reuse the existing `companyDate(configSeed, now)` parts-based ISO assembler. Keep the original Date construction, `setDate` offsets, configured timezone, retained records and authentication flow. Add regressions for offsets/company-local midnight, fixture dates, genuine runtime credentials/second step and reopening unchanged business. The original source fails seven of the same eight cases; the repair passes all eight. Do not reset data, bypass authentication or remove the native diagnostic test.
+
+**Why:** prevent a proven portability failure using the established company-date contract. Mixed complete local runs and passing focused checks remain separate evidence; none establishes a green full suite or the native WebKit cause. Require new exact-head CI, and leave C9 unmerged for Ali's review.
+
+## 046 — Persist attachment bytes without WebKit Blob preparation (2026-10-19)
+
+**Context:** the completed f371881 run retained 790 browser passes, 50 existing skips and one WebKit startup failure. Its native diagnostics identify IndexedDB `UnknownError: Error preparing Blob/File data to be stored in object store`, followed by `FileStorageError: unavailable`. The diagnostic dates were valid ISO dates; Decision 045 is separate date hardening, not this failure's cause. High-level GitHub statuses lagged the actual completed job steps and did not prove a runner queue.
+
+**Decision:** keep the public Blob file/backup interfaces and their existing references, hashes, company scope, metadata, exact downloads and recovery gates. Encode only new browser-repository writes as `array-buffer-v1` byte records with explicit source/preview/raw MIME types. Finish conversion before opening the existing write transaction, then retain commit/read-back/hash verification. Read legacy Blob rows without rewriting or deleting them. Keep database version 1 and both stores; unknown or malformed encoded rows fail integrity checks. No authentication bypass, demo reset, evidence deletion or authority change is permitted.
+
+**Why:** avoid the exact native operation that fails while preserving retained evidence. Adapter regressions must exercise the observed Blob rejection, original and preview bytes/MIME, old Blob rows, backups, corruption and scope. Raw-IDB browser inspectors must understand both formats without weakening byte/hash, migration-failure, quota, permission or recovery assertions. The original WebKit project remains scoped to its one no-reload case. Require all four browser shards and every exact-head check before C9 is called green; leave it unmerged for Ali to test.

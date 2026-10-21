@@ -1,0 +1,26 @@
+
+Running 8 tests using 2 workers
+
+(node:182462) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:182461) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [desktop] › tests/filters-a2.spec.ts:54:1 › Offers combines name/code/label search, category, supplier, type and status without changing prices (9.2s)
+  ✓  3 [desktop] › tests/notebooks-b.spec.ts:299:1 › Persian Deli notebook uses custom controls and keeps the measurement and dates readable (8.9s)
+  ✓  4 [desktop] › tests/returns-a2.spec.ts:271:1 › Returns starts with all suppliers and Open records, and opens each return as its own page (7.3s)
+(node:182992) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/c5-button-audit.spec.ts:133:1 › C5 button contract covers working Settings groups and their dialogs (27.7s)
+(node:183107) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  6 [phone] › tests/filters-a2.spec.ts:54:1 › Offers combines name/code/label search, category, supplier, type and status without changing prices (15.6s)
+  ✓  7 [phone] › tests/notebooks-b.spec.ts:299:1 › Persian Deli notebook uses custom controls and keeps the measurement and dates readable (9.3s)
+  ✓  8 [phone] › tests/returns-a2.spec.ts:271:1 › Returns starts with all suppliers and Open records, and opens each return as its own page (4.6s)
+  ✓  5 [phone] › tests/c5-button-audit.spec.ts:133:1 › C5 button contract covers working Settings groups and their dialogs (38.6s)
+
+  8 passed (1.1m)
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

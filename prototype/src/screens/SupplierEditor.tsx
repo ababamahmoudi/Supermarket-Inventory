@@ -89,8 +89,8 @@ export function SupplierEditor({
   };
   const errors: Record<SupplierEditError["code"], string> = {
     permission: t(
-      "Only a Supervisor can save this supplier.",
-      "فقط سرپرست می‌تواند این تأمین‌کننده را ذخیره کند.",
+      "Only an Owner or Manager can save this supplier.",
+      "فقط مالک یا مدیر می‌تواند این تأمین‌کننده را ذخیره کند.",
     ),
     scope: t("Choose an allowed branch.", "یک شعبهٔ مجاز انتخاب کنید."),
     name: t("Add the supplier name.", "نام تأمین‌کننده را وارد کنید."),

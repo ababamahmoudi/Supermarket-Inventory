@@ -151,7 +151,6 @@ test("C5 button contract covers working Settings groups and their dialogs", asyn
       "Taxes",
       "Receiving",
       "Returns/date tracking/labels",
-      "Notes",
       "Notifications",
       "Modules",
       "Data",
@@ -161,6 +160,9 @@ test("C5 button contract covers working Settings groups and their dialogs", asyn
         .click();
       await proof.check(`Settings: ${group}`);
     }
+    await expect(
+      navigation.getByRole("button", { name: "Notes", exact: true }),
+    ).toHaveCount(0);
     await navigation
       .getByRole("button", { name: "Branches", exact: true })
       .click();
@@ -183,9 +185,10 @@ test("C5 button contract covers working Settings groups and their dialogs", asyn
       .click();
     await proof.check("Add pricing category dialog");
     await closeDialog(page);
-    await navigation
-      .getByRole("button", { name: "Notes", exact: true })
-      .click();
+    // C9 manages notebooks on Notes only; keep the same real button/dialog
+    // contract coverage at its new destination instead of restoring Settings.
+    await page.goto("/#notes");
+    await proof.check("Notes notebook management");
     await page
       .getByRole("button", { name: "New notebook", exact: true })
       .click();
@@ -284,7 +287,7 @@ test("C5 button contract covers Orders and Branch request forms and retained det
     await closeDialog(page);
     await page.goto("/#requests");
     await proof.check("Branch requests Incoming");
-    await page.getByRole("tab", { name: "Outgoing", exact: true }).click();
+    await page.getByRole("tab", { name: /^Outgoing(?: \d+)?$/ }).click();
     await proof.check("Branch requests Outgoing");
     await page
       .getByRole("button", { name: "New request", exact: true })
@@ -292,10 +295,14 @@ test("C5 button contract covers Orders and Branch request forms and retained det
     await proof.check("New request");
     await chooseOption(
       page,
-      page.getByLabel("Sending location", { exact: true }),
+      page.getByLabel("Ask this location", { exact: true }),
       "Warehouse",
     );
-    await page.getByLabel("Search products", { exact: true }).fill("0003");
+    await page
+      .getByLabel("Add a product, or type an item that isn't in the catalog", {
+        exact: true,
+      })
+      .fill("0003");
     await page
       .locator(".request-search-results")
       .getByRole("button", { name: "Add", exact: true })

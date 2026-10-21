@@ -227,7 +227,7 @@ test("Notes has a focused validating dialog; Save is quiet and Mark done can be 
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#notes");
-  await page.getByRole("tab", { name: /^For Supervisor/ }).click();
+  await page.getByRole("tab", { name: /^For managers/ }).click();
   await expect(
     page.getByRole("form", { name: "Add note", exact: true }),
   ).toHaveCount(0);

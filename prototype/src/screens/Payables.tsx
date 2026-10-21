@@ -45,6 +45,7 @@ import {
   TableRowLink,
   ConfirmDialog,
   useTableColumns,
+  useListFilterOrigin,
 } from "../ui";
 import {
   markLedgerDispute,
@@ -62,11 +63,16 @@ import "./payables-klead.css";
 
 export function Payables() {
   const { actor, can, t } = useDemo();
+  const filterLocation = useListFilterOrigin("payables");
   if (!actor || !can("payables.read"))
     return <EmptyState>{t("Payables", "پرداختنی‌ها")}</EmptyState>;
-  return <PayablesContent />;
+  return <PayablesContent filterLocation={filterLocation} />;
 }
-function PayablesContent() {
+function PayablesContent({
+  filterLocation,
+}: {
+  filterLocation: ReturnType<typeof useListFilterOrigin>;
+}) {
   const { state, command, query, actor, branch, setBranch, user, lang, t } =
     useDemo();
   const branches = configuredBranches(state.config);
@@ -85,6 +91,8 @@ function PayablesContent() {
   const [search, setSearch] = useListState("payables.search", "");
   const [overdueOnly, setOverdueOnly] = useListState("payables.overdue", false);
   const [withBalance, setWithBalance] = useListState("payables.balance", false);
+  const { origin: filterOrigin, locationChanged: locationFilterChanged } =
+    filterLocation;
   const [mode, setMode] = useListState<"ledger" | "month">(
     "payables.mode",
     "ledger",
@@ -237,7 +245,11 @@ function PayablesContent() {
       resetEntryForms();
     } catch (caught) {
       setError(
-        operationError(caught instanceof Error ? caught.message : "", t),
+        operationError(
+          caught instanceof Error ? caught.message : "",
+          t,
+          state.config,
+        ),
       );
     }
   };
@@ -246,7 +258,7 @@ function PayablesContent() {
     setSearch("");
     setOverdueOnly(false);
     setWithBalance(false);
-    changeBranch("all", true);
+    void changeBranch(filterOrigin, true);
   };
   const openSupplier = (name: string) => {
     setSupplier(name);
@@ -306,7 +318,11 @@ function PayablesContent() {
             : key;
       setErrorKey(localKey);
       setError(
-        operationError(caught instanceof Error ? caught.message : "", t),
+        operationError(
+          caught instanceof Error ? caught.message : "",
+          t,
+          state.config,
+        ),
       );
       return false;
     }
@@ -357,9 +373,9 @@ function PayablesContent() {
           ? "payables-payment-amount"
           : "payables-entry-amount";
       if (!value || (kind === "payment" ? !value.gt(0) : value.isZero()))
-        add(amountId, operationError("amount", t));
+        add(amountId, operationError("amount", t, state.config));
       if (kind === "entry" && entryType === "credit" && value && value.gte(0))
-        add(amountId, operationError("credit_sign", t));
+        add(amountId, operationError("credit_sign", t, state.config));
       if (
         !previewOnly &&
         (!/^\d{4}-\d{2}-\d{2}$/.test(date) ||
@@ -391,7 +407,7 @@ function PayablesContent() {
       )
         add(
           "payables-payment-receipt",
-          operationError("duplicate_document", t),
+          operationError("duplicate_document", t, state.config),
         );
       if (checkAllocations) {
         const values = allocations ?? [];
@@ -406,7 +422,7 @@ function PayablesContent() {
           if (!value || value.lt(0) || !invoice || value.gt(invoice.amount))
             add(
               `payables-allocation-${allocation.invoice_id}`,
-              operationError("allocation", t),
+              operationError("allocation", t, state.config),
             );
           if (value) sum = sum.plus(value);
         }
@@ -416,7 +432,7 @@ function PayablesContent() {
             values.length
               ? `payables-allocation-${values[0].invoice_id}`
               : "payables-payment-amount",
-            operationError("allocation", t),
+            operationError("allocation", t, state.config),
           );
       }
     } else if (kind === "entry") {
@@ -443,7 +459,10 @@ function PayablesContent() {
             row.type === "opening_balance",
         )
       )
-        add("payables-entry-type", operationError("opening_exists", t));
+        add(
+          "payables-entry-type",
+          operationError("opening_exists", t, state.config),
+        );
       if (
         financialRead.ledger.some(
           (row) =>
@@ -456,10 +475,10 @@ function PayablesContent() {
       )
         add(
           "payables-entry-reference",
-          operationError("duplicate_document", t),
+          operationError("duplicate_document", t, state.config),
         );
     } else if (!disputeNote.trim())
-      add("payables-dispute-note", operationError("reason", t));
+      add("payables-dispute-note", operationError("reason", t, state.config));
     setValidationIssues(issues);
     return issues.length === 0;
   };
@@ -549,7 +568,11 @@ function PayablesContent() {
       URL.revokeObjectURL(url);
     } catch (caught) {
       setError(
-        operationError(caught instanceof Error ? caught.message : "", t),
+        operationError(
+          caught instanceof Error ? caught.message : "",
+          t,
+          state.config,
+        ),
       );
     }
   };
@@ -655,9 +678,11 @@ function PayablesContent() {
           <Checkbox checked={withBalance} onChange={setWithBalance}>
             {t("With balance", "دارای مانده")}
           </Checkbox>
-          <Button variant="ghost" onClick={clearFilters}>
-            {t("Clear filters", "پاک کردن فیلترها")}
-          </Button>
+          {(search || overdueOnly || withBalance || locationFilterChanged) && (
+            <Button variant="ghost" onClick={clearFilters}>
+              {t("Clear filters", "پاک کردن فیلترها")}
+            </Button>
+          )}
         </FilterToolbar>
         <DataTable
           className="payables-overview-table"
@@ -828,6 +853,7 @@ function PayablesContent() {
                       operationError(
                         caught instanceof Error ? caught.message : "",
                         t,
+                        state.config,
                       ),
                     );
                   }
@@ -1063,6 +1089,7 @@ function PayablesContent() {
                       operationError(
                         caught instanceof Error ? caught.message : "",
                         t,
+                        state.config,
                       ),
                     );
                   }

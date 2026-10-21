@@ -1513,12 +1513,19 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     expect(review.manual_price_review!.decision).toBe("rule");
     expect(finance()).toBe(evidence);
   });
-  it("does not create a same-cost lower-regular alert or another manual approval even when regular is below the current Sale", async () => {
-    begin();
+  it("keeps a same-cost manual regular price after the conflicting sale is explicitly ended", async () => {
+    const sale = begin();
     savePriceChange(
       state,
       manager,
-      input({ mode: "regular", price: "15.99", accept_below_margin: true }),
+      input({
+        mode: "regular",
+        price: "15.99",
+        accept_below_margin: true,
+        regular_sale_resolutions: [
+          { sale_id: sale.id, expected_revision: sale.revision, action: "end" },
+        ],
+      }),
       now,
     );
     costInvoice("12.6000");
@@ -1530,7 +1537,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     expect(state.approvals).toEqual(approvals);
     expect(state.alerts).toEqual(alerts);
     expect(regularPrice(state, "0012", "Branch 1")).toBe(baseline);
-    expect(effectivePrice(state, "0012", "Branch 1", now)).toBe("16.99");
+    expect(effectivePrice(state, "0012", "Branch 1", now)).toBe("15.99");
   });
   it("requires a reason to Keep below minimum and blocks stale or company-wide Keep decisions without writes", async () => {
     const review = prepare("17.99"),
