@@ -8,6 +8,7 @@ import {
   setLanguage,
   openInvoiceUpload,
   openInvoiceLine,
+  openInvoiceDetails,
 } from "./helpers";
 
 test.setTimeout(60000);
@@ -147,6 +148,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
     await track.getByRole("button", { name: "No", exact: true }).click();
     await confirmInvoiceLine(page, line);
   }
+  await openInvoiceDetails(page);
   await page
     .getByRole("button", { name: "Looks right: Invoice details", exact: true })
     .click();

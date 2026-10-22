@@ -159,9 +159,11 @@ test("a worker retargets their own invoice to Warehouse without gaining Warehous
       .getByRole("button", { name: "No", exact: true })
       .click();
     await confirmInvoiceLine(page, line);
-    await expect(page.getByTestId(`invoice-line-row-${index}`)).toContainText(
-      "Confirmed ✓",
-    );
+    await expect(
+      page
+        .getByTestId(`invoice-line-row-${index}`)
+        .getByRole("img", { name: "Confirmed", exact: true }),
+    ).toBeVisible();
   }
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
@@ -339,9 +341,11 @@ test("invoice changed regular cost defaults to calculated and explicit Keep pres
     .getByRole("button", { name: "No", exact: true })
     .click();
   await confirmInvoiceLine(page, line);
-  await expect(page.getByTestId("invoice-line-row-0")).toContainText(
-    "Confirmed ✓",
-  );
+  await expect(
+    page
+      .getByTestId("invoice-line-row-0")
+      .getByRole("img", { name: "Confirmed", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeEnabled();

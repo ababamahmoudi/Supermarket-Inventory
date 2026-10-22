@@ -171,7 +171,9 @@ test("retained case quote bills exactly, remembers the pack and leaves the poste
   await expect(
     line.getByLabel("Unit cost before tax", { exact: true }),
   ).toHaveValue("1.6658");
-  await expect(line.getByText("= 6000 units", { exact: true })).toBeVisible();
+  await expect(line.locator(".receiving-pack-equation")).toHaveText(
+    "500 cases × 12 units = 6000 units",
+  );
   await confirmNoDate(page);
   await post(page);
   const after = await stored(page);

@@ -229,7 +229,10 @@ for (const language of ["en", "fa"] as const) {
     await setLanguage(page, language);
     const displayedCost = page
       .getByTestId("invoice-line-row-0")
-      .getByText("$1.5525", { exact: true });
+      .locator(
+        ".receiving-cost-cell > bdi:visible, .receiving-phone-cost > bdi:visible",
+      );
+    await expect(displayedCost).toHaveCount(1);
     await expect(displayedCost).toBeVisible();
     await expect(displayedCost).toHaveText("$1.5525");
     await expect

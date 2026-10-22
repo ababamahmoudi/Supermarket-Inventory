@@ -1,6 +1,12 @@
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
-import { invoiceImage, openShellAction, setBranch, signIn } from "./helpers";
+import {
+  invoiceImage,
+  openInvoiceDetails,
+  openShellAction,
+  setBranch,
+  signIn,
+} from "./helpers";
 
 test.setTimeout(60000);
 
@@ -85,6 +91,7 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await expect(
     page.getByLabel("Add a product to the invoice", { exact: true }),
   ).toBeVisible();
+  await openInvoiceDetails(page);
   await page
     .getByLabel("Invoice number", { exact: true })
     .fill("PRIVATE-BRANCH-2");
@@ -144,6 +151,7 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
     .filter({ has: page.getByText("PRIVATE-BRANCH-2", { exact: true }) })
     .getByRole("link", { name: "PRIVATE-BRANCH-2", exact: true })
     .click();
+  await openInvoiceDetails(page);
   await expect(page.getByLabel("Invoice number", { exact: true })).toHaveValue(
     "PRIVATE-BRANCH-2",
   );
