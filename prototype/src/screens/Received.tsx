@@ -2,6 +2,7 @@ import "../c3-tables.css";
 import { useListState } from "../navigation";
 import { useDemo } from "../store";
 import { receivedLog, type DeliveryReceipt } from "../received";
+import { invoiceLineHref } from "../invoice-line-links";
 import { branchLabel } from "../settings";
 import { supplierRecords } from "../supplier-editor";
 import { useProtectedQuery } from "../use-protected-query";
@@ -17,7 +18,6 @@ import {
   Button,
   Card,
   DataTable,
-  TableRowLink,
   EmptyState,
   FilterToolbar,
   PageHeader,
@@ -85,15 +85,6 @@ function useReceivedColumns() {
       label: t("Received by", "دریافت‌کننده"),
       width: "12%",
     },
-    {
-      key: "actions",
-      label: t("Action", "عملیات"),
-      width: 60,
-      actions: true,
-      priority: 0,
-      required: true,
-      align: "end",
-    },
   ]);
 }
 
@@ -104,7 +95,7 @@ export function ReceivedTable({
   rows: DeliveryReceipt[];
   columns: ReturnType<typeof useTableColumns>["columns"];
 }) {
-  const { state, lang, t, navigate } = useDemo();
+  const { state, lang, t } = useDemo();
   if (!rows.length)
     return (
       <EmptyState>
@@ -139,7 +130,6 @@ export function ReceivedTable({
             <th>{t("Invoice number", "شماره فاکتور")}</th>
             <th>{t("Date", "تاریخ")}</th>
             <th>{t("Received by", "دریافت‌کننده")}</th>
-            <th>{t("Action", "عملیات")}</th>
           </tr>
         </thead>
         <tbody>
@@ -150,7 +140,10 @@ export function ReceivedTable({
                 item.code === receipt.product_code,
             );
             const recordHref = receipt.invoice_id
-              ? `#invoices?id=${encodeURIComponent(receipt.invoice_id)}`
+              ? invoiceLineHref(
+                  receipt.invoice_id,
+                  receipt.line_id ?? String(receipt.line_index),
+                )
               : receipt.return_id
                 ? `#return?id=${encodeURIComponent(receipt.return_id)}`
                 : undefined;
@@ -210,15 +203,7 @@ export function ReceivedTable({
                 </td>
                 <td>
                   {receipt.invoice_id ? (
-                    <a
-                      className="received-invoice-link"
-                      href={`#invoices?id=${encodeURIComponent(receipt.invoice_id)}`}
-                      onClick={() =>
-                        navigate(
-                          `invoices?id=${encodeURIComponent(receipt.invoice_id)}`,
-                        )
-                      }
-                    >
+                    <a className="received-invoice-link" href={recordHref}>
                       <LtrText className="received-invoice-reference">
                         {receipt.invoice_number}
                       </LtrText>
@@ -228,7 +213,13 @@ export function ReceivedTable({
                   )}
                 </td>
                 <td>
-                  <DateText value={receipt.date} />
+                  {receipt.invoice_id ? (
+                    <a className="entity-link" href={recordHref}>
+                      <DateText value={receipt.date} />
+                    </a>
+                  ) : (
+                    <DateText value={receipt.date} />
+                  )}
                 </td>
                 <td>
                   {receipt.received_by ? (
@@ -237,18 +228,6 @@ export function ReceivedTable({
                     <span className="muted">
                       {t("Not recorded", "ثبت نشده")}
                     </span>
-                  )}
-                </td>
-                <td className="action-cell">
-                  {recordHref && (
-                    <TableRowLink
-                      href={recordHref}
-                      aria-label={
-                        receipt.invoice_id
-                          ? `${t("Invoice", "فاکتور")} ${receipt.invoice_number}`
-                          : t("Return", "مرجوعی")
-                      }
-                    />
                   )}
                 </td>
               </tr>

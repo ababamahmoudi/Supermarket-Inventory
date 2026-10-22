@@ -1,8 +1,9 @@
 .invoice-readings-mode {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
   margin-block: 16px;
+  min-inline-size: 0;
 }
 .invoice-reading-thumbnail {
   display: block;
@@ -22,9 +23,167 @@
   padding: 0;
   list-style: none;
 }
-@media (max-width: 759px) {
-  .invoice-readings-mode {
-    flex-direction: column;
-    align-items: flex-start;
+.invoice-readings-mode > span {
+  white-space: nowrap;
+}
+.invoice-readings-mode > .ui-segments {
+  min-inline-size: 0;
+}
+.settings-form-card > p + button,
+.settings-form-card > p + input[hidden] + button {
+  margin-block-start: 16px;
+}
+
+.invoice-empty-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-block-end: 20px;
+}
+.invoice-empty-lists > section {
+  min-inline-size: 0;
+  padding: 14px 16px;
+  border-radius: var(--radius-card);
+  background: var(--page);
+}
+.invoice-empty-lists h3,
+.invoice-import-skipped h3 {
+  margin: 0 0 8px;
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-label);
+  font-weight: var(--font-weight-title);
+}
+.invoice-empty-lists ul {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.invoice-empty-lists li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-label);
+}
+.invoice-empty-lists li > svg {
+  flex: 0 0 14px;
+  margin-block-start: 2px;
+}
+.invoice-empty-keeps,
+.invoice-empty-lists section:first-child li > svg {
+  color: var(--approved);
+}
+.invoice-empty-removes,
+.invoice-empty-lists section:last-child li > svg {
+  color: var(--danger);
+}
+.invoice-import-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.invoice-import-stats > div {
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: var(--radius-menu);
+  background: var(--page);
+}
+.invoice-import-stats dt {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  font-weight: var(--font-weight-caption);
+  color: var(--text-muted);
+}
+.invoice-import-stats dd {
+  margin: 0;
+  font-size: calc(var(--font-size-base) * 1.5);
+  line-height: calc(var(--font-size-base) * 1.875);
+  font-weight: var(--font-weight-title);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+.invoice-import-skipped {
+  margin-block-start: 20px;
+}
+.invoice-import-skipped .invoice-reading-summary {
+  margin: 0;
+  gap: 8px;
+}
+.invoice-import-skipped .list-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-menu);
+}
+.invoice-import-skipped .list-box > div {
+  min-inline-size: 0;
+}
+.invoice-import-skipped strong {
+  font-weight: var(--font-weight-headline);
+}
+.invoice-import-skipped p {
+  margin: 2px 0 0;
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-label);
+  color: var(--text-muted);
+}
+.invoice-import-skip-dot {
+  flex: 0 0 8px;
+  block-size: 8px;
+  margin-block-start: 6px;
+  border-radius: var(--radius-round);
+  background: var(--neutral-dot);
+}
+.invoice-import-location-note,
+.invoice-import-supplier-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-control);
+  background: var(--accent-soft);
+}
+.invoice-import-location-note > span {
+  flex: 1;
+}
+.invoice-import-location-note > .ui-button {
+  padding: 0;
+  white-space: normal;
+  block-size: auto;
+}
+.invoice-import-supplier-note {
+  margin-block-start: 8px;
+  color: var(--text-muted);
+  background: var(--page);
+}
+@media (max-width: 459px) {
+  .invoice-empty-lists {
+    grid-template-columns: minmax(0, 1fr);
   }
+  .invoice-import-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .invoice-import-location-note {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+:root .ui-dialog.ui-dialog-structured.invoice-empty-store {
+  inline-size: 540px;
+}
+
+.invoice-import-file {
+  margin: 0;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
 }

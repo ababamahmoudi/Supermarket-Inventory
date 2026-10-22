@@ -14,6 +14,7 @@ import { authenticatedProviderFixture } from "../authority-provider-test-fixture
 import i18n from "../i18n";
 import Settings from "./Settings";
 import sample from "../../tests/fixtures/fictional-readings-export.json";
+import receivingFixture from "../../tests/fixtures/r2-fictional-readings-export.json";
 import { parseInvoiceReadings } from "../invoice-readings";
 import {
   renderedUiReady,
@@ -127,6 +128,15 @@ it("shows a duplicate as unticked and disabled and explains its reason in the su
   );
   const summary = screen.getByRole("dialog", { name: "Import complete" });
   expect(
+    within(summary).getByRole("heading", { name: "0 invoices imported" }),
+  ).toBeInTheDocument();
+  expect(summary.querySelectorAll(".invoice-import-stats > div")).toHaveLength(
+    4,
+  );
+  expect(
+    within(summary).getByRole("button", { name: "Close" }),
+  ).toBeInTheDocument();
+  expect(
     within(summary).getByText(/already has that invoice number/),
   ).toBeInTheDocument();
   const canonical = await fixture.readCanonical();
@@ -143,6 +153,57 @@ it("shows a duplicate as unticked and disabled and explains its reason in the su
   );
 });
 
+it("marks both in-file copies, preselects the complete one and lets a person switch exclusively", async () => {
+  await openData();
+  fireEvent.change(screen.getByLabelText("Choose file…"), {
+    target: { files: [new File(["{}"], "fictional-r2.json")] },
+  });
+  await act(async () =>
+    ImportWorker.current.onmessage?.({
+      data: {
+        ok: true,
+        exported: parseInvoiceReadings(JSON.stringify(receivingFixture)),
+      },
+    } as MessageEvent),
+  );
+  const dialog = await screen.findByRole("dialog", {
+    name: "Import invoice readings",
+  });
+  await waitFor(() =>
+    expect(
+      within(dialog).getAllByText("Same invoice twice in this file"),
+    ).toHaveLength(2),
+  );
+  const choices = within(dialog).getAllByRole("checkbox", {
+    name: "Import R2-FICTIONAL-025",
+  });
+  expect(choices[0]).toHaveAttribute("aria-checked", "false");
+  expect(choices[1]).toHaveAttribute("aria-checked", "true");
+  expect(choices.every((choice) => !choice.hasAttribute("disabled"))).toBe(
+    true,
+  );
+  expect(
+    within(dialog).queryByText("Already in the app"),
+  ).not.toBeInTheDocument();
+  expect(
+    within(dialog).getByRole("button", { name: "Import 1 invoices" }),
+  ).toBeEnabled();
+  const mode = within(dialog).getByRole("group", { name: "Reading values" });
+  expect(
+    within(mode).getByRole("button", { name: "AI reading" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(
+    within(mode).getByRole("button", { name: "My checked values" }),
+  ).toBeInTheDocument();
+  expect(within(dialog).queryByRole("radio")).not.toBeInTheDocument();
+  fireEvent.click(choices[0]);
+  expect(choices[0]).toHaveAttribute("aria-checked", "true");
+  expect(choices[1]).toHaveAttribute("aria-checked", "false");
+  fireEvent.click(choices[1]);
+  expect(choices[0]).toHaveAttribute("aria-checked", "false");
+  expect(choices[1]).toHaveAttribute("aria-checked", "true");
+});
+
 it("cancelling empty-store confirmation preserves business data, confirming keeps settings", async () => {
   await openData();
   const before = await fixture.readCanonical();
@@ -153,7 +214,16 @@ it("cancelling empty-store confirmation preserves business data, confirming keep
     name: "Start with an empty store",
   });
   expect(
-    within(confirmation).getByText(/Keep company settings/),
+    within(confirmation).getByRole("heading", { name: "Keeps" }),
+  ).toBeInTheDocument();
+  expect(
+    within(confirmation).getByText("Company settings"),
+  ).toBeInTheDocument();
+  expect(
+    within(confirmation).getByRole("heading", { name: "Removes" }),
+  ).toBeInTheDocument();
+  expect(
+    within(confirmation).getByText("Invoices, including imported ones"),
   ).toBeInTheDocument();
   fireEvent.click(within(confirmation).getByRole("button", { name: "Cancel" }));
   expect((await fixture.readCanonical()).products).toEqual(before.products);
@@ -163,9 +233,25 @@ it("cancelling empty-store confirmation preserves business data, confirming keep
   confirmation = screen.getByRole("dialog", {
     name: "Start with an empty store",
   });
-  fireEvent.click(
-    within(confirmation).getByRole("button", { name: "Remove fictional data" }),
+  const removeButton = within(confirmation).getByRole("button", {
+    name: "Remove fictional data",
+  });
+  expect(removeButton).toBeDisabled();
+  for (const invalid of ["delete", "DELET", "Delete"]) {
+    fireEvent.change(
+      within(confirmation).getByLabelText("Type DELETE to confirm"),
+      {
+        target: { value: invalid },
+      },
+    );
+    expect(removeButton).toBeDisabled();
+  }
+  fireEvent.change(
+    within(confirmation).getByLabelText("Type DELETE to confirm"),
+    { target: { value: "DELETE" } },
   );
+  expect(removeButton).toBeEnabled();
+  fireEvent.click(removeButton);
   await renderedUiReady(() =>
     Boolean(
       screen

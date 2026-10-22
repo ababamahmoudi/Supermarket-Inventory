@@ -1,7 +1,18 @@
 import Decimal from "decimal.js";
+import { costPerUnit, packUnits } from "./supplier-items";
 import type { AuthenticatedActor } from "./authority-types";
 import { requireInvoiceAuthority } from "./invoice-authority";
-import type { DemoState, InvoiceLine, CompanyConfig } from "./types";
+import type {
+  DemoState,
+  InvoiceLine,
+  CompanyConfig,
+  DemoInvoice,
+} from "./types";
+import {
+  validCost,
+  validInvoiceLineQuantity,
+  validInvoiceLineReceived,
+} from "./invoice";
 
 /** Export schema names resolve to the existing editable invoice fields. */
 export function invoiceCheckField(field: string): string {
@@ -15,8 +26,56 @@ export function invoiceCheckField(field: string): string {
         supplier_sku: "supplier_item_code",
         cost_per_unit_before_tax: "unit_cost_before_tax",
       } as Record<string, string>
-    )[field] ?? field
+    )[field.replace(/^calculated:/, "")] ?? field.replace(/^calculated:/, "")
   );
+}
+
+const optionalInvoiceFields = new Set([
+  "barcode",
+  "lot_number",
+  "expiry_as_printed",
+  "handwritten_note",
+  "order_reference",
+  "bill_to",
+  "ship_to",
+]);
+export function visibleInvoiceCheckFields(record: {
+  low_confidence_fields?: string[];
+}): string[] {
+  const values = record as Record<string, unknown>;
+  return (record.low_confidence_fields ?? []).filter((field) => {
+    const key = invoiceCheckField(field);
+    return (
+      !optionalInvoiceFields.has(key) || String(values[key] ?? "").trim() !== ""
+    );
+  });
+}
+
+/** Adopt the receiving defaults on an authorized draft, preserving explicit date choices. */
+export function normalizeInvoiceReceivingReview(invoice: DemoInvoice): void {
+  if (invoice.status === "posted") return;
+  const required = [
+    "supplier",
+    "supplier_invoice_number",
+    "invoice_date",
+    "final_total",
+  ] as const;
+  invoice.low_confidence_fields = [
+    ...new Set([
+      ...visibleInvoiceCheckFields(invoice),
+      ...required.filter((field) => !String(invoice[field] ?? "").trim()),
+    ]),
+  ];
+  fillCalculatedInvoiceTotals(invoice);
+  invoice.supplier_review_required = false;
+  for (const [index, line] of invoice.lines.entries()) {
+    line.id ??= `${invoice.id}:line:${line.import_line_index ?? index}`;
+    line.low_confidence_fields = visibleInvoiceCheckFields(line);
+    line.date_tracking ??= false;
+    if (!line.date_tracking) line.date_confirmed = true;
+  }
+  for (const charge of invoice.other_charges ?? [])
+    charge.low_confidence_fields = visibleInvoiceCheckFields(charge);
 }
 
 export function invoiceCheckCount(invoice: {
@@ -25,13 +84,13 @@ export function invoiceCheckCount(invoice: {
   other_charges?: { low_confidence_fields?: string[] }[];
 }): number {
   return (
-    (invoice.low_confidence_fields?.length ?? 0) +
+    visibleInvoiceCheckFields(invoice).length +
     invoice.lines.reduce(
-      (sum, line) => sum + (line.low_confidence_fields?.length ?? 0),
+      (sum, line) => sum + visibleInvoiceCheckFields(line).length,
       0,
     ) +
     (invoice.other_charges ?? []).reduce(
-      (sum, line) => sum + (line.low_confidence_fields?.length ?? 0),
+      (sum, line) => sum + visibleInvoiceCheckFields(line).length,
       0,
     )
   );
@@ -58,16 +117,29 @@ export function acknowledgeInvoiceCheck(
   if (lineIndex !== undefined && field === "taxable")
     state.invoice.lines[lineIndex].taxable_inferred = false;
   record.low_confidence_fields = record.low_confidence_fields?.filter(
-    (value) => value !== field,
+    (value) =>
+      value !== field && invoiceCheckField(value) !== invoiceCheckField(field),
   );
 }
 
+export class InvoiceLineConfirmationError extends Error {
+  constructor(
+    readonly field: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = "InvoiceLineConfirmationError";
+  }
+}
+
+/** Confirmation covers all highlighted fields after checking the actual receiving facts. */
 export function confirmInvoiceLineChecks(
   state: DemoState,
   actor: AuthenticatedActor,
   lineIndex: number,
-  acknowledgeAll = false,
+  _acknowledgeAll = false,
 ): void {
+  void _acknowledgeAll; // Retained for existing callers; confirmation now always covers the line.
   requireInvoiceAuthority(
     state,
     actor,
@@ -78,11 +150,101 @@ export function confirmInvoiceLineChecks(
   const line = state.invoice.lines[lineIndex];
   if (!line || state.invoice.status === "posted")
     throw new Error("Choose a draft invoice line.");
-  if (line.low_confidence_fields?.length && !acknowledgeAll)
-    throw new Error("This line has fields to check. Confirm all of them?");
+  if (line.product_code === "NEW" && !line.new_name_en?.trim())
+    throw new InvoiceLineConfirmationError(
+      "new_name_en",
+      "Enter an English name for the new product.",
+    );
+  if (
+    line.product_code === "NEW" &&
+    !state.config.pricing_categories.some(
+      (category) => category.key === line.pricing_category,
+    )
+  )
+    throw new InvoiceLineConfirmationError(
+      "pricing_category",
+      "Choose a pricing category for the new product.",
+    );
+  if (!validInvoiceLineQuantity(line))
+    throw new InvoiceLineConfirmationError(
+      "quantity_entered",
+      "Enter a valid quantity greater than zero.",
+    );
+  if (!validInvoiceLineReceived(line))
+    throw new InvoiceLineConfirmationError(
+      "qty_received_at_posting",
+      "Enter delivered units between zero and the invoiced quantity.",
+    );
+  if (!validCost(line.unit_cost_before_tax))
+    throw new InvoiceLineConfirmationError(
+      "unit_cost_before_tax",
+      "Enter a nonnegative cost with up to four decimal places.",
+    );
+  if (line.sold_by !== "weight" && line.quantity_unit === "cases") {
+    try {
+      if (
+        packUnits(
+          line.quantity_entered ?? "",
+          "cases",
+          line.units_per_case ?? 1,
+        ) !== line.qty_invoiced
+      )
+        throw new Error("quantity");
+    } catch {
+      throw new InvoiceLineConfirmationError(
+        "quantity_entered",
+        "Check cases invoiced and units per case.",
+      );
+    }
+    if (!validCost(line.case_cost_before_tax ?? ""))
+      throw new InvoiceLineConfirmationError(
+        "case_cost_before_tax",
+        "Enter a nonnegative case cost with up to four decimal places.",
+      );
+    if (
+      costPerUnit(line.case_cost_before_tax!, line.units_per_case ?? 1) !==
+      new Decimal(line.unit_cost_before_tax).toFixed(4)
+    )
+      throw new InvoiceLineConfirmationError(
+        "case_cost_before_tax",
+        "Check that the case cost matches the unit cost and units per case.",
+      );
+  }
   line.low_confidence_fields = [];
   line.taxable_inferred = false;
   line.review_confirmed = true;
+  line.review_changed_after_confirmation = false;
+}
+
+/** Fill only a missing paper total; retain a review marker until the totals card is checked. */
+export function fillCalculatedInvoiceTotals(invoice: {
+  subtotal: string;
+  tax: string;
+  final_total: string;
+  low_confidence_fields?: string[];
+}): void {
+  const valid = (value: string) => /^\d+(?:\.\d{1,2})?$/.test(value);
+  if (!valid(invoice.tax)) return;
+  let field: "subtotal" | "final_total" | undefined;
+  if (!invoice.subtotal.trim() && valid(invoice.final_total)) {
+    const subtotal = new Decimal(invoice.final_total).minus(invoice.tax);
+    if (subtotal.gte(0)) {
+      invoice.subtotal = subtotal.toFixed(2);
+      field = "subtotal";
+    }
+  } else if (!invoice.final_total.trim() && valid(invoice.subtotal)) {
+    invoice.final_total = new Decimal(invoice.subtotal)
+      .plus(invoice.tax)
+      .toFixed(2);
+    field = "final_total";
+  }
+  if (field)
+    invoice.low_confidence_fields = [
+      ...(invoice.low_confidence_fields ?? []).filter(
+        (value) => invoiceCheckField(value) !== field,
+      ),
+      `calculated:${field}`,
+    ];
 }
 
 export function invoiceTotalsCheck(invoice: {
@@ -132,7 +294,8 @@ export function setInvoiceLineCategory(
   config: CompanyConfig,
 ): void {
   line.pricing_category = category;
-  line.date_confirmed = false;
+  line.review_changed_after_confirmation ||= Boolean(line.review_confirmed);
+  line.review_confirmed = false;
   if (!line.taxable_inferred) return;
   const categoryConfig = config.pricing_categories.find(
     (item) => item.key === category,

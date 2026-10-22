@@ -325,16 +325,20 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       "$3.40",
       "$1.60",
     ]);
-    const title = page.locator(".posted-invoice-title");
+    const title = page.locator("header.posted-invoice-title-row");
     expect(
       await title.evaluate((element) => {
-        const heading = element.querySelector("h2")!.getBoundingClientRect();
+        const heading = element.querySelector("h1")!.getBoundingClientRect();
         const badge = element.querySelector(".badge")!.getBoundingClientRect();
-        return Math.abs(
-          heading.top + heading.height / 2 - badge.top - badge.height / 2,
+        const bounds = element.getBoundingClientRect();
+        return (
+          badge.top >= heading.bottom - 2 &&
+          badge.left >= bounds.left - 2 &&
+          badge.right <= bounds.right + 2 &&
+          badge.bottom <= bounds.bottom + 2
         );
       }),
-    ).toBeLessThanOrEqual(2);
+    ).toBe(true);
     const totals = page.locator(".posted-invoice-totals > div");
     await expect(totals).toHaveCount(5);
     await expect(totals.locator("dt")).toHaveText(
@@ -474,6 +478,15 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
         image.evaluate((element: HTMLImageElement) => element.naturalWidth),
       )
       .toBeGreaterThan(0);
+    await expect(media).toHaveAttribute("data-fit", "width");
+    const toolbar = page.locator(".invoice-original-controls");
+    await button(toolbar, "More", "بیشتر").click();
+    await page
+      .getByRole("menuitem", {
+        name: variant === "fa-light" ? "اندازه صفحه" : "Fit page",
+        exact: true,
+      })
+      .click();
     await expect(media).toHaveAttribute("data-fit", "page");
     const fits = () =>
       media.evaluate((element) => {
@@ -489,7 +502,6 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
         );
       });
     await expect.poll(fits).toBe(true);
-    const toolbar = page.locator(".invoice-original-controls");
     await button(toolbar, "Fit width", "اندازه عرض").click();
     await expect(media).toHaveAttribute("data-fit", "width");
     await expect(media).toHaveAttribute("data-zoom", "1");
@@ -501,7 +513,13 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     for (let count = 0; count < 15; count++) await zoomIn.click();
     await expect(media).toHaveAttribute("data-zoom", "4");
     await expect(zoomIn).toBeDisabled();
-    await button(toolbar, "Fit page", "اندازه صفحه").click();
+    await button(toolbar, "More", "بیشتر").click();
+    await page
+      .getByRole("menuitem", {
+        name: variant === "fa-light" ? "اندازه صفحه" : "Fit page",
+        exact: true,
+      })
+      .click();
     await expect(media).toHaveAttribute("data-fit", "page");
     await expect.poll(fits).toBe(true);
     const posted = await assertContract(page, "Posted invoice", variant);

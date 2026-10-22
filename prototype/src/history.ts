@@ -225,7 +225,13 @@ function difference(
   afterExists = after !== undefined,
 ) {
   if (equal(before, after)) return;
-  if (Array.isArray(before) && Array.isArray(after)) {
+  // Invoice line order is part of the source document. Retain the whole ordered
+  // array as before stable line IDs, so Undo restores its original positions and
+  // rejects intervening line edits instead of appending the removed row.
+  const orderedInvoiceLines =
+    ["invoice", "invoices"].includes(String(path[0])) &&
+    path.at(-1) === "lines";
+  if (Array.isArray(before) && Array.isArray(after) && !orderedInvoiceLines) {
     const key = ["id", "code", "key"].find((candidate) =>
       [...before, ...after].every(
         (item) => own(item) && typeof item[candidate] === "string",

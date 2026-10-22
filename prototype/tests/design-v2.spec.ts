@@ -360,9 +360,9 @@ test("the four redesigned screens use styled controls and borderless cards witho
     await page.goto(`/#${route}`);
     if (route === "invoices") {
       await uploadInvoice(page);
-      await page
-        .getByRole("button", { name: "Invoice details", exact: true })
-        .click();
+      await expect(
+        page.getByRole("heading", { name: "Invoice details", exact: true }),
+      ).toBeVisible();
     }
     await expectStyledControls(page);
     await expectBorderlessCards(page);
@@ -419,16 +419,23 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
   ).toBe(56);
   await page.goto("/#invoices");
   await uploadInvoice(page);
-  await page
-    .getByRole("button", { name: "Invoice details", exact: true })
-    .click();
+  await expect(
+    page.getByRole("heading", { name: "Invoice details", exact: true }),
+  ).toBeVisible();
+  const moreDetails = page.locator(".receiving-details details > summary");
+  await moreDetails.click();
+  await page.getByTestId("invoice-line-row-5").click();
+  await expect(page.locator("#invoice-line-5-detail")).toBeVisible();
+  await page.locator("#invoice-line-5-detail details > summary").click();
   for (const form of await page
-    .locator(".invoice-details-form, .invoice-line-form")
+    .locator(
+      ".receiving-details .detail-grid, .receiving-line-editor .detail-grid",
+    )
     .all())
     expect(
       await form.evaluate((element) => {
         const pane = element
-          .closest(".invoice-review-pane")!
+          .closest(".receiving-work")!
           .getBoundingClientRect();
         const rect = element.getBoundingClientRect();
         return (
@@ -439,16 +446,25 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
       }),
     ).toBe(true);
   for (const input of await page
-    .locator(".invoice-details-form input, .invoice-line-form input")
-    .all())
-    expect((await input.boundingBox())!.width).toBeLessThanOrEqual(640);
-  const documentPane = (await page
-    .locator(".invoice-document-pane")
-    .boundingBox())!;
-  const reviewPane = (await page
-    .locator(".invoice-review-pane")
-    .boundingBox())!;
-  expect(documentPane.x + documentPane.width).toBeLessThan(reviewPane.x);
+    .locator(".receiving-details input, .receiving-line-editor input")
+    .all()) {
+    const fullWidthName = /-name-(en|fa)$/.test(
+      (await input.getAttribute("id")) ?? "",
+    );
+    const width = (await input.boundingBox())!.width;
+    if (fullWidthName) {
+      const editor = (await page
+        .locator("#invoice-line-5-detail")
+        .boundingBox())!;
+      expect(width).toBeLessThanOrEqual(editor.width);
+    } else expect(width).toBeLessThanOrEqual(640);
+  }
+  expect(
+    (await page.locator("#invoice-line-5-name-en").boundingBox())!.width,
+  ).toBe((await page.locator("#invoice-line-5-name-fa").boundingBox())!.width);
+  const documentPane = (await page.locator(".original-viewer").boundingBox())!;
+  const reviewPane = (await page.locator(".receiving-work").boundingBox())!;
+  expect(reviewPane.x + reviewPane.width).toBeLessThan(documentPane.x);
   await page
     .getByLabel("Unit cost before tax", { exact: true })
     .last()
@@ -456,25 +472,29 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
   await post.scrollIntoViewIfNeeded();
   await expect(post).toBeInViewport();
-  const footerProof = await page
-    .locator(".invoice-action-footer")
-    .evaluate((footer) => {
-      const box = footer.getBoundingClientRect();
+  const headerProof = await page
+    .locator(".receiving-header")
+    .evaluate((header) => {
+      const box = header.getBoundingClientRect();
+      const actions = header.querySelector(".actions")!.getBoundingClientRect();
       const content = document
-        .querySelector(".invoice-review-pane")!
+        .querySelector(".receiving-layout")!
         .getBoundingClientRect();
       return {
         top: box.top,
-        bottom: box.bottom,
-        contentBottom: content.bottom,
+        bottom: actions.bottom,
+        headerBottom: box.bottom,
+        contentTop: content.top,
         viewport: innerHeight,
         scrollable: document.documentElement.scrollHeight > innerHeight,
       };
     });
-  expect(footerProof.top).toBeGreaterThanOrEqual(0);
-  expect(footerProof.bottom).toBeLessThanOrEqual(footerProof.viewport + 2);
-  expect(footerProof.scrollable).toBe(true);
-  expect(footerProof.contentBottom).toBeLessThanOrEqual(footerProof.top + 2);
+  expect(headerProof.top).toBeGreaterThanOrEqual(0);
+  expect(headerProof.bottom).toBeLessThanOrEqual(headerProof.viewport + 2);
+  expect(headerProof.scrollable).toBe(true);
+  expect(headerProof.headerBottom).toBeLessThanOrEqual(
+    headerProof.contentTop + 2,
+  );
 });
 
 test("dashboard approvals and notes have actions that change the actual records and navigate to their lists", async ({

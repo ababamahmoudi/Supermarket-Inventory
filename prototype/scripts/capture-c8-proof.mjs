@@ -1,4 +1,4 @@
-/* global document, window, getComputedStyle, indexedDB, Blob, crypto */
+/* global document, window, getComputedStyle, indexedDB, Blob, crypto, NodeFilter */
 import { readFileSync } from "node:fs";
 import { URL } from "node:url";
 import { expect } from "@playwright/test";
@@ -179,10 +179,23 @@ export async function visitC8(page, route) {
 /** Add vertical/card containment to the unchanged C6 text/control guards. */
 export async function inspectC8Containment(page) {
   return page.evaluate(() => {
+    const receivingEditor = document.querySelector(".receiving-line-editor");
+    const fullScreenEditor =
+      receivingEditor && getComputedStyle(receivingEditor).position === "fixed"
+        ? receivingEditor
+        : null;
     const visible = (element) => {
       const rect = element.getBoundingClientRect();
       const style = getComputedStyle(element);
+      const closedDetails = element.closest("details:not([open])");
+      const summary = closedDetails?.querySelector(":scope > summary");
       return (
+        (!fullScreenEditor ||
+          fullScreenEditor.contains(element) ||
+          element.contains(fullScreenEditor)) &&
+        (!closedDetails ||
+          element === closedDetails ||
+          summary?.contains(element)) &&
         rect.width > 1 &&
         rect.height > 1 &&
         style.display !== "none" &&
@@ -195,25 +208,69 @@ export async function inspectC8Containment(page) {
     const failures = [];
     const tables = [];
     let rowCount = 0;
-    for (const wrapper of document.querySelectorAll("main .ui-data-table")) {
+    let editorCount = 0;
+    let cells = 0;
+    let words = 0;
+    for (const wrapper of document.querySelectorAll(
+      "main .ui-data-table, main .receiving-lines-table",
+    )) {
       if (!visible(wrapper) || wrapper.closest(excluded)) continue;
-      const card = wrapper.closest(".ui-card,.card");
+      const receiving = wrapper.matches(".receiving-lines-table");
+      const card = wrapper.closest(".ui-card,.card,.list-box");
       const rows = [];
       if (!card) {
         failures.push("Table has no enclosing list card: " + wrapper.className);
         continue;
       }
       const bounds = card.getBoundingClientRect();
+      const frame = wrapper.getBoundingClientRect();
+      if (receiving && wrapper.scrollWidth > wrapper.clientWidth + 1)
+        failures.push("Receiving table clips sideways");
+      const boundedScroll =
+        wrapper.matches(".ui-data-table.is-scrollable:not(.is-phone-list)") &&
+        /^(auto|scroll)$/.test(getComputedStyle(wrapper).overflowX) &&
+        wrapper.tabIndex >= 0 &&
+        frame.left >= bounds.left - 1 &&
+        frame.right <= bounds.right + 1;
+      for (const editor of wrapper.querySelectorAll(".receiving-line-editor")) {
+        if (!visible(editor)) continue;
+        editorCount++;
+        const editorBounds = editor.getBoundingClientRect();
+        const fixed = getComputedStyle(editor).position === "fixed";
+        const left = fixed ? 0 : frame.left;
+        const right = fixed
+          ? document.documentElement.clientWidth
+          : frame.right;
+        if (editorBounds.left < left - 1 || editorBounds.right > right + 1)
+          failures.push(
+            "Expanded invoice editor extends beyond its visible frame",
+          );
+      }
       for (const row of wrapper.querySelectorAll("table > tbody > tr")) {
-        if (!visible(row)) continue;
-        const rect = row.getBoundingClientRect();
+        const fixedEditor = row.contains(fullScreenEditor)
+          ? fullScreenEditor
+          : null;
+        if (!visible(row) && !fixedEditor) continue;
+        // A fixed phone sheet is the expanded row's painted frame, independent
+        // of its zero-height background table row and list card.
+        const rect = (fixedEditor ?? row).getBoundingClientRect();
+        const rowBounds = fixedEditor
+          ? {
+              left: 0,
+              right: document.documentElement.clientWidth,
+              top: 0,
+              bottom: window.innerHeight,
+            }
+          : bounds;
         rowCount++;
         const label = (row.textContent ?? "").replace(/\s+/g, " ").trim();
         const outside =
-          rect.left < bounds.left - 1 ||
-          rect.right > bounds.right + 1 ||
-          rect.top < bounds.top - 1 ||
-          rect.bottom > bounds.bottom + 1;
+          (boundedScroll ? Math.max(rect.left, frame.left) : rect.left) <
+            rowBounds.left - 1 ||
+          (boundedScroll ? Math.min(rect.right, frame.right) : rect.right) >
+            rowBounds.right + 1 ||
+          rect.top < rowBounds.top - 1 ||
+          rect.bottom > rowBounds.bottom + 1;
         if (outside)
           failures.push("Row extends beyond card: " + label.slice(0, 160));
         rows.push({
@@ -228,6 +285,142 @@ export async function inspectC8Containment(page) {
           contained: !outside,
         });
       }
+      if (receiving) {
+        // C6 retains its shared-table contract. Apply those same cell-word,
+        // neighbor and control guards to the dedicated receiving component.
+        for (const row of wrapper.querySelectorAll("thead > tr, tbody > tr")) {
+          if (!visible(row)) continue;
+          const rowWords = [];
+          for (const cell of row.querySelectorAll(":scope > th, :scope > td")) {
+            if (!visible(cell) || cell.colSpan > 1) continue;
+            cells++;
+            const cellBounds = cell.getBoundingClientRect();
+            const walker = document.createTreeWalker(
+              cell,
+              NodeFilter.SHOW_TEXT,
+            );
+            let node;
+            while ((node = walker.nextNode())) {
+              const element = node.parentElement;
+              if (
+                !element ||
+                !visible(element) ||
+                element.closest(".sr-only,[aria-hidden=true]")
+              )
+                continue;
+              const name = element.closest(".receiving-product-name");
+              const nameStyle = name && getComputedStyle(name);
+              const nameBounds = name?.getBoundingClientRect();
+              const tidy = (value) =>
+                (value ?? "")
+                  .replace(/[\u2066-\u2069]/g, "")
+                  .replace(/\s+/g, " ")
+                  .trim();
+              const approvedEllipsis =
+                name &&
+                name.closest("td") === cell &&
+                nameStyle.whiteSpace === "nowrap" &&
+                nameStyle.overflowX === "hidden" &&
+                nameStyle.textOverflow === "ellipsis" &&
+                tidy(name.getAttribute("title")) === tidy(name.textContent) &&
+                tidy(name.textContent) &&
+                nameBounds.left >= cellBounds.left - 1 &&
+                nameBounds.right <= cellBounds.right + 1 &&
+                nameBounds.top >= cellBounds.top - 1 &&
+                nameBounds.bottom <= cellBounds.bottom + 1;
+              if (
+                name &&
+                name.scrollWidth > name.clientWidth + 1 &&
+                !approvedEllipsis
+              )
+                failures.push(
+                  "Receiving text leaves cell: " + tidy(name.textContent),
+                );
+              for (const match of (node.textContent ?? "").matchAll(
+                /[0-9\u0660-\u0669\u06f0-\u06f9]{4}-[0-9\u0660-\u0669\u06f0-\u06f9]{2}-[0-9\u0660-\u0669\u06f0-\u06f9]{2}|\$?\d[\d,]*(?:\.\d+)?(?:\/\w+)?|[A-Za-z\u0600-\u06ff\u200c]+(?:-[A-Za-z]+)*/gu,
+              )) {
+                const range = document.createRange();
+                range.setStart(node, match.index);
+                range.setEnd(node, match.index + match[0].length);
+                const rects = [...range.getClientRects()].filter(
+                  (item) => item.width > 0.1 && item.height > 0.1,
+                );
+                if (!rects.length) continue;
+                words++;
+                if (new Set(rects.map((item) => Math.round(item.top))).size > 1)
+                  failures.push("Receiving word broken in middle: " + match[0]);
+                for (const item of rects) {
+                  if (
+                    !approvedEllipsis &&
+                    (item.left < cellBounds.left - 1 ||
+                      item.right > cellBounds.right + 1)
+                  )
+                    failures.push("Receiving text leaves cell: " + match[0]);
+                  const left = approvedEllipsis
+                    ? Math.max(item.left, nameBounds.left)
+                    : item.left;
+                  const right = approvedEllipsis
+                    ? Math.min(item.right, nameBounds.right)
+                    : item.right;
+                  if (right > left)
+                    rowWords.push({
+                      cell,
+                      text: match[0],
+                      left,
+                      right,
+                      top: item.top,
+                      bottom: item.bottom,
+                    });
+                }
+              }
+            }
+          }
+          for (let i = 0; i < rowWords.length; i++)
+            for (let j = i + 1; j < rowWords.length; j++) {
+              const a = rowWords[i],
+                b = rowWords[j];
+              if (
+                a.cell !== b.cell &&
+                Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 &&
+                Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1
+              )
+                failures.push(
+                  "Receiving neighboring values overlap: " +
+                    a.text +
+                    "/" +
+                    b.text,
+                );
+            }
+          const controls = [
+            ...row.querySelectorAll("button,input,textarea,[role=combobox]"),
+          ].filter(
+            (element) =>
+              visible(element) && !element.closest(".receiving-line-editor"),
+          );
+          for (let i = 0; i < controls.length; i++)
+            for (let j = i + 1; j < controls.length; j++) {
+              const a = controls[i],
+                b = controls[j];
+              if (a.contains(b) || b.contains(a)) continue;
+              const first = a.getBoundingClientRect(),
+                second = b.getBoundingClientRect();
+              if (
+                Math.min(first.right, second.right) -
+                  Math.max(first.left, second.left) >
+                  1 &&
+                Math.min(first.bottom, second.bottom) -
+                  Math.max(first.top, second.top) >
+                  1
+              )
+                failures.push(
+                  "Receiving controls overlap: " +
+                    a.textContent +
+                    "/" +
+                    b.textContent,
+                );
+            }
+        }
+      }
       tables.push({
         className: wrapper.className,
         cardClassName: card.className,
@@ -240,7 +433,15 @@ export async function inspectC8Containment(page) {
         rows,
       });
     }
-    return { tableCount: tables.length, rowCount, tables, failures };
+    return {
+      tableCount: tables.length,
+      rowCount,
+      editorCount,
+      cells,
+      words,
+      tables,
+      failures,
+    };
   });
 }
 
@@ -249,6 +450,8 @@ export async function inspectC8Layout(page, scene, language, width) {
   const containment = await inspectC8Containment(page);
   return {
     ...layout,
+    cells: layout.cells + containment.cells,
+    words: layout.words + containment.words,
     containment,
     failures: [...new Set([...layout.failures, ...containment.failures])],
   };
@@ -325,53 +528,54 @@ export async function prepareC8ManualInvoice(page) {
   await visitC8(page, "invoices");
   const previous = (await readC8State(page)).invoice.id;
   await button(page, "New invoice", "فاکتور جدید").click();
+  const chooser = page.getByRole("dialog", {
+    name: /^(New invoice|فاکتور جدید)$/,
+  });
+  await button(chooser, "Manual entry", "ورود دستی").click();
   await expect
     .poll(async () => {
       const invoice = (await readC8State(page)).invoice;
-      const routed =
-        new URL(page.url()).hash ===
-        "#invoices?id=" + encodeURIComponent(invoice.id);
       return (
-        invoice.id !== previous && invoice.entry_mode === "upload" && routed
-      );
-    })
-    .toBe(true);
-  const uploadId = (await readC8State(page)).invoice.id;
-  await button(page, "Manual entry", "ورود دستی").click();
-  await expect
-    .poll(async () => {
-      const invoice = (await readC8State(page)).invoice;
-      const routed =
-        new URL(page.url()).hash ===
-        "#invoices?id=" + encodeURIComponent(invoice.id);
-      return (
-        invoice.id !== uploadId &&
+        invoice.id !== previous &&
         invoice.entry_mode === "manual" &&
-        routed &&
+        new URL(page.url()).hash ===
+          "#invoices?id=" + encodeURIComponent(invoice.id) &&
         invoice.lines.length === 0
       );
     })
     .toBe(true);
+  const detailsToggle = page.locator(
+    '.receiving-details-phone-toggle[aria-expanded="false"]',
+  );
+  if (await detailsToggle.isVisible()) await detailsToggle.click();
   const details = page.locator("#invoice-details-fields");
   await choose(
     page,
     field(details, "Supplier", "تأمین‌کننده"),
     /Fresh Valley Foods/,
   );
-  const number = field(
-    details,
-    "Supplier invoice number (optional)",
-    "شماره فاکتور تأمین‌کننده (اختیاری)",
-  );
+  const number = field(details, "Invoice number", "شماره فاکتور");
   await expect(number).toBeEnabled();
   await number.fill("C8-QA-CONTAINMENT");
   await expect
     .poll(async () => (await readC8State(page)).invoice.supplier_invoice_number)
     .toBe("C8-QA-CONTAINMENT");
-  await button(page, "Add line", "افزودن ردیف").click();
-  await expect(page.locator(".invoice-lines-table .invoice-line")).toHaveCount(
-    1,
+  const product = (await readC8State(page)).products.find(
+    (item) => item.code === "0002",
   );
+  if (!product) throw new Error("The fictional receiving product is missing.");
+  await choose(
+    page,
+    field(page, "Add a product to the invoice", "افزودن کالا به فاکتور"),
+    product.name_en,
+  );
+  await button(page, "Add line", "افزودن ردیف").click();
+  await expect(
+    page.locator(".receiving-lines-table .invoice-line"),
+  ).toHaveCount(1);
+  await page.getByTestId("invoice-line-row-0").click();
+  await expect(page.locator("#invoice-line-0-detail")).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
 }
 
 export async function openC8PriceDialog(page, code) {
@@ -452,6 +656,11 @@ export async function postC8SaleCostInvoice(page, originalPath) {
   await visitC8(page, "invoices");
   const previousInvoice = (await readC8State(page)).invoice.id;
   await button(page, "New invoice", "فاکتور جدید").click();
+  const chooser = page.getByRole("dialog", {
+    name: /^(New invoice|فاکتور جدید)$/,
+  });
+  await expect(chooser).toBeVisible();
+  await button(chooser, "Upload", "بارگذاری").click();
   await expect
     .poll(async () => {
       const current = (await readC8State(page)).invoice;
@@ -485,7 +694,7 @@ export async function postC8SaleCostInvoice(page, originalPath) {
     .toBe(true);
   await expect(
     page.getByRole("heading", {
-      name: /^(Review invoice lines|بررسی ردیف‌های فاکتور)$/,
+      name: /^(Invoice lines|ردیف‌های فاکتور)$/,
     }),
   ).toBeVisible({ timeout: Math.max(1, reviewDeadline - Date.now()) });
   await expect
@@ -516,14 +725,15 @@ export async function postC8SaleCostInvoice(page, originalPath) {
   expect(originalSHA).toBe(
     "b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444",
   );
-  await page
-    .locator(".invoice-line")
-    .getByRole("checkbox", {
-      name: /^(Confirm this invoice line|تأیید این ردیف فاکتور)$/,
-    })
+  await page.getByTestId("invoice-line-row-0").click();
+  const line = page.locator("#invoice-line-0-detail");
+  await expect(line).toBeVisible();
+  await line
+    .getByRole("group", { name: /^(Track date|پیگیری تاریخ)$/ })
+    .getByRole("button", { name: /^(No|خیر)$/, exact: true })
     .click();
-  // Confirmation collapses this real line and removes its checkbox. Verify
-  // the resulting UI and durable fact rather than re-querying that old control.
+  await button(line, "Confirm line", "تأیید ردیف").click();
+  // Confirming the real editor collapses the line and retains the durable fact.
   await expect(page.locator(".invoice-line")).toHaveAttribute(
     "data-expanded",
     "false",

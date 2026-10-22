@@ -92,10 +92,7 @@ describe("R1 human review and invoice charges", () => {
     acknowledgeInvoiceCheck(state, actor, "supplier_invoice_number");
     acknowledgeInvoiceCheck(state, actor, "description", 0);
     expect(line.low_confidence_fields).toEqual(["unit_cost_before_tax"]);
-    expect(() => confirmInvoiceLineChecks(state, actor, 0)).toThrow(
-      "Confirm all of them?",
-    );
-    confirmInvoiceLineChecks(state, actor, 0, true);
+    confirmInvoiceLineChecks(state, actor, 0);
     expect(invoiceCheckCount(state.invoice)).toBe(0);
     expect(line.review_confirmed).toBe(true);
     expect(invoiceBlockers(state, actor)).not.toContain("checks");

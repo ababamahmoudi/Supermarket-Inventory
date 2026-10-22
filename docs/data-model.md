@@ -1,5 +1,13 @@
 # Data model
 
+## R2 supplier profiles and corrected approvals (2026-10-21)
+
+Supplier records retain the internal confirmed status for compatibility; it now means Active immediately on creation. Profile incomplete is derived from missing phone, email, representative, representative phone, payment terms or address and is never a posting guard. Supplier notes default empty; source invoice provenance is displayed separately. A versioned, backup-verified supplier migration activates legacy proposed suppliers and records History. Old supplier approvals remain historical only. Persist normalized supplier-name distinction pairs per company so a dismissed similar-name warning does not recur for that pair. Profile-completion notifications are scoped to Owner/Manager and resolve after completion.
+
+InvoiceLine may have a stable id; newly imported/added lines receive one. Retained older lines support their original index as a route fallback. Delivery evidence exposes the source line identity; links use #invoices?id=…&line=…. review_changed_after_confirmation marks the single edited confirmed line. Reserved calculated:subtotal/calculated:final_total confidence keys identify derived paper totals until Totals acknowledgment; empty optional keys are filtered from actionable checks.
+
+Approval gains pricing_category and optional resubmitted_from_id/resubmitted_as_id links. Correcting a pending category recalculates against configured Decimal pricing rules and records the old/new proposal. Resubmitting creates a new pending record, leaving the rejected record immutable apart from its forward link. Batch decisions affect only explicitly selected requests under ordinary authority, location, preview and pricing checks. Import/posted History stores invoice identity and counts so its list can show a meaningful invoice item without flattening the entire recorded invoice into hundreds of changes.
+
 ## R1 imported reading contract (2026-10-21)
 
 The local file envelope has `format: "super-arzon-invoice-readings"`, `version: 1`, `reading_schema: "invoice-reading-v2"`, `exported_at`, and `invoices`. Each export invoice contains ordered base64 image pages, `original_sha256`, AI reading/statuses/source/models, optional partially populated `checked_answer`, and `reading_cost_usd`. It is an input format, not a second business invoice model. All monetary normalization uses Decimal, with four decimal places for costs.

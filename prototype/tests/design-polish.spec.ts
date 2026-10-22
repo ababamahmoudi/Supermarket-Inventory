@@ -47,6 +47,22 @@ async function assertPresentation(page: Page) {
       ),
     ]
       .filter(visible)
+      .filter((element) => {
+        if (!element.matches("details.ui-disclosure")) return true;
+        const summary = element.querySelector(":scope > summary");
+        if (
+          !summary?.matches(
+            '.ui-button.button.button-plain[data-control-kind="disclosure"]',
+          )
+        )
+          return true;
+        const style = getComputedStyle(summary);
+        return (
+          !style.display.includes("flex") ||
+          style.listStyleType !== "none" ||
+          summary.querySelectorAll('svg[aria-hidden="true"]').length !== 1
+        );
+      })
       .map((element) => element.outerHTML.slice(0, 160));
     const resize = [...document.querySelectorAll("textarea")]
       .filter(visible)

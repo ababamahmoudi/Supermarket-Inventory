@@ -262,7 +262,7 @@ export function ApprovalReviewPanel({
                             config={state.config}
                           />
                         ) : (
-                          "—"
+                          t("No price yet", "هنوز قیمتی ندارد")
                         )}
                         <ArrowRight
                           className="directional"

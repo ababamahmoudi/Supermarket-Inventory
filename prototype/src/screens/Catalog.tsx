@@ -72,6 +72,7 @@ import {
   ManualPricePill,
 } from "../manual-price-presentation";
 import { receivedLog } from "../received";
+import { invoiceLineHref } from "../invoice-line-links";
 import "./manual-entry.css";
 import "./c5-catalog-offers.css";
 import "../catalog-c7.css";
@@ -2207,12 +2208,6 @@ function ProductDetail({ product }: { product: Product }) {
                 label: t("Invoice number", "شمارهٔ فاکتور"),
                 priority: 5,
               },
-              {
-                key: "actions",
-                label: t("Details", "جزئیات"),
-                actions: true,
-                priority: 0,
-              },
             ]}
           >
             <thead>
@@ -2222,17 +2217,27 @@ function ProductDetail({ product }: { product: Product }) {
                 <th>{t("Cases and units", "کارتن و واحد")}</th>
                 <th>{t("Supplier", "تأمین‌کننده")}</th>
                 <th>{t("Invoice number", "شمارهٔ فاکتور")}</th>
-                <th>{t("Details", "جزئیات")}</th>
               </tr>
             </thead>
             <tbody>
               {deliveries.map((entry) => (
                 <tr
                   key={entry.id}
-                  data-row-href={`#invoices?id=${encodeURIComponent(entry.invoice_id)}`}
+                  data-row-href={invoiceLineHref(
+                    entry.invoice_id,
+                    entry.line_id ?? String(entry.line_index),
+                  )}
                 >
                   <td>
-                    <DateText value={entry.date} />
+                    <a
+                      className="entity-link"
+                      href={invoiceLineHref(
+                        entry.invoice_id,
+                        entry.line_id ?? String(entry.line_index),
+                      )}
+                    >
+                      <DateText value={entry.date} />
+                    </a>
                   </td>
                   <td>
                     {configuredBranchLabel(state.config, entry.branch, lang)}
@@ -2256,18 +2261,15 @@ function ProductDetail({ product }: { product: Product }) {
                     <LtrText>{entry.supplier}</LtrText>
                   </td>
                   <td>
-                    <LtrText>{entry.invoice_number}</LtrText>
-                  </td>
-                  <td>
-                    <div className="actions">
-                      <TableRowLink
-                        href={`#invoices?id=${encodeURIComponent(entry.invoice_id)}`}
-                        aria-label={t(
-                          `Open ${entry.invoice_number}`,
-                          `باز کردن ${entry.invoice_number}`,
-                        )}
-                      />
-                    </div>
+                    <a
+                      className="entity-link"
+                      href={invoiceLineHref(
+                        entry.invoice_id,
+                        entry.line_id ?? String(entry.line_index),
+                      )}
+                    >
+                      <LtrText>{entry.invoice_number}</LtrText>
+                    </a>
                   </td>
                 </tr>
               ))}

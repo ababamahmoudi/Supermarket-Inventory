@@ -94,11 +94,12 @@ export function Money({
   currency,
   decimals,
   compact,
+  fixedDecimals,
   ...props
 }: HTMLAttributes<HTMLElement> & MoneyOptions & { value: Decimal.Value }) {
   return (
     <LtrText {...props}>
-      {formatMoney(value, { currency, decimals, compact })}
+      {formatMoney(value, { currency, decimals, compact, fixedDecimals })}
     </LtrText>
   );
 }

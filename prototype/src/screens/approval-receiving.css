@@ -1,0 +1,39 @@
+.approval-board-list {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  overflow-anchor: none;
+}
+.approval-invoice-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 16px;
+}
+.approval-invoice-group h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+.approval-departure {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition:
+    grid-template-rows 160ms ease,
+    opacity 160ms ease;
+}
+.approval-departure > div {
+  min-block-size: 0;
+  overflow: hidden;
+}
+.approval-departure.is-leaving {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .approval-departure {
+    transition: none;
+  }
+}

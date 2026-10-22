@@ -157,8 +157,11 @@ describe("invoice pack snapshots and payable precision", () => {
     const remembered = uploaded.lines.find(
       (line) => line.product_code === "0002",
     )!;
+    expect(remembered.id).toMatch(/^invoice-line-/);
+    expect(remembered.id).not.toBe(parsed.id);
     expect(remembered).toEqual({
       ...parsed,
+      id: remembered.id,
       supplier_item_id: item.id,
       supplier_item_code: "UPLOAD-PACK-12",
       units_per_case: 12,
@@ -190,6 +193,11 @@ describe("invoice pack snapshots and payable precision", () => {
     state.supplier_items = [];
     const original = createInvoice(state, actor(state), "Branch 1");
     const parsed = original.lines.find((line) => line.product_code === "0002")!;
+    const expectFreshParsed = (line: InvoiceLine | undefined) => {
+      expect(line?.id).toMatch(/^invoice-line-/);
+      expect(line?.id).not.toBe(parsed.id);
+      expect(line).toEqual({ ...parsed, id: line?.id });
+    };
     const context = actor(state);
     const first = saveSupplierItem(state, context, original.supplier, {
       product_code: "0002",
@@ -201,19 +209,19 @@ describe("invoice pack snapshots and payable precision", () => {
       supplier_item_code: "UPLOAD-12",
       units_per_case: 12,
     });
-    expect(
+    expectFreshParsed(
       createInvoice(state, actor(state), "Branch 1").lines.find(
         (line) => line.product_code === "0002",
       ),
-    ).toEqual(parsed);
+    );
     state.supplier_items = [
       { ...first, company_id: "another-company", units_per_case: 48 },
     ];
-    expect(
+    expectFreshParsed(
       createInvoice(state, actor(state), "Branch 1").lines.find(
         (line) => line.product_code === "0002",
       ),
-    ).toEqual(parsed);
+    );
     const otherSupplier = supplierRecords(state).find(
       (supplier) => supplier.name !== original.supplier,
     )!;
@@ -225,11 +233,11 @@ describe("invoice pack snapshots and payable precision", () => {
         units_per_case: 48,
       },
     ];
-    expect(
+    expectFreshParsed(
       createInvoice(state, actor(state), "Branch 1").lines.find(
         (line) => line.product_code === "0002",
       ),
-    ).toEqual(parsed);
+    );
   });
   it("bills the retained $19.99 case quote exactly across 500 cases rather than reconstructing rounded unit cost", () => {
     const state = draft();

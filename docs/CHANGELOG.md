@@ -1,5 +1,26 @@
 # Project changelog
 
+## 2026-10-22 — R2 approved receiving design
+
+- Review fixes (Claude): number and text boxes bound to saved values now keep every keystroke while they have focus (`BufferedInput`, used in the receiving editor, invoice details and totals, and by `NumberField` there through `keepTyping`). Before, a slower browser-database save could land between keystrokes, so typing "20" into Delivered could become "240" and "1.3" in Unit cost could become "13". A cleared box stays blank while typing and shows the saved value when the person leaves it. Supplier and payment-terms boxes in invoice details stay on one line with "…" (rule 7). The phone "View original" is a full-width card with page count and chevron, and the closed phone details card shows "N to check" (reference screen 05). Persian editor numbers and codes sit on the right edge (screen 07).
+- Updated Django REST Framework to 3.18.2 and regenerated both hashed dependency locks to fix CVE-2026-114138, CVE-2026-114136 and CVE-2026-114137; retained the dependency-audit gate.
+- Browser CI selects official Ubuntu package mirrors before installing Playwright dependencies, avoiding the stalled Azure mirror while retaining signed package verification, all tests and the existing 30-minute job limits.
+
+- Receiving uses a five-column table that fits at 1440px and 1000px, visible first-column status, green confirmed rows, source-unit weight/four-decimal cost summaries and counted filters. Long-list 48px rows and 8px work gaps retain normal fonts, card/field sizes and the existing 25-line/2700px review budget. The attached white editor has distinct section headings, level 44px fields and a real Confirm line action; phone editors use a full-screen sheet with a full-width Confirm above equal secondary actions. Temporary phone body-height reservation preserves position when date fields collapse and releases on wheel/touch, close or navigation. More details stays closed for visible name questions and opens automatically only for highlighted hidden evidence, retaining printed description and other fields.
+- Details use a three-column grid and a read-only Received summary with a Change popover; phone details starts compact and expands through its chevron or needed-field navigation. Totals starts as read-only label/amount rows with amber calculated tags; Edit opens 44px fields, also exposed by actual non-calculated questions or invalid attempted totals. Whole-card Looks right remains. Original evidence is sticky on the right from 1180px, a 320px panel above work below that width, and full-screen from the phone's View original card. Its one-row toolbar moves Rotate into More below 340px container width to fit the retained app shell. Progress sits directly beneath the top bar or in a phone bottom bar with equal 44px Next/Post actions.
+- Amber field borders and label-adjacent ! markers provide stable hints with tooltips above inputs. Collapsed-sidebar labels appear above content after 300ms hover/focus. Persian labels, isolated LTR amounts/codes, aligned totals and dark-theme token use follow the same receiving contract; confirmation metadata is shown only when recorded.
+- Empty store, import preview and import complete share a dialog layout. Only structured-dialog footers use the reference's 44px intrinsic actions, surface-fill/1px-border secondary and filled danger action; other button contracts remain. Empty store has Keeps/Removes lists and a red action gated by DELETE/حذف. Import complete has four stat tiles, plain skipped reasons and other-location navigation; preview Status remains visible.
+- Added the approved fictional [reference README and eight HTML screens](design-reference/r2-receiving/README.md), the thirteen receiving rules and updated [screen](screens.md) and [manual review](PR_R2_REVIEW.md) guidance. Reference PNGs and private invoice/export data are excluded. Existing stability, financial, permission and approval-position requirements remain acceptance gates; validation results belong to the PR's checked head.
+
+## 2026-10-21 — R2 compact receiving and approval corrections
+
+- Checked all seven successful CI checks on R1 #28 at `537ab7a816724442bdd327f5452c1e8f15aefa2b`, then merged with the owner's explicit approval as `3d0aaaa3b4bf3eb73da136f385a45d07cf1605c3`. Created `feat/prototype-r2-receiving` from updated main.
+- Replaced expanded receiving forms with separate invoice-review components, closed line summaries, a single editor/phone sheet, card-level acknowledgments, calculated totals, grouped missing requirements and responsive original viewing. Kept the canonical domain, authority repository and configured Decimal pricing.
+- Suppliers are active immediately, with optional profile details and an Owner/Manager completion notification. Added distinctive-name similarity/dismissal and a versioned, verified-backup migration of legacy waiting suppliers. Supplier approvals leave active queues; historical evidence stays.
+- Added counted invoice queues/sidebar, mutually exclusive in-file duplicate selection, compact import source choices, full location names, grouped approval review with deselection, category correction and linked rejected-request resubmission. Delivery links identify and highlight the exact invoice line. Import/post History has invoice identity and useful summaries.
+- Added the invented 25-line/partial-duplicate fixture, domain regressions and desktop/phone EN/FA receiving/geometry tests; added the scoped Firefox receiving project and only the CI install line needed for it. Updated legacy UI expectations only for the intentionally replaced review/entry/confirmation behavior. Validation results are recorded in the R2 PR and review guide.
+- Removed stray `prototype/nb1.png` and `prototype/nb2.png`. Updated the private-data chat/repository rule while retaining the local-only API-key/keys.env rules. No real invoice data or screenshot evidence is committed. No startup/loading, service worker or production deployment changes.
+
 ## 2026-10-21 — R1 invoice-reading import and empty store
 
 - Verified all seven CI checks on C9 #26 and S1 #27, then merged in that order with ordinary merges (`5901326`, `6f1de45`). S1's contents were preserved without conflict-resolution edits. Created `feat/prototype-r1-real-import` from main.
@@ -135,13 +156,11 @@
 - Restore staff Rule price / Manual price comparisons using only two public selling amounts per visible active Store; private costs, margins and decision provenance remain excluded.
 - Added current-Provider and DTO isolation regressions and retained the native read/revoke workflow. This corrects existing requirements rather than adding a new permission.
 
-
 ## 2026-10-15 — E3 source-first phone and installable-shell contract
 
 - Specified seven compact phone-row families with inherited protected data, EN/FA390/430 checks and retained wider tables/printing.
 - Defined configured company manifest/icons/standalone/theme, dedicated No connection page, exact public-only cache and explicit updates guarded by genuine active work/dirty editors.
 - Added owner-run no-Docker Ubuntu/local-Wi-Fi/private Pages+Access instructions, separate phone data and accurate scanner/HTTPS/installation limits. No account/resource/deployment or actual hardware test is performed by this specification; executed proof remains separate.
-
 
 ## 2026-10-15 — E2 source-first price work and personal-notification contract
 

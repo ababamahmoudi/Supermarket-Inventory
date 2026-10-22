@@ -106,11 +106,12 @@ it("keeps 25–400% zoom and returns to a whole-page fit without changing origin
     });
     fireEvent.load(image);
     const media = mounted.container.querySelector(".invoice-original-media")!;
-    expect(media).toHaveAttribute("data-fit", "page");
-    expect(Number(media.getAttribute("data-zoom"))).toBeCloseTo(0.525);
+    // R2 opens paper at full panel width; whole-page fit remains available in More.
+    expect(media).toHaveAttribute("data-fit", "width");
+    expect(media).toHaveAttribute("data-zoom", "1");
     expect(
       mounted.container.querySelector(".invoice-original-zoom"),
-    ).toHaveTextContent("53%");
+    ).toHaveTextContent("100%");
     await user.click(screen.getByRole("button", { name: "Fit width" }));
     expect(media).toHaveAttribute("data-zoom", "1");
     for (let index = 0; index < 3; index++)
@@ -121,7 +122,8 @@ it("keeps 25–400% zoom and returns to a whole-page fit without changing origin
       await user.click(screen.getByRole("button", { name: "Zoom in" }));
     expect(media).toHaveAttribute("data-zoom", "4");
     expect(screen.getByRole("button", { name: "Zoom in" })).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: "Fit page" }));
+    await user.click(screen.getByRole("button", { name: "More" }));
+    await user.click(screen.getByRole("menuitem", { name: "Fit page" }));
     expect(media).toHaveAttribute("data-fit", "page");
     expect(Number(media.getAttribute("data-zoom"))).toBeCloseTo(0.525);
     const retained = (await fixture.readCanonical()).invoice;
@@ -386,7 +388,7 @@ it("pairs each posted total label with its amount and retains all original invoi
         screen.queryByTestId("posted-auth-stage")?.textContent === "complete",
     );
     await screen.findByRole("heading", {
-      name: original.supplier_invoice_number,
+      name: `Invoice ${original.supplier_invoice_number}`,
     });
     const rows = mounted.container.querySelectorAll(
       ".posted-invoice-totals > div",
@@ -401,7 +403,9 @@ it("pairs each posted total label with its amount and retains all original invoi
       expect(row.querySelector("dd")?.textContent).toMatch(/\$/);
     });
     expect(rows[4]).toHaveClass("posted-invoice-payable");
-    const title = mounted.container.querySelector(".posted-invoice-title")!;
+    const title = mounted.container.querySelector(
+      "header.posted-invoice-title-row",
+    )!;
     expect(title).toHaveTextContent(original.supplier_invoice_number);
     expect(
       within(title as HTMLElement).getByText("Posted"),

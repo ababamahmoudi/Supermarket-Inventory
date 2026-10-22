@@ -37,10 +37,18 @@ export async function openAlert(scope: Page | Locator, name?: string | RegExp) {
 
 export async function openShellAction(page: Page, name: string) {
   const direct = page.getByRole("button", { name, exact: true });
-  if (await direct.isVisible()) return direct;
   const item = page.getByRole("menuitem", { name, exact: true });
-  if (!(await item.isVisible()))
-    await page.locator(".mobile-more-menu").click();
+  const more = page.locator(".mobile-more-menu");
+  await expect
+    .poll(
+      async () =>
+        (await direct.isVisible()) ||
+        (await item.isVisible()) ||
+        (await more.isVisible()),
+    )
+    .toBe(true);
+  if (await direct.isVisible()) return direct;
+  if (!(await item.isVisible())) await more.click();
   await expect(item).toBeVisible();
   return item;
 }
@@ -238,8 +246,17 @@ export async function resetDemo(page: Page) {
 }
 
 export async function visitPage(page: Page, label: string) {
-  // Wait for the real route projection before choosing a compact sidebar group.
-  await expect(page.locator("main h1")).toBeVisible();
+  const main = page.getByRole("main");
+  // Settings retains its previous subtree in a hidden Activity while fetching
+  // fresh configuration. Its live group controls, not the placeholder header,
+  // establish readiness; role queries also exclude that retained hidden h1.
+  if (new URL(page.url()).hash.split("?")[0] === "#settings")
+    await expect(
+      main.getByRole("navigation", {
+        name: /^(Settings groups|گروه‌های تنظیمات)$/,
+      }),
+    ).toBeVisible();
+  await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
   if (await page.evaluate(() => window.innerWidth <= 760))
     await page.locator("#menu-toggle").click();
   const link = page
@@ -277,8 +294,16 @@ export async function openInvoiceUpload(page: Page) {
     await page
       .getByRole("button", { name: "New invoice", exact: true })
       .click();
+    const chooser = page.getByRole("dialog", {
+      name: "New invoice",
+      exact: true,
+    });
+    await expect(chooser).toBeVisible();
+    await chooser.getByRole("button", { name: "Upload", exact: true }).click();
   }
+  await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
   await expect(input).toBeAttached();
+  await expect(input).toBeEnabled();
   return input;
 }
 
@@ -309,26 +334,51 @@ export async function uploadInvoice(page: Page) {
       status: "review",
     });
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: remaining() });
-  await expect(page.locator(".invoice-line")).toHaveCount(6, {
-    timeout: remaining(),
-  });
+  await expect(page.locator('[data-testid^="invoice-line-row-"]')).toHaveCount(
+    6,
+    {
+      timeout: remaining(),
+    },
+  );
+  await openInvoiceDetails(page);
 }
 
-/** R1 asks a person before confirming all remaining AI checks on a line. */
+/** Phone receiving keeps the details card compact until its fields are needed. */
+export async function openInvoiceDetails(page: Page) {
+  await expect(page.getByTestId("invoice-details-card")).toBeVisible();
+  const toggle = page.locator(
+    '.receiving-details-phone-toggle[aria-expanded="false"]',
+  );
+  if (await toggle.isVisible()) await toggle.click();
+}
+
+/** Open one R2 line editor and retain its scoped locator. */
+export async function openInvoiceLine(page: Page, index: number) {
+  const editor = page.locator(`#invoice-line-${index}-detail`);
+  if (!(await editor.isVisible())) {
+    if ((page.viewportSize()?.width ?? 1440) <= 760) {
+      const previous = page.locator(".receiving-line-editor:visible");
+      if (await previous.count())
+        await previous
+          .getByRole("button", { name: /^(Close|بستن)$/, exact: true })
+          .click();
+    }
+    await page.getByTestId(`invoice-line-row-${index}`).click();
+  }
+  await expect(editor).toBeVisible();
+  return editor;
+}
+
+/** R2 confirms the whole line, including its highlighted fields, in one action. */
 export async function confirmInvoiceLine(page: Page, line: Locator) {
-  const hasChecks = (await line.locator(".reading-check-chip").count()) > 0;
+  const fa = (await page.locator("html").getAttribute("lang")) === "fa";
   await line
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+    .getByRole("button", {
+      name: fa ? "تأیید ردیف" : "Confirm line",
+      exact: true,
+    })
     .click();
-  if (!hasChecks) return;
-  const confirmation = page.getByRole("dialog", {
-    name: "This line has fields to check. Confirm all of them?",
-    exact: true,
-  });
-  await expect(confirmation).toBeVisible();
-  await confirmation
-    .getByRole("button", { name: "Confirm all fields", exact: true })
-    .click();
+  await expect(line).toBeHidden();
 }

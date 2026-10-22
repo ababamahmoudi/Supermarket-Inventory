@@ -63,6 +63,7 @@ export function approvalViews(
       const origin = effectiveApprovalLocation(state, approval);
       return (
         approval.company_id === state.config.company.seed_key &&
+        approval.type !== "new_supplier" &&
         (origin === "all" ? decides : selected.has(origin)) &&
         (decides || approval.status === "pending") &&
         can(
@@ -189,6 +190,7 @@ export type NotificationReadDTO = Pick<
   | "request_id"
   | "alert_id"
   | "invoice_id"
+  | "supplier_id"
   | "href"
   | "created_at"
   | "read_at"
@@ -304,6 +306,7 @@ export function projectSalesReadView(
             request_id: item.request_id,
             alert_id: item.alert_id,
             invoice_id: item.invoice_id,
+            supplier_id: item.supplier_id,
             href: item.href,
             created_at: item.created_at,
             read_at: item.read_at,

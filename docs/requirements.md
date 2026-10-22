@@ -1,5 +1,17 @@
 # Requirements (current owner workflow, C9 — 2026-10-19)
 
+## R2 receiving and approvals (2026-10-21, current owner contract)
+
+This section supersedes earlier supplier-confirmation, per-field review and unset date-tracking requirements.
+
+- A supplier is active immediately when created from import, receiving or Suppliers. Only its name is required. Phone, email, representative, representative phone, payment terms and address remain optional everywhere. Owners and Managers receive one profile-completion notification that links to Edit supplier and resolves when all profile details are supplied. Neither incomplete profiles nor old supplier approval records block posting.
+- Invoice lines default to Track date No, except an existing product whose saved preference is Yes. A required date is shown only when tracking is enabled or existing short-dated evidence requires it.
+- One Confirm line validates the new-product category, quantity and cost and acknowledges that line's highlights. Invoice details and Totals each have one Looks right. Editing acknowledges only the edited field and unconfirms only the changed line. Adding/removing lines preserves the others' confirmations.
+- Empty optional barcode, lot, printed expiry, handwritten note, order reference, bill-to and ship-to fields never count as uncertainty. Missing required supplier, invoice number/date/total, description, quantity or cost remains highlighted. Calculate a missing subtotal from total minus tax, or a missing total from subtotal plus tax, and retain a Calculated acknowledgment in Totals.
+- Duplicate supplier/invoice numbers inside one import file are a separate condition from Already in the app. Prefer the copy with more item lines, then a present total, and permit switching the selected copy while importing at most one.
+- Pending approvals group by source invoice. Owner/Manager can review a batch, deselect products and approve the selected subset. Pending categories can be corrected with pricing-engine recalculation; rejected requests can be fixed and resubmitted as a new linked pending request. Audit every decision and correction; preserve original rejected evidence.
+- The compact review, original viewer and stability contract are specified in screens.md and design-language.md. Delivery links target the exact invoice line. All new UI is English/Persian and uses the existing authority repository and Decimal pricing engine.
+
 ## R1: private invoice-reading imports and empty store (2026-10-21)
 
 Owner and Manager alone may use Settings → Data to import version 1 `super-arzon-invoice-readings` exports with reading schema `invoice-reading-v2`, or explicitly remove fictional business data. Both operations enforce current authority in the domain. Import reads local JSON with visible progress, previews every invoice with its original thumbnail, destination, totals, check count and duplicates, and defaults to AI readings. Checked-values mode overlays only values actually checked by a person; remaining AI uncertainty stays visible. Missing values stay empty and require review. Decimal accepts numeric JSON values or decimal strings and retains four-place costs.

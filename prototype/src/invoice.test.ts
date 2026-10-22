@@ -138,12 +138,13 @@ describe("invoice review and posting", () => {
     expect(state).toEqual(saved);
   });
 
-  it("requires an explicit date answer on every line and a date for Yes", () => {
+  it("defaults No without another answer and requires a date for Yes", () => {
     const state = reviewed();
     const rice = state.invoice.lines[0];
     rice.pricing_category = "rice";
     rice.date_confirmed = false;
-    expect(invoiceBlockers(state, receivingActor(state))).toContain("date");
+    rice.date_tracking = false;
+    expect(invoiceBlockers(state, receivingActor(state))).not.toContain("date");
     rice.date_tracking = true;
     rice.date_confirmed = true;
     rice.date_value = undefined;
@@ -352,13 +353,13 @@ describe("invoice review and posting", () => {
     expect(state).toEqual(before);
   });
 
-  it("requires a note for unknown lower-price information and confirms a proposed supplier before posting", () => {
+  it("requires a note for unknown lower-price information without supplier confirmation", () => {
     const state = reviewed();
     state.invoice.lower_price_answers = { same_expiry: "unknown", note: "" };
     state.invoice.supplier_confirmed = false;
-    expect(invoiceBlockers(state, receivingActor(state))).toEqual(
-      expect.arrayContaining(["lower_price", "supplier_pending"]),
-    );
+    expect(invoiceBlockers(state, receivingActor(state))).toEqual([
+      "lower_price",
+    ]);
     state.invoice.lower_price_answers = { same_expiry: "no_previous_stock" };
     state.invoice.supplier_confirmed = true;
     expect(invoiceBlockers(state, receivingActor(state))).toEqual([]);

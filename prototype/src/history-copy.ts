@@ -6,7 +6,17 @@ import { configSeed } from "./config";
 import { configuredRoleLabel } from "./role-config";
 
 const actions: Record<string, [string, string]> = {
+  "Change approval category": [
+    "Change approval category",
+    "تغییر دسته‌بندی درخواست تأیید",
+  ],
+  "Resubmit approval": ["Resubmit approval", "ارسال دوباره درخواست تأیید"],
   "Create invoice draft": ["Create invoice draft", "ایجاد پیش‌نویس فاکتور"],
+  "Distinguish suppliers": ["Distinguish suppliers", "تأمین‌کنندگان متفاوت"],
+  "Activate supplier without approval": [
+    "Activate supplier without approval",
+    "فعال‌سازی تأمین‌کننده بدون تأیید",
+  ],
   "Removed fictional data": [
     "Removed fictional data",
     "داده‌های خیالی حذف شدند",

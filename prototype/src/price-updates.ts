@@ -41,6 +41,7 @@ import {
   type LabelPrintProduct,
 } from "./label-workflow";
 import type { DemoState, Activity } from "./types";
+import { syncSupplierProfileNotifications } from "./supplier-profiles";
 
 export interface PriceUpdatesSettings {
   allow_floor_worker_complete: boolean;
@@ -1483,6 +1484,7 @@ function settingsAudit(
   });
 }
 function syncGeneralNotifications(state: DemoState, now: Date) {
+  syncSupplierProfileNotifications(state, now);
   for (const request of state.sale_requests ?? [])
     if (
       request.company_id === state.config.company.seed_key &&
@@ -1502,6 +1504,7 @@ function syncGeneralNotifications(state: DemoState, now: Date) {
   for (const approval of state.approvals)
     if (
       approval.company_id === state.config.company.seed_key &&
+      approval.type !== "new_supplier" &&
       approval.status === "pending"
     )
       notify(state, {

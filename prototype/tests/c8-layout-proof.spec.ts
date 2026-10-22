@@ -1,7 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
 import Decimal from "decimal.js";
-import { invoiceImage, setBranch, setLanguage, signIn } from "./helpers";
+import {
+  invoiceImage,
+  openInvoiceLine,
+  setBranch,
+  setLanguage,
+  signIn,
+} from "./helpers";
 import { button, choose, field } from "../scripts/c5-browser-proof.mjs";
 import {
   inspectC8Layout,
@@ -44,16 +50,24 @@ const pages = [
   { route: "settings?group=modules", table: false },
 ] as const;
 
+async function setReviewLanguage(page: Page, language: "en" | "fa") {
+  if ((await page.locator("html").getAttribute("lang")) === language) return;
+  const fullScreen = (page.viewportSize()?.width ?? 1440) <= 760;
+  const editor = page.locator("#invoice-line-0-detail");
+  const reopen = fullScreen && (await editor.isVisible());
+  if (reopen) await button(editor, "Close", "بستن").click();
+  await setLanguage(page, language);
+  if (reopen) await openInvoiceLine(page, 0);
+}
+
 async function prepareSupplierShorts(page: Page) {
   const before = await readC8State(page);
   await prepareC8ManualInvoice(page);
-  await field(page, "Supplier invoice number (optional)").fill(
-    "C8-QA-SHORT-LAYOUT",
-  );
+  await field(page, "Invoice number").fill("C8-QA-SHORT-LAYOUT");
   const manualId = (await readC8State(page)).invoice.id;
   // A real manual fixture carries its own clearly fictional original and passes
   // the normal receiving gates. No saved invoice or stock record is injected.
-  await field(page, "Upload a PDF or photo").setInputFiles({
+  await field(page, "Attach original").setInputFiles({
     ...invoiceImage,
     name: "fictional-c8-short-layout.png",
   });
@@ -75,33 +89,40 @@ async function prepareSupplierShorts(page: Page) {
       fileName: "fictional-c8-short-layout.png",
       originalRetained: true,
     });
-  await expect(button(page, "New invoice")).toBeEnabled();
-  const line = page.locator(".invoice-line");
-  await expect(line).toHaveCount(1);
+  await expect(button(page, "Save and close")).toBeEnabled();
+  await expect(page.locator(".invoice-line")).toHaveCount(1);
+  const line = await openInvoiceLine(page, 0);
   await expect(line).toContainText("0002");
-  await choose(page, field(line, "Quantity unit"), "Units");
+  await choose(page, field(line, "Unit"), "Units");
   const cost = (await readC8State(page)).invoice.lines[0].unit_cost_before_tax;
-  await field(line, "Invoiced").fill("6");
+  await field(line, "Invoiced units").fill("6");
   await expect
     .poll(async () => (await readC8State(page)).invoice.lines[0].qty_invoiced)
     .toBe(6);
-  await expect(field(line, "Invoiced")).toHaveValue("6");
-  await field(line, "Delivered").fill("2");
+  await expect(field(line, "Invoiced units")).toHaveValue("6");
+  await field(line, "Delivered units").fill("2");
   await expect
     .poll(
       async () =>
         (await readC8State(page)).invoice.lines[0].qty_received_at_posting,
     )
     .toBe(2);
-  await expect(field(line, "Delivered")).toHaveValue("2");
-  await expect(
-    line.getByRole("checkbox", { name: "Mark as short", exact: true }),
-  ).toHaveAttribute("aria-checked", "true");
-  await button(line, "No").click();
+  await expect(field(line, "Delivered units")).toHaveValue("2");
+  await button(line, "Report short or refused").click();
+  await field(line, "Short units").fill("4");
+  await expect(line).toContainText(`4 units × $${cost}`);
+  await expect(line).toContainText(new Decimal(cost).times(4).toFixed(2));
+  await button(line, "Apply").click();
+  await expect(field(line, "Delivered units")).toHaveValue("2");
   await line
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+    .getByRole("group", { name: "Track date", exact: true })
+    .getByRole("button", { name: "No", exact: true })
     .click();
-  await expect(line).toHaveAttribute("data-expanded", "false");
+  await button(line, "Confirm line").click();
+  await expect(page.locator(".invoice-line")).toHaveAttribute(
+    "data-expanded",
+    "false",
+  );
   await expect
     .poll(
       async () => (await readC8State(page)).invoice.lines[0].review_confirmed,
@@ -156,6 +177,182 @@ async function prepareSupplierShorts(page: Page) {
     { type: "short_deduction", amount: new Decimal(cost).times(-4).toFixed(2) },
   ]);
   return draft.supplier_invoice_number;
+}
+
+for (const language of ["en", "fa"] as const) {
+  test(`C8 receiving retains short money, controls and RTL layout (${language})`, async ({
+    page,
+  }, info) => {
+    const width = info.project.name === "phone" ? 390 : 1440;
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+    await signIn(page, "Supervisor");
+    await setBranch(page, "Branch 1");
+    const reference = await prepareSupplierShorts(page);
+    await setLanguage(page, language);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      reference,
+    );
+    const posted = await inspectC8Layout(
+      page,
+      "receiving:posted-short",
+      language,
+      width,
+    );
+    expect(posted.actualWidth).toBe(width);
+    expect(posted.words).toBeGreaterThan(0);
+    expect(posted.failures).toEqual([]);
+    await setLanguage(page, "en");
+    await prepareC8ManualInvoice(page);
+    await setReviewLanguage(page, language);
+    if (width <= 760)
+      await button(
+        page.locator("#invoice-line-0-detail"),
+        "Close",
+        "بستن",
+      ).click();
+    const titleReference = page.locator("h1 .invoice-title-reference");
+    await expect(titleReference).toHaveText("C8-QA-CONTAINMENT");
+    expect(
+      await titleReference.evaluate((element) => {
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+        const rects: DOMRect[] = [];
+        let node;
+        while ((node = walker.nextNode())) {
+          if (!node.textContent?.trim()) continue;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          rects.push(
+            ...[...range.getClientRects()].filter(
+              (rect) => rect.width > 0.1 && rect.height > 0.1,
+            ),
+          );
+        }
+        const width = document.documentElement.clientWidth;
+        return {
+          lines: new Set(rects.map((rect) => Math.round(rect.top))).size,
+          contained: rects.every(
+            (rect) => rect.left >= -1 && rect.right <= width + 1,
+          ),
+          pageContained: document.documentElement.scrollWidth <= width + 1,
+        };
+      }),
+    ).toEqual({ lines: 1, contained: true, pageContained: true });
+    const openedEditor = await openInvoiceLine(page, 0);
+    const nameInput = openedEditor.locator("#invoice-line-0-name-en");
+    if (width <= 760) await nameInput.scrollIntoViewIfNeeded();
+    else
+      await nameInput.evaluate((element) =>
+        element.scrollIntoView({ block: "start" }),
+      );
+    await expect(nameInput).toBeInViewport();
+    const expanded = await inspectC8Layout(
+      page,
+      "receiving:manual-editor",
+      language,
+      width,
+    );
+    expect(expanded.actualWidth).toBe(width);
+    expect(expanded.words).toBeGreaterThan(0);
+    expect(expanded.containment.tableCount).toBe(1);
+    expect(expanded.containment.rowCount).toBeGreaterThan(0);
+    expect(expanded.containment.editorCount).toBe(1);
+    const editorProof = expanded.forms.find((form: { className: string }) =>
+      form.className.includes("receiving-line-editor"),
+    );
+    expect(editorProof).toBeDefined();
+    expect(editorProof!.words).toBeGreaterThan(0);
+    expect(editorProof!.controls).toBeGreaterThan(0);
+    expect(expanded.failures).toEqual([]);
+    if (width === 1440 && language === "en") {
+      await button(page.locator("#invoice-line-0-detail"), "Close").click();
+      await expect(page.locator("#invoice-line-0-detail")).toHaveCount(0);
+      const row = page.getByTestId("invoice-line-row-0");
+      await row.evaluate((element) =>
+        element.scrollIntoView({ block: "start" }),
+      );
+      const name = row.locator(".receiving-product-name");
+      const expectPaintedName = async () => {
+        await expect(row).toBeInViewport({ ratio: 1 });
+        expect(
+          await name.evaluate((element) => {
+            const bounds = element.getBoundingClientRect();
+            const progress = document.querySelector(".receiving-progress")!;
+            const topbar = document.querySelector(".topbar")!;
+            const stickyBottom = Math.max(
+              progress.getBoundingClientRect().bottom,
+              topbar.getBoundingClientRect().bottom,
+            );
+            const hit = document.elementFromPoint(
+              bounds.left + bounds.width / 2,
+              bounds.top + bounds.height / 2,
+            );
+            return {
+              belowStickyBars: bounds.top >= stickyBottom,
+              insideViewport:
+                bounds.left >= 0 &&
+                bounds.right <= document.documentElement.clientWidth &&
+                bounds.bottom <= window.innerHeight,
+              painted: !!hit && (hit === element || element.contains(hit)),
+            };
+          }),
+        ).toEqual({
+          belowStickyBars: true,
+          insideViewport: true,
+          painted: true,
+        });
+      };
+      await expectPaintedName();
+      const original = await name.evaluate((element) => {
+        const original = {
+          title: element.getAttribute("title"),
+          style: element.getAttribute("style"),
+        };
+        (element as HTMLElement).style.inlineSize = "16px";
+        return original;
+      });
+      try {
+        const ellipsis = await inspectC8Layout(
+          page,
+          "receiving:full-title-ellipsis",
+          language,
+          width,
+        );
+        expect(ellipsis.failures).toEqual([]);
+        await expectPaintedName();
+        await name.evaluate((element) => element.removeAttribute("title"));
+        const missingTitle = await inspectC8Layout(
+          page,
+          "receiving:missing-full-title",
+          language,
+          width,
+        );
+        expect(
+          missingTitle.failures.some((failure: string) =>
+            failure.startsWith("Receiving text leaves cell:"),
+          ),
+        ).toBe(true);
+        await expectPaintedName();
+      } finally {
+        await name.evaluate((element, original) => {
+          for (const [key, value] of Object.entries(original)) {
+            if (value === null) element.removeAttribute(key);
+            else element.setAttribute(key, value);
+          }
+        }, original);
+      }
+      await expectPaintedName();
+      expect(
+        (
+          await inspectC8Layout(
+            page,
+            "receiving:restored-title",
+            language,
+            width,
+          )
+        ).failures,
+      ).toEqual([]);
+    }
+  });
 }
 
 for (const language of ["en", "fa"] as const)
@@ -243,6 +440,16 @@ for (const language of ["en", "fa"] as const)
               proof.containment.rowCount,
               scene + ": actual populated rows measured",
             ).toBeGreaterThan(0);
+          }
+          if (scene === "invoices:expanded-manual-line") {
+            expect(proof.containment.editorCount).toBe(1);
+            const editorProof = proof.forms.find(
+              (form: { className: string }) =>
+                form.className.includes("receiving-line-editor"),
+            );
+            expect(editorProof).toBeDefined();
+            expect(editorProof!.words).toBeGreaterThan(0);
+            expect(editorProof!.controls).toBeGreaterThan(0);
           }
           expect(proof.failures, scene).toEqual([]);
         };
@@ -372,14 +579,21 @@ for (const language of ["en", "fa"] as const)
         await visitC8(page, "invoices");
         await page
           .getByRole("tab", {
-            name: language === "en" ? "Posted" : "ثبت‌شده",
-            exact: true,
+            name: language === "en" ? /^Posted\s+\d+$/ : /^ثبت‌شده\s+[\d۰-۹]+$/,
           })
           .click();
         await inspect("invoices:posted", true);
         await setLanguage(page, "en");
         await prepareC8ManualInvoice(page);
-        await setLanguage(page, language);
+        await setReviewLanguage(page, language);
+        const invoiceEditor = await openInvoiceLine(page, 0);
+        const invoiceName = invoiceEditor.locator("#invoice-line-0-name-en");
+        if (width === 900)
+          await invoiceName.evaluate((element) =>
+            element.scrollIntoView({ block: "start" }),
+          );
+        else await invoiceName.scrollIntoViewIfNeeded();
+        await expect(invoiceName).toBeInViewport();
         await inspect("invoices:expanded-manual-line", true);
         const editor = await openC8ProductEditor(page, "0006");
         await inspect("product-editor:top");

@@ -7,12 +7,17 @@ export interface MoneyOptions {
   currency?: string;
   decimals?: number;
   compact?: boolean;
+  fixedDecimals?: boolean;
 }
 
 /** Presentation only: amounts remain Decimal strings in the business model. */
 export function formatMoney(
   value: Decimal.Value,
-  { currency = configSeed.company.currency, decimals = 4 }: MoneyOptions = {},
+  {
+    currency = configSeed.company.currency,
+    decimals = 4,
+    fixedDecimals = false,
+  }: MoneyOptions = {},
 ): string {
   const amount = new Decimal(value);
   if (!amount.isFinite()) throw new Error("Money must be finite");
@@ -28,8 +33,8 @@ export function formatMoney(
   // evidence, not a new monetary rounding or allocation rule.
   let digits = amount
     .abs()
-    .toFixed(Math.min(4, Math.max(2, decimals)), Decimal.ROUND_HALF_UP)
-    .replace(/(\.\d{2,}?)0+$/, "$1");
+    .toFixed(Math.min(4, Math.max(2, decimals)), Decimal.ROUND_HALF_UP);
+  if (!fixedDecimals) digits = digits.replace(/(\.\d{2,}?)0+$/, "$1");
   const [whole, fraction] = digits.split(".");
   digits =
     whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",") +

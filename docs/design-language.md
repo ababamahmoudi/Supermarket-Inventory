@@ -1,5 +1,33 @@
 # Klead design language v1
 
+## R2 receiving reference and stability (2026-10-22)
+
+The approved [receiving reference](design-reference/r2-receiving/README.md) defines this composition and its token map. The repository retains its README and eight HTML screens; the PNG filenames refer to the original approved reference pack. Reference shell branding, people and amounts are illustrative: keep the current app shell and actual records. Preserve the [R2 behavior decisions](decisions.md#r2-receiving-decisions--2026-10-21).
+
+S1's shared fields, tabs, links, list-box, detail-grid, back-link, NotAdded and LtrValue remain the foundation. The receiving line table is the specific exception to the shared DataTable requirement: use a small dedicated component with tokens. Receiving styles own its composition, not overrides of shared tables, fields, tabs or links. All other tables retain S1.
+
+1. **Five-column lines table:** status icon + number, Product, Quantity, Unit cost and Line total. It fits its card without horizontal scrolling at 1440px with the original shown and at 1000px. Status stays visible; omit separate Delivered, Category and Status columns.
+2. **Compact line facts:** one ellipsized product-name line, then 12px supplier code, category/amber Choose a category, New product and check count. Quantity shows the case formula over muted units; a short delivery adds one red line beneath it. Weight/short summaries retain the invoice's source kg/lb, and four-decimal source costs show their per-unit label on desktop and phone.
+3. **Row states:** confirmed uses `--approved-bg` and a filled green check; questions use pale amber and an amber ring/!; other unconfirmed rows use `--surface` and a grey ring. Status is first at inline-start. Show confirmer names/times only when recorded; never infer them from the current person.
+4. **Counted filters:** All · Needs attention · Confirmed sit above the lines and preserve their counts and line-review state.
+5. **Attached editor:** a white `--surface` panel directly beneath the accent-tinted row header, outside any horizontal scroll box, with a light accent border/shadow. It never inherits row hover/active fill. Desktop Product and Quantity and cost sections use 15px/800 headings with hairlines; labels are 13px/600 muted. Shared fields stay 44px high and level. The bottom row contains Taxable, Track dates No/Yes and quiet Selling price; Track dates defaults to No unless the product tracks dates. More details starts closed for a question already shown in English name/description; only highlighted hidden barcode, lot, printed expiry or note evidence opens it automatically. Opening it still exposes the retained printed description and all other evidence. Footer order is red-tint Remove line, Report short or refused, then Close and a real primary Confirm line button with a check icon. Phone editors are full-screen sheets with a sticky 44px full-width Confirm action above two equal-width secondary actions; these footer widths are an explicit receiving exception to intrinsic button widths.
+6. **AI hints:** throughout receiving, use 2px amber field borders and a 16px amber ! immediately after each nowrap label. The dark tooltip appears above the marker and receiving content, has an arrow, normal text wrapping and `pointer-events: none`; it never covers an input or shifts its top edge. One amber note explains the highlighted-field count. Receiving has no old ? badges or Please check chips.
+7. **Invoice details:** three `minmax(0, 1fr)` columns with `min-width: 0` on every item; boxes never overlap at 1000px. Received is one read-only date/time/receiver summary with Change opening a small popover. One Looks right acknowledges the card. Phones start with a compact disclosure; its expand control, a missing-field Show action or Next to check opens it when header fields need review.
+8. **Original:** sticky on the right at **1180px and wider**; below 1180px, above the work column at 320px with Expand. Phones use View original to open a full-screen viewer. Page arrows, zoom, fit, rotate and More stay on one toolbar row. When the toolbar container is narrower than 340px, Rotate moves into More instead of wrapping; this responsive variant fits the retained app shell. Loading uses a skeleton, never a broken image.
+9. **Progress:** the strip sticks exactly beneath the actual top bar, with no transparent gap. Phones use a sticky bottom bar with progress and equal-width Next to check/Post invoice columns containing shared 44px actions; reserve content space for it. Full-width actions in this phone bar are an explicit exception; other buttons remain intrinsic.
+10. **Totals:** read-only label/amount rows by default, with end-aligned tabular amounts and the amber Calculated · not on the paper label on derived amounts. Edit opens real shared 44px inputs; actual non-calculated questions or invalid amounts after a posting attempt open them automatically. One Looks right still acknowledges the whole card. Preserve Decimal calculations, deductions and posting checks.
+11. **Persian and dark:** translate visible labels, use logical layout, and isolate amounts/codes with LtrValue or `bdi dir="ltr"`. Amount columns retain the same width and edge with tabular digits. Both themes use the reference token aliases; filled primaries use `--accent-fill`.
+12. **Shared dialogs:** empty store, import complete and import preview use an icon tile, 20px/800 title, short description and close control, then body and end-aligned footer with secondary before primary/destructive. The `.ui-dialog-structured` footer specifically uses 44px intrinsic buttons: secondary has a 1px `--field-border` and `--surface` fill (white in light theme); destructive uses filled `--danger` with contrasting theme text. This footer is the scoped exception to the general 40px/borderless button rules; those rules remain unchanged elsewhere. Empty store has Keeps/Removes lists and an initially empty DELETE/حذف field; its red destructive button stays disabled until the phrase matches. Import complete has four stat tiles, plain skipped reasons, other-location notice/Show all locations and Close/Open Needs review. Import preview's Status column remains fully visible.
+13. **Collapsed sidebar tooltip:** hover/focus after 300ms opens a label above all content through a portal/top layer; it is hit-testable at its center and never appears for the expanded sidebar. Unlike the AI tooltip, it must not use `pointer-events: none`. Keep the rest of the sidebar/top bar unchanged apart from the Invoices count.
+
+Dialog descriptions stay concise and may wrap naturally on narrow screens; never clip text to force a single line.
+
+Long receiving lists use compact 48px closed rows and 8px work-column gaps while preserving normal font sizes, card tokens and 44px fields. The 25-line fixture remains within the existing three-viewport/2700px desktop review budget; compact density does not shrink controls or change recorded quantities.
+
+**Stability is an acceptance requirement:** clicks, typing, confirmation, Looks right, category changes, Yes/No and collapse keep the control's top edge within 2px. Confirm line and Close keep the line row within 2px instead. Only Next to check or an explicit link to evidence may deliberately scroll. Anchor scroll when content closes above the viewport; use stable persisted line identities and update one line without remounting the list. Test category/date/name/acknowledgment/confirmation in Chromium desktop and phone in both languages, plus the dedicated Firefox receiving project. Approval cards collapse in place, preserve scroll and use the bottom Undo toast; respect reduced-motion preferences. Exact-line navigation uses the existing accent tint in light/dark with a two-second fade.
+
+The fixed phone sheet temporarily reserves its body height during edits so Track dates Yes → No does not clamp the internal scroll position and move the control. Release that reservation on user wheel/touch scrolling, close or navigation. This preserves the existing stability guard without changing any business value.
+
 Owner specification: C6/C7, 2026-10-11. This document replaces the previous design language completely, including C2/C3/C5 borders, resting glows, typography, striped rows and control sizes. C6 uses it for new and changed components; C7 applies it to every existing screen. Match the five owner retouches (components/tokens, Lookup, Date tracking, Edit product, dark phone Lookup). Take visual style only; retain company logo, people, products and actual demo data.
 
 ## Hard rules
@@ -132,7 +160,7 @@ Worker home retains My drafts, Needs review, Offers to confirm and Expiring soon
 
 **Date tracking:** retain quick-add product scan/name/code/barcode, date, current allowed location, Enter/Add, refocus, new-row pin/highlight and More for Type/Quantity/Lot/Note. Due soon/All dates/Removed segments. Product/reminder/stop semantics come from requirements §10.
 
-**Invoice review:** wide layout retains 40% sticky original pane plus lines, summary/totals and reserved Save as draft/Post invoice bar. What's missing is an amber linked list at form top, plus local field errors. No autosave/edit Undo. Posted number/status share header with end actions; five adjacent end-aligned totals: Subtotal, Tax, Invoice total, Deductions, bold Payable. Original whole-page default, 25–400% toolbar − / % / + / Fit width / Fit page / Download; actual bytes unchanged.
+**Invoice review:** use the R2 receiving composition above: five-column closed lines, one attached editor, sticky progress, details/charges/totals and a responsive original viewer. Save and close/Post invoice retain grouped missing requirements and local errors. No edit Undo. Posted number/status share the header with end actions; retained totals show Subtotal, Tax, Invoice total, Deductions and bold Payable. Original whole-page default, 25–400% zoom, page navigation, fit/rotate/download and unchanged evidence bytes remain available.
 
 **Returns:** title/status together, creation/supplier/location subtitle and policy/next action at end. Pickup actual quantity per item, shortfall reason/disposition, locked saved pickup and separate authorized Correct pickup. Resolution groups clear item progress, credited/replaced/outstanding quantities. Policy about 640 px, summary and five numbered bold-title/one-sentence steps, no inner card, Download full policy and Close. Supplier memo defaults English and uses RM reference.
 
@@ -213,47 +241,47 @@ Pending uses amber where it means outstanding staff work; Done uses green; Cance
 
 Canonical additional copy (interpolate real product/store/price/time values, including localized plural rules):
 
-| English | Persian |
-| --- | --- |
-| Price updates | به‌روزرسانی قیمت‌ها |
-| Price updates to apply | به‌روزرسانی قیمت‌های قابل اجرا |
-| Changed on the cash register | در صندوق فروش تغییر داده شد |
-| New label printed | برچسب جدید چاپ شد |
-| Print label now | چاپ برچسب اکنون |
-| Add to label waitlist | افزودن به فهرست انتظار برچسب‌ها |
-| No label needed | نیازی به برچسب نیست |
-| Reason | دلیل |
-| Mark as done | علامت‌گذاری انجام‌شده |
-| Print labels | چاپ برچسب‌ها |
-| Pending | در انتظار |
-| Done | انجام‌شده |
-| Price changed | قیمت تغییر کرد |
-| Mark all as read | علامت‌گذاری همه به‌عنوان خوانده‌شده |
-| Sale ends after today: back to ${{price}} tomorrow | حراج پس از امروز تمام می‌شود: فردا بازگشت به ${{price}} |
-| {{location}} has {{count}} price updates waiting | {{location}} تعداد {{count}} به‌روزرسانی قیمت در انتظار دارد |
-| Earlier changes | تغییرات قبلی |
-| No price updates | به‌روزرسانی قیمتی وجود ندارد |
-| No notifications | اعلانی وجود ندارد |
-| Store progress | پیشرفت فروشگاه‌ها |
-| Why it changed | دلیل تغییر |
-| Decided by | تصمیم‌گیرنده |
-| Effective from | اجرا از |
-| Did the labels print correctly? | آیا برچسب‌ها درست چاپ شدند؟ |
-| Price update reminders | یادآوری به‌روزرسانی قیمت‌ها |
-| Notifications | اعلان‌ها |
-| Remind after (hours) | یادآوری پس از (ساعت) |
-| Alert Owner and Manager after (hours) | هشدار به مالک و مدیر پس از (ساعت) |
-| Allow Floor Workers to mark tasks done | اجازهٔ انجام‌شده کردن کارها برای کارکنان کف فروشگاه |
-| A register confirmation is still required. | تأیید تغییر در صندوق فروش همچنان لازم است. |
-| Confirm that the label was printed. | تأیید کنید که برچسب چاپ شده است. |
-| Add a reason. | یک دلیل اضافه کنید. |
-| This price update has changed. Open it again. | این به‌روزرسانی قیمت تغییر کرده است. آن را دوباره باز کنید. |
+| English                                                                                  | Persian                                                                            |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Price updates                                                                            | به‌روزرسانی قیمت‌ها                                                                |
+| Price updates to apply                                                                   | به‌روزرسانی قیمت‌های قابل اجرا                                                     |
+| Changed on the cash register                                                             | در صندوق فروش تغییر داده شد                                                        |
+| New label printed                                                                        | برچسب جدید چاپ شد                                                                  |
+| Print label now                                                                          | چاپ برچسب اکنون                                                                    |
+| Add to label waitlist                                                                    | افزودن به فهرست انتظار برچسب‌ها                                                    |
+| No label needed                                                                          | نیازی به برچسب نیست                                                                |
+| Reason                                                                                   | دلیل                                                                               |
+| Mark as done                                                                             | علامت‌گذاری انجام‌شده                                                              |
+| Print labels                                                                             | چاپ برچسب‌ها                                                                       |
+| Pending                                                                                  | در انتظار                                                                          |
+| Done                                                                                     | انجام‌شده                                                                          |
+| Price changed                                                                            | قیمت تغییر کرد                                                                     |
+| Mark all as read                                                                         | علامت‌گذاری همه به‌عنوان خوانده‌شده                                                |
+| Sale ends after today: back to ${{price}} tomorrow                                       | حراج پس از امروز تمام می‌شود: فردا بازگشت به ${{price}}                            |
+| {{location}} has {{count}} price updates waiting                                         | {{location}} تعداد {{count}} به‌روزرسانی قیمت در انتظار دارد                       |
+| Earlier changes                                                                          | تغییرات قبلی                                                                       |
+| No price updates                                                                         | به‌روزرسانی قیمتی وجود ندارد                                                       |
+| No notifications                                                                         | اعلانی وجود ندارد                                                                  |
+| Store progress                                                                           | پیشرفت فروشگاه‌ها                                                                  |
+| Why it changed                                                                           | دلیل تغییر                                                                         |
+| Decided by                                                                               | تصمیم‌گیرنده                                                                       |
+| Effective from                                                                           | اجرا از                                                                            |
+| Did the labels print correctly?                                                          | آیا برچسب‌ها درست چاپ شدند؟                                                        |
+| Price update reminders                                                                   | یادآوری به‌روزرسانی قیمت‌ها                                                        |
+| Notifications                                                                            | اعلان‌ها                                                                           |
+| Remind after (hours)                                                                     | یادآوری پس از (ساعت)                                                               |
+| Alert Owner and Manager after (hours)                                                    | هشدار به مالک و مدیر پس از (ساعت)                                                  |
+| Allow Floor Workers to mark tasks done                                                   | اجازهٔ انجام‌شده کردن کارها برای کارکنان کف فروشگاه                                |
+| A register confirmation is still required.                                               | تأیید تغییر در صندوق فروش همچنان لازم است.                                         |
+| Confirm that the label was printed.                                                      | تأیید کنید که برچسب چاپ شده است.                                                   |
+| Add a reason.                                                                            | یک دلیل اضافه کنید.                                                                |
+| This price update has changed. Open it again.                                            | این به‌روزرسانی قیمت تغییر کرده است. آن را دوباره باز کنید.                        |
 | The price in the app changes right away. Confirm the cash register and shelf label here. | قیمت در برنامه بلافاصله تغییر می‌کند. صندوق فروش و برچسب قفسه را اینجا تأیید کنید. |
-| No price updates match these filters. | به‌روزرسانی قیمتی با این فیلترها پیدا نشد. |
-| No pending price updates. | به‌روزرسانی قیمت در انتظار وجود ندارد. |
-| Back to Price updates | بازگشت به به‌روزرسانی قیمت‌ها |
-| Print the new label, or choose No label needed and add a reason. | برچسب جدید را چاپ کنید، یا «نیازی به برچسب نیست» را انتخاب کرده و دلیل بنویسید. |
-| Use a reminder time above zero and a later Owner and Manager alert time. | زمان یادآوری باید بیشتر از صفر و زمان هشدار مالک و مدیر دیرتر باشد. |
+| No price updates match these filters.                                                    | به‌روزرسانی قیمتی با این فیلترها پیدا نشد.                                         |
+| No pending price updates.                                                                | به‌روزرسانی قیمت در انتظار وجود ندارد.                                             |
+| Back to Price updates                                                                    | بازگشت به به‌روزرسانی قیمت‌ها                                                      |
+| Print the new label, or choose No label needed and add a reason.                         | برچسب جدید را چاپ کنید، یا «نیازی به برچسب نیست» را انتخاب کرده و دلیل بنویسید.    |
+| Use a reminder time above zero and a later Owner and Manager alert time.                 | زمان یادآوری باید بیشتر از صفر و زمان هشدار مالک و مدیر دیرتر باشد.                |
 
 Labels referenced from a task retain current Regular/Promo template geometry and actual print behavior. A queue/preview is not a physical print; confirm only the genuine current preparation, and retain successful output evidence if another check fails. This stage builds in-browser personal notifications only, with no browser push permission prompt.
 
@@ -265,13 +293,13 @@ Check actual line fragments and inner panel/page overflow at 390/430 in both dir
 
 Additional canonical copy:
 
-| English | Persian |
-| --- | --- |
-| No connection | اتصال برقرار نیست |
-| Reconnect, then try again. | دوباره متصل شوید و تلاش کنید. |
-| Try again | تلاش دوباره |
-| Update available | به‌روزرسانی آماده است |
-| Update app | به‌روزرسانی برنامه |
+| English                                            | Persian                                              |
+| -------------------------------------------------- | ---------------------------------------------------- |
+| No connection                                      | اتصال برقرار نیست                                    |
+| Reconnect, then try again.                         | دوباره متصل شوید و تلاش کنید.                        |
+| Try again                                          | تلاش دوباره                                          |
+| Update available                                   | به‌روزرسانی آماده است                                |
+| Update app                                         | به‌روزرسانی برنامه                                   |
 | Finish or close your current work before updating. | پیش از به‌روزرسانی، کار فعلی را تمام کنید یا ببندید. |
 
 Update controls live only in the small Demo menu. They never interrupt a real pending operation or dirty editor; retain the current app until explicit safe activation. This presentation adds no copy claiming that email, a register, another phone, a real passkey or a production server has synchronized.
@@ -297,7 +325,7 @@ C9 proof includes Chromium and WebKit dark-theme frame/no-reload checks at a non
 
 These rules replace any earlier per-PR wording that conflicts with them. The code lives in `prototype/src/foundation.css` (loaded last) plus a few shared components. **Do not restyle these parts in page stylesheets.** If a page needs something new, add it to the foundation and use it everywhere.
 
-1. **Tables.** Use `DataTable`. Every row has the same rhythm: 12px cell padding, 16px at the first and last cell, header and values aligned the same way. Numbers, money and dates-as-numbers are right-aligned with tabular figures. Never set a cell's padding to 0 to make room. Give phones a `phoneList` (name, value, secondary) so rows stay readable.
+1. **Tables.** Use `DataTable`, except for the dedicated five-column receiving line table specified above. Every shared row has the same rhythm: 12px cell padding, 16px at the first and last cell, header and values aligned the same way. Numbers, money and dates-as-numbers are right-aligned with tabular figures. Never set a cell's padding to 0 to make room. Give phones a `phoneList` (name, value, secondary) so rows stay readable.
 2. **Blue means you can open it.** Product, supplier and invoice names that open a page are accent blue (`--link-text`); use `a.entity-link` for new links. Plain text stays ink.
 3. **Empty values say so.** Use `<NotAdded />` or `<LtrValue value=… />` for anything that was never entered ("Not added" in muted italics). Use "—" only in table columns that mean "none" (for example no offer).
 4. **Fields look editable everywhere.** Inputs, text areas and selects have a visible border (`--field-border`), including on grey panels. Errors outline the field in red and say how to fix it. A wrong password is cleared and focused.

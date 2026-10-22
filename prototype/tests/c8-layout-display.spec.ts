@@ -6,6 +6,7 @@ import demo from "../../seed/demo-data.json" with { type: "json" };
 import type { DemoState } from "../src/types";
 import {
   invoiceImage,
+  openInvoiceLine,
   openInvoiceUpload,
   setLanguage,
   signIn,
@@ -86,6 +87,19 @@ async function quantityEvidence(page: Page, row: Locator) {
   return details;
 }
 
+async function showOriginal(page: Page, language: "en" | "fa") {
+  if ((page.viewportSize()?.width ?? 1440) <= 760) {
+    await page
+      .getByRole("button", {
+        name: language === "en" ? /^View original \(/ : /^مشاهده اصل/,
+      })
+      .click();
+  }
+  await expect(
+    page.locator(".invoice-original-media img").filter({ visible: true }),
+  ).toBeVisible();
+}
+
 for (const language of ["en", "fa"] as const) {
   test(`C8 unread original has Continue and exact durable evidence (${language})`, async ({
     page,
@@ -98,14 +112,23 @@ for (const language of ["en", "fa"] as const) {
     expect(before.file_data).toMatch(/^idb-file:v1:/);
     const originalHash = await retainedOriginalHash(page, before.file_data!);
     const drafts = page.locator(".invoice-saved-drafts");
-    await expect(drafts).toContainText(
-      copy(language, "Not read yet", "هنوز خوانده نشده"),
-    );
+    await expect(drafts).toContainText(before.supplier_invoice_number);
+    const continueOriginal =
+      (page.viewportSize()?.width ?? 1440) <= 760
+        ? drafts.getByRole("link", {
+            name: copy(language, "Open", "باز کردن"),
+            exact: true,
+          })
+        : drafts.getByRole("button", {
+            name: copy(language, "Continue", "ادامه"),
+            exact: true,
+          });
+    await expect(continueOriginal).toBeVisible();
     await expect(
       page
         .getByText(before.file_name!, { exact: true })
         .filter({ visible: true }),
-    ).toHaveCount(1);
+    ).toHaveCount(0);
     await expect(
       page.getByText(
         copy(
@@ -116,16 +139,25 @@ for (const language of ["en", "fa"] as const) {
         { exact: true },
       ),
     ).toHaveCount(0);
-    await drafts
-      .getByRole("button", {
-        name: copy(language, "Continue", "ادامه"),
-        exact: true,
-      })
-      .click();
-    await expect(page.locator(".invoice-reading-state")).toBeVisible();
+    await continueOriginal.click();
+    // The shared phone list opens the retained original first; its detail
+    // action starts the same read operation as desktop Continue.
+    if ((page.viewportSize()?.width ?? 1440) <= 760)
+      await page
+        .getByRole("button", {
+          name: copy(language, "Read invoice", "خواندن فاکتور"),
+          exact: true,
+        })
+        .click();
+    await expect(
+      page.getByText(
+        copy(language, "Reading invoice…", "در حال خواندن فاکتور…"),
+        { exact: true },
+      ),
+    ).toBeVisible();
     await expect(
       page.getByRole("heading", {
-        name: copy(language, "Review invoice lines", "بررسی ردیف‌های فاکتور"),
+        name: copy(language, "Invoice lines", "ردیف‌های فاکتور"),
         exact: true,
       }),
     ).toBeVisible({ timeout: 10000 });
@@ -135,17 +167,28 @@ for (const language of ["en", "fa"] as const) {
     const after = (await saved(page)).invoice;
     expect(after.id).toBe(before.id);
     expect(after.file_data).toBe(before.file_data);
-    expect(after.lines).toEqual(before.lines);
+    // Reading adopts the stable R2 line identity and explicit date/review
+    // defaults; every original business field remains byte-for-byte equal.
+    expect(after.lines).toEqual(
+      before.lines.map((line, index) => ({
+        ...line,
+        id: line.id ?? `${before.id}:line:${line.import_line_index ?? index}`,
+        date_tracking: line.date_tracking ?? false,
+        date_confirmed: line.date_tracking ? line.date_confirmed : true,
+        low_confidence_fields: line.low_confidence_fields ?? [],
+      })),
+    );
     expect(await retainedOriginalHash(page, after.file_data!)).toBe(
       originalHash,
     );
+    await showOriginal(page, language);
     await expect(
       page
         .getByText(before.file_name!, { exact: true })
         .filter({ visible: true }),
     ).toHaveCount(1);
     await page.reload();
-    await expect(page.locator(".invoice-original-media img")).toBeVisible();
+    await showOriginal(page, language);
     expect(await retainedOriginalHash(page, after.file_data!)).toBe(
       originalHash,
     );
@@ -168,19 +211,28 @@ for (const language of ["en", "fa"] as const) {
     expect(originalHash).toBe(
       createHash("sha256").update(invoiceImage.buffer).digest("hex"),
     );
-    const line = page.locator(".invoice-line").first();
+    const line = await openInvoiceLine(page, 0);
     await line
       .getByLabel("Unit cost before tax", { exact: true })
       .fill("1.5525");
-    await line.getByRole("button", { name: "No", exact: true }).click();
     await line
-      .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+      .getByRole("group", { name: "Track date", exact: true })
+      .getByRole("button", { name: "No", exact: true })
       .click();
-    await expect(line).toHaveAttribute("data-expanded", "false");
+    await line
+      .getByRole("button", { name: "Confirm line", exact: true })
+      .click();
+    await expect(page.locator(".invoice-line").first()).toHaveAttribute(
+      "data-expanded",
+      "false",
+    );
     await setLanguage(page, language);
-    const displayedCost = line
-      .locator(".invoice-line-summary > td:nth-child(3)")
-      .getByText("$1.5525", { exact: true });
+    const displayedCost = page
+      .getByTestId("invoice-line-row-0")
+      .locator(
+        ".receiving-cost-cell > bdi:visible, .receiving-phone-cost > bdi:visible",
+      );
+    await expect(displayedCost).toHaveCount(1);
     await expect(displayedCost).toBeVisible();
     await expect(displayedCost).toHaveText("$1.5525");
     await expect
@@ -232,10 +284,21 @@ for (const language of ["en", "fa"] as const) {
       const name = demo.products.find((item) => item.code === code)!.name_en;
       const row = page
         .locator(
-          `.received-table tbody > tr[data-row-href="#invoices?id=${encodeURIComponent(invoice.id)}"]`,
+          `.received-table tbody > tr[data-row-href^="#invoices?id=${encodeURIComponent(invoice.id)}&line="]`,
         )
         .filter({ hasText: name });
       await expect(row).toHaveCount(1);
+      const lineIndex = invoice.lines.findIndex(
+        (line) => line.product_code === code,
+      );
+      expect(lineIndex).toBeGreaterThanOrEqual(0);
+      const lineId = invoice.lines[lineIndex].id ?? String(lineIndex);
+      const href = `#invoices?id=${encodeURIComponent(invoice.id)}&line=${encodeURIComponent(lineId)}`;
+      await expect(row).toHaveAttribute("data-row-href", href);
+      await expect(row.locator(`a[href="${href}"]`).first()).toHaveAttribute(
+        "href",
+        href,
+      );
       const evidence = await quantityEvidence(page, row);
       await expect(evidence).toContainText(expected);
       await expect(evidence).not.toContainText(/\d+\.\d+\s+(?:cases|کارتن)/);
@@ -251,6 +314,7 @@ for (const language of ["en", "fa"] as const) {
   }) => {
     await signIn(page, "Supervisor");
     await setLanguage(page, language);
+    const navigationState = await saved(page);
     const tables = [
       ["received", ".received-table"],
       ["suppliers", ".suppliers-table"],
@@ -262,9 +326,32 @@ for (const language of ["en", "fa"] as const) {
       await page.goto(`/#${route}`);
       const row = page.locator(`${selector} tbody > tr[data-row-href]`).first();
       await expect(row).toBeVisible();
-      await expect(row.locator(".table-row-link")).toHaveCount(1);
+      if (route === "received") {
+        const href = await row.getAttribute("data-row-href");
+        expect(href).not.toBeNull();
+        const destination = new URL(href!, page.url());
+        const params = new URLSearchParams(destination.hash.split("?")[1]);
+        const invoice = [
+          navigationState.invoice,
+          ...(navigationState.invoices ?? []),
+        ].find((entry) => entry.id === params.get("id"));
+        expect(invoice).toBeDefined();
+        const lineIndex = invoice!.lines.findIndex(
+          (line, index) => (line.id ?? String(index)) === params.get("line"),
+        );
+        expect(lineIndex).toBeGreaterThanOrEqual(0);
+        const line = invoice!.lines[lineIndex];
+        const exactHref = `#invoices?id=${encodeURIComponent(invoice!.id)}&line=${encodeURIComponent(line.id ?? String(lineIndex))}`;
+        expect(href).toBe(exactHref);
+        await expect(row).toContainText(line.description);
+      }
       const disclosure = row.locator(".table-details-toggle");
       if (await row.evaluate((element) => element.matches(".phone-list-row"))) {
+        await expect(row.locator(".table-row-link")).toHaveCount(1);
+        await expect(row.locator(".table-row-link")).toHaveAttribute(
+          "href",
+          (await row.getAttribute("data-row-href"))!,
+        );
         await expect(
           row.locator(".phone-list-chevron .table-row-link"),
         ).toHaveCount(1);
@@ -310,12 +397,30 @@ for (const language of ["en", "fa"] as const) {
           afterValues: true,
         });
       } else {
-        await expect(
-          row.locator('td[data-column-key="actions"] .table-row-link'),
-        ).toHaveCount(1);
-        if (await disclosure.count()) {
+        if (route === "received") {
+          const href = await row.getAttribute("data-row-href");
+          await expect(row.locator(".received-invoice-link")).toHaveAttribute(
+            "href",
+            href!,
+          );
           await expect(
-            row.locator('td[data-column-key="actions"] .table-details-toggle'),
+            row.locator('td[data-column-key="date"] a'),
+          ).toHaveAttribute("href", href!);
+          await expect(row.locator(".table-row-link")).toHaveCount(0);
+        } else {
+          await expect(row.locator(".table-row-link")).toHaveCount(1);
+          await expect(
+            row.locator('td[data-column-key="actions"] .table-row-link'),
+          ).toHaveCount(1);
+        }
+        if (await disclosure.count()) {
+          await expect(disclosure).toHaveCount(1);
+          await expect(
+            row.locator(
+              route === "received"
+                ? ":scope > td:last-child .table-details-toggle"
+                : 'td[data-column-key="actions"] .table-details-toggle',
+            ),
           ).toHaveCount(1);
         }
       }
@@ -456,7 +561,7 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
   );
   await (await openInvoiceUpload(page)).setInputFiles(original);
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });
   await expect(page.locator(".invoice-line")).toHaveCount(1);
   await expect
@@ -480,18 +585,20 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
   expect(
     loaded.invoices!.find((item) => item.id === before.invoice.id)!.file_data,
   ).toBe(before.invoice.file_data);
-  await page
-    .locator(".invoice-line")
-    .first()
+  const editor = await openInvoiceLine(page, 0);
+  await editor
     .getByLabel("Unit cost before tax", { exact: true })
     .fill("14.3000");
+  await editor.getByRole("button", { name: "Close", exact: true }).click();
   await expect
     .poll(async () => (await saved(page)).invoice.lines[0].unit_cost_before_tax)
     .toBe("14.3000");
-  await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Save and close", exact: true })
+    .click();
   await (await openInvoiceUpload(page)).setInputFiles(original);
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });
   await expect
     .poll(async () => (await saved(page)).invoice.lines[0].unit_cost_before_tax)
@@ -500,12 +607,14 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
   expect(reused.invoice.id).toBe(loaded.invoice.id);
   expect(reused.invoice.file_data).toBe(loaded.invoice.file_data);
   expect(reused.ledger).toEqual(before.ledger);
-  await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Save and close", exact: true })
+    .click();
   await (
     await openInvoiceUpload(page)
   ).setInputFiles({ ...invoiceImage, name: "fictional-hw-5012.svg" });
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });
   const unknown = await saved(page);
   expect(unknown.invoice.id).not.toBe(loaded.invoice.id);

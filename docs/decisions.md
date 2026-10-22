@@ -334,7 +334,6 @@ Specification first; implementation and tests require separate actual-source evi
 
 **Why:** a no-op location choice must preserve live filter input. A genuine Provider regression delays delivery of the real refreshed projection and reproduces the old empty input; the repair retains typed text, focus, matching supplier and financial records. Companion cases retain Clear filters and the actual Floor Worker Payables denial.
 
-
 ## 042 — C9 session presentation and shared display contracts (2026-10-19)
 
 **Context:** the owner found transient light/sign-in frames, missing decided sale requests, conflicting regular/sale prices, ambiguous note status and inconsistent lists. The four approved feature PRs were merged in order only after all seven checks passed, following the separate CI sharding PR.
@@ -344,7 +343,6 @@ Specification first; implementation and tests require separate actual-source evi
 **Decision:** WebKit runs only the new non-localhost dark-theme no-reload test; existing Chromium projects retain their suite, workers, retries and skip rules. C9 includes the restored device-access instructions, with no hosting resource/deployment or claimed real Safari/phone evidence.
 
 **Why:** correct the observed interactions without presenting stale private information, recalculating retained targets or implying remote synchronization. Source contracts precede code; executed evidence is recorded separately in PR_C9_REVIEW.md.
-
 
 C9 weighed-price boundary: a retained $22.02/kg sale can convert below $9.99/lb exactly while both display the same cents. Promotion markers/comparisons require a reduction in the displayed main-unit cents as well as the exact canonical amount. Keep the actual entered-unit display, effective price and history unchanged; never reconstruct a retained kg amount from rounded lb cents.
 
@@ -389,3 +387,55 @@ C9 weighed-price boundary: a retained $22.02/kg sale can convert below $9.99/lb 
 - **Note authors cannot mark their own note seen; a notebook setting chooses who may mark notes done** (Ali). Default stays "anyone who can add notes".
 - **Everyone adds dates** (Ali). Cashiers receive `dates.add` only: they can add a date at an assigned Store (recorded with who added it) but still get only the public date hint, never the full list or removal.
 - **A returning signed-in tab shows the app frame while it starts** instead of a blank page, so a browser reload (seen in Safari) no longer flashes white.
+
+## R2 receiving decisions — 2026-10-21
+
+### 2026-10-21 — Suppliers are active on creation
+
+Supplier approval and required contact fields slowed receiving. Require only the name; contacts, representative, terms and address are optional. Notify Owners/Managers once to complete a missing profile and resolve the notification when complete. Never block posting for supplier profile details.
+
+### 2026-10-21 — Track dates defaults to No
+
+Repeated Yes/No questions add no useful review. Default each line to No unless its matched product already tracks dates; Yes exposes the date and may suggest printed expiry.
+
+### 2026-10-21 — One confirmation per line
+
+Per-field buttons caused excessive controls. Confirm line acknowledges the entire validated line, highlights included; invoice details and totals each retain one Looks right.
+
+### 2026-10-21 — Highlight only actual questions
+
+Empty optional barcode, lot, printed expiry, handwritten note, order reference, bill-to and ship-to fields are never uncertainty. Missing required supplier, invoice number/date/total, line description/quantity/cost remains highlighted.
+
+### 2026-10-21 — Calculate missing paper totals
+
+When total and tax exist derive subtotal as total minus tax; when subtotal and tax exist derive total as their sum. Fill it and label Calculated: compare with the paper until the totals acknowledgment.
+
+### 2026-10-21 — Rare printed evidence stays under More details
+
+Keep lot number, printed expiry, barcode and printed description out of the compact line editor by default. Only highlighted hidden barcode, lot, printed expiry or note evidence opens More details automatically; a question already visible in English name/description leaves it closed. Opening the section retains printed description and all evidence fields after acknowledgment.
+
+### 2026-10-21 — Correct and resubmit approvals
+
+A rejected product/price request can be corrected within pricing rules and permissions and resubmitted as a new pending request linked to the rejected record. A pending category can also be corrected before approval, with recalculation and History.
+
+### 2026-10-22 — Compact reference within the retained receiving layout budget
+
+**Context:** the approved receiving reference requires a compact five-column table and quiet totals while the existing 2px stability and 25-line/2700px desktop budgets remain mandatory.
+
+**Decision:** use a dedicated receiving table, 48px closed rows for long lists and 8px work gaps, retaining normal typography, card tokens and 44px fields. Totals defaults to label/amount rows with calculated tags; Edit exposes the real fields, automatically shown for actual non-calculated questions or invalid attempted totals. Keep one whole-card Looks right and stable line identities. Phone details starts as a compact disclosure and expands through its chevron or needed-header navigation.
+
+**Scoped reference variants:** `.ui-dialog-structured` footers use 44px intrinsic actions, surface-fill/1px-field-border secondary and filled danger, preserving general 40px/borderless rules elsewhere. Phone receiving Confirm spans its footer above two equal secondary actions; phone progress Next/Post use equal columns. Those two phone layouts allow stretched 44px actions; other buttons remain intrinsic. Below a 340px toolbar-container width, Rotate moves into More rather than wrapping, fitting the retained sidebar/top-bar layout.
+
+**Phone stability:** temporarily reserve the fixed editor body's height while fields collapse so Track dates Yes → No does not clamp its internal scroll position. Release on user wheel/touch scrolling, close or navigation; retain the existing 2px guard and all business values.
+
+**Why:** match the approved composition without losing evidence, shrinking controls, moving the user's row or weakening existing guards. This changes presentation only; canonical validation, Decimal calculations, pricing decisions and authority remain unchanged.
+
+### 2026-10-22 — Boxes keep what the person types while focused
+
+**Context:** saves go through the asynchronous browser database. Inputs bound directly to the saved value were re-rendered with the older saved value between keystrokes, which dropped or repeated characters ("20" became "240").
+
+**Decision:** `BufferedInput` (and `NumberField` with `keepTyping`, used on the receiving screen) shows the person's own text while the box has focus and the saved value again on blur. A saved value that matches something they typed (including numeric forms like "7" for "007", or 0 for a blank box) is treated as an echo and ignored; any other new saved value, such as a price chip or recalculation, replaces the text at once. Changes made without focus are never buffered.
+
+**Why:** correct quantities and costs are the core of receiving; this removes a race without changing validation, Decimal maths or what is saved.
+
+**Scope:** opt-in. Screens that correct a value at once while typing (Labels copies snap back to 1 with an error) keep the plain `NumberField`.

@@ -2,7 +2,13 @@ import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { createHash } from "node:crypto";
-import { invoiceImage, setLanguage, signIn, uploadInvoice } from "./helpers";
+import {
+  invoiceImage,
+  setLanguage,
+  signIn,
+  uploadInvoice,
+  openInvoiceDetails,
+} from "./helpers";
 import type { DemoState } from "../src/types";
 import type { Order } from "../src/orders";
 
@@ -91,6 +97,7 @@ async function reviewWithComparison(page: Page) {
     undefined,
   );
   await page.reload();
+  await openInvoiceDetails(page);
   await page.getByLabel("Order (optional)", { exact: true }).click();
   await page.getByRole("option", { name: /ORD-C3-LAYOUT/ }).click();
   await expect(page.locator(".invoice-order-table tbody tr")).toHaveCount(6);
@@ -103,7 +110,7 @@ async function reviewWithComparison(page: Page) {
   }
   await expect(page.locator(".invoice-order-costs").first()).toBeVisible();
   await expect(
-    page.locator(".invoice-line-price .badge").first(),
+    page.locator(".receiving-lines-table .receiving-status-icon").first(),
   ).toBeVisible();
 }
 
@@ -119,11 +126,30 @@ async function invoiceGeometry(page: Page) {
     )) {
       if (!visible(panel)) continue;
       const bounds = panel.getBoundingClientRect();
-      if (panel.scrollWidth > panel.clientWidth + 2)
+      const scrollable = panel.matches(
+        ".ui-data-table.is-scrollable:not(.is-phone-list)",
+      );
+      const scrollTable =
+        panel.matches("table") &&
+        panel.closest(".ui-data-table.is-scrollable:not(.is-phone-list)");
+      if (scrollable) {
+        const parent = panel.parentElement!.getBoundingClientRect();
+        if (
+          !/^(auto|scroll)$/.test(getComputedStyle(panel).overflowX) ||
+          panel.tabIndex < 0 ||
+          bounds.left < parent.left - 2 ||
+          bounds.right > parent.right + 2
+        )
+          failures.push("Scrollable table containment or keyboard access");
+      }
+      if (panel.scrollWidth > panel.clientWidth + 2 && !scrollable)
         failures.push(
           `Sideways panel: ${panel.className} ${panel.scrollWidth}/${panel.clientWidth}`,
         );
-      if (bounds.left < -2 || bounds.right > window.innerWidth + 2)
+      if (
+        !scrollTable &&
+        (bounds.left < -2 || bounds.right > window.innerWidth + 2)
+      )
         failures.push(`Outside viewport: ${panel.className}`);
     }
     for (const cell of area.querySelectorAll<HTMLElement>("td,th")) {
@@ -212,39 +238,40 @@ for (const width of [1280, 1440, 1920]) {
         });
         expect(await invoiceGeometry(page)).toEqual([]);
         const panes = await page
-          .locator(".invoice-workspace")
+          .locator(".receiving-review")
           .evaluate((element) => {
             const original = element
-              .querySelector(".invoice-document-pane")!
+              .querySelector(".original-viewer")!
               .getBoundingClientRect();
             const review = element
-              .querySelector(".invoice-review-pane")!
+              .querySelector(".receiving-work")!
               .getBoundingClientRect();
             const footer = element
-              .querySelector(".invoice-action-footer")!
+              .querySelector(".receiving-progress")!
               .getBoundingClientRect();
             return {
               originalTop: original.top,
               reviewTop: review.top,
               originalShare: original.width / (original.width + review.width),
               originalPosition: getComputedStyle(
-                element.querySelector(".invoice-document-pane")!,
+                element.querySelector(".original-viewer")!,
               ).position,
               reviewBottom: review.bottom,
               footerTop: footer.top,
               footerPosition: getComputedStyle(
-                element.querySelector(".invoice-action-footer")!,
+                element.querySelector(".receiving-progress")!,
               ).position,
             };
           });
-        // C7 replaces the old stacked desktop layout with the specified sticky 40% original pane.
+        // The approved receiving composition gives the work pane 1.7 shares
+        // and the sticky original one share, with all five columns visible.
         expect(
           Math.abs(panes.originalTop - panes.reviewTop),
         ).toBeLessThanOrEqual(1);
-        expect(panes.originalShare).toBeCloseTo(0.4, 2);
+        expect(panes.originalShare).toBeCloseTo(1 / 2.7, 2);
         expect(panes.originalPosition).toBe("sticky");
-        expect(panes.footerTop).toBeGreaterThanOrEqual(panes.reviewBottom);
-        expect(panes.footerPosition).toBe("static");
+        expect(panes.footerTop).toBeLessThanOrEqual(panes.reviewTop);
+        expect(panes.footerPosition).toBe("sticky");
       });
     }
   }
@@ -255,7 +282,7 @@ test("posted invoice Columns persist, and detail/browser Back retain the Posted 
 }) => {
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
-  await page.getByRole("tab", { name: "Posted", exact: true }).click();
+  await page.getByRole("tab", { name: /^Posted \d+$/, exact: false }).click();
   await expect(
     page.locator(".invoice-posted-table tbody tr").first(),
   ).toBeVisible();
@@ -273,7 +300,7 @@ test("posted invoice Columns persist, and detail/browser Back retain the Posted 
   ).toHaveCount(0);
   await page.reload();
   await expect(
-    page.getByRole("tab", { name: "Posted", exact: true }),
+    page.getByRole("tab", { name: /^Posted \d+$/, exact: false }),
   ).toHaveAttribute("aria-selected", "true");
   await expect(
     page.locator(".invoice-posted-table th[data-column-key=supplier]"),
@@ -281,17 +308,20 @@ test("posted invoice Columns persist, and detail/browser Back retain the Posted 
   await page.locator(".invoice-posted-table").getByRole("link").first().click();
   await expect(page).toHaveURL(/#invoices\?id=/);
   await expect(
-    page.getByRole("link", { name: "Back to Invoices", exact: true }),
+    page
+      .getByRole("link", { name: "Invoices", exact: true })
+      .and(page.locator(".back-link")),
   ).toBeVisible();
   await page.goBack();
   await expect(page).toHaveURL(/#invoices$/);
   await expect(page.locator(".invoice-posted-table")).toBeVisible();
   await expect(
-    page.getByRole("tab", { name: "Posted", exact: true }),
+    page.getByRole("tab", { name: /^Posted \d+$/, exact: false }),
   ).toHaveAttribute("aria-selected", "true");
   await page.locator(".invoice-posted-table").getByRole("link").first().click();
   await page
-    .getByRole("link", { name: "Back to Invoices", exact: true })
+    .getByRole("link", { name: "Invoices", exact: true })
+    .and(page.locator(".back-link"))
     .click();
   await expect(page.locator(".invoice-posted-table")).toBeVisible();
   await page.getByRole("button", { name: "Columns", exact: true }).click();
@@ -310,24 +340,30 @@ test("a manual draft detail returns to its list without losing the saved line", 
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "New invoice", exact: true })
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
   await expect(page).toHaveURL(/#invoices\?id=/);
+  await page
+    .getByLabel("Add a product to the invoice", { exact: true })
+    .click();
+  await page
+    .getByRole("option", { name: "Canned Fava Beans 400 g", exact: true })
+    .click();
   await page.getByRole("button", { name: "Add line", exact: true }).click();
   await page
-    .getByRole("button", { name: "Save as draft", exact: true })
-    .click();
-  await page
-    .getByRole("link", { name: "Back to Invoices", exact: true })
+    .getByRole("button", { name: "Save and close", exact: true })
     .click();
   await expect(page.locator(".invoice-saved-drafts")).toBeVisible();
-  await expect(page.locator(".invoice-lines-table")).toHaveCount(0);
+  await expect(page.locator(".receiving-lines-table")).toHaveCount(0);
   // S1: saved drafts are a table; the new manual draft has no invoice number yet.
   await page
     .locator(".invoice-saved-drafts tbody tr")
     .filter({
-      has: page.locator("td:first-child strong", { hasText: /^Draft$/ }),
+      has: page.locator("td:first-child a", { hasText: /^Draft$/ }),
     })
-    .getByRole("button", { name: "Resume draft", exact: true })
+    .getByRole("link", { name: "Draft", exact: true })
     .click();
   await expect(page.locator(".invoice-line")).toHaveCount(1);
   await page.goBack();

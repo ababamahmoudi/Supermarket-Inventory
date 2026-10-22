@@ -15,9 +15,12 @@ import {
   type AnchorHTMLAttributes,
   type ReactElement,
   type ReactNode,
+  type ComponentPropsWithRef,
   type InputHTMLAttributes,
+  type Ref,
   type CSSProperties,
   type KeyboardEvent,
+  type DetailsHTMLAttributes,
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { Slot } from "@radix-ui/react-slot";
@@ -94,7 +97,7 @@ export function Button({
   className,
   type = "button",
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
+}: ComponentPropsWithRef<"button"> & {
   variant?:
     | "primary"
     | "secondary"
@@ -116,6 +119,25 @@ export function Button({
       type={type}
       {...props}
     />
+  );
+}
+export function Disclosure({
+  summary,
+  children,
+  className,
+  ...props
+}: DetailsHTMLAttributes<HTMLDetailsElement> & { summary: ReactNode }) {
+  return (
+    <details {...props} className={cn("ui-disclosure", className)}>
+      <summary
+        className={cn("ui-button", buttonVariants({ variant: "plain" }))}
+        data-control-kind="disclosure"
+      >
+        <span>{summary}</span>
+        <ChevronDown size={16} aria-hidden="true" />
+      </summary>
+      {children}
+    </details>
   );
 }
 export function Card({
@@ -287,16 +309,18 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
 }
 export function Badge({
   tone = "neutral",
+  wrap = false,
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone }) {
+}: HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone; wrap?: boolean }) {
   const resolvedTone = statusTone(children) ?? tone;
   const offer = typeof children === "string" && /^\d+\s+for\s+/i.test(children);
   return (
     <span
       className={cn(
         "badge ui-badge",
+        wrap && "is-wrappable",
         resolvedTone,
         { "offer-pill": offer },
         className,
@@ -311,6 +335,7 @@ export function Badge({
 export const StatusBadge = Badge;
 export function Field({
   adornment,
+  labelAdornment,
   containerId,
   label,
   children,
@@ -321,9 +346,10 @@ export function Field({
   label: string;
   children: ReactNode;
   adornment?: ReactNode;
+  labelAdornment?: ReactNode;
   containerId?: string;
   error?: string;
-  hint?: string;
+  hint?: ReactNode;
   className?: string;
 }) {
   const generated = useId();
@@ -340,17 +366,27 @@ export function Field({
   const labelId = `${id}-label`;
   const descriptionId = `${id}-help`;
   const optional = label.match(/^(.*?)\s+(\((?:optional|اختیاری)\))$/);
+  const fieldLabel = (
+    <label id={labelId} htmlFor={id}>
+      {optional ? (
+        <>
+          {optional[1]} <span className="field-optional">{optional[2]}</span>
+        </>
+      ) : (
+        label
+      )}
+    </label>
+  );
   return (
     <div id={containerId} className={cn("field", className)}>
-      <label id={labelId} htmlFor={id}>
-        {optional ? (
-          <>
-            {optional[1]} <span className="field-optional">{optional[2]}</span>
-          </>
-        ) : (
-          label
-        )}
-      </label>
+      {labelAdornment ? (
+        <div className="ui-field-label-row">
+          {fieldLabel}
+          {labelAdornment}
+        </div>
+      ) : (
+        fieldLabel
+      )}
       {child
         ? cloneElement(child, {
             id,
@@ -409,10 +445,14 @@ export function DataTable({
   expandedRowKeys,
   onExpandedRowKeysChange,
   phoneList,
+  horizontalScroll = false,
+  density = "default",
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
   columns?: ResponsiveColumn[];
   responsive?: boolean;
+  horizontalScroll?: boolean;
+  density?: "default" | "compact";
   expandedRowKeys?: string[];
   onExpandedRowKeysChange?: (keys: string[]) => void;
   phoneList?: {
@@ -734,13 +774,25 @@ export function DataTable({
           </IconButton>
         ) : null;
         if (mobile && phoneList && bodyRow && !fullRow) {
+          const withoutRowLinks = (nodes: ReactNode): ReactNode =>
+            Array.isArray(nodes)
+              ? nodes.map(withoutRowLinks)
+              : !isValidElement<{ children?: ReactNode }>(nodes)
+                ? nodes
+                : nodes.type === TableRowLink
+                  ? null
+                  : nodes.props.children === undefined
+                    ? nodes
+                    : cloneElement(nodes, {
+                        children: withoutRowLinks(nodes.props.children),
+                      });
           const permittedCell = (key: string | undefined) => {
             const index = resolvedColumns.findIndex(
               (column) => column.key === key && !column.hidden,
             );
             const cell = index < 0 ? null : rowCells[index];
             return isValidElement<{ children?: ReactNode }>(cell)
-              ? cell.props.children
+              ? withoutRowLinks(cell.props.children)
               : null;
           };
           const findLink = (nodes: ReactNode): ReactNode => {
@@ -979,6 +1031,8 @@ export function DataTable({
         "table-wrap",
         "ui-data-table",
         layoutResponsive && "is-responsive",
+        horizontalScroll && "is-scrollable",
+        density === "compact" && "is-compact",
         mobile && "is-mobile",
         printing && "is-printing",
         mobile && phoneList && "is-phone-list",
@@ -1278,6 +1332,11 @@ export function Dialog({
   description,
   children,
   className,
+  icon,
+  iconTone = "neutral",
+  footer,
+  bodyClassName,
+  heading,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -1285,10 +1344,17 @@ export function Dialog({
   description?: ReactNode;
   children?: ReactNode;
   className?: string;
+  icon?: ReactNode;
+  iconTone?: "neutral" | "approved" | "danger";
+  footer?: ReactNode;
+  bodyClassName?: string;
+  heading?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
   const titleId = useId();
+  const descriptionId = useId();
+  const structured = icon !== undefined || footer !== undefined;
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -1309,19 +1375,25 @@ export function Dialog({
       )?.focus();
     } else if (!open && dialog.open) {
       dialog.close();
-      trigger.current?.focus();
+      trigger.current?.focus({ preventScroll: true });
     }
     return () => {
       if (dialog.open) dialog.close();
-      trigger.current?.focus();
+      trigger.current?.focus({ preventScroll: true });
     };
   }, [open]);
   return (
     <dialog
       ref={ref}
-      className={cn("confirm-dialog ui-dialog", className)}
+      className={cn(
+        "confirm-dialog ui-dialog",
+        structured && "ui-dialog-structured",
+        className,
+      )}
       tabIndex={-1}
-      aria-labelledby={open ? titleId : undefined}
+      aria-labelledby={open && !heading ? titleId : undefined}
+      aria-label={heading ? title : undefined}
+      aria-describedby={description ? descriptionId : undefined}
       onKeyDown={(event) => {
         if (event.key !== "Tab" || event.defaultPrevented) return;
         const dialog = event.currentTarget;
@@ -1369,7 +1441,26 @@ export function Dialog({
       }}
     >
       <div className="ui-dialog-header">
-        <h2 id={titleId}>{title}</h2>
+        {structured && icon && (
+          <span
+            className={cn("ui-dialog-icon", `is-${iconTone}`)}
+            aria-hidden="true"
+          >
+            {icon}
+          </span>
+        )}
+        {structured ? (
+          <div className="ui-dialog-heading">
+            <h2 id={titleId}>{heading ?? title}</h2>
+            {description && (
+              <div id={descriptionId} className="dialog-description muted">
+                {description}
+              </div>
+            )}
+          </div>
+        ) : (
+          <h2 id={titleId}>{title}</h2>
+        )}
         <IconButton
           aria-label={translate("Close dialog", "بستن پنجره")}
           onClick={() => onOpenChange(false)}
@@ -1377,10 +1468,21 @@ export function Dialog({
           <X size={20} aria-hidden="true" />
         </IconButton>
       </div>
-      {description && (
-        <div className="dialog-description muted">{description}</div>
+      {!structured && description && (
+        <div id={descriptionId} className="dialog-description muted">
+          {description}
+        </div>
       )}
-      {children}
+      {structured ? (
+        <>
+          <div className={cn("ui-dialog-body", bodyClassName)}>{children}</div>
+          {footer && (
+            <DialogActions className="ui-dialog-footer">{footer}</DialogActions>
+          )}
+        </>
+      ) : (
+        children
+      )}
     </dialog>
   );
 }
@@ -1453,7 +1555,7 @@ export type SelectOption = {
   count?: number;
 };
 
-function usePopover(minWidth = 224) {
+export function usePopover(minWidth = 224) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<CSSProperties>({});
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
@@ -1508,7 +1610,10 @@ function usePopover(minWidth = 224) {
   };
   const show = () => {
     measure();
-    setPortalTarget(triggerRef.current?.closest("dialog") ?? document.body);
+    setPortalTarget(
+      triggerRef.current?.closest<HTMLElement>("[data-popover-root],dialog") ??
+        document.body,
+    );
     setOpen(true);
   };
   useEffect(() => {
@@ -1909,6 +2014,82 @@ export function Switch({
   );
 }
 
+// While a box has focus it shows exactly what the person typed. Saves finish
+// later (the browser database is asynchronous), so applying a slower saved
+// value mid-typing used to drop or repeat characters ("20" became "240",
+// "1.3" became "13"). The saved value shows again when the person leaves.
+const sameEntry = (entry: string, saved: string) => {
+  if (entry === saved || entry.trim() === saved.trim()) return true;
+  const number = /^\s*-?(\d+\.?\d*|\.\d+)\s*$/;
+  if (entry.trim() === "") return number.test(saved) && Number(saved) === 0;
+  return (
+    number.test(entry) && number.test(saved) && Number(entry) === Number(saved)
+  );
+};
+function useTypingBuffer(value: unknown) {
+  const saved = value === null || value === undefined ? "" : String(value);
+  const [typing, setTyping] = useState<string | null>(null);
+  const typed = useRef<string[]>([]);
+  useEffect(() => {
+    if (typing === null) return;
+    // A late save of something the person typed is an echo: keep their text.
+    // Anything else (a chip, a recalculation) is a real change: show it.
+    if (!typed.current.some((entry) => sameEntry(entry, saved)))
+      setTyping(saved);
+    // Only a new saved value should trigger this check.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saved]);
+  return {
+    shown: typing ?? saved,
+    focus: () => {
+      typed.current = [saved];
+      setTyping(saved);
+    },
+    change: (next: string, focused: boolean) => {
+      // Only a box the person is typing in keeps its own text.
+      if (!focused) return;
+      typed.current.push(next);
+      setTyping(next);
+    },
+    blur: () => setTyping(null),
+  };
+}
+
+/** A text box for a saved value: keeps every keystroke while it has focus. */
+export function BufferedInput({
+  value,
+  onChange,
+  onFocus,
+  onBlur,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "value"> & {
+  value: string | number | null | undefined;
+  ref?: Ref<HTMLInputElement>;
+}) {
+  const buffer = useTypingBuffer(value);
+  return (
+    <input
+      {...props}
+      value={buffer.shown}
+      onFocus={(event) => {
+        buffer.focus();
+        onFocus?.(event);
+      }}
+      onChange={(event) => {
+        buffer.change(
+          event.target.value,
+          event.target.ownerDocument.activeElement === event.target,
+        );
+        onChange?.(event);
+      }}
+      onBlur={(event) => {
+        buffer.blur();
+        onBlur?.(event);
+      }}
+    />
+  );
+}
+
 export function NumberField({
   value,
   onChange,
@@ -1916,6 +2097,7 @@ export function NumberField({
   max,
   step,
   className,
+  keepTyping = false,
   ...props
 }: Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -1926,9 +2108,14 @@ export function NumberField({
   min?: string | number;
   max?: string | number;
   step?: string | number;
+  /** Keep the person's own text while focused (see BufferedInput). Off by
+   * default so screens that correct a value at once (Labels copies) keep
+   * showing the corrected value immediately. */
+  keepTyping?: boolean;
 }) {
+  const Input = keepTyping ? BufferedInput : "input";
   return (
-    <input
+    <Input
       {...props}
       type="text"
       dir={props.dir ?? "ltr"}

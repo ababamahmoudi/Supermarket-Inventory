@@ -4,6 +4,8 @@ import type { NotificationRecord } from "./sales";
 import { can } from "./permissions";
 import { domainScope } from "./domain-authority";
 import { readableNotebookEntries } from "./notebooks";
+import { supplierRecords } from "./supplier-editor";
+import { missingSupplierProfileDetails } from "./supplier-profiles";
 /** Retained notification rows never retain authority after a person's role/locations change. */
 export function notificationReadable(
   state: DemoState,
@@ -18,6 +20,21 @@ export function notificationReadable(
     return false;
   let capability: Capability;
   switch (row.kind) {
+    case "supplier_profile_incomplete": {
+      const supplier = supplierRecords(state).find(
+        (record) =>
+          record.company_id === actor.company_id &&
+          record.id === row.supplier_id,
+      );
+      if (
+        !supplier ||
+        !supplier.active ||
+        !missingSupplierProfileDetails(supplier).length
+      )
+        return false;
+      capability = "suppliers.manage";
+      break;
+    }
     case "note_added":
       if (
         !state.notes.some(
@@ -71,6 +88,17 @@ export function notificationReadable(
       capability = "dashboard.company";
       break;
     case "approval_waiting":
+      if (
+        state.approvals.some(
+          (approval) =>
+            approval.company_id === actor.company_id &&
+            approval.type === "new_supplier" &&
+            row.event_key.startsWith(`approval:${approval.id}:`),
+        )
+      )
+        return false;
+      capability = "approvals.read";
+      break;
     case "sale_request_submitted":
       capability = "approvals.read";
       break;

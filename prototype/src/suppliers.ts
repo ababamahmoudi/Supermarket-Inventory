@@ -1,5 +1,6 @@
 import { companyCalendarDate } from "./company-time";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
+import { missingSupplierProfileDetails } from "./supplier-profiles";
 import Decimal from "decimal.js";
 import { companyDate } from "./invoice";
 import { OperationError } from "./operations";
@@ -39,6 +40,8 @@ export interface SupplierOverviewRow {
   notes?: string;
   name: string;
   status: "confirmed" | "proposed";
+  profile_missing: ReturnType<typeof missingSupplierProfileDetails>;
+  source_invoice_number?: string;
   phone: string | null;
   email: string | null;
   sales_rep_name: string | null;
@@ -220,6 +223,13 @@ export function suppliersOverview(
     .filter((record) => inScope(state, record, context))
     .forEach((record) => addName(record.supplier));
   const month = companyDate(state.config).slice(0, 7);
+  // Keep import creation order while adopting edits from the current workspace.
+  const importSources = new Map(
+    [...(state.invoices ?? []), state.invoice].map((invoice) => [
+      invoice.id,
+      invoice,
+    ]),
+  );
   return [...names].map((name) => {
     const details = metadata.find((supplier) => supplier.name === name);
     const matches = (supplier: string) =>
@@ -239,6 +249,15 @@ export function suppliersOverview(
       address: details?.address,
       notes: details?.notes,
       status: details?.status === "proposed" ? "proposed" : "confirmed",
+      profile_missing: details ? missingSupplierProfileDetails(details) : [],
+      source_invoice_number: details?.created_from_import
+        ? [...importSources.values()].find(
+            (invoice) =>
+              invoice.company_id === context.company_id &&
+              invoice.reading_record?.source === "imported" &&
+              matches(invoice.supplier),
+          )?.supplier_invoice_number
+        : undefined,
       phone: details?.phone ?? null,
       email: details?.email ?? null,
       sales_rep_name: details?.sales_rep_name ?? null,

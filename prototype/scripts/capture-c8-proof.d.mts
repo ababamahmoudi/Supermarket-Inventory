@@ -39,6 +39,9 @@ export function postC8SaleCostInvoice(
 export type C8Containment = {
   tableCount: number;
   rowCount: number;
+  editorCount: number;
+  cells: number;
+  words: number;
   tables: {
     className: string;
     cardClassName: string;

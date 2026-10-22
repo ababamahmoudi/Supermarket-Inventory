@@ -4,7 +4,7 @@ import {
   prepareSharedUiFixture,
   disposeSharedUiFixture,
 } from "./shared-ui-provider-test-fixture";
-import { useState, type ReactNode } from "react";
+import { createRef, useState, type ReactNode } from "react";
 import {
   act,
   fireEvent,
@@ -22,6 +22,7 @@ import {
   DateText,
   ProductName,
   OfferLabel,
+  LtrText,
   branchLabel,
   demoUserLabel,
   formatMoney,
@@ -31,7 +32,9 @@ import {
   Badge,
   Checkbox,
   ConfirmDialog,
+  Dialog,
   DataTable,
+  Disclosure,
   DateField,
   Dropzone,
   Field,
@@ -523,7 +526,104 @@ describe("styled NumberField", () => {
     await user.type(input, "2.35");
     expect(input).toHaveValue("2.35");
   });
+
+  it("keeps every keystroke when the saved value arrives later", async () => {
+    const user = userEvent.setup();
+    const saved: string[] = [];
+    await show(<SlowSavedQuantity saved={saved} />);
+    const input = screen.getByRole("textbox", { name: "Delivered" });
+    await user.tripleClick(input);
+    // Each key lands before the previous save has finished.
+    await user.keyboard("2");
+    await user.keyboard("0");
+    expect(input).toHaveValue("20");
+    await act(() => new Promise((resolve) => setTimeout(resolve, 80)));
+    expect(input).toHaveValue("20");
+    expect(saved.at(-1)).toBe("20");
+    // Emptying the box while typing does not snap back to a number.
+    await user.clear(input);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 80)));
+    expect(input).toHaveValue("");
+    await user.type(input, "18");
+    await act(() => new Promise((resolve) => setTimeout(resolve, 80)));
+    await user.tab();
+    expect(input).toHaveValue("18");
+  });
+
+  it("shows the saved value again after leaving the box", async () => {
+    const user = userEvent.setup();
+    await show(<SlowSavedQuantity saved={[]} normalize />);
+    const input = screen.getByRole("textbox", { name: "Delivered" });
+    await user.tripleClick(input);
+    await user.keyboard("007");
+    await act(() => new Promise((resolve) => setTimeout(resolve, 80)));
+    expect(input).toHaveValue("007");
+    await user.tab();
+    expect(input).toHaveValue("7");
+  });
 });
+function PriceWithChip() {
+  const [value, setValue] = useState("4.99");
+  return (
+    <>
+      <Field label="Price">
+        <NumberField
+          value={value}
+          onChange={setValue}
+          min="0"
+          step="0.01"
+          keepTyping
+        />
+      </Field>
+      {/* Safari keeps focus in the box when a button is clicked. */}
+      <button
+        type="button"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => setValue("5.49")}
+      >
+        +10%
+      </button>
+    </>
+  );
+}
+describe("styled NumberField outside changes", () => {
+  it("shows a price set by a chip while the box keeps focus", async () => {
+    const user = userEvent.setup();
+    await show(<PriceWithChip />);
+    const input = screen.getByRole("textbox", { name: "Price" });
+    await user.click(input);
+    await user.click(screen.getByRole("button", { name: "+10%" }));
+    expect(input).toHaveFocus();
+    expect(input).toHaveValue("5.49");
+  });
+});
+function SlowSavedQuantity({
+  saved,
+  normalize = false,
+}: {
+  saved: string[];
+  normalize?: boolean;
+}) {
+  const [value, setValue] = useState("24");
+  return (
+    <Field label="Delivered">
+      <NumberField
+        value={value}
+        min="0"
+        step="1"
+        keepTyping
+        onChange={(next) => {
+          saved.push(next);
+          // Like the app's browser-database save: the value comes back later.
+          setTimeout(
+            () => setValue(normalize ? String(Number(next)) : next),
+            30,
+          );
+        }}
+      />
+    </Field>
+  );
+}
 function InvoiceUpload() {
   const [file, setFile] = useState<File | null>(null);
   return (
@@ -826,6 +926,72 @@ it("detail-opening rows navigate by click and keyboard while child actions remai
   );
   window.location.hash = "";
 });
+it("moves a retained cell's navigation into the single phone chevron slot", async () => {
+  vi.stubGlobal("innerWidth", 390);
+  const opened = vi.fn();
+  try {
+    const user = userEvent.setup();
+    await show(
+      <DataTable
+        columns={[{ key: "name" }, { key: "cost" }, { key: "status" }]}
+        phoneList={{ name: "name", value: "cost", secondary: ["status"] }}
+      >
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Cost</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <LtrText>Fictional pantry item</LtrText>
+            </td>
+            <td>$1.00</td>
+            <td>
+              <span>Not confirmed</span>
+              <TableRowLink
+                href="#review-line"
+                aria-label="Review line"
+                onClick={(event) => {
+                  event.preventDefault();
+                  opened();
+                }}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </DataTable>,
+    );
+    const control = screen.getByRole("link", { name: "Review line" });
+    expect(control.closest("td")).toHaveClass("phone-list-chevron");
+    expect(screen.getByText("Not confirmed").closest("td")).toHaveClass(
+      "phone-list-secondary",
+    );
+    await user.click(control);
+    expect(opened).toHaveBeenCalledOnce();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+it("keeps disclosure content while its shared summary opens and closes", async () => {
+  const user = userEvent.setup();
+  await show(
+    <Disclosure summary="More details">
+      <p>Optional printed note</p>
+    </Disclosure>,
+  );
+  const summary = screen.getByText("More details").closest("summary")!;
+  const details = summary.parentElement!;
+  expect(screen.getByText("Optional printed note")).not.toBeVisible();
+  await user.click(summary);
+  expect(details).toHaveAttribute("open");
+  expect(screen.getByText("Optional printed note")).toBeVisible();
+  await user.click(summary);
+  expect(details).not.toHaveAttribute("open");
+  expect(screen.getByText("Optional printed note")).not.toBeVisible();
+});
 describe("shared language and number presentation", () => {
   it("formats money without losing Decimal precision, with Western digits and the symbol first", () => {
     expect(formatMoney("2.99", { currency: "CAD" })).toBe("$2.99");
@@ -1069,4 +1235,111 @@ beforeEach(async () => {
 });
 afterEach(() => {
   disposeSharedUiFixture();
+});
+
+describe("shared structured compositions", () => {
+  it("keeps field adornments separate from the accessible label and includes rich help", async () => {
+    const button = createRef<HTMLButtonElement>();
+    await show(
+      <>
+        <Field
+          label="Subtotal"
+          labelAdornment={
+            <span role="img" aria-label="Check original">
+              !
+            </span>
+          }
+          hint={
+            <span>
+              Calculated from <strong>line totals</strong>.
+            </span>
+          }
+        >
+          <input defaultValue="12.50" />
+        </Field>
+        <Button ref={button}>Apply value</Button>
+      </>,
+    );
+    const input = screen.getByRole("textbox", {
+      name: "Subtotal",
+    });
+    expect(input).toHaveAccessibleDescription("Calculated from line totals.");
+    expect(
+      screen.getByRole("img", { name: "Check original" }),
+    ).toBeInTheDocument();
+    expect(button.current).toBe(
+      screen.getByRole("button", { name: "Apply value" }),
+    );
+  });
+  it("keeps nested options inside their containing popover", async () => {
+    const user = userEvent.setup();
+    await show(
+      <div data-popover-root data-testid="received-popover">
+        <StatusSelect />
+      </div>,
+    );
+    const parent = screen.getByTestId("received-popover");
+    const select = within(parent).getByRole("combobox", {
+      name: "Invoice status",
+    });
+    await user.click(select);
+    const listbox = within(parent).getByRole("listbox", {
+      name: "Invoice status",
+    });
+    await user.click(within(listbox).getByRole("option", { name: "Posted" }));
+    expect(within(parent).getByTestId("selected-status")).toHaveTextContent(
+      "posted",
+    );
+    expect(select).toHaveFocus();
+  });
+  it("preserves the dialog name, cancellation and return focus with a separate visible heading", async () => {
+    function StructuredDialog() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <Button onClick={() => setOpen(true)}>
+            Review imported invoices
+          </Button>
+          <Dialog
+            open={open}
+            onOpenChange={setOpen}
+            title="Import complete"
+            heading="13 invoices imported"
+            description="Review before posting."
+            icon={<span aria-hidden="true">✓</span>}
+            footer={<Button onClick={() => setOpen(false)}>Done</Button>}
+          >
+            <Field label="Review note">
+              <input defaultValue="Fictional invoice" />
+            </Field>
+          </Dialog>
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    await show(<StructuredDialog />);
+    const trigger = screen.getByRole("button", {
+      name: "Review imported invoices",
+    });
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog", { name: "Import complete" });
+    expect(dialog).toHaveAccessibleDescription("Review before posting.");
+    expect(
+      within(dialog).getByRole("heading", { name: "13 invoices imported" }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("textbox", { name: "Review note" }),
+    ).toHaveFocus();
+    expect(
+      within(dialog).getByRole("button", { name: "Done" }),
+    ).toBeInTheDocument();
+    fireEvent(
+      dialog,
+      new Event("cancel", { bubbles: false, cancelable: true }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(trigger).toHaveFocus();
+  });
 });

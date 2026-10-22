@@ -1,7 +1,73 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
 import { signIn, setLanguage } from "./helpers";
 import { inspectResponsiveLayout } from "../scripts/c6-layout-proof.mjs";
+
+async function expectDelayedNavigationTooltip(
+  navigationItem: Locator,
+  label: string,
+  intent: "focus" | "mouseenter",
+) {
+  await navigationItem.evaluate((element, eventName) => {
+    performance.clearMarks("c6-tooltip-intent");
+    performance.clearMeasures("c6-tooltip-delay");
+    element.addEventListener(
+      eventName,
+      () => {
+        performance.mark("c6-tooltip-intent");
+        const observer = new MutationObserver(() => {
+          const tooltip = document.querySelector(".collapsed-nav-tooltip");
+          if (
+            tooltip &&
+            getComputedStyle(tooltip).visibility === "visible" &&
+            tooltip.getBoundingClientRect().width > 0
+          ) {
+            performance.measure("c6-tooltip-delay", "c6-tooltip-intent");
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.body, {
+          attributes: true,
+          childList: true,
+          subtree: true,
+        });
+      },
+      { once: true },
+    );
+  }, intent);
+  if (intent === "focus") await navigationItem.focus();
+  else await navigationItem.hover();
+  const tooltip = navigationItem
+    .page()
+    .getByRole("tooltip", { name: label, exact: true });
+  await expect(tooltip).toBeVisible();
+  const delay = await navigationItem.evaluate(
+    () =>
+      performance.getEntriesByName("c6-tooltip-delay", "measure")[0]?.duration,
+  );
+  // Allow one frame of measurement tolerance around the 300ms intent delay.
+  expect(delay).toBeGreaterThanOrEqual(290);
+  await expect(navigationItem).toHaveAttribute(
+    "aria-describedby",
+    (await tooltip.getAttribute("id"))!,
+  );
+  await expect(tooltip).toHaveCSS("pointer-events", "auto");
+  expect(
+    await tooltip.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        bounds.x + bounds.width / 2,
+        bounds.y + bounds.height / 2,
+      );
+      return {
+        portal: element.parentElement === document.body,
+        topLayer: element.matches(":popover-open"),
+        hit: Boolean(hit && element.contains(hit)),
+      };
+    }),
+  ).toEqual({ portal: true, topLayer: true, hit: true });
+}
+
 for (const language of ["en", "fa"] as const)
   for (const width of [390, 768, 900, 1024, 1180, 1280, 1440, 1920]) {
     test(`C7 adaptive tables and shell: ${language} ${width}px`, async ({
@@ -154,12 +220,57 @@ for (const language of ["en", "fa"] as const)
         await expect(page.locator(".sidebar")).toHaveCSS("width", "72px");
         const navigationItem = page.locator('.sidebar nav a[href="#products"]');
         const navigationLabel = navigationItem.locator(".nav-item-label");
-        await navigationItem.focus();
+        const tooltip = page.getByRole("tooltip", {
+          name: language === "en" ? "Products" : "محصولات",
+          exact: true,
+        });
+        await page.locator("#menu-toggle").click();
+        await expect(page.locator("#menu-toggle")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+        await expect(page.locator(".sidebar")).toHaveCSS("width", "248px");
         await expect(navigationLabel).toBeVisible();
-        await page.locator(".topbar-search-icon").focus();
-        await expect(navigationLabel).not.toBeVisible();
         await navigationItem.hover();
-        await expect(navigationLabel).toBeVisible();
+        await navigationItem.focus();
+        expect(
+          await page.evaluate(
+            () =>
+              new Promise<boolean>((resolve) => {
+                const started = performance.now();
+                let appeared = false;
+                const observe = () => {
+                  appeared ||= Boolean(
+                    document.querySelector(".collapsed-nav-tooltip"),
+                  );
+                  if (performance.now() - started >= 350) resolve(appeared);
+                  else requestAnimationFrame(observe);
+                };
+                observe();
+              }),
+          ),
+        ).toBe(false);
+        await page.keyboard.press("Escape");
+        await expect(page.locator("#menu-toggle")).toHaveAttribute(
+          "aria-expanded",
+          "false",
+        );
+        await page.mouse.move(width / 2, 540);
+        await expect(page.locator(".sidebar")).toHaveCSS("width", "72px");
+        await expect(navigationLabel).not.toBeVisible();
+        await expect(tooltip).toHaveCount(0);
+        await expectDelayedNavigationTooltip(
+          navigationItem,
+          language === "en" ? "Products" : "محصولات",
+          "focus",
+        );
+        await page.locator(".topbar-search-icon").focus();
+        await expect(tooltip).toHaveCount(0);
+        await expectDelayedNavigationTooltip(
+          navigationItem,
+          language === "en" ? "Products" : "محصولات",
+          "mouseenter",
+        );
         if (info.project.name === "phone")
           await page.locator(".topbar-search-icon").tap();
         else await page.locator(".topbar-search-icon").click();

@@ -7,6 +7,9 @@ import {
   setLanguage,
   openShellAction,
   openInvoiceUpload,
+  openInvoiceLine,
+  confirmInvoiceLine,
+  chooseOption,
 } from "./helpers";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import receiptFixtures from "../src/fixtures/a2-demo-data.json" with { type: "json" };
@@ -26,9 +29,12 @@ async function review(page: import("@playwright/test").Page) {
     mimeType: "image/png",
     buffer: pixel,
   });
-  await expect(page.locator(".invoice-line")).toHaveCount(6, {
-    timeout: 10000,
-  });
+  await expect(page.locator('[data-testid^="invoice-line-row-"]')).toHaveCount(
+    6,
+    {
+      timeout: 10000,
+    },
+  );
   // Existing seed lines can render before the uploaded original and its
   // simulated reading transition finish. Geometry and edits must use the
   // committed upload rather than the previous workspace during that change.
@@ -55,11 +61,13 @@ async function review(page: import("@playwright/test").Page) {
     );
   });
 }
-test("each invoice line requires one date answer, collapses when confirmed and opens from the row", async ({
+test("invoice lines start closed, confirm once and reopen without opening the next line", async ({
   page,
-}) => {
+}, testInfo) => {
   await review(page);
-  const lines = page.locator(".invoice-line");
+  const rows = page.locator('[data-testid^="invoice-line-row-"]');
+  await expect(rows).toHaveCount(6);
+  await expect(page.locator(".receiving-line-editor")).toHaveCount(0);
   await expect(
     page.getByRole("checkbox", {
       name: "Confirm date tracking decision",
@@ -72,106 +80,121 @@ test("each invoice line requires one date answer, collapses when confirmed and o
       exact: true,
     }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  const post = page.getByRole("button", { name: "Post invoice", exact: true });
+  await expect(post).toBeDisabled();
+  await post.locator("..").focus();
+  await expect(post.locator("..").getByRole("tooltip")).toContainText(
+    /Lines: 6 not confirmed/,
+  );
+  await page.keyboard.press("Enter");
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
-  ).toBeVisible();
-  const first = lines.first();
-  await first
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+  ).toContainText("Lines: 6 not confirmed");
+  const first = rows.first();
+  const editor = await openInvoiceLine(page, 0);
+  await expect(first).toHaveAttribute("aria-expanded", "true");
+  await editor
+    .getByRole("group", { name: "Track date", exact: true })
+    .getByRole("button", { name: "No", exact: true })
     .click();
-  await expect(first).toHaveAttribute("data-expanded", "true");
-  await first.getByRole("button", { name: "No", exact: true }).click();
-  await first
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
-    .click();
-  await expect(first).toHaveAttribute("data-expanded", "false");
-  await expect(first.locator(".invoice-line-detail")).toHaveCount(0);
-  await first.locator(".invoice-line-toggle").click();
-  await expect(first).toHaveAttribute("data-expanded", "true");
-  await first.locator(".invoice-line-summary td").nth(3).click();
-  await expect(first).toHaveAttribute("data-expanded", "false");
+  await confirmInvoiceLine(page, editor);
+  await expect(first).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator(".receiving-line-editor")).toHaveCount(0);
   await expect(
-    lines.nth(4).getByText("No Product Code yet", { exact: true }),
+    first.getByRole("img", { name: "Confirmed", exact: true }),
   ).toBeVisible();
+  const reopened = await openInvoiceLine(page, 0);
+  await expect(first).toHaveAttribute("aria-expanded", "true");
+  if (testInfo.project.name === "phone")
+    await reopened.getByRole("button", { name: "Close", exact: true }).click();
+  else await first.getByRole("cell").nth(2).click();
+  await expect(first).toHaveAttribute("aria-expanded", "false");
+  await expect(rows.nth(4)).toContainText("New product");
   await expect(
-    lines.nth(2).getByText("Pending", { exact: true }),
+    rows.nth(2).getByRole("img", { name: "Not confirmed", exact: true }),
   ).toBeVisible();
-  await expect(
-    lines.nth(2).getByText("Goes to approval when posted", { exact: true }),
-  ).toBeVisible();
-  const section = page.locator(".invoice-summary-section");
+  const canonical = await readCanonicalBusinessEvidence(page);
+  expect(canonical.invoice.lines[4].product_code).toBe("NEW");
+  expect(canonical.invoice.lines[2]).toMatchObject({
+    calculated_selling_price: "2.99",
+    current_selling_price: "1.99",
+  });
   expect(
-    await section
-      .locator(".invoice-summary-note")
-      .evaluate((note) =>
-        Math.round(
-          note.getBoundingClientRect().top -
-            note.previousElementSibling!.getBoundingClientRect().bottom,
-        ),
-      ),
-  ).toBe(16);
+    canonical.approvals.filter(
+      (approval) => approval.source_invoice_id === canonical.invoice.id,
+    ),
+  ).toHaveLength(0);
 });
-test("Persian signed money, line numbers and deduction parentheses stay isolated", async ({
+
+test("Persian signed money, line numbers and short deduction remain isolated", async ({
   page,
 }) => {
   await review(page);
-  const markShort = page
-    .locator(".invoice-line")
-    .nth(5)
-    .getByRole("checkbox", { name: "Mark as short", exact: true });
-  await expect(markShort).not.toBeChecked();
-  await markShort.click();
-  await expect(markShort).toBeChecked();
+  const editor = await openInvoiceLine(page, 5);
+  await editor
+    .getByRole("button", { name: "Report short or refused", exact: true })
+    .click();
+  await editor.getByLabel("Short units", { exact: true }).fill("4");
+  const equation = editor.locator("p").filter({ hasText: "Deduction:" });
+  await expect(equation).toContainText("4 units × $1.6000");
+  await expect(equation).toContainText("$6.40");
+  await expect(equation.locator('bdi[dir="ltr"]').first()).toContainText(
+    "4 units × $1.6000",
+  );
+  await editor.getByRole("button", { name: "Apply", exact: true }).click();
+  await editor.getByRole("button", { name: "Close", exact: true }).click();
   await setLanguage(page, "fa");
   const deduction = page
-    .locator(".invoice-summary-grid .ui-summary-tile")
-    .nth(2);
+    .getByTestId("invoice-totals-card")
+    .locator(".receiving-total-row")
+    .filter({ hasText: "کسری‌ها و ردشده‌ها" });
   await expect(deduction).toContainText("-$7.23");
   await expect(deduction.locator('bdi[dir="ltr"]')).toContainText("-$7.23");
-  await expect(page.locator(".invoice-line-toggle > bdi").first()).toHaveText(
-    "1.",
-  );
-  const parentheses = page
-    .locator(".invoice-line")
-    .nth(5)
-    .locator(".banner > bdi")
-    .last();
-  await expect(parentheses).toHaveAttribute("dir", "ltr");
-  await expect(parentheses).toContainText("($6.40 + $0.83 )");
+  const numberCell = page
+    .getByTestId("invoice-line-row-0")
+    .locator('td[data-column-key="number"]');
+  await expect(numberCell).toBeVisible();
+  await expect(numberCell.locator('bdi[dir="ltr"]')).toHaveText("1");
+  const canonical = await readCanonicalBusinessEvidence(page);
+  expect(canonical.invoice.lines[5]).toMatchObject({
+    qty_invoiced: 12,
+    qty_received_at_posting: 8,
+  });
 });
-test("the document sticks beside the review and the action bar has a full surface", async ({
+
+test("the original sticks beside the work column and the progress bar has a full surface", async ({
   page,
 }, testInfo) => {
   test.skip(
     testInfo.project.name === "phone",
-    "Phone review uses one stacked column.",
+    "Phone review uses a full-screen original viewer and bottom progress bar.",
   );
   await page.setViewportSize({ width: 1920, height: 1080 });
   await review(page);
+  const layout = await page.locator(".receiving-layout").boundingBox();
+  const work = await page.locator(".receiving-work").boundingBox();
+  const original = page.locator(".original-viewer");
+  const panel = await original.boundingBox();
+  expect(panel!.x).toBeGreaterThan(work!.x + work!.width);
+  expect(work!.width / (layout!.width - 16)).toBeCloseTo(0.6, 1);
+  expect(panel!.width / (layout!.width - 16)).toBeCloseTo(0.4, 1);
+  await expect(original).toHaveCSS("position", "sticky");
   await page.evaluate(() => window.scrollTo(0, 450));
-  const pane = await page.locator(".invoice-document-pane").boundingBox();
-  const topbar = await page.locator(".topbar").boundingBox();
-  expect(pane!.y).toBeGreaterThanOrEqual(topbar!.y + topbar!.height + 22);
-  expect(pane!.y).toBeLessThanOrEqual(topbar!.y + topbar!.height + 26);
-  const reviewPane = await page.locator(".invoice-review-pane").boundingBox();
-  const footer = await page.locator(".invoice-action-footer").boundingBox();
-  // The C7 bar reserves its own row below the review pane instead of stretching across the original.
-  expect(Math.abs(reviewPane!.width - footer!.width)).toBeLessThanOrEqual(2);
-  expect(Math.abs(reviewPane!.x - footer!.x)).toBeLessThanOrEqual(2);
-  expect(footer!.y).toBeGreaterThanOrEqual(reviewPane!.y + reviewPane!.height);
-  await expect(page.locator(".invoice-action-footer")).toHaveCSS(
-    "position",
-    "static",
+  const sticky = await original.boundingBox();
+  const top = await original.evaluate((node) =>
+    parseFloat(getComputedStyle(node).top),
   );
+  expect(Math.abs(sticky!.y - top)).toBeLessThanOrEqual(2);
+  const progress = page.locator(".receiving-progress");
+  await expect(progress).toHaveCSS("position", "sticky");
   expect(
-    await page
-      .locator(".invoice-action-footer")
-      .evaluate((node) => getComputedStyle(node).backgroundColor),
+    await progress.evaluate((node) => getComputedStyle(node).backgroundColor),
   ).not.toBe("rgba(0, 0, 0, 0)");
+  await expect(
+    page
+      .locator(".receiving-header")
+      .getByRole("button", { name: "Post invoice", exact: true }),
+  ).toBeDisabled();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -193,7 +216,19 @@ test("manual invoice drafts work when randomUUID is unavailable", async ({
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "New invoice", exact: true })
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
+  await chooseOption(
+    page,
+    page.getByRole("combobox", {
+      name: "Add a product to the invoice",
+      exact: true,
+    }),
+    "0002",
+    "Canned Fava Beans 400 g",
+  );
   await page.getByRole("button", { name: "Add line", exact: true }).click();
   expect(
     await page.evaluate(
@@ -206,12 +241,16 @@ test("manual invoice drafts work when randomUUID is unavailable", async ({
     ),
   ).toBe(true);
   await page
-    .getByRole("button", { name: "Save as draft", exact: true })
+    .getByRole("button", { name: "Save and close", exact: true })
     .click();
-  await page.reload();
-  await expect(page.locator(".invoice-line")).toHaveCount(1);
+  await expect(page).toHaveURL(/#invoices$/);
   const invoice = await readCanonicalBusinessEvidence(page).then(
     (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).invoice,
+  );
+  await page.goto(`/#invoices?id=${encodeURIComponent(invoice.id)}`);
+  await page.reload();
+  await expect(page.locator('[data-testid^="invoice-line-row-"]')).toHaveCount(
+    1,
   );
   expect(invoice.status).toBe("draft");
   expect(typeof invoice.id).toBe("string");
