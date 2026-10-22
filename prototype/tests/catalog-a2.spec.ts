@@ -93,11 +93,9 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
 }) => {
   await signIn(page, "Supervisor");
   await setBranch(page, "all");
-  await page.goto("/#lookup");
-  await page
-    .getByRole("main")
-    .getByLabel("Search products", { exact: true })
-    .fill("0009");
+  // Keep the subject in Lookup's supported route across protected location
+  // refreshes, so this price-scope check always compares the same product.
+  await page.goto("/#lookup?search=0009");
   // Aggregate Lookup requires an actual selling store before prices/actions.
   await chooseOption(
     page,
@@ -121,6 +119,9 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
   await expect(editor).not.toBeVisible();
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
   await setBranch(page, "Branch 2");
+  await expect(
+    page.locator(".lookup-detail").getByRole("heading", { level: 2 }),
+  ).toHaveText("Potato Chips 150 g");
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
   // E2 appends derived store tasks after the accepted price decision. Prove
   // the new causal decision itself, independently of those later audit rows.
@@ -151,15 +152,12 @@ test("Change price changes this store only, and validation stays inside the open
 }) => {
   await signIn(page, "Supervisor");
   await setBranch(page, "Branch 1");
-  await page.goto("/#lookup");
-  await page
-    .getByRole("main")
-    .getByLabel("Search products", { exact: true })
-    .fill("0009");
+  await page.goto("/#lookup?search=0009");
+  await expect(
+    page.locator(".lookup-detail").getByRole("heading", { level: 2 }),
+  ).toHaveText("Potato Chips 150 g");
   const editor = await openRegularPrice(page);
-  const before = await readCanonicalBusinessEvidence(page).then(
-    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
-  );
+  const before = (await readCanonicalBusinessEvidence(page)).products;
   await editor.getByLabel("Price", { exact: true }).fill("3.291");
   await editor
     .getByRole("button", { name: "Save new price", exact: true })
@@ -168,11 +166,7 @@ test("Change price changes this store only, and validation stays inside the open
     editor.getByRole("alert", { name: "What's missing", exact: true }),
   ).toContainText("at most two decimals");
   await expect(editor).toBeVisible();
-  expect(
-    await readCanonicalBusinessEvidence(page).then(
-      (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
-    ),
-  ).toEqual(before);
+  expect((await readCanonicalBusinessEvidence(page)).products).toEqual(before);
   await editor.getByLabel("Price", { exact: true }).fill("3.29");
   await editor
     .getByRole("button", { name: "Only North York", exact: true })
@@ -183,7 +177,21 @@ test("Change price changes this store only, and validation stays inside the open
   await expect(editor).not.toBeVisible();
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
   await setBranch(page, "Branch 2");
+  await expect(
+    page.locator(".lookup-detail").getByRole("heading", { level: 2 }),
+  ).toHaveText("Potato Chips 150 g");
   await expect(page.locator(".lookup-detail .price")).toHaveText("$2.99");
+  const after = (await readCanonicalBusinessEvidence(page)).products;
+  const originalProduct = before.find((product) => product.code === "0009")!;
+  const changedProduct = after.find((product) => product.code === "0009")!;
+  expect(changedProduct.selling_price).toBe(originalProduct.selling_price);
+  expect(changedProduct.branch_prices).toEqual({
+    ...originalProduct.branch_prices,
+    "Branch 1": "3.29",
+  });
+  expect(after.filter((product) => product.code !== "0009")).toEqual(
+    before.filter((product) => product.code !== "0009"),
+  );
 });
 
 test("Floor Worker and Cashier never see product Edit, including direct product links", async ({

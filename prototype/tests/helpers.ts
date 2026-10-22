@@ -246,8 +246,17 @@ export async function resetDemo(page: Page) {
 }
 
 export async function visitPage(page: Page, label: string) {
-  // Wait for the real route projection before choosing a compact sidebar group.
-  await expect(page.locator("main h1")).toBeVisible();
+  const main = page.getByRole("main");
+  // Settings retains its previous subtree in a hidden Activity while fetching
+  // fresh configuration. Its live group controls, not the placeholder header,
+  // establish readiness; role queries also exclude that retained hidden h1.
+  if (new URL(page.url()).hash.split("?")[0] === "#settings")
+    await expect(
+      main.getByRole("navigation", {
+        name: /^(Settings groups|گروه‌های تنظیمات)$/,
+      }),
+    ).toBeVisible();
+  await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
   if (await page.evaluate(() => window.innerWidth <= 760))
     await page.locator("#menu-toggle").click();
   const link = page

@@ -265,9 +265,43 @@ for (const language of ["en", "fa"] as const) {
     expect(expanded.failures).toEqual([]);
     if (width === 1440 && language === "en") {
       await button(page.locator("#invoice-line-0-detail"), "Close").click();
-      const name = page
-        .getByTestId("invoice-line-row-0")
-        .locator(".receiving-product-name");
+      await expect(page.locator("#invoice-line-0-detail")).toHaveCount(0);
+      const row = page.getByTestId("invoice-line-row-0");
+      await row.evaluate((element) =>
+        element.scrollIntoView({ block: "start" }),
+      );
+      const name = row.locator(".receiving-product-name");
+      const expectPaintedName = async () => {
+        await expect(row).toBeInViewport({ ratio: 1 });
+        expect(
+          await name.evaluate((element) => {
+            const bounds = element.getBoundingClientRect();
+            const progress = document.querySelector(".receiving-progress")!;
+            const topbar = document.querySelector(".topbar")!;
+            const stickyBottom = Math.max(
+              progress.getBoundingClientRect().bottom,
+              topbar.getBoundingClientRect().bottom,
+            );
+            const hit = document.elementFromPoint(
+              bounds.left + bounds.width / 2,
+              bounds.top + bounds.height / 2,
+            );
+            return {
+              belowStickyBars: bounds.top >= stickyBottom,
+              insideViewport:
+                bounds.left >= 0 &&
+                bounds.right <= document.documentElement.clientWidth &&
+                bounds.bottom <= window.innerHeight,
+              painted: !!hit && (hit === element || element.contains(hit)),
+            };
+          }),
+        ).toEqual({
+          belowStickyBars: true,
+          insideViewport: true,
+          painted: true,
+        });
+      };
+      await expectPaintedName();
       const original = await name.evaluate((element) => {
         const original = {
           title: element.getAttribute("title"),
@@ -284,6 +318,7 @@ for (const language of ["en", "fa"] as const) {
           width,
         );
         expect(ellipsis.failures).toEqual([]);
+        await expectPaintedName();
         await name.evaluate((element) => element.removeAttribute("title"));
         const missingTitle = await inspectC8Layout(
           page,
@@ -296,6 +331,7 @@ for (const language of ["en", "fa"] as const) {
             failure.startsWith("Receiving text leaves cell:"),
           ),
         ).toBe(true);
+        await expectPaintedName();
       } finally {
         await name.evaluate((element, original) => {
           for (const [key, value] of Object.entries(original)) {
@@ -304,6 +340,7 @@ for (const language of ["en", "fa"] as const) {
           }
         }, original);
       }
+      await expectPaintedName();
       expect(
         (
           await inspectC8Layout(
