@@ -2097,6 +2097,7 @@ export function NumberField({
   max,
   step,
   className,
+  keepTyping = false,
   ...props
 }: Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -2107,9 +2108,14 @@ export function NumberField({
   min?: string | number;
   max?: string | number;
   step?: string | number;
+  /** Keep the person's own text while focused (see BufferedInput). Off by
+   * default so screens that correct a value at once (Labels copies) keep
+   * showing the corrected value immediately. */
+  keepTyping?: boolean;
 }) {
+  const Input = keepTyping ? BufferedInput : "input";
   return (
-    <BufferedInput
+    <Input
       {...props}
       type="text"
       dir={props.dir ?? "ltr"}

@@ -567,7 +567,13 @@ function PriceWithChip() {
   return (
     <>
       <Field label="Price">
-        <NumberField value={value} onChange={setValue} min="0" step="0.01" />
+        <NumberField
+          value={value}
+          onChange={setValue}
+          min="0"
+          step="0.01"
+          keepTyping
+        />
       </Field>
       {/* Safari keeps focus in the box when a button is clicked. */}
       <button
@@ -605,6 +611,7 @@ function SlowSavedQuantity({
         value={value}
         min="0"
         step="1"
+        keepTyping
         onChange={(next) => {
           saved.push(next);
           // Like the app's browser-database save: the value comes back later.

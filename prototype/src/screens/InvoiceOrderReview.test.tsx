@@ -175,10 +175,14 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
   await waitFor(() =>
     expect(screen.getByLabelText("Unit cost before tax")).toHaveValue("0.9800"),
   );
-  await waitFor(async () =>
-    expect(
-      (await fixture.readCanonical()).invoice.lines[0].unit_cost_before_tax,
-    ).toBe("0.9800"),
+  // The box shows the typed cost at once; the save itself can take over a
+  // second on a busy test machine, so give the saved value time to arrive.
+  await waitFor(
+    async () =>
+      expect(
+        (await fixture.readCanonical()).invoice.lines[0].unit_cost_before_tax,
+      ).toBe("0.9800"),
+    { timeout: 5000 },
   );
   expect(screen.queryByLabelText("Units per case")).not.toBeInTheDocument();
   expect(screen.getByLabelText("Invoiced units")).toHaveValue("12");

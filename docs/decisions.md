@@ -434,6 +434,8 @@ A rejected product/price request can be corrected within pricing rules and permi
 
 **Context:** saves go through the asynchronous browser database. Inputs bound directly to the saved value were re-rendered with the older saved value between keystrokes, which dropped or repeated characters ("20" became "240").
 
-**Decision:** `BufferedInput` (and `NumberField`, built on it) shows the person's own text while the box has focus and the saved value again on blur. A saved value that matches something they typed (including numeric forms like "7" for "007", or 0 for a blank box) is treated as an echo and ignored; any other new saved value, such as a price chip or recalculation, replaces the text at once. Changes made without focus are never buffered.
+**Decision:** `BufferedInput` (and `NumberField` with `keepTyping`, used on the receiving screen) shows the person's own text while the box has focus and the saved value again on blur. A saved value that matches something they typed (including numeric forms like "7" for "007", or 0 for a blank box) is treated as an echo and ignored; any other new saved value, such as a price chip or recalculation, replaces the text at once. Changes made without focus are never buffered.
 
 **Why:** correct quantities and costs are the core of receiving; this removes a race without changing validation, Decimal maths or what is saved.
+
+**Scope:** opt-in. Screens that correct a value at once while typing (Labels copies snap back to 1 with an error) keep the plain `NumberField`.

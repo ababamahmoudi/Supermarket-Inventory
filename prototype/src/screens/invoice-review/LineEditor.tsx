@@ -533,6 +533,7 @@ export function LineEditor({
                   error={quantityError}
                 >
                   <NumberField
+                    keepTyping
                     id={id("invoiced")}
                     dir="ltr"
                     min="0"
@@ -570,6 +571,7 @@ export function LineEditor({
                     }
                   >
                     <NumberField
+                      keepTyping
                       id={id("pack")}
                       aria-label={t("Units per case", "واحد در هر کارتن")}
                       dir="ltr"
@@ -599,6 +601,7 @@ export function LineEditor({
                   error={receivedError}
                 >
                   <NumberField
+                    keepTyping
                     id={id("delivered")}
                     aria-label={t("Delivered units", "واحدهای تحویل‌شده")}
                     dir="ltr"
@@ -1037,6 +1040,7 @@ export function LineEditor({
               <div className="detail-grid">
                 <Field label={t("Short units", "واحدهای کسری")}>
                   <NumberField
+                    keepTyping
                     min="0"
                     dir="ltr"
                     value={short}
@@ -1045,6 +1049,7 @@ export function LineEditor({
                 </Field>
                 <Field label={t("Refused units", "واحدهای ردشده")}>
                   <NumberField
+                    keepTyping
                     min="0"
                     dir="ltr"
                     value={refused}
