@@ -1,6 +1,7 @@
 import type { InvoiceEditableLine } from "./invoice-edit-types";
 import { invoiceView, type InvoiceLineView } from "./invoice-projections";
 import Decimal from "decimal.js";
+import { invoiceCheckCount } from "./invoice-checks";
 import type { AuthenticatedActor } from "./authority-types";
 import { cloneWithAuthority } from "./authority";
 import { can, directoryRecipients, requireCapability } from "./permissions";
@@ -16,7 +17,7 @@ import {
   type InternalPurchaseEvidence,
 } from "./purchase-evidence.internal";
 import { configSeed, demoSeed as demo } from "./config";
-import { regularPrice } from "./catalog";
+import { regularPrice, conflictingBarcodeProduct } from "./catalog";
 import { createId } from "./ids";
 import { configuredBranches } from "./settings";
 import {
@@ -527,7 +528,14 @@ export function recalculateInvoice(
         continue;
       }
     }
-    if (line.quantity_unit === "units")
+    // An unread imported quantity is an empty review field, not a printed zero.
+    // Unrelated edits must not replace that missing source value with the
+    // canonical zero used internally until someone enters a real quantity.
+    if (
+      line.quantity_unit === "units" &&
+      (!invoice.reading_record ||
+        String(line.quantity_entered ?? "").trim() !== "")
+    )
       line.quantity_entered = String(line.qty_invoiced);
     if (
       !validCost(line.unit_cost_before_tax) ||
@@ -555,10 +563,23 @@ export function recalculateInvoice(
     tax = tax.plus(line.line_tax);
     line.review_confirmed = false;
   }
-  invoice.subtotal = cents(subtotal);
-  invoice.tax = cents(tax);
-  if (!invoice.final_total_manual)
-    invoice.final_total = invoiceComputedTotal(invoice)!;
+  for (const charge of invoice.other_charges ?? []) {
+    try {
+      const amount = new Decimal(charge.amount);
+      if (!amount.isFinite()) continue;
+      subtotal = subtotal.plus(amount);
+      if (charge.taxable) tax = tax.plus(amount.times(config.tax.rate));
+    } catch {
+      /* Invalid imported amounts stay visible for review. */
+    }
+  }
+  // Imported headers retain the supplier's printed amounts for reconciliation.
+  if (!invoice.reading_record) {
+    invoice.subtotal = cents(subtotal);
+    invoice.tax = cents(tax);
+    if (!invoice.final_total_manual)
+      invoice.final_total = invoiceComputedTotal(invoice)!;
+  }
   invoice.payable_after_open_shorts = cents(
     new Decimal(validMoney(invoice.final_total) ? invoice.final_total : "0")
       .minus(shortTotals(invoice).total)
@@ -581,7 +602,12 @@ export function lineRefused(line: InvoiceEditableLine): {
   total: string;
 } {
   const quantity = line.refused_units ?? 0;
-  if (!quantity || !validInvoiceLineQuantity(line))
+  if (
+    !quantity ||
+    !validInvoiceLineQuantity(line) ||
+    !validMoney(line.line_total) ||
+    !validMoney(line.line_tax || "0.00")
+  )
     return { quantity, beforeTax: "0.00", tax: "0.00", total: "0.00" };
   const short = lineShort(line);
   const excluded = new Decimal(short.quantity).plus(quantity);
@@ -689,7 +715,7 @@ export function validInvoiceLineReceived(line: InvoiceEditableLine): boolean {
   }
 }
 
-function validCost(value: string): boolean {
+export function validCost(value: string): boolean {
   return /^\d+(?:\.\d{1,4})?$/.test(value);
 }
 
@@ -718,7 +744,9 @@ export function lineShort(line: InvoiceEditableLine): {
   if (
     !quantity ||
     !validInvoiceLineQuantity(line) ||
-    !validCost(line.unit_cost_before_tax)
+    !validCost(line.unit_cost_before_tax) ||
+    !validMoney(line.line_total) ||
+    !validMoney(line.line_tax || "0.00")
   ) {
     return { quantity, beforeTax: "0.00", tax: "0.00", total: "0.00" };
   }
@@ -970,7 +998,9 @@ export type InvoiceBlocker =
   | "lower_price"
   | "manual_price"
   | "order"
-  | "order_decisions";
+  | "order_decisions"
+  | "checks"
+  | "barcode";
 
 export function invoiceBlockers(
   state: DemoState,
@@ -1026,6 +1056,17 @@ export function invoiceBlockers(
     blockers.push("money");
   if (!invoice.file_name || !invoice.file_data) blockers.push("file");
   if (!invoice.lines.length) blockers.push("lines");
+  if (invoiceCheckCount(invoice)) blockers.push("checks");
+  if (
+    (invoice.other_charges ?? []).some((charge) => {
+      try {
+        return !new Decimal(charge.amount).isFinite();
+      } catch {
+        return true;
+      }
+    })
+  )
+    blockers.push("money");
   for (const line of invoice.lines) {
     const product = state.products.find(
       (item) =>
@@ -1033,6 +1074,16 @@ export function invoiceBlockers(
         item.company_id === invoice.company_id,
     );
     if (line.company_id !== invoice.company_id) blockers.push("company");
+    if (
+      line.product_code === "NEW" &&
+      line.barcode &&
+      conflictingBarcodeProduct(
+        state.products,
+        invoice.company_id,
+        line.barcode,
+      )
+    )
+      blockers.push("barcode");
     if (
       !product &&
       !(line.refused_units && acceptedInvoiceUnits(line) === 0) &&
@@ -1222,7 +1273,10 @@ export function postInvoice(
           name_fa: line.new_name_fa?.trim() ?? "",
           first_added_branch: invoice.branch,
           pricing_category: line.pricing_category ?? "grocery",
-          unit_size: line.sold_by === "weight" ? "" : "100 g",
+          unit_size:
+            line.sold_by === "weight"
+              ? ""
+              : (line.pack_size ?? (invoice.reading_record ? "" : "100 g")),
           sold_by: line.sold_by ?? "each",
           last_cost_before_tax: line.unit_cost_before_tax,
           selling_price: "",
@@ -1230,8 +1284,8 @@ export function postInvoice(
           taxable: line.taxable,
           date_tracking: line.date_tracking ?? true,
           main_supplier: invoice.supplier,
-          ai_category: "Dried fruits & spices",
-          barcode: "",
+          ai_category: invoice.reading_record ? "" : "Dried fruits & spices",
+          barcode: line.barcode ?? "",
           status: "pending_approval",
           tax_profile: line.tax_profile,
         };
@@ -1476,7 +1530,14 @@ export function postInvoice(
         .equals(invoice.final_total) ||
       new Decimal(invoice.tax)
         .minus(
-          Decimal.sum(...invoice.lines.map((line) => line.line_tax ?? "0")),
+          Decimal.sum(
+            ...invoice.lines.map((line) => line.line_tax ?? "0"),
+            ...(invoice.other_charges ?? []).map((charge) =>
+              charge.taxable
+                ? new Decimal(charge.amount).times(state.config.tax.rate)
+                : "0",
+            ),
+          ),
         )
         .abs()
         .greaterThan("0.01");

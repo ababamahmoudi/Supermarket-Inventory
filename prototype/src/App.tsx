@@ -1683,8 +1683,8 @@ export default function App() {
         onOpenChange={setResetOpen}
         title={t("Reset demo", "بازنشانی دمو")}
         description={t(
-          "Restore the fictional business data and the six demo people. People changes and business changes made in this browser are cleared. Your preferences and language stay the same.",
-          "داده‌های کسب‌وکار خیالی و شش کاربر دمو بازیابی می‌شوند. تغییرات کاربران و کسب‌وکار این مرورگر پاک می‌شوند. تنظیمات شخصی و زبان شما حفظ می‌شوند.",
+          "Restore the fictional business data and the six demo people. People changes and business changes made in this browser are cleared. This also removes invoices you imported. Your preferences and language stay the same.",
+          "داده‌های کسب‌وکار خیالی و شش کاربر دمو بازیابی می‌شوند. تغییرات کاربران و کسب‌وکار این مرورگر پاک می‌شوند. فاکتورهایی که وارد کرده‌اید نیز حذف می‌شوند. تنظیمات شخصی و زبان شما حفظ می‌شوند.",
         )}
         confirmLabel={t("Reset demo", "بازنشانی دمو")}
         onConfirm={reset}

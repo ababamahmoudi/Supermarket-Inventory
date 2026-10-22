@@ -310,6 +310,8 @@ export function Badge({
 }
 export const StatusBadge = Badge;
 export function Field({
+  adornment,
+  containerId,
   label,
   children,
   error,
@@ -318,6 +320,8 @@ export function Field({
 }: {
   label: string;
   children: ReactNode;
+  adornment?: ReactNode;
+  containerId?: string;
   error?: string;
   hint?: string;
   className?: string;
@@ -337,7 +341,7 @@ export function Field({
   const descriptionId = `${id}-help`;
   const optional = label.match(/^(.*?)\s+(\((?:optional|اختیاری)\))$/);
   return (
-    <div className={cn("field", className)}>
+    <div id={containerId} className={cn("field", className)}>
       <label id={labelId} htmlFor={id}>
         {optional ? (
           <>
@@ -365,6 +369,7 @@ export function Field({
               : (child.props["aria-invalid"] ?? false),
           })
         : children}
+      {adornment}
       {(error || hint) && (
         <p
           id={descriptionId}

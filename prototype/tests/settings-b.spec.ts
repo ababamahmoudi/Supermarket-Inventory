@@ -34,9 +34,9 @@ test("Settings presents the exact 12 groups and unfinished groups cannot save", 
     "Modules",
     "Data",
   ]);
-  // E1 implements People and E2 implements Notifications. The remaining
+  // E1 implements People, E2 Notifications, and R1 Data. The remaining
   // planned groups retain their original no-save/no-input guarantees.
-  for (const label of ["Pricing and approvals", "Taxes", "Receiving", "Data"]) {
+  for (const label of ["Pricing and approvals", "Taxes", "Receiving"]) {
     await group(page, label);
     const planned = page.locator(".settings-form-card").filter({
       has: page.getByText(
@@ -69,6 +69,38 @@ test("Settings presents the exact 12 groups and unfinished groups cannot save", 
       ).toBeChecked();
     }
   }
+  await group(page, "Data");
+  const data = page.getByRole("region", { name: "Data", exact: true });
+  await expect(
+    data.getByRole("heading", { name: "Import invoice readings", exact: true }),
+  ).toBeVisible();
+  await expect(
+    data.getByRole("button", { name: "Choose file…", exact: true }),
+  ).toBeEnabled();
+  await expect(data.locator('input[type="file"]')).toHaveAttribute(
+    "accept",
+    /(?:^|,)\.json(?:,|$)/,
+  );
+  await expect(
+    data.getByRole("heading", {
+      name: "Start with an empty store",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    data.getByRole("button", { name: "Remove fictional data…", exact: true }),
+  ).toBeEnabled();
+  await expect(data.locator(".settings-planned-list")).toHaveCount(0);
+  await expect(
+    data.getByText(
+      "These settings are planned. Changes are not available yet.",
+      {
+        exact: true,
+      },
+    ),
+  ).toHaveCount(0);
+  await expect(data.getByText("CSV import", { exact: true })).toHaveCount(0);
+  await expect(data.getByText("CSV export", { exact: true })).toHaveCount(0);
   await group(page, "People");
   const people = page.getByRole("region", { name: "People", exact: true });
   await expect(

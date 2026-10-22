@@ -1880,10 +1880,15 @@ export function Labels() {
             )}
             {products.length === 0 && (
               <EmptyState>
-                {t(
-                  "No products match these filters.",
-                  "کالایی با این فیلترها پیدا نشد.",
-                )}
+                {state.products.length === 0
+                  ? t(
+                      "No products to label yet; post an invoice or add a product first.",
+                      "هنوز محصولی برای برچسب‌زنی وجود ندارد؛ ابتدا یک فاکتور ثبت کنید یا محصولی اضافه کنید.",
+                    )
+                  : t(
+                      "No products match these filters.",
+                      "کالایی با این فیلترها پیدا نشد.",
+                    )}
               </EmptyState>
             )}
           </Card>

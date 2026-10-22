@@ -634,10 +634,15 @@ function ReturnsContent() {
             </DataTable>
             {overviewReturns.length === 0 && (
               <EmptyState>
-                {t(
-                  "No returns match these filters.",
-                  "مرجوعی‌ای با این فیلترها وجود ندارد.",
-                )}
+                {scopedReturns.length === 0
+                  ? t(
+                      "No returns yet; create a return when goods need to go back to a supplier.",
+                      "هنوز مرجوعی‌ای وجود ندارد؛ برای بازگرداندن کالا به تأمین‌کننده، یک مرجوعی ایجاد کنید.",
+                    )
+                  : t(
+                      "No returns match these filters.",
+                      "مرجوعی‌ای با این فیلترها وجود ندارد.",
+                    )}
               </EmptyState>
             )}
           </Card>

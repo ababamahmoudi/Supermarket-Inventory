@@ -4,6 +4,7 @@ import { expect, test } from "@playwright/test";
 import Decimal from "decimal.js";
 import {
   chooseOption,
+  confirmInvoiceLine,
   invoiceImage,
   setBranch,
   signIn,
@@ -107,12 +108,7 @@ test("a worker retargets their own invoice to Warehouse without gaining Warehous
   });
   for (const line of await page.locator(".invoice-line").all()) {
     await line.getByRole("button", { name: "No", exact: true }).click();
-    await line
-      .getByRole("checkbox", {
-        name: "Confirm this invoice line",
-        exact: true,
-      })
-      .click();
+    await confirmInvoiceLine(page, line);
     await expect(line.getByText("Confirmed", { exact: true })).toBeVisible();
   }
   await expect(

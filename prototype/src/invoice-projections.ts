@@ -33,6 +33,9 @@ type InvoiceMoney =
 export type InvoiceView = Omit<
   DemoInvoice,
   | "file_data"
+  | "original_pages"
+  | "reading_record"
+  | "other_charges"
   | "legacy_demo_original"
   | "lines"
   | "_confidence_note"
@@ -45,6 +48,9 @@ export type InvoiceView = Omit<
     short_lines?: DemoInvoice["short_lines"];
     order_comparison?: DemoInvoice["order_comparison"];
     original_available: boolean;
+    original_page_count: number;
+    reading_record?: DemoInvoice["reading_record"];
+    other_charges?: DemoInvoice["other_charges"];
     purchase_cost_allowed: boolean;
     margin_allowed: boolean;
     correction_allowed: boolean;
@@ -64,6 +70,11 @@ const lineKeys = [
   "company_id",
   "product_code",
   "description",
+  "barcode",
+  "handwritten_note",
+  "expiry_as_printed",
+  "pack_size",
+  "import_line_index",
   "qty_invoiced",
   "taxable",
   "calculated_selling_price",
@@ -72,6 +83,7 @@ const lineKeys = [
   "tax_profile",
   "confidence",
   "low_confidence_fields",
+  "taxable_inferred",
   "pricing_category",
   "date_tracking",
   "date_type",
@@ -120,6 +132,11 @@ const invoiceKeys = [
   "branch_id",
   "supplier",
   "supplier_invoice_number",
+  "low_confidence_fields",
+  "import_warnings",
+  "import_handwritten_notes",
+  "import_currency",
+  "order_reference",
   "invoice_date_relative_days",
   "payment_terms",
   "created_by_user_id",
@@ -205,7 +222,12 @@ export function invoiceView(
   );
   const view = {
     ...select(invoice, invoiceKeys),
-    ...(costs ? select(invoice, invoiceMoneyKeys) : {}),
+    ...(costs
+      ? {
+          ...select(invoice, invoiceMoneyKeys),
+          ...select(invoice, ["reading_record", "other_charges"]),
+        }
+      : {}),
     branch:
       original.status === "posted"
         ? effectiveInvoiceLocation(state, original)
@@ -301,8 +323,14 @@ export function invoiceView(
         }
       : {}),
     original_available: Boolean(
-      costs && original.file_data && original.file_name,
+      costs &&
+      ((original.file_data && original.file_name) ||
+        original.original_pages?.length),
     ),
+    original_page_count: costs
+      ? original.original_pages?.length ||
+        (original.file_data && original.file_name ? 1 : 0)
+      : 0,
     purchase_cost_allowed: costs,
     margin_allowed: margins,
     correction_allowed: can(

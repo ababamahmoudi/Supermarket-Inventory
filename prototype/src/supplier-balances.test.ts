@@ -15,6 +15,7 @@ import {
   supplierBalanceSummary,
 } from "./supplier-balances";
 import type { DemoState } from "./types";
+import { confirmInvoiceLineChecks } from "./invoice-checks";
 
 const freshValley = "Fresh Valley Foods";
 
@@ -23,8 +24,8 @@ function postDemoInvoice(state: DemoState, quantityReceived = 8) {
   state.invoice = createInvoice(state, worker, "Branch 1");
   state.invoice.file_name = "fictional-original.png";
   state.invoice.file_data = "data:image/png;base64,ZGVtby1vbmx5";
-  for (const line of state.invoice.lines) {
-    line.review_confirmed = true;
+  for (const [index, line] of state.invoice.lines.entries()) {
+    confirmInvoiceLineChecks(state, worker, index, true);
     line.date_confirmed = true;
     if (line.date_tracking) {
       line.date_type = "best_before";

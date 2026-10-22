@@ -1,5 +1,15 @@
 # Project changelog
 
+## 2026-10-21 — R1 invoice-reading import and empty store
+
+- Verified all seven CI checks on C9 #26 and S1 #27, then merged in that order with ordinary merges (`5901326`, `6f1de45`). S1's contents were preserved without conflict-resolution edits. Created `feat/prototype-r1-real-import` from main.
+- Specified local export imports, originals/source records, checked-value overlays, actionable uncertainty, other charges/totals, normal approvals, duplicate/location checks and empty-store behavior. Real files remain private; only fictional fixtures enter the repository.
+- Implemented Settings → Data worker parsing and protected preview/import, checked-value overlays with dependent arithmetic recomputation, supplier/product matching and approvals, location suggestions, duplicate skipping, per-page originals and source History. History shows import counts/filenames and draft/removal labels in English and Persian. Added separate signed charges/credits, printed-total reconciliation and human-confirmed expiry suggestions.
+- Added Please check outlines/chips on stable normal fields, Looks right and explicit confirm-all, exact-field edit acknowledgment and posting blockers with field links. Imported barcodes retain ordinary uniqueness/approval rules; inferred tax follows the selected category until a person confirms it. Unread quantities stay empty through unrelated edits instead of becoming zero; taxable controls reuse the shared Select.
+- Added the protected, explicitly confirmed empty-store action, preserving configuration/people/templates/notebook definitions and product-code allocation. Both empty-store and Reset demo confirmations disclose removal of imported invoices. Empty screens use helpful bilingual messages; fixed All my locations Lookup hiding its empty state.
+- Validation includes fictional import/edge-case fixtures, 34 importer cases, focused review/posting/permission/empty-store/UI/file tests and desktop/phone browser workflows. The complete application suite passed locally (1,608 tests) before the additional History/quantity regression cases; CI then passed all 1,611 application and 75 SDK tests before the quantity fix. Existing reviewed-invoice fixtures explicitly acknowledge AI checks. Settings Data and empty-list browser expectations follow the intentionally replaced behavior; invoice controls retain the shared presentation checks. The row-end audit distinguishes the required per-field Looks right actions while retaining their independent style/size/control checks. The PR's live checks provide the final complete CI result. Initial development failures and interrupted/superseded runs are distinct from those passing results.
+- R1 remains unmerged. No deployment, live AI, startup/loading or service-worker change; no screenshot/evidence files added. Physical Safari/phone/printer tests are not claimed.
+
 ## 2026-10-20 — S1 fixes from Ali's screenshots (Claude)
 
 - Alerts: one list for all alerts, each with a category label; details (for example the cross-branch price table and **Mark as intentional**) open when you click the row. The Dashboard's **Review** opens that alert directly.

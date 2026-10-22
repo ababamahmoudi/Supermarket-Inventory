@@ -17,6 +17,7 @@ interface Access {
   invoice_id: string;
   company_id: string;
   reference: string;
+  page: number;
   user_id: string;
   session_id: string;
 }
@@ -31,6 +32,7 @@ function resolveAccess(
   state: DemoState,
   actor: AuthenticatedActor,
   invoiceId: string,
+  page = 0,
 ): OriginalAccess {
   const current = requireInvoiceAuthority(
     state,
@@ -43,18 +45,26 @@ function resolveAccess(
     invoiceId === state.invoice.id
       ? state.invoice
       : state.invoices!.find((record) => record.id === invoiceId)!;
-  if (!invoice.file_data || !invoice.file_name)
+  if (!Number.isSafeInteger(page) || page < 0)
+    throw new Error("Original page is invalid.");
+  const source = invoice.original_pages?.length
+    ? invoice.original_pages[page]
+    : page === 0
+      ? invoice
+      : undefined;
+  if (!source?.file_data || !source.file_name)
     throw new Error("Original evidence is missing.");
   const handle = Object.freeze({
     available: true as const,
-    name: invoice.file_name,
-    type: invoice.file_type ?? "",
-    size: invoice.file_size,
+    name: source.file_name,
+    type: source.file_type ?? "",
+    size: source.file_size,
   });
   accesses.set(handle, {
     invoice_id: invoice.id,
     company_id: invoice.company_id,
-    reference: invoice.file_data,
+    reference: source.file_data,
+    page,
     user_id: current.user_id,
     session_id: current.session_id,
   });
@@ -62,7 +72,7 @@ function resolveAccess(
 }
 export async function loadInvoiceOriginal(
   query: ProtectedInvoiceQuery,
-  input: { company_id: string; invoice_id: string },
+  input: { company_id: string; invoice_id: string; page?: number },
 ): Promise<StoredFileRecord> {
   const scope: ResourceScope = {
     company_id: input.company_id,
@@ -70,7 +80,7 @@ export async function loadInvoiceOriginal(
     entity_id: input.invoice_id,
   };
   const handle = await query("invoices.read", scope, (state, actor) =>
-    resolveAccess(state, actor, input.invoice_id),
+    resolveAccess(state, actor, input.invoice_id, input.page),
   );
   const access = accesses.get(handle);
   if (!access) throw new Error("Original access changed.");
@@ -85,7 +95,12 @@ export async function loadInvoiceOriginal(
       current.session_id !== access.session_id
     )
       throw new Error("Original access changed.");
-    const latest = resolveAccess(state, current, access.invoice_id),
+    const latest = resolveAccess(
+        state,
+        current,
+        access.invoice_id,
+        access.page,
+      ),
       resolved = accesses.get(latest)!;
     if (
       resolved.company_id !== access.company_id ||
@@ -94,7 +109,7 @@ export async function loadInvoiceOriginal(
       throw new Error("Original evidence changed.");
   });
   accesses.delete(handle);
-  return file;
+  return { ...file, name: handle.name };
 }
 
 import { storeUploadedFile } from "./file-database";

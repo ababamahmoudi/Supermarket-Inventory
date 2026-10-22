@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import {
   signIn,
   chooseOption,
+  confirmInvoiceLine,
   setLanguage,
   openInvoiceUpload,
 } from "./helpers";
@@ -126,9 +127,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
     .fill("Demo only: old stock label cannot be read.");
   for (const line of await page.locator(".invoice-line").all()) {
     await line.getByRole("button", { name: "No", exact: true }).click();
-    await line
-      .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
-      .click();
+    await confirmInvoiceLine(page, line);
   }
   await page
     .getByRole("button", { name: "Save as draft", exact: true })

@@ -393,10 +393,15 @@ export function Expiry() {
         )}
         {entries.length === 0 ? (
           <EmptyState>
-            {t(
-              "No dates match these filters.",
-              "هیچ تاریخی با این فیلترها مطابق نیست.",
-            )}
+            {trackedDateView(state, true).length === 0
+              ? t(
+                  "No tracked dates yet; add an expiry or best-before date when you receive a product.",
+                  "هنوز تاریخی برای پیگیری وجود ندارد؛ هنگام دریافت محصول، تاریخ انقضا یا بهترین زمان مصرف را اضافه کنید.",
+                )
+              : t(
+                  "No dates match these filters.",
+                  "هیچ تاریخی با این فیلترها مطابق نیست.",
+                )}
           </EmptyState>
         ) : (
           <div>

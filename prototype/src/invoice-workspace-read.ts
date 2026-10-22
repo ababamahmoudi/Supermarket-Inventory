@@ -11,6 +11,7 @@ import {
   manualDecisionForLine,
   previousReceiptCost,
   initializeInvoiceManualPriceDecisions,
+  validCost,
 } from "./invoice";
 import { invoiceLineCalculation } from "./invoice-weight";
 import { invoiceVersion, invoiceContentVersions } from "./invoice-version";
@@ -106,14 +107,24 @@ export function invoiceWorkspaceRead(
     let price: string | null = null,
       costValid = true;
     try {
-      price =
-        working.invoice.status === "posted"
-          ? line.calculated_selling_price
-          : invoiceLineCalculation(
-              line,
-              line.pricing_category ?? product?.pricing_category ?? "grocery",
-              working.config,
-            ).selling_price;
+      // A new imported product awaits a person's category choice. Its valid
+      // printed cost is independent of that missing pricing input.
+      if (line.pricing_category === "") {
+        costValid = validCost(line.unit_cost_before_tax);
+        if (line.sold_by === "weight")
+          costValid &&= validCost(line.source_cost_before_tax ?? "");
+        if (line.quantity_unit === "cases" && line.sold_by !== "weight")
+          costValid &&= validCost(line.case_cost_before_tax ?? "");
+      } else {
+        price =
+          working.invoice.status === "posted"
+            ? line.calculated_selling_price
+            : invoiceLineCalculation(
+                line,
+                line.pricing_category ?? product?.pricing_category ?? "grocery",
+                working.config,
+              ).selling_price;
+      }
     } catch {
       costValid = false;
     }

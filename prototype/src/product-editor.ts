@@ -1,4 +1,8 @@
-import { regularPrice, normalizeSearch } from "./catalog";
+import {
+  regularPrice,
+  normalizeSearch,
+  conflictingBarcodeProduct,
+} from "./catalog";
 import type { AuthenticatedActor } from "./authority-types";
 import { freshActor } from "./authority";
 import { requireCapability } from "./permissions";
@@ -143,12 +147,11 @@ export function saveProductEdits(
   )
     fail("supplier");
   if (
-    edits.barcode.trim() &&
-    state.products.some(
-      (item) =>
-        item.company_id === context.company_id &&
-        item.code !== code &&
-        normalizeSearch(item.barcode) === normalizeSearch(edits.barcode),
+    conflictingBarcodeProduct(
+      state.products,
+      context.company_id,
+      edits.barcode,
+      code,
     )
   )
     fail("barcode_conflict");

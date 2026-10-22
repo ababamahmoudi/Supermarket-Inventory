@@ -2814,18 +2814,25 @@ export function Lookup() {
           </Field>
         </Card>
       )}
-      {branch === "all" ? null : !selected ? (
+      {branch === "all" && products.length > 0 ? null : !selected ? (
         <EmptyState
           action={
-            <Button variant="secondary" onClick={clearSearch}>
-              {t("Clear search", "پاک کردن جست‌وجو")}
-            </Button>
+            products.length > 0 ? (
+              <Button variant="secondary" onClick={clearSearch}>
+                {t("Clear search", "پاک کردن جست‌وجو")}
+              </Button>
+            ) : undefined
           }
         >
-          {t(
-            "No products match. Check the name or barcode, or clear the category filter.",
-            "محصولی یافت نشد. نام یا بارکد را بررسی کنید یا فیلتر دسته را پاک کنید.",
-          )}
+          {products.length === 0
+            ? t(
+                "No products yet; products appear here after an invoice is posted or a product is added.",
+                "هنوز محصولی وجود ندارد؛ پس از ثبت فاکتور یا افزودن محصول، محصولات اینجا نمایش داده می‌شوند.",
+              )
+            : t(
+                "No products match. Check the name or barcode, or clear the category filter.",
+                "محصولی یافت نشد. نام یا بارکد را بررسی کنید یا فیلتر دسته را پاک کنید.",
+              )}
         </EmptyState>
       ) : (
         <>
@@ -3316,15 +3323,22 @@ export function Products() {
         {!results.length ? (
           <EmptyState
             action={
-              <Button variant="secondary" onClick={clear}>
-                {t("Clear filters", "پاک کردن فیلترها")}
-              </Button>
+              products.length > 0 ? (
+                <Button variant="secondary" onClick={clear}>
+                  {t("Clear filters", "پاک کردن فیلترها")}
+                </Button>
+              ) : undefined
             }
           >
-            {t(
-              "No products match these filters. Clear a filter or check the search text.",
-              "محصولی با این فیلترها یافت نشد. فیلتر را پاک کنید یا متن جست‌وجو را بررسی کنید.",
-            )}
+            {products.length === 0
+              ? t(
+                  "No products yet; import an invoice in Settings → Data or add a product to get started.",
+                  "هنوز محصولی وجود ندارد؛ برای شروع از تنظیمات ← داده‌ها یک فاکتور وارد کنید یا محصولی اضافه کنید.",
+                )
+              : t(
+                  "No products match these filters. Clear a filter or check the search text.",
+                  "محصولی با این فیلترها یافت نشد. فیلتر را پاک کنید یا متن جست‌وجو را بررسی کنید.",
+                )}
           </EmptyState>
         ) : (
           <div>

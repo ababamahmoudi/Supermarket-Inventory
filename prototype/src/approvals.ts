@@ -9,6 +9,7 @@ import { demoSeed } from "./config";
 import { createId } from "./ids";
 import {
   effectiveOffer,
+  conflictingBarcodeProduct,
   regularPrice,
   type CatalogPriceReadState,
   type PriceProduct,
@@ -185,6 +186,7 @@ export function approvalLocationEffects(
   });
   if (approval.company_id !== state.config.company.seed_key) return [];
   const product = currentProduct(state, approval.product_code);
+
   const locations =
     scope === "all"
       ? sellingBranches(state.config)
@@ -543,6 +545,19 @@ export function resolveApproval(
   if (approval.type === "new_supplier")
     throw new Error("Review this supplier with supplier confirmation");
   const product = currentProduct(state, approval.product_code);
+  if (
+    decision === "approve" &&
+    approval.type === "new_product" &&
+    conflictingBarcodeProduct(
+      state.products,
+      approval.company_id,
+      product.barcode,
+      product.code,
+    )
+  )
+    throw new Error(
+      "This barcode already belongs to another product. Correct it before approving.",
+    );
   if (
     expectedSnapshot !== undefined &&
     expectedSnapshot !== approvalSnapshot(state, actor, product.code)

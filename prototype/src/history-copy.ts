@@ -6,6 +6,11 @@ import { configSeed } from "./config";
 import { configuredRoleLabel } from "./role-config";
 
 const actions: Record<string, [string, string]> = {
+  "Create invoice draft": ["Create invoice draft", "ایجاد پیش‌نویس فاکتور"],
+  "Removed fictional data": [
+    "Removed fictional data",
+    "داده‌های خیالی حذف شدند",
+  ],
   "Create price update": ["Create price update", "ایجاد به‌روزرسانی قیمت"],
   "Replace pending price update": [
     "Replace pending price update",
@@ -185,6 +190,14 @@ const actions: Record<string, [string, string]> = {
   notebook_entry_reopened: ["Reopen", "بازگشایی"],
 };
 export function historyActionLabel(action: string, lang: Language): string {
+  const imported = /^Imported (\d+) invoice readings from (.+)$/s.exec(action);
+  if (imported) {
+    if (lang !== "fa") return action;
+    const count = new Intl.NumberFormat("fa-IR", { useGrouping: false }).format(
+      Number(imported[1]),
+    );
+    return `${count} خوانش فاکتور از \u2066${imported[2]}\u2069 وارد شد`;
+  }
   if (action.startsWith("Reverted "))
     return `${translate("Reverted", "بازگردانده شد", lang)} ${historyActionLabel(action.slice(9), lang)}`;
   const copy = actions[action];

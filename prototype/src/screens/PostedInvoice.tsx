@@ -1,6 +1,10 @@
 import { companyTimestampText } from "../company-time";
 import type { ReactNode } from "react";
 import Decimal from "decimal.js";
+import {
+  ImportedReadingNote,
+  InvoiceOtherCharges,
+} from "../InvoiceReadingReview";
 import { useDemo } from "../store";
 import { branchLabel } from "../settings";
 import { invoiceContentVersions } from "../invoice-version";
@@ -156,6 +160,7 @@ export function PostedInvoice({
   return (
     <>
       <Card className="posted-invoice-document">
+        <ImportedReadingNote invoice={invoice} />
         <div className="posted-invoice-title-row">
           <div className="posted-invoice-title">
             <h2>
@@ -236,6 +241,12 @@ export function PostedInvoice({
               <DateText value={invoice.due_date} />
             </dd>
           </div>
+          {invoice.order_reference && (
+            <div>
+              <dt>{t("Order reference", "مرجع سفارش")}</dt>
+              <dd>{invoice.order_reference}</dd>
+            </div>
+          )}
           {invoice.ship_to && (
             <div>
               <dt>{t("Ship to", "نشانی تحویل")}</dt>
@@ -296,6 +307,10 @@ export function PostedInvoice({
                         </>
                       )}
                     </p>
+                    {line.handwritten_note && <p>{line.handwritten_note}</p>}
+                    {line.expiry_as_printed && (
+                      <p className="muted">{line.expiry_as_printed}</p>
+                    )}
                     <div className="posted-invoice-line-decisions">
                       {short.quantity > 0 && (
                         <span>
@@ -402,6 +417,7 @@ export function PostedInvoice({
             })}
           </tbody>
         </DataTable>
+        <InvoiceOtherCharges invoice={invoice} />
         <dl className="posted-invoice-totals">
           <div>
             <dt>{t("Subtotal", "جمع پیش از مالیات")}</dt>

@@ -299,10 +299,15 @@ export function PriceUpdates() {
             </p>
           ) : !visible.length ? (
             <EmptyState>
-              {t(
-                "No price updates match these filters.",
-                "به‌روزرسانی قیمتی با این فیلترها پیدا نشد.",
-              )}
+              {tasks.length === 0
+                ? t(
+                    "No price updates yet; approved price changes will appear here for the register and shelf labels.",
+                    "هنوز به‌روزرسانی قیمتی وجود ندارد؛ تغییرات قیمت تأییدشده برای صندوق و برچسب قفسه اینجا نمایش داده می‌شوند.",
+                  )
+                : t(
+                    "No price updates match these filters.",
+                    "به‌روزرسانی قیمتی با این فیلترها پیدا نشد.",
+                  )}
             </EmptyState>
           ) : (
             <div className="price-updates-list">

@@ -584,10 +584,15 @@ export default function Suppliers() {
           </DataTable>
           {rows.length === 0 && !supplierRead.pending && (
             <EmptyState>
-              {t(
-                "No suppliers match these filters.",
-                "هیچ تأمین‌کننده‌ای با این فیلترها پیدا نشد.",
-              )}
+              {overview.length === 0
+                ? t(
+                    "No suppliers yet; import an invoice or add a supplier to get started.",
+                    "هنوز تأمین‌کننده‌ای وجود ندارد؛ برای شروع یک فاکتور وارد کنید یا تأمین‌کننده‌ای اضافه کنید.",
+                  )
+                : t(
+                    "No suppliers match these filters.",
+                    "هیچ تأمین‌کننده‌ای با این فیلترها پیدا نشد.",
+                  )}
             </EmptyState>
           )}
         </Card>

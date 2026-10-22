@@ -1,5 +1,13 @@
 # Workflows and state machines
 
+## R1: import an invoice-reader export
+
+Owner/Manager → Settings → Data → Choose file… → Reading file… → preview the AI reading (default) or My checked values → review suggested locations and disabled duplicates → Import N invoices → summary → Open Needs review. Parsing runs off the UI thread. The protected preview and final command enforce current authority; final import rechecks locations and duplicates after original-page storage completes. No AI service is called.
+
+Imported drafts follow existing supplier review, product association/new-product pricing category, date confirmation and posting. Please check fields require an edit or Looks right; Confirm this invoice line asks before clearing remaining flags. What's missing links unresolved fields and totals differences. Original images have Page X of N and Previous/Next. Other charges remain separate from product receiving and contribute to the payable.
+
+Start with an empty store → Remove fictional data… → inspect what stays/what is removed → Remove fictional data → intentional empty operational screens. Settings, locations, people, pricing, templates and notebook definitions remain; History contains one removal entry. Reset demo warns that imported invoices are also removed before restoring the full fictional business and configured demo people.
+
 Current E1 authority replaces three-role and static actor rules. Owner/Manager carry former Supervisor authority; historical C1–C8 clauses retain original wording where explicitly historical. Current C6/C7/C8 workflows supersede earlier date controls, stacked Undo and whole-return settlement limits. Klead design-language governs all new screens before implementation.
 
 Each workflow lists states, who can move it, and the side effects. All state changes are audited.

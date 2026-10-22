@@ -18,6 +18,7 @@ import type { DemoState } from "./types";
 import type { AuthenticatedActor } from "./authority-types";
 import { authenticatedTestActor } from "./authority-test-fixture";
 import { AuthorityError } from "./authority";
+import { confirmInvoiceLineChecks } from "./invoice-checks";
 const workers = new WeakMap<DemoState, AuthenticatedActor>();
 const managers = new WeakMap<DemoState, AuthenticatedActor>();
 function receivingActor(state: DemoState) {
@@ -64,8 +65,8 @@ function reviewed(): DemoState {
   state.invoice.file_name = "fictional-original.png";
   state.invoice.file_type = "image/png";
   state.invoice.file_data = "data:image/png;base64,ZGVtby1vbmx5";
-  state.invoice.lines.forEach((line) => {
-    line.review_confirmed = true;
+  state.invoice.lines.forEach((line, index) => {
+    confirmInvoiceLineChecks(state, receivingActor(state), index, true);
     line.date_confirmed = true;
     if (line.date_tracking) {
       line.date_value = "2027-01-01";

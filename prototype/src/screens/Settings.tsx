@@ -3,9 +3,10 @@ import { SettingsConfigurationGate } from "../SettingsConfigurationGate";
 import People from "./People";
 import NotificationSettings from "./NotificationSettings";
 import RegisteredComputers from "./RegisteredComputers";
+import InvoiceReadingsImport from "./InvoiceReadingsImport";
 import { useEffect, useRef, useState, type SetStateAction } from "react";
 import companyLogo from "../../../assets/arzon-logo.png?inline";
-import { History, MoreHorizontal, Plus } from "lucide-react";
+import { MoreHorizontal, Plus } from "lucide-react";
 import { useDemo } from "../store";
 import { storeUploadedFile } from "../file-database";
 import { StoredFileImage } from "../stored-file";
@@ -194,12 +195,8 @@ const groups: {
     key: "data",
     label: ["Data", "داده‌ها"],
     description: [
-      "Import, export and recorded History.",
-      "ورود، خروج و تاریخچه ثبت‌شده.",
-    ],
-    planned: [
-      ["CSV import", "ورود CSV"],
-      ["CSV export", "خروج CSV"],
+      "Import invoice readings or start with an empty store.",
+      "خوانش فاکتورها را وارد کنید یا با فروشگاهی خالی شروع کنید.",
     ],
   },
 ];
@@ -1301,12 +1298,6 @@ function PlannedSettings({ group }: { group: (typeof groups)[number] }) {
           <li key={en}>{t(en, fa)}</li>
         ))}
       </ul>
-      {group.key === "data" && (
-        <a className="settings-history-link" href="#history">
-          <History size={18} />
-          {t("History", "تاریخچه")}
-        </a>
-      )}
       {group.key === "pricing" && (
         <p>
           {t(
@@ -1423,6 +1414,8 @@ function SettingsContent() {
                 orders: configuration.orders,
               })}
             />
+          ) : selected === "data" ? (
+            <InvoiceReadingsImport />
           ) : (
             <PlannedSettings group={group} />
           )}{" "}

@@ -1,5 +1,13 @@
 # Decisions
 
+## R1 — Local invoice readings before live AI (2026-10-21)
+
+Context: Ali needs real-data testing before the October 30 pitch using readings already produced by his invoice-reader kit, without paying for another AI run.
+
+Decision: accept the versioned local export into existing invoice/supplier/product/approval flows, preserving all original pages, source metadata, uncertainty and non-item charges. AI is the default; checked mode overlays only fields actually checked. Human review and posting/price authority remain. An explicitly confirmed Owner/Manager empty-store operation keeps settings and people. Startup/service-worker work remains outside R1.
+
+Why: exercise existing money and receiving rules without a parallel invoice model or live AI integration. Ali's real file stays on his computer, never in GitHub, seed data, fixtures, chat or screenshots. Tests use the supplied fictional export and a second fictional two-page edge-case export.
+
 The repository is the source of truth. Entries below were recorded on **2026-10-06**. Ali confirmed the location/tax details, accepted safe return cancellation, and authorized the lead developer to choose and document resolutions for the remaining contradictions. Defaults remain editable company configuration; they are not hardcoded business rules.
 
 ## 001 — Business location, time, and tax
