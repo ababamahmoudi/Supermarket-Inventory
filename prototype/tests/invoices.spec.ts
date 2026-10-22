@@ -76,7 +76,10 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   page.on("pageerror", (error) => browserErrors.push(error.message));
   await signInWorker(page);
   // The unread retained original now opens from its real Drafts row.
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page
+    .locator(".invoice-saved-table tbody tr td:first-child a")
+    .first()
+    .click();
   await expect(
     page.getByRole("complementary", { name: "Original invoice", exact: true }),
   ).toBeVisible();
@@ -113,6 +116,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await expect(
     chips.getByLabel("Delivered units", { exact: true }),
   ).toHaveValue("8");
+  await chips.getByRole("button", { name: "Close", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeDisabled();

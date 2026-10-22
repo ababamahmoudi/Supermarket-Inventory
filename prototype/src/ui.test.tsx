@@ -22,6 +22,7 @@ import {
   DateText,
   ProductName,
   OfferLabel,
+  LtrText,
   branchLabel,
   demoUserLabel,
   formatMoney,
@@ -32,6 +33,7 @@ import {
   Checkbox,
   ConfirmDialog,
   DataTable,
+  Disclosure,
   DateField,
   Dropzone,
   Field,
@@ -825,6 +827,72 @@ it("detail-opening rows navigate by click and keyboard while child actions remai
     "#return?id=demo-return-1",
   );
   window.location.hash = "";
+});
+it("moves a retained cell's navigation into the single phone chevron slot", async () => {
+  vi.stubGlobal("innerWidth", 390);
+  const opened = vi.fn();
+  try {
+    const user = userEvent.setup();
+    await show(
+      <DataTable
+        columns={[{ key: "name" }, { key: "cost" }, { key: "status" }]}
+        phoneList={{ name: "name", value: "cost", secondary: ["status"] }}
+      >
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Cost</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <LtrText>Fictional pantry item</LtrText>
+            </td>
+            <td>$1.00</td>
+            <td>
+              <span>Not confirmed</span>
+              <TableRowLink
+                href="#review-line"
+                aria-label="Review line"
+                onClick={(event) => {
+                  event.preventDefault();
+                  opened();
+                }}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </DataTable>,
+    );
+    const control = screen.getByRole("link", { name: "Review line" });
+    expect(control.closest("td")).toHaveClass("phone-list-chevron");
+    expect(screen.getByText("Not confirmed").closest("td")).toHaveClass(
+      "phone-list-secondary",
+    );
+    await user.click(control);
+    expect(opened).toHaveBeenCalledOnce();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+it("keeps disclosure content while its shared summary opens and closes", async () => {
+  const user = userEvent.setup();
+  await show(
+    <Disclosure summary="More details">
+      <p>Optional printed note</p>
+    </Disclosure>,
+  );
+  const summary = screen.getByText("More details").closest("summary")!;
+  const details = summary.parentElement!;
+  expect(screen.getByText("Optional printed note")).not.toBeVisible();
+  await user.click(summary);
+  expect(details).toHaveAttribute("open");
+  expect(screen.getByText("Optional printed note")).toBeVisible();
+  await user.click(summary);
+  expect(details).not.toHaveAttribute("open");
+  expect(screen.getByText("Optional printed note")).not.toBeVisible();
 });
 describe("shared language and number presentation", () => {
   it("formats money without losing Decimal precision, with Western digits and the symbol first", () => {

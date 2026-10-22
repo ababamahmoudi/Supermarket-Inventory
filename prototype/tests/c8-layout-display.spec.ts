@@ -113,12 +113,17 @@ for (const language of ["en", "fa"] as const) {
     const originalHash = await retainedOriginalHash(page, before.file_data!);
     const drafts = page.locator(".invoice-saved-drafts");
     await expect(drafts).toContainText(before.supplier_invoice_number);
-    await expect(
-      drafts.getByRole("button", {
-        name: copy(language, "Continue", "ادامه"),
-        exact: true,
-      }),
-    ).toBeVisible();
+    const continueOriginal =
+      (page.viewportSize()?.width ?? 1440) <= 760
+        ? drafts.getByRole("link", {
+            name: copy(language, "Open", "باز کردن"),
+            exact: true,
+          })
+        : drafts.getByRole("button", {
+            name: copy(language, "Continue", "ادامه"),
+            exact: true,
+          });
+    await expect(continueOriginal).toBeVisible();
     await expect(
       page
         .getByText(before.file_name!, { exact: true })
@@ -134,12 +139,16 @@ for (const language of ["en", "fa"] as const) {
         { exact: true },
       ),
     ).toHaveCount(0);
-    await drafts
-      .getByRole("button", {
-        name: copy(language, "Continue", "ادامه"),
-        exact: true,
-      })
-      .click();
+    await continueOriginal.click();
+    // The shared phone list opens the retained original first; its detail
+    // action starts the same read operation as desktop Continue.
+    if ((page.viewportSize()?.width ?? 1440) <= 760)
+      await page
+        .getByRole("button", {
+          name: copy(language, "Read invoice", "خواندن فاکتور"),
+          exact: true,
+        })
+        .click();
     await expect(
       page.getByText(
         copy(language, "Reading invoice…", "در حال خواندن فاکتور…"),
@@ -158,7 +167,17 @@ for (const language of ["en", "fa"] as const) {
     const after = (await saved(page)).invoice;
     expect(after.id).toBe(before.id);
     expect(after.file_data).toBe(before.file_data);
-    expect(after.lines).toEqual(before.lines);
+    // Reading adopts the stable R2 line identity and explicit date/review
+    // defaults; every original business field remains byte-for-byte equal.
+    expect(after.lines).toEqual(
+      before.lines.map((line, index) => ({
+        ...line,
+        id: line.id ?? `${before.id}:line:${line.import_line_index ?? index}`,
+        date_tracking: line.date_tracking ?? false,
+        date_confirmed: line.date_tracking ? line.date_confirmed : true,
+        low_confidence_fields: line.low_confidence_fields ?? [],
+      })),
+    );
     expect(await retainedOriginalHash(page, after.file_data!)).toBe(
       originalHash,
     );
@@ -210,7 +229,6 @@ for (const language of ["en", "fa"] as const) {
     await setLanguage(page, language);
     const displayedCost = page
       .getByTestId("invoice-line-row-0")
-      .locator('td[data-column-key="cost"]')
       .getByText("$1.5525", { exact: true });
     await expect(displayedCost).toBeVisible();
     await expect(displayedCost).toHaveText("$1.5525");
@@ -263,10 +281,21 @@ for (const language of ["en", "fa"] as const) {
       const name = demo.products.find((item) => item.code === code)!.name_en;
       const row = page
         .locator(
-          `.received-table tbody > tr[data-row-href="#invoices?id=${encodeURIComponent(invoice.id)}"]`,
+          `.received-table tbody > tr[data-row-href^="#invoices?id=${encodeURIComponent(invoice.id)}&line="]`,
         )
         .filter({ hasText: name });
       await expect(row).toHaveCount(1);
+      const lineIndex = invoice.lines.findIndex(
+        (line) => line.product_code === code,
+      );
+      expect(lineIndex).toBeGreaterThanOrEqual(0);
+      const lineId = invoice.lines[lineIndex].id ?? String(lineIndex);
+      const href = `#invoices?id=${encodeURIComponent(invoice.id)}&line=${encodeURIComponent(lineId)}`;
+      await expect(row).toHaveAttribute("data-row-href", href);
+      await expect(row.locator(`a[href="${href}"]`).first()).toHaveAttribute(
+        "href",
+        href,
+      );
       const evidence = await quantityEvidence(page, row);
       await expect(evidence).toContainText(expected);
       await expect(evidence).not.toContainText(/\d+\.\d+\s+(?:cases|کارتن)/);
@@ -282,6 +311,7 @@ for (const language of ["en", "fa"] as const) {
   }) => {
     await signIn(page, "Supervisor");
     await setLanguage(page, language);
+    const navigationState = await saved(page);
     const tables = [
       ["received", ".received-table"],
       ["suppliers", ".suppliers-table"],
@@ -293,9 +323,32 @@ for (const language of ["en", "fa"] as const) {
       await page.goto(`/#${route}`);
       const row = page.locator(`${selector} tbody > tr[data-row-href]`).first();
       await expect(row).toBeVisible();
-      await expect(row.locator(".table-row-link")).toHaveCount(1);
+      if (route === "received") {
+        const href = await row.getAttribute("data-row-href");
+        expect(href).not.toBeNull();
+        const destination = new URL(href!, page.url());
+        const params = new URLSearchParams(destination.hash.split("?")[1]);
+        const invoice = [
+          navigationState.invoice,
+          ...(navigationState.invoices ?? []),
+        ].find((entry) => entry.id === params.get("id"));
+        expect(invoice).toBeDefined();
+        const lineIndex = invoice!.lines.findIndex(
+          (line, index) => (line.id ?? String(index)) === params.get("line"),
+        );
+        expect(lineIndex).toBeGreaterThanOrEqual(0);
+        const line = invoice!.lines[lineIndex];
+        const exactHref = `#invoices?id=${encodeURIComponent(invoice!.id)}&line=${encodeURIComponent(line.id ?? String(lineIndex))}`;
+        expect(href).toBe(exactHref);
+        await expect(row).toContainText(line.description);
+      }
       const disclosure = row.locator(".table-details-toggle");
       if (await row.evaluate((element) => element.matches(".phone-list-row"))) {
+        await expect(row.locator(".table-row-link")).toHaveCount(1);
+        await expect(row.locator(".table-row-link")).toHaveAttribute(
+          "href",
+          (await row.getAttribute("data-row-href"))!,
+        );
         await expect(
           row.locator(".phone-list-chevron .table-row-link"),
         ).toHaveCount(1);
@@ -341,12 +394,30 @@ for (const language of ["en", "fa"] as const) {
           afterValues: true,
         });
       } else {
-        await expect(
-          row.locator('td[data-column-key="actions"] .table-row-link'),
-        ).toHaveCount(1);
-        if (await disclosure.count()) {
+        if (route === "received") {
+          const href = await row.getAttribute("data-row-href");
+          await expect(row.locator(".received-invoice-link")).toHaveAttribute(
+            "href",
+            href!,
+          );
           await expect(
-            row.locator('td[data-column-key="actions"] .table-details-toggle'),
+            row.locator('td[data-column-key="date"] a'),
+          ).toHaveAttribute("href", href!);
+          await expect(row.locator(".table-row-link")).toHaveCount(0);
+        } else {
+          await expect(row.locator(".table-row-link")).toHaveCount(1);
+          await expect(
+            row.locator('td[data-column-key="actions"] .table-row-link'),
+          ).toHaveCount(1);
+        }
+        if (await disclosure.count()) {
+          await expect(disclosure).toHaveCount(1);
+          await expect(
+            row.locator(
+              route === "received"
+                ? ":scope > td:last-child .table-details-toggle"
+                : 'td[data-column-key="actions"] .table-details-toggle',
+            ),
           ).toHaveCount(1);
         }
       }

@@ -241,6 +241,11 @@ it("keeps old fields inert through genuine New/Manual commands and enables only 
   // absent while the genuine list action and accepted workspace remain guarded.
   expect(number).not.toBeInTheDocument();
   const uploadId = await accepted(read, firstId, "upload");
+  expect(screen.getByLabelText("Upload a PDF or photo")).toBeEnabled();
+  expect(
+    screen.queryByRole("heading", { name: "Invoice lines" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Invoice number")).not.toBeInTheDocument();
   let current = await read();
   expect(
     current.invoices!.find((row) => row.id === firstId)

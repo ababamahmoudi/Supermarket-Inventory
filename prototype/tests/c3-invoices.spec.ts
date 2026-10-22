@@ -300,7 +300,9 @@ test("posted invoice Columns persist, and detail/browser Back retain the Posted 
   await page.locator(".invoice-posted-table").getByRole("link").first().click();
   await expect(page).toHaveURL(/#invoices\?id=/);
   await expect(
-    page.getByRole("link", { name: "Invoices", exact: true }),
+    page
+      .getByRole("link", { name: "Invoices", exact: true })
+      .and(page.locator(".back-link")),
   ).toBeVisible();
   await page.goBack();
   await expect(page).toHaveURL(/#invoices$/);
@@ -309,7 +311,10 @@ test("posted invoice Columns persist, and detail/browser Back retain the Posted 
     page.getByRole("tab", { name: /^Posted \d+$/, exact: false }),
   ).toHaveAttribute("aria-selected", "true");
   await page.locator(".invoice-posted-table").getByRole("link").first().click();
-  await page.getByRole("link", { name: "Invoices", exact: true }).click();
+  await page
+    .getByRole("link", { name: "Invoices", exact: true })
+    .and(page.locator(".back-link"))
+    .click();
   await expect(page.locator(".invoice-posted-table")).toBeVisible();
   await page.getByRole("button", { name: "Columns", exact: true }).click();
   await columns
@@ -327,25 +332,30 @@ test("a manual draft detail returns to its list without losing the saved line", 
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "New invoice", exact: true })
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
   await expect(page).toHaveURL(/#invoices\?id=/);
   await page
     .getByLabel("Add a product to the invoice", { exact: true })
     .click();
-  await page.getByRole("option", { name: "New product", exact: true }).click();
+  await page
+    .getByRole("option", { name: "Canned Fava Beans 400 g", exact: true })
+    .click();
   await page.getByRole("button", { name: "Add line", exact: true }).click();
   await page
     .getByRole("button", { name: "Save and close", exact: true })
     .click();
   await expect(page.locator(".invoice-saved-drafts")).toBeVisible();
-  await expect(page.locator(".invoice-lines-table")).toHaveCount(0);
+  await expect(page.locator(".receiving-lines-table")).toHaveCount(0);
   // S1: saved drafts are a table; the new manual draft has no invoice number yet.
   await page
     .locator(".invoice-saved-drafts tbody tr")
     .filter({
       has: page.locator("td:first-child a", { hasText: /^Draft$/ }),
     })
-    .getByRole("button", { name: "Review", exact: true })
+    .getByRole("link", { name: "Draft", exact: true })
     .click();
   await expect(page.locator(".invoice-line")).toHaveCount(1);
   await page.goBack();

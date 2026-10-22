@@ -17,6 +17,7 @@ import {
   keepApprovedPrice,
   proposeManualOverride,
   resolveApproval,
+  requiresIndividualApprovalReview,
 } from "../approvals";
 import { regularPrice } from "../catalog";
 import { ManualPricePill } from "../manual-price-presentation";
@@ -298,7 +299,7 @@ export function Approvals() {
         accessKey,
         ids: group.map((row) => row.approval.id),
         selected: group
-          .filter((row) => row.approval.type !== "margin_review")
+          .filter((row) => !requiresIndividualApprovalReview(row.approval))
           .map((row) => row.approval.id),
         snapshots,
         title: `${t("Invoice", "فاکتور")} ${group[0].invoiceNumber} · ${group[0].supplierName ?? ""}`,
@@ -997,7 +998,9 @@ export function Approvals() {
                           type="checkbox"
                           aria-label={`${t("Include", "انتخاب")} ${product.name_en}`}
                           checked={bulk.selected.includes(row.approval.id)}
-                          disabled={row.approval.type === "margin_review"}
+                          disabled={requiresIndividualApprovalReview(
+                            row.approval,
+                          )}
                           onChange={(event) =>
                             setBulk({
                               ...bulk,
@@ -1009,7 +1012,7 @@ export function Approvals() {
                             })
                           }
                         />
-                        {row.approval.type === "margin_review" && (
+                        {requiresIndividualApprovalReview(row.approval) && (
                           <small>
                             {t("Review individually", "جداگانه بررسی شود")}
                           </small>

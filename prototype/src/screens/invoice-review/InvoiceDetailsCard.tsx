@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDemo } from "../../store";
 import {
   Button,
+  Disclosure,
   DateField,
   Select,
   Dialog,
@@ -278,12 +279,12 @@ export function InvoiceDetailsCard({
             />
           </Field>
         </div>
-        <details
+        <Disclosure
           className="receiving-more"
+          summary={t("More details", "جزئیات بیشتر")}
           open={more}
           onToggle={(e) => setMore(e.currentTarget.open)}
         >
-          <summary>{t("More details", "جزئیات بیشتر")}</summary>
           <div className="detail-grid">
             {moreKeys.map((key) => {
               const labels: Record<string, [string, string]> = {
@@ -319,7 +320,7 @@ export function InvoiceDetailsCard({
               );
             })}
           </div>
-        </details>
+        </Disclosure>
       </ReadingCheckProvider>
       <Dialog
         open={locationOpen}

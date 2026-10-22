@@ -322,9 +322,11 @@ test("R2 invoice names and four-decimal cost values fit on one line", async ({
   await page.goto("/#invoices");
   await uploadInvoice(page);
   await expect(page.locator(".invoice-line")).toHaveCount(6);
-  await expect(page.locator(".invoice-line-toggle > bdi")).toHaveCount(6);
+  await expect(
+    page.locator(".invoice-line-toggle .receiving-product-name > bdi"),
+  ).toHaveCount(6);
   const names = await page
-    .locator(".invoice-line-toggle > bdi")
+    .locator(".invoice-line-toggle .receiving-product-name > bdi")
     .evaluateAll((elements) =>
       elements.map((element) => {
         const range = document.createRange();
@@ -545,7 +547,10 @@ test("Part 1 demo disclaimer appears inside Demo and only invoice AI reading rem
   await expect(page.locator("main")).toContainText(
     "AI invoice reading is simulated",
   );
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page
+    .locator(".invoice-saved-table tbody tr td:first-child a")
+    .first()
+    .click();
   await expect(page.locator("main")).not.toContainText(
     "AI invoice reading is simulated",
   );

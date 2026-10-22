@@ -5,6 +5,7 @@ import {
   Button,
   ConfirmDialog,
   DateField,
+  Disclosure,
   NumberField,
   SegmentedControl,
   Select,
@@ -19,6 +20,7 @@ import {
   invoiceCheckField,
   setInvoiceLineCategory,
   confirmInvoiceLineChecks,
+  InvoiceLineConfirmationError,
 } from "../../invoice-checks";
 import {
   removeInvoiceLine,
@@ -71,6 +73,7 @@ export function LineEditor({
   const [attempted, setAttempted] = useState(false);
   const showErrors = attempted || attemptedPost;
   const [failure, setFailure] = useState("");
+  const [failedField, setFailedField] = useState("");
   const [removeOpen, setRemoveOpen] = useState(false);
   const [shortOpen, setShortOpen] = useState(false);
   const moreKeys = [
@@ -96,7 +99,9 @@ export function LineEditor({
     field: string,
     change: Parameters<ReviewProps["editLine"]>[1],
     recalculate = false,
-  ) =>
+  ) => {
+    setFailedField("");
+    setFailure("");
     editLine(
       index,
       (item, draft, actor) => {
@@ -107,6 +112,7 @@ export function LineEditor({
       },
       recalculate,
     );
+  };
   const nameError =
     showErrors && line.product_code === "NEW" && !english.trim()
       ? t("Enter the English name.", "نام انگلیسی را وارد کنید.")
@@ -128,6 +134,17 @@ export function LineEditor({
       ? t(
           "Enter a cost of zero or more with up to four decimal places.",
           "هزینه صفر یا بیشتر با حداکثر چهار رقم اعشار وارد کنید.",
+        )
+      : undefined;
+  const validCaseCost =
+    line.quantity_unit !== "cases" ||
+    line.sold_by === "weight" ||
+    /^\d+(?:\.\d{1,4})?$/.test(line.case_cost_before_tax ?? "");
+  const caseCostError =
+    showErrors && (!validCaseCost || failedField === "case_cost_before_tax")
+      ? t(
+          "Enter a case cost of zero or more that agrees with the unit cost and pack.",
+          "هزینه کارتن صفر یا بیشتر وارد کنید که با هزینه واحد و اندازه بسته سازگار باشد.",
         )
       : undefined;
   const saveName = async () => {
@@ -155,34 +172,61 @@ export function LineEditor({
             ? id("invoiced")
             : !validInvoiceLineReceived(line)
               ? id("delivered")
-              : !workspace.lineDetails[index]?.costValid
-                ? id("cost")
-                : null;
+              : !validCaseCost
+                ? id("case-cost")
+                : !workspace.lineDetails[index]?.costValid
+                  ? id("cost")
+                  : null;
     if (target) {
       document.getElementById(target)?.focus({ preventScroll: true });
       return;
     }
     let error = "";
+    let field = "";
     const result = await update((draft, actor) => {
       try {
         confirmInvoiceLineChecks(draft, actor, index, true);
         return true;
       } catch (cause) {
         error = cause instanceof Error ? cause.message : String(cause);
+        if (cause instanceof InvoiceLineConfirmationError) field = cause.field;
         return false;
       }
     });
     if (result) {
       onClose();
-    } else
+    } else {
+      setFailedField(field);
+      if (field) {
+        const suffix: Record<string, string> = {
+          new_name_en: "name-en",
+          pricing_category: "category",
+          quantity_entered: "invoiced",
+          qty_received_at_posting: "delivered",
+          unit_cost_before_tax: "cost",
+          case_cost_before_tax: "case-cost",
+          units_per_case: "pack",
+          date_value: "date",
+        };
+        document
+          .getElementById(id(suffix[field] ?? field))
+          ?.focus({ preventScroll: true });
+      }
       setFailure(
-        error ||
-          t(
-            "Check the fields before confirming.",
-            "پیش از تأیید فیلدها را بررسی کنید.",
-          ),
+        field
+          ? t(
+              "Check the marked field before confirming.",
+              "پیش از تأیید، فیلد مشخص‌شده را بررسی کنید.",
+            )
+          : error ||
+              t(
+                "Check the fields before confirming.",
+                "پیش از تأیید فیلدها را بررسی کنید.",
+              ),
       );
+    }
   };
+
   let lowerCost = false;
   try {
     lowerCost =
@@ -419,7 +463,9 @@ export function LineEditor({
               label={
                 line.quantity_unit === "cases"
                   ? t("Cases invoiced", "کارتن‌های فاکتور شده")
-                  : t("Invoiced", "فاکتور شده")
+                  : line.sold_by === "weight"
+                    ? t("Invoiced weight", "وزن فاکتور شده")
+                    : t("Invoiced units", "واحدهای فاکتور شده")
               }
               error={quantityError}
             >
@@ -507,6 +553,7 @@ export function LineEditor({
               <Field
                 readingField="case_cost_before_tax"
                 label={t("Case cost before tax", "هزینه کارتن پیش از مالیات")}
+                error={caseCostError}
               >
                 <input
                   id={id("case-cost")}
@@ -829,12 +876,12 @@ export function LineEditor({
             </p>
           )}
         </section>
-        <details
+        <Disclosure
           className="receiving-more"
+          summary={t("More details", "جزئیات بیشتر")}
           open={more}
           onToggle={(e) => setMore(e.currentTarget.open)}
         >
-          <summary>{t("More details", "جزئیات بیشتر")}</summary>
           <div className="detail-grid">
             {moreKeys.map((key) => {
               const labels: Record<string, [string, string]> = {
@@ -867,7 +914,7 @@ export function LineEditor({
               );
             })}
           </div>
-        </details>
+        </Disclosure>
         {shortOpen && (
           <section className="list-box">
             <h4>{t("Report short or refused", "گزارش کسری یا مرجوعی")}</h4>

@@ -25,11 +25,15 @@ export function OriginalInvoice({
   onAttach,
   children,
   bare = false,
+  onPageCount,
+  onThumbnail,
 }: {
   invoice: InvoiceReadDTO;
   onAttach?: () => void;
   children?: ReactNode;
   bare?: boolean;
+  onPageCount?: (count: number) => void;
+  onThumbnail?: (sourceKey: string, url: string) => void;
 }) {
   const [imageSelection, setImageSelection] = useState({
     invoiceId: invoice.id,
@@ -51,6 +55,8 @@ export function OriginalInvoice({
       onImagePage={(page) => setImageSelection({ invoiceId: invoice.id, page })}
       onAttach={onAttach}
       bare={bare}
+      onPageCount={onPageCount}
+      onThumbnail={onThumbnail}
     >
       {children}
     </OriginalInvoiceContent>
@@ -65,6 +71,8 @@ function OriginalInvoiceContent({
   onAttach,
   children,
   bare,
+  onPageCount,
+  onThumbnail,
 }: {
   invoice: InvoiceReadDTO;
   file: ReturnType<typeof useInvoiceOriginal>;
@@ -73,6 +81,8 @@ function OriginalInvoiceContent({
   onAttach?: () => void;
   children?: ReactNode;
   bare: boolean;
+  onPageCount?: (count: number) => void;
+  onThumbnail?: (sourceKey: string, url: string) => void;
 }) {
   const { t, query } = useDemo();
   const media = useRef<HTMLDivElement>(null);
@@ -129,6 +139,7 @@ function OriginalInvoiceContent({
         if (!cancelled && pdf) {
           setDocument(pdf);
           setLoading(false);
+          onPageCount?.(pdf.numPages);
         }
       })
       .catch(() => {
@@ -141,7 +152,40 @@ function OriginalInvoiceContent({
       cancelled = true;
       void task?.destroy();
     };
-  }, [file.source, invoice.file_type]);
+  }, [file.source, invoice.file_type, onPageCount]);
+  useEffect(() => {
+    if (!document || !onThumbnail) return;
+    let active = true;
+    let render:
+      | ReturnType<Awaited<ReturnType<PDFDocumentProxy["getPage"]>>["render"]>
+      | undefined;
+    void document
+      .getPage(1)
+      .then(async (pdfPage) => {
+        if (!active) return;
+        const natural = pdfPage.getViewport({ scale: 1 });
+        const viewport = pdfPage.getViewport({ scale: 56 / natural.width });
+        const thumbnail = window.document.createElement("canvas");
+        thumbnail.width = Math.ceil(viewport.width);
+        thumbnail.height = Math.ceil(viewport.height);
+        const context = thumbnail.getContext("2d");
+        if (!context) return;
+        render = pdfPage.render({
+          canvas: thumbnail,
+          canvasContext: context,
+          viewport,
+        });
+        await render.promise;
+        if (active) onThumbnail(file.key, thumbnail.toDataURL("image/png"));
+      })
+      .catch(() => {
+        // The full viewer reports a failed PDF; a thumbnail stays optional.
+      });
+    return () => {
+      active = false;
+      render?.cancel();
+    };
+  }, [document, file.key, onThumbnail]);
   useEffect(() => {
     if (!document || !canvas.current) return;
     let cancelled = false;

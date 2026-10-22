@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Expand, FileImage } from "lucide-react";
 import type { InvoiceReadDTO } from "../../invoice-projections";
 import { useDemo } from "../../store";
@@ -40,7 +40,40 @@ export function OriginalViewer({
   }
   const hidden = preference.key === key ? preference.hidden : storedHidden;
   const [expanded, setExpanded] = useState(false);
+  const [pdfThumbnail, setPdfThumbnail] = useState({ sourceKey: "", url: "" });
+  const onThumbnail = useCallback(
+    (sourceKey: string, url: string) => setPdfThumbnail({ sourceKey, url }),
+    [],
+  );
+  const documentKey = JSON.stringify([
+    invoice.id,
+    invoice.file_name,
+    invoice.file_size,
+    invoice.file_type,
+  ]);
+  const [pdfPages, setPdfPages] = useState({ documentKey, count: 0 });
+  const onPageCount = useCallback(
+    (count: number) =>
+      setPdfPages((previous) =>
+        previous.documentKey === documentKey && previous.count === count
+          ? previous
+          : { documentKey, count },
+      ),
+    [documentKey],
+  );
+  const pageCount =
+    pdfPages.documentKey === documentKey && pdfPages.count
+      ? pdfPages.count
+      : (invoice.original_page_count ?? 1);
   const firstPage = useInvoiceOriginal(invoice, 0);
+  const thumbnailUrl =
+    invoice.file_type === "application/pdf"
+      ? pdfThumbnail.sourceKey === firstPage.key &&
+        !firstPage.loading &&
+        !firstPage.error
+        ? pdfThumbnail.url
+        : undefined
+      : firstPage.url;
   useEffect(() => {
     onVisibilityChange?.(!hidden);
   }, [hidden, onVisibilityChange]);
@@ -56,6 +89,7 @@ export function OriginalViewer({
   return (
     <aside
       id="invoice-original-field"
+      aria-label={t("Original invoice", "اصل فاکتور")}
       tabIndex={-1}
       className="original-viewer"
       data-hidden={hidden}
@@ -84,7 +118,13 @@ export function OriginalViewer({
       </div>
       <div className="original-viewer-panel">
         {!expanded && (
-          <OriginalInvoice invoice={invoice} onAttach={onAttach} bare />
+          <OriginalInvoice
+            invoice={invoice}
+            onAttach={onAttach}
+            onPageCount={onPageCount}
+            onThumbnail={onThumbnail}
+            bare
+          />
         )}
       </div>
       <Button
@@ -94,19 +134,17 @@ export function OriginalViewer({
           invoice.original_available ? setExpanded(true) : onAttach?.()
         }
       >
-        {firstPage.url ? (
-          <img
-            src={firstPage.url}
-            alt=""
-            className="original-viewer-thumbnail"
-          />
-        ) : (
-          <FileImage size={24} aria-hidden="true" />
-        )}
+        <span className="original-viewer-thumbnail" aria-hidden="true">
+          {thumbnailUrl ? (
+            <img src={thumbnailUrl} alt="" />
+          ) : (
+            <FileImage size={24} />
+          )}
+        </span>
         {invoice.original_available
           ? t(
-              `View original (${invoice.original_page_count ?? 1} pages)`,
-              `مشاهده اصل (${invoice.original_page_count ?? 1} صفحه)`,
+              `View original (${pageCount} pages)`,
+              `مشاهده اصل (${pageCount} صفحه)`,
             )
           : t("Attach original", "پیوست اصل فاکتور")}
       </Button>
@@ -117,7 +155,13 @@ export function OriginalViewer({
         className="original-viewer-dialog"
       >
         {expanded && (
-          <OriginalInvoice invoice={invoice} onAttach={onAttach} bare />
+          <OriginalInvoice
+            invoice={invoice}
+            onAttach={onAttach}
+            onPageCount={onPageCount}
+            onThumbnail={onThumbnail}
+            bare
+          />
         )}
       </Dialog>
     </aside>

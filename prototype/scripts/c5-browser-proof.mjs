@@ -245,7 +245,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           for (const bounds of range.getClientRects())
             textWidth += bounds.width;
         }
-        const icons = [...element.querySelectorAll("svg")]
+        const icons = [...element.querySelectorAll("svg, img")]
           .filter((icon) => {
             const bounds = icon.getBoundingClientRect();
             return (

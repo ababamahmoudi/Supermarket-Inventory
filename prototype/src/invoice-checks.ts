@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { costPerUnit, packUnits } from "./supplier-items";
 import type { AuthenticatedActor } from "./authority-types";
 import { requireInvoiceAuthority } from "./invoice-authority";
 import type {
@@ -179,6 +180,36 @@ export function confirmInvoiceLineChecks(
       "unit_cost_before_tax",
       "Enter a nonnegative cost with up to four decimal places.",
     );
+  if (line.sold_by !== "weight" && line.quantity_unit === "cases") {
+    try {
+      if (
+        packUnits(
+          line.quantity_entered ?? "",
+          "cases",
+          line.units_per_case ?? 1,
+        ) !== line.qty_invoiced
+      )
+        throw new Error("quantity");
+    } catch {
+      throw new InvoiceLineConfirmationError(
+        "quantity_entered",
+        "Check cases invoiced and units per case.",
+      );
+    }
+    if (!validCost(line.case_cost_before_tax ?? ""))
+      throw new InvoiceLineConfirmationError(
+        "case_cost_before_tax",
+        "Enter a nonnegative case cost with up to four decimal places.",
+      );
+    if (
+      costPerUnit(line.case_cost_before_tax!, line.units_per_case ?? 1) !==
+      new Decimal(line.unit_cost_before_tax).toFixed(4)
+    )
+      throw new InvoiceLineConfirmationError(
+        "case_cost_before_tax",
+        "Check that the case cost matches the unit cost and units per case.",
+      );
+  }
   line.low_confidence_fields = [];
   line.taxable_inferred = false;
   line.review_confirmed = true;

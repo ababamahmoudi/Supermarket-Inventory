@@ -55,13 +55,17 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
         expires: Number.POSITIVE_INFINITY,
       };
   };
-  const adjustingScroll = useRef(false);
+  const adjustingScroll = useRef<number | null>(null);
   useEffect(() => {
     const scrolled = () => {
-      if (adjustingScroll.current) {
-        adjustingScroll.current = false;
+      if (
+        adjustingScroll.current !== null &&
+        Math.abs(window.scrollY - adjustingScroll.current) <= 0.25
+      ) {
+        adjustingScroll.current = null;
         return;
       }
+      adjustingScroll.current = null;
       position.current = null;
     };
     window.addEventListener("scroll", scrolled, { passive: true });
@@ -77,8 +81,10 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
       return;
     const delta = saved.element.getBoundingClientRect().top - saved.top;
     if (Math.abs(delta) > 0.25) {
-      adjustingScroll.current = true;
+      const before = window.scrollY;
       window.scrollBy({ top: delta, behavior: "instant" });
+      adjustingScroll.current =
+        window.scrollY !== before ? window.scrollY : null;
     }
   });
   useInvoiceLineHighlight(invoice.id, true);
@@ -105,12 +111,20 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
     show(
       (invoice.low_confidence_fields ?? []).some((x) =>
         /subtotal|tax|final_total/.test(x),
-      )
+      ) ||
+        (invoice.other_charges ?? []).some(
+          (charge) => charge.low_confidence_fields?.length,
+        )
         ? "invoice-totals"
         : "invoice-details-fields",
     );
   };
-  const missing = missingGroups(invoice, t, workspace.blockers)
+  const missing = missingGroups(
+    invoice,
+    t,
+    workspace.blockers,
+    workspace.blockerLineIndexes,
+  )
     .map((x) => x.label)
     .join("\n");
   return (
@@ -126,6 +140,19 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
       onClickCapture={(e) => {
         if (e.target instanceof Node && e.currentTarget.contains(e.target))
           refreshLayout((n) => n + 1);
+      }}
+      onKeyDownCapture={(e) => {
+        if (
+          !["Enter", " "].includes(e.key) ||
+          !(e.target instanceof HTMLElement) ||
+          !e.currentTarget.contains(e.target) ||
+          !e.target.matches("button,summary,[role='combobox']")
+        )
+          return;
+        anchor(e.target);
+        setReservedHeight((current) =>
+          Math.max(current, root.current?.getBoundingClientRect().height ?? 0),
+        );
       }}
       onPointerDownCapture={(e) => {
         const target =
@@ -160,6 +187,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
         <MissingPanel
           invoice={invoice}
           blockers={workspace.blockers}
+          blockerLineIndexes={workspace.blockerLineIndexes}
           onShow={show}
         />
       )}

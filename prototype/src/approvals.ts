@@ -30,6 +30,7 @@ import {
 import { productStoreCost } from "./product-costs";
 import { effectiveApprovalLocation } from "./received";
 import { calculatePrice } from "./pricing";
+import { calculateWeighedPrice } from "./weighed";
 export { isOfferScheduledNow } from "./catalog";
 import type {
   Approval,
@@ -772,7 +773,10 @@ export function changeApprovalCategory(
     ? productStoreCost(state, actorAtLocation(state, actor, origin), product)
     : (approval.unit_cost ?? product.last_cost_before_tax);
   if (!cost) throw new Error("A current unit cost is required");
-  const calculation = calculatePrice(cost, categoryKey, state.config);
+  const calculation =
+    product.sold_by === "weight"
+      ? calculateWeighedPrice(cost, "lb", categoryKey, state.config)
+      : calculatePrice(cost, categoryKey, state.config);
   if (approval.pricing_category === categoryKey) return approval;
   approval.pricing_category = categoryKey;
   approval.proposed_price = calculation.selling_price;
@@ -846,9 +850,14 @@ export function resubmitApproval(
     (item) => item.key === categoryKey,
   );
   if (!category) throw new Error("Choose a pricing category");
-  const cost = rejected.unit_cost ?? product.last_cost_before_tax;
+  const cost = rejected.source_manual_request
+    ? productStoreCost(state, actorAtLocation(state, actor, origin), product)
+    : (rejected.unit_cost ?? product.last_cost_before_tax);
   if (!cost) throw new Error("A current unit cost is required");
-  const calculation = calculatePrice(cost, categoryKey, state.config);
+  const calculation =
+    product.sold_by === "weight"
+      ? calculateWeighedPrice(cost, "lb", categoryKey, state.config)
+      : calculatePrice(cost, categoryKey, state.config);
   const price = edits.price?.trim()
     ? priceAmount(edits.price.trim())
     : calculation.selling_price;
@@ -861,20 +870,33 @@ export function resubmitApproval(
       new Decimal(margin).lt(category.minimum_margin));
   if ((belowMinimum || new Decimal(price).lt(cost)) && !edits.reason?.trim())
     throw new Error("Add a reason for a price below the minimum margin");
+  const now = new Date();
   const request: Approval = {
     ...structuredClone(rejected),
     id: createId("approval"),
     status: "pending",
     pricing_category: categoryKey,
     proposed_price: price,
+    unit_cost: cost,
     current_price: regularPrice(state, product, origin),
     margin,
     threshold: category.minimum_margin,
     manual_override: price !== calculation.selling_price,
     manual_price_review: undefined,
-    source_manual_request: undefined,
+    source_manual_request: rejected.source_manual_request
+      ? {
+          requester_user_id: actor.user_id,
+          requester_name_snapshot: actor.actor,
+          requester_role_snapshot: actor.role,
+          requested_at: now.toISOString(),
+          entered_price: price,
+          price_unit: product.sold_by === "weight" ? "lb" : "each",
+          regular_price_snapshot: regularPrice(state, product, origin),
+        }
+      : undefined,
     clear_manual_price: price === calculation.selling_price,
-    created_at: new Date().toISOString(),
+    created_at: now.toISOString(),
+    ...actorAudit(state, actor, now),
     decided_at: undefined,
     decided_by_user_id: undefined,
     decision_attribution: undefined,
@@ -893,6 +915,15 @@ export function resubmitApproval(
   if (rejected.type === "new_product") product.status = "pending_approval";
   recordDemoActivity(state, actor, "Resubmit approval", product.code, origin);
   return request;
+}
+
+/** These requests need the separate price choice or acknowledgment controls. */
+export function requiresIndividualApprovalReview(approval: Approval): boolean {
+  return Boolean(
+    approval.type === "margin_review" ||
+    approval.manual_price_review ||
+    approval.source_manual_request,
+  );
 }
 
 /** The review dialog submits only checked rows; validate the complete batch atomically. */
@@ -927,6 +958,8 @@ export function approveInvoiceApprovals(
       (invoiceId && source !== invoiceId)
     )
       throw new Error("Select pending products from one invoice");
+    if (requiresIndividualApprovalReview(approval))
+      throw new Error("Review this request individually");
     invoiceId = source;
     resolveApproval(candidate, actor, id, "approve", scope, target);
   }

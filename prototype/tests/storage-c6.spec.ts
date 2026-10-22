@@ -372,35 +372,83 @@ async function canonicalBusinessExists(page: Page) {
   );
 }
 async function openManual(page: Page) {
-  const previousInvoiceId = (await saved(page)).invoice.id;
+  const viewer = page.getByRole("dialog", {
+    name: "Original invoice",
+    exact: true,
+  });
+  if (await viewer.isVisible())
+    await viewer
+      .getByRole("button", { name: "Close dialog", exact: true })
+      .click();
+  const saveAndClose = page.getByRole("button", {
+    name: "Save and close",
+    exact: true,
+  });
+  if (await saveAndClose.isVisible()) {
+    await saveAndClose.click();
+    await expect(
+      page.getByRole("tablist", { name: "Invoice views", exact: true }),
+    ).toBeVisible();
+  }
+  const previous = await saved(page);
+  const previousInvoiceId = previous.invoice.id;
+  const previousIds = new Set(
+    [previous.invoice, ...(previous.invoices ?? [])].map(
+      (invoice) => invoice.id,
+    ),
+  );
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  // New and Manual entry are two real persisted commands. Do not choose the
-  // old invoice's entry method while New is still committing its replacement.
-  await expect
-    .poll(async () => (await saved(page)).invoice.id)
-    .not.toBe(previousInvoiceId);
-  await expect(
-    page.getByRole("button", { name: "New invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
-  // A retained large original is still reconciling when its reference appears.
-  // The real entry barrier releases only when route and projection agree.
-  await expect(
-    page.getByRole("button", { name: "New invoice", exact: true }),
-  ).toBeEnabled();
+  const chooser = page.getByRole("dialog", {
+    name: "New invoice",
+    exact: true,
+  });
+  await expect(chooser).toBeVisible();
+  // Opening the chooser is inert; choosing Manual creates exactly one draft.
+  expect((await saved(page)).invoice.id).toBe(previousInvoiceId);
+  await chooser
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    const id = new URLSearchParams(parameters).get("id");
+    return route === "invoices" && Boolean(id && id !== previousInvoiceId);
+  });
+  const acceptedId = new URLSearchParams(
+    new URL(page.url()).hash.split("?")[1],
+  ).get("id");
   await expect
     .poll(async () => {
       const current = (await saved(page)).invoice;
       return (
-        current.id !== previousInvoiceId &&
+        current.id === acceptedId &&
         current.entry_mode === "manual" &&
         current.status === "draft"
       );
     })
     .toBe(true);
+  const accepted = await saved(page);
+  expect(
+    [
+      ...new Set(
+        [accepted.invoice, ...(accepted.invoices ?? [])].map(
+          (invoice) => invoice.id,
+        ),
+      ),
+    ].filter((id) => !previousIds.has(id)),
+  ).toEqual([acceptedId]);
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible();
+}
+
+async function openOriginal(page: Page) {
+  if ((page.viewportSize()?.width ?? 0) <= 760)
+    await page.getByRole("button", { name: /^View original \(/ }).click();
+  const image = page
+    .getByRole("img", { name: "Original invoice image", exact: true })
+    .filter({ visible: true });
+  await expect(image).toBeVisible();
+  return image;
 }
 
 test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact originals and reloads readable previews", async ({
@@ -423,7 +471,7 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
     await openManual(page);
     const photo = await makePhoto(page, index);
     await page
-      .getByLabel("Upload a PDF or photo", { exact: true })
+      .locator('input[type="file"][aria-label="Attach original"]')
       .setInputFiles({
         name: photo.name,
         mimeType: "image/jpeg",
@@ -440,11 +488,7 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
       size: photo.size,
       name: photo.name,
     });
-    const image = page.getByRole("img", {
-      name: "Original invoice image",
-      exact: true,
-    });
-    await expect(image).toBeVisible();
+    const image = await openOriginal(page);
     await expect
       .poll(() =>
         image.evaluate((element: HTMLImageElement) => element.naturalWidth),
@@ -519,16 +563,17 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
           invoice.id === file.id && invoice.file_data === file.reference,
       ),
     ).toBe(true);
+  const reloadedImage = await openOriginal(page);
   await expect
     .poll(() =>
-      page
-        .getByRole("img", { name: "Original invoice image", exact: true })
-        .evaluate((element: HTMLImageElement) => element.naturalWidth),
+      reloadedImage.evaluate(
+        (element: HTMLImageElement) => element.naturalWidth,
+      ),
     )
     .toBe(2000);
   const downloadEvent = page.waitForEvent("download");
   await page
-    .locator(".invoice-original-controls")
+    .locator(".invoice-original-controls:visible")
     .getByRole("button", { name: "Download", exact: true })
     .click();
   const download = await downloadEvent;

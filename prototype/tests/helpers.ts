@@ -37,10 +37,18 @@ export async function openAlert(scope: Page | Locator, name?: string | RegExp) {
 
 export async function openShellAction(page: Page, name: string) {
   const direct = page.getByRole("button", { name, exact: true });
-  if (await direct.isVisible()) return direct;
   const item = page.getByRole("menuitem", { name, exact: true });
-  if (!(await item.isVisible()))
-    await page.locator(".mobile-more-menu").click();
+  const more = page.locator(".mobile-more-menu");
+  await expect
+    .poll(
+      async () =>
+        (await direct.isVisible()) ||
+        (await item.isVisible()) ||
+        (await more.isVisible()),
+    )
+    .toBe(true);
+  if (await direct.isVisible()) return direct;
+  if (!(await item.isVisible())) await more.click();
   await expect(item).toBeVisible();
   return item;
 }
@@ -281,10 +289,8 @@ export async function openInvoiceUpload(page: Page) {
       name: "New invoice",
       exact: true,
     });
-    if (await chooser.isVisible())
-      await chooser
-        .getByRole("button", { name: "Upload", exact: true })
-        .click();
+    await expect(chooser).toBeVisible();
+    await chooser.getByRole("button", { name: "Upload", exact: true }).click();
   }
   await expect(input).toBeAttached();
   return input;
@@ -330,8 +336,16 @@ export async function uploadInvoice(page: Page) {
 /** Open one R2 line editor and retain its scoped locator. */
 export async function openInvoiceLine(page: Page, index: number) {
   const editor = page.locator(`#invoice-line-${index}-detail`);
-  if (!(await editor.isVisible()))
+  if (!(await editor.isVisible())) {
+    if ((page.viewportSize()?.width ?? 1440) <= 760) {
+      const previous = page.locator(".receiving-line-editor:visible");
+      if (await previous.count())
+        await previous
+          .getByRole("button", { name: /^(Close|بستن)$/, exact: true })
+          .click();
+    }
     await page.getByTestId(`invoice-line-row-${index}`).click();
+  }
   await expect(editor).toBeVisible();
   return editor;
 }
@@ -345,4 +359,5 @@ export async function confirmInvoiceLine(page: Page, line: Locator) {
       exact: true,
     })
     .click();
+  await expect(line).toBeHidden();
 }

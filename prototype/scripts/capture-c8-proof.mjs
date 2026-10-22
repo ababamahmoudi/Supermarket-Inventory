@@ -195,6 +195,7 @@ export async function inspectC8Containment(page) {
     const failures = [];
     const tables = [];
     let rowCount = 0;
+    let editorCount = 0;
     for (const wrapper of document.querySelectorAll("main .ui-data-table")) {
       if (!visible(wrapper) || wrapper.closest(excluded)) continue;
       const card = wrapper.closest(".ui-card,.card,.list-box");
@@ -204,14 +205,37 @@ export async function inspectC8Containment(page) {
         continue;
       }
       const bounds = card.getBoundingClientRect();
+      const frame = wrapper.getBoundingClientRect();
+      const boundedScroll =
+        wrapper.matches(".ui-data-table.is-scrollable:not(.is-phone-list)") &&
+        /^(auto|scroll)$/.test(getComputedStyle(wrapper).overflowX) &&
+        wrapper.tabIndex >= 0 &&
+        frame.left >= bounds.left - 1 &&
+        frame.right <= bounds.right + 1;
+      for (const editor of wrapper.querySelectorAll(".receiving-line-editor")) {
+        if (!visible(editor)) continue;
+        editorCount++;
+        const editorBounds = editor.getBoundingClientRect();
+        const fixed = getComputedStyle(editor).position === "fixed";
+        const left = fixed ? 0 : frame.left;
+        const right = fixed
+          ? document.documentElement.clientWidth
+          : frame.right;
+        if (editorBounds.left < left - 1 || editorBounds.right > right + 1)
+          failures.push(
+            "Expanded invoice editor extends beyond its visible frame",
+          );
+      }
       for (const row of wrapper.querySelectorAll("table > tbody > tr")) {
         if (!visible(row)) continue;
         const rect = row.getBoundingClientRect();
         rowCount++;
         const label = (row.textContent ?? "").replace(/\s+/g, " ").trim();
         const outside =
-          rect.left < bounds.left - 1 ||
-          rect.right > bounds.right + 1 ||
+          (boundedScroll ? Math.max(rect.left, frame.left) : rect.left) <
+            bounds.left - 1 ||
+          (boundedScroll ? Math.min(rect.right, frame.right) : rect.right) >
+            bounds.right + 1 ||
           rect.top < bounds.top - 1 ||
           rect.bottom > bounds.bottom + 1;
         if (outside)
@@ -240,7 +264,13 @@ export async function inspectC8Containment(page) {
         rows,
       });
     }
-    return { tableCount: tables.length, rowCount, tables, failures };
+    return {
+      tableCount: tables.length,
+      rowCount,
+      editorCount,
+      tables,
+      failures,
+    };
   });
 }
 
@@ -368,6 +398,7 @@ export async function prepareC8ManualInvoice(page) {
   ).toHaveCount(1);
   await page.getByTestId("invoice-line-row-0").click();
   await expect(page.locator("#invoice-line-0-detail")).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
 }
 
 export async function openC8PriceDialog(page, code) {
@@ -448,6 +479,11 @@ export async function postC8SaleCostInvoice(page, originalPath) {
   await visitC8(page, "invoices");
   const previousInvoice = (await readC8State(page)).invoice.id;
   await button(page, "New invoice", "فاکتور جدید").click();
+  const chooser = page.getByRole("dialog", {
+    name: /^(New invoice|فاکتور جدید)$/,
+  });
+  await expect(chooser).toBeVisible();
+  await button(chooser, "Upload", "بارگذاری").click();
   await expect
     .poll(async () => {
       const current = (await readC8State(page)).invoice;
@@ -481,7 +517,7 @@ export async function postC8SaleCostInvoice(page, originalPath) {
     .toBe(true);
   await expect(
     page.getByRole("heading", {
-      name: /^(Review invoice lines|بررسی ردیف‌های فاکتور)$/,
+      name: /^(Invoice lines|ردیف‌های فاکتور)$/,
     }),
   ).toBeVisible({ timeout: Math.max(1, reviewDeadline - Date.now()) });
   await expect
@@ -512,14 +548,15 @@ export async function postC8SaleCostInvoice(page, originalPath) {
   expect(originalSHA).toBe(
     "b0f9b1cb07929298d0666800cb1ca3493bbaebd65e52a2f28b1bde9633f84444",
   );
-  await page
-    .locator(".invoice-line")
-    .getByRole("checkbox", {
-      name: /^(Confirm this invoice line|تأیید این ردیف فاکتور)$/,
-    })
+  await page.getByTestId("invoice-line-row-0").click();
+  const line = page.locator("#invoice-line-0-detail");
+  await expect(line).toBeVisible();
+  await line
+    .getByRole("group", { name: /^(Track date|پیگیری تاریخ)$/ })
+    .getByRole("button", { name: /^(No|خیر)$/, exact: true })
     .click();
-  // Confirmation collapses this real line and removes its checkbox. Verify
-  // the resulting UI and durable fact rather than re-querying that old control.
+  await button(line, "Confirm line", "تأیید ردیف").click();
+  // Confirming the real editor collapses the line and retains the durable fact.
   await expect(page.locator(".invoice-line")).toHaveAttribute(
     "data-expanded",
     "false",

@@ -177,7 +177,7 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
     ).toBe("0.9800"),
   );
   expect(screen.queryByLabelText("Units per case")).not.toBeInTheDocument();
-  expect(screen.getByLabelText("Invoiced")).toHaveValue("12");
+  expect(screen.getByLabelText("Invoiced units")).toHaveValue("12");
   expect((await fixture.readCanonical()).invoice.lines[0]).toMatchObject({
     quantity_unit: "units",
     qty_invoiced: 12,
@@ -232,7 +232,7 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
   fireEvent.click(screen.getByRole("combobox", { name: "Unit" }));
   fireEvent.click(await screen.findByRole("option", { name: "Units" }));
   await waitFor(() =>
-    expect(screen.getByLabelText("Invoiced")).toHaveValue("12"),
+    expect(screen.getByLabelText("Invoiced units")).toHaveValue("12"),
   );
   expect(screen.queryByLabelText("Units per case")).not.toBeInTheDocument();
   await waitFor(async () =>

@@ -998,6 +998,7 @@ export type InvoiceBlocker =
 export function invoiceBlockers(
   state: DemoState,
   actor: AuthenticatedActor,
+  lineIndexes?: Partial<Record<InvoiceBlocker, number[]>>,
 ): InvoiceBlocker[] {
   const invoice = state.invoice;
   const blockers: InvoiceBlocker[] = [];
@@ -1051,7 +1052,8 @@ export function invoiceBlockers(
     })
   )
     blockers.push("money");
-  for (const line of invoice.lines) {
+  for (const [lineIndex, line] of invoice.lines.entries()) {
+    const firstLineBlocker = blockers.length;
     const product = state.products.find(
       (item) =>
         item.code === line.product_code &&
@@ -1155,6 +1157,9 @@ export function invoiceBlockers(
       !line.manual_price_decision
     )
       blockers.push("manual_price");
+    if (lineIndexes)
+      for (const blocker of new Set(blockers.slice(firstLineBlocker)))
+        (lineIndexes[blocker] ??= []).push(lineIndex);
   }
   if (canonicalLowerPriceLines(state, actor).length) {
     const answer = invoice.lower_price_answers;

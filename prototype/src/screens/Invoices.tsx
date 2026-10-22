@@ -595,7 +595,6 @@ function InvoiceWorkspace({
     kind: "company_shared" as const,
     entity_id: invoice.id,
   };
-  const canReadWorkspace = true;
   const [message, setMessage] = useState("");
   const readingEdit = useRef<{ field: string; lineIndex?: number } | null>(
     null,
@@ -837,7 +836,7 @@ function InvoiceWorkspace({
   }
   // Refreshing a processing draft resumes the honest simulated reading state.
   useEffect(() => {
-    if (!canReadWorkspace || invoice.status !== "reading") return;
+    if (invoice.status !== "reading") return;
     const id = invoice.id;
     const timer = window.setTimeout(
       () =>
@@ -848,11 +847,11 @@ function InvoiceWorkspace({
       2500,
     );
     return () => window.clearTimeout(timer);
-  }, [invoice.id, invoice.status, canReadWorkspace, updateInvoice]);
+  }, [invoice.id, invoice.status, updateInvoice]);
 
   useEffect(() => {
     const applyDemoAnswer = () => {
-      if (!canReadWorkspace || !active || locked || !lowerLines.length) return;
+      if (!active || locked || !lowerLines.length) return;
       updateInvoice((draft) => {
         const today = companyDate(draft.config);
         draft.invoice.lower_price_answers = {
@@ -876,7 +875,7 @@ function InvoiceWorkspace({
     window.addEventListener("arzon:demo-invoice-answer", applyDemoAnswer);
     return () =>
       window.removeEventListener("arzon:demo-invoice-answer", applyDemoAnswer);
-  }, [active, locked, lowerLines.length, canReadWorkspace, updateInvoice]);
+  }, [active, locked, lowerLines.length, updateInvoice]);
 
   async function start(manual = false) {
     if (!actor || actor.selection.kind !== "location") return;
@@ -1170,12 +1169,7 @@ function InvoiceWorkspace({
     if (!posted) return;
     setSelectedView(null);
     navigate(`invoices?id=${encodeURIComponent(invoice.id)}`);
-    setMessage(
-      t(
-        "Posted. Received, approvals, alerts, and supplier ledger are updated.",
-        "ثبت شد. دریافت‌شده‌ها، تأییدها، هشدارها و دفتر تأمین‌کننده به‌روز شدند.",
-      ),
-    );
+    setMessage("");
   }
 
   function sourceDeliveryQuantity(
@@ -1346,30 +1340,6 @@ function InvoiceWorkspace({
       <InvoiceQueueTable invoices={savedDrafts} onOpen={resume} />
     </Card>
   ) : null;
-  if (!canReadWorkspace)
-    return (
-      <>
-        <PageHeader
-          title={t("Invoices", "فاکتورها")}
-          description={t(
-            "Deliveries and supplier invoices",
-            "تحویل‌ها و فاکتورهای تأمین‌کننده",
-          )}
-          actions={
-            <Button onClick={() => start()}>
-              {t("New invoice", "فاکتور جدید")}
-            </Button>
-          }
-        />
-        <EmptyState>
-          {t(
-            "Choose an invoice in your branch, or start a new invoice.",
-            "فاکتوری در شعبه خود انتخاب کنید یا فاکتور جدید شروع کنید.",
-          )}
-        </EmptyState>
-        {draftList}
-      </>
-    );
   const laterShortDeliveries = (
     <>
       {locked &&
@@ -1851,6 +1821,39 @@ function InvoiceWorkspace({
               </p>
             )}
           </aside>
+        </div>
+      ) : routeId &&
+        invoice.entry_mode === "upload" &&
+        invoice.status === "draft" &&
+        !invoice.original_available ? (
+        <div className="receiving-review" data-testid="invoice-upload-entry">
+          <PageHeader
+            title={t("New invoice", "فاکتور جدید")}
+            actions={
+              <Button variant="secondary" onClick={() => navigate("invoices")}>
+                {t("Save and close", "ذخیره و بستن")}
+              </Button>
+            }
+          />
+          <Card>
+            <Field
+              label={t("Upload a PDF or photo", "بارگذاری PDF یا عکس")}
+              error={uploadError}
+            >
+              <Dropzone
+                id="invoice-original"
+                accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                onChange={(file) => void attachFile(file)}
+                disabled={uploadPending || entryPending}
+              />
+            </Field>
+            <p className="helper">
+              {t(
+                "AI invoice reading is simulated",
+                "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
+              )}
+            </p>
+          </Card>
         </div>
       ) : routeId &&
         invoice.original_available &&

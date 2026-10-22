@@ -268,7 +268,15 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
   await page.goto(`${origin}/#invoices`);
   const previousInvoiceId = (await saved(page)).invoice.id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  const chooser = page.getByRole("dialog", {
+    name: "New invoice",
+    exact: true,
+  });
+  await expect(chooser).toBeVisible();
+  expect((await saved(page)).invoice.id).toBe(previousInvoiceId);
+  await chooser
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
   await expect
     .poll(async () => {
       const current = (await saved(page)).invoice;
@@ -280,11 +288,11 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
     })
     .toBe(true);
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible();
   const photo = await photoFixture(page, true);
   await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
+    .locator('input[type="file"][aria-label="Attach original"]')
     .setInputFiles({
       name: "fictional-lan-original.jpg",
       mimeType: "image/jpeg",
@@ -301,10 +309,14 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
   expect(source.bytes).toEqual(photo.buffer);
   expect(Math.max(source.preview_width, source.preview_height)).toBe(2000);
   await page.reload();
-  const image = page.getByRole("img", {
-    name: "Original invoice image",
-    exact: true,
-  });
+  if ((page.viewportSize()?.width ?? 0) <= 760)
+    await page.getByRole("button", { name: /^View original \(/ }).click();
+  const image = page
+    .getByRole("img", {
+      name: "Original invoice image",
+      exact: true,
+    })
+    .filter({ visible: true });
   await expect(image).toBeVisible();
   await expect
     .poll(() =>
@@ -317,7 +329,7 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
   );
   const downloadEvent = page.waitForEvent("download");
   await page
-    .locator(".invoice-original-controls")
+    .locator(".invoice-original-controls:visible")
     .getByRole("button", { name: "Download", exact: true })
     .click();
   const download = await downloadEvent;

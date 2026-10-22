@@ -15,10 +15,28 @@ for (const language of ["en", "fa"] as const) {
     page,
   }, testInfo) => {
     test.setTimeout(120_000);
+    const caseStarted = performance.now();
     const phone = testInfo.project.name === "phone";
     await page.setViewportSize({ width: phone ? 390 : 1440, height: 900 });
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => {
+      if (message.text().startsWith("[canonical-evidence:")) {
+        console.log(message.text());
+      }
+    });
+    const canonicalAt = async (stage: string) => {
+      const started = performance.now();
+      console.log(
+        `[canonical-evidence:${stage}] requested; ${Math.round(testInfo.timeout - (performance.now() - caseStarted))}ms remain`,
+      );
+      const evidence = await readCanonicalBusinessEvidence(page, stage);
+      testInfo.annotations.push({
+        type: `${stage}-evidence-read-ms`,
+        description: String(Math.round(performance.now() - started)),
+      });
+      return evidence;
+    };
     const imported = await importReceivingFixture(page, language);
     await expect(
       page.locator('[data-testid^="invoice-line-row-"]'),
@@ -38,6 +56,13 @@ for (const language of ["en", "fa"] as const) {
       const documentHeight = await page.evaluate(
         () => document.documentElement.scrollHeight,
       );
+      testInfo.annotations.push({
+        type: "closed-invoice-height",
+        description: JSON.stringify({
+          review: height,
+          document: documentHeight,
+        }),
+      });
       expect(
         documentHeight,
         "The entire invoice page, including the app header, fits in three desktop windows",
@@ -183,15 +208,15 @@ for (const language of ["en", "fa"] as const) {
         exact: true,
       })
       .click();
-    await expect
-      .poll(
-        async () =>
-          (await readCanonicalBusinessEvidence(page)).invoices?.find(
-            (entry) => entry.id === imported.id,
-          )?.status,
-      )
-      .toBe("posted");
-    const posted = await readCanonicalBusinessEvidence(page);
+    await expect(
+      page
+        .locator(".invoice-posted-workspace")
+        .getByText(word(language, "Posted", "ثبت‌شده"), { exact: true }),
+    ).toBeVisible();
+    const posted = await canonicalAt("posted");
+    expect(
+      posted.invoices?.find((entry) => entry.id === imported.id)?.status,
+    ).toBe("posted");
     expect(posted.products).toHaveLength(25);
     expect(
       posted.stock_movements?.filter(
@@ -226,14 +251,13 @@ for (const language of ["en", "fa"] as const) {
     expect(
       Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore),
     ).toBeLessThanOrEqual(2);
-    await expect
-      .poll(
-        async () =>
-          (await readCanonicalBusinessEvidence(page)).products.filter(
-            (product) => product.status === "active",
-          ).length,
-      )
-      .toBe(25);
+    await expect(
+      page.getByRole("tab", { name: /^(Approved|تأییدشده) 25$/ }),
+    ).toBeVisible();
+    const approved = await canonicalAt("approved");
+    expect(
+      approved.products.filter((product) => product.status === "active"),
+    ).toHaveLength(25);
     // Follow the genuine Received link, then the product's delivery link, to the exact line.
     await page.goto("/#received");
     const deliveryLink = page

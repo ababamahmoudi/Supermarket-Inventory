@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { chooseOption, setLanguage, signIn } from "./helpers";
+import { chooseOption, openInvoiceLine, setLanguage, signIn } from "./helpers";
 
 test.setTimeout(180000);
 test.use({ actionTimeout: 10000 });
@@ -37,11 +37,30 @@ async function geometry(page: Page) {
       if (!panel.getClientRects().length) continue;
       panels++;
       const bounds = panel.getBoundingClientRect();
-      if (panel.scrollWidth > panel.clientWidth + 2)
+      // R2 keeps the dense invoice rows in an explicitly scrollable DataTable.
+      // Its viewport must remain contained and keyboard accessible; the table
+      // itself may extend within that viewport without clipping cell content.
+      const scrollable = panel.matches(
+        ".ui-data-table.is-scrollable:not(.is-phone-list)",
+      );
+      const scrollTable =
+        panel.matches("table") &&
+        panel.closest(".ui-data-table.is-scrollable:not(.is-phone-list)");
+      if (scrollable) {
+        const parent = panel.parentElement!.getBoundingClientRect();
+        if (
+          !/^(auto|scroll)$/.test(getComputedStyle(panel).overflowX) ||
+          panel.tabIndex < 0 ||
+          bounds.left < parent.left - 2 ||
+          bounds.right > parent.right + 2
+        )
+          failures.push("Scrollable table containment or keyboard access");
+      }
+      if (panel.scrollWidth > panel.clientWidth + 2 && !scrollable)
         failures.push(
-          `${panel.className || panel.tagName}: horizontal panel scroll`,
+          `${panel.className || panel.tagName}: horizontal panel scroll${panel.matches(".field") ? ` (${panel.querySelector("label")?.textContent})` : ""}`,
         );
-      if (bounds.left < -2 || bounds.right > innerWidth + 2)
+      if (!scrollTable && (bounds.left < -2 || bounds.right > innerWidth + 2))
         failures.push(`${panel.className || panel.tagName}: outside viewport`);
     }
     for (const container of area.querySelectorAll<HTMLElement>(
@@ -183,6 +202,7 @@ for (const width of [1280, 1440, 1920]) {
         .getByRole("button", { name: "New invoice", exact: true })
         .click();
       await page
+        .getByRole("dialog", { name: "New invoice", exact: true })
         .getByRole("button", { name: "Manual entry", exact: true })
         .click();
       await page
@@ -200,12 +220,14 @@ for (const width of [1280, 1440, 1920]) {
         .getByRole("option", { name: "Canned Fava Beans 400 g", exact: true })
         .click();
       await page.getByRole("button", { name: "Add line", exact: true }).click();
-      const line = page.locator(".invoice-line").first();
-      const quantity = line.getByLabel("Invoiced units", { exact: true });
-      if (!(await quantity.isVisible()))
-        await line.locator(".invoice-line-toggle").click();
+      const line = await openInvoiceLine(page, 0);
+      await chooseOption(
+        page,
+        line.getByLabel("Unit", { exact: true }),
+        "Cases",
+      );
       await line.getByLabel("Units per case", { exact: true }).fill("12");
-      await quantity.fill("12");
+      await line.getByLabel("Cases invoiced", { exact: true }).fill("1");
       await line
         .getByLabel("Unit cost before tax", { exact: true })
         .fill("0.98");
@@ -214,9 +236,7 @@ for (const width of [1280, 1440, 1920]) {
         .locator("#invoice-details-fields")
         .getByLabel("Order (optional)", { exact: true })
         .click();
-      await page
-        .getByRole("option", { name: new RegExp(`^${reference} · `) })
-        .click();
+      await page.getByRole("option", { name: reference, exact: true }).click();
       await expect(comparison).toContainText("Sample barley biscuits");
       await expect(comparison.locator(".invoice-order-table")).toContainText(
         "Canned Fava Beans",

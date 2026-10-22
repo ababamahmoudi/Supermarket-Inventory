@@ -1,9 +1,13 @@
 import { invoiceCheckField } from "../../invoice-checks";
+import { validCost } from "../../invoice";
 import type { InvoiceReadDTO } from "../../invoice-projections";
 export function missingGroups(
   invoice: InvoiceReadDTO,
   t: (en: string, fa: string) => string,
   blockers: readonly string[],
+  blockerLineIndexes: Readonly<
+    Record<string, readonly number[] | undefined>
+  > = {},
 ) {
   const groups: { label: string; target: string; line?: number }[] = [];
   const totals = (invoice.low_confidence_fields ?? []).filter((x) =>
@@ -137,28 +141,38 @@ export function missingGroups(
       ],
       barcode: ["Correct the duplicate barcode", "بارکد تکراری را اصلاح کنید"],
     };
+    const affectedLine = blockerLineIndexes[blocker]?.[0];
+    const lineBlocker = [
+      "matching",
+      "cost",
+      "quantity",
+      "manual_price",
+      "barcode",
+      "date",
+    ].includes(blocker);
+    const affected = invoice.lines[affectedLine ?? 0];
+    const targetField =
+      blocker === "cost" &&
+      affected?.quantity_unit === "cases" &&
+      affected.sold_by !== "weight" &&
+      !validCost(affected.case_cost_before_tax ?? "")
+        ? "case-cost"
+        : (
+            {
+              matching: "matching",
+              cost: "cost",
+              quantity: "invoiced",
+              manual_price: "manual",
+              barcode: "barcode",
+              date: "date",
+            } as Record<string, string>
+          )[blocker];
     if (copy[blocker])
       groups.push({
         label: t(...copy[blocker]),
-        line: [
-          "matching",
-          "cost",
-          "quantity",
-          "manual_price",
-          "barcode",
-          "date",
-        ].includes(blocker)
-          ? 0
-          : undefined,
-        target: [
-          "matching",
-          "cost",
-          "quantity",
-          "manual_price",
-          "barcode",
-          "date",
-        ].includes(blocker)
-          ? `invoice-line-0-${({ matching: "matching", cost: "cost", quantity: "invoiced", manual_price: "manual", barcode: "barcode", date: "date" } as Record<string, string>)[blocker]}`
+        line: lineBlocker ? (affectedLine ?? 0) : undefined,
+        target: lineBlocker
+          ? `invoice-line-${affectedLine ?? 0}-${targetField}`
           : blocker === "file"
             ? "invoice-original-field"
             : blocker === "money"

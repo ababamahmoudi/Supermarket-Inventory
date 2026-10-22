@@ -300,8 +300,8 @@ export function InvoiceOrderReview() {
           onExpandedRowKeysChange={setExpandedRowKeys}
           columns={[
             { width: "30%" },
-            { width: 140, align: "end" },
-            { width: 140, align: "end" },
+            { width: 230, minWidth: 230, align: "end" },
+            { width: 180, minWidth: 180, align: "end" },
             { width: "40%" },
           ]}
         >

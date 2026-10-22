@@ -17,9 +17,14 @@ import { demoSaleCostInvoice, postInvoice } from "./invoice";
 import { savePriceChange, saleStoreDate } from "./sales";
 import { Approvals } from "./screens/Approvals";
 import { DemoProvider, initialState, useDemo } from "./store";
+import {
+  clearRenderedUiReadiness,
+  renderedUiReady,
+} from "./test/rendered-ui-readiness";
 
 const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
 afterEach(() => {
+  clearRenderedUiReadiness();
   for (const fixture of fixtures.splice(0)) fixture.dispose();
 });
 beforeEach(async () => {
@@ -117,6 +122,11 @@ async function prepare() {
     <DemoProvider options={fixture.options}>
       <Harness />
     </DemoProvider>,
+  );
+  await renderedUiReady(() =>
+    Boolean(
+      screen.queryByText("Stainless Steel Pot 24 cm", { selector: "h2" }),
+    ),
   );
   const title = await screen.findByText("Stainless Steel Pot 24 cm", {
     selector: "h2",

@@ -162,7 +162,10 @@ export function invoiceWorkspaceRead(
       dateSuggestions,
     };
   });
-  const blockers = invoiceBlockers(working, actor);
+  const blockerLineIndexes: Partial<
+    Record<ReturnType<typeof invoiceBlockers>[number], number[]>
+  > = {};
+  const blockers = invoiceBlockers(working, actor, blockerLineIndexes);
   const blockersById: Record<string, ReturnType<typeof invoiceBlockers>> = {};
   for (const row of [state.invoice, ...(state.invoices ?? [])]) {
     if (!canInvoiceAuthority(state, actor, "invoices.cost_read", row.id))
@@ -189,6 +192,7 @@ export function invoiceWorkspaceRead(
     displayedVersion,
     latestVersionId: versions.at(-1)!.version_id,
     blockers,
+    blockerLineIndexes,
     blockersById,
     lowerLineIndexes: lowerPriceLineIndexes(working, actor),
     lineDetails,

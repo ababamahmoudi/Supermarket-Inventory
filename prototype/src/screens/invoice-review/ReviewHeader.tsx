@@ -1,3 +1,4 @@
+import { useId, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useDemo } from "../../store";
 import { Badge, Button } from "../../ui";
@@ -18,13 +19,16 @@ export function ReviewHeader({
   onAttemptPost(): void;
 }) {
   const { state, t, lang } = useDemo();
+  const tooltipId = useId();
+  const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
   return (
     <header className="receiving-header">
       <a className="back-link" href="#invoices">
         <ArrowLeft size={16} />
         {t("Invoices", "فاکتورها")}
       </a>
-      <div className="receiving-header-main">
+      <div className="page-header receiving-header-main">
         <div>
           <h1>
             {t("Invoice", "فاکتور")}{" "}
@@ -53,12 +57,19 @@ export function ReviewHeader({
           )}
         </div>
         <div className="actions">
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="neutral" onClick={onClose}>
             {t("Save and close", "ذخیره و بستن")}
           </Button>
           <span
+            className="receiving-post-control"
             tabIndex={missing ? 0 : undefined}
-            title={missing || undefined}
+            aria-describedby={
+              missing && (focused || hovered) ? tooltipId : undefined
+            }
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
             onPointerDownCapture={() => {
               if (missing) onAttemptPost();
             }}
@@ -70,6 +81,15 @@ export function ReviewHeader({
             <Button disabled={!!missing} onClick={onPost}>
               {t("Post invoice", "ثبت فاکتور")}
             </Button>
+            {missing && (focused || hovered) && (
+              <span
+                className="reading-check-tooltip"
+                role="tooltip"
+                id={tooltipId}
+              >
+                {missing}
+              </span>
+            )}
           </span>
         </div>
       </div>

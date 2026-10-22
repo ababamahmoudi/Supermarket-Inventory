@@ -285,6 +285,26 @@ describe("R2 receiving decisions", () => {
     expect(state.invoice.lines[0].review_confirmed).toBe(true);
     expect(state.invoice.lines[0].low_confidence_fields).toEqual([]);
   });
+  it("does not confirm an empty or inconsistent case cost while a stale unit cost remains valid", async () => {
+    const { state, actor } = await imported();
+    const line = state.invoice.lines[0];
+    line.pricing_category = state.config.pricing_categories[0].key;
+    expect(line.quantity_unit).toBe("cases");
+    const original = line.case_cost_before_tax;
+    line.case_cost_before_tax = "";
+    expect(() => confirmInvoiceLineChecks(state, actor, 0)).toThrow(
+      expect.objectContaining({ field: "case_cost_before_tax" }),
+    );
+    expect(line.review_confirmed).toBe(false);
+    line.case_cost_before_tax = new Decimal(original!).plus(1).toFixed(4);
+    expect(() => confirmInvoiceLineChecks(state, actor, 0)).toThrow(
+      expect.objectContaining({ field: "case_cost_before_tax" }),
+    );
+    expect(line.review_confirmed).toBe(false);
+    line.case_cost_before_tax = original;
+    confirmInvoiceLineChecks(state, actor, 0);
+    expect(line.review_confirmed).toBe(true);
+  });
   it("invalidates only the changed line and retains confirmations when removing another line", async () => {
     const { state, actor } = await imported();
     for (const line of state.invoice.lines) {

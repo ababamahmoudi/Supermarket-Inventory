@@ -1,7 +1,7 @@
 import { useDemo } from "../store";
 import type { InvoiceReadDTO } from "../invoice-projections";
 import { DataTable, Button } from "../ui";
-import { DateText, LtrValue, NotAdded } from "../presentation";
+import { DateText, LtrText, LtrValue, NotAdded } from "../presentation";
 import { ReadingMoney } from "../InvoiceReadingReview";
 import { effectiveInvoiceLocation } from "../received";
 import { branchLabel as configuredBranchLabel } from "../settings";
@@ -29,7 +29,7 @@ export function InvoiceQueueTable({
           label: t("Invoice", "فاکتور"),
           required: true,
           priority: 1,
-          minWidth: 110,
+          minWidth: 240,
         },
         {
           key: "supplier",
@@ -127,11 +127,9 @@ export function InvoiceQueueTable({
             <tr key={saved.id} data-row-href={href}>
               <td>
                 <a className="entity-link" href={href}>
-                  <LtrValue
-                    value={
-                      saved.supplier_invoice_number || t("Draft", "پیش‌نویس")
-                    }
-                  />
+                  <LtrText className="invoice-draft-reference">
+                    {saved.supplier_invoice_number || t("Draft", "پیش‌نویس")}
+                  </LtrText>
                 </a>
               </td>
               <td>

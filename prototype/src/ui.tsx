@@ -18,6 +18,7 @@ import {
   type InputHTMLAttributes,
   type CSSProperties,
   type KeyboardEvent,
+  type DetailsHTMLAttributes,
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { Slot } from "@radix-ui/react-slot";
@@ -116,6 +117,25 @@ export function Button({
       type={type}
       {...props}
     />
+  );
+}
+export function Disclosure({
+  summary,
+  children,
+  className,
+  ...props
+}: DetailsHTMLAttributes<HTMLDetailsElement> & { summary: ReactNode }) {
+  return (
+    <details {...props} className={cn("ui-disclosure", className)}>
+      <summary
+        className={cn("ui-button", buttonVariants({ variant: "plain" }))}
+        data-control-kind="disclosure"
+      >
+        <span>{summary}</span>
+        <ChevronDown size={16} aria-hidden="true" />
+      </summary>
+      {children}
+    </details>
   );
 }
 export function Card({
@@ -740,13 +760,25 @@ export function DataTable({
           </IconButton>
         ) : null;
         if (mobile && phoneList && bodyRow && !fullRow) {
+          const withoutRowLinks = (nodes: ReactNode): ReactNode =>
+            Array.isArray(nodes)
+              ? nodes.map(withoutRowLinks)
+              : !isValidElement<{ children?: ReactNode }>(nodes)
+                ? nodes
+                : nodes.type === TableRowLink
+                  ? null
+                  : nodes.props.children === undefined
+                    ? nodes
+                    : cloneElement(nodes, {
+                        children: withoutRowLinks(nodes.props.children),
+                      });
           const permittedCell = (key: string | undefined) => {
             const index = resolvedColumns.findIndex(
               (column) => column.key === key && !column.hidden,
             );
             const cell = index < 0 ? null : rowCells[index];
             return isValidElement<{ children?: ReactNode }>(cell)
-              ? cell.props.children
+              ? withoutRowLinks(cell.props.children)
               : null;
           };
           const findLink = (nodes: ReactNode): ReactNode => {

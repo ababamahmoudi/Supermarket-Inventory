@@ -125,7 +125,7 @@ test("invoice lines start closed, confirm once and reopen without opening the ne
 
 test("Persian signed money, line numbers and short deduction remain isolated", async ({
   page,
-}) => {
+}, testInfo) => {
   await review(page);
   const editor = await openInvoiceLine(page, 5);
   await editor
@@ -147,11 +147,12 @@ test("Persian signed money, line numbers and short deduction remain isolated", a
     .filter({ hasText: "کسری‌ها و ردشده‌ها" });
   await expect(deduction).toContainText("-$7.23");
   await expect(deduction.locator('bdi[dir="ltr"]')).toContainText("-$7.23");
-  await expect(
-    page
-      .getByTestId("invoice-line-row-0")
-      .locator('td[data-column-key="number"] bdi[dir="ltr"]'),
-  ).toHaveText("1");
+  const numberCell = page
+    .getByTestId("invoice-line-row-0")
+    .locator('td[data-column-key="number"]');
+  if (testInfo.project.name === "phone")
+    await expect(numberCell).toHaveCount(0);
+  else await expect(numberCell.locator('bdi[dir="ltr"]')).toHaveText("1");
   const canonical = await readCanonicalBusinessEvidence(page);
   expect(canonical.invoice.lines[5]).toMatchObject({
     qty_invoiced: 12,

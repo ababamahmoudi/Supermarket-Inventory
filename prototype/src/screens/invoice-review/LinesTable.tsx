@@ -1,8 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
 import Decimal from "decimal.js";
 import { useDemo } from "../../store";
-import { Badge, DataTable } from "../../ui";
+import { Badge, DataTable, TableRowLink } from "../../ui";
 import { LtrValue } from "../../presentation";
 import { invoiceLineId } from "../../invoice-line-links";
 import { ReadingMoney as Money } from "../../InvoiceReadingReview";
@@ -60,13 +59,13 @@ export function LinesTable({
         horizontalScroll
         density="compact"
         columns={[
-          { key: "number", width: 40, fixedWidth: true, required: true },
+          { key: "number", width: 48, fixedWidth: true, required: true },
           { key: "product", width: 285, fixedWidth: true, required: true },
           { key: "quantity", width: 190, fixedWidth: true, required: true },
           { key: "delivered", width: 90, fixedWidth: true, required: true },
           {
             key: "cost",
-            width: 130,
+            width: 220,
             fixedWidth: true,
             required: true,
             align: "end",
@@ -170,7 +169,6 @@ export function LinesTable({
                     <span className="receiving-product-name" title={name}>
                       <LtrValue value={name} />
                     </span>
-                    <ChevronDown size={14} />
                   </a>
                   <small className="receiving-product-meta">
                     {line.supplier_item_code && (
@@ -246,22 +244,38 @@ export function LinesTable({
                     : t("Not added", "اضافه نشده")}
                 </td>
                 <td>
-                  <span className={count ? "receiving-check-summary" : ""}>
-                    {line.review_confirmed
-                      ? t("Confirmed ✓", "تأیید شد ✓")
-                      : line.review_changed_after_confirmation
-                        ? t(
-                            "Changed after confirming: confirm again",
-                            "پس از تأیید تغییر کرد: دوباره تأیید کنید",
-                          )
-                        : count
-                          ? t(`${count} to check`, `${count} برای بررسی`)
-                          : t("Not confirmed", "تأیید نشده")}
-                  </span>
+                  <div className="receiving-line-status">
+                    <span className={count ? "receiving-check-summary" : ""}>
+                      {line.review_confirmed
+                        ? t("Confirmed ✓", "تأیید شد ✓")
+                        : line.review_changed_after_confirmation
+                          ? t(
+                              "Changed after confirming: confirm again",
+                              "پس از تأیید تغییر کرد: دوباره تأیید کنید",
+                            )
+                          : count
+                            ? t(`${count} to check`, `${count} برای بررسی`)
+                            : t("Not confirmed", "تأیید نشده")}
+                    </span>
+                    <TableRowLink
+                      href="#invoice-line-editor"
+                      aria-label={t(
+                        `Review line ${index + 1}`,
+                        `بررسی ردیف ${index + 1}`,
+                      )}
+                      aria-expanded={openLine === index}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        const row = document.getElementById(rowId);
+                        if (row) anchor(row);
+                        onOpen(openLine === index ? null : index);
+                      }}
+                    />
+                  </div>
                 </td>
               </tr>
               {openLine === index && (
-                <tr className="receiving-editor-row invoice-line-detail">
+                <tr className="table-expanded-row receiving-editor-row invoice-line-detail">
                   <td colSpan={8}>
                     <LineEditor
                       invoice={invoice}

@@ -37,24 +37,20 @@ async function manual(page: Page, language: "en" | "fa") {
   await page.goto("/#invoices");
   await button(page, "New invoice", "فاکتور جدید").click();
   await button(page, "Manual entry", "ورود دستی").click();
-  await choose(
-    page,
-    page.locator("#invoice-supplier"),
-    "\u2066Fresh Valley Foods\u2069",
-  );
+  await choose(page, page.locator("#invoice-supplier"), "Fresh Valley Foods");
   await page
     .getByLabel(exact("Invoice number", "شماره فاکتور"))
     .fill("DEMO-C6-MISSING");
   await choose(
     page,
     page.getByLabel("Add a product to the invoice", { exact: true }),
-    "New product",
+    "Canned Fava Beans 400 g",
   );
   await button(page, "Add line", "افزودن ردیف").click();
+  await setLanguage(page, language);
   await openInvoiceLine(page, 0);
   await expect(page.locator(".invoice-line-detail")).toBeVisible();
-  await setLanguage(page, language);
-  await page.locator("main h1").click();
+  await page.locator(".receiving-line-editor h3").first().click();
   await page.mouse.move(0, 0);
   await settled(page);
 }
@@ -223,7 +219,7 @@ for (const language of ["en", "fa"] as const) {
       .soft(focused.shadow, "keyboard focus remains visible")
       .not.toBe("none");
     await quantity.fill("");
-    await button(page, "Post invoice", "ثبت فاکتور").locator("..").click();
+    await button(page, "Confirm line", "تأیید ردیف").click();
     await expect(quantity).toHaveAttribute("aria-invalid", "true");
     const invalid = await appearance(quantity);
     expect.soft(invalid.borderVisible).toBe(true);
@@ -264,14 +260,21 @@ for (const language of ["en", "fa"] as const) {
     page,
   }, info) => {
     await manual(page, language);
+    await button(
+      page.locator(".receiving-line-editor"),
+      "Close",
+      "بستن",
+    ).click();
     await button(page, "Post invoice", "ثبت فاکتور").locator("..").click();
     await expect(
       page.getByRole("alert", { name: exact("What's missing", "موارد ناقص") }),
     ).toBeVisible();
+    await button(page, "Save and close", "ذخیره و بستن").click();
+    await page.getByRole("tab", { name: /^(Drafts|پیش‌نویس‌ها)\s/ }).click();
     await settled(page);
-    const reference = page.locator(
-      ".invoice-draft-list tbody td:first-child .ltr-fragment",
-    );
+    const reference = page
+      .locator(".invoice-saved-table tbody td:first-child .ltr-fragment")
+      .filter({ hasText: "DEMO-C6-MISSING" });
     await expect(reference).toHaveText("DEMO-C6-MISSING");
     const geometry = await reference.evaluate((element) => {
       const range = document.createRange();
@@ -668,9 +671,9 @@ for (const language of ["en", "fa"] as const) {
     await button(page, "Manual entry").click();
     await setLanguage(page, language);
     const newInvoice = button(
-      page.locator(".page-header"),
-      "New invoice",
-      "فاکتور جدید",
+      page.locator(".receiving-header"),
+      "Save and close",
+      "ذخیره و بستن",
     );
     await expect(newInvoice).toHaveClass(/button-neutral/);
     expect(

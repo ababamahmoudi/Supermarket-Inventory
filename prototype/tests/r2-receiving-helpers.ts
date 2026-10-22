@@ -159,6 +159,9 @@ export async function expectReceivingStable(
   action: () => Promise<unknown>,
   options: { scroll?: boolean } = {},
 ) {
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
   if (options.scroll !== false) {
     await measured.evaluate((element) =>
       element.scrollIntoView({
@@ -179,21 +182,82 @@ export async function expectReceivingStable(
   const element = await measured.elementHandle();
   if (!element) throw new Error("Stability target is missing");
   await element.evaluate((target) => {
+    const context = () => {
+      const bounds = target.getBoundingClientRect();
+      const style = getComputedStyle(target);
+      return {
+        top: bounds.top,
+        scrollX: window.scrollX,
+        scrollY: window.scrollY,
+        documentHeight: document.documentElement.scrollHeight,
+        targetHeight: bounds.height,
+        targetStyle: {
+          transform: style.transform,
+          translate: style.translate,
+          marginBlockStart: style.marginBlockStart,
+          marginBlockEnd: style.marginBlockEnd,
+          paddingBlockStart: style.paddingBlockStart,
+          paddingBlockEnd: style.paddingBlockEnd,
+          lineHeight: style.lineHeight,
+          fontSize: style.fontSize,
+          alignSelf: style.alignSelf,
+          position: style.position,
+          top: style.top,
+        },
+        active: target.matches(":active"),
+        focused: target.matches(":focus"),
+        viewport: window.visualViewport
+          ? {
+              offsetTop: window.visualViewport.offsetTop,
+              offsetLeft: window.visualViewport.offsetLeft,
+              pageTop: window.visualViewport.pageTop,
+              pageLeft: window.visualViewport.pageLeft,
+              height: window.visualViewport.height,
+              scale: window.visualViewport.scale,
+            }
+          : null,
+        ancestors: [
+          ".receiving-header",
+          ".receiving-details",
+          ".receiving-card-title",
+          ".main-content",
+          ".topbar",
+          ".receiving-review",
+          ".receiving-lines-table",
+        ].map((selector) => {
+          const node = document.querySelector(selector);
+          if (!node) return { selector, missing: true };
+          const rectangle = node.getBoundingClientRect();
+          return {
+            selector,
+            top: rectangle.top,
+            left: rectangle.left,
+            height: rectangle.height,
+            width: rectangle.width,
+            transform: getComputedStyle(node).transform,
+          };
+        }),
+      };
+    };
     const state = {
       top: target.getBoundingClientRect().top,
       scrollY: window.scrollY,
       documentHeight: document.documentElement.scrollHeight,
       maxDelta: 0,
+      startFrame: context(),
+      maxFrame: null as null | Record<string, unknown>,
       disconnected: false,
       active: true,
     };
     Object.assign(target, { __receivingGeometry: state });
     const sample = () => {
       state.disconnected ||= !target.isConnected;
-      state.maxDelta = Math.max(
-        state.maxDelta,
-        Math.abs(target.getBoundingClientRect().top - state.top),
-      );
+      const bounds = target.getBoundingClientRect();
+      const delta = Math.abs(bounds.top - state.top);
+      if (delta > state.maxDelta) {
+        state.maxDelta = delta;
+        state.maxFrame = context();
+      }
       if (state.active) requestAnimationFrame(sample);
     };
     requestAnimationFrame(sample);
@@ -213,6 +277,8 @@ export async function expectReceivingStable(
           scrollY: number;
           documentHeight: number;
           maxDelta: number;
+          startFrame: Record<string, unknown>;
+          maxFrame: null | Record<string, unknown>;
           disconnected: boolean;
           active: boolean;
         };
@@ -221,6 +287,8 @@ export async function expectReceivingStable(
     state.active = false;
     return {
       maxDelta: state.maxDelta,
+      startFrame: state.startFrame,
+      maxFrame: state.maxFrame,
       disconnected: state.disconnected,
       startTop: state.top,
       finalTop: target.getBoundingClientRect().top,
