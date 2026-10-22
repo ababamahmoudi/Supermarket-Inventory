@@ -227,9 +227,12 @@
 :root .detail-grid .field > .ui-select > .select-sizing {
   display: none;
 }
+/* One line in a 44 px box; a long supplier name ends in "…" (R2 rule 7). */
 :root .detail-grid .field > .ui-select > span:not(.select-sizing) {
-  white-space: normal;
-  overflow-wrap: anywhere;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .detail-grid dt {
   color: var(--text-muted);

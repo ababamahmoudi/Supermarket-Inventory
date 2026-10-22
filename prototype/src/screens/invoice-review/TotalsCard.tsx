@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { useState } from "react";
 import { useDemo } from "../../store";
-import { Badge, Button } from "../../ui";
+import { Badge, BufferedInput, Button } from "../../ui";
 
 import {
   ReadingMoney as Money,
@@ -163,7 +163,7 @@ export function TotalsCard({
                       ) : undefined
                     }
                   >
-                    <input
+                    <BufferedInput
                       id={`invoice-${key.replaceAll("_", "-")}`}
                       dir="ltr"
                       inputMode="decimal"

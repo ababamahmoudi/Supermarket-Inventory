@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import { Check, X } from "lucide-react";
 import { useDemo } from "../../store";
 import {
+  BufferedInput,
   Button,
   ConfirmDialog,
   DateField,
@@ -460,7 +461,7 @@ export function LineEditor({
                   readingField="supplier_item_code"
                   label={t("Supplier code", "کد تأمین‌کننده")}
                 >
-                  <input
+                  <BufferedInput
                     id={id("supplier-code")}
                     aria-label={t(
                       "Supplier item code (optional)",
@@ -627,7 +628,7 @@ export function LineEditor({
                     label={t("Case cost", "هزینه کارتن")}
                     error={caseCostError}
                   >
-                    <input
+                    <BufferedInput
                       id={id("case-cost")}
                       aria-label={t(
                         "Case cost before tax",
@@ -662,7 +663,7 @@ export function LineEditor({
                   label={t("Unit cost", "هزینه واحد")}
                   error={costError}
                 >
-                  <input
+                  <BufferedInput
                     id={id("cost")}
                     aria-label={t(
                       "Unit cost before tax",
@@ -749,7 +750,7 @@ export function LineEditor({
                       : undefined
                   }
                 >
-                  <input
+                  <BufferedInput
                     id={id("line-total")}
                     dir="ltr"
                     inputMode="decimal"
@@ -1011,7 +1012,7 @@ export function LineEditor({
                 };
                 return (
                   <Field key={key} readingField={key} label={t(...labels[key])}>
-                    <input
+                    <BufferedInput
                       id={id(key)}
                       dir="ltr"
                       value={String(

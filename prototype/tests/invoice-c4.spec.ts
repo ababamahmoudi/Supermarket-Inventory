@@ -284,7 +284,9 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
   ).toHaveAttribute("aria-label", "Page 1 of 2");
   if ((page.viewportSize()?.width ?? 1440) <= 760) {
     const trigger = page.locator(".original-viewer-phone-trigger");
-    await expect(trigger).toHaveText("View original (2 pages)");
+    await expect(trigger).toHaveText(
+      "View original2 pages · opens full screen",
+    );
     await expect
       .poll(() =>
         trigger
