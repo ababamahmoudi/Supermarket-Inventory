@@ -16,11 +16,7 @@ import { activeSaleAt, savePriceChange } from "./sales";
 import { authenticatedTestActor } from "./authority-test-fixture";
 import type { AuthenticatedActor } from "./authority-types";
 import { initialState } from "./store";
-import {
-  confirmSupplier,
-  hydrateSuppliers,
-  supplierRecords,
-} from "./supplier-editor";
+import { hydrateSuppliers, supplierRecords } from "./supplier-editor";
 import type { DemoState } from "./types";
 
 const now = new Date("2026-10-12T16:00:00Z");
@@ -179,24 +175,21 @@ describe("C8 actual included original supplier confirmation", () => {
     expect(new Uint8Array(await retained.source.arrayBuffer())).toEqual(bytes);
   });
 
-  it("blocks a proposed supplier atomically until actual Manager confirmation, then posts the same retained original", async () => {
+  it("posts a legacy proposed supplier without approval and retains the same original and sale", async () => {
     const state = fixtureState();
     const supplier = homeWare(state);
     supplier.status = "proposed";
     const previousStock = state.stock["Branch 1:0012"];
     await readAndReviewOriginal(state);
     expect(state.invoice.supplier_confirmed).toBe(false);
-    expect(invoiceBlockers(state, manager)).toEqual(["supplier_pending"]);
     const pending = structuredClone(state);
-    expect(() => postInvoice(state, manager)).toThrow("supplier_pending");
-    expect(state).toEqual(pending);
-    confirmSupplier(state, manager, supplier.id, now);
-    expect(supplier.status).toBe("confirmed");
-    expect(state.invoice.supplier_confirmed).toBe(true);
     expect(invoiceBlockers(state, manager)).toEqual([]);
     expect(postInvoice(state, manager)).toBe(true);
     assertPostedReceipt(state, previousStock);
     expect(state.sales).toEqual(pending.sales);
+    expect(
+      state.approvals.some((approval) => approval.type === "new_supplier"),
+    ).toBe(false);
   });
 
   it("never treats a same-name foreign supplier as confirmed for this company's original", async () => {
@@ -204,9 +197,9 @@ describe("C8 actual included original supplier confirmation", () => {
     homeWare(state).company_id = "other-company";
     await readAndReviewOriginal(state);
     expect(state.invoice.supplier_confirmed).toBe(false);
-    expect(invoiceBlockers(state, manager)).toContain("supplier_pending");
+    expect(invoiceBlockers(state, manager)).toContain("supplier");
     const pending = structuredClone(state);
-    expect(() => postInvoice(state, manager)).toThrow("supplier_pending");
+    expect(() => postInvoice(state, manager)).toThrow("supplier");
     expect(state).toEqual(pending);
   });
 

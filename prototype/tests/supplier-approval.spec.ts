@@ -1,81 +1,22 @@
-import { configuredPersonExpectation } from "./configured-person-expectations";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
-import { chooseOption, signIn } from "./helpers";
+import { chooseOption, invoiceImage, signIn } from "./helpers";
 
-async function proposeSupplier(page: Page, name: string) {
+async function quickAddSupplier(page: Page, name: string) {
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
-  const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
-    .id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await expect(page).toHaveURL((url) => {
-    const [route, parameters] = url.hash.slice(1).split("?");
-    const selected = new URLSearchParams(parameters).get("id");
-    return (
-      route === "invoices" &&
-      Boolean(selected && selected !== previousInvoiceId)
-    );
-  });
-  const newInvoiceId = new URLSearchParams(
-    new URL(page.url()).hash.split("?")[1],
-  ).get("id");
-  if (!newInvoiceId)
-    throw new Error("The accepted invoice route is missing its ID.");
-  await expect
-    .poll(async () => (await readCanonicalBusinessEvidence(page)).invoice.id)
-    .toBe(newInvoiceId);
-  await page.getByRole("button", { name: "Upload", exact: true }).click();
-  await expect(page).toHaveURL((url) => {
-    const [route, parameters] = url.hash.slice(1).split("?");
-    const selected = new URLSearchParams(parameters).get("id");
-    return (
-      route === "invoices" && Boolean(selected && selected !== newInvoiceId)
-    );
-  });
-  const uploadInvoiceId = new URLSearchParams(
-    new URL(page.url()).hash.split("?")[1],
-  ).get("id");
-  if (!uploadInvoiceId)
-    throw new Error("The accepted upload-entry route is missing its ID.");
-  await expect
-    .poll(async () => {
-      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
-      return {
-        id: invoice.id,
-        mode: invoice.entry_mode,
-        status: invoice.status,
-        lines: invoice.lines.length,
-      };
-    })
-    .toEqual({
-      id: uploadInvoiceId,
-      mode: "upload",
-      status: "draft",
-      lines: 6,
-    });
-  await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
-  ).toBeVisible();
-  await expect(page.locator(".invoice-lines-table .invoice-line")).toHaveCount(
-    6,
-  );
-  const detailsToggle = page.getByRole("button", {
-    name: "Invoice details",
-    exact: true,
-  });
-  await expect(detailsToggle).toHaveAttribute(
-    "aria-expanded",
-    /^(true|false)$/,
-  );
-  if ((await detailsToggle.getAttribute("aria-expanded")) === "false")
-    await detailsToggle.click();
+  await page
+    .getByRole("dialog", { name: "New invoice", exact: true })
+    .getByRole("button", { name: "Upload", exact: true })
+    .click();
+  await page
+    .getByLabel("Upload a PDF or photo", { exact: true })
+    .setInputFiles(invoiceImage);
   await expect(page.locator("#invoice-details-fields")).toBeVisible();
   await chooseOption(
     page,
-    page
-      .locator("#invoice-details-fields")
-      .getByLabel("Supplier", { exact: true }),
+    page.locator("#invoice-supplier"),
     "__add_supplier",
     "+ Add supplier",
   );
@@ -84,9 +25,87 @@ async function proposeSupplier(page: Page, name: string) {
     exact: true,
   });
   await dialog.getByLabel("Supplier name", { exact: true }).fill(name);
+  await expect(
+    dialog.getByLabel("Opening balance", { exact: true }),
+  ).toHaveCount(0);
+  await dialog
+    .getByRole("button", { name: "Add supplier", exact: true })
+    .click();
+  await expect(dialog).not.toBeVisible();
+  const state = await readCanonicalBusinessEvidence(page);
+  const supplier = state.suppliers!.find((record) => record.name === name)!;
+  expect(supplier).toMatchObject({
+    status: "confirmed",
+    active: true,
+    phone: "",
+    email: "",
+    notes: "",
+  });
+  expect(
+    state.approvals.filter((record) => record.supplier_id === supplier.id),
+  ).toEqual([]);
+  expect(state.invoice.supplier_confirmed).toBe(true);
+  await expect(
+    page.getByRole("button", { name: "Confirm supplier", exact: true }),
+  ).toHaveCount(0);
+  return supplier;
+}
+
+test("worker's name-only supplier is active immediately and absent from Approvals and Dashboard work", async ({
+  page,
+}) => {
+  const supplier = await quickAddSupplier(page, "Orchard Immediate Supply");
+  await signIn(page, "Supervisor");
+  await page.goto("/#approvals");
+  await expect(
+    page.getByRole("heading", { name: "Approvals", level: 1, exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".supplier-approval-card")).toHaveCount(0);
+  await page.goto("/#dashboard");
+  await expect(
+    page.getByRole("heading", { name: /dashboard$/, level: 1 }),
+  ).toBeVisible();
+  await expect(page.locator(".dashboard-supplier-approval")).toHaveCount(0);
+  const state = await readCanonicalBusinessEvidence(page);
+  expect(
+    state.suppliers!.find((record) => record.id === supplier.id),
+  ).toMatchObject({ status: "confirmed", active: true });
+  expect(
+    state.approvals.some((record) => record.supplier_id === supplier.id),
+  ).toBe(false);
+});
+
+test("profile notification opens its editor, clears when completed, and does not repeat", async ({
+  page,
+}) => {
+  const supplier = await quickAddSupplier(page, "Orchard Profile Supply");
+  await signIn(page, "Supervisor");
+  await page.getByRole("button", { name: /^Notifications, / }).click();
+  const notification = page
+    .getByRole("menuitem")
+    .filter({ hasText: "Complete supplier profile: Orchard Profile Supply" });
+  await expect(notification).toHaveCount(1);
+  await notification.click();
+  const dialog = page.getByRole("dialog", {
+    name: "Edit supplier",
+    exact: true,
+  });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel("Supplier name", { exact: true })).toHaveValue(
+    supplier.name,
+  );
   await dialog
     .getByLabel("Phone (optional)", { exact: true })
     .fill("416-555-0173");
+  await dialog
+    .getByLabel("Email (optional)", { exact: true })
+    .fill("orders@example.test");
+  await dialog
+    .getByLabel("Sales representative (optional)", { exact: true })
+    .fill("Orchard Representative");
+  await dialog
+    .getByLabel("Sales rep phone (optional)", { exact: true })
+    .fill("416-555-0174");
   await chooseOption(
     page,
     dialog.getByLabel("Payment terms (optional)", { exact: true }),
@@ -94,141 +113,26 @@ async function proposeSupplier(page: Page, name: string) {
     "Monthly (30 days)",
   );
   await dialog
-    .getByLabel("Email (optional)", { exact: true })
-    .fill("orders@example.test");
+    .getByLabel("Address (optional)", { exact: true })
+    .fill("1 Fictional Way");
   await dialog
-    .getByLabel("Sales representative (optional)", { exact: true })
-    .fill("Fictional Representative");
-  await dialog
-    .getByLabel("Sales rep phone (optional)", { exact: true })
-    .fill("416-555-0174");
-  await dialog
-    .getByRole("button", { name: "Add supplier", exact: true })
+    .getByRole("button", { name: "Save supplier", exact: true })
     .click();
   await expect(dialog).not.toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
-  await expect(
-    page.getByRole("alert", { name: "What's missing", exact: true }),
+    page.locator(".supplier-header-card").getByText("Active", { exact: true }),
   ).toBeVisible();
-}
-
-test("Supervisor confirms a worker supplier from Approvals without product-price fields", async ({
-  page,
-}) => {
-  await proposeSupplier(page, "Orchard Confirmation Supply");
-  await signIn(page, "Supervisor");
-  await page.goto("/#approvals");
-  const card = page.locator(".supplier-approval-card").filter({
-    has: page.getByRole("heading", {
-      name: "Orchard Confirmation Supply",
-      exact: true,
-    }),
-  });
-  await expect(
-    card.getByText("Supplier waiting for confirmation", { exact: true }),
-  ).toBeVisible();
-  await expect(card.getByText("416-555-0173", { exact: true })).toBeVisible();
-  await expect(card.getByText("Old price", { exact: true })).toHaveCount(0);
-  await expect(card.getByText("Unit cost", { exact: true })).toHaveCount(0);
-  await card
-    .getByRole("button", { name: "Confirm supplier", exact: true })
-    .click();
-  const dialog = page.getByRole("dialog", {
-    name: "Confirm supplier",
-    exact: true,
-  });
-  await expect(dialog.getByText("Net 30", { exact: true })).toBeVisible();
-  await expect(
-    dialog.getByLabel("Apply price to", { exact: true }),
-  ).toHaveCount(0);
-  await dialog
-    .getByRole("button", { name: "Confirm supplier", exact: true })
-    .click();
-  await expect(card).toHaveCount(0);
-  const saved = await readCanonicalBusinessEvidence(page).then(
-    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
-  );
-  const supplier = saved.suppliers.find(
-    (record: { name: string }) => record.name === "Orchard Confirmation Supply",
-  );
-  expect(supplier.status).toBe("confirmed");
-  expect(saved.invoice.supplier_confirmed).toBe(true);
-  expect(
-    saved.approvals.find(
-      (record: { supplier_id: string }) => record.supplier_id === supplier.id,
-    ).status,
-  ).toBe("approved");
-  expect(
-    saved.activity.find(
-      (record: { action: string }) => record.action === "Confirm supplier",
-    ).by,
-  ).toBe(configuredPersonExpectation("manager").name_en);
-  await page.getByRole("tab", { name: /^Approved\s+\d+$/ }).click();
+  await page.getByRole("button", { name: /^Notifications, / }).click();
   await expect(
     page
-      .locator(".supplier-approval-card")
-      .getByText("Confirmed", { exact: true }),
-  ).toBeVisible();
-});
-
-test("Supervisor rejects a worker supplier from the dashboard and keeps its invoice blocked", async ({
-  page,
-}) => {
-  await proposeSupplier(page, "Orchard Rejection Supply");
-  await signIn(page, "Supervisor");
-  await page.goto("/#dashboard");
-  const card = page.locator(".dashboard-supplier-approval").filter({
-    has: page.getByRole("heading", {
-      name: "Orchard Rejection Supply",
-      exact: true,
-    }),
-  });
-  await expect(
-    card.getByText("Supplier waiting for confirmation", { exact: true }),
-  ).toBeVisible();
-  await card.getByRole("button", { name: "More", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Reject", exact: true }).click();
-  await page
-    .getByRole("dialog", { name: "Reject proposal", exact: true })
-    .getByRole("button", { name: "Reject proposal", exact: true })
-    .click();
-  await expect(card).toHaveCount(0);
-  const saved = await readCanonicalBusinessEvidence(page).then(
-    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
-  );
-  const supplier = saved.suppliers.find(
-    (record: { name: string }) => record.name === "Orchard Rejection Supply",
-  );
-  expect(supplier).toMatchObject({ status: "proposed", active: false });
-  expect(saved.invoice.supplier).toBe(supplier.name);
-  expect(saved.invoice.supplier_confirmed).toBe(false);
-  expect(
-    saved.approvals.find(
-      (record: { supplier_id: string }) => record.supplier_id === supplier.id,
-    ).status,
-  ).toBe("rejected");
-  await signIn(page, "Floor Worker");
-  await page.goto("/#invoices");
-  await page.getByRole("tab", { name: "Needs review", exact: true }).click();
-  await page
-    .locator(".invoice-saved-drafts tbody tr")
-    .filter({
-      has: page.getByText("Orchard Rejection Supply", { exact: true }),
-    })
-    .getByRole("button", { name: "Resume draft", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
-  await expect(
-    page.getByRole("alert", { name: "What's missing", exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Confirm supplier", exact: true }),
+      .getByRole("menuitem")
+      .filter({ hasText: "Complete supplier profile: Orchard Profile Supply" }),
   ).toHaveCount(0);
-  await expect(page.locator(".supplier-approval-card")).toHaveCount(0);
+  const state = await readCanonicalBusinessEvidence(page);
+  const notifications = state.notifications!.filter(
+    (row) => row.supplier_id === supplier.id,
+  );
+  expect(new Set(notifications.map((row) => row.recipient_user_id)).size).toBe(
+    notifications.length,
+  );
 });

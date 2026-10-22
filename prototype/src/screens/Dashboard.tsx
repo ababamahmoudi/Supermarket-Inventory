@@ -23,7 +23,6 @@ import { configuredRoleLabel } from "../role-config";
 import { companyDate } from "../invoice";
 import { approvalSnapshot, resolveApproval } from "../approvals";
 import { ManualPricePill } from "../manual-price-presentation";
-import { SupplierApproval } from "./SupplierApproval";
 import { SaleRequestCards } from "./SalesApprovals";
 import { ApprovalReviewPanel } from "./ApprovalReviewPanel";
 import {
@@ -167,7 +166,9 @@ export function Dashboard() {
   } = result.data;
 
   const branches = sellingBranches(state.config);
-  const approvals = state.approvals.filter((item) => item.status === "pending");
+  const approvals = state.approvals.filter(
+    (item) => item.status === "pending" && item.type !== "new_supplier",
+  );
   const pendingSaleRequests = (state.sale_requests ?? []).filter(
     (item) => item.status === "pending",
   );
@@ -582,14 +583,6 @@ export function Dashboard() {
                 <div className="dashboard-queue">
                   <SaleRequestCards compact />
                   {approvals.slice(0, 6).map((item) => {
-                    if (item.type === "new_supplier")
-                      return (
-                        <SupplierApproval
-                          key={item.id}
-                          approval={item}
-                          compact
-                        />
-                      );
                     const product = state.products.find(
                       (value) =>
                         value.company_id === context.company_id &&

@@ -315,18 +315,16 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
   }
 });
 
-test("Part 1 invoice names and approved-price notes fit on one line", async ({
+test("R2 invoice names and four-decimal cost values fit on one line", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
   await uploadInvoice(page);
   await expect(page.locator(".invoice-line")).toHaveCount(6);
-  await expect(
-    page.locator(".invoice-line-toggle .product-name strong"),
-  ).toHaveCount(6);
+  await expect(page.locator(".invoice-line-toggle > bdi")).toHaveCount(6);
   const names = await page
-    .locator(".invoice-line-toggle .product-name strong")
+    .locator(".invoice-line-toggle > bdi")
     .evaluateAll((elements) =>
       elements.map((element) => {
         const range = document.createRange();
@@ -341,21 +339,21 @@ test("Part 1 invoice names and approved-price notes fit on one line", async ({
   expect(names.length).toBeGreaterThan(0);
   for (const name of names)
     expect(name.lines, name.text ?? "product name").toBe(1);
-  await page.locator(".invoice-line-toggle").first().click();
-  const note = page
-    .locator(".invoice-line-price .muted")
-    .filter({ hasText: /^Approved:/ })
-    .first();
-  await expect(note).toBeVisible();
-  await expect(note).toContainText("$");
-  const lines = await note.evaluate((element) => {
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    return new Set(
-      [...range.getClientRects()].map((rect) => Math.round(rect.top)),
-    ).size;
-  });
-  expect(lines).toBe(1);
+  const costs = page.locator(
+    '.receiving-lines-table tbody td[data-column-key="cost"] > bdi',
+  );
+  await expect(costs).toHaveCount(6);
+  for (const cost of await costs.all()) {
+    await expect(cost).toHaveText(/\$\d+\.\d{4}$/);
+    const lines = await cost.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return new Set(
+        [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+      ).size;
+    });
+    expect(lines).toBe(1);
+  }
 });
 
 test("Part 1 purchase charts show week dates and hover/focus amounts with equal-height desktop cards", async ({
@@ -543,8 +541,12 @@ test("Part 1 demo disclaimer appears inside Demo and only invoice AI reading rem
     "Demo with fictional data",
   );
   await page.goto("/#invoices");
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("tab", { name: /^Drafts \d+$/, exact: false }).click();
   await expect(page.locator("main")).toContainText(
+    "AI invoice reading is simulated",
+  );
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.locator("main")).not.toContainText(
     "AI invoice reading is simulated",
   );
 });

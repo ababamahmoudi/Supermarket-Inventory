@@ -360,9 +360,9 @@ test("the four redesigned screens use styled controls and borderless cards witho
     await page.goto(`/#${route}`);
     if (route === "invoices") {
       await uploadInvoice(page);
-      await page
-        .getByRole("button", { name: "Invoice details", exact: true })
-        .click();
+      await expect(
+        page.getByRole("heading", { name: "Invoice details", exact: true }),
+      ).toBeVisible();
     }
     await expectStyledControls(page);
     await expectBorderlessCards(page);
@@ -419,16 +419,18 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
   ).toBe(56);
   await page.goto("/#invoices");
   await uploadInvoice(page);
-  await page
-    .getByRole("button", { name: "Invoice details", exact: true })
-    .click();
+  await expect(
+    page.getByRole("heading", { name: "Invoice details", exact: true }),
+  ).toBeVisible();
   for (const form of await page
-    .locator(".invoice-details-form, .invoice-line-form")
+    .locator(
+      ".receiving-details .detail-grid, .receiving-line-editor .detail-grid",
+    )
     .all())
     expect(
       await form.evaluate((element) => {
         const pane = element
-          .closest(".invoice-review-pane")!
+          .closest(".receiving-work")!
           .getBoundingClientRect();
         const rect = element.getBoundingClientRect();
         return (
@@ -439,16 +441,12 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
       }),
     ).toBe(true);
   for (const input of await page
-    .locator(".invoice-details-form input, .invoice-line-form input")
+    .locator(".receiving-details input, .receiving-line-editor input")
     .all())
     expect((await input.boundingBox())!.width).toBeLessThanOrEqual(640);
-  const documentPane = (await page
-    .locator(".invoice-document-pane")
-    .boundingBox())!;
-  const reviewPane = (await page
-    .locator(".invoice-review-pane")
-    .boundingBox())!;
-  expect(documentPane.x + documentPane.width).toBeLessThan(reviewPane.x);
+  const documentPane = (await page.locator(".original-viewer").boundingBox())!;
+  const reviewPane = (await page.locator(".receiving-work").boundingBox())!;
+  expect(reviewPane.x + reviewPane.width).toBeLessThan(documentPane.x);
   await page
     .getByLabel("Unit cost before tax", { exact: true })
     .last()

@@ -29,6 +29,16 @@ export default defineConfig({
         launchOptions: {},
       },
     },
+    {
+      name: "firefox-receiving",
+      testMatch: "r2-receiving-stability.spec.ts",
+      use: {
+        ...devices["Desktop Firefox"],
+        browserName: "firefox",
+        // A configured system Chromium executable cannot run Firefox.
+        launchOptions: {},
+      },
+    },
   ],
   webServer: {
     command: "npm run preview",

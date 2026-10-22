@@ -277,6 +277,14 @@ export async function openInvoiceUpload(page: Page) {
     await page
       .getByRole("button", { name: "New invoice", exact: true })
       .click();
+    const chooser = page.getByRole("dialog", {
+      name: "New invoice",
+      exact: true,
+    });
+    if (await chooser.isVisible())
+      await chooser
+        .getByRole("button", { name: "Upload", exact: true })
+        .click();
   }
   await expect(input).toBeAttached();
   return input;
@@ -309,26 +317,32 @@ export async function uploadInvoice(page: Page) {
       status: "review",
     });
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: remaining() });
-  await expect(page.locator(".invoice-line")).toHaveCount(6, {
-    timeout: remaining(),
-  });
+  await expect(page.locator('[data-testid^="invoice-line-row-"]')).toHaveCount(
+    6,
+    {
+      timeout: remaining(),
+    },
+  );
 }
 
-/** R1 asks a person before confirming all remaining AI checks on a line. */
+/** Open one R2 line editor and retain its scoped locator. */
+export async function openInvoiceLine(page: Page, index: number) {
+  const editor = page.locator(`#invoice-line-${index}-detail`);
+  if (!(await editor.isVisible()))
+    await page.getByTestId(`invoice-line-row-${index}`).click();
+  await expect(editor).toBeVisible();
+  return editor;
+}
+
+/** R2 confirms the whole line, including its highlighted fields, in one action. */
 export async function confirmInvoiceLine(page: Page, line: Locator) {
-  const hasChecks = (await line.locator(".reading-check-chip").count()) > 0;
+  const fa = (await page.locator("html").getAttribute("lang")) === "fa";
   await line
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
-    .click();
-  if (!hasChecks) return;
-  const confirmation = page.getByRole("dialog", {
-    name: "This line has fields to check. Confirm all of them?",
-    exact: true,
-  });
-  await expect(confirmation).toBeVisible();
-  await confirmation
-    .getByRole("button", { name: "Confirm all fields", exact: true })
+    .getByRole("button", {
+      name: fa ? "تأیید ردیف" : "Confirm line",
+      exact: true,
+    })
     .click();
 }

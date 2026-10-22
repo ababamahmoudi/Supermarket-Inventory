@@ -15,6 +15,34 @@ import {
 import { effectiveApprovalLocation } from "./received";
 import { regularPrice } from "./catalog";
 import type { DemoState, Branch } from "./types";
+import { calculatePrice } from "./pricing";
+
+export function approvalCategoryPreview(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  id: string,
+  category: string,
+): string {
+  actor = freshActor(state, actor);
+  const approval = state.approvals.find(
+    (item) => item.id === id && item.company_id === actor.company_id,
+  );
+  if (!approval) throw new Error("Approval changed. Refresh the preview");
+  requireCapability(
+    state,
+    actor,
+    "approvals.decide",
+    domainScope(state, approval),
+  );
+  const product = state.products.find(
+    (item) =>
+      item.company_id === actor.company_id &&
+      item.code === approval.product_code,
+  );
+  const cost = approval.unit_cost ?? product?.last_cost_before_tax;
+  if (!cost) throw new Error("A current unit cost is required");
+  return calculatePrice(cost, category, state.config).selling_price;
+}
 
 export function approvalBoard(state: DemoState, actor: AuthenticatedActor) {
   actor = freshActor(state, actor);
@@ -82,6 +110,9 @@ export function approvalBoard(state: DemoState, actor: AuthenticatedActor) {
             : invoice?.receiving_employee
           : undefined),
       invoiceNumber: actual.invoice_number ?? invoice?.supplier_invoice_number,
+      invoiceId: actual.source_invoice_id ?? invoice?.id,
+      supplierName: invoice?.supplier ?? actual.supplier_name,
+      category: actual.pricing_category ?? product?.pricing_category,
     };
   });
 }

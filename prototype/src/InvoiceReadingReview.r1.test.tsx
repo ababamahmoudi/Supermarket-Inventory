@@ -16,35 +16,38 @@ function EditableCheck() {
     "line_total",
   ]);
   return (
-    <ReadingCheckProvider
-      fields={fields}
-      idPrefix="test-line"
-      onAcknowledge={(field) =>
-        setFields((current) => current.filter((item) => item !== field))
-      }
-      onEdit={(field, change) => {
-        change();
-        setFields((current) => current.filter((item) => item !== field));
-      }}
-    >
-      <ReadingField
-        readingField="unit_cost_before_tax"
-        label="Unit cost before tax"
+    <>
+      <ReadingCheckProvider
+        fields={fields}
+        idPrefix="test-line"
+        onAcknowledge={(field) =>
+          setFields((current) => current.filter((item) => item !== field))
+        }
+        onEdit={(field, change) => {
+          change();
+          setFields((current) => current.filter((item) => item !== field));
+        }}
       >
-        <input
-          value={value}
-          onChange={(event) => {
-            setValue(event.target.value);
-          }}
-        />
-      </ReadingField>
-      <ReadingField readingField="line_total" label="Line total">
-        <input defaultValue="8.00" />
-      </ReadingField>
-      <ReadingField readingField="description" label="Description">
-        <input defaultValue="Fictional" />
-      </ReadingField>
-    </ReadingCheckProvider>
+        <ReadingField
+          readingField="unit_cost_before_tax"
+          label="Unit cost before tax"
+        >
+          <input
+            value={value}
+            onChange={(event) => {
+              setValue(event.target.value);
+            }}
+          />
+        </ReadingField>
+        <ReadingField readingField="line_total" label="Line total">
+          <input defaultValue="8.00" />
+        </ReadingField>
+        <ReadingField readingField="description" label="Description">
+          <input defaultValue="Fictional" />
+        </ReadingField>
+      </ReadingCheckProvider>
+      <button onClick={() => setFields([])}>Confirm line</button>
+    </>
   );
 }
 
@@ -53,20 +56,20 @@ describe("R1 fields needing a human check", () => {
     const user = userEvent.setup();
     render(<EditableCheck />);
     const input = screen.getByLabelText("Unit cost before tax");
-    expect(screen.getAllByText("Please check")).toHaveLength(3);
+    expect(screen.getAllByText("?")).toHaveLength(3);
     expect(input.closest(".field")).toHaveClass("please-check-field");
     await user.clear(input);
     await user.type(input, "12.50");
     expect(screen.getByLabelText("Unit cost before tax")).toBe(input);
     expect(input).toHaveFocus();
     expect(input).toHaveValue("12.50");
-    expect(screen.getAllByText("Please check")).toHaveLength(2);
+    expect(screen.getAllByText("?")).toHaveLength(2);
     expect(input.closest(".field")).not.toHaveClass("please-check-field");
     expect(screen.getByLabelText("Line total").closest(".field")).toHaveClass(
       "please-check-field",
     );
   });
-  it("Looks right acknowledges one existing field and exposes the explanation on the chip", async () => {
+  it("exposes the explanation without per-field buttons and keeps all fields after whole-line confirmation", async () => {
     const user = userEvent.setup();
     render(<EditableCheck />);
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
@@ -85,13 +88,15 @@ describe("R1 fields needing a human check", () => {
     await user.unhover(chip);
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     const input = screen.getByLabelText("Unit cost before tax");
-    await user.click(
-      screen.getByRole("button", { name: "Looks right: Unit cost before tax" }),
-    );
-    expect(screen.getByLabelText("Unit cost before tax")).toBe(input);
-    expect(screen.getAllByText("Please check")).toHaveLength(2);
     expect(
-      screen.getByRole("button", { name: "Looks right: Description" }),
-    ).toBeInTheDocument();
+      screen.queryAllByRole("button", { name: /^Looks right/ }),
+    ).toHaveLength(0);
+    const total = screen.getByLabelText("Line total");
+    await user.click(screen.getByRole("button", { name: "Confirm line" }));
+    expect(screen.getByLabelText("Unit cost before tax")).toBe(input);
+    expect(screen.getByLabelText("Line total")).toBe(total);
+    expect(screen.getByLabelText("Description")).toHaveValue("Fictional");
+    expect(screen.queryAllByText("?")).toHaveLength(0);
+    expect(document.querySelectorAll(".please-check-field")).toHaveLength(0);
   });
 });

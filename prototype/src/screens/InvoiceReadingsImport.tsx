@@ -7,7 +7,8 @@ import {
   DataTable,
   Dialog,
   DialogActions,
-  Radio,
+  Field,
+  SegmentedControl,
   Select,
 } from "../ui";
 import { useDemo } from "../store";
@@ -21,6 +22,7 @@ import {
   importInvoiceReadings,
   prepareInvoiceReadingPages,
   previewInvoiceReadings,
+  selectInvoiceReading,
   type ImportMode,
   type ImportSummary,
   type InvoiceReadingsExport,
@@ -111,9 +113,7 @@ function ImportPreview({
   const { state, branch, command, lang, t, money } = useDemo();
   const config = useSettingsConfiguration();
   const [mode, setMode] = useState<ImportMode>("ai");
-  const [selected, setSelected] = useState(() =>
-    exported.invoices.map((invoice) => invoice.id),
-  );
+  const [selected, setSelected] = useState<string[] | null>(null);
   const [locations, setLocations] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -130,7 +130,15 @@ function ImportPreview({
   );
   const rows = preview.data ?? [];
   const eligible = rows.filter((row) => !row.duplicate_reason && !row.error);
-  const selectedRows = eligible.filter((row) => selected.includes(row.id));
+  const selection =
+    selected ?? eligible.filter((row) => row.recommended).map((row) => row.id);
+  const selectedRows = eligible.filter((row) => selection.includes(row.id));
+  const locationWidth = Math.max(
+    180,
+    ...configuredBranches(config).map(
+      (value) => branchLabel(config, value, lang).length * 9 + 56,
+    ),
+  );
   const missingLocation = selectedRows.filter(
     (row) => !(locations[row.id] ?? row.location),
   );
@@ -156,6 +164,7 @@ function ImportPreview({
             exported,
             fileName,
             mode,
+            currentLocation: branch,
             locations: Object.fromEntries(
               selectedRows.map((row) => [
                 row.id,
@@ -190,18 +199,29 @@ function ImportPreview({
       description={fileName}
       className="invoice-readings-dialog dialog-wide dialog-phone-fullscreen"
     >
-      <fieldset className="invoice-readings-mode list-box" disabled={busy}>
-        <legend>{t("Use:", "استفاده از:")}</legend>
-        <Radio checked={mode === "ai"} onChange={() => setMode("ai")}>
-          {t(
-            "AI reading, with what to check highlighted",
-            "خوانش هوش مصنوعی با مشخص شدن موارد نیازمند بررسی",
-          )}
-        </Radio>
-        <Radio checked={mode === "checked"} onChange={() => setMode("checked")}>
-          {t("My checked values", "مقادیر بررسی‌شدهٔ من")}
-        </Radio>
-      </fieldset>
+      <div className="invoice-readings-mode">
+        <span>{t("Use:", "استفاده از:")}</span>
+        <SegmentedControl
+          aria-label={t("Reading values", "مقادیر خوانش")}
+          value={mode}
+          onChange={(value) => {
+            setMode(value as ImportMode);
+            setSelected(null);
+          }}
+          options={[
+            {
+              value: "ai",
+              label: t("AI reading", "خوانش هوش مصنوعی"),
+              disabled: busy,
+            },
+            {
+              value: "checked",
+              label: t("My checked values", "مقادیر بررسی‌شدهٔ من"),
+              disabled: busy,
+            },
+          ]}
+        />
+      </div>
       {preview.pending && (
         <p role="status">{t("Preparing preview…", "آماده‌سازی پیش‌نمایش…")}</p>
       )}
@@ -245,7 +265,12 @@ function ImportPreview({
               align: "end",
               minWidth: 128,
             },
-            { key: "location", label: t("Location", "مکان"), priority: 2 },
+            {
+              key: "location",
+              label: t("Location", "مکان"),
+              priority: 2,
+              minWidth: locationWidth,
+            },
             {
               key: "lines",
               label: t("Lines", "ردیف‌ها"),
@@ -311,14 +336,17 @@ function ImportPreview({
                 <tr key={row.id} data-import-id={row.id}>
                   <td>
                     <Checkbox
-                      checked={!disabled && selected.includes(row.id)}
+                      checked={!disabled && selection.includes(row.id)}
                       disabled={disabled || busy}
                       aria-label={`${t("Import", "ورود")} ${number}`}
                       onChange={(checked) =>
                         setSelected((current) =>
-                          checked
-                            ? [...current, row.id]
-                            : current.filter((id) => id !== row.id),
+                          selectInvoiceReading(
+                            rows,
+                            current ?? selection,
+                            row.id,
+                            checked,
+                          ),
                         )
                       }
                     />
@@ -352,7 +380,7 @@ function ImportPreview({
                       value={location}
                       aria-label={`${t("Location for", "مکان برای")} ${number}`}
                       aria-invalid={
-                        !disabled && selected.includes(row.id) && !location
+                        !disabled && selection.includes(row.id) && !location
                       }
                       disabled={disabled || busy}
                       options={[
@@ -407,6 +435,13 @@ function ImportPreview({
                     {row.duplicate_reason ? (
                       <Badge>
                         {t("Already in the app", "از قبل در برنامه است")}
+                      </Badge>
+                    ) : row.in_file_duplicate_group ? (
+                      <Badge tone="pending">
+                        {t(
+                          "Same invoice twice in this file",
+                          "همین فاکتور دو بار در این فایل است",
+                        )}
                       </Badge>
                     ) : row.error ? (
                       <Badge tone="danger">
@@ -471,7 +506,7 @@ function ImportPreview({
 }
 
 export default function InvoiceReadingsImport() {
-  const { state, command, can, role, t, navigate } = useDemo();
+  const { state, command, can, role, t, navigate, setBranch } = useDemo();
   const input = useRef<HTMLInputElement>(null);
   const reader = useRef<AbortController | null>(null);
   const [reading, setReading] = useState(false);
@@ -480,6 +515,7 @@ export default function InvoiceReadingsImport() {
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [error, setError] = useState("");
   const [emptyOpen, setEmptyOpen] = useState(false);
+  const [emptyConfirmation, setEmptyConfirmation] = useState("");
   const [removing, setRemoving] = useState(false);
   const [emptyMessage, setEmptyMessage] = useState("");
   useEffect(() => () => reader.current?.abort(), []);
@@ -579,6 +615,7 @@ export default function InvoiceReadingsImport() {
           variant="danger"
           onClick={() => {
             setError("");
+            setEmptyConfirmation("");
             setEmptyOpen(true);
           }}
         >
@@ -644,9 +681,27 @@ export default function InvoiceReadingsImport() {
           {summary.new_suppliers.length > 0 && (
             <p>
               {t(
-                "New suppliers need your normal review and confirmation.",
-                "تأمین‌کنندگان جدید به بررسی و تأیید معمول شما نیاز دارند.",
+                "New suppliers are active. Contact details can be completed later.",
+                "تأمین‌کنندگان جدید فعال هستند. اطلاعات تماس را می‌توان بعداً تکمیل کرد.",
               )}
+            </p>
+          )}
+          {(summary.other_locations ?? 0) > 0 && (
+            <p>
+              {t(
+                `${summary.other_locations} more are at other locations`,
+                `${summary.other_locations} مورد دیگر در مکان‌های دیگر هستند`,
+              )}{" "}
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  await setBranch("all");
+                  setSummary(null);
+                  navigate("invoices?tab=needs_review");
+                }}
+              >
+                {t("All my locations", "همهٔ مکان‌های من")}
+              </Button>
             </p>
           )}
           <DialogActions>
@@ -683,6 +738,13 @@ export default function InvoiceReadingsImport() {
             "محصولات، تأمین‌کنندگان، اقلام تأمین‌کنندگان، فاکتورها، دریافت‌ها، پیشنهادها، حراج‌ها و درخواست‌های حراج، مرجوعی‌ها، سفارش‌ها، درخواست‌های شعب، حساب‌های پرداختنی، یادداشت‌ها و نوشته‌های دفترچه‌ها، تاریخ‌های پیگیری، به‌روزرسانی قیمت‌ها، هشدارها، صف برچسب و تاریخچهٔ آن‌ها حذف می‌شوند. فاکتورهایی که وارد کرده‌اید نیز حذف می‌شوند.",
           )}
         </p>
+        <Field label={t("Type DELETE to confirm", "برای تأیید حذف را بنویسید")}>
+          <input
+            value={emptyConfirmation}
+            onChange={(event) => setEmptyConfirmation(event.target.value)}
+            autoComplete="off"
+          />
+        </Field>
         <DialogActions>
           <Button
             variant="secondary"
@@ -693,7 +755,9 @@ export default function InvoiceReadingsImport() {
           </Button>
           <Button
             variant="danger"
-            disabled={removing}
+            disabled={
+              removing || !["DELETE", "حذف"].includes(emptyConfirmation.trim())
+            }
             onClick={() => void remove()}
           >
             {t("Remove fictional data", "حذف داده‌های خیالی")}

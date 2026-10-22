@@ -1154,11 +1154,19 @@ export default function App() {
     ).length + customUnread;
   const approvalCount =
     state.approvals.filter(
-      (record) => inBranch(record) && record.status === "pending",
+      (record) =>
+        inBranch(record) &&
+        record.type !== "new_supplier" &&
+        record.status === "pending",
     ).length +
     (state.sale_requests ?? []).filter(
       (record) => inBranch(record) && record.status === "pending",
     ).length;
+  const invoiceCount = new Map(
+    [...state.invoices, ...(state.invoice ? [state.invoice] : [])]
+      .filter((record) => inBranch(record) && record.status === "review")
+      .map((record) => [record.id, record]),
+  ).size;
   const alertCount = state.alerts.filter(
     (record) => inBranch(record) && record.status === "pending",
   ).length;
@@ -1339,13 +1347,15 @@ export default function App() {
                                 request.status !== "closed" &&
                                 request.status !== "cancelled",
                             ).length
-                          : item.key === "approvals"
-                            ? approvalCount
-                            : item.key === "alerts"
-                              ? alertCount
-                              : item.key === "price-updates"
-                                ? pendingPriceUpdates
-                                : 0;
+                          : item.key === "invoices"
+                            ? invoiceCount
+                            : item.key === "approvals"
+                              ? approvalCount
+                              : item.key === "alerts"
+                                ? alertCount
+                                : item.key === "price-updates"
+                                  ? pendingPriceUpdates
+                                  : 0;
                     return (
                       <a
                         key={item.key}
@@ -1371,7 +1381,7 @@ export default function App() {
                         {count > 0 && (
                           <>
                             <span
-                              className={`nav-count ${["approvals", "alerts"].includes(item.key) ? "nav-count-attention" : ""}`}
+                              className={`nav-count ${["invoices", "approvals", "alerts"].includes(item.key) ? "nav-count-attention" : ""}`}
                             >
                               {count}
                             </span>

@@ -322,8 +322,8 @@ describe("normal invoice field mappings", () => {
     );
     expect(mapped).toMatchObject({
       date_value: "2026-11-27",
-      date_confirmed: false,
-      date_tracking: true,
+      date_confirmed: true,
+      date_tracking: false,
     });
   });
 });
@@ -585,18 +585,19 @@ describe("import prepares evidence and normal drafts only", () => {
       initialState().stock_movements?.length ?? 0,
     );
   });
-  it("creates Needs review suppliers and drafts, derives Net 14, and records import provenance/history", async () => {
+  it("creates active suppliers and review drafts, derives Net 14, and records import provenance/history", async () => {
     const state = emptyBusiness(),
       beforeProducts = structuredClone(state.products),
       result = await importFile(state, exported());
     expect(result.imported).toHaveLength(1);
     expect(result.new_suppliers).toEqual(["Fresh Valley Foods"]);
     expect(state.suppliers?.[0]).toMatchObject({
-      status: "proposed",
+      status: "confirmed",
+      active: true,
       created_from_import: true,
-      notes: "Created from an imported reading",
+      notes: "",
     });
-    expect(state.approvals).toContainEqual(
+    expect(state.approvals).not.toContainEqual(
       expect.objectContaining({ type: "new_supplier", status: "pending" }),
     );
     const draft = state.invoices![0];
@@ -659,7 +660,7 @@ describe("import prepares evidence and normal drafts only", () => {
     });
     expect(
       draft.lines.some(
-        (line) => line.date_value === "2026-11-27" && !line.date_confirmed,
+        (line) => line.date_value === "2026-11-27" && !line.date_tracking,
       ),
     ).toBe(true);
     expect(state.products).toHaveLength(0);

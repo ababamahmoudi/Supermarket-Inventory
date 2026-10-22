@@ -1,5 +1,14 @@
 # Project changelog
 
+## 2026-10-21 — R2 compact receiving and approval corrections
+
+- Checked all seven successful CI checks on R1 #28 at `537ab7a816724442bdd327f5452c1e8f15aefa2b`, then merged with the owner's explicit approval as `3d0aaaa3b4bf3eb73da136f385a45d07cf1605c3`. Created `feat/prototype-r2-receiving` from updated main.
+- Replaced expanded receiving forms with separate invoice-review components, closed line summaries, a single editor/phone sheet, card-level acknowledgments, calculated totals, grouped missing requirements and responsive original viewing. Kept the canonical domain, authority repository and configured Decimal pricing.
+- Suppliers are active immediately, with optional profile details and an Owner/Manager completion notification. Added distinctive-name similarity/dismissal and a versioned, verified-backup migration of legacy waiting suppliers. Supplier approvals leave active queues; historical evidence stays.
+- Added counted invoice queues/sidebar, mutually exclusive in-file duplicate selection, compact import source choices, full location names, grouped approval review with deselection, category correction and linked rejected-request resubmission. Delivery links identify and highlight the exact invoice line. Import/post History has invoice identity and useful summaries.
+- Added the invented 25-line/partial-duplicate fixture, domain regressions and desktop/phone EN/FA receiving/geometry tests; added the scoped Firefox receiving project and only the CI install line needed for it. Updated legacy UI expectations only for the intentionally replaced review/entry/confirmation behavior. Validation results are recorded in the R2 PR and review guide.
+- Removed stray `prototype/nb1.png` and `prototype/nb2.png`. Updated the private-data chat/repository rule while retaining the local-only API-key/keys.env rules. No real invoice data or screenshot evidence is committed. No startup/loading, service worker or production deployment changes.
+
 ## 2026-10-21 — R1 invoice-reading import and empty store
 
 - Verified all seven CI checks on C9 #26 and S1 #27, then merged in that order with ordinary merges (`5901326`, `6f1de45`). S1's contents were preserved without conflict-resolution edits. Created `feat/prototype-r1-real-import` from main.

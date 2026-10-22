@@ -1,7 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
 import Decimal from "decimal.js";
-import { invoiceImage, setBranch, setLanguage, signIn } from "./helpers";
+import {
+  invoiceImage,
+  openInvoiceLine,
+  setBranch,
+  setLanguage,
+  signIn,
+} from "./helpers";
 import { button, choose, field } from "../scripts/c5-browser-proof.mjs";
 import {
   inspectC8Layout,
@@ -47,13 +53,11 @@ const pages = [
 async function prepareSupplierShorts(page: Page) {
   const before = await readC8State(page);
   await prepareC8ManualInvoice(page);
-  await field(page, "Supplier invoice number (optional)").fill(
-    "C8-QA-SHORT-LAYOUT",
-  );
+  await field(page, "Invoice number").fill("C8-QA-SHORT-LAYOUT");
   const manualId = (await readC8State(page)).invoice.id;
   // A real manual fixture carries its own clearly fictional original and passes
   // the normal receiving gates. No saved invoice or stock record is injected.
-  await field(page, "Upload a PDF or photo").setInputFiles({
+  await field(page, "Attach original").setInputFiles({
     ...invoiceImage,
     name: "fictional-c8-short-layout.png",
   });
@@ -75,33 +79,40 @@ async function prepareSupplierShorts(page: Page) {
       fileName: "fictional-c8-short-layout.png",
       originalRetained: true,
     });
-  await expect(button(page, "New invoice")).toBeEnabled();
-  const line = page.locator(".invoice-line");
-  await expect(line).toHaveCount(1);
+  await expect(button(page, "Save and close")).toBeEnabled();
+  await expect(page.locator(".invoice-line")).toHaveCount(1);
+  const line = await openInvoiceLine(page, 0);
   await expect(line).toContainText("0002");
-  await choose(page, field(line, "Quantity unit"), "Units");
+  await choose(page, field(line, "Unit"), "Units");
   const cost = (await readC8State(page)).invoice.lines[0].unit_cost_before_tax;
   await field(line, "Invoiced").fill("6");
   await expect
     .poll(async () => (await readC8State(page)).invoice.lines[0].qty_invoiced)
     .toBe(6);
   await expect(field(line, "Invoiced")).toHaveValue("6");
-  await field(line, "Delivered").fill("2");
+  await field(line, "Delivered units").fill("2");
   await expect
     .poll(
       async () =>
         (await readC8State(page)).invoice.lines[0].qty_received_at_posting,
     )
     .toBe(2);
-  await expect(field(line, "Delivered")).toHaveValue("2");
-  await expect(
-    line.getByRole("checkbox", { name: "Mark as short", exact: true }),
-  ).toHaveAttribute("aria-checked", "true");
-  await button(line, "No").click();
+  await expect(field(line, "Delivered units")).toHaveValue("2");
+  await button(line, "Report short or refused").click();
+  await field(line, "Short units").fill("4");
+  await expect(line).toContainText(`4 × $${cost}`);
+  await expect(line).toContainText(new Decimal(cost).times(4).toFixed(2));
+  await button(line, "Apply").click();
+  await expect(field(line, "Delivered units")).toHaveValue("2");
   await line
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+    .getByRole("group", { name: "Track date", exact: true })
+    .getByRole("button", { name: "No", exact: true })
     .click();
-  await expect(line).toHaveAttribute("data-expanded", "false");
+  await button(line, "Confirm line").click();
+  await expect(page.locator(".invoice-line")).toHaveAttribute(
+    "data-expanded",
+    "false",
+  );
   await expect
     .poll(
       async () => (await readC8State(page)).invoice.lines[0].review_confirmed,
@@ -156,6 +167,44 @@ async function prepareSupplierShorts(page: Page) {
     { type: "short_deduction", amount: new Decimal(cost).times(-4).toFixed(2) },
   ]);
   return draft.supplier_invoice_number;
+}
+
+for (const language of ["en", "fa"] as const) {
+  test(`C8 receiving retains short money, controls and RTL layout (${language})`, async ({
+    page,
+  }, info) => {
+    const width = info.project.name === "phone" ? 390 : 1440;
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+    await signIn(page, "Supervisor");
+    await setBranch(page, "Branch 1");
+    const reference = await prepareSupplierShorts(page);
+    await setLanguage(page, language);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      reference,
+    );
+    const posted = await inspectC8Layout(
+      page,
+      "receiving:posted-short",
+      language,
+      width,
+    );
+    expect(posted.actualWidth).toBe(width);
+    expect(posted.words).toBeGreaterThan(0);
+    expect(posted.failures).toEqual([]);
+    await setLanguage(page, "en");
+    await prepareC8ManualInvoice(page);
+    await setLanguage(page, language);
+    const expanded = await inspectC8Layout(
+      page,
+      "receiving:manual-editor",
+      language,
+      width,
+    );
+    expect(expanded.actualWidth).toBe(width);
+    expect(expanded.words).toBeGreaterThan(0);
+    expect(expanded.containment.rowCount).toBeGreaterThan(0);
+    expect(expanded.failures).toEqual([]);
+  });
 }
 
 for (const language of ["en", "fa"] as const)
@@ -372,8 +421,7 @@ for (const language of ["en", "fa"] as const)
         await visitC8(page, "invoices");
         await page
           .getByRole("tab", {
-            name: language === "en" ? "Posted" : "ثبت‌شده",
-            exact: true,
+            name: language === "en" ? /^Posted\s+\d+$/ : /^ثبت‌شده\s+[\d۰-۹]+$/,
           })
           .click();
         await inspect("invoices:posted", true);

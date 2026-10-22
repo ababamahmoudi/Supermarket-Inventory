@@ -691,7 +691,23 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           ),
         ]) {
           if (!visible(panel)) continue;
-          if (panel.scrollWidth > panel.clientWidth + 2)
+          const scrollable = panel.matches(
+            ".ui-data-table.is-scrollable:not(.is-phone-list)",
+          );
+          if (scrollable) {
+            const bounds = panel.getBoundingClientRect();
+            const parent = panel.parentElement.getBoundingClientRect();
+            if (
+              !/^(auto|scroll)$/.test(getComputedStyle(panel).overflowX) ||
+              panel.tabIndex < 0 ||
+              bounds.left < parent.left - 2 ||
+              bounds.right > parent.right + 2
+            )
+              failures.push(
+                "Scrollable table is not contained and keyboard accessible",
+              );
+          }
+          if (panel.scrollWidth > panel.clientWidth + 2 && !scrollable)
             failures.push(
               `Desktop panel overflow: ${panel.className || panel.tagName}`,
             );

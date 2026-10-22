@@ -1,4 +1,6 @@
 import { companyTimestampText } from "../company-time";
+import { invoiceLineId } from "../invoice-line-links";
+import { useInvoiceLineHighlight } from "./invoice-review/useInvoiceLineHighlight";
 import type { ReactNode } from "react";
 import Decimal from "decimal.js";
 import {
@@ -38,6 +40,7 @@ import {
 } from "../invoice-authority";
 import "./invoice-document-c4.css";
 import "./invoices-c7.css";
+import "./invoice-review/invoice-review.css";
 
 export function InvoiceQuantity({ line }: { line: InvoiceEditableLine }) {
   const { lang, t, tCount } = useDemo();
@@ -116,6 +119,7 @@ export function PostedInvoice({
   children?: ReactNode;
 }) {
   const { state, actor, can, lang, t } = useDemo();
+  useInvoiceLineHighlight(invoice.id, true);
   const scope = {
     company_id: original.company_id,
     kind: "company_shared" as const,
@@ -159,19 +163,44 @@ export function PostedInvoice({
   const refused = refusedTotals(invoice);
   return (
     <>
+      <a className="back-link" href="#invoices">
+        {t("Invoices", "فاکتورها")}
+      </a>
+      <header className="posted-invoice-title-row">
+        <div>
+          <h1>
+            {t("Invoice", "فاکتور")}{" "}
+            <LtrText>{invoice.supplier_invoice_number}</LtrText>
+          </h1>
+          <p>
+            <a
+              className="entity-link"
+              href={`#suppliers?name=${encodeURIComponent(invoice.supplier)}`}
+            >
+              {invoice.supplier}
+            </a>
+            {" · "}
+            {branchLabel(state.config, location, lang)}
+            {" · "}
+            <DateText value={invoice.invoice_date ?? ""} />
+            {" · "}
+            <Badge tone="approved">{t("Posted", "ثبت‌شده")}</Badge>
+          </p>
+          {invoice.reading_record && (
+            <small className="muted">
+              {t(
+                "AI reading, imported (not live)",
+                "خوانش هوش مصنوعی، واردشده (زنده نیست)",
+              )}
+              {" · "}
+              {invoice.reading_record.models.join(", ")}
+            </small>
+          )}
+        </div>
+      </header>
       <Card className="posted-invoice-document">
         <ImportedReadingNote invoice={invoice} />
         <div className="posted-invoice-title-row">
-          <div className="posted-invoice-title">
-            <h2>
-              <LtrText>{invoice.supplier_invoice_number}</LtrText>
-            </h2>
-            <Badge tone="approved">
-              {versions.length > 1
-                ? t("Corrected", "اصلاح‌شده")
-                : t("Posted", "ثبت‌شده")}
-            </Badge>
-          </div>
           {current &&
             (can("invoices.correct", scope) ||
               can("invoices.relocate", scope)) && (
@@ -285,7 +314,11 @@ export function PostedInvoice({
               const short = lineShort(line);
               const refusedLine = lineRefused(line);
               return (
-                <tr key={index} data-posted-line={index}>
+                <tr
+                  key={invoiceLineId(line, index)}
+                  data-posted-line={index}
+                  data-line-id={invoiceLineId(line, index)}
+                >
                   <td>
                     <ProductName
                       product={{

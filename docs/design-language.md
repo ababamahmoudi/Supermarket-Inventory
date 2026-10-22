@@ -1,5 +1,15 @@
 # Klead design language v1
 
+## R2 review layout and stability (2026-10-21)
+
+Keep every S1 foundation rule: DataTable, list-box, detail-grid, back-link, NotAdded and LtrValue remain shared primitives. The invoice-review stylesheet owns composition only; it must not restyle shared tables, fields, tabs or links. All visual values use foundation tokens.
+
+The shared DataTable horizontalScroll option keeps a wide review table inside its work column with a keyboard-focusable scroll region and declared column widths. The document and containing card must never overflow; all cell/control clipping guards still apply. Browser proof checks containment, native horizontal scrolling and keyboard access, including a negative control for a broken scroll region.
+
+Review uses a compact closed line table, a single inline editor on desktop/full-screen editor on phones, sticky progress and an original viewer appropriate to the breakpoint. Highlight affordances reserve their space so acknowledgment does not move a control. Optional More details stays mounted/visible independently of review completion.
+
+**Stability is an acceptance requirement:** clicks, typing, confirmation, Looks right, category changes, Yes/No and collapse keep the control's top edge within 2px. Confirm line and Close keep the line row within 2px instead. Only Next to check or an explicit link to evidence may deliberately scroll. Anchor scroll when content closes above the viewport; use stable persisted line identities and update one line without remounting the list. Test category/date/name/acknowledgment/confirmation in Chromium desktop and phone in both languages, plus the dedicated Firefox receiving project. Approval cards collapse in place, preserve scroll and use the bottom Undo toast; respect reduced-motion preferences. Exact-line navigation uses the existing accent tint in light/dark with a two-second fade.
+
 Owner specification: C6/C7, 2026-10-11. This document replaces the previous design language completely, including C2/C3/C5 borders, resting glows, typography, striped rows and control sizes. C6 uses it for new and changed components; C7 applies it to every existing screen. Match the five owner retouches (components/tokens, Lookup, Date tracking, Edit product, dark phone Lookup). Take visual style only; retain company logo, people, products and actual demo data.
 
 ## Hard rules

@@ -1,4 +1,5 @@
 import { notificationReadable } from "./notification-access";
+import { migrateSupplierProfiles } from "./supplier-profiles";
 import {
   invoiceEvidenceActor,
   type InternalPurchaseEvidence,
@@ -213,6 +214,7 @@ export interface SaleLifecycleEvent {
   effective_price_after: string | null;
 }
 export type NotificationKind =
+  | "supplier_profile_incomplete"
   | "note_added"
   | "notebook_entry_added"
   | "price_update_created"
@@ -249,6 +251,7 @@ export interface NotificationRecord {
   invoice_id?: string;
   note_id?: string;
   notebook_entry_id?: string;
+  supplier_id?: string;
   reason?: string;
   href: string;
   created_at: string;
@@ -2911,6 +2914,7 @@ export async function migrateSalePriceInvariants(
   repository: BrowserAuthorityRepository,
   companyId: string,
 ): Promise<void> {
+  await migrateSupplierProfiles(repository, companyId);
   const hash = (raw: string) => sha256Bytes(new TextEncoder().encode(raw));
   class ChangedDuringBackup extends Error {}
   for (let attempt = 0; attempt < 8; attempt++) {

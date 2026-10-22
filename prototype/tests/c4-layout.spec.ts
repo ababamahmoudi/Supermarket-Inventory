@@ -193,9 +193,15 @@ for (const width of [1280, 1440, 1920]) {
         .getByRole("listbox", { name: "Supplier", exact: true })
         .getByRole("option", { name: /Fresh Valley Foods/ })
         .click();
+      await page
+        .getByLabel("Add a product to the invoice", { exact: true })
+        .click();
+      await page
+        .getByRole("option", { name: "Canned Fava Beans 400 g", exact: true })
+        .click();
       await page.getByRole("button", { name: "Add line", exact: true }).click();
       const line = page.locator(".invoice-line").first();
-      const quantity = line.getByLabel("Invoiced", { exact: true });
+      const quantity = line.getByLabel("Invoiced units", { exact: true });
       if (!(await quantity.isVisible()))
         await line.locator(".invoice-line-toggle").click();
       await line.getByLabel("Units per case", { exact: true }).fill("12");
@@ -204,7 +210,10 @@ for (const width of [1280, 1440, 1920]) {
         .getByLabel("Unit cost before tax", { exact: true })
         .fill("0.98");
       const comparison = page.locator(".invoice-order-card");
-      await comparison.getByLabel("Order (optional)", { exact: true }).click();
+      await page
+        .locator("#invoice-details-fields")
+        .getByLabel("Order (optional)", { exact: true })
+        .click();
       await page
         .getByRole("option", { name: new RegExp(`^${reference} · `) })
         .click();

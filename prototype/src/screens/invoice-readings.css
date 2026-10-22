@@ -1,8 +1,9 @@
 .invoice-readings-mode {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
   margin-block: 16px;
+  min-inline-size: 0;
 }
 .invoice-reading-thumbnail {
   display: block;
@@ -22,9 +23,13 @@
   padding: 0;
   list-style: none;
 }
-@media (max-width: 759px) {
-  .invoice-readings-mode {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+.invoice-readings-mode > span {
+  white-space: nowrap;
+}
+.invoice-readings-mode > .ui-segments {
+  min-inline-size: 0;
+}
+.settings-form-card > p + button,
+.settings-form-card > p + input[hidden] + button {
+  margin-block-start: 16px;
 }

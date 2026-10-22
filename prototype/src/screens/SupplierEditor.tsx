@@ -6,19 +6,12 @@ import { configuredBranches, branchLabel } from "../settings";
 import {
   saveSupplier,
   similarSupplierNames,
+  dismissSimilarSupplier,
   SupplierEditError,
   type SupplierEdits,
-  invoiceSupplierFields,
 } from "../supplier-editor";
 import type { SupplierRecord } from "../types";
-import {
-  Button,
-  Checkbox,
-  DateField,
-  Dialog,
-  DialogActions,
-  Field,
-} from "../ui";
+import { Button, DateField, Dialog, DialogActions, Field } from "../ui";
 import { LtrText } from "../presentation";
 import "./manual-entry.css";
 import { PaymentTermsControl } from "./PaymentTermsControl";
@@ -29,7 +22,6 @@ import "./suppliers-c7.css";
 export function SupplierEditor({
   supplier,
   invoiceQuickAdd = false,
-  completeForInvoice = false,
   onClose,
   onSaved,
 }: {
@@ -120,10 +112,7 @@ export function SupplierEditor({
     sales_rep_phone: ["Sales rep phone", "تلفن نماینده فروش"],
     payment_terms: ["Payment terms", "شرایط پرداخت"],
   };
-  const missing: ValidationIssue[] = [
-    "name",
-    ...(completeForInvoice ? invoiceSupplierFields : []),
-  ]
+  const missing: ValidationIssue[] = ["name"]
     .filter(
       (field) => !String(values[field as keyof SupplierEdits] ?? "").trim(),
     )
@@ -227,7 +216,6 @@ export function SupplierEditor({
                     {
                       id: supplier?.id,
                       invoice_quick_add: invoiceQuickAdd,
-                      complete_invoice_details: completeForInvoice,
                     },
                   ),
                 ),
@@ -258,11 +246,7 @@ export function SupplierEditor({
         </Field>
         <div className="manual-entry-pair">
           <Field
-            label={
-              completeForInvoice
-                ? t("Phone", "تلفن")
-                : t("Phone (optional)", "تلفن (اختیاری)")
-            }
+            label={t("Phone (optional)", "تلفن (اختیاری)")}
             error={fieldError("phone")}
           >
             <input
@@ -274,11 +258,7 @@ export function SupplierEditor({
             />
           </Field>
           <Field
-            label={
-              completeForInvoice
-                ? t("Email", "ایمیل")
-                : t("Email (optional)", "ایمیل (اختیاری)")
-            }
+            label={t("Email (optional)", "ایمیل (اختیاری)")}
             error={
               fieldError("email") ||
               (error === "email" ? errors.email : undefined)
@@ -293,11 +273,10 @@ export function SupplierEditor({
             />
           </Field>
           <Field
-            label={
-              completeForInvoice
-                ? t("Sales representative", "نماینده فروش")
-                : t("Sales representative (optional)", "نماینده فروش (اختیاری)")
-            }
+            label={t(
+              "Sales representative (optional)",
+              "نماینده فروش (اختیاری)",
+            )}
             error={fieldError("sales_rep_name")}
           >
             <input
@@ -308,11 +287,10 @@ export function SupplierEditor({
             />
           </Field>
           <Field
-            label={
-              completeForInvoice
-                ? t("Sales rep phone", "تلفن نماینده فروش")
-                : t("Sales rep phone (optional)", "تلفن نماینده فروش (اختیاری)")
-            }
+            label={t(
+              "Sales rep phone (optional)",
+              "تلفن نماینده فروش (اختیاری)",
+            )}
             error={fieldError("sales_rep_phone")}
           >
             <input
@@ -326,11 +304,7 @@ export function SupplierEditor({
         </div>
         <PaymentTermsControl
           id="supplier-payment_terms"
-          label={
-            completeForInvoice
-              ? t("Payment terms", "شرایط پرداخت")
-              : t("Payment terms (optional)", "شرایط پرداخت (اختیاری)")
-          }
+          label={t("Payment terms (optional)", "شرایط پرداخت (اختیاری)")}
           value={values.payment_terms}
           error={fieldError("payment_terms")}
           onChange={(value) => patch("payment_terms", value)}
@@ -427,7 +401,11 @@ export function SupplierEditor({
           </fieldset>
         )}
         {!!matches.length && (
-          <div className="banner info manual-similar-warning" role="status">
+          <div
+            className="banner info manual-similar-warning"
+            id="supplier-similar"
+            role="status"
+          >
             {error === "similar" && (
               <p role="alert" className="form-error">
                 {errors.similar}
@@ -440,27 +418,54 @@ export function SupplierEditor({
               )}
             </p>
             {matches.map((record) => (
-              <Button
-                key={record.id}
-                variant="neutral"
-                onClick={() => {
-                  onClose();
-                  navigate(`suppliers?name=${encodeURIComponent(record.name)}`);
-                }}
-              >
+              <div className="list-box" key={record.id}>
                 <LtrText>{record.name}</LtrText>
-              </Button>
+                <div className="actions">
+                  <Button
+                    variant="neutral"
+                    disabled={pending}
+                    onClick={() => {
+                      onClose();
+                      if (invoiceQuickAdd) onSaved?.(record);
+                      else
+                        navigate(
+                          `suppliers?name=${encodeURIComponent(record.name)}`,
+                        );
+                    }}
+                  >
+                    {t("Use", "استفاده از")} <LtrText>{record.name}</LtrText>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    disabled={pending}
+                    onClick={async () => {
+                      setPending(true);
+                      try {
+                        await command(
+                          saveCapability,
+                          scope,
+                          (draft, currentActor) =>
+                            dismissSimilarSupplier(
+                              draft,
+                              currentActor,
+                              values.name,
+                              record.id,
+                              invoiceQuickAdd,
+                            ),
+                        );
+                        setError(null);
+                      } catch {
+                        setError("scope");
+                      } finally {
+                        setPending(false);
+                      }
+                    }}
+                  >
+                    {t("Not the same supplier", "تأمین‌کنندهٔ متفاوتی است")}
+                  </Button>
+                </div>
+              </div>
             ))}
-            <Checkbox
-              id="supplier-similar"
-              checked={!!values.similar_name_confirmed}
-              onChange={(checked) => patch("similar_name_confirmed", checked)}
-            >
-              {t(
-                "Continue with this supplier name",
-                "ادامه با این نام تأمین‌کننده",
-              )}
-            </Checkbox>
           </div>
         )}
         {error &&

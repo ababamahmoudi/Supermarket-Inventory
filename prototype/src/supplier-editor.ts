@@ -9,6 +9,7 @@ import { can, requireCapability } from "./permissions";
 import { requirePurchase, purchaseLocationScope } from "./purchase-authority";
 import { invoiceAuthorityScope } from "./invoice-authority";
 import { paymentTermsDays } from "./invoice-entry";
+import { syncSupplierProfileNotifications } from "./supplier-profiles";
 
 export interface SupplierEdits {
   name: string;
@@ -40,6 +41,7 @@ export class SupplierEditError extends Error {
 export type SupplierReadState = {
   readonly config: { readonly company: { readonly seed_key: string } };
   readonly suppliers?: readonly SupplierRecord[];
+  readonly supplier_name_distinctions?: readonly string[];
 };
 export function supplierRecords(
   state: SupplierReadState,
@@ -55,10 +57,7 @@ export function supplierRecords(
       sales_rep_name: record.sales_rep_name ?? "",
       sales_rep_phone: record.sales_rep_phone ?? "",
       payment_terms: record.payment_terms ?? "",
-      status:
-        record.status === "proposed"
-          ? ("proposed" as const)
-          : ("confirmed" as const),
+      status: "confirmed" as const,
       active: true,
       address: "",
       notes: "",
@@ -107,31 +106,115 @@ const normalizedName = (name: string) =>
     .normalize("NFKC")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
+const genericSupplierWords = new Set([
+  "inc",
+  "ltd",
+  "co",
+  "corp",
+  "limited",
+  "incorporated",
+  "food",
+  "foods",
+  "trading",
+  "group",
+  "import",
+  "export",
+  "distribution",
+  "the",
+  "of",
+  "and",
+]);
+function distinctiveName(name: string): string {
+  return normalizedName(name)
+    .split(" ")
+    .filter((word) => word && !genericSupplierWords.has(word))
+    .sort()
+    .join(" ");
+}
+function nameSimilarity(left: string, right: string): number {
+  if (left === right) return 1;
+  if (!left || !right) return 0;
+  let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let row = 1; row <= left.length; row++) {
+    const next = [row];
+    for (let column = 1; column <= right.length; column++)
+      next[column] = Math.min(
+        next[column - 1] + 1,
+        previous[column] + 1,
+        previous[column - 1] + Number(left[row - 1] !== right[column - 1]),
+      );
+    previous = next;
+  }
+  return 1 - previous[right.length] / Math.max(left.length, right.length);
+}
+function supplierPairKey(
+  companyId: string,
+  left: string,
+  right: string,
+): string {
+  return JSON.stringify([
+    companyId,
+    ...[normalizedName(left), normalizedName(right)].sort(),
+  ]);
+}
 /** Comparison is a warning, never a silent merge of two supplier identities. */
 export function similarSupplierNames(
   state: SupplierReadState,
   name: string,
   exceptId?: string,
 ): SupplierRecord[] {
-  const words = normalizedName(name).split(" ").filter(Boolean);
-  if (!words.length) return [];
+  const distinctive = distinctiveName(name);
+  if (!normalizedName(name)) return [];
   return supplierRecords(state).filter((record) => {
     if (
       record.company_id !== state.config.company.seed_key ||
-      record.id === exceptId
+      record.id === exceptId ||
+      state.supplier_name_distinctions?.includes(
+        supplierPairKey(record.company_id, name, record.name),
+      )
     )
       return false;
-    const existing = normalizedName(record.name);
-    const shared = words.filter((word) =>
-      existing.split(" ").includes(word),
-    ).length;
+    const existing = distinctiveName(record.name);
     return (
-      existing === normalizedName(name) ||
-      (words.length >= 2 && shared >= 2) ||
-      (words.length === 1 &&
-        words[0].length >= 5 &&
-        existing.startsWith(words[0]))
+      (!!distinctive && existing === distinctive) ||
+      nameSimilarity(distinctive, existing) >= 0.85 ||
+      normalizedName(record.name) === normalizedName(name)
     );
+  });
+}
+/** A recorded pair dismissal never edits either supplier's correct legal name. */
+export function dismissSimilarSupplier(
+  state: DemoState,
+  context: AuthenticatedActor,
+  name: string,
+  existingId: string,
+  invoiceQuickAdd = false,
+  now = new Date(),
+): void {
+  context = guard(state, context, invoiceQuickAdd);
+  const existing = supplierRecords(state).find(
+    (record) =>
+      record.company_id === context.company_id && record.id === existingId,
+  );
+  if (!existing || !name.trim()) throw new SupplierEditError("not_found");
+  const key = supplierPairKey(context.company_id, name, existing.name);
+  state.supplier_name_distinctions ??= [];
+  if (state.supplier_name_distinctions.includes(key)) return;
+  state.supplier_name_distinctions.push(key);
+  state.activity.push({
+    id: createId("supplier-activity"),
+    company_id: context.company_id,
+    branch: "all",
+    action: "Distinguish suppliers",
+    by: context.actor,
+    at: now.toISOString(),
+    actor_user_id: context.user_id,
+    actor_username: context.username,
+    actor_role_snapshot: context.role,
+    reversible: false,
+    entity_type: "supplier",
+    entity_id: existing.id,
+    after: { name: name.trim(), different_from: existing.name },
   });
 }
 function guard(
@@ -161,11 +244,6 @@ export function saveSupplier(
   now = new Date(),
 ): SupplierRecord {
   context = guard(state, context, !options.id && options.invoice_quick_add);
-  if (
-    options.complete_invoice_details &&
-    invoiceSupplierFields.some((field) => !edits[field].trim())
-  )
-    throw new Error("Complete supplier details before confirming.");
   if (!edits.name.trim()) throw new SupplierEditError("name");
   if (
     edits.email.trim() &&
@@ -236,14 +314,8 @@ export function saveSupplier(
     sales_rep_name: "",
     sales_rep_phone: "",
     payment_terms: "",
-    status:
-      can(state, context, "suppliers.confirm", {
-        company_id: context.company_id,
-        kind: "company_shared",
-      }).allowed && !options.invoice_quick_add
-        ? "confirmed"
-        : "proposed",
-    invoice_review_required: !!options.invoice_quick_add,
+    status: "confirmed",
+    invoice_review_required: false,
     active: true,
     created_at: now.toISOString(),
     created_by: context.actor,
@@ -280,21 +352,6 @@ export function saveSupplier(
       currency: state.config.company.currency,
       note: context.actor,
     });
-  if (record.status === "proposed" && !previous)
-    state.approvals.push({
-      id: `${record.id}:confirmation`,
-      company_id: context.company_id,
-      branch: options.invoice_quick_add ? state.invoice.branch : context.branch,
-      type: "new_supplier",
-      supplier_id: record.id,
-      supplier_name: record.name,
-      product_code: "",
-      proposed_price: "",
-      status: "pending",
-      created_at: now.toISOString(),
-      triggered_by: context.actor,
-      triggered_by_user_id: context.user_id,
-    });
   state.activity.push({
     id: createId("supplier-activity"),
     company_id: context.company_id,
@@ -313,6 +370,7 @@ export function saveSupplier(
     before,
     after: structuredClone(record),
   });
+  syncSupplierProfileNotifications(state, now);
   return record;
 }
 export function deactivateSupplier(

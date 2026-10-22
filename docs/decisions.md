@@ -389,3 +389,33 @@ C9 weighed-price boundary: a retained $22.02/kg sale can convert below $9.99/lb 
 - **Note authors cannot mark their own note seen; a notebook setting chooses who may mark notes done** (Ali). Default stays "anyone who can add notes".
 - **Everyone adds dates** (Ali). Cashiers receive `dates.add` only: they can add a date at an assigned Store (recorded with who added it) but still get only the public date hint, never the full list or removal.
 - **A returning signed-in tab shows the app frame while it starts** instead of a blank page, so a browser reload (seen in Safari) no longer flashes white.
+
+## R2 receiving decisions — 2026-10-21
+
+### 2026-10-21 — Suppliers are active on creation
+
+Supplier approval and required contact fields slowed receiving. Require only the name; contacts, representative, terms and address are optional. Notify Owners/Managers once to complete a missing profile and resolve the notification when complete. Never block posting for supplier profile details.
+
+### 2026-10-21 — Track dates defaults to No
+
+Repeated Yes/No questions add no useful review. Default each line to No unless its matched product already tracks dates; Yes exposes the date and may suggest printed expiry.
+
+### 2026-10-21 — One confirmation per line
+
+Per-field buttons caused excessive controls. Confirm line acknowledges the entire validated line, highlights included; invoice details and totals each retain one Looks right.
+
+### 2026-10-21 — Highlight only actual questions
+
+Empty optional barcode, lot, printed expiry, handwritten note, order reference, bill-to and ship-to fields are never uncertainty. Missing required supplier, invoice number/date/total, line description/quantity/cost remains highlighted.
+
+### 2026-10-21 — Calculate missing paper totals
+
+When total and tax exist derive subtotal as total minus tax; when subtotal and tax exist derive total as their sum. Fill it and label Calculated: compare with the paper until the totals acknowledgment.
+
+### 2026-10-21 — Rare printed evidence stays under More details
+
+Keep lot number, printed expiry, barcode and printed description out of the compact line editor by default. Open More details automatically only for highlighted evidence, and keep fields present after acknowledgment.
+
+### 2026-10-21 — Correct and resubmit approvals
+
+A rejected product/price request can be corrected within pricing rules and permissions and resubmitted as a new pending request linked to the rejected record. A pending category can also be corrected before approval, with recalculation and History.

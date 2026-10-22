@@ -17,6 +17,7 @@ import { companyDate } from "./invoice";
 import { branchId, configuredBranches } from "./settings";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
 import { createId } from "./ids";
+import { invoiceLineId } from "./invoice-line-links";
 import type { OperationalLedger, OperationalReturn } from "./operations";
 import type {
   Approval,
@@ -50,6 +51,7 @@ export interface DeliveryReceipt {
   id: string;
   invoice_id: string;
   line_index: number;
+  line_id?: string;
   company_id: string;
   branch: Branch;
   product_code: string;
@@ -245,6 +247,7 @@ export function receivedLog(
       id,
       invoice_id: invoice.id,
       line_index: lineIndex,
+      line_id: invoiceLineId(line, lineIndex),
       company_id: invoice.company_id,
       branch: effectiveInvoiceLocation(state, invoice),
       product_code: line.product_code,

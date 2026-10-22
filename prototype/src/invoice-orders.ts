@@ -252,10 +252,9 @@ export function invoiceOrderIssues(
 ): InvoiceOrderIssue[] {
   requireInvoiceAuthority(state, actor, "invoices.read");
   const invoice = state.invoice;
-  if (!invoice.order_id)
-    return invoice.lines.some((line) => (line.refused_units ?? 0) > 0)
-      ? ["order_decisions"]
-      : [];
+  // A receiver can report a refused delivery even when there was no purchase order.
+  // The invoice domain still validates refused/received bounds before posting.
+  if (!invoice.order_id) return [];
   const order = compatibleInvoiceOrders(state, actor).find(
     (record) => record.id === invoice.order_id,
   );
@@ -267,8 +266,7 @@ export function invoiceOrderIssues(
       (item) =>
         item.id === order.supplier_id && item.company_id === invoice.company_id,
     );
-    if (supplier && (!supplier.active || supplier.status !== "confirmed"))
-      return ["order_decisions"];
+    if (supplier && !supplier.active) return ["order_decisions"];
     for (const row of comparison.lines) {
       const line = invoice.lines[row.invoice_line_index];
       const temporary = order.lines.find(
@@ -644,6 +642,29 @@ export function clearInvoiceOrder(invoice: DemoInvoice): void {
   invoice.order_comparison = undefined;
   invoice.order_missing_decisions = undefined;
   for (const line of invoice.lines) clearInvoiceOrderLine(line);
+}
+
+/** Removing a different line moves indices, while its confirmed facts stay the same. */
+export function reindexInvoiceOrderLines(invoice: DemoInvoice): void {
+  for (const [index, line] of invoice.lines.entries()) {
+    const match = line.order_new_item_match;
+    if (
+      match &&
+      match.fingerprint ===
+        invoiceNewItemFingerprint(
+          line,
+          match.invoice_line_index,
+          match.product_code,
+        )
+    ) {
+      match.invoice_line_index = index;
+      match.fingerprint = invoiceNewItemFingerprint(
+        line,
+        index,
+        match.product_code,
+      );
+    }
+  }
 }
 
 export function clearInvoiceOrderLine(line: InvoiceLine): void {

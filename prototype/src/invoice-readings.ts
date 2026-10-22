@@ -17,6 +17,10 @@ import {
 import { regularPrice } from "./catalog";
 import { invoiceLineCalculation, refreshInvoiceWeight } from "./invoice-weight";
 import { trackingChoiceForProduct } from "./date-tracking";
+import {
+  fillCalculatedInvoiceTotals,
+  invoiceCheckCount,
+} from "./invoice-checks";
 import { storeUploadedFile, type FileRepository } from "./file-database";
 import { createId } from "./ids";
 import type {
@@ -488,8 +492,71 @@ export interface ImportPreviewRow {
   using_checked: boolean;
   check_count: number;
   duplicate_reason?: "invoice_number" | "page_sha256";
+  /** These rows are alternatives in this file, not invoices already stored in the app. */
+  in_file_duplicate_group?: string;
+  recommended: boolean;
   error?: "missing_reading";
 }
+
+export function readingInvoiceIdentity(
+  state: DemoState,
+  value: InvoiceReading,
+): string | undefined {
+  const number = text(value.supplier_invoice_number);
+  if (!number) return undefined;
+  const supplier =
+    matchReadingSupplier(state, value)?.id ||
+    normalizeReadingName(text(value.supplier_tax_number)).replace(/ /g, "") ||
+    normalizeSupplierName(text(value.supplier_name));
+  return supplier ? `${supplier}:${number}` : undefined;
+}
+
+/** Optional blanks never generate a question, even when the AI marked them check. */
+export function actionableReadingChecks(
+  state: DemoState,
+  value: InvoiceReading,
+  statuses: Record<string, "auto" | "check">,
+) {
+  const checks = readingCheckFields(statuses, value);
+  const header = {
+    supplier: text(value.supplier_name),
+    supplier_invoice_number: text(value.supplier_invoice_number),
+    invoice_date: readingExpiryDate(text(value.invoice_date)) ?? "",
+    order_reference: text(value.order_reference),
+    bill_to: text(value.bill_to),
+    ship_to: text(value.ship_to) || text(value.branch_hint),
+    subtotal: decimal(value.subtotal, 2),
+    tax: decimal(value.tax, 2),
+    final_total: decimal(value.final_total, 2),
+    low_confidence_fields: checks.header,
+  };
+  for (const field of [
+    "supplier",
+    "supplier_invoice_number",
+    "invoice_date",
+    "final_total",
+  ] as const)
+    if (!header[field]) header.low_confidence_fields.push(field);
+  header.low_confidence_fields = [...new Set(header.low_confidence_fields)];
+  fillCalculatedInvoiceTotals(header);
+  return {
+    ...header,
+    lines: (value.lines ?? []).map((line, index) =>
+      !line.line_type || line.line_type === "item"
+        ? mapReadingLine(
+            state,
+            matchReadingSupplier(state, value),
+            line,
+            index,
+            checks.lines[index],
+          )
+        : {
+            low_confidence_fields: chargeCheckFields(line, checks.lines[index]),
+          },
+    ),
+  };
+}
+
 export function previewInvoiceReadings(
   state: DemoState,
   actor: AuthenticatedActor,
@@ -498,43 +565,78 @@ export function previewInvoiceReadings(
   currentLocation: string,
 ): ImportPreviewRow[] {
   requireImport(state, actor);
-  const seenHashes = new Set<string>(),
-    seenNumbers = new Set<string>();
-  return exported.invoices.map((entry) => {
+  const rows = exported.invoices.map((entry): ImportPreviewRow => {
     const effective = effectiveInvoiceReading(entry, mode),
       value = effective.reading;
-    const supplierKey = value && matchReadingSupplier(state, value)?.id;
-    const numberKey = `${supplierKey || normalizeReadingName(text(value?.supplier_tax_number)).replace(/ /g, "") || normalizeSupplierName(text(value?.supplier_name))}:${text(value?.supplier_invoice_number)}`;
-    let duplicate = value
-      ? readingDuplicateReason(state, entry, value)
+    const checked = value
+      ? actionableReadingChecks(state, value, effective.statuses)
       : undefined;
-    if (entry.original_sha256.some((hash) => seenHashes.has(hash)))
-      duplicate = "page_sha256";
-    if (text(value?.supplier_invoice_number) && seenNumbers.has(numberKey))
-      duplicate ??= "invoice_number";
-    if (value) {
-      entry.original_sha256.forEach((hash) => seenHashes.add(hash));
-      if (text(value.supplier_invoice_number)) seenNumbers.add(numberKey);
-    }
     return {
       id: entry.id,
       supplier: text(value?.supplier_name),
       invoice_number: text(value?.supplier_invoice_number),
       invoice_date: text(value?.invoice_date),
-      line_count: value?.lines?.length ?? 0,
-      total: decimal(value?.final_total, 2),
+      line_count:
+        value?.lines?.filter(
+          (line) => !line.line_type || line.line_type === "item",
+        ).length ?? 0,
+      total: checked?.final_total ?? "",
       location: value
         ? suggestReadingLocation(state, value, currentLocation)
         : null,
       checked: Boolean(entry.checked_answer),
       using_checked: effective.using_checked,
-      check_count: Object.values(effective.statuses).filter(
-        (status) => status === "check",
-      ).length,
-      duplicate_reason: duplicate,
+      check_count: checked ? invoiceCheckCount(checked) : 0,
+      duplicate_reason: value
+        ? readingDuplicateReason(state, entry, value)
+        : undefined,
+      in_file_duplicate_group: value
+        ? readingInvoiceIdentity(state, value)
+        : undefined,
+      recommended: true,
       error: value ? undefined : "missing_reading",
     };
   });
+  const groups = new Map<string, ImportPreviewRow[]>();
+  for (const row of rows)
+    if (row.in_file_duplicate_group) {
+      const group = groups.get(row.in_file_duplicate_group) ?? [];
+      group.push(row);
+      groups.set(row.in_file_duplicate_group, group);
+    }
+  for (const group of groups.values()) {
+    if (group.length < 2) {
+      group[0].in_file_duplicate_group = undefined;
+      continue;
+    }
+    const best = [...group].sort(
+      (a, b) =>
+        b.line_count - a.line_count ||
+        Number(Boolean(b.total)) - Number(Boolean(a.total)),
+    )[0];
+    for (const row of group) row.recommended = row.id === best.id;
+  }
+  return rows;
+}
+
+/** Selecting another copy replaces the selected member of that duplicate group. */
+export function selectInvoiceReading(
+  rows: ImportPreviewRow[],
+  selected: string[],
+  id: string,
+  checked: boolean,
+): string[] {
+  const row = rows.find((row) => row.id === id);
+  if (!row || row.duplicate_reason || row.error) return selected;
+  const others = selected.filter(
+    (current) =>
+      current !== id &&
+      (!checked ||
+        !row.in_file_duplicate_group ||
+        rows.find((item) => item.id === current)?.in_file_duplicate_group !==
+          row.in_file_duplicate_group),
+  );
+  return checked ? [...others, id] : others;
 }
 
 /** Gregorian or Persian full dates only; month-only printed dates remain text. */
@@ -619,17 +721,88 @@ const headerStatusAliases: Record<string, string> = {
   tax: "tax",
   final_total: "final_total",
 };
+const optionalReadingFields = new Set([
+  "barcode",
+  "lot_number",
+  "expiry_as_printed",
+  "handwritten_note",
+  "handwritten_notes",
+  "order_reference",
+  "bill_to",
+  "ship_to",
+]);
+
+/** Supplier pack sizes stay recognizable while ALL CAPS words become readable names. */
+export function suggestInvoiceEnglishName(description: string): string {
+  const normalizeSizes = (value: string) =>
+    value.replace(
+      /\b\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?)*\s*(?:kg|g|ml|l|lb|oz)\b/gi,
+      (match) => match.toLowerCase(),
+    );
+  const source = description.trim();
+  const words = source.replace(
+    /\b\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?)*\s*(?:kg|g|ml|l|lb|oz)\b/gi,
+    "",
+  );
+  // Preserve names that already use ordinary mixed case, including brand spelling.
+  if (/\p{Ll}/u.test(words)) return normalizeSizes(source);
+  return normalizeSizes(
+    source
+      .split(/(\s+)/)
+      .map((word) => {
+        if (!/\p{L}/u.test(word)) return word;
+        if (
+          /^(?:\d+(?:\.\d+)?\s*x\s*)*\d+(?:\.\d+)?(?:kg|g|ml|l|lb|oz)\b/i.test(
+            word,
+          ) ||
+          /^x$/i.test(word)
+        )
+          return word.toLowerCase();
+        return word
+          .toLocaleLowerCase()
+          .replace(
+            /(^|[-/])([a-z])/g,
+            (_match, separator: string, letter: string) =>
+              separator + letter.toUpperCase(),
+          );
+      })
+      .join(""),
+  );
+}
+
+function chargeCheckFields(
+  source: InvoiceReadingLine,
+  statuses: string[] = [],
+): string[] {
+  const checks = statuses.filter((field) =>
+    ["description", "line_total", "taxable"].includes(field),
+  );
+  if (!text(source.description)) checks.push("description");
+  if (!decimal(source.line_total, 2)) checks.push("line_total");
+  if (source.taxable == null) checks.push("taxable");
+  return [...new Set(checks)];
+}
+
 export function readingCheckFields(
   statuses: Record<string, "auto" | "check">,
+  value?: InvoiceReading,
 ): { header: string[]; lines: Record<number, string[]> } {
   const header: string[] = [],
     lines: Record<number, string[]> = {};
   for (const [key, status] of Object.entries(statuses)) {
     if (status !== "check") continue;
-    if (key.startsWith("header."))
-      header.push(headerStatusAliases[key.slice(7)] ?? key.slice(7));
+    if (key.startsWith("header.")) {
+      const field = key.slice(7);
+      if (!value || !optionalReadingFields.has(field) || text(value[field]))
+        header.push(headerStatusAliases[field] ?? field);
+    }
     const line = /^lines\[(\d+)\]\.(.+)$/.exec(key);
-    if (line)
+    if (
+      line &&
+      (!value ||
+        !optionalReadingFields.has(line[2]) ||
+        text(value.lines?.[Number(line[1])]?.[line[2]]))
+    )
       (lines[Number(line[1])] ??= []).push(
         lineStatusAliases[line[2]] ?? line[2],
       );
@@ -699,12 +872,13 @@ export function mapReadingLine(
     caseCost =
       decimal(source.cost_per_case_before_tax, 4) ||
       (cost ? new Decimal(cost).times(pack).toFixed(4) : "");
-  const checks = [...statuses];
+  const checks = statuses.filter(
+    (field) => !optionalReadingFields.has(field) || text(source[field]),
+  );
   for (const [field, value] of Object.entries({
     description: text(source.description),
     quantity_entered: quantity,
     unit_cost_before_tax: cost,
-    line_total: decimal(source.line_total, 2),
   }))
     if (!value) checks.push(field);
   if (source.taxable == null) checks.push("taxable");
@@ -713,6 +887,7 @@ export function mapReadingLine(
   if (unit === "case" && !decimal(source.units_per_case))
     checks.push("units_per_case");
   const line: InvoiceLine = {
+    id: createId("invoice-line"),
     company_id: company,
     product_code: product?.code ?? "NEW",
     description: text(source.description),
@@ -722,7 +897,14 @@ export function mapReadingLine(
     qty_received_at_posting: received ? new Decimal(received).toNumber() : 0,
     qty_later_received: 0,
     unit_cost_before_tax: cost,
-    line_total: decimal(source.line_total, 2),
+    line_total:
+      decimal(source.line_total, 2) ||
+      (cost && quantity
+        ? new Decimal(cost)
+            .times(quantity)
+            .times(unit === "case" ? pack : 1)
+            .toFixed(2)
+        : ""),
     taxable,
     taxable_inferred: source.taxable == null,
     tax_profile: taxProfile,
@@ -732,7 +914,9 @@ export function mapReadingLine(
     low_confidence_fields: [...new Set(checks)],
     pricing_category: category,
     review_confirmed: false,
-    new_name_en: product ? undefined : text(source.description),
+    new_name_en: product
+      ? undefined
+      : suggestInvoiceEnglishName(text(source.description)),
     new_name_fa: product ? undefined : "",
     supplier_item_code: text(source.supplier_sku),
     barcode: text(source.barcode),
@@ -752,7 +936,7 @@ export function mapReadingLine(
     expiry_as_printed: text(source.expiry_as_printed),
     import_line_index: index,
     date_tracking: trackingChoiceForProduct(product) === "yes",
-    date_confirmed: trackingChoiceForProduct(product) !== undefined,
+    date_confirmed: true,
     line_tax: decimal(source.line_total, 2)
       ? new Decimal(decimal(source.line_total, 2))
           .times(
@@ -765,10 +949,8 @@ export function mapReadingLine(
   };
   const expiry = readingExpiryDate(text(source.expiry_as_printed));
   if (expiry) {
-    line.date_tracking = true;
     line.date_value = expiry;
     line.date_type = "expiry";
-    line.date_confirmed = false;
   }
   if (line.sold_by === "weight") {
     line.source_quantity = quantity;
@@ -858,6 +1040,7 @@ export interface ImportSummary {
   skipped: { id: string; reason: string }[];
   new_suppliers: string[];
   needs_location: string[];
+  other_locations?: number;
 }
 export interface ImportReadingsInput {
   exported: InvoiceReadingsExport;
@@ -866,6 +1049,7 @@ export interface ImportReadingsInput {
   locations: Record<string, string>;
   selectedIds: string[];
   pages: PreparedReadingPages;
+  currentLocation?: string;
 }
 export function importInvoiceReadings(
   state: DemoState,
@@ -882,6 +1066,7 @@ export function importInvoiceReadings(
     skipped: [],
     new_suppliers: [],
     needs_location: [],
+    other_locations: 0,
   };
   const existingCurrent = state.invoice;
   state.invoices ??= [];
@@ -892,6 +1077,28 @@ export function importInvoiceReadings(
     if (index < 0) state.invoices.push(existingCurrent);
     else state.invoices[index] = existingCurrent;
   }
+  const preview = previewInvoiceReadings(
+    state,
+    actor,
+    input.exported,
+    input.mode,
+    "all",
+  );
+  const selected = new Set(input.selectedIds);
+  for (const row of preview)
+    if (
+      row.in_file_duplicate_group &&
+      !row.recommended &&
+      selected.has(row.id)
+    ) {
+      const recommendation = preview.find(
+        (other) =>
+          other.in_file_duplicate_group === row.in_file_duplicate_group &&
+          other.recommended,
+      );
+      if (recommendation && selected.has(recommendation.id))
+        selected.delete(row.id);
+    }
   for (const entry of input.exported.invoices) {
     const effective = effectiveInvoiceReading(entry, input.mode),
       value = effective.reading;
@@ -904,7 +1111,7 @@ export function importInvoiceReadings(
       summary.skipped.push({ id: entry.id, reason: "missing_reading" });
       continue;
     }
-    if (!input.selectedIds.includes(entry.id)) {
+    if (!selected.has(entry.id)) {
       summary.skipped.push({ id: entry.id, reason: "not_selected" });
       continue;
     }
@@ -943,7 +1150,7 @@ export function importInvoiceReadings(
           sales_rep_name: "",
           sales_rep_phone: "",
           payment_terms: text(value.payment_terms),
-          notes: "Created from an imported reading",
+          notes: "",
           similar_name_confirmed: true,
         },
         { invoice_quick_add: true },
@@ -953,11 +1160,11 @@ export function importInvoiceReadings(
       supplier.created_from_import = true;
       summary.new_suppliers.push(supplier.name);
     }
-    const checks = readingCheckFields(effective.statuses);
+    const checks = readingCheckFields(effective.statuses, value);
     invoice.supplier = supplier?.name ?? text(value.supplier_name);
-    invoice.supplier_confirmed = supplier?.status === "confirmed";
-    invoice.supplier_review_required = supplier?.status !== "confirmed";
-    invoice.supplier_review_confirmed = false;
+    invoice.supplier_confirmed = Boolean(supplier?.active);
+    invoice.supplier_review_required = false;
+    invoice.supplier_review_confirmed = true;
     invoice.supplier_invoice_number = text(value.supplier_invoice_number);
     invoice.number_is_system_assigned = false;
     invoice.invoice_date = readingExpiryDate(text(value.invoice_date)) ?? "";
@@ -969,7 +1176,9 @@ export function importInvoiceReadings(
         ? dateAfter(invoice.invoice_date, invoice.payment_term_days)
         : "");
     invoice.due_date_manual = Boolean(text(value.due_date));
-    invoice.ship_to = text(value.branch_hint) || text(value.bill_to);
+    invoice.ship_to = text(value.ship_to) || text(value.branch_hint);
+    invoice.bill_to = text(value.bill_to);
+    invoice.supplier_tax_number = text(value.supplier_tax_number);
     invoice.order_reference = text(value.order_reference);
     invoice.import_currency = text(value.currency);
     invoice.subtotal = decimal(value.subtotal, 2);
@@ -987,13 +1196,12 @@ export function importInvoiceReadings(
       "supplier",
       "supplier_invoice_number",
       "invoice_date",
-      "due_date",
-      "subtotal",
-      "tax",
       "final_total",
     ] as const)
       if (!invoice[field]) invoice.low_confidence_fields.push(field);
     invoice.low_confidence_fields = [...new Set(invoice.low_confidence_fields)];
+    fillCalculatedInvoiceTotals(invoice);
+    invoice.payable_after_open_shorts = invoice.final_total;
     invoice.lines = [];
     invoice.other_charges = [];
     for (const [index, line] of (value.lines ?? []).entries()) {
@@ -1013,14 +1221,7 @@ export function importInvoiceReadings(
         invoice.lines.push(mapped);
       } else {
         const amount = decimal(line.line_total, 2);
-        const chargeChecks = [
-          ...(checks.lines[index] ?? []).filter((field) =>
-            ["description", "line_total", "taxable"].includes(field),
-          ),
-        ];
-        if (!text(line.description)) chargeChecks.push("description");
-        if (!amount) chargeChecks.push("line_total");
-        if (line.taxable == null) chargeChecks.push("taxable");
+        const chargeChecks = chargeCheckFields(line, checks.lines[index]);
         invoice.other_charges.push({
           line_type: ([
             "deposit",
@@ -1058,6 +1259,12 @@ export function importInvoiceReadings(
     };
     state.invoices.push(invoice);
     summary.imported.push(invoice.id);
+    if (
+      input.currentLocation &&
+      input.currentLocation !== "all" &&
+      location !== input.currentLocation
+    )
+      summary.other_locations = (summary.other_locations ?? 0) + 1;
     state.activity.push({
       id: createId("invoice-import-draft"),
       company_id: actor.company_id,

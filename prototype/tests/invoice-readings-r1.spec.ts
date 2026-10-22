@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   chooseOption,
+  confirmInvoiceLine,
   openShellAction,
   resetDemo,
   setBranch,
@@ -10,6 +11,7 @@ import {
   signIn,
 } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { openReceivingLine, receivingRow } from "./r2-receiving-helpers";
 
 const sampleFile = fileURLToPath(
   new URL("./fixtures/fictional-readings-export.json", import.meta.url),
@@ -61,6 +63,7 @@ async function removeFictionalData(page: Page) {
     exact: true,
   });
   await expect(confirmation).toContainText("pricing rules");
+  await confirmation.getByRole("textbox").fill("DELETE");
   await confirmation
     .getByRole("button", { name: "Remove fictional data", exact: true })
     .click();
@@ -128,12 +131,12 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
     preview.getByText("Checked by you", { exact: true }),
   ).toBeVisible();
   await preview
-    .getByRole("radio", { name: "My checked values", exact: true })
+    .getByRole("button", { name: "My checked values", exact: true })
     .click();
   let summary = await importSelected(page, 1);
   await summary.getByText("Open Needs review", { exact: true }).click();
   await expect(
-    page.getByRole("tab", { name: "Needs review", exact: true }),
+    page.getByRole("tab", { name: /^Needs review \d+$/ }),
   ).toBeVisible();
 
   preview = await chooseImport(page, twoPageFile);
@@ -158,38 +161,51 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
   await page
     .locator(".invoice-saved-drafts tbody tr")
     .filter({ hasText: fictionalNumber })
-    .getByRole("button", { name: "Resume draft", exact: true })
+    .getByRole("link", { name: fictionalNumber, exact: true })
     .click();
 
-  await expect(page.locator(".invoice-line")).toHaveCount(2);
-  const importedCost = page
-    .locator(".invoice-line")
-    .first()
-    .getByLabel("Unit cost before tax", { exact: true });
+  await expect(page.locator('[data-testid^="invoice-line-row-"]')).toHaveCount(
+    2,
+  );
+  await expect(
+    page.locator('[id^="invoice-line-"][id$="-name-en"]'),
+  ).toHaveCount(0);
+  let firstEditor = await openReceivingLine(page, 0);
+  let importedCost = firstEditor.getByLabel("Unit cost before tax", {
+    exact: true,
+  });
   await expect(importedCost).toHaveValue("2.0000");
   await expect(importedCost).toHaveAttribute("aria-invalid", "false");
-  await expect(page.locator(".invoice-line").first()).not.toContainText(
+  await expect(firstEditor).not.toContainText(
     "Enter a cost of zero or more up to four decimal places.",
   );
   await expectWarningOutline(importedCost);
+  await firstEditor.getByRole("button", { name: "Close", exact: true }).click();
   await (await openShellAction(page, "Switch to dark theme")).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  firstEditor = await openReceivingLine(page, 0);
+  importedCost = firstEditor.getByLabel("Unit cost before tax", {
+    exact: true,
+  });
   await expectWarningOutline(importedCost);
+  await firstEditor.getByRole("button", { name: "Close", exact: true }).click();
   await (await openShellAction(page, "Switch to light theme")).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
   await expect(
-    page.getByText("Please check", { exact: true }).first(),
+    page.getByText(/AI reading, imported \(not live\)/).first(),
   ).toBeVisible();
-  await expect(
-    page
-      .getByText(/Reading imported from the invoice-reader kit \(not live\)/)
-      .first(),
-  ).toBeVisible();
+  const phone = testInfo.project.name === "phone";
+  if (phone)
+    await page
+      .getByRole("button", { name: "View original (2 pages)", exact: true })
+      .click();
   await expect(page.getByText("Page 1 of 2", { exact: true })).toBeVisible();
-  const originalImage = page.locator(".invoice-original-media img");
+  const originalImage = page
+    .locator(".invoice-original-media img")
+    .filter({ visible: true });
   await expect(originalImage).toHaveJSProperty("naturalWidth", 760);
   await page.getByRole("button", { name: "Next page", exact: true }).click();
   await expect(page.getByText("Page 2 of 2", { exact: true })).toBeVisible();
@@ -198,6 +214,11 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
     .getByRole("button", { name: "Previous page", exact: true })
     .click();
   await expect(page.getByText("Page 1 of 2", { exact: true })).toBeVisible();
+  if (phone)
+    await page
+      .getByRole("dialog", { name: "Original invoice", exact: true })
+      .getByRole("button", { name: "Close dialog", exact: true })
+      .click();
   await expect(
     page.getByRole("heading", {
       name: "Other charges and credits",
@@ -210,99 +231,60 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
   await expect(
     page.getByText("Fictional promotional discount", { exact: true }),
   ).toBeVisible();
-
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
   await expect(
-    page.getByRole("alert", { name: "What's missing", exact: true }),
-  ).toContainText("fields still need checking");
+    page.getByRole("button", { name: "Post invoice", exact: true }),
+  ).toBeDisabled();
   const beforeReview = await readCanonicalBusinessEvidence(page);
   expect(beforeReview.ledger).toHaveLength(0);
   expect(beforeReview.products).toHaveLength(0);
-
-  const details = page.getByRole("button", {
-    name: "Invoice details",
-    exact: true,
-  });
-  if ((await details.getAttribute("aria-expanded")) === "false")
-    await details.click();
-  // Imported suppliers retain the existing C6 completion/confirmation flow.
+  // R2 activates imported suppliers immediately and never blocks on contact details.
+  await expect(
+    page.getByRole("button", { name: "Confirm supplier", exact: true }),
+  ).toHaveCount(0);
+  expect(
+    beforeReview.suppliers?.find(
+      (supplier) => supplier.name === fictionalSupplier,
+    )?.phone ?? "",
+  ).toBe("");
   await page
-    .getByRole("button", { name: "Confirm supplier", exact: true })
+    .getByRole("button", { name: "Looks right: Invoice details", exact: true })
     .click();
-  const supplierDialog = page.getByRole("dialog", {
-    name: "Edit supplier",
-    exact: true,
-  });
-  await expect(supplierDialog).toBeVisible();
-  await supplierDialog.locator("#supplier-phone").fill("416-555-0101");
-  await supplierDialog
-    .locator("#supplier-email")
-    .fill("fictional-orders@example.test");
-  await supplierDialog
-    .locator("#supplier-sales_rep_name")
-    .fill("Fictional Representative");
-  await supplierDialog
-    .locator("#supplier-sales_rep_phone")
-    .fill("416-555-0102");
-  await supplierDialog
-    .getByRole("button", { name: "Save supplier", exact: true })
-    .click();
-  await expect(supplierDialog).not.toBeVisible();
-  await page
-    .getByRole("button", { name: "Confirm supplier", exact: true })
-    .click();
-
-  // Each acknowledgement is a real protected UI action; no state is injected.
-  await page
-    .getByRole("button", {
-      name: /^Looks right: Supplier invoice number/,
-    })
-    .click();
-  await page
-    .locator(".invoice-line")
-    .first()
-    .getByRole("button", {
-      name: "Looks right: Unit cost before tax",
-      exact: true,
-    })
-    .click();
-  for (const [index, line] of (
-    await page.locator(".invoice-line").all()
-  ).entries()) {
-    if ((await line.getAttribute("data-expanded")) !== "true")
-      await line.locator(".invoice-line-toggle").click();
+  for (let index = 0; index < 2; index++) {
+    const editor = await openReceivingLine(page, index);
     await chooseOption(
       page,
-      line.getByLabel("Pricing category", { exact: true }),
+      editor.getByLabel("Pricing category", { exact: true }),
       "grocery",
       "Grocery",
     );
     if (index === 0) {
-      await line.getByRole("button", { name: "Yes", exact: true }).click();
-      const date = line.getByLabel("Date", { exact: true });
+      await editor
+        .getByRole("group", { name: "Track date", exact: true })
+        .getByRole("button", { name: "Yes", exact: true })
+        .click();
+      const date = editor.getByLabel("Date", { exact: true });
       await expect(date).toContainText("2026-11-27");
       await date.click();
       await page
         .getByRole("button", { name: "2026-11-27", exact: true })
         .click();
     } else {
-      await line.getByRole("button", { name: "No", exact: true }).click();
+      await expect(
+        editor
+          .getByRole("group", { name: "Track date", exact: true })
+          .getByRole("button", { name: "No", exact: true }),
+      ).toHaveAttribute("aria-pressed", "true");
     }
-    await line
-      .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
-      .click();
-    const checkAll = page.getByRole("dialog", {
-      name: "This line has fields to check. Confirm all of them?",
-      exact: true,
-    });
-    if (index === 1) {
-      await expect(checkAll).toBeVisible();
-      await checkAll
-        .getByRole("button", { name: "Confirm all fields", exact: true })
-        .click();
-    }
-    await expect(line).toHaveAttribute("data-expanded", "false");
+    await expect(
+      editor.getByRole("button", { name: /^Looks right:/ }),
+    ).toHaveCount(0);
+    await confirmInvoiceLine(page, editor);
+    await expect(receivingRow(page, index)).toContainText("Confirmed");
+    await expect(editor).toHaveCount(0);
   }
+  await page
+    .getByRole("button", { name: "Looks right: Totals", exact: true })
+    .click();
   await expect(page.getByText("Please check", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Post invoice", exact: true }).click();
   await page

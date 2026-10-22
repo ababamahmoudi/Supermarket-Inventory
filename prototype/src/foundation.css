@@ -589,3 +589,46 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+/* Operational tables may keep every configured column in an inner scroll area. */
+:root .ui-data-table.is-scrollable:not(.is-phone-list) {
+  overflow-x: auto;
+}
+:root
+  .ui-data-table.is-scrollable:not(.is-phone-list)
+  table.has-defined-columns {
+  min-inline-size: var(--table-min-width);
+  max-inline-size: none;
+}
+
+@media (min-width: 761px) {
+  :root .ui-data-table.is-compact tr > :is(th, td) {
+    padding-block: 2px;
+  }
+}
+
+@media (min-width: 761px) {
+  :root
+    .ui-data-table.is-compact
+    tbody
+    tr:not(.table-expanded-row):nth-child(n) {
+    block-size: 44px;
+  }
+}
+
+:root .ui-badge.badge.is-wrappable {
+  display: inline-block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+:root .ui-badge.badge.is-wrappable .ltr-fragment {
+  display: inline;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.reading-check-value {
+  outline: 2px solid var(--pending-dot);
+  outline-offset: 1px;
+  border-radius: var(--radius-mark);
+}

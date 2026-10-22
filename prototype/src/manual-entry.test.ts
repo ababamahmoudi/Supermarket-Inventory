@@ -236,19 +236,21 @@ describe("Supervisor manual supplier entry", () => {
       ).toThrow(error);
     expect(state).toEqual(before);
   });
-  it("creates worker invoice-only proposals, blocks posting even if a confirmed flag is forged, and unblocks only after confirmation", () => {
+  it("creates an active invoice supplier without approval while retaining the confirmation permission boundary", () => {
     const worker = actor("floor_worker");
     state.invoice = createInvoice(state, worker, "Branch 1", false);
     const added = saveSupplier(state, worker, supplierEdits(), {
       invoice_quick_add: true,
     });
-    expect(added.status).toBe("proposed");
+    expect(added.status).toBe("confirmed");
     state.invoice.supplier = added.name;
     state.invoice.supplier_confirmed = true;
-    expect(invoiceBlockers(state, worker)).toContain("supplier_pending");
+    expect(invoiceBlockers(state, worker)).not.toContain("supplier_pending");
     expect(
-      state.approvals.find((item) => item.supplier_id === added.id),
-    ).toMatchObject({ type: "new_supplier", status: "pending" });
+      state.approvals.find(
+        (item) => item.supplier_id === added.id && item.type === "new_supplier",
+      ),
+    ).toBeUndefined();
     expect(() => confirmSupplier(state, worker, added.id)).toThrow(
       AuthorityError,
     );

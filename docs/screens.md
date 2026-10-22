@@ -1,5 +1,17 @@
 # Screens and navigation
 
+## R2 invoice review layout (2026-10-21)
+
+The detail route replaces the list header/tabs with Invoices back link, Invoice number, linked supplier, location/date/status, a neutral imported-reading source chip, Save and close and Post invoice. Post describes missing requirements on hover/focus. Its grouped missing panel links to invoice details, totals and affected lines.
+
+At 1100px and above, the work column takes about 60% and a sticky original viewer 40%; Hide original expands the work column and remembers the person's choice. At 761–1099px the original is a 320px panel above the work, with Expand. Phones show a thumbnail View original button and a full-screen zoomable viewer. Original pages have one toolbar for page arrows, zoom, fit, rotate and download; replace is under More. Existing originals never show the upload placeholder. File names appear once and use LtrValue.
+
+Invoice details remain visible in a two-column detail grid; order reference, addresses, currency and supplier tax number stay under More details, automatically opened for highlights. Checking a field never removes it. The sticky desktop progress strip becomes a sticky phone bottom bar.
+
+Lines are a DataTable with all rows initially closed: number, English product and item code, quantity, differing delivered amount, four-decimal unit cost, total, category and status. One row editor can be open. Phones use boxed line summaries and a full-screen editor sheet with sticky actions. Confirm/Close return to the same row without opening another line. With 25 closed rows, the full review must fit within three 900px desktop viewports at 1440px wide. Other charges remain separate and the compact Totals card follows the lines.
+
+Product names in the row commit on input blur. Editors group Product, Quantity and cost, Tax, Dates, and rare More details. Errors appear only after Confirm/Post; confirmation focuses the missing field. One amber explanation replaces per-field Looks right buttons. Remove line uses a destructive confirmation. Delivery date/invoice links open the exact draft/posted line, center it and fade a token-based accent over two seconds.
+
 ## R1: Settings → Data and imported invoice review
 
 Owner/Manager Data replaces planned CSV items with **Import invoice readings** (Choose file…) and **Start with an empty store** (Remove fictional data…). The import dialog uses DataTable and fills the phone screen. Rows show selection, page-one thumbnail, supplier, number/date, editable destination, item count, total, checked badge, check count and status. Duplicates say Already in the app and cannot be selected. Checked-values mode explains rows that still use AI. A summary lists imports, skips, new suppliers and missing locations with Open Needs review.

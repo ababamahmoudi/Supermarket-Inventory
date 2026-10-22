@@ -287,16 +287,18 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
 }
 export function Badge({
   tone = "neutral",
+  wrap = false,
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone }) {
+}: HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone; wrap?: boolean }) {
   const resolvedTone = statusTone(children) ?? tone;
   const offer = typeof children === "string" && /^\d+\s+for\s+/i.test(children);
   return (
     <span
       className={cn(
         "badge ui-badge",
+        wrap && "is-wrappable",
         resolvedTone,
         { "offer-pill": offer },
         className,
@@ -409,10 +411,14 @@ export function DataTable({
   expandedRowKeys,
   onExpandedRowKeysChange,
   phoneList,
+  horizontalScroll = false,
+  density = "default",
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
   columns?: ResponsiveColumn[];
   responsive?: boolean;
+  horizontalScroll?: boolean;
+  density?: "default" | "compact";
   expandedRowKeys?: string[];
   onExpandedRowKeysChange?: (keys: string[]) => void;
   phoneList?: {
@@ -979,6 +985,8 @@ export function DataTable({
         "table-wrap",
         "ui-data-table",
         layoutResponsive && "is-responsive",
+        horizontalScroll && "is-scrollable",
+        density === "compact" && "is-compact",
         mobile && "is-mobile",
         printing && "is-printing",
         mobile && phoneList && "is-phone-list",
@@ -1309,11 +1317,11 @@ export function Dialog({
       )?.focus();
     } else if (!open && dialog.open) {
       dialog.close();
-      trigger.current?.focus();
+      trigger.current?.focus({ preventScroll: true });
     }
     return () => {
       if (dialog.open) dialog.close();
-      trigger.current?.focus();
+      trigger.current?.focus({ preventScroll: true });
     };
   }, [open]);
   return (

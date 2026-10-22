@@ -493,7 +493,6 @@ function draftValues(
     (record) =>
       record.company_id === context.company_id &&
       record.active &&
-      record.status === "confirmed" &&
       supplierMatches(record, input.supplier),
   );
   if (!supplier) fail("supplier");
@@ -815,8 +814,7 @@ export function placeOrder(
       (supplier) =>
         supplier.company_id === context.company_id &&
         supplier.id === order.supplier_id &&
-        supplier.active &&
-        supplier.status === "confirmed",
+        supplier.active,
     )
   )
     fail("supplier");

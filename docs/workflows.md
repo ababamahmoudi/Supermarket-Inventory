@@ -1,5 +1,17 @@
 # Workflows and state machines
 
+## R2 import → receiving → approved prices (2026-10-21)
+
+Settings → Data → Remove fictional data requires the owner to type DELETE (or حذف). Select a private readings export, choose AI reading or My checked values and locations, then import. In-file duplicates identify both copies; only one is selected, with the more complete copy preferred. Already in the app means persisted evidence only. The summary can switch to All my locations when invoices were imported elsewhere.
+
+Invoices opens the first tab with work: Needs review, Ready to post, Drafts, Processing, otherwise Posted. Counts and the sidebar badge follow the selected authorized locations. Drafts/New invoice contain upload/manual entry; invoice details have their own header and back link.
+
+Open an invoice, compare its details and original, acknowledge the details card, and open one line at a time. Choose an existing product or provide the new product's English name/category; verify quantity/cost and optional tax/date choices. More details contains rare printed evidence. Report short or refused shows the changed delivered quantity and exact deduction. Confirm line keeps other lines' confirmations, closes the editor and preserves the row's position. Only Next to check or an explicit field/delivery link deliberately scrolls. Acknowledge calculated totals, then post when the grouped missing checks are resolved. Supplier contact details never block this flow.
+
+Approvals groups pending requests by invoice. Approve all opens a review of category, cost, price and margin; untick any requests to leave them pending. Individual decisions remain available. Change category recalculates with the configured pricing engine. Fix and resubmit retains the rejected request and links the new pending request in both directions. Decisions use the existing bottom Undo toast; the list and counts remain stable during refresh. Only Owner/Manager may make approval decisions, enforced by the domain.
+
+Suppliers created here are active immediately. Owners/Managers can complete their optional profiles later from the notification or supplier banner. Similar-name warnings compare distinctive names, can use the existing supplier, or remember a Not the same supplier decision for that pair.
+
 ## R1: import an invoice-reader export
 
 Owner/Manager → Settings → Data → Choose file… → Reading file… → preview the AI reading (default) or My checked values → review suggested locations and disabled duplicates → Import N invoices → summary → Open Needs review. Parsing runs off the UI thread. The protected preview and final command enforce current authority; final import rechecks locations and duplicates after original-page storage completes. No AI service is called.

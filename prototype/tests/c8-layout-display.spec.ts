@@ -6,6 +6,7 @@ import demo from "../../seed/demo-data.json" with { type: "json" };
 import type { DemoState } from "../src/types";
 import {
   invoiceImage,
+  openInvoiceLine,
   openInvoiceUpload,
   setLanguage,
   signIn,
@@ -86,6 +87,19 @@ async function quantityEvidence(page: Page, row: Locator) {
   return details;
 }
 
+async function showOriginal(page: Page, language: "en" | "fa") {
+  if ((page.viewportSize()?.width ?? 1440) <= 760) {
+    await page
+      .getByRole("button", {
+        name: language === "en" ? /^View original \(/ : /^مشاهده اصل/,
+      })
+      .click();
+  }
+  await expect(
+    page.locator(".invoice-original-media img").filter({ visible: true }),
+  ).toBeVisible();
+}
+
 for (const language of ["en", "fa"] as const) {
   test(`C8 unread original has Continue and exact durable evidence (${language})`, async ({
     page,
@@ -98,14 +112,18 @@ for (const language of ["en", "fa"] as const) {
     expect(before.file_data).toMatch(/^idb-file:v1:/);
     const originalHash = await retainedOriginalHash(page, before.file_data!);
     const drafts = page.locator(".invoice-saved-drafts");
-    await expect(drafts).toContainText(
-      copy(language, "Not read yet", "هنوز خوانده نشده"),
-    );
+    await expect(drafts).toContainText(before.supplier_invoice_number);
+    await expect(
+      drafts.getByRole("button", {
+        name: copy(language, "Continue", "ادامه"),
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect(
       page
         .getByText(before.file_name!, { exact: true })
         .filter({ visible: true }),
-    ).toHaveCount(1);
+    ).toHaveCount(0);
     await expect(
       page.getByText(
         copy(
@@ -122,10 +140,15 @@ for (const language of ["en", "fa"] as const) {
         exact: true,
       })
       .click();
-    await expect(page.locator(".invoice-reading-state")).toBeVisible();
+    await expect(
+      page.getByText(
+        copy(language, "Reading invoice…", "در حال خواندن فاکتور…"),
+        { exact: true },
+      ),
+    ).toBeVisible();
     await expect(
       page.getByRole("heading", {
-        name: copy(language, "Review invoice lines", "بررسی ردیف‌های فاکتور"),
+        name: copy(language, "Invoice lines", "ردیف‌های فاکتور"),
         exact: true,
       }),
     ).toBeVisible({ timeout: 10000 });
@@ -139,13 +162,14 @@ for (const language of ["en", "fa"] as const) {
     expect(await retainedOriginalHash(page, after.file_data!)).toBe(
       originalHash,
     );
+    await showOriginal(page, language);
     await expect(
       page
         .getByText(before.file_name!, { exact: true })
         .filter({ visible: true }),
     ).toHaveCount(1);
     await page.reload();
-    await expect(page.locator(".invoice-original-media img")).toBeVisible();
+    await showOriginal(page, language);
     expect(await retainedOriginalHash(page, after.file_data!)).toBe(
       originalHash,
     );
@@ -168,18 +192,25 @@ for (const language of ["en", "fa"] as const) {
     expect(originalHash).toBe(
       createHash("sha256").update(invoiceImage.buffer).digest("hex"),
     );
-    const line = page.locator(".invoice-line").first();
+    const line = await openInvoiceLine(page, 0);
     await line
       .getByLabel("Unit cost before tax", { exact: true })
       .fill("1.5525");
-    await line.getByRole("button", { name: "No", exact: true }).click();
     await line
-      .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+      .getByRole("group", { name: "Track date", exact: true })
+      .getByRole("button", { name: "No", exact: true })
       .click();
-    await expect(line).toHaveAttribute("data-expanded", "false");
+    await line
+      .getByRole("button", { name: "Confirm line", exact: true })
+      .click();
+    await expect(page.locator(".invoice-line").first()).toHaveAttribute(
+      "data-expanded",
+      "false",
+    );
     await setLanguage(page, language);
-    const displayedCost = line
-      .locator(".invoice-line-summary > td:nth-child(3)")
+    const displayedCost = page
+      .getByTestId("invoice-line-row-0")
+      .locator('td[data-column-key="cost"]')
       .getByText("$1.5525", { exact: true });
     await expect(displayedCost).toBeVisible();
     await expect(displayedCost).toHaveText("$1.5525");
@@ -456,7 +487,7 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
   );
   await (await openInvoiceUpload(page)).setInputFiles(original);
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });
   await expect(page.locator(".invoice-line")).toHaveCount(1);
   await expect
@@ -480,18 +511,20 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
   expect(
     loaded.invoices!.find((item) => item.id === before.invoice.id)!.file_data,
   ).toBe(before.invoice.file_data);
-  await page
-    .locator(".invoice-line")
-    .first()
+  const editor = await openInvoiceLine(page, 0);
+  await editor
     .getByLabel("Unit cost before tax", { exact: true })
     .fill("14.3000");
+  await editor.getByRole("button", { name: "Close", exact: true }).click();
   await expect
     .poll(async () => (await saved(page)).invoice.lines[0].unit_cost_before_tax)
     .toBe("14.3000");
-  await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Save and close", exact: true })
+    .click();
   await (await openInvoiceUpload(page)).setInputFiles(original);
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });
   await expect
     .poll(async () => (await saved(page)).invoice.lines[0].unit_cost_before_tax)
@@ -500,12 +533,14 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
   expect(reused.invoice.id).toBe(loaded.invoice.id);
   expect(reused.invoice.file_data).toBe(loaded.invoice.file_data);
   expect(reused.ledger).toEqual(before.ledger);
-  await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Save and close", exact: true })
+    .click();
   await (
     await openInvoiceUpload(page)
   ).setInputFiles({ ...invoiceImage, name: "fictional-hw-5012.svg" });
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });
   const unknown = await saved(page);
   expect(unknown.invoice.id).not.toBe(loaded.invoice.id);

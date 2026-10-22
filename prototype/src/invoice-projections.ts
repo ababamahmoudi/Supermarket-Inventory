@@ -14,6 +14,7 @@ import {
   requireInvoiceAuthority,
 } from "./invoice-authority";
 import type { DemoInvoice, DemoState, InvoiceLine } from "./types";
+import { normalizeInvoiceReceivingReview } from "./invoice-checks";
 
 type InvoiceLineMoney =
   | "unit_cost_before_tax"
@@ -67,6 +68,7 @@ function select<T extends object, K extends keyof T>(
   return result;
 }
 const lineKeys = [
+  "id",
   "company_id",
   "product_code",
   "description",
@@ -92,6 +94,7 @@ const lineKeys = [
   "lot_number",
   "qty_later_received",
   "review_confirmed",
+  "review_changed_after_confirmation",
   "new_name_en",
   "new_name_fa",
   "units_per_case",
@@ -166,6 +169,8 @@ const invoiceKeys = [
   "short_receipt_keys",
   "handling_branch",
   "ship_to",
+  "bill_to",
+  "supplier_tax_number",
   "order_id",
   "order_missing_decisions",
   "order_review_version",
@@ -196,11 +201,14 @@ export function invoiceView(
       : state.invoices!.find((value) => value.id === invoiceId)!;
   if (requestedVersion)
     requireInvoiceAuthority(state, current, "invoices.correct", original.id);
-  const invoice = requestedVersion
-    ? invoiceVersion(state, original, requestedVersion).invoice
-    : original.status === "posted"
-      ? effectiveInvoiceVersion(state, original)
-      : original;
+  const invoice = structuredClone(
+    requestedVersion
+      ? invoiceVersion(state, original, requestedVersion).invoice
+      : original.status === "posted"
+        ? effectiveInvoiceVersion(state, original)
+        : original,
+  );
+  normalizeInvoiceReceivingReview(invoice);
   const scope = invoiceAuthorityScope(state, original.id);
   const costs = can(state, current, "invoices.cost_read", scope).allowed;
   const margins = can(state, current, "pricing.margin_read", scope).allowed;

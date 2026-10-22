@@ -77,7 +77,7 @@ export function PersonalNotifications() {
           );
           if (
             !source ||
-            !/^(?:#)?(?:product\?code=|approvals(?:[?]|$)|alerts(?:[?]|$)|notes(?:[?]|$)|price-update\?id=|price-updates(?:[?]|$)|requests(?:[?]|$)|returns(?:[?]|$)|expiry(?:[?]|$))/.test(
+            !/^(?:#)?(?:product\?code=|suppliers\?name=|approvals(?:[?]|$)|alerts(?:[?]|$)|notes(?:[?]|$)|price-update\?id=|price-updates(?:[?]|$)|requests(?:[?]|$)|returns(?:[?]|$)|expiry(?:[?]|$))/.test(
               source.href,
             )
           )
@@ -103,6 +103,10 @@ export function PersonalNotifications() {
   };
   if (!notifications.length) return null;
   const titles: Record<NotificationRecord["kind"], string> = {
+    supplier_profile_incomplete: t(
+      "Complete supplier profile",
+      "تکمیل مشخصات تأمین‌کننده",
+    ),
     note_added: t("New note", "یادداشت جدید"),
     notebook_entry_added: t("New notebook entry", "یادداشت جدید دفترچه"),
     sale_request_decision: t("Sale request decision", "نتیجهٔ درخواست حراج"),
@@ -162,6 +166,13 @@ export function PersonalNotifications() {
         </MenuItem>
       )}
       {notifications.map((notification) => {
+        const supplier =
+          notification.kind === "supplier_profile_incomplete" &&
+          state.suppliers?.find(
+            (record) =>
+              record.id === notification.supplier_id &&
+              record.company_id === notification.company_id,
+          );
         const product = state.products.find(
           (item) =>
             item.company_id === notification.company_id &&
@@ -174,7 +185,14 @@ export function PersonalNotifications() {
             onClick={() => open(notification.id)}
           >
             <span className="personal-notification-copy">
-              <strong>{titles[notification.kind]}</strong>
+              <strong>
+                {titles[notification.kind]}
+                {supplier && (
+                  <>
+                    : <LtrText>{supplier.name}</LtrText>
+                  </>
+                )}
+              </strong>
               {product && <ProductName product={product} language={lang} />}
               <small>
                 {branchLabel(state.config, notification.branch, lang)} ·{" "}

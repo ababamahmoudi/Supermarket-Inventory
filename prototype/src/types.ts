@@ -161,6 +161,9 @@ export type Product = Omit<
   >;
 };
 export interface Approval extends ScopedRecord {
+  pricing_category?: string;
+  resubmitted_from_id?: string;
+  resubmitted_as_id?: string;
   decided_by_user_id?: string;
   decided_at?: string;
   decision_attribution?: DecisionAttribution;
@@ -291,6 +294,7 @@ export type InvoiceLine = Omit<
   | "order_new_item_match"
 > & {
   company_id: string;
+  id?: string;
   confidence?: number;
   low_confidence_fields?: string[];
   taxable_inferred?: boolean;
@@ -307,6 +311,7 @@ export type InvoiceLine = Omit<
   lot_number?: string;
   qty_later_received?: number;
   review_confirmed?: boolean;
+  review_changed_after_confirmation?: boolean;
   short_before_tax?: string;
   short_tax?: string;
   line_tax?: string;
@@ -375,6 +380,8 @@ export type DemoInvoice = Omit<
     import_warnings?: string[];
     import_handwritten_notes?: string[];
     order_reference?: string;
+    bill_to?: string;
+    supplier_tax_number?: string;
     other_charges?: {
       line_no?: number;
       line_type: "deposit" | "fee" | "discount" | "credit" | "other";
@@ -680,6 +687,8 @@ export interface DemoState {
   prototype_c8_schema?: 1;
   prototype_e1_schema?: 1;
   prototype_e2_schema?: 1;
+  prototype_r2_supplier_schema?: 1;
+  supplier_name_distinctions?: string[];
   price_update_tasks?: PriceUpdateTask[];
   price_update_baseline?: Record<string, PriceSnapshot>;
   price_task_prints?: PriceTaskPrint[];

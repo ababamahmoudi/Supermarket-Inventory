@@ -197,7 +197,7 @@ export async function inspectC8Containment(page) {
     let rowCount = 0;
     for (const wrapper of document.querySelectorAll("main .ui-data-table")) {
       if (!visible(wrapper) || wrapper.closest(excluded)) continue;
-      const card = wrapper.closest(".ui-card,.card");
+      const card = wrapper.closest(".ui-card,.card,.list-box");
       const rows = [];
       if (!card) {
         failures.push("Table has no enclosing list card: " + wrapper.className);
@@ -325,29 +325,18 @@ export async function prepareC8ManualInvoice(page) {
   await visitC8(page, "invoices");
   const previous = (await readC8State(page)).invoice.id;
   await button(page, "New invoice", "فاکتور جدید").click();
+  const chooser = page.getByRole("dialog", {
+    name: /^(New invoice|فاکتور جدید)$/,
+  });
+  await button(chooser, "Manual entry", "ورود دستی").click();
   await expect
     .poll(async () => {
       const invoice = (await readC8State(page)).invoice;
-      const routed =
-        new URL(page.url()).hash ===
-        "#invoices?id=" + encodeURIComponent(invoice.id);
       return (
-        invoice.id !== previous && invoice.entry_mode === "upload" && routed
-      );
-    })
-    .toBe(true);
-  const uploadId = (await readC8State(page)).invoice.id;
-  await button(page, "Manual entry", "ورود دستی").click();
-  await expect
-    .poll(async () => {
-      const invoice = (await readC8State(page)).invoice;
-      const routed =
-        new URL(page.url()).hash ===
-        "#invoices?id=" + encodeURIComponent(invoice.id);
-      return (
-        invoice.id !== uploadId &&
+        invoice.id !== previous &&
         invoice.entry_mode === "manual" &&
-        routed &&
+        new URL(page.url()).hash ===
+          "#invoices?id=" + encodeURIComponent(invoice.id) &&
         invoice.lines.length === 0
       );
     })
@@ -358,20 +347,27 @@ export async function prepareC8ManualInvoice(page) {
     field(details, "Supplier", "تأمین‌کننده"),
     /Fresh Valley Foods/,
   );
-  const number = field(
-    details,
-    "Supplier invoice number (optional)",
-    "شماره فاکتور تأمین‌کننده (اختیاری)",
-  );
+  const number = field(details, "Invoice number", "شماره فاکتور");
   await expect(number).toBeEnabled();
   await number.fill("C8-QA-CONTAINMENT");
   await expect
     .poll(async () => (await readC8State(page)).invoice.supplier_invoice_number)
     .toBe("C8-QA-CONTAINMENT");
-  await button(page, "Add line", "افزودن ردیف").click();
-  await expect(page.locator(".invoice-lines-table .invoice-line")).toHaveCount(
-    1,
+  const product = (await readC8State(page)).products.find(
+    (item) => item.code === "0002",
   );
+  if (!product) throw new Error("The fictional receiving product is missing.");
+  await choose(
+    page,
+    field(page, "Add a product to the invoice", "افزودن کالا به فاکتور"),
+    product.name_en,
+  );
+  await button(page, "Add line", "افزودن ردیف").click();
+  await expect(
+    page.locator(".receiving-lines-table .invoice-line"),
+  ).toHaveCount(1);
+  await page.getByTestId("invoice-line-row-0").click();
+  await expect(page.locator("#invoice-line-0-detail")).toBeVisible();
 }
 
 export async function openC8PriceDialog(page, code) {

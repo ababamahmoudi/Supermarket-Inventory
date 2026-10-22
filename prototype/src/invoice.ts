@@ -1,7 +1,10 @@
 import type { InvoiceEditableLine } from "./invoice-edit-types";
 import { invoiceView, type InvoiceLineView } from "./invoice-projections";
 import Decimal from "decimal.js";
-import { invoiceCheckCount } from "./invoice-checks";
+import {
+  fillCalculatedInvoiceTotals,
+  invoiceCheckCount,
+} from "./invoice-checks";
 import type { AuthenticatedActor } from "./authority-types";
 import { cloneWithAuthority } from "./authority";
 import { can, directoryRecipients, requireCapability } from "./permissions";
@@ -23,7 +26,6 @@ import { configuredBranches } from "./settings";
 import {
   supplierRecords,
   supplierMatches,
-  missingInvoiceSupplierDetails,
   confirmSupplier,
 } from "./supplier-editor";
 import { companyCalendarDate } from "./company-time";
@@ -60,7 +62,7 @@ import {
   shortOrderReceipt,
   validateShortOrderReceipt,
   applyShortOrderReceipt,
-  clearInvoiceOrderLine,
+  reindexInvoiceOrderLines,
 } from "./invoice-orders";
 import type {
   Approval,
@@ -126,22 +128,16 @@ export function companyDate(
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
-/** A new/incomplete manual supplier is a review task, never a posting shortcut. */
+/** Supplier profiles are optional receiving follow-up; they never require approval. */
 export function markInvoiceSupplierReview(
   invoice: DemoInvoice,
   supplier: ReturnType<typeof supplierRecords>[number],
-  previousSupplier = invoice.supplier,
+  _previousSupplier = invoice.supplier,
 ): void {
-  const requiresReview =
-    supplier.status !== "confirmed" ||
-    (invoice.supplier_review_required &&
-      !invoice.supplier_review_confirmed &&
-      supplierMatches(supplier, previousSupplier)) ||
-    (invoice.entry_mode === "manual" &&
-      missingInvoiceSupplierDetails(supplier).length > 0);
-  invoice.supplier_review_required = requiresReview;
-  invoice.supplier_review_confirmed = false;
-  if (requiresReview) invoice.status = "review";
+  void _previousSupplier; // Legacy callers can still pass their previous selection.
+  invoice.supplier_confirmed = supplier.active;
+  invoice.supplier_review_required = false;
+  invoice.supplier_review_confirmed = true;
 }
 
 export function confirmInvoiceSupplierReview(
@@ -166,8 +162,6 @@ export function confirmInvoiceSupplierReview(
   );
   if (!supplier || !supplier.active)
     throw new Error("Choose an active supplier.");
-  if (missingInvoiceSupplierDetails(supplier).length)
-    throw new Error("Complete supplier details before confirming.");
   if (supplier.status !== "confirmed")
     confirmSupplier(state, context, supplier.id, now);
   if (invoice.supplier_review_confirmed) return;
@@ -218,7 +212,7 @@ export function removeInvoiceLine(
   invoice.order_comparison = undefined;
   invoice.order_missing_decisions = undefined;
   invoice.lower_price_answers = undefined;
-  for (const line of invoice.lines) clearInvoiceOrderLine(line);
+  reindexInvoiceOrderLines(invoice);
   recalculateInvoice(invoice, state.config);
   state.activity.push({
     id: createId("invoice-line-remove"),
@@ -340,6 +334,7 @@ export function createInvoice(
               },
               {
                 ...line,
+                id: createId("invoice-line"),
                 company_id: company,
                 // Let the receiver explicitly mark the four chips missing, rather than inventing a shortage.
                 qty_received_at_posting: line.qty_invoiced,
@@ -363,12 +358,7 @@ export function createInvoice(
                       (product) => product.code === line.product_code,
                     ),
                   ) === "yes",
-                date_confirmed:
-                  trackingChoiceForProduct(
-                    state.products.find(
-                      (product) => product.code === line.product_code,
-                    ),
-                  ) !== undefined,
+                date_confirmed: true,
                 new_name_en:
                   line.product_code === "NEW" ? line.description : undefined,
                 new_name_fa:
@@ -446,6 +436,7 @@ export function addManualLine(
       ? product.last_cost_before_tax
       : "");
   state.invoice.lines.push({
+    id: createId("invoice-line"),
     company_id: state.invoice.company_id,
     product_code: code,
     description: product.name_en,
@@ -460,10 +451,11 @@ export function addManualLine(
     current_selling_price: product.selling_price,
     pricing_category: product.pricing_category,
     demo_note: "",
+    low_confidence_fields: [],
     review_confirmed: false,
     sold_by: product.sold_by ?? "each",
     date_tracking: trackingChoiceForProduct(product) === "yes",
-    date_confirmed: trackingChoiceForProduct(product) !== undefined,
+    date_confirmed: true,
     supplier_item_id: item?.id,
     supplier_item_code: item?.supplier_item_code,
     units_per_case: item?.units_per_case ?? 1,
@@ -511,6 +503,7 @@ export function setInvoiceLineQuantity(
   line.refused_units = 0;
   line.extra_delivery_decision = undefined;
   line.order_price_decision = undefined;
+  line.review_changed_after_confirmation ||= Boolean(line.review_confirmed);
   line.review_confirmed = false;
 }
 
@@ -561,7 +554,6 @@ export function recalculateInvoice(
     );
     subtotal = subtotal.plus(line.line_total);
     tax = tax.plus(line.line_tax);
-    line.review_confirmed = false;
   }
   for (const charge of invoice.other_charges ?? []) {
     try {
@@ -580,6 +572,7 @@ export function recalculateInvoice(
     if (!invoice.final_total_manual)
       invoice.final_total = invoiceComputedTotal(invoice)!;
   }
+  fillCalculatedInvoiceTotals(invoice);
   invoice.payable_after_open_shorts = cents(
     new Decimal(validMoney(invoice.final_total) ? invoice.final_total : "0")
       .minus(shortTotals(invoice).total)
@@ -1015,26 +1008,16 @@ export function invoiceBlockers(
     blockers.push("branch");
   if (invoice.company_id !== state.config.company.seed_key)
     blockers.push("company");
-  if (!invoice.supplier.trim()) blockers.push("supplier");
-  const supplier = supplierRecords(state).find(
-    (record) =>
-      record.company_id === invoice.company_id &&
-      supplierMatches(record, invoice.supplier),
-  );
   if (
-    !supplier ||
-    supplier.status !== "confirmed" ||
-    !invoice.supplier_confirmed
+    !invoice.supplier.trim() ||
+    !supplierRecords(state).some(
+      (record) =>
+        record.company_id === invoice.company_id &&
+        record.active &&
+        supplierMatches(record, invoice.supplier),
+    )
   )
-    blockers.push("supplier_pending");
-  if (
-    invoice.entry_mode === "manual" &&
-    supplier &&
-    missingInvoiceSupplierDetails(supplier).length
-  )
-    blockers.push("supplier_details");
-  if (invoice.supplier_review_required && !invoice.supplier_review_confirmed)
-    blockers.push("supplier_review");
+    blockers.push("supplier");
   if (
     invoice.entry_mode === "manual" &&
     invoice.payment_terms &&
@@ -1046,6 +1029,7 @@ export function invoiceBlockers(
   )
     blockers.push("payment_terms");
   if (
+    !invoice.supplier_invoice_number.trim() ||
     !actualDate(invoice.invoice_date) ||
     !invoice.received_at ||
     Number.isNaN(Date.parse(invoice.received_at)) ||
@@ -1148,7 +1132,7 @@ export function invoiceBlockers(
     } catch {
       blockers.push("cost");
     }
-    if (!line.date_confirmed || (line.date_tracking && !line.date_value))
+    if (line.date_tracking && (!line.date_confirmed || !line.date_value))
       blockers.push("date");
     if (
       line.short_dated &&
@@ -1221,18 +1205,6 @@ export function postInvoice(
       for (const row of orderComparison.lines)
         invoice.lines[row.invoice_line_index].order_item_id = row.order_line_id;
     const now = new Date().toISOString();
-    if (!invoice.supplier_invoice_number.trim()) {
-      invoice.supplier_invoice_number = String(
-        1 +
-          state.ledger.filter(
-            (entry) =>
-              entry.company_id === invoice.company_id &&
-              entry.supplier === invoice.supplier &&
-              entry.type === "invoice",
-          ).length,
-      );
-      invoice.number_is_system_assigned = true;
-    }
     const saleCostInputs = new Map<string, SaleReceiptCostInput>();
     const priorCosts = new Map(
       state.products
@@ -1640,6 +1612,13 @@ export function postInvoice(
       company_id: invoice.company_id,
       branch: invoice.branch,
       action: "Posted invoice",
+      entity_type: "invoice",
+      entity_id: invoice.id,
+      after: {
+        supplier_invoice_number: invoice.supplier_invoice_number,
+        supplier: invoice.supplier,
+        line_count: invoice.lines.length,
+      },
       by: actor.actor,
       actor_user_id: actor.user_id,
       actor_username: actor.username,

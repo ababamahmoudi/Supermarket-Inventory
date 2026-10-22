@@ -86,7 +86,13 @@ export default function Suppliers() {
     command,
   } = useDemo();
   const branches = locationIds;
-  const [editor, setEditor] = useState<"new" | "edit" | null>(null);
+  const [editor, setEditor] = useState<"new" | "edit" | null>(() =>
+    new URLSearchParams(window.location.hash.split("?")[1] ?? "").get(
+      "edit",
+    ) === "1"
+      ? "edit"
+      : null,
+  );
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
   const [query, setQuery] = useListState("suppliers.search", "");
   const { locationChanged: locationFilterChanged, resetLocation } =
@@ -105,6 +111,12 @@ export default function Suppliers() {
   );
   useEffect(() => {
     const changed = () => {
+      if (
+        new URLSearchParams(window.location.hash.split("?")[1] ?? "").get(
+          "edit",
+        ) === "1"
+      )
+        setEditor("edit");
       setName(
         new URLSearchParams(window.location.hash.split("?")[1] ?? "").get(
           "name",
@@ -267,13 +279,29 @@ export default function Suppliers() {
   );
   const branchName = (value: string) =>
     configuredBranchLabel(state.config, value, lang);
-  const supplierStatus = (value: string) =>
-    value === "proposed"
-      ? t("Proposed", "پیشنهادی")
-      : t("Confirmed", "تأییدشده");
+  const supplierStatus = (supplier: SupplierOverviewRow) =>
+    supplier.active === false
+      ? t("Archived", "بایگانی‌شده")
+      : supplier.profile_missing.length
+        ? t("Profile incomplete", "مشخصات ناقص")
+        : t("Active", "فعال");
+  const profileLabels = {
+    phone: t("Phone", "تلفن"),
+    email: t("Email", "ایمیل"),
+    sales_rep_name: t("Sales representative", "نماینده فروش"),
+    sales_rep_phone: t("Sales rep phone", "تلفن نماینده فروش"),
+    payment_terms: t("Payment terms", "شرایط پرداخت"),
+    address: t("Address", "نشانی"),
+  };
   const invoiceStatus = (value: string) =>
     value === "posted" ? t("Posted", "ثبت‌شده") : t("Draft", "پیش‌نویس");
   const compareValue = (supplier: SupplierOverviewRow, key: SortKey) => {
+    if (key === "status")
+      return supplier.active === false
+        ? "archived"
+        : supplier.profile_missing.length
+          ? "profile_incomplete"
+          : "active";
     if (key === "balance" || key === "overdue")
       return supplier.financial?.[key] ?? "";
     if (key === "next_due_date") return supplier.financial?.next_due_date ?? "";
@@ -292,7 +320,7 @@ export default function Suppliers() {
             ? supplier.open_returns > 0
             : filter === "shorts"
               ? supplier.open_shorts > 0
-              : supplier.status === "proposed",
+              : supplier.profile_missing.length > 0,
       ),
     )
     .sort((a, b) => {
@@ -402,7 +430,7 @@ export default function Suppliers() {
               ...(supervisor ? [["overdue", "Overdue", "سررسید گذشته"]] : []),
               ["returns", "Open returns", "مرجوعی‌های باز"],
               ["shorts", "Open shorts", "کسری‌های باز"],
-              ["proposed", "Waiting for confirmation", "در انتظار تأیید"],
+              ["proposed", "Profile incomplete", "مشخصات ناقص"],
             ].map(([key, en, fa]) => (
               <FilterChip
                 key={key}
@@ -533,19 +561,22 @@ export default function Suppliers() {
                   <td>
                     <Badge
                       tone={
-                        supplier.status === "confirmed" ? "approved" : "pending"
+                        supplier.active === false
+                          ? "neutral"
+                          : supplier.profile_missing.length
+                            ? "pending"
+                            : "approved"
                       }
                     >
-                      {supplierStatus(supplier.status)}
+                      {supplierStatus(supplier)}
                     </Badge>
-                    {supplier.active === false && (
-                      <Badge tone="neutral">
-                        {t("Archived", "بایگانی‌شده")}
-                      </Badge>
-                    )}
                   </td>
                   <td>
-                    <DateText value={supplier.last_delivery} />
+                    {supplier.last_delivery ? (
+                      <DateText value={supplier.last_delivery} />
+                    ) : (
+                      t("No deliveries yet", "هنوز تحویلی ثبت نشده")
+                    )}
                   </td>
                   <td>{supplier.deliveries_this_month}</td>
                   <td>{supplier.open_returns}</td>
@@ -693,13 +724,41 @@ export default function Suppliers() {
       <Card className="supplier-header-card">
         <div className="supplier-header-line">
           <LtrText className="supplier-header-name">{current.name}</LtrText>
-          <Badge tone={current.status === "confirmed" ? "approved" : "pending"}>
-            {supplierStatus(current.status)}
+          <Badge
+            tone={
+              current.active === false
+                ? "neutral"
+                : current.profile_missing.length
+                  ? "pending"
+                  : "approved"
+            }
+          >
+            {supplierStatus(current)}
           </Badge>
-          {current.active === false && (
-            <Badge tone="neutral">{t("Archived", "بایگانی‌شده")}</Badge>
-          )}
         </div>
+        {current.profile_missing.length > 0 && (
+          <div className="banner warning list-box" role="status">
+            <strong>{t("Complete profile", "تکمیل مشخصات")}</strong>
+            <p>
+              {t("Missing details", "اطلاعات واردنشده")}:{" "}
+              {current.profile_missing
+                .map((field) => profileLabels[field])
+                .join(lang === "fa" ? "، " : ", ")}
+            </p>
+            {canManage && (
+              <Button variant="secondary" onClick={() => setEditor("edit")}>
+                {t("Edit supplier", "ویرایش تأمین‌کننده")}
+              </Button>
+            )}
+          </div>
+        )}
+        {current.source_invoice_number && (
+          <small className="muted">
+            {t("Added from invoice", "افزوده‌شده از فاکتور")}{" "}
+            <LtrValue value={current.source_invoice_number} />{" "}
+            {t("(imported reading)", "(خوانش واردشده)")}
+          </small>
+        )}
         <dl className="supplier-contact-grid">
           <div>
             <dt>{t("Phone", "تلفن")}</dt>
@@ -760,7 +819,13 @@ export default function Suppliers() {
                   )
               : undefined
           }
-          value={<DateText value={current.last_delivery} />}
+          value={
+            current.last_delivery ? (
+              <DateText value={current.last_delivery} />
+            ) : (
+              t("No deliveries yet", "هنوز تحویلی ثبت نشده")
+            )
+          }
           tone="accent"
         />
         <KpiCard
@@ -934,9 +999,7 @@ export default function Suppliers() {
         {effectiveTab === "products" && (
           <SupplierItems
             supplier={current.name}
-            editable={
-              current.active !== false && current.status === "confirmed"
-            }
+            editable={current.active !== false}
           />
         )}
         {effectiveTab === "returns" && (

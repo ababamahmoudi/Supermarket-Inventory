@@ -1,6 +1,11 @@
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { openShellAction, setLanguage, signIn } from "./helpers";
+import {
+  openShellAction,
+  setLanguage,
+  signIn,
+  openInvoiceLine,
+} from "./helpers";
 import {
   button,
   choose,
@@ -38,14 +43,15 @@ async function manual(page: Page, language: "en" | "fa") {
     "\u2066Fresh Valley Foods\u2069",
   );
   await page
-    .getByLabel(
-      exact(
-        "Supplier invoice number (optional)",
-        "شماره فاکتور تأمین‌کننده (اختیاری)",
-      ),
-    )
+    .getByLabel(exact("Invoice number", "شماره فاکتور"))
     .fill("DEMO-C6-MISSING");
+  await choose(
+    page,
+    page.getByLabel("Add a product to the invoice", { exact: true }),
+    "New product",
+  );
   await button(page, "Add line", "افزودن ردیف").click();
+  await openInvoiceLine(page, 0);
   await expect(page.locator(".invoice-line-detail")).toBeVisible();
   await setLanguage(page, language);
   await page.locator("main h1").click();
@@ -217,7 +223,7 @@ for (const language of ["en", "fa"] as const) {
       .soft(focused.shadow, "keyboard focus remains visible")
       .not.toBe("none");
     await quantity.fill("");
-    await button(page, "Post invoice", "ثبت فاکتور").click();
+    await button(page, "Post invoice", "ثبت فاکتور").locator("..").click();
     await expect(quantity).toHaveAttribute("aria-invalid", "true");
     const invalid = await appearance(quantity);
     expect.soft(invalid.borderVisible).toBe(true);
@@ -242,6 +248,12 @@ for (const language of ["en", "fa"] as const) {
     expect.soft(style.outlineVisible).toBe(false);
     expect.soft(style.contrast).toBeGreaterThanOrEqual(4.5);
     await remove.click();
+    await expect(page.locator(".invoice-line")).toHaveCount(1);
+    const confirmation = page.getByRole("dialog", {
+      name: exact("Remove line?", "ردیف حذف شود؟"),
+    });
+    await expect(confirmation).toBeVisible();
+    await button(confirmation, "Remove line", "حذف ردیف").click();
     await expect(page.locator(".invoice-line")).toHaveCount(0);
     await button(page.getByTestId("undo-toast"), "Undo", "واگرد").click();
     await expect(page.locator(".invoice-line")).toHaveCount(1);
@@ -252,7 +264,7 @@ for (const language of ["en", "fa"] as const) {
     page,
   }, info) => {
     await manual(page, language);
-    await button(page, "Post invoice", "ثبت فاکتور").click();
+    await button(page, "Post invoice", "ثبت فاکتور").locator("..").click();
     await expect(
       page.getByRole("alert", { name: exact("What's missing", "موارد ناقص") }),
     ).toBeVisible();

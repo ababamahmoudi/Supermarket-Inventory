@@ -625,8 +625,7 @@ export function saveSupplierItem(
       record.company_id === context.company_id &&
       supplierMatches(record, supplierName),
   );
-  if (!supplier?.active || supplier.status !== "confirmed")
-    throw new SupplierItemError("supplier");
+  if (!supplier?.active) throw new SupplierItemError("supplier");
   if (
     !state.products.some(
       (product) =>
@@ -767,8 +766,7 @@ export function associatePostedSupplierItem(
       item.company_id === context.company_id &&
       supplierMatches(item, invoice.supplier),
   );
-  if (!supplier?.active || supplier.status !== "confirmed")
-    throw new SupplierItemError("supplier");
+  if (!supplier?.active) throw new SupplierItemError("supplier");
   if (
     !state.products.some(
       (product) =>

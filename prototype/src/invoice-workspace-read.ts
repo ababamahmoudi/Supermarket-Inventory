@@ -26,6 +26,7 @@ import {
 } from "./received";
 import { createId } from "./ids";
 import type { DemoState, DemoInvoice } from "./types";
+import { normalizeInvoiceReceivingReview } from "./invoice-checks";
 
 function canonicalInvoice(state: DemoState, id: string): DemoInvoice {
   const invoice =
@@ -66,8 +67,10 @@ export function selectInvoiceWorkspace(
   if (
     state.invoice.status !== "posted" &&
     canInvoiceAuthority(state, actor, "invoices.edit", id, true)
-  )
+  ) {
+    normalizeInvoiceReceivingReview(state.invoice);
     initializeInvoiceManualPriceDecisions(state, actor);
+  }
 }
 /** Only financial values belonging to this authorized invoice enter the workspace DTO. */
 export function invoiceWorkspaceRead(
@@ -80,6 +83,7 @@ export function invoiceWorkspaceRead(
   const canonical = canonicalInvoice(state, id);
   const working = cloneWithAuthority(state);
   working.invoice = structuredClone(canonical);
+  normalizeInvoiceReceivingReview(working.invoice);
   const invoice = purchaseInvoiceView(state, actor, id);
   const versions = invoiceContentVersions(state, canonical);
   const selected = invoiceVersion(state, canonical, version);
@@ -165,6 +169,7 @@ export function invoiceWorkspaceRead(
       continue;
     const draft = cloneWithAuthority(state);
     draft.invoice = structuredClone(row);
+    normalizeInvoiceReceivingReview(draft.invoice);
     blockersById[row.id] = invoiceBlockers(draft, actor);
   }
   const supplierItems = supplierItemFactsForInvoice(

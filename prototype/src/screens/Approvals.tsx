@@ -1,5 +1,5 @@
 import { saleRequestTab } from "../sale-request-status";
-import { approvalBoard } from "../approval-board";
+import { approvalBoard, approvalCategoryPreview } from "../approval-board";
 import { useProtectedQuery } from "../use-protected-query";
 import { domainScope } from "../domain-authority";
 import {
@@ -7,10 +7,13 @@ import {
   branchSellsToCustomers,
   sellingBranches,
 } from "../settings";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Decimal from "decimal.js";
 import {
   approvalSnapshot,
+  approveInvoiceApprovals,
+  changeApprovalCategory,
+  resubmitApproval,
   keepApprovedPrice,
   proposeManualOverride,
   resolveApproval,
@@ -21,10 +24,10 @@ import { demoUserLabel, LtrText, ProductName } from "../presentation";
 import { ProductCost, ProductPrice } from "../weight-price-presentation";
 import "./financial-polish.css";
 import { useDemo } from "../store";
-import { SupplierApproval } from "./SupplierApproval";
 import { ApprovalReviewPanel } from "./ApprovalReviewPanel";
 import { SaleRequestCards } from "./SalesApprovals";
 import type { Approval, Branch } from "../types";
+import "./approval-receiving.css";
 import {
   Badge,
   Button,
@@ -35,6 +38,9 @@ import {
   PageHeader,
   Tabs,
   NumberField,
+  DataTable,
+  Select,
+  Dialog,
 } from "../ui";
 
 export function Approvals() {
@@ -58,6 +64,52 @@ export function Approvals() {
     branch,
   );
   const accessKey = `${authorityGeneration}:${authorityDirectoryVersion}:${actor?.user_id}:${actor?.session_id}:${actor?.authority_epoch}:${branch}`;
+  const [retainedBoard, setRetainedBoard] = useState<{
+    accessKey: string;
+    data: NonNullable<typeof boardRead.data>;
+  } | null>(null);
+  useEffect(() => {
+    if (boardRead.data) setRetainedBoard({ accessKey, data: boardRead.data });
+  }, [boardRead.data, accessKey]);
+  const board =
+    boardRead.data ??
+    (retainedBoard?.accessKey === accessKey ? retainedBoard.data : []);
+  const boardElement = useRef<HTMLDivElement>(null);
+  const [boardFloor, setBoardFloor] = useState(0);
+  const [departureKey, setDepartureKey] = useState(accessKey);
+  const [departing, setDeparting] = useState<
+    NonNullable<typeof boardRead.data>
+  >([]);
+  const [bulk, setBulk] = useState<{
+    accessKey: string;
+    ids: string[];
+    selected: string[];
+    snapshots: Record<string, string>;
+    title: string;
+  } | null>(null);
+  const [savingCorrection, setSavingCorrection] = useState(false);
+  const [correction, setCorrection] = useState<{
+    accessKey: string;
+    item: Approval;
+    category: string;
+    price: string;
+    reason: string;
+    error: string;
+  } | null>(null);
+  const correctionRead = useProtectedQuery(
+    correction?.accessKey === accessKey && canDecide
+      ? "approvals.decide"
+      : null,
+    domainScope(state, correction?.item),
+    (canonical, currentActor) =>
+      approvalCategoryPreview(
+        canonical,
+        currentActor,
+        correction!.item.id,
+        correction!.category,
+      ),
+    `${correction?.item.id}:${correction?.category}`,
+  );
   const [filter, setFilter] = useState<Approval["status"]>("pending");
   const [scope, setScope] = useState<"all" | "branch">("all");
   const [regularDecision, setRegularDecision] = useState<"rule" | "keep">(
@@ -85,9 +137,36 @@ export function Approvals() {
   const company = state.config.company.seed_key;
   const branches = sellingBranches(state.config);
   const viewStatus = canDecide ? filter : "pending";
-  const rows = (boardRead.data ?? []).filter(
-    (row) => row.approval.status === viewStatus,
+  const currentRows = board.filter(
+    (row) =>
+      row.approval.status === viewStatus &&
+      row.approval.type !== "new_supplier",
   );
+  const visibleDepartures = departureKey === accessKey ? departing : [];
+  const boardOrder = new Map(
+    board.map((row, index) => [row.approval.id, index]),
+  );
+  const displayedRows = [
+    ...currentRows,
+    ...visibleDepartures.filter(
+      (row) =>
+        row.approval.status === viewStatus &&
+        !currentRows.some((current) => current.approval.id === row.approval.id),
+    ),
+  ].sort(
+    (left, right) =>
+      (boardOrder.get(left.approval.id) ?? Number.MAX_SAFE_INTEGER) -
+      (boardOrder.get(right.approval.id) ?? Number.MAX_SAFE_INTEGER),
+  );
+  const groups = new Map<string, typeof displayedRows>();
+  for (const row of displayedRows) {
+    const key =
+      viewStatus === "pending"
+        ? (row.invoiceId ?? row.approval.id)
+        : row.approval.id;
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  }
+  const rows = [...groups.values()].flat();
   const items = rows.map((row) => row.approval);
   const saleRequests = (state.sale_requests ?? []).filter(
     (request) =>
@@ -96,8 +175,10 @@ export function Approvals() {
       (branch === "all" || request.branch === branch),
   );
   const counts = (status: Approval["status"]) =>
-    (boardRead.data ?? []).filter((row) => row.approval.status === status)
-      .length +
+    board.filter(
+      (row) =>
+        row.approval.status === status && row.approval.type !== "new_supplier",
+    ).length +
     saleRequests.filter((request) => saleRequestTab(request.status) === status)
       .length;
   const saleCount = saleRequests.filter(
@@ -161,8 +242,175 @@ export function Approvals() {
       );
     }
   };
+  const preserveViewport = () => {
+    const scroll = { x: window.scrollX, y: window.scrollY };
+    if (boardElement.current)
+      setBoardFloor((height) =>
+        Math.max(height, boardElement.current!.getBoundingClientRect().height),
+      );
+    return scroll;
+  };
+  const finishRemoval = (
+    ids: readonly string[],
+    scroll: { x: number; y: number },
+  ) => {
+    setDepartureKey(accessKey);
+    setDeparting((stored) => {
+      const current = departureKey === accessKey ? stored : [];
+      return [
+        ...current,
+        ...rows.filter(
+          (row) =>
+            ids.includes(row.approval.id) &&
+            !current.some((item) => item.approval.id === row.approval.id),
+        ),
+      ];
+    });
+    window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(() => window.scrollTo(scroll.x, scroll.y)),
+    );
+    window.setTimeout(
+      () =>
+        setDeparting((current) =>
+          current.filter((row) => !ids.includes(row.approval.id)),
+        ),
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0 : 180,
+    );
+  };
+  const openBulk = async (group: typeof rows) => {
+    try {
+      const snapshots = await query(
+        "approvals.decide",
+        domainScope(state),
+        (canonical, currentActor) =>
+          Object.fromEntries(
+            group.map((row) => [
+              row.approval.product_code,
+              approvalSnapshot(
+                canonical,
+                currentActor,
+                row.approval.product_code,
+              ),
+            ]),
+          ),
+      );
+      setBulk({
+        accessKey,
+        ids: group.map((row) => row.approval.id),
+        selected: group
+          .filter((row) => row.approval.type !== "margin_review")
+          .map((row) => row.approval.id),
+        snapshots,
+        title: `${t("Invoice", "فاکتور")} ${group[0].invoiceNumber} · ${group[0].supplierName ?? ""}`,
+      });
+      setMessage("");
+    } catch {
+      setMessage(
+        t(
+          "This proposal changed. Open the approval again before confirming.",
+          "این پیشنهاد تغییر کرد. پیش از تأیید، آن را دوباره باز کنید.",
+        ),
+      );
+    }
+  };
+  const confirmBulk = async () => {
+    if (!bulk || bulk.accessKey !== accessKey) return;
+    const scroll = preserveViewport();
+    try {
+      await command(
+        "approvals.decide",
+        domainScope(state, undefined, true),
+        (draft, currentActor) => {
+          for (const [code, snapshot] of Object.entries(bulk.snapshots))
+            if (approvalSnapshot(draft, currentActor, code) !== snapshot)
+              throw new Error("Prices changed. Refresh the approval preview");
+          approveInvoiceApprovals(
+            draft,
+            currentActor,
+            bulk.selected,
+            "all",
+            branches[0] ?? "all",
+          );
+        },
+      );
+      finishRemoval(bulk.selected, scroll);
+      setBulk(null);
+    } catch {
+      setBulk(null);
+      setMessage(
+        t(
+          "This proposal changed. Open the approval again before confirming.",
+          "این پیشنهاد تغییر کرد. پیش از تأیید، آن را دوباره باز کنید.",
+        ),
+      );
+    }
+  };
+  const openCorrection = (item: Approval) => {
+    const product = state.products.find(
+      (value) =>
+        value.company_id === company && value.code === item.product_code,
+    );
+    setCorrection({
+      accessKey,
+      item,
+      category: item.pricing_category ?? product?.pricing_category ?? "",
+      price: "",
+      reason: "",
+      error: "",
+    });
+  };
+  const saveCorrection = async () => {
+    if (!correction || correction.accessKey !== accessKey || savingCorrection)
+      return;
+    const scroll = preserveViewport();
+    setSavingCorrection(true);
+    try {
+      await command(
+        "approvals.decide",
+        domainScope(state, correction.item, true),
+        (draft, currentActor) => {
+          if (correction.item.status === "rejected")
+            resubmitApproval(draft, currentActor, correction.item.id, {
+              category: correction.category,
+              price: correction.price,
+              reason: correction.reason,
+            });
+          else
+            changeApprovalCategory(
+              draft,
+              currentActor,
+              correction.item.id,
+              correction.category,
+            );
+        },
+      );
+      setCorrection(null);
+      window.requestAnimationFrame(() => window.scrollTo(scroll.x, scroll.y));
+    } catch (error) {
+      setCorrection((current) =>
+        current
+          ? {
+              ...current,
+              error:
+                error instanceof Error && /reason/.test(error.message)
+                  ? t(
+                      "Add a reason for a price below the minimum margin.",
+                      "برای قیمتی کمتر از حداقل حاشیه سود دلیل وارد کنید.",
+                    )
+                  : t(
+                      "This request changed. Open it again and check the category and price.",
+                      "این درخواست تغییر کرد. دوباره باز کنید و دسته‌بندی و قیمت را بررسی کنید.",
+                    ),
+            }
+          : null,
+      );
+    } finally {
+      setSavingCorrection(false);
+    }
+  };
   const confirm = async () => {
     if (!preview) return;
+    const scroll = preserveViewport();
     if (
       preview.company !== company ||
       preview.branch !== branch ||
@@ -211,26 +459,12 @@ export function Approvals() {
       setPreview(null);
       return;
     }
-    setMessage(
-      preview.approval.type === "barcode_conflict"
-        ? t(
-            preview.decision === "approve" ? "Approved" : "Rejected",
-            preview.decision === "approve" ? "تأیید شد" : "رد شد",
-          )
-        : preview.decision === "approve"
-          ? t(
-              "Approved price. Cashier lookup now shows the approved price.",
-              "قیمت تأیید شد. جستجوی صندوق‌دار اکنون قیمت تأییدشده را نشان می‌دهد.",
-            )
-          : t(
-              "Rejected. The approved price was kept.",
-              "رد شد. قیمت تأییدشده حفظ شد.",
-            ),
-    );
+    finishRemoval([preview.approval.id], scroll);
     setPreview(null);
   };
   const marginAction = async (item: Approval, action: "keep" | "override") => {
     if (!canDecide) return;
+    const scroll = preserveViewport();
     const reason = reasons[item.id]?.trim();
     if (!reason) {
       setReasonErrors((current) => ({
@@ -277,18 +511,9 @@ export function Approvals() {
       );
       return;
     }
-    setMessage(
-      action === "keep"
-        ? t(
-            "Kept approved price. The review is acknowledged.",
-            "قیمت تأییدشده حفظ شد. بررسی ثبت شد.",
-          )
-        : t(
-            "Proposed manual override. The cashier keeps the approved price until approval.",
-            "تغییر دستی پیشنهاد شد. صندوق‌دار تا تأیید، قیمت قبلی را استفاده می‌کند.",
-          ),
-    );
+    finishRemoval([item.id], scroll);
   };
+  const correctionPrice = correction?.price || correctionRead.data || "…";
   return (
     <>
       <PageHeader
@@ -304,6 +529,8 @@ export function Approvals() {
         aria-label={t("Approval status", "وضعیت تأیید")}
         onChange={(value) => {
           setFilter(value as typeof filter);
+          setBoardFloor(0);
+          setDeparting([]);
           setMessage("");
         }}
         options={
@@ -362,272 +589,553 @@ export function Approvals() {
                   )}
         </EmptyState>
       )}
-      {items.map((item) => {
-        if (item.type === "new_supplier")
-          return canDecide ? (
-            <SupplierApproval key={item.id} approval={item} />
-          ) : (
-            <Card key={item.id} title={item.supplier_name}>
-              {t(
-                "Supplier waiting for confirmation",
-                "تأمین‌کننده در انتظار تأیید",
-              )}
-            </Card>
+      <div
+        ref={boardElement}
+        className="approval-board-list"
+        style={{ minBlockSize: boardFloor }}
+      >
+        {items.map((item, itemIndex) => {
+          const product = state.products.find(
+            (value) =>
+              value.company_id === company && value.code === item.product_code,
           );
-        const product = state.products.find(
-          (value) =>
-            value.company_id === company && value.code === item.product_code,
-        );
-        if (!product) return null;
-        const approved =
-          "current_price" in item
-            ? item.current_price
-            : regularPrice(state, product, item.branch);
-        const details = rows.find((row) => row.approval.id === item.id)!;
-        const { unitCost, margin, triggeredBy } = details;
-        const invoiceNumber = details.invoiceNumber;
+          if (!product) return null;
+          const approved =
+            "current_price" in item
+              ? item.current_price
+              : regularPrice(state, product, item.branch);
+          const details = rows.find((row) => row.approval.id === item.id)!;
+          const { unitCost, margin, triggeredBy } = details;
+          const invoiceNumber = details.invoiceNumber;
 
-        return (
-          <Card
-            key={item.id}
-            className="approval-card"
-            title={lang === "fa" ? product.name_fa : product.name_en}
-          >
-            <p className="muted approval-secondary-name">
-              <bdi dir={lang === "fa" ? "ltr" : "rtl"}>
-                {lang === "fa" ? product.name_en : product.name_fa}
-              </bdi>
-            </p>
-            {item.type === "barcode_conflict" && (
-              <div className="barcode-conflict-details">
-                <LtrText>{item.barcode}</LtrText>
-                <p>
-                  {t("Product", "محصول")}:{" "}
-                  <ProductName product={product} language={lang} />
-                </p>
-                {state.products
-                  .filter(
-                    (value) =>
-                      value.company_id === company &&
-                      value.code === item.conflicting_product_code,
-                  )
-                  .map((value) => (
-                    <p key={value.code}>
-                      {t("Existing barcode mapping", "محصول متصل به بارکد")}:{" "}
-                      <ProductName product={value} language={lang} />
-                    </p>
-                  ))}
-              </div>
-            )}
-            <div className="row">
-              <Badge
-                tone={
-                  item.status === "pending"
-                    ? "pending"
-                    : item.status === "approved"
-                      ? "approved"
-                      : "neutral"
-                }
-              >
-                {item.status === "pending"
-                  ? t("Pending", "در انتظار")
-                  : item.status === "approved"
-                    ? t("Approved", "تأییدشده")
-                    : item.status === "superseded"
-                      ? t("Superseded", "جایگزین‌شده")
-                      : t("Rejected", "ردشده")}
-              </Badge>
-              <Badge tone="info">{typeName(item)}</Badge>
-              <span>
-                {branchName(item.branch)} · {t("Product Code", "کد کالا")}{" "}
-                <bdi>{item.product_code}</bdi>
-              </span>
-            </div>
-            {item.type !== "barcode_conflict" && (
-              <div className="approval-values">
-                <div className="approval-value">
-                  <span className="muted">{t("Old price", "قیمت قبلی")}</span>
-                  {approved !== null && approved !== undefined ? (
-                    <strong className="price">
-                      <ProductPrice
-                        value={approved}
-                        product={product}
-                        config={state.config}
-                      />
-                      <ManualPricePill product={product} branch={item.branch} />
-                    </strong>
-                  ) : (
-                    <span className="muted approval-missing-price">
-                      {t("No approved price yet", "هنوز قیمت تأییدشده ندارد")}
-                    </span>
+          const group = details.invoiceId
+            ? groups.get(details.invoiceId)
+            : undefined;
+          const groupStart =
+            viewStatus === "pending" &&
+            details.invoiceId &&
+            (itemIndex === 0 ||
+              rows[itemIndex - 1].invoiceId !== details.invoiceId);
+          return (
+            <div
+              key={item.id}
+              className={
+                visibleDepartures.some((row) => row.approval.id === item.id)
+                  ? "approval-departure is-leaving"
+                  : "approval-departure"
+              }
+            >
+              <div>
+                {groupStart && group && (
+                  <div
+                    className="approval-invoice-group"
+                    data-testid={`invoice-approval-group-${details.invoiceId}`}
+                  >
+                    <h2>
+                      {t("Invoice", "فاکتور")}{" "}
+                      <bdi dir="ltr">{invoiceNumber}</bdi> ·{" "}
+                      {details.supplierName} ·{" "}
+                      {
+                        new Set(group.map((row) => row.approval.product_code))
+                          .size
+                      }{" "}
+                      {t("products", "کالا")}
+                    </h2>
+                    {canDecide && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => void openBulk(group)}
+                      >
+                        {t(
+                          `Approve all ${new Set(group.map((row) => row.approval.product_code)).size}…`,
+                          `تأیید همهٔ ${new Set(group.map((row) => row.approval.product_code)).size} کالا…`,
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                )}
+                <Card className="approval-card" title={product.name_en}>
+                  <p className="muted approval-secondary-name">
+                    <bdi dir="rtl">{product.name_fa}</bdi>
+                  </p>
+                  {item.type === "barcode_conflict" && (
+                    <div className="barcode-conflict-details">
+                      <LtrText>{item.barcode}</LtrText>
+                      <p>
+                        {t("Product", "محصول")}:{" "}
+                        <ProductName product={product} language={lang} />
+                      </p>
+                      {state.products
+                        .filter(
+                          (value) =>
+                            value.company_id === company &&
+                            value.code === item.conflicting_product_code,
+                        )
+                        .map((value) => (
+                          <p key={value.code}>
+                            {t(
+                              "Existing barcode mapping",
+                              "محصول متصل به بارکد",
+                            )}
+                            : <ProductName product={value} language={lang} />
+                          </p>
+                        ))}
+                    </div>
                   )}
-                </div>
-                <div className="approval-value">
-                  <span className="muted">{t("New price", "قیمت جدید")}</span>
-                  <strong className="price">
-                    <ProductPrice
-                      value={item.proposed_price}
-                      product={product}
-                      config={state.config}
-                    />
-                  </strong>
-                </div>
-                {canDecide && (
-                  <>
-                    <div className="approval-value">
-                      <span className="muted">
-                        {t("Unit cost", "هزینه واحد")}
-                      </span>
-                      <strong>
-                        {unitCost !== null && unitCost !== undefined ? (
-                          <ProductCost
-                            value={unitCost}
+                  <div className="row">
+                    <Badge
+                      tone={
+                        item.status === "pending"
+                          ? "pending"
+                          : item.status === "approved"
+                            ? "approved"
+                            : "neutral"
+                      }
+                    >
+                      {item.status === "pending"
+                        ? t("Pending", "در انتظار")
+                        : item.status === "approved"
+                          ? t("Approved", "تأییدشده")
+                          : item.status === "superseded"
+                            ? t("Superseded", "جایگزین‌شده")
+                            : t("Rejected", "ردشده")}
+                    </Badge>
+                    <Badge tone="info">{typeName(item)}</Badge>
+                    <span>
+                      {branchName(item.branch)} · {t("Product Code", "کد کالا")}{" "}
+                      <bdi>{item.product_code}</bdi>
+                    </span>
+                  </div>
+                  {item.type !== "barcode_conflict" && (
+                    <div className="approval-values">
+                      <div className="approval-value">
+                        <span className="muted">
+                          {t("Old price", "قیمت قبلی")}
+                        </span>
+                        {approved ? (
+                          <strong className="price">
+                            <ProductPrice
+                              value={approved}
+                              product={product}
+                              config={state.config}
+                            />
+                            <ManualPricePill
+                              product={product}
+                              branch={item.branch}
+                            />
+                          </strong>
+                        ) : (
+                          <span className="muted approval-missing-price">
+                            {t(
+                              "No approved price yet",
+                              "هنوز قیمت تأییدشده ندارد",
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      <div className="approval-value">
+                        <span className="muted">
+                          {t("New price", "قیمت جدید")}
+                        </span>
+                        <strong className="price">
+                          <ProductPrice
+                            value={item.proposed_price}
                             product={product}
                             config={state.config}
                           />
-                        ) : (
-                          <span className="muted">—</span>
-                        )}
-                      </strong>
+                        </strong>
+                      </div>
+                      {canDecide && (
+                        <>
+                          <div className="approval-value">
+                            <span className="muted">
+                              {t("Unit cost", "هزینه واحد")}
+                            </span>
+                            <strong>
+                              {unitCost !== null && unitCost !== undefined ? (
+                                <ProductCost
+                                  value={unitCost}
+                                  product={product}
+                                  config={state.config}
+                                />
+                              ) : (
+                                <span className="muted">—</span>
+                              )}
+                            </strong>
+                          </div>
+                          <div className="approval-value">
+                            <span className="muted">
+                              {t("Margin", "حاشیه سود")}
+                            </span>
+                            <strong>
+                              <bdi dir="ltr">
+                                {margin !== null
+                                  ? `${new Decimal(margin).times(100).toFixed(2)}%`
+                                  : "—"}
+                              </bdi>
+                            </strong>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <div className="approval-value">
-                      <span className="muted">{t("Margin", "حاشیه سود")}</span>
-                      <strong>
+                  )}
+                  <div className="approval-meta">
+                    <span>
+                      {t("Branch", "شعبه")}: {branchName(item.branch)}
+                    </span>
+                    <span>
+                      {t("Triggered by", "ایجادشده توسط")}:{" "}
+                      {triggeredBy
+                        ? demoUserLabel(triggeredBy, lang)
+                        : t("Not recorded", "ثبت نشده")}
+                    </span>
+                    {canDecide && item.threshold && (
+                      <span>
+                        {t("Minimum margin", "حداقل حاشیه سود")}:{" "}
                         <bdi dir="ltr">
-                          {margin !== null
-                            ? `${new Decimal(margin).times(100).toFixed(2)}%`
-                            : "—"}
+                          {new Decimal(item.threshold).times(100).toFixed(2)}%
                         </bdi>
-                      </strong>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-            <div className="approval-meta">
-              <span>
-                {t("Branch", "شعبه")}: {branchName(item.branch)}
-              </span>
-              <span>
-                {t("Triggered by", "ایجادشده توسط")}:{" "}
-                {triggeredBy
-                  ? demoUserLabel(triggeredBy, lang)
-                  : t("Not recorded", "ثبت نشده")}
-              </span>
-              {canDecide && item.threshold && (
-                <span>
-                  {t("Minimum margin", "حداقل حاشیه سود")}:{" "}
-                  <bdi dir="ltr">
-                    {new Decimal(item.threshold).times(100).toFixed(2)}%
-                  </bdi>
-                </span>
-              )}
-            </div>
-            {canDecide && item.manual_override && (
-              <p>
-                {t("Reason", "دلیل")}: {item.reason}
-              </p>
-            )}
-            {invoiceNumber && (
-              <p className="muted">
-                {t("Invoice", "فاکتور")}: <bdi dir="ltr">{invoiceNumber}</bdi>
-              </p>
-            )}
-            {canDecide &&
-              item.status === "pending" &&
-              item.type === "margin_review" && (
-                <>
-                  <p className="muted">
-                    {t(
-                      "Receiving continues. Keep this price with a reason, propose an override, or leave the review pending.",
-                      "دریافت کالا ادامه دارد. قیمت را با دلیل حفظ کنید، تغییر دستی پیشنهاد دهید یا بررسی را در انتظار بگذارید.",
+                      </span>
                     )}
-                  </p>
-                  <div className="form-grid approval-form">
-                    <Field
-                      label={t("Reason", "دلیل")}
-                      error={reasonErrors[item.id]}
-                    >
-                      <input
-                        value={reasons[item.id] ?? ""}
-                        onChange={(event) => {
-                          setReasons({
-                            ...reasons,
-                            [item.id]: event.target.value,
-                          });
-                          setReasonErrors((current) => ({
-                            ...current,
-                            [item.id]: "",
-                          }));
-                        }}
-                      />
-                    </Field>
-                    <Field
-                      label={t("Manual override price", "قیمت دستی")}
-                      error={overrideErrors[item.id]}
-                    >
-                      <NumberField
-                        value={overrides[item.id] ?? ""}
-                        onChange={(value) => {
-                          setOverrides({ ...overrides, [item.id]: value });
-                          setOverrideErrors((current) => ({
-                            ...current,
-                            [item.id]: "",
-                          }));
-                        }}
-                      />
-                    </Field>
                   </div>
-                  <div className="actions">
-                    <Button onClick={() => marginAction(item, "keep")}>
-                      {t("Keep approved price", "حفظ قیمت تأییدشده")}
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => marginAction(item, "override")}
-                    >
-                      {t("Propose manual override", "پیشنهاد تغییر دستی")}
-                    </Button>
-                  </div>
-                </>
-              )}
-            {canDecide &&
-              item.status === "pending" &&
-              item.type !== "margin_review" && (
-                <div className="actions">
-                  <Button
-                    onClick={() => {
-                      setScope("all");
-                      openPreview(item, "approve");
-                    }}
-                  >
-                    {item.type === "barcode_conflict"
-                      ? t("Approve", "تأیید")
-                      : item.type === "new_product"
-                        ? t("Approve product", "تأیید کالا")
-                        : t("Approve price", "تأیید قیمت")}
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => openPreview(item, "reject")}
-                  >
-                    {t("Reject", "رد کردن")}
-                  </Button>
-                </div>
-              )}
-            {canDecide && item.acknowledgment_reason && (
-              <p>
-                {t("Review reason", "دلیل بررسی")}: {item.acknowledgment_reason}
-              </p>
-            )}
-            {item.applies_after_sale && (
-              <Badge tone="info">
-                {t("Applies after the sale", "پس از حراج اعمال می‌شود")}
-              </Badge>
-            )}
-          </Card>
-        );
-      })}
+                  {canDecide && item.manual_override && (
+                    <p>
+                      {t("Reason", "دلیل")}: {item.reason}
+                    </p>
+                  )}
+                  {invoiceNumber && (
+                    <p className="muted">
+                      {t("Invoice", "فاکتور")}:{" "}
+                      <bdi dir="ltr">{invoiceNumber}</bdi>
+                    </p>
+                  )}
+                  {canDecide &&
+                    item.status === "pending" &&
+                    item.type === "margin_review" && (
+                      <>
+                        <p className="muted">
+                          {t(
+                            "Receiving continues. Keep this price with a reason, propose an override, or leave the review pending.",
+                            "دریافت کالا ادامه دارد. قیمت را با دلیل حفظ کنید، تغییر دستی پیشنهاد دهید یا بررسی را در انتظار بگذارید.",
+                          )}
+                        </p>
+                        <div className="form-grid approval-form">
+                          <Field
+                            label={t("Reason", "دلیل")}
+                            error={reasonErrors[item.id]}
+                          >
+                            <input
+                              value={reasons[item.id] ?? ""}
+                              onChange={(event) => {
+                                setReasons({
+                                  ...reasons,
+                                  [item.id]: event.target.value,
+                                });
+                                setReasonErrors((current) => ({
+                                  ...current,
+                                  [item.id]: "",
+                                }));
+                              }}
+                            />
+                          </Field>
+                          <Field
+                            label={t("Manual override price", "قیمت دستی")}
+                            error={overrideErrors[item.id]}
+                          >
+                            <NumberField
+                              value={overrides[item.id] ?? ""}
+                              onChange={(value) => {
+                                setOverrides({
+                                  ...overrides,
+                                  [item.id]: value,
+                                });
+                                setOverrideErrors((current) => ({
+                                  ...current,
+                                  [item.id]: "",
+                                }));
+                              }}
+                            />
+                          </Field>
+                        </div>
+                        <div className="actions">
+                          <Button onClick={() => marginAction(item, "keep")}>
+                            {t("Keep approved price", "حفظ قیمت تأییدشده")}
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => marginAction(item, "override")}
+                          >
+                            {t("Propose manual override", "پیشنهاد تغییر دستی")}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  {canDecide &&
+                    item.status === "pending" &&
+                    item.type !== "margin_review" && (
+                      <div className="actions">
+                        <Button
+                          onClick={() => {
+                            setScope("all");
+                            openPreview(item, "approve");
+                          }}
+                        >
+                          {item.type === "barcode_conflict"
+                            ? t("Approve", "تأیید")
+                            : item.type === "new_product"
+                              ? t("Approve product", "تأیید کالا")
+                              : t("Approve price", "تأیید قیمت")}
+                        </Button>
+                        <Button
+                          variant="danger"
+                          onClick={() => openPreview(item, "reject")}
+                        >
+                          {t("Reject", "رد کردن")}
+                        </Button>
+                      </div>
+                    )}
+                  {canDecide && item.acknowledgment_reason && (
+                    <p>
+                      {t("Review reason", "دلیل بررسی")}:{" "}
+                      {item.acknowledgment_reason}
+                    </p>
+                  )}
+                  {item.applies_after_sale && (
+                    <Badge tone="info">
+                      {t("Applies after the sale", "پس از حراج اعمال می‌شود")}
+                    </Badge>
+                  )}
+                  {canDecide &&
+                    item.status === "pending" &&
+                    item.type !== "barcode_conflict" && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => openCorrection(item)}
+                      >
+                        {t("Change category", "تغییر دسته‌بندی")}
+                      </Button>
+                    )}
+                  {canDecide &&
+                    item.status === "rejected" &&
+                    item.type !== "barcode_conflict" &&
+                    !item.resubmitted_as_id && (
+                      <Button onClick={() => openCorrection(item)}>
+                        {t("Fix and resubmit", "اصلاح و ارسال دوباره")}
+                      </Button>
+                    )}
+                  {item.resubmitted_as_id && (
+                    <p className="muted">
+                      {t(
+                        "Resubmitted as a new pending request",
+                        "به عنوان درخواست جدید در انتظار ارسال شد",
+                      )}
+                    </p>
+                  )}
+                </Card>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {canDecide && bulk?.accessKey === accessKey && (
+        <ConfirmDialog
+          open
+          title={t("Review invoice approvals", "بررسی تأییدهای فاکتور")}
+          description={bulk.title}
+          confirmLabel={t(
+            `Approve ${bulk.selected.length} products`,
+            `تأیید ${bulk.selected.length} کالا`,
+          )}
+          confirmDisabled={!bulk.selected.length || !branches.length}
+          onConfirm={confirmBulk}
+          onOpenChange={(open) => {
+            if (!open) setBulk(null);
+          }}
+        >
+          <DataTable
+            columns={[
+              { key: "select" },
+              { key: "product" },
+              { key: "category" },
+              { key: "cost", align: "end" },
+              { key: "price", align: "end" },
+              { key: "margin", align: "end" },
+            ]}
+            phoneList={{
+              name: "product",
+              value: "price",
+              secondary: ["select", "category", "cost", "margin"],
+            }}
+          >
+            <thead>
+              <tr>
+                <th>{t("Include", "انتخاب")}</th>
+                <th>{t("Product", "کالا")}</th>
+                <th>{t("Pricing category", "دسته‌بندی قیمت")}</th>
+                <th>{t("Unit cost", "هزینه واحد")}</th>
+                <th>{t("New price", "قیمت جدید")}</th>
+                <th>{t("Margin", "حاشیه سود")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {board
+                .filter((row) => bulk.ids.includes(row.approval.id))
+                .map((row) => {
+                  const product = state.products.find(
+                    (value) =>
+                      value.company_id === company &&
+                      value.code === row.approval.product_code,
+                  );
+                  if (!product) return null;
+                  const category = state.config.pricing_categories.find(
+                    (value) => value.key === row.category,
+                  );
+                  return (
+                    <tr key={row.approval.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          aria-label={`${t("Include", "انتخاب")} ${product.name_en}`}
+                          checked={bulk.selected.includes(row.approval.id)}
+                          disabled={row.approval.type === "margin_review"}
+                          onChange={(event) =>
+                            setBulk({
+                              ...bulk,
+                              selected: event.target.checked
+                                ? [...bulk.selected, row.approval.id]
+                                : bulk.selected.filter(
+                                    (id) => id !== row.approval.id,
+                                  ),
+                            })
+                          }
+                        />
+                        {row.approval.type === "margin_review" && (
+                          <small>
+                            {t("Review individually", "جداگانه بررسی شود")}
+                          </small>
+                        )}
+                      </td>
+                      <td>
+                        <bdi dir="ltr">{product.name_en}</bdi>
+                      </td>
+                      <td>
+                        {category
+                          ? lang === "fa"
+                            ? category.label_fa
+                            : category.label
+                          : row.category}
+                      </td>
+                      <td>
+                        {row.unitCost && (
+                          <ProductCost
+                            value={row.unitCost}
+                            product={product}
+                            config={state.config}
+                          />
+                        )}
+                      </td>
+                      <td>
+                        <ProductPrice
+                          value={row.approval.proposed_price}
+                          product={product}
+                          config={state.config}
+                        />
+                      </td>
+                      <td>
+                        <bdi dir="ltr">
+                          {row.margin !== null
+                            ? `${new Decimal(row.margin).times(100).toFixed(2)}%`
+                            : t("Not added", "اضافه نشده")}
+                        </bdi>
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </DataTable>
+        </ConfirmDialog>
+      )}
+      {canDecide && correction?.accessKey === accessKey && (
+        <Dialog
+          open
+          title={
+            correction.item.status === "rejected"
+              ? t("Fix and resubmit", "اصلاح و ارسال دوباره")
+              : t("Change category", "تغییر دسته‌بندی")
+          }
+          description={t(
+            "Compare the corrected category and proposed price before saving.",
+            "پیش از ذخیره، دسته‌بندی اصلاح‌شده و قیمت پیشنهادی را مقایسه کنید.",
+          )}
+          onOpenChange={(open) => {
+            if (!open) setCorrection(null);
+          }}
+        >
+          <Field label={t("Pricing category", "دسته‌بندی قیمت")}>
+            <Select
+              value={correction.category}
+              onChange={(category) =>
+                setCorrection({ ...correction, category, error: "" })
+              }
+              options={state.config.pricing_categories.map((category) => ({
+                value: category.key,
+                label:
+                  lang === "fa"
+                    ? (category.label_fa ?? category.label)
+                    : category.label,
+              }))}
+            />
+          </Field>
+          <p>
+            <bdi dir="ltr">
+              {correction.item.proposed_price} → {correctionPrice}
+            </bdi>
+          </p>
+          {correction.item.status === "rejected" && (
+            <>
+              <Field label={t("New price (optional)", "قیمت جدید (اختیاری)")}>
+                <NumberField
+                  value={correction.price}
+                  onChange={(price) =>
+                    setCorrection({ ...correction, price, error: "" })
+                  }
+                />
+              </Field>
+              <Field
+                label={t(
+                  "Reason (required below minimum margin)",
+                  "دلیل (برای کمتر از حداقل حاشیه سود الزامی)",
+                )}
+              >
+                <input
+                  value={correction.reason}
+                  onChange={(event) =>
+                    setCorrection({
+                      ...correction,
+                      reason: event.target.value,
+                      error: "",
+                    })
+                  }
+                />
+              </Field>
+            </>
+          )}
+          {correction.error && <p role="alert">{correction.error}</p>}
+          <div className="actions c3-dialog-actions">
+            <Button variant="secondary" onClick={() => setCorrection(null)}>
+              {t("Cancel", "انصراف")}
+            </Button>
+            <Button
+              disabled={savingCorrection || correctionRead.pending}
+              onClick={() => void saveCorrection()}
+            >
+              {correction.item.status === "rejected"
+                ? t("Resubmit", "ارسال دوباره")
+                : t("Save category", "ذخیره دسته‌بندی")}
+            </Button>
+          </div>
+        </Dialog>
+      )}
       {canDecide && preview && (
         <ConfirmDialog
           open

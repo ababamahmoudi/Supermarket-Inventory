@@ -62,7 +62,7 @@ it("browser Back retains the Posted list after an accepted invoice workspace rea
     </DemoProvider>,
   );
   await renderedUiReady(() => currentDemo?.authStage === "complete");
-  fireEvent.click(await screen.findByRole("tab", { name: "Posted" }));
+  fireEvent.click(await screen.findByRole("tab", { name: /^Posted \d+$/ }));
   const table = () =>
     document.querySelector<HTMLDivElement>(".invoice-posted-table")!;
   await waitFor(() => expect(table()).not.toBeNull());
@@ -110,7 +110,7 @@ it("browser Back retains the Posted list after an accepted invoice workspace rea
     ),
   );
   await waitFor(() => expect(acceptedSelection).toBe(true));
-  await screen.findByRole("link", { name: "Back to Invoices" });
+  await screen.findByRole("link", { name: "Invoices" });
   expect((await fixture.readCanonical()).invoice.id).toBe(target.id);
 
   await act(async () => {
@@ -118,7 +118,7 @@ it("browser Back retains the Posted list after an accepted invoice workspace rea
   });
   await waitFor(() => expect(window.location.hash).toBe("#invoices"));
   await waitFor(() => expect(table()).not.toBeNull());
-  expect(screen.getByRole("tab", { name: "Posted" })).toHaveAttribute(
+  expect(screen.getByRole("tab", { name: /^Posted \d+$/ })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -138,7 +138,7 @@ it("browser Back retains the Posted list after an accepted invoice workspace rea
     );
   });
   expect(window.location.hash).toBe("#invoices");
-  expect(screen.getByRole("tab", { name: "Posted" })).toHaveAttribute(
+  expect(screen.getByRole("tab", { name: /^Posted \d+$/ })).toHaveAttribute(
     "aria-selected",
     "true",
   );
