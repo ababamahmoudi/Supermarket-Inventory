@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useDemo } from "../../store";
 import {
+  BufferedInput,
   Button,
   Disclosure,
   DateField,
@@ -109,6 +110,12 @@ export function InvoiceDetailsCard({
         >
           {t("Looks right", "درست است")}
         </Button>
+        {/* Phone (reference screen 05): the closed card still says what to check. */}
+        {fields.length > 0 && (
+          <span className="receiving-details-phone-check">
+            {t(`${fields.length} to check`, `${fields.length} برای بررسی`)}
+          </span>
+        )}
         <Button
           variant="plain"
           size="sm"
@@ -192,7 +199,7 @@ export function InvoiceDetailsCard({
                   : undefined
               }
             >
-              <input
+              <BufferedInput
                 id="invoice-number"
                 dir="ltr"
                 value={invoice.supplier_invoice_number}
@@ -315,7 +322,7 @@ export function InvoiceDetailsCard({
                 };
                 return (
                   <Field key={key} readingField={key} label={t(...labels[key])}>
-                    <input
+                    <BufferedInput
                       dir="ltr"
                       value={
                         key === "currency"

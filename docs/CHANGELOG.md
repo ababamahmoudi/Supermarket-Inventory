@@ -2,6 +2,7 @@
 
 ## 2026-10-22 — R2 approved receiving design
 
+- Review fixes (Claude): number and text boxes bound to saved values now keep every keystroke while they have focus (`BufferedInput`, used by `NumberField` and the receiving editor, invoice details and totals). Before, a slower browser-database save could land between keystrokes, so typing "20" into Delivered could become "240" and "1.3" in Unit cost could become "13". A cleared box stays blank while typing and shows the saved value when the person leaves it. Supplier and payment-terms boxes in invoice details stay on one line with "…" (rule 7). The phone "View original" is a full-width card with page count and chevron, and the closed phone details card shows "N to check" (reference screen 05). Persian editor numbers and codes sit on the right edge (screen 07).
 - Updated Django REST Framework to 3.18.2 and regenerated both hashed dependency locks to fix CVE-2026-114138, CVE-2026-114136 and CVE-2026-114137; retained the dependency-audit gate.
 - Browser CI selects official Ubuntu package mirrors before installing Playwright dependencies, avoiding the stalled Azure mirror while retaining signed package verification, all tests and the existing 30-minute job limits.
 

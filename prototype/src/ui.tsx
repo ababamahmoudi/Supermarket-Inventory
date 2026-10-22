@@ -17,6 +17,7 @@ import {
   type ReactNode,
   type ComponentPropsWithRef,
   type InputHTMLAttributes,
+  type Ref,
   type CSSProperties,
   type KeyboardEvent,
   type DetailsHTMLAttributes,
@@ -2013,6 +2014,82 @@ export function Switch({
   );
 }
 
+// While a box has focus it shows exactly what the person typed. Saves finish
+// later (the browser database is asynchronous), so applying a slower saved
+// value mid-typing used to drop or repeat characters ("20" became "240",
+// "1.3" became "13"). The saved value shows again when the person leaves.
+const sameEntry = (entry: string, saved: string) => {
+  if (entry === saved || entry.trim() === saved.trim()) return true;
+  const number = /^\s*-?(\d+\.?\d*|\.\d+)\s*$/;
+  if (entry.trim() === "") return number.test(saved) && Number(saved) === 0;
+  return (
+    number.test(entry) && number.test(saved) && Number(entry) === Number(saved)
+  );
+};
+function useTypingBuffer(value: unknown) {
+  const saved = value === null || value === undefined ? "" : String(value);
+  const [typing, setTyping] = useState<string | null>(null);
+  const typed = useRef<string[]>([]);
+  useEffect(() => {
+    if (typing === null) return;
+    // A late save of something the person typed is an echo: keep their text.
+    // Anything else (a chip, a recalculation) is a real change: show it.
+    if (!typed.current.some((entry) => sameEntry(entry, saved)))
+      setTyping(saved);
+    // Only a new saved value should trigger this check.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saved]);
+  return {
+    shown: typing ?? saved,
+    focus: () => {
+      typed.current = [saved];
+      setTyping(saved);
+    },
+    change: (next: string, focused: boolean) => {
+      // Only a box the person is typing in keeps its own text.
+      if (!focused) return;
+      typed.current.push(next);
+      setTyping(next);
+    },
+    blur: () => setTyping(null),
+  };
+}
+
+/** A text box for a saved value: keeps every keystroke while it has focus. */
+export function BufferedInput({
+  value,
+  onChange,
+  onFocus,
+  onBlur,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "value"> & {
+  value: string | number | null | undefined;
+  ref?: Ref<HTMLInputElement>;
+}) {
+  const buffer = useTypingBuffer(value);
+  return (
+    <input
+      {...props}
+      value={buffer.shown}
+      onFocus={(event) => {
+        buffer.focus();
+        onFocus?.(event);
+      }}
+      onChange={(event) => {
+        buffer.change(
+          event.target.value,
+          event.target.ownerDocument.activeElement === event.target,
+        );
+        onChange?.(event);
+      }}
+      onBlur={(event) => {
+        buffer.blur();
+        onBlur?.(event);
+      }}
+    />
+  );
+}
+
 export function NumberField({
   value,
   onChange,
@@ -2032,7 +2109,7 @@ export function NumberField({
   step?: string | number;
 }) {
   return (
-    <input
+    <BufferedInput
       {...props}
       type="text"
       dir={props.dir ?? "ltr"}

@@ -526,7 +526,97 @@ describe("styled NumberField", () => {
     await user.type(input, "2.35");
     expect(input).toHaveValue("2.35");
   });
+
+  it("keeps every keystroke when the saved value arrives later", async () => {
+    const user = userEvent.setup();
+    const saved: string[] = [];
+    await show(<SlowSavedQuantity saved={saved} />);
+    const input = screen.getByRole("textbox", { name: "Delivered" });
+    await user.tripleClick(input);
+    // Each key lands before the previous save has finished.
+    await user.keyboard("2");
+    await user.keyboard("0");
+    expect(input).toHaveValue("20");
+    await act(() => new Promise((resolve) => setTimeout(resolve, 80)));
+    expect(input).toHaveValue("20");
+    expect(saved.at(-1)).toBe("20");
+    // Emptying the box while typing does not snap back to a number.
+    await user.clear(input);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 80)));
+    expect(input).toHaveValue("");
+    await user.type(input, "18");
+    await act(() => new Promise((resolve) => setTimeout(resolve, 80)));
+    await user.tab();
+    expect(input).toHaveValue("18");
+  });
+
+  it("shows the saved value again after leaving the box", async () => {
+    const user = userEvent.setup();
+    await show(<SlowSavedQuantity saved={[]} normalize />);
+    const input = screen.getByRole("textbox", { name: "Delivered" });
+    await user.tripleClick(input);
+    await user.keyboard("007");
+    await act(() => new Promise((resolve) => setTimeout(resolve, 80)));
+    expect(input).toHaveValue("007");
+    await user.tab();
+    expect(input).toHaveValue("7");
+  });
 });
+function PriceWithChip() {
+  const [value, setValue] = useState("4.99");
+  return (
+    <>
+      <Field label="Price">
+        <NumberField value={value} onChange={setValue} min="0" step="0.01" />
+      </Field>
+      {/* Safari keeps focus in the box when a button is clicked. */}
+      <button
+        type="button"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => setValue("5.49")}
+      >
+        +10%
+      </button>
+    </>
+  );
+}
+describe("styled NumberField outside changes", () => {
+  it("shows a price set by a chip while the box keeps focus", async () => {
+    const user = userEvent.setup();
+    await show(<PriceWithChip />);
+    const input = screen.getByRole("textbox", { name: "Price" });
+    await user.click(input);
+    await user.click(screen.getByRole("button", { name: "+10%" }));
+    expect(input).toHaveFocus();
+    expect(input).toHaveValue("5.49");
+  });
+});
+function SlowSavedQuantity({
+  saved,
+  normalize = false,
+}: {
+  saved: string[];
+  normalize?: boolean;
+}) {
+  const [value, setValue] = useState("24");
+  return (
+    <Field label="Delivered">
+      <NumberField
+        value={value}
+        min="0"
+        step="1"
+        onChange={(next) => {
+          saved.push(next);
+          // Like the app's browser-database save: the value comes back later.
+          setTimeout(
+            () => setValue(normalize ? String(Number(next)) : next),
+            30,
+          );
+        }}
+      />
+    </Field>
+  );
+}
 function InvoiceUpload() {
   const [file, setFile] = useState<File | null>(null);
   return (

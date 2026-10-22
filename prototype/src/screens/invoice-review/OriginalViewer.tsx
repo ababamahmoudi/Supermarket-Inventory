@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Expand, FileImage } from "lucide-react";
+import { ChevronRight, Expand, FileImage } from "lucide-react";
 import type { InvoiceReadDTO } from "../../invoice-projections";
 import { useDemo } from "../../store";
 import { useInvoiceOriginal } from "../../use-invoice-original";
@@ -131,6 +131,14 @@ export function OriginalViewer({
       <Button
         variant="secondary"
         className="original-viewer-phone-trigger"
+        aria-label={
+          invoice.original_available
+            ? t(
+                `View original (${pageCount} pages)`,
+                `مشاهده اصل (${pageCount} صفحه)`,
+              )
+            : undefined
+        }
         onClick={() =>
           invoice.original_available ? setExpanded(true) : onAttach?.()
         }
@@ -148,12 +156,27 @@ export function OriginalViewer({
             <FileImage size={24} />
           )}
         </span>
-        {invoice.original_available
-          ? t(
-              `View original (${pageCount} pages)`,
-              `مشاهده اصل (${pageCount} صفحه)`,
-            )
-          : t("Attach original", "پیوست اصل فاکتور")}
+        {/* Phone (reference screen 05): a card that opens full screen. */}
+        <span className="original-viewer-phone-text">
+          <strong>
+            {invoice.original_available
+              ? t("View original", "مشاهده اصل")
+              : t("Attach original", "پیوست اصل فاکتور")}
+          </strong>
+          {invoice.original_available && (
+            <span>
+              {t(
+                `${pageCount} ${pageCount === 1 ? "page" : "pages"} · opens full screen`,
+                `${pageCount} صفحه · تمام‌صفحه باز می‌شود`,
+              )}
+            </span>
+          )}
+        </span>
+        <ChevronRight
+          size={18}
+          className="directional original-viewer-phone-chevron"
+          aria-hidden="true"
+        />
       </Button>
       <Dialog
         open={expanded}

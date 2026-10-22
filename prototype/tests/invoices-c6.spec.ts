@@ -85,12 +85,17 @@ test("manual invoice uses local time, term dates and editable computed totals wi
   expectedDue.setUTCDate(expectedDue.getUTCDate() + 30);
   expect(invoice.due_date).toBe(expectedDue.toISOString().slice(0, 10));
   await page.getByRole("button", { name: "Edit totals", exact: true }).click();
-  await page.getByLabel("Subtotal", { exact: true }).fill("");
+  const subtotal = page.getByLabel("Subtotal", { exact: true });
+  await subtotal.fill("");
   await expect(page.getByTestId("invoice-totals-card")).toBeVisible();
-  await expect(page.getByLabel("Subtotal", { exact: true })).toHaveValue(
-    "0.00",
-  );
-  expect((await stored(page)).invoice.subtotal).toBe("0.00");
+  await expect
+    .poll(async () => (await stored(page)).invoice.subtotal)
+    .toBe("0.00");
+  // While the person is still in the box it keeps what they typed (blank);
+  // the saved 0.00 shows once they leave it.
+  await expect(subtotal).toHaveValue("");
+  await subtotal.blur();
+  await expect(subtotal).toHaveValue("0.00");
   await expect(page.getByTestId("invoice-totals-card")).toContainText(
     "Calculated · not on the paper",
   );

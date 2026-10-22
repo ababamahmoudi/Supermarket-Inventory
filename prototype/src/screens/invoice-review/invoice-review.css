@@ -149,7 +149,8 @@
   box-shadow: var(--shadow-card);
 }
 .receiving-details-phone-toggle,
-.receiving-details-phone-summary {
+.receiving-details-phone-summary,
+.receiving-details-phone-check {
   display: none;
 }
 .receiving-details-grid.detail-grid {
@@ -906,6 +907,18 @@
   .receiving-details-phone-toggle {
     display: inline-flex;
   }
+  .receiving-details[data-phone-open="false"] .receiving-details-phone-check {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-start: auto;
+    padding: 2px 10px;
+    border-radius: var(--radius-round);
+    background: var(--pending-bg);
+    color: var(--pending);
+    font-size: var(--font-size-caption);
+    font-weight: 700;
+    white-space: nowrap;
+  }
   .receiving-details-phone-summary {
     display: block;
     margin: 0;
@@ -1129,17 +1142,52 @@
   .original-viewer-panel {
     display: none;
   }
-  .original-viewer-phone-trigger {
+  :root .original-viewer-phone-trigger.ui-button {
     display: flex;
+    align-items: center;
     gap: 12px;
+    inline-size: 100%;
+    min-block-size: 76px;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-card);
+    text-align: start;
+    justify-content: flex-start;
+  }
+  .original-viewer-phone-text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 2px;
+    min-inline-size: 0;
+    white-space: normal;
+  }
+  .original-viewer-phone-text > strong {
+    font-weight: 700;
+  }
+  .original-viewer-phone-text > span {
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    font-weight: 500;
+  }
+  .original-viewer-phone-chevron {
+    flex: 0 0 auto;
+    color: var(--text-muted);
   }
   .original-viewer-thumbnail {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 28px;
-    inline-size: 28px;
-    block-size: 40px;
+    flex: 0 0 40px;
+    inline-size: 40px;
+    block-size: 52px;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-mark);
+    background: var(--neutral-fill);
+    overflow: hidden;
   }
   .original-viewer-thumbnail > img {
     inline-size: 100%;
@@ -1164,4 +1212,11 @@
     animation: none;
     background-color: var(--accent-soft);
   }
+}
+
+/* Persian: numbers and codes sit on the same (right) edge as their labels,
+   as on reference screen 07. The digits themselves stay left-to-right. */
+:root[dir="rtl"] .receiving-editor-body .ui-number,
+:root[dir="rtl"] .receiving-editor-body input[id$="-supplier-code"] {
+  text-align: right;
 }
