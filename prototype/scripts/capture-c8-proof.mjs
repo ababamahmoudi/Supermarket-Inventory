@@ -371,6 +371,10 @@ export async function prepareC8ManualInvoice(page) {
       );
     })
     .toBe(true);
+  const detailsToggle = page.locator(
+    '.receiving-details-phone-toggle[aria-expanded="false"]',
+  );
+  if (await detailsToggle.isVisible()) await detailsToggle.click();
   const details = page.locator("#invoice-details-fields");
   await choose(
     page,

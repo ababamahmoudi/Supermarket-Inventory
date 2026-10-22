@@ -1,7 +1,7 @@
+import { openInvoiceDetails } from "./helpers";
 import { expect, test } from "@playwright/test";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { openShellAction } from "./helpers";
-import { inspect } from "../scripts/c5-browser-proof.mjs";
 import {
   importReceivingFixture,
   openReceivingLine,
@@ -67,29 +67,16 @@ for (const language of ["en", "fa"] as const) {
         documentHeight,
         "The entire invoice page, including the app header, fits in three desktop windows",
       ).toBeLessThanOrEqual(2700);
-      const table = review.locator(
-        ".receiving-lines-table.ui-data-table.is-scrollable",
-      );
+      const table = review.locator(".receiving-lines-table");
       await expect(table).toHaveCount(1);
-      const initialTabIndex = await table.getAttribute("tabindex");
       expect(
         await table.evaluate(
-          (element) => element.scrollWidth > element.clientWidth,
+          (element) => element.scrollWidth <= element.clientWidth,
         ),
       ).toBe(true);
-      const issue = "Scrollable table is not contained and keyboard accessible";
-      const inspectTable = () =>
-        inspect(page, "R2 invoice review", `${language}-light`, "owner");
-      expect((await inspectTable()).failures).not.toContain(issue);
-      await table.evaluate((element) => {
-        element.tabIndex = -1;
-      });
-      expect((await inspectTable()).failures).toContain(issue);
-      await table.evaluate((element, value) => {
-        if (value === null) element.removeAttribute("tabindex");
-        else element.setAttribute("tabindex", value);
-      }, initialTabIndex);
-      expect((await inspectTable()).failures).not.toContain(issue);
+      await expect(table.locator("thead th")).toHaveCount(5);
+      const status = receivingRow(page, 0).locator(".receiving-status-icon");
+      await expect(status).toBeInViewport({ ratio: 1 });
     }
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
@@ -123,6 +110,7 @@ for (const language of ["en", "fa"] as const) {
         exact: true,
       }),
     ).toBeDisabled();
+    await openInvoiceDetails(page);
     await page
       .getByRole("button", {
         name: word(
@@ -150,9 +138,12 @@ for (const language of ["en", "fa"] as const) {
           exact: true,
         })
         .click();
-      await expect(receivingRow(page, index)).toContainText(
-        word(language, "Confirmed", "تأیید شد"),
-      );
+      await expect(
+        receivingRow(page, index).getByRole("img", {
+          name: word(language, "Confirmed", "تأیید شد"),
+          exact: true,
+        }),
+      ).toBeVisible();
       await expect(
         page.locator('[id^="invoice-line-"][id$="-name-en"]'),
       ).toHaveCount(0);

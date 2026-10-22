@@ -15,6 +15,7 @@ import {
   type AnchorHTMLAttributes,
   type ReactElement,
   type ReactNode,
+  type ComponentPropsWithRef,
   type InputHTMLAttributes,
   type CSSProperties,
   type KeyboardEvent,
@@ -95,7 +96,7 @@ export function Button({
   className,
   type = "button",
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
+}: ComponentPropsWithRef<"button"> & {
   variant?:
     | "primary"
     | "secondary"
@@ -333,6 +334,7 @@ export function Badge({
 export const StatusBadge = Badge;
 export function Field({
   adornment,
+  labelAdornment,
   containerId,
   label,
   children,
@@ -343,9 +345,10 @@ export function Field({
   label: string;
   children: ReactNode;
   adornment?: ReactNode;
+  labelAdornment?: ReactNode;
   containerId?: string;
   error?: string;
-  hint?: string;
+  hint?: ReactNode;
   className?: string;
 }) {
   const generated = useId();
@@ -362,17 +365,27 @@ export function Field({
   const labelId = `${id}-label`;
   const descriptionId = `${id}-help`;
   const optional = label.match(/^(.*?)\s+(\((?:optional|اختیاری)\))$/);
+  const fieldLabel = (
+    <label id={labelId} htmlFor={id}>
+      {optional ? (
+        <>
+          {optional[1]} <span className="field-optional">{optional[2]}</span>
+        </>
+      ) : (
+        label
+      )}
+    </label>
+  );
   return (
     <div id={containerId} className={cn("field", className)}>
-      <label id={labelId} htmlFor={id}>
-        {optional ? (
-          <>
-            {optional[1]} <span className="field-optional">{optional[2]}</span>
-          </>
-        ) : (
-          label
-        )}
-      </label>
+      {labelAdornment ? (
+        <div className="ui-field-label-row">
+          {fieldLabel}
+          {labelAdornment}
+        </div>
+      ) : (
+        fieldLabel
+      )}
       {child
         ? cloneElement(child, {
             id,
@@ -1318,6 +1331,11 @@ export function Dialog({
   description,
   children,
   className,
+  icon,
+  iconTone = "neutral",
+  footer,
+  bodyClassName,
+  heading,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -1325,10 +1343,17 @@ export function Dialog({
   description?: ReactNode;
   children?: ReactNode;
   className?: string;
+  icon?: ReactNode;
+  iconTone?: "neutral" | "approved" | "danger";
+  footer?: ReactNode;
+  bodyClassName?: string;
+  heading?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
   const titleId = useId();
+  const descriptionId = useId();
+  const structured = icon !== undefined || footer !== undefined;
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -1359,9 +1384,15 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      className={cn("confirm-dialog ui-dialog", className)}
+      className={cn(
+        "confirm-dialog ui-dialog",
+        structured && "ui-dialog-structured",
+        className,
+      )}
       tabIndex={-1}
-      aria-labelledby={open ? titleId : undefined}
+      aria-labelledby={open && !heading ? titleId : undefined}
+      aria-label={heading ? title : undefined}
+      aria-describedby={description ? descriptionId : undefined}
       onKeyDown={(event) => {
         if (event.key !== "Tab" || event.defaultPrevented) return;
         const dialog = event.currentTarget;
@@ -1409,7 +1440,26 @@ export function Dialog({
       }}
     >
       <div className="ui-dialog-header">
-        <h2 id={titleId}>{title}</h2>
+        {structured && icon && (
+          <span
+            className={cn("ui-dialog-icon", `is-${iconTone}`)}
+            aria-hidden="true"
+          >
+            {icon}
+          </span>
+        )}
+        {structured ? (
+          <div className="ui-dialog-heading">
+            <h2 id={titleId}>{heading ?? title}</h2>
+            {description && (
+              <div id={descriptionId} className="dialog-description muted">
+                {description}
+              </div>
+            )}
+          </div>
+        ) : (
+          <h2 id={titleId}>{title}</h2>
+        )}
         <IconButton
           aria-label={translate("Close dialog", "بستن پنجره")}
           onClick={() => onOpenChange(false)}
@@ -1417,10 +1467,21 @@ export function Dialog({
           <X size={20} aria-hidden="true" />
         </IconButton>
       </div>
-      {description && (
-        <div className="dialog-description muted">{description}</div>
+      {!structured && description && (
+        <div id={descriptionId} className="dialog-description muted">
+          {description}
+        </div>
       )}
-      {children}
+      {structured ? (
+        <>
+          <div className={cn("ui-dialog-body", bodyClassName)}>{children}</div>
+          {footer && (
+            <DialogActions className="ui-dialog-footer">{footer}</DialogActions>
+          )}
+        </>
+      ) : (
+        children
+      )}
     </dialog>
   );
 }
@@ -1493,7 +1554,7 @@ export type SelectOption = {
   count?: number;
 };
 
-function usePopover(minWidth = 224) {
+export function usePopover(minWidth = 224) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<CSSProperties>({});
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
@@ -1548,7 +1609,10 @@ function usePopover(minWidth = 224) {
   };
   const show = () => {
     measure();
-    setPortalTarget(triggerRef.current?.closest("dialog") ?? document.body);
+    setPortalTarget(
+      triggerRef.current?.closest<HTMLElement>("[data-popover-root],dialog") ??
+        document.body,
+    );
     setOpen(true);
   };
   useEffect(() => {

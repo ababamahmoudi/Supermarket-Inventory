@@ -128,6 +128,15 @@ it("shows a duplicate as unticked and disabled and explains its reason in the su
   );
   const summary = screen.getByRole("dialog", { name: "Import complete" });
   expect(
+    within(summary).getByRole("heading", { name: "0 invoices imported" }),
+  ).toBeInTheDocument();
+  expect(summary.querySelectorAll(".invoice-import-stats > div")).toHaveLength(
+    4,
+  );
+  expect(
+    within(summary).getByRole("button", { name: "Close" }),
+  ).toBeInTheDocument();
+  expect(
     within(summary).getByText(/already has that invoice number/),
   ).toBeInTheDocument();
   const canonical = await fixture.readCanonical();
@@ -205,7 +214,16 @@ it("cancelling empty-store confirmation preserves business data, confirming keep
     name: "Start with an empty store",
   });
   expect(
-    within(confirmation).getByText(/Keep company settings/),
+    within(confirmation).getByRole("heading", { name: "Keeps" }),
+  ).toBeInTheDocument();
+  expect(
+    within(confirmation).getByText("Company settings"),
+  ).toBeInTheDocument();
+  expect(
+    within(confirmation).getByRole("heading", { name: "Removes" }),
+  ).toBeInTheDocument();
+  expect(
+    within(confirmation).getByText("Invoices, including imported ones"),
   ).toBeInTheDocument();
   fireEvent.click(within(confirmation).getByRole("button", { name: "Cancel" }));
   expect((await fixture.readCanonical()).products).toEqual(before.products);
@@ -219,6 +237,15 @@ it("cancelling empty-store confirmation preserves business data, confirming keep
     name: "Remove fictional data",
   });
   expect(removeButton).toBeDisabled();
+  for (const invalid of ["delete", "DELET", "Delete"]) {
+    fireEvent.change(
+      within(confirmation).getByLabelText("Type DELETE to confirm"),
+      {
+        target: { value: invalid },
+      },
+    );
+    expect(removeButton).toBeDisabled();
+  }
   fireEvent.change(
     within(confirmation).getByLabelText("Type DELETE to confirm"),
     { target: { value: "DELETE" } },

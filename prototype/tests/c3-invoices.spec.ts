@@ -2,7 +2,13 @@ import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { createHash } from "node:crypto";
-import { invoiceImage, setLanguage, signIn, uploadInvoice } from "./helpers";
+import {
+  invoiceImage,
+  setLanguage,
+  signIn,
+  uploadInvoice,
+  openInvoiceDetails,
+} from "./helpers";
 import type { DemoState } from "../src/types";
 import type { Order } from "../src/orders";
 
@@ -91,6 +97,7 @@ async function reviewWithComparison(page: Page) {
     undefined,
   );
   await page.reload();
+  await openInvoiceDetails(page);
   await page.getByLabel("Order (optional)", { exact: true }).click();
   await page.getByRole("option", { name: /ORD-C3-LAYOUT/ }).click();
   await expect(page.locator(".invoice-order-table tbody tr")).toHaveCount(6);
@@ -103,7 +110,7 @@ async function reviewWithComparison(page: Page) {
   }
   await expect(page.locator(".invoice-order-costs").first()).toBeVisible();
   await expect(
-    page.locator(".receiving-lines-table .badge").first(),
+    page.locator(".receiving-lines-table .receiving-status-icon").first(),
   ).toBeVisible();
 }
 
@@ -256,11 +263,12 @@ for (const width of [1280, 1440, 1920]) {
               ).position,
             };
           });
-        // C7 replaces the old stacked desktop layout with the specified sticky 40% original pane.
+        // The approved receiving composition gives the work pane 1.7 shares
+        // and the sticky original one share, with all five columns visible.
         expect(
           Math.abs(panes.originalTop - panes.reviewTop),
         ).toBeLessThanOrEqual(1);
-        expect(panes.originalShare).toBeCloseTo(0.4, 2);
+        expect(panes.originalShare).toBeCloseTo(1 / 2.7, 2);
         expect(panes.originalPosition).toBe("sticky");
         expect(panes.footerTop).toBeLessThanOrEqual(panes.reviewTop);
         expect(panes.footerPosition).toBe("sticky");

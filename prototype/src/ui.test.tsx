@@ -4,7 +4,7 @@ import {
   prepareSharedUiFixture,
   disposeSharedUiFixture,
 } from "./shared-ui-provider-test-fixture";
-import { useState, type ReactNode } from "react";
+import { createRef, useState, type ReactNode } from "react";
 import {
   act,
   fireEvent,
@@ -32,6 +32,7 @@ import {
   Badge,
   Checkbox,
   ConfirmDialog,
+  Dialog,
   DataTable,
   Disclosure,
   DateField,
@@ -1137,4 +1138,111 @@ beforeEach(async () => {
 });
 afterEach(() => {
   disposeSharedUiFixture();
+});
+
+describe("shared structured compositions", () => {
+  it("keeps field adornments separate from the accessible label and includes rich help", async () => {
+    const button = createRef<HTMLButtonElement>();
+    await show(
+      <>
+        <Field
+          label="Subtotal"
+          labelAdornment={
+            <span role="img" aria-label="Check original">
+              !
+            </span>
+          }
+          hint={
+            <span>
+              Calculated from <strong>line totals</strong>.
+            </span>
+          }
+        >
+          <input defaultValue="12.50" />
+        </Field>
+        <Button ref={button}>Apply value</Button>
+      </>,
+    );
+    const input = screen.getByRole("textbox", {
+      name: "Subtotal",
+    });
+    expect(input).toHaveAccessibleDescription("Calculated from line totals.");
+    expect(
+      screen.getByRole("img", { name: "Check original" }),
+    ).toBeInTheDocument();
+    expect(button.current).toBe(
+      screen.getByRole("button", { name: "Apply value" }),
+    );
+  });
+  it("keeps nested options inside their containing popover", async () => {
+    const user = userEvent.setup();
+    await show(
+      <div data-popover-root data-testid="received-popover">
+        <StatusSelect />
+      </div>,
+    );
+    const parent = screen.getByTestId("received-popover");
+    const select = within(parent).getByRole("combobox", {
+      name: "Invoice status",
+    });
+    await user.click(select);
+    const listbox = within(parent).getByRole("listbox", {
+      name: "Invoice status",
+    });
+    await user.click(within(listbox).getByRole("option", { name: "Posted" }));
+    expect(within(parent).getByTestId("selected-status")).toHaveTextContent(
+      "posted",
+    );
+    expect(select).toHaveFocus();
+  });
+  it("preserves the dialog name, cancellation and return focus with a separate visible heading", async () => {
+    function StructuredDialog() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <Button onClick={() => setOpen(true)}>
+            Review imported invoices
+          </Button>
+          <Dialog
+            open={open}
+            onOpenChange={setOpen}
+            title="Import complete"
+            heading="13 invoices imported"
+            description="Review before posting."
+            icon={<span aria-hidden="true">✓</span>}
+            footer={<Button onClick={() => setOpen(false)}>Done</Button>}
+          >
+            <Field label="Review note">
+              <input defaultValue="Fictional invoice" />
+            </Field>
+          </Dialog>
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    await show(<StructuredDialog />);
+    const trigger = screen.getByRole("button", {
+      name: "Review imported invoices",
+    });
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog", { name: "Import complete" });
+    expect(dialog).toHaveAccessibleDescription("Review before posting.");
+    expect(
+      within(dialog).getByRole("heading", { name: "13 invoices imported" }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("textbox", { name: "Review note" }),
+    ).toHaveFocus();
+    expect(
+      within(dialog).getByRole("button", { name: "Done" }),
+    ).toBeInTheDocument();
+    fireEvent(
+      dialog,
+      new Event("cancel", { bubbles: false, cancelable: true }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(trigger).toHaveFocus();
+  });
 });

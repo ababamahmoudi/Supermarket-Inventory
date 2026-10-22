@@ -158,7 +158,11 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
       "Enter a cost of zero or more with up to four decimal places.",
     ),
   ).toBeVisible();
-  expect(screen.getByRole("button", { name: "Post invoice" })).toBeDisabled();
+  expect(
+    within(document.querySelector(".receiving-header")!).getByRole("button", {
+      name: "Post invoice",
+    }),
+  ).toBeDisabled();
   fireEvent.change(cost, { target: { value: "0.9800" } });
   await renderedUiReady(
     () =>
@@ -213,7 +217,11 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
     ).toBe(0),
   );
   expect(screen.getByLabelText("Cases invoiced")).toHaveValue("12");
-  expect(screen.getByRole("button", { name: "Post invoice" })).toBeDisabled();
+  expect(
+    within(document.querySelector(".receiving-header")!).getByRole("button", {
+      name: "Post invoice",
+    }),
+  ).toBeDisabled();
   fireEvent.change(pack, { target: { value: "12" } });
   await renderedUiReady(
     () =>
@@ -265,6 +273,11 @@ it("groups every invalid total and shows local errors without crashing while fie
       <Invoices />
     </DemoProvider>,
   );
+  await renderedUiReady(() =>
+    Boolean(screen.queryByRole("button", { name: "Edit totals" })),
+  );
+  if (!screen.queryByLabelText("Subtotal"))
+    fireEvent.click(screen.getByRole("button", { name: "Edit totals" }));
   await renderedUiReady(() => Boolean(screen.queryByLabelText("Subtotal")));
   const subtotal = await screen.findByLabelText("Subtotal");
   // With valid total and tax R2 calculates a cleared subtotal. Make the tax
@@ -299,7 +312,11 @@ it("groups every invalid total and shows local errors without crashing while fie
       final_total: "",
     }),
   );
-  fireEvent.pointerDown(screen.getByRole("button", { name: "Post invoice" }));
+  fireEvent.pointerDown(
+    within(document.querySelector(".receiving-header")!).getByRole("button", {
+      name: "Post invoice",
+    }),
+  );
   expect(
     await screen.findByRole("heading", { name: "What's missing" }),
   ).toBeVisible();
@@ -310,7 +327,11 @@ it("groups every invalid total and shows local errors without crashing while fie
       "true",
     );
   }
-  expect(screen.getByRole("button", { name: "Post invoice" })).toBeDisabled();
+  expect(
+    within(document.querySelector(".receiving-header")!).getByRole("button", {
+      name: "Post invoice",
+    }),
+  ).toBeDisabled();
 });
 
 it("retains only the expanded order row keys during a fresh protected read so a real Manager can accept the changed cost", async () => {

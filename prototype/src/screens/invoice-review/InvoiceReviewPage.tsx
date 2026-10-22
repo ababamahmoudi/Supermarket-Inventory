@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useDemo } from "../../store";
 import { Button, Select } from "../../ui";
 import { addManualLine, recalculateInvoice } from "../../invoice";
@@ -30,8 +30,30 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
   const [addProduct, setAddProduct] = useState("");
   const [hidden, setHidden] = useState(false);
   const [reservedHeight, setReservedHeight] = useState(0);
+  const [attentionNavigationKey, setAttentionNavigationKey] = useState(0);
   const [, refreshLayout] = useState(0);
   const root = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const topbar = document.querySelector<HTMLElement>(".topbar");
+    const progress = root.current?.querySelector<HTMLElement>(
+      ".receiving-progress",
+    );
+    const measure = () => {
+      root.current?.style.setProperty(
+        "--receiving-topbar-height",
+        `${topbar?.getBoundingClientRect().height ?? 0}px`,
+      );
+      root.current?.style.setProperty(
+        "--receiving-progress-height",
+        `${progress?.getBoundingClientRect().height ?? 0}px`,
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    if (topbar) observer.observe(topbar);
+    if (progress) observer.observe(progress);
+    return () => observer.disconnect();
+  }, []);
   const open = (index: number | null) => {
     if (index === null && openLine !== null)
       setReservedHeight(root.current?.getBoundingClientRect().height ?? 0);
@@ -40,8 +62,15 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
   const { anchor, clear: clearAnchor } = useReviewScrollAnchor();
   useInvoiceLineHighlight(invoice.id, true);
   const show = (target: string, line?: number) => {
+    setAttentionNavigationKey((value) => value + 1);
     clearAnchor();
     setReservedHeight(0);
+    if (target === "invoice-details-fields") {
+      const disclosure = root.current?.querySelector<HTMLButtonElement>(
+        ".receiving-details-phone-toggle[aria-expanded='false']",
+      );
+      disclosure?.click();
+    }
     if (line !== undefined) setOpenLine(line);
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
@@ -133,7 +162,13 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
         onPost={props.onPost}
         onAttemptPost={props.onAttemptPost}
       />
-      <ProgressStrip invoice={invoice} onNext={next} />
+      <ProgressStrip
+        invoice={invoice}
+        onNext={next}
+        missing={missing}
+        onPost={props.onPost}
+        onAttemptPost={props.onAttemptPost}
+      />
       {props.attemptedPost && workspace.blockers.length > 0 && (
         <MissingPanel
           invoice={invoice}
@@ -162,6 +197,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
             onOpen={open}
             anchor={anchor}
             attemptedPost={props.attemptedPost}
+            attentionNavigationKey={attentionNavigationKey}
           />
           <InvoiceOtherCharges
             invoice={invoice}

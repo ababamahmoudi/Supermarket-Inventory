@@ -54,7 +54,7 @@ it("opens each retained image page with navigation and keeps private page refere
       <Sample />
     </DemoProvider>,
   );
-  await screen.findByText("Page 1 of 2", {}, { timeout: 10_000 });
+  await screen.findByLabelText("Page 1 of 2", {}, { timeout: 10_000 });
   const view = await context!.query(
     "invoices.read",
     {
@@ -77,7 +77,7 @@ it("opens each retained image page with navigation and keeps private page refere
     .getByRole("img", { name: "Original invoice image" })
     .getAttribute("src");
   await user.click(screen.getByRole("button", { name: "Next page" }));
-  await screen.findByText("Page 2 of 2");
+  await screen.findByLabelText("Page 2 of 2");
   await waitFor(() =>
     expect(
       screen.getByRole("img", { name: "Original invoice image" }),
@@ -135,7 +135,7 @@ it("rechecks the same page reference after loading bytes before making them visi
       <Sample />
     </DemoProvider>,
   );
-  await screen.findByText("Page 1 of 2", {}, { timeout: 10_000 });
+  await screen.findByLabelText("Page 1 of 2", {}, { timeout: 10_000 });
   const invoiceId = (await actual.readCanonical()).invoice.id;
   const current = context!;
   let queryCount = 0;

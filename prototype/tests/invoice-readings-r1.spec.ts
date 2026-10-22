@@ -1,3 +1,4 @@
+import { openInvoiceDetails } from "./helpers";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -62,7 +63,9 @@ async function removeFictionalData(page: Page) {
     name: "Start with an empty store",
     exact: true,
   });
-  await expect(confirmation).toContainText("pricing rules");
+  await expect(
+    confirmation.getByText("Pricing rules and categories", { exact: true }),
+  ).toBeVisible();
   await confirmation.getByRole("textbox").fill("DELETE");
   await confirmation
     .getByRole("button", { name: "Remove fictional data", exact: true })
@@ -202,18 +205,18 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
     await page
       .getByRole("button", { name: "View original (2 pages)", exact: true })
       .click();
-  await expect(page.getByText("Page 1 of 2", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Page 1 of 2", { exact: true })).toBeVisible();
   const originalImage = page
     .locator(".invoice-original-media img")
     .filter({ visible: true });
   await expect(originalImage).toHaveJSProperty("naturalWidth", 760);
   await page.getByRole("button", { name: "Next page", exact: true }).click();
-  await expect(page.getByText("Page 2 of 2", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Page 2 of 2", { exact: true })).toBeVisible();
   await expect(originalImage).toHaveJSProperty("naturalWidth", 760);
   await page
     .getByRole("button", { name: "Previous page", exact: true })
     .click();
-  await expect(page.getByText("Page 1 of 2", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Page 1 of 2", { exact: true })).toBeVisible();
   if (phone)
     await page
       .getByRole("dialog", { name: "Original invoice", exact: true })
@@ -246,6 +249,7 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
       (supplier) => supplier.name === fictionalSupplier,
     )?.phone ?? "",
   ).toBe("");
+  await openInvoiceDetails(page);
   await page
     .getByRole("button", { name: "Looks right: Invoice details", exact: true })
     .click();
@@ -279,7 +283,12 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
       editor.getByRole("button", { name: /^Looks right:/ }),
     ).toHaveCount(0);
     await confirmInvoiceLine(page, editor);
-    await expect(receivingRow(page, index)).toContainText("Confirmed");
+    await expect(
+      receivingRow(page, index).getByRole("img", {
+        name: "Confirmed",
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect(editor).toHaveCount(0);
   }
   await page

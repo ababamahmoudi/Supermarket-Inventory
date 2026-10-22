@@ -14,7 +14,7 @@ import { invoiceCheckField, invoiceTotalsCheck } from "./invoice-checks";
 import type { InvoiceReadDTO } from "./invoice-projections";
 import { LtrValue, Money, NotAdded } from "./presentation";
 import { useDemo } from "./store";
-import { Badge, Field as BaseField, DataTable, Select } from "./ui";
+import { Field as BaseField, DataTable, Select } from "./ui";
 
 export function ImportedReadingNote({ invoice }: { invoice: InvoiceReadDTO }) {
   const { state, t } = useDemo();
@@ -74,6 +74,7 @@ export function InvoiceOtherCharges({
     <section className="invoice-other-charges">
       <h3>{t("Other charges and credits", "هزینه‌ها و اعتبارهای دیگر")}</h3>
       <DataTable
+        density="compact"
         columns={[
           { key: "description" },
           { key: "amount", align: "end" },
@@ -245,6 +246,7 @@ export function ReadingCheckProvider({
 /** Adds review affordances to the normal editable field without replacing its input. */
 export function ReadingField({
   readingField,
+  labelAdornment,
   ...props
 }: ComponentProps<typeof BaseField> & { readingField?: string }) {
   const context = useContext(CheckContext);
@@ -302,11 +304,17 @@ export function ReadingField({
       className={[props.className, field ? "please-check-field" : ""]
         .filter(Boolean)
         .join(" ")}
-      adornment={
-        field ? (
-          <div className="reading-check-actions">
+      labelAdornment={
+        <>
+          {labelAdornment}
+          {field && (
             <span
-              className="reading-check-chip"
+              className="reading-check-marker"
+              role="img"
+              aria-label={t(
+                "Check this against the original",
+                "با اصل فاکتور بررسی کنید",
+              )}
               tabIndex={0}
               aria-describedby={helpFocused || helpHovered ? helpId : undefined}
               onFocus={() => setHelpFocused(true)}
@@ -314,21 +322,19 @@ export function ReadingField({
               onMouseEnter={() => setHelpHovered(true)}
               onMouseLeave={() => setHelpHovered(false)}
             >
-              <Badge tone="pending">?</Badge>
+              <span aria-hidden="true">!</span>
+              {(helpFocused || helpHovered) && (
+                <span
+                  id={helpId}
+                  role="tooltip"
+                  className="reading-check-tooltip reading-ai-tooltip"
+                >
+                  {hint}
+                </span>
+              )}
             </span>
-            {(helpFocused || helpHovered) && (
-              <span
-                id={helpId}
-                role="tooltip"
-                className="reading-check-tooltip"
-              >
-                {hint}
-              </span>
-            )}
-          </div>
-        ) : (
-          props.adornment
-        )
+          )}
+        </>
       }
     />
   );
@@ -432,7 +438,10 @@ export function ReadingUnknownChecks({
             label={
               field === "line_type"
                 ? t("Line type", "نوع ردیف")
-                : field.replaceAll("_", " ")
+                : t("Other reading field", "فیلد دیگر خوانش")
+            }
+            hint={
+              field === "line_type" ? undefined : <LtrValue value={field} />
             }
           >
             <input

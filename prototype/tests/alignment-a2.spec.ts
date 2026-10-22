@@ -59,7 +59,11 @@ for (const language of ["en", "fa"] as const) {
         let maxError = 0;
         let cards = 0;
         const failures: string[] = [];
-        const tables = [...main.querySelectorAll(".ui-data-table table")];
+        const tables = [
+          ...main.querySelectorAll(
+            ".ui-data-table table, table.receiving-table",
+          ),
+        ];
         for (const [tableIndex, table] of tables.entries()) {
           const headers = [
             ...table.querySelectorAll("thead tr:first-child th"),
@@ -76,6 +80,7 @@ for (const language of ["en", "fa"] as const) {
             ...table.querySelectorAll("tbody tr"),
           ].entries()) {
             const compact = row.matches(".phone-list-row");
+            const receiving = table.matches(".receiving-table");
             if (
               !compact &&
               (row.children.length !== headers.length ||
@@ -87,7 +92,28 @@ for (const language of ["en", "fa"] as const) {
             if (stacked) {
               cards++;
               const bounds = row.getBoundingClientRect();
-              if (compact) {
+              if (receiving) {
+                for (const region of ["status", "product", "total"]) {
+                  const matches = row.querySelectorAll(
+                    `:scope > .receiving-${region}-cell`,
+                  );
+                  const element = matches[0] as HTMLElement | undefined;
+                  if (
+                    matches.length !== 1 ||
+                    !element ||
+                    element.getBoundingClientRect().height <= 0
+                  )
+                    failures.push(
+                      `table ${tableIndex}, receiving card ${rowIndex}: missing visible ${region}`,
+                    );
+                }
+                if (
+                  row.querySelectorAll(".receiving-phone-chevron").length !== 1
+                )
+                  failures.push(
+                    `table ${tableIndex}, receiving card ${rowIndex}: expected one record chevron`,
+                  );
+              } else if (compact) {
                 // E3 replaces repeated label/value cards with explicit list
                 // regions. Keep the same containment check on every cell.
                 for (const region of [
@@ -132,7 +158,11 @@ for (const language of ["en", "fa"] as const) {
                     `table ${tableIndex}, phone list ${rowIndex}: missing selection checkbox`,
                   );
               }
-              for (const [columnIndex, cell] of [...row.children].entries()) {
+              const rowCells = [...row.children].filter(
+                (cell) =>
+                  !receiving || getComputedStyle(cell).display !== "none",
+              );
+              for (const [columnIndex, cell] of rowCells.entries()) {
                 const rect = cell.getBoundingClientRect();
                 const error = Math.max(
                   0,
@@ -146,7 +176,7 @@ for (const language of ["en", "fa"] as const) {
                   failures.push(
                     `table ${tableIndex}, phone card ${rowIndex}, column ${columnIndex}: containment ${error}px`,
                   );
-                if (compact) {
+                if (compact || receiving) {
                   if (
                     cell.getAttribute("data-column-label") ||
                     !["none", "normal"].includes(
@@ -243,15 +273,19 @@ for (const language of ["en", "fa"] as const) {
       expect(metrics.maxError).toBeLessThanOrEqual(2);
       if (path === "invoices") {
         if ((page.viewportSize()?.width ?? 1280) <= 760) {
-          const rows = page.locator(".receiving-lines-table .phone-list-row");
+          const rows = page.locator(".receiving-table .invoice-line-summary");
           await expect(rows).toHaveCount(6);
           for (const row of await rows.all()) {
-            await expect(row.locator(":scope > td")).toHaveCount(4);
-            for (const cell of ["name", "value", "chevron", "secondary"])
-              await expect(row.locator(`.phone-list-${cell}`)).toBeVisible();
+            await expect(row.locator(":scope > td:visible")).toHaveCount(3);
+            for (const cell of ["status", "product", "total"])
+              await expect(
+                row.locator(`.receiving-${cell}-cell`),
+              ).toBeVisible();
+            await expect(row.locator(".receiving-status-icon")).toBeVisible();
+            await expect(row.locator(".receiving-phone-chevron")).toBeVisible();
           }
           expect(metrics.cards).toBe(6);
-          expect(metrics.cells).toBe(24);
+          expect(metrics.cells).toBe(18);
         } else expect(metrics.cells).toBeGreaterThanOrEqual(30);
       }
       report.push({

@@ -333,6 +333,16 @@ export async function uploadInvoice(page: Page) {
       timeout: remaining(),
     },
   );
+  await openInvoiceDetails(page);
+}
+
+/** Phone receiving keeps the details card compact until its fields are needed. */
+export async function openInvoiceDetails(page: Page) {
+  await expect(page.getByTestId("invoice-details-card")).toBeVisible();
+  const toggle = page.locator(
+    '.receiving-details-phone-toggle[aria-expanded="false"]',
+  );
+  if (await toggle.isVisible()) await toggle.click();
 }
 
 /** Open one R2 line editor and retain its scoped locator. */

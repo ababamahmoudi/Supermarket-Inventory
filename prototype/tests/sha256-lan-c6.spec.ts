@@ -327,11 +327,12 @@ test("C6 nonsecure HTTP uploads, migrates near-full text storage and verifies or
   expect((await retained(page, uploaded.file_data!)).bytes).toEqual(
     photo.buffer,
   );
-  const downloadEvent = page.waitForEvent("download");
   await page
     .locator(".invoice-original-controls:visible")
-    .getByRole("button", { name: "Download", exact: true })
+    .getByRole("button", { name: "More", exact: true })
     .click();
+  const downloadEvent = page.waitForEvent("download");
+  await page.getByRole("menuitem", { name: "Download", exact: true }).click();
   const download = await downloadEvent;
   expect(download.suggestedFilename()).toBe("fictional-lan-original.jpg");
   expect(await readFile((await download.path())!)).toEqual(photo.buffer);

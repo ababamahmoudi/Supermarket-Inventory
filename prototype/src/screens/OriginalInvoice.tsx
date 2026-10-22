@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ChevronLeft,
   ChevronRight,
-  Download,
+  Maximize2,
   Minus,
   MoreHorizontal,
   Plus,
@@ -108,6 +108,10 @@ function OriginalInvoiceContent({
   const [document, setDocument] = useState<PDFDocumentProxy | null>(null);
   const [page, setPage] = useState(1);
   const [error, setError] = useState(false);
+  const [previewReady, setPreviewReady] = useState(false);
+  const previewable =
+    invoice.file_type === "application/pdf" ||
+    invoice.file_type?.startsWith("image/");
   const [loading, setLoading] = useState(
     invoice.file_type === "application/pdf" && invoice.original_available,
   );
@@ -216,7 +220,9 @@ function OriginalInvoiceContent({
           viewport,
           transform: [ratio, 0, 0, ratio, 0, 0],
         });
-        return render.promise;
+        return render.promise.then(() => {
+          if (!cancelled) setPreviewReady(true);
+        });
       })
       .catch((caught: unknown) => {
         if (
@@ -274,104 +280,112 @@ function OriginalInvoiceContent({
           <p className="invoice-original-name">
             <LtrValue value={file.name ?? invoice.file_name} />
           </p>
-          <div
-            className="invoice-original-controls"
-            role="group"
-            aria-label={t("Original invoice", "اصل فاکتور")}
-          >
-            <IconButton
-              size="sm"
-              disabled={document ? page <= 1 : imagePage <= 0}
-              onClick={() =>
-                document
-                  ? setPage((value) => value - 1)
-                  : onImagePage(imagePage - 1)
-              }
-              aria-label={t("Previous page", "صفحه قبل")}
+          <div className="invoice-original-toolbar-container">
+            <div
+              className="invoice-original-controls"
+              role="group"
+              aria-label={t("Original invoice", "اصل فاکتور")}
             >
-              <ChevronLeft size={16} />
-            </IconButton>
-            <span className="invoice-original-page" aria-live="polite">
-              {t(
-                `Page ${document ? page : imagePage + 1} of ${document?.numPages ?? invoice.original_page_count ?? 1}`,
-                `صفحه ${document ? page : imagePage + 1} از ${document?.numPages ?? invoice.original_page_count ?? 1}`,
-              )}
-            </span>
-            <IconButton
-              size="sm"
-              disabled={
-                document
-                  ? page >= document.numPages
-                  : imagePage >= (invoice.original_page_count ?? 1) - 1
-              }
-              onClick={() =>
-                document
-                  ? setPage((value) => value + 1)
-                  : onImagePage(imagePage + 1)
-              }
-              aria-label={t("Next page", "صفحه بعد")}
-            >
-              <ChevronRight size={16} />
-            </IconButton>
-            <IconButton
-              size="sm"
-              onClick={() => changeZoom(zoom - 0.25)}
-              disabled={zoom <= 0.25}
-              aria-label={t("Zoom out", "کوچک‌نمایی")}
-            >
-              <Minus size={16} />
-            </IconButton>
-            <LtrText className="invoice-original-zoom" aria-live="polite">
-              {Math.round(zoom * 100)}%
-            </LtrText>
-            <IconButton
-              size="sm"
-              onClick={() => changeZoom(zoom + 0.25)}
-              disabled={zoom >= 4}
-              aria-label={t("Zoom in", "بزرگ‌نمایی")}
-            >
-              <Plus size={16} />
-            </IconButton>
-            <Button variant="neutral" size="sm" onClick={() => setFit("width")}>
-              {t("Fit width", "اندازه عرض")}
-            </Button>
-            <IconButton
-              size="sm"
-              onClick={() => setRotation((value) => (value + 90) % 360)}
-              aria-label={t("Rotate", "چرخش")}
-            >
-              <RotateCw size={16} />
-            </IconButton>
-            <IconButton
-              size="sm"
-              onClick={download}
-              disabled={!file.source}
-              aria-label={t("Download", "دانلود")}
-            >
-              <Download size={16} />
-            </IconButton>
-            <Menu
-              label={t("More", "بیشتر")}
-              aria-label={t("More", "بیشتر")}
-              icon={<MoreHorizontal size={16} />}
-              iconOnly
-              showChevron={false}
-            >
-              <MenuItem onClick={() => setFit("page")}>
-                {t("Fit page", "اندازه صفحه")}
-              </MenuItem>
-              {onAttach && (
-                <MenuItem onClick={onAttach}>
-                  {t("Replace file", "جایگزینی فایل")}
+              <IconButton
+                size="sm"
+                disabled={document ? page <= 1 : imagePage <= 0}
+                onClick={() =>
+                  document
+                    ? setPage((value) => value - 1)
+                    : onImagePage(imagePage - 1)
+                }
+                aria-label={t("Previous page", "صفحه قبل")}
+              >
+                <ChevronLeft size={16} />
+              </IconButton>
+              <span
+                className="invoice-original-page"
+                aria-live="polite"
+                aria-label={t(
+                  `Page ${document ? page : imagePage + 1} of ${document?.numPages ?? invoice.original_page_count ?? 1}`,
+                  `صفحه ${document ? page : imagePage + 1} از ${document?.numPages ?? invoice.original_page_count ?? 1}`,
+                )}
+              >
+                <LtrValue
+                  value={`${document ? page : imagePage + 1} / ${document?.numPages ?? invoice.original_page_count ?? 1}`}
+                />
+              </span>
+              <IconButton
+                size="sm"
+                disabled={
+                  document
+                    ? page >= document.numPages
+                    : imagePage >= (invoice.original_page_count ?? 1) - 1
+                }
+                onClick={() =>
+                  document
+                    ? setPage((value) => value + 1)
+                    : onImagePage(imagePage + 1)
+                }
+                aria-label={t("Next page", "صفحه بعد")}
+              >
+                <ChevronRight size={16} />
+              </IconButton>
+              <IconButton
+                size="sm"
+                onClick={() => changeZoom(zoom - 0.25)}
+                disabled={zoom <= 0.25}
+                aria-label={t("Zoom out", "کوچک‌نمایی")}
+              >
+                <Minus size={16} />
+              </IconButton>
+              <LtrText className="invoice-original-zoom" aria-live="polite">
+                {Math.round(zoom * 100)}%
+              </LtrText>
+              <IconButton
+                size="sm"
+                onClick={() => changeZoom(zoom + 0.25)}
+                disabled={zoom >= 4}
+                aria-label={t("Zoom in", "بزرگ‌نمایی")}
+              >
+                <Plus size={16} />
+              </IconButton>
+              <IconButton
+                size="sm"
+                aria-label={t("Fit width", "اندازه عرض")}
+                onClick={() => setFit("width")}
+              >
+                <Maximize2 size={16} aria-hidden="true" />
+              </IconButton>
+              <IconButton
+                size="sm"
+                className="invoice-original-rotate"
+                onClick={() => setRotation((value) => (value + 90) % 360)}
+                aria-label={t("Rotate", "چرخش")}
+              >
+                <RotateCw size={16} />
+              </IconButton>
+              <Menu
+                label={t("More", "بیشتر")}
+                aria-label={t("More", "بیشتر")}
+                icon={<MoreHorizontal size={16} />}
+                iconOnly
+                showChevron={false}
+              >
+                <MenuItem onClick={() => setFit("page")}>
+                  {t("Fit page", "اندازه صفحه")}
                 </MenuItem>
-              )}
-            </Menu>
+                <MenuItem
+                  onClick={() => setRotation((value) => (value + 90) % 360)}
+                >
+                  {t("Rotate", "چرخش")}
+                </MenuItem>
+                <MenuItem onClick={download} disabled={!file.source}>
+                  {t("Download", "دانلود")}
+                </MenuItem>
+                {onAttach && (
+                  <MenuItem onClick={onAttach}>
+                    {t("Replace file", "جایگزینی فایل")}
+                  </MenuItem>
+                )}
+              </Menu>
+            </div>
           </div>
-          {(loading || file.loading) && (
-            <p role="status">
-              {t("Loading original invoice…", "در حال بارگذاری اصل فاکتور…")}
-            </p>
-          )}
           {(error || file.error) && (
             <p role="alert" className="form-error">
               {file.error
@@ -437,13 +451,34 @@ function OriginalInvoiceContent({
               pinch.current = null;
             }}
           >
+            {!error &&
+              !file.error &&
+              (loading || file.loading || (previewable && !previewReady)) && (
+                <div
+                  className="invoice-original-skeleton"
+                  role="status"
+                  aria-label={t(
+                    "Loading original invoice",
+                    "بارگذاری اصل فاکتور",
+                  )}
+                >
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              )}
             {invoice.file_type === "application/pdf" ? (
               <canvas
                 ref={canvas}
                 role="img"
                 aria-label={t("Original invoice PDF", "PDF اصل فاکتور")}
               />
-            ) : invoice.file_type?.startsWith("image/") ? (
+            ) : invoice.file_type?.startsWith("image/") &&
+              file.url &&
+              !error &&
+              !file.error ? (
               <div
                 className="invoice-original-image-page"
                 style={{
@@ -461,18 +496,23 @@ function OriginalInvoiceContent({
                   }}
                   onLoad={(event) => {
                     const image = event.currentTarget;
-                    if (image.naturalWidth > 0)
+                    if (image.naturalWidth > 0) {
                       setPageRatio(image.naturalHeight / image.naturalWidth);
+                      setPreviewReady(true);
+                    }
                   }}
+                  onError={() => setError(true)}
                 />
               </div>
             ) : (
-              <p>
-                {t(
-                  "Download the original file to view it.",
-                  "برای مشاهده، فایل اصلی را دانلود کنید.",
-                )}
-              </p>
+              !invoice.file_type?.startsWith("image/") && (
+                <p>
+                  {t(
+                    "Download the original file to view it.",
+                    "برای مشاهده، فایل اصلی را دانلود کنید.",
+                  )}
+                </p>
+              )
             )}
           </div>
         </>

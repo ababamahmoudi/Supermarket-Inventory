@@ -571,11 +571,12 @@ test("C6 keeps twenty distinct 3MB photos out of text storage, preserves exact o
       ),
     )
     .toBe(2000);
-  const downloadEvent = page.waitForEvent("download");
   await page
     .locator(".invoice-original-controls:visible")
-    .getByRole("button", { name: "Download", exact: true })
+    .getByRole("button", { name: "More", exact: true })
     .click();
+  const downloadEvent = page.waitForEvent("download");
+  await page.getByRole("menuitem", { name: "Download", exact: true }).click();
   const download = await downloadEvent;
   const path = await download.path();
   expect(path).not.toBeNull();

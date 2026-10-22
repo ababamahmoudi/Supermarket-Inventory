@@ -1,3 +1,4 @@
+import { openInvoiceDetails } from "./helpers";
 import { createHash } from "node:crypto";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
@@ -42,6 +43,7 @@ async function manual(page: Page) {
     .getByRole("dialog", { name: "New invoice", exact: true })
     .getByRole("button", { name: "Manual entry", exact: true })
     .click();
+  await openInvoiceDetails(page);
   await expect
     .poll(async () => {
       const current = (await stored(page)).invoice;
@@ -121,9 +123,11 @@ async function confirmNoDate(page: Page) {
     .getByRole("button", { name: "No", exact: true })
     .click();
   await confirmInvoiceLine(page, line);
-  await expect(page.getByTestId("invoice-line-row-0")).toContainText(
-    "Confirmed ✓",
-  );
+  await expect(
+    page
+      .getByTestId("invoice-line-row-0")
+      .getByRole("img", { name: "Confirmed", exact: true }),
+  ).toBeVisible();
 }
 
 async function post(page: Page) {

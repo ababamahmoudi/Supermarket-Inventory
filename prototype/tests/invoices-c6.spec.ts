@@ -1,3 +1,4 @@
+import { openInvoiceDetails } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, signIn, invoiceImage } from "./helpers";
@@ -33,6 +34,7 @@ async function manual(page: Page) {
     .getByRole("dialog", { name: "New invoice", exact: true })
     .getByRole("button", { name: "Manual entry", exact: true })
     .click();
+  await openInvoiceDetails(page);
   await expect(page.locator("#invoice-details-fields")).toBeVisible();
 }
 
@@ -52,6 +54,10 @@ test("manual invoice uses local time, term dates and editable computed totals wi
   }).formatToParts(new Date(before.invoice.received_at!));
   const part = (type: string) =>
     local.find((item) => item.type === type)?.value;
+  await page
+    .locator(".receiving-received-summary")
+    .getByRole("button", { name: "Change", exact: true })
+    .click();
   await expect(page.locator("#invoice-received-date")).toContainText(
     `${part("year")}-${part("month")}-${part("day")}`,
   );
@@ -78,6 +84,7 @@ test("manual invoice uses local time, term dates and editable computed totals wi
   const expectedDue = new Date(`${invoice.invoice_date}T12:00:00Z`);
   expectedDue.setUTCDate(expectedDue.getUTCDate() + 30);
   expect(invoice.due_date).toBe(expectedDue.toISOString().slice(0, 10));
+  await page.getByRole("button", { name: "Edit totals", exact: true }).click();
   await page.getByLabel("Subtotal", { exact: true }).fill("");
   await expect(page.getByTestId("invoice-totals-card")).toBeVisible();
   await expect(page.getByLabel("Subtotal", { exact: true })).toHaveValue(
@@ -85,7 +92,7 @@ test("manual invoice uses local time, term dates and editable computed totals wi
   );
   expect((await stored(page)).invoice.subtotal).toBe("0.00");
   await expect(page.getByTestId("invoice-totals-card")).toContainText(
-    "Calculated: compare with the paper",
+    "Calculated · not on the paper",
   );
   await page.getByLabel("Subtotal", { exact: true }).fill("400.00");
   await page.getByLabel("Tax", { exact: true }).fill("52.00");
@@ -284,6 +291,7 @@ test("New invoice preserves an unsaved draft and its durable original instead of
     .getByRole("dialog", { name: "New invoice", exact: true })
     .getByRole("button", { name: "Manual entry", exact: true })
     .click();
+  await openInvoiceDetails(page);
   await expect
     .poll(async () => (await stored(page)).invoice.id)
     .not.toBe(prior.id);

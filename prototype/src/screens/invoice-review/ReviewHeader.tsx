@@ -19,9 +19,6 @@ export function ReviewHeader({
   onAttemptPost(): void;
 }) {
   const { state, t, lang } = useDemo();
-  const tooltipId = useId();
-  const [focused, setFocused] = useState(false);
-  const [hovered, setHovered] = useState(false);
   return (
     <header className="receiving-header">
       <a className="back-link" href="#invoices">
@@ -62,39 +59,57 @@ export function ReviewHeader({
           <Button variant="neutral" onClick={onClose}>
             {t("Save and close", "ذخیره و بستن")}
           </Button>
-          <span
-            className="receiving-post-control"
-            tabIndex={missing ? 0 : undefined}
-            aria-describedby={
-              missing && (focused || hovered) ? tooltipId : undefined
-            }
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            onPointerDownCapture={() => {
-              if (missing) onAttemptPost();
-            }}
-            onKeyDown={(e) => {
-              if (missing && (e.key === "Enter" || e.key === " "))
-                onAttemptPost();
-            }}
-          >
-            <Button disabled={!!missing} onClick={onPost}>
-              {t("Post invoice", "ثبت فاکتور")}
-            </Button>
-            {missing && (focused || hovered) && (
-              <span
-                className="reading-check-tooltip"
-                role="tooltip"
-                id={tooltipId}
-              >
-                {missing}
-              </span>
-            )}
-          </span>
+          <PostInvoiceControl
+            missing={missing}
+            onPost={onPost}
+            onAttemptPost={onAttemptPost}
+            className="receiving-desktop-post"
+          />
         </div>
       </div>
     </header>
+  );
+}
+
+export function PostInvoiceControl({
+  missing,
+  onPost,
+  onAttemptPost,
+  className,
+}: {
+  missing: string;
+  onPost(): void;
+  onAttemptPost(): void;
+  className?: string;
+}) {
+  const { t } = useDemo();
+  const tooltipId = useId();
+  const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  return (
+    <span
+      className={`receiving-post-control ${className ?? ""}`}
+      tabIndex={missing ? 0 : undefined}
+      aria-describedby={missing && (focused || hovered) ? tooltipId : undefined}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onPointerDownCapture={() => {
+        if (missing) onAttemptPost();
+      }}
+      onKeyDown={(e) => {
+        if (missing && (e.key === "Enter" || e.key === " ")) onAttemptPost();
+      }}
+    >
+      <Button disabled={!!missing} onClick={onPost}>
+        {t("Post invoice", "ثبت فاکتور")}
+      </Button>
+      {missing && (focused || hovered) && (
+        <span className="reading-check-tooltip" role="tooltip" id={tooltipId}>
+          {missing}
+        </span>
+      )}
+    </span>
   );
 }

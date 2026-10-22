@@ -89,6 +89,12 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           .replace(/\s+/g, " ")
           .trim();
       const round = (value) => Math.round(value * 100) / 100;
+      const canonicalColor = (value) => {
+        const context = document.createElement("canvas").getContext("2d");
+        if (!context) return value;
+        context.fillStyle = value;
+        return context.fillStyle;
+      };
       const textContrastOf = (element) => {
         const parse = (color) => {
           const channels = color.match(/[\d.]+/g)?.map(Number) ?? [];
@@ -198,6 +204,131 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         if (element.closest(".topbar")) return "topbar";
         return "action";
       };
+      // The approved receiving sheets use explicit grid actions on phones.
+      // Measure those exact slots instead of treating a full-width action as
+      // an accidentally stretched ordinary button.
+      const phoneReceivingWidths = new Map();
+      const phone = document.documentElement.clientWidth < 760;
+      const contentBounds = (element) => {
+        const bounds = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        const left =
+          bounds.left +
+          parseFloat(style.paddingLeft || "0") +
+          parseFloat(style.borderLeftWidth || "0");
+        const right =
+          bounds.right -
+          parseFloat(style.paddingRight || "0") -
+          parseFloat(style.borderRightWidth || "0");
+        return { left, right, width: right - left };
+      };
+      const checkPhoneActionGrid = (
+        group,
+        controls,
+        count,
+        label,
+        container,
+      ) => {
+        const style = getComputedStyle(group);
+        const bounds = contentBounds(group);
+        const containerBounds = contentBounds(container);
+        const gap = parseFloat(style.columnGap || "0") || 0;
+        const requiredWidth = (bounds.width - gap * (count - 1)) / count;
+        if (
+          style.display !== "grid" ||
+          controls.length !== count ||
+          Math.abs(bounds.left - containerBounds.left) > 1 ||
+          Math.abs(bounds.right - containerBounds.right) > 1
+        )
+          failures.push(`Receiving phone action grid: ${label}`);
+        const measured = controls
+          .map((control) => ({
+            control,
+            bounds: control.getBoundingClientRect(),
+          }))
+          .sort((a, b) => a.bounds.left - b.bounds.left);
+        for (const [index, { control, bounds: rect }] of measured.entries()) {
+          phoneReceivingWidths.set(control, requiredWidth);
+          if (
+            Math.abs(rect.width - requiredWidth) > 1 ||
+            Math.abs(
+              rect.left - (bounds.left + index * (requiredWidth + gap)),
+            ) > 1 ||
+            Math.abs(rect.top - measured[0].bounds.top) > 1
+          )
+            failures.push(
+              `Receiving phone action does not fill its grid slot: ${tidy(control.textContent)}`,
+            );
+        }
+      };
+      for (const form of document.querySelectorAll(
+        ".receiving-editor-row > td > .receiving-line-editor",
+      )) {
+        if (!visible(form)) continue;
+        const footer = form.querySelector(":scope > .receiving-line-footer");
+        if (!footer || !visible(footer)) {
+          failures.push("Receiving editor footer needs its exact action set");
+          continue;
+        }
+        const secondary = footer.querySelector(
+          ":scope > .receiving-line-secondary-actions",
+        );
+        const confirmation = footer.querySelector(
+          ":scope > .receiving-line-confirm-actions",
+        );
+        const controls = [
+          ...footer.querySelectorAll(":scope > .actions > button"),
+        ].filter(visible);
+        if (
+          !secondary ||
+          !confirmation ||
+          controls.length !== (phone ? 3 : 4) ||
+          controls.filter((control) =>
+            control.matches(".receiving-line-confirm"),
+          ).length !== 1 ||
+          controls.filter((control) =>
+            control.matches(".receiving-line-remove"),
+          ).length !== 1 ||
+          controls.filter((control) => control.matches(".receiving-line-close"))
+            .length !== (phone ? 0 : 1)
+        )
+          failures.push("Receiving editor footer needs its exact action set");
+        if (phone && secondary && confirmation) {
+          checkPhoneActionGrid(
+            secondary,
+            [...secondary.querySelectorAll(":scope > button")].filter(visible),
+            2,
+            "line secondary actions",
+            footer,
+          );
+          checkPhoneActionGrid(
+            confirmation,
+            [...confirmation.querySelectorAll(":scope > button")].filter(
+              visible,
+            ),
+            1,
+            "Confirm line",
+            footer,
+          );
+        }
+      }
+      if (phone)
+        for (const review of document.querySelectorAll(".receiving-review")) {
+          if (!visible(review)) continue;
+          const group = review.querySelector(
+            ":scope > .receiving-progress > .receiving-progress-actions",
+          );
+          if (!group || !visible(group)) {
+            failures.push("Receiving phone action grid: receiving progress");
+            continue;
+          }
+          const controls = [
+            ...group.querySelectorAll(
+              ":scope > .ui-button.button, :scope > .receiving-post-control > .ui-button.button",
+            ),
+          ].filter(visible);
+          checkPhoneActionGrid(group, controls, 2, "receiving progress", group);
+        }
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
       )) {
@@ -222,8 +353,13 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         ].find((value) => element.classList.contains(`button-${value}`));
         const nearestRow = element.closest("tbody tr");
         const dialog = element.closest("dialog");
+        const receivingForm = element.closest(
+          ".receiving-editor-row > td > .receiving-line-editor",
+        );
         const row =
-          nearestRow && (!dialog || !nearestRow.contains(dialog))
+          nearestRow &&
+          !receivingForm &&
+          (!dialog || !nearestRow.contains(dialog))
             ? nearestRow
             : null;
         let textWidth = 0;
@@ -319,7 +455,6 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         };
         buttons.push(entry);
         if (kind === "action" || kind === "choice") {
-          const phone = document.documentElement.clientWidth < 760;
           const small =
             element.classList.contains("button-sm") ||
             element.closest(".table-actions, .catalog-row-actions");
@@ -328,15 +463,24 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const fieldAlignedAdd = element.matches(
             ".date-quick-actions > button[type='submit'], .product-editor-date-add > button",
           );
-          const expectedHeight = element.closest(".c9-filter-toolbar")
-            ? element.closest(".ui-segments")
-              ? 32
-              : 40
-            : phone || fieldAlignedAdd
-              ? 44
-              : small
+          const structuredFooter = element.matches(
+            "dialog.ui-dialog-structured > .ui-dialog-footer > .ui-button.button",
+          );
+          const structuredSecondary =
+            structuredFooter &&
+            variantClass === "secondary" &&
+            !element.disabled;
+          const expectedHeight = structuredFooter
+            ? 44
+            : element.closest(".c9-filter-toolbar")
+              ? element.closest(".ui-segments")
                 ? 32
-                : 40;
+                : 40
+              : phone || fieldAlignedAdd
+                ? 44
+                : small
+                  ? 32
+                  : 40;
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {
@@ -371,8 +515,26 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               `Text action height: ${label} (${round(rect.height)}px)`,
             );
           if (!variantClass) failures.push(`Unstyled text action: ${label}`);
+          if (structuredSecondary) {
+            const tokenBorder = canonicalColor(
+              style.getPropertyValue("--field-border").trim(),
+            );
+            if (
+              ["Top", "Right", "Bottom", "Left"].some(
+                (side) =>
+                  Math.abs(parseFloat(style[`border${side}Width`]) - 1) >
+                    0.01 ||
+                  style[`border${side}Style`] !== "solid" ||
+                  canonicalColor(style[`border${side}Color`]) !== tokenBorder,
+              )
+            )
+              failures.push(
+                `Structured dialog secondary needs its 1px field-token border: ${label}`,
+              );
+          }
           if (
             kind === "action" &&
+            !structuredSecondary &&
             element.closest(".card, .ui-card, dialog") &&
             parseFloat(style.borderTopWidth) > 0.5 &&
             style.borderTopStyle !== "none"
@@ -384,7 +546,10 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             failures.push(
               `Table action wider than 200px: ${label} (${round(rect.width)}px)`,
             );
-          if (rect.width > Math.max(40, intrinsicWidth) + 5)
+          if (
+            !phoneReceivingWidths.has(element) &&
+            rect.width > Math.max(40, intrinsicWidth) + 5
+          )
             failures.push(
               `${row ? "Table action" : "Text action"} stretched: ${label} (${round(rect.width)} > ${round(intrinsicWidth)})`,
             );
@@ -410,7 +575,72 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const chevronCells = cells.filter((cell) =>
             cell.matches(".phone-list-chevron"),
           );
-          if (
+          const importContentRow = row.matches(
+            ".invoice-readings-table tr.phone-list-row[data-import-id]",
+          );
+          const chargesContentRow = row.matches(
+            ".invoice-other-charges tr.phone-list-row",
+          );
+          const contentRow = importContentRow || chargesContentRow;
+          if (contentRow) {
+            const selection = row.querySelectorAll(
+              ":scope > .phone-list-selection [role='checkbox']",
+            );
+            const name = row.querySelector(":scope > .phone-list-name");
+            const value = row.querySelector(":scope > .phone-list-value");
+            const secondary = row.querySelector(
+              ":scope > .phone-list-secondary",
+            );
+            const rowBounds = row.getBoundingClientRect();
+            if (
+              getComputedStyle(row).display !== "grid" ||
+              rowNavigation.length !== 0 ||
+              rowDisclosure.length !== 0 ||
+              !name ||
+              !tidy(name.textContent) ||
+              !value ||
+              !tidy(value.textContent) ||
+              !secondary ||
+              !tidy(secondary.textContent) ||
+              cells.some((cell) => {
+                const bounds = cell.getBoundingClientRect();
+                return (
+                  bounds.left < rowBounds.left - 1 ||
+                  bounds.right > rowBounds.right + 1
+                );
+              })
+            )
+              failures.push(
+                "Receiving phone content row loses contained fields",
+              );
+            if (
+              importContentRow &&
+              (selection.length !== 1 ||
+                !selection[0].getAttribute("aria-label") ||
+                !value?.querySelector(".ui-badge") ||
+                secondary?.querySelectorAll("[role='combobox']").length !== 1 ||
+                secondary?.querySelectorAll("img.invoice-reading-thumbnail")
+                  .length !== 1)
+            )
+              failures.push(
+                "Import preview phone row needs selection, Status and its secondary fields",
+              );
+            if (chargesContentRow) {
+              const edits = name?.querySelectorAll(
+                "a[data-control-kind='disclosure'][aria-expanded]",
+              );
+              const review = Boolean(row.closest(".receiving-review"));
+              if (
+                selection.length !== 0 ||
+                edits?.length !== (review ? 1 : 0) ||
+                !value?.querySelector("bdi[dir='ltr'], .value-empty") ||
+                secondary?.querySelectorAll(":scope > span").length !== 1
+              )
+                failures.push(
+                  "Other charges phone row needs its amount, tax and permitted inline edit",
+                );
+            }
+          } else if (
             getComputedStyle(row).display !== "grid" ||
             chevronCells.length !== 1 ||
             rowNavigation.length !== 1 ||
@@ -486,6 +716,15 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             // invoice form, rather than at the row end. The independent
             // action/control/style/size audits above still measure them.
             .filter((element) => !element.closest(".reading-check-actions"))
+            // A composed receiving editor is a full form inside an expanded
+            // row. Its exact footer set/grid is measured above; each ordinary
+            // action still passes every independent size/style audit.
+            .filter(
+              (element) =>
+                !element.closest(
+                  ".receiving-editor-row > td > .receiving-line-editor",
+                ),
+            )
             .filter((element) => ["action", "icon"].includes(kindOf(element)));
           if (controls.length > 2)
             failures.push(
@@ -726,10 +965,34 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               parent.closest(".sr-only, .visually-hidden")
             )
               continue;
+            const ellipsis = parent.closest(
+              ".receiving-table .receiving-product-name",
+            );
+            const ellipsisStyle = ellipsis && getComputedStyle(ellipsis);
+            const ellipsisBounds = ellipsis?.getBoundingClientRect();
+            // Only the reference receiving name intentionally elides text.
+            // Its full exact title remains available and its painted box must
+            // stay wholly within this cell; no other clipped text is exempt.
+            const receivingEllipsis =
+              ellipsis &&
+              ellipsis.closest("td") === cell &&
+              ellipsisStyle.overflowX === "hidden" &&
+              ellipsisStyle.textOverflow === "ellipsis" &&
+              ellipsisStyle.whiteSpace === "nowrap" &&
+              tidy(ellipsis.getAttribute("title")) ===
+                tidy(ellipsis.textContent) &&
+              tidy(ellipsis.textContent) &&
+              ellipsisBounds.left >= bounds.left - 1 &&
+              ellipsisBounds.right <= bounds.right + 1 &&
+              ellipsisBounds.top >= bounds.top - 1 &&
+              ellipsisBounds.bottom <= bounds.bottom + 1;
             const range = document.createRange();
             range.selectNodeContents(node);
             for (const rect of range.getClientRects())
-              if (rect.left < bounds.left - 2 || rect.right > bounds.right + 2)
+              if (
+                !receivingEllipsis &&
+                (rect.left < bounds.left - 2 || rect.right > bounds.right + 2)
+              )
                 failures.push(`Clipped table text: ${tidy(node.textContent)}`);
           }
         }

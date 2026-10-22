@@ -574,29 +574,6 @@ div.ui-kpi:hover {
 .sidebar nav a[aria-current="page"]::before {
   display: none;
 }
-/* Icon navigation shows the same translated label on hover and keyboard focus. */
-.is-collapsed .sidebar:not(.is-open) nav a {
-  position: relative;
-}
-.is-collapsed .sidebar:not(.is-open) nav a:is(:hover, :focus) .nav-item-label {
-  display: block;
-  position: absolute;
-  inset-inline-start: calc(100% + 12px);
-  inset-block-start: 50%;
-  transform: translateY(-50%);
-  inline-size: max-content;
-  max-inline-size: 240px;
-  padding: 8px 12px;
-  border-radius: var(--radius-menu);
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-menu);
-  font-size: var(--font-size-label);
-  font-weight: var(--font-weight-caption);
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 60;
-}
 :root .sidebar .user-menu.ui-button.button {
   block-size: 56px;
   min-block-size: 56px;

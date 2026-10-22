@@ -56,6 +56,8 @@ export async function removeReceivingDemo(
 export async function importReceivingFixture(
   page: Page,
   language: ReceivingLanguage,
+  onPreview?: (preview: Locator) => Promise<void>,
+  onSummary?: (summary: Locator) => Promise<void>,
 ) {
   await signIn(page, "Owner");
   await setBranch(page, "Branch 1");
@@ -92,6 +94,7 @@ export async function importReceivingFixture(
   await expect(complete.getByRole("checkbox")).not.toBeChecked();
   await complete.getByRole("checkbox").check();
   await expect(partial.getByRole("checkbox")).not.toBeChecked();
+  await onPreview?.(preview);
   await preview
     .getByRole("button", {
       name: word(language, "Import 1 invoices", "ورود 1 فاکتور"),
@@ -103,6 +106,7 @@ export async function importReceivingFixture(
     exact: true,
   });
   await expect(summary).toBeVisible();
+  await onSummary?.(summary);
   await summary
     .getByText(word(language, "Open Needs review", "باز کردن نیازمند بررسی"), {
       exact: true,

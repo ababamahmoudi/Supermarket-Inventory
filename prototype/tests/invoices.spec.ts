@@ -269,7 +269,11 @@ test("manual draft survives a refresh and cannot post without its original", asy
   await page.goto(savedRoute);
   await page.reload();
   await expect(page.locator(".invoice-line")).toHaveCount(1);
-  await expect(page.locator(".invoice-line")).toContainText("Confirmed");
+  await expect(
+    page
+      .locator(".invoice-line")
+      .getByRole("img", { name: "Confirmed", exact: true }),
+  ).toBeVisible();
   await expect(page.locator(".invoice-line")).toHaveAttribute(
     "data-expanded",
     "false",

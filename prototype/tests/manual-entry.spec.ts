@@ -1,3 +1,4 @@
+import { openInvoiceDetails } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import {
@@ -298,6 +299,7 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     .getByRole("dialog", { name: "New invoice", exact: true })
     .getByRole("button", { name: "Manual entry", exact: true })
     .click();
+  await openInvoiceDetails(page);
   await chooseOption(
     page,
     page
@@ -398,9 +400,11 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     .getByRole("button", { name: "No", exact: true })
     .click();
   await page.getByRole("button", { name: "Confirm line", exact: true }).click();
-  await expect(page.locator(".invoice-line-summary")).toContainText(
-    "Confirmed",
-  );
+  await expect(
+    page
+      .locator(".invoice-line-summary")
+      .getByRole("img", { name: "Confirmed", exact: true }),
+  ).toBeVisible();
   await expect(post).toBeDisabled();
   await page
     .getByLabel(/^(Attach original|Replace file)$/)

@@ -40,6 +40,7 @@ export function OriginalViewer({
   }
   const hidden = preference.key === key ? preference.hidden : storedHidden;
   const [expanded, setExpanded] = useState(false);
+  const [failedThumbnail, setFailedThumbnail] = useState("");
   const [pdfThumbnail, setPdfThumbnail] = useState({ sourceKey: "", url: "" });
   const onThumbnail = useCallback(
     (sourceKey: string, url: string) => setPdfThumbnail({ sourceKey, url }),
@@ -135,8 +136,14 @@ export function OriginalViewer({
         }
       >
         <span className="original-viewer-thumbnail" aria-hidden="true">
-          {thumbnailUrl ? (
-            <img src={thumbnailUrl} alt="" />
+          {thumbnailUrl && failedThumbnail !== firstPage.key ? (
+            <img
+              src={thumbnailUrl}
+              alt=""
+              onError={() => setFailedThumbnail(firstPage.key)}
+            />
+          ) : firstPage.loading ? (
+            <span className="original-viewer-thumbnail-skeleton" />
           ) : (
             <FileImage size={24} />
           )}
@@ -152,7 +159,7 @@ export function OriginalViewer({
         open={expanded}
         onOpenChange={setExpanded}
         title={t("Original invoice", "اصل فاکتور")}
-        className="original-viewer-dialog"
+        className="original-viewer-dialog dialog-phone-fullscreen"
       >
         {expanded && (
           <OriginalInvoice

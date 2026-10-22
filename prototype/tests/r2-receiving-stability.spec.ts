@@ -1,3 +1,4 @@
+import { openInvoiceDetails } from "./helpers";
 import { expect, test } from "@playwright/test";
 import {
   expectReceivingStable,
@@ -24,6 +25,7 @@ for (const language of ["en", "fa"] as const) {
         .locator('[role="region"]')
         .filter({ has: page.locator('[id^="invoice-line-"][id$="-name-en"]') }),
     ).toHaveCount(0);
+    await openInvoiceDetails(page);
     const details = page.getByRole("button", {
       name: word(
         language,
@@ -98,7 +100,12 @@ for (const language of ["en", "fa"] as const) {
       { scroll: false },
     );
     await expect(editor).toHaveCount(0);
-    await expect(row).toContainText(word(language, "Confirmed", "تأیید شد"));
+    await expect(
+      row.getByRole("img", {
+        name: word(language, "Confirmed", "تأیید شد"),
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect(
       page.locator('[id^="invoice-line-"][id$="-name-en"]'),
     ).toHaveCount(0);

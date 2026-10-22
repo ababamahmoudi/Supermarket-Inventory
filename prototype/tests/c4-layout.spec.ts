@@ -1,3 +1,4 @@
+import { openInvoiceDetails } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, openInvoiceLine, setLanguage, signIn } from "./helpers";
 
@@ -205,6 +206,7 @@ for (const width of [1280, 1440, 1920]) {
         .getByRole("dialog", { name: "New invoice", exact: true })
         .getByRole("button", { name: "Manual entry", exact: true })
         .click();
+      await openInvoiceDetails(page);
       await page
         .locator("#invoice-details-fields")
         .getByLabel("Supplier", { exact: true })

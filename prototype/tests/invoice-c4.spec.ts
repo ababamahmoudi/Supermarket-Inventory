@@ -66,7 +66,11 @@ for (const language of ["en", "fa"] as const)
       .toBeGreaterThan(0);
     const downloadPromise = page.waitForEvent("download");
     await page
-      .getByRole("button", { name: fa ? "دانلود" : "Download", exact: true })
+      .locator(".invoice-original-controls:visible")
+      .getByRole("button", { name: fa ? "بیشتر" : "More", exact: true })
+      .click();
+    await page
+      .getByRole("menuitem", { name: fa ? "دانلود" : "Download", exact: true })
       .click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe(original.file_name);
@@ -277,7 +281,7 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
   await expect(canvas).toBeVisible();
   await expect(
     page.locator(".invoice-original-page").filter({ visible: true }),
-  ).toHaveText("Page 1 of 2");
+  ).toHaveAttribute("aria-label", "Page 1 of 2");
   if ((page.viewportSize()?.width ?? 1440) <= 760) {
     const trigger = page.locator(".original-viewer-phone-trigger");
     await expect(trigger).toHaveText("View original (2 pages)");
@@ -315,7 +319,7 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
   await page.getByRole("button", { name: "Next page", exact: true }).click();
   await expect(
     page.locator(".invoice-original-page").filter({ visible: true }),
-  ).toHaveText("Page 2 of 2");
+  ).toHaveAttribute("aria-label", "Page 2 of 2");
   await expect
     .poll(() =>
       canvas.evaluate((element) => (element as HTMLCanvasElement).toDataURL()),
@@ -403,17 +407,18 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
   await showReviewOriginal(page);
   await expect(
     page.locator(".invoice-original-page").filter({ visible: true }),
-  ).toHaveText("Page 1 of 2");
+  ).toHaveAttribute("aria-label", "Page 1 of 2");
   expect((await saved(page)).invoice.file_data).toBe(uploaded);
   await expect.poll(() => pixel(0.18)).toEqual([51, 102, 204]);
   const afterReload = await storedPdf();
   expect(afterReload).toEqual(beforeReload);
   expect(Buffer.from(afterReload.bytes)).toEqual(fixture.buffer);
-  const downloadEvent = page.waitForEvent("download");
   await page
-    .locator(".invoice-original-controls")
-    .getByRole("button", { name: "Download", exact: true })
+    .locator(".invoice-original-controls:visible")
+    .getByRole("button", { name: "More", exact: true })
     .click();
+  const downloadEvent = page.waitForEvent("download");
+  await page.getByRole("menuitem", { name: "Download", exact: true }).click();
   const download = await downloadEvent;
   expect(download.suggestedFilename()).toBe(fixture.name);
   const downloadPath = await download.path();

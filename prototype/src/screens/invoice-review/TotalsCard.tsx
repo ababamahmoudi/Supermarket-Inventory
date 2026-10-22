@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
+import { useState } from "react";
 import { useDemo } from "../../store";
-import { Button } from "../../ui";
+import { Badge, Button } from "../../ui";
 
 import {
   ReadingMoney as Money,
@@ -24,6 +25,15 @@ export function TotalsCard({
   const fields = (invoice.low_confidence_fields ?? []).filter((x) =>
     ["subtotal", "tax", "final_total"].includes(invoiceCheckField(x)),
   );
+  const [editing, setEditing] = useState(() =>
+    fields.some((field) => !field.startsWith("calculated:")),
+  );
+  const showEditor =
+    editing ||
+    (attemptedPost &&
+      [invoice.subtotal, invoice.tax, invoice.final_total].some(
+        (value) => !/^\d+(?:\.\d{1,2})?$/.test(value),
+      ));
   const safe = (value?: string) => {
     try {
       return new Decimal(value || 0);
@@ -45,26 +55,37 @@ export function TotalsCard({
   const differences = invoiceTotalsCheck(invoice);
   return (
     <section
-      className="list-box receiving-totals"
+      className="list-box receiving-totals ui-form-large"
       data-testid="invoice-totals-card"
     >
       <div className="receiving-card-title">
         <h2>{t("Totals", "جمع‌ها")}</h2>
-        <Button
-          variant="secondary"
-          size="sm"
-          aria-label={t("Looks right: Totals", "درست است: جمع‌ها")}
-          onClick={() =>
-            update((draft, actor) => {
-              for (const field of fields)
-                acknowledgeInvoiceCheck(draft, actor, field);
-              for (const charge of draft.invoice.other_charges ?? [])
-                charge.low_confidence_fields = [];
-            })
-          }
-        >
-          {t("Looks right", "درست است")}
-        </Button>
+        <div className="receiving-totals-actions">
+          <Button
+            variant="plain"
+            size="sm"
+            aria-label={t("Edit totals", "ویرایش جمع‌ها")}
+            aria-expanded={showEditor}
+            onClick={() => setEditing((value) => !value)}
+          >
+            {t("Edit", "ویرایش")}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-label={t("Looks right: Totals", "درست است: جمع‌ها")}
+            onClick={() =>
+              update((draft, actor) => {
+                for (const field of fields)
+                  acknowledgeInvoiceCheck(draft, actor, field);
+                for (const charge of draft.invoice.other_charges ?? [])
+                  charge.low_confidence_fields = [];
+              })
+            }
+          >
+            {t("Looks right", "درست است")}
+          </Button>
+        </div>
       </div>
       <ReadingCheckProvider
         fields={fields}
@@ -104,43 +125,62 @@ export function TotalsCard({
                   : undefined;
             return (
               <div className="receiving-total-edit" key={key}>
-                <Field
-                  readingField={key}
-                  label={t(...labels[key])}
-                  error={
-                    attemptedPost && !/^\d+(?:\.\d{1,2})?$/.test(invoice[key])
-                      ? t(
-                          "Enter nonnegative totals with no more than two decimal places.",
-                          "مبالغ غیرمنفی با حداکثر دو رقم اعشار وارد کنید.",
-                        )
-                      : undefined
-                  }
-                  hint={
-                    calculated
-                      ? t(
-                          "Calculated: compare with the paper",
-                          "محاسبه‌شده: با کاغذ مقایسه کنید",
-                        )
-                      : undefined
-                  }
-                >
-                  <input
-                    id={`invoice-${key.replaceAll("_", "-")}`}
-                    dir="ltr"
-                    inputMode="decimal"
-                    value={invoice[key]}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      update((draft, actor) => {
-                        setInvoiceAmount(draft.invoice, key, value);
-                        for (const field of draft.invoice
-                          .low_confidence_fields ?? [])
-                          if (invoiceCheckField(field) === key)
-                            acknowledgeInvoiceCheck(draft, actor, field);
-                      });
-                    }}
-                  />
-                </Field>
+                {!showEditor ? (
+                  <div className="receiving-total-row">
+                    <span>
+                      {t(...labels[key])}
+                      {calculated && (
+                        <Badge tone="pending" wrap>
+                          {t(
+                            "Calculated · not on the paper",
+                            "محاسبه‌شده · روی کاغذ نیست",
+                          )}
+                        </Badge>
+                      )}
+                    </span>
+                    <Money value={invoice[key]} />
+                  </div>
+                ) : (
+                  <Field
+                    readingField={key}
+                    label={t(...labels[key])}
+                    error={
+                      attemptedPost && !/^\d+(?:\.\d{1,2})?$/.test(invoice[key])
+                        ? t(
+                            "Enter nonnegative totals with no more than two decimal places.",
+                            "مبالغ غیرمنفی با حداکثر دو رقم اعشار وارد کنید.",
+                          )
+                        : undefined
+                    }
+                    hint={
+                      calculated ? (
+                        <Badge tone="pending" wrap>
+                          {t(
+                            "Calculated · not on the paper",
+                            "محاسبه‌شده · روی کاغذ نیست",
+                          )}
+                        </Badge>
+                      ) : undefined
+                    }
+                  >
+                    <input
+                      id={`invoice-${key.replaceAll("_", "-")}`}
+                      dir="ltr"
+                      inputMode="decimal"
+                      value={invoice[key]}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        update((draft, actor) => {
+                          setInvoiceAmount(draft.invoice, key, value);
+                          for (const field of draft.invoice
+                            .low_confidence_fields ?? [])
+                            if (invoiceCheckField(field) === key)
+                              acknowledgeInvoiceCheck(draft, actor, field);
+                        });
+                      }}
+                    />
+                  </Field>
+                )}
                 {difference && (
                   <span className="receiving-check-summary">
                     {t("Paper:", "کاغذ:")} <Money value={invoice[key]} /> ·{" "}

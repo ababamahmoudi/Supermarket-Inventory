@@ -1,4 +1,5 @@
 import PwaMenu from "./PwaMenu";
+import { CollapsedNavTooltip } from "./CollapsedNavTooltip";
 import { InitialSessionLoading, SessionProgress } from "./SessionProgress.c9";
 import { AUTH_IDENTITY_KEY } from "./auth-preferences.e1";
 import {
@@ -1357,41 +1358,50 @@ export default function App() {
                                   ? pendingPriceUpdates
                                   : 0;
                     return (
-                      <a
+                      <CollapsedNavTooltip
                         key={item.key}
-                        href={item.disabled ? undefined : `#${item.key}`}
-                        role={item.disabled ? "link" : undefined}
-                        aria-disabled={item.disabled || undefined}
-                        tabIndex={item.disabled ? -1 : undefined}
-                        aria-label={t(item.en, item.fa)}
-                        title={
-                          item.disabled && !effectiveCollapsed
-                            ? t(item.en, item.fa)
-                            : undefined
-                        }
-                        aria-current={
-                          page.key === item.key ? "page" : undefined
-                        }
-                        onClick={() => setMenuOpen(false)}
+                        enabled={effectiveCollapsed && !menuOpen}
+                        label={t(item.en, item.fa)}
                       >
-                        <Icon size={18} strokeWidth={1.5} aria-hidden="true" />
-                        <span className="nav-item-label">
-                          {t(item.en, item.fa)}
-                        </span>
-                        {count > 0 && (
-                          <>
-                            <span
-                              className={`nav-count ${["invoices", "approvals", "alerts"].includes(item.key) ? "nav-count-attention" : ""}`}
-                            >
-                              {count}
-                            </span>
-                            <span
-                              className="nav-count-dot"
-                              aria-hidden="true"
-                            />
-                          </>
-                        )}
-                      </a>
+                        <a
+                          href={item.disabled ? undefined : `#${item.key}`}
+                          role={item.disabled ? "link" : undefined}
+                          aria-disabled={item.disabled || undefined}
+                          tabIndex={item.disabled ? -1 : undefined}
+                          aria-label={t(item.en, item.fa)}
+                          title={
+                            item.disabled && !effectiveCollapsed
+                              ? t(item.en, item.fa)
+                              : undefined
+                          }
+                          aria-current={
+                            page.key === item.key ? "page" : undefined
+                          }
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          <Icon
+                            size={18}
+                            strokeWidth={1.5}
+                            aria-hidden="true"
+                          />
+                          <span className="nav-item-label">
+                            {t(item.en, item.fa)}
+                          </span>
+                          {count > 0 && (
+                            <>
+                              <span
+                                className={`nav-count ${["invoices", "approvals", "alerts"].includes(item.key) ? "nav-count-attention" : ""}`}
+                              >
+                                {count}
+                              </span>
+                              <span
+                                className="nav-count-dot"
+                                aria-hidden="true"
+                              />
+                            </>
+                          )}
+                        </a>
+                      </CollapsedNavTooltip>
                     );
                   })}
                 </div>

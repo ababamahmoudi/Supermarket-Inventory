@@ -1,3 +1,4 @@
+import { openInvoiceDetails } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
@@ -37,6 +38,7 @@ async function manual(page: Page, language: "en" | "fa") {
   await page.goto("/#invoices");
   await button(page, "New invoice", "فاکتور جدید").click();
   await button(page, "Manual entry", "ورود دستی").click();
+  await openInvoiceDetails(page);
   await choose(page, page.locator("#invoice-supplier"), "Fresh Valley Foods");
   await page
     .getByLabel(exact("Invoice number", "شماره فاکتور"))

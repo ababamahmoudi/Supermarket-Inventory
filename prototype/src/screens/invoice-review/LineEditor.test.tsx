@@ -92,7 +92,6 @@ function EditorWithDelayedProjection({
       onClose={closed}
       anchor={() => {}}
       attemptedPost={false}
-      editorWidth={560}
     />
   );
 }

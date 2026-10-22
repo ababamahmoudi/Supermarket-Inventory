@@ -83,6 +83,7 @@
   --line-height-caption: 1rem;
   --font-weight-caption: 600;
   --font-size-label: 0.8125rem;
+  --line-height-label: 1.125rem;
   --font-size-product-price: 2.75rem;
   --line-height-product-price: 3rem;
   --font-weight-product-price: 800;
@@ -109,6 +110,8 @@
   --primary-text: var(--klead-primary-text);
   --accent-hover: var(--accent);
   --accent-soft: var(--klead-accent-tint);
+  --accent-border-soft: color-mix(in srgb, var(--accent) 25%, var(--divider));
+  --surface-footer: color-mix(in srgb, var(--surface) 65%, var(--page));
   --accent-tint-text: var(--klead-accent-text);
   --nav-active: var(--accent-soft);
   --hover-fill: var(--klead-hover);
@@ -200,6 +203,8 @@
   --primary-text: var(--klead-primary-text);
   --accent-hover: var(--accent);
   --accent-soft: var(--klead-accent-tint);
+  --accent-border-soft: color-mix(in srgb, var(--accent) 25%, var(--divider));
+  --surface-footer: color-mix(in srgb, var(--surface) 65%, var(--page));
   --accent-tint-text: var(--klead-accent-text);
   --nav-active: var(--accent-soft);
   --hover-fill: var(--klead-hover);

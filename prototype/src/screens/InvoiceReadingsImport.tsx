@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Check, FileInput, Trash2, X } from "lucide-react";
 import {
   Badge,
   Button,
@@ -6,7 +7,6 @@ import {
   Checkbox,
   DataTable,
   Dialog,
-  DialogActions,
   Field,
   SegmentedControl,
   Select,
@@ -31,6 +31,13 @@ import { removeFictionalData } from "../empty-store";
 import "./invoice-readings.css";
 
 type Translate = (en: string, fa: string) => string;
+type ImportResultView = Omit<ImportSummary, "skipped"> & {
+  skipped: (ImportSummary["skipped"][number] & {
+    invoiceNumber?: string;
+    supplier?: string;
+    displayReason?: string;
+  })[];
+};
 function importError(error: unknown, t: Translate): string {
   const code =
     error && typeof error === "object" && "code" in error
@@ -79,6 +86,16 @@ function importError(error: unknown, t: Translate): string {
   );
 }
 function skippedReason(reason: string, t: Translate): string {
+  if (reason === "in_file_partial")
+    return t(
+      "A page-1-only copy of an invoice that was also in the file. The complete copy was imported.",
+      "نسخه‌ای شامل فقط صفحهٔ اول فاکتوری که در فایل هم وجود داشت. نسخهٔ کامل وارد شد.",
+    );
+  if (reason === "in_file_duplicate")
+    return t(
+      "Another copy of this invoice was selected from the file.",
+      "نسخهٔ دیگری از این فاکتور در فایل انتخاب شد.",
+    );
   if (reason === "invoice_number")
     return t(
       "This supplier already has that invoice number in the app.",
@@ -108,7 +125,7 @@ function ImportPreview({
   exported: InvoiceReadingsExport;
   fileName: string;
   onClose(): void;
-  onImported(summary: ImportSummary): void;
+  onImported(summary: ImportResultView): void;
 }) {
   const { state, branch, command, lang, t, money } = useDemo();
   const config = useSettingsConfiguration();
@@ -183,7 +200,38 @@ function ImportPreview({
             reason: row.duplicate_reason ?? row.error!,
           });
       }
-      onImported({ ...result, skipped: [...skipped.values()] });
+      onImported({
+        ...result,
+        skipped: [...skipped.values()].map((item) => {
+          const row = rows.find((candidate) => candidate.id === item.id);
+          const selectedCopy = row?.in_file_duplicate_group
+            ? rows.find(
+                (candidate) =>
+                  candidate.in_file_duplicate_group ===
+                    row.in_file_duplicate_group &&
+                  selectedIds.includes(candidate.id),
+              )
+            : undefined;
+          const pageCount =
+            exported.invoices.find((candidate) => candidate.id === item.id)
+              ?.pages.length ?? 0;
+          const selectedPages =
+            exported.invoices.find(
+              (candidate) => candidate.id === selectedCopy?.id,
+            )?.pages.length ?? 0;
+          return {
+            ...item,
+            invoiceNumber: row?.invoice_number,
+            supplier: row?.supplier,
+            displayReason:
+              selectedCopy && selectedCopy.id !== item.id
+                ? pageCount === 1 && selectedPages > 1
+                  ? "in_file_partial"
+                  : "in_file_duplicate"
+                : item.reason,
+          };
+        }),
+      });
     } catch (failure) {
       setError(importError(failure, t));
     } finally {
@@ -196,9 +244,34 @@ function ImportPreview({
       open
       onOpenChange={(open) => !open && !busy && onClose()}
       title={t("Import invoice readings", "ورود خوانش فاکتورها")}
-      description={<LtrValue value={fileName} />}
+      description={t("Choose what to import.", "موارد ورود را انتخاب کنید.")}
+      icon={<FileInput size={22} />}
       className="invoice-readings-dialog dialog-wide dialog-phone-fullscreen"
+      footer={
+        <>
+          <Button variant="secondary" disabled={busy} onClick={onClose}>
+            {t("Cancel", "انصراف")}
+          </Button>
+          <Button
+            disabled={
+              busy ||
+              preview.pending ||
+              !hasImportSelection ||
+              missingLocation.length > 0
+            }
+            onClick={() => void importSelected()}
+          >
+            {t(
+              `Import ${selectedRows.length} invoices`,
+              `ورود ${selectedRows.length} فاکتور`,
+            )}
+          </Button>
+        </>
+      }
     >
+      <p className="invoice-import-file">
+        <LtrValue value={fileName} />
+      </p>
       <div className="invoice-readings-mode">
         <span>{t("Use:", "استفاده از:")}</span>
         <SegmentedControl
@@ -292,7 +365,12 @@ function ImportPreview({
               priority: 4,
               minWidth: 160,
             },
-            { key: "status", label: t("Status", "وضعیت"), priority: 1 },
+            {
+              key: "status",
+              label: t("Status", "وضعیت"),
+              required: true,
+              minWidth: 160,
+            },
           ]}
           phoneList={{
             name: "supplier",
@@ -433,26 +511,26 @@ function ImportPreview({
                   </td>
                   <td>
                     {row.duplicate_reason ? (
-                      <Badge>
+                      <Badge wrap>
                         {t("Already in the app", "از قبل در برنامه است")}
                       </Badge>
                     ) : row.in_file_duplicate_group ? (
-                      <Badge tone="pending">
+                      <Badge tone="pending" wrap>
                         {t(
                           "Same invoice twice in this file",
                           "همین فاکتور دو بار در این فایل است",
                         )}
                       </Badge>
                     ) : row.error ? (
-                      <Badge tone="danger">
+                      <Badge tone="danger" wrap>
                         {t("No usable reading", "خوانش قابل استفاده ندارد")}
                       </Badge>
                     ) : !location ? (
-                      <Badge tone="pending">
+                      <Badge tone="pending" wrap>
                         {t("Choose a location", "یک مکان انتخاب کنید")}
                       </Badge>
                     ) : (
-                      <Badge>{t("Ready", "آماده")}</Badge>
+                      <Badge wrap>{t("Ready", "آماده")}</Badge>
                     )}
                   </td>
                 </tr>
@@ -482,25 +560,6 @@ function ImportPreview({
           )}
         </p>
       )}
-      <DialogActions>
-        <Button variant="secondary" disabled={busy} onClick={onClose}>
-          {t("Cancel", "انصراف")}
-        </Button>
-        <Button
-          disabled={
-            busy ||
-            preview.pending ||
-            !hasImportSelection ||
-            missingLocation.length > 0
-          }
-          onClick={() => void importSelected()}
-        >
-          {t(
-            `Import ${selectedRows.length} invoices`,
-            `ورود ${selectedRows.length} فاکتور`,
-          )}
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }
@@ -512,7 +571,7 @@ export default function InvoiceReadingsImport() {
   const [reading, setReading] = useState(false);
   const [fileName, setFileName] = useState("");
   const [exported, setExported] = useState<InvoiceReadingsExport | null>(null);
-  const [summary, setSummary] = useState<ImportSummary | null>(null);
+  const [summary, setSummary] = useState<ImportResultView | null>(null);
   const [error, setError] = useState("");
   const [emptyOpen, setEmptyOpen] = useState(false);
   const [emptyConfirmation, setEmptyConfirmation] = useState("");
@@ -647,8 +706,41 @@ export default function InvoiceReadingsImport() {
           open
           onOpenChange={(open) => !open && setSummary(null)}
           title={t("Import complete", "ورود کامل شد")}
+          heading={
+            <>
+              <LtrValue value={String(summary.imported.length)} />{" "}
+              {t(
+                summary.imported.length === 1
+                  ? "invoice imported"
+                  : "invoices imported",
+                "فاکتور وارد شد",
+              )}
+            </>
+          }
+          description={t(
+            "Drafts are ready in Needs review.",
+            "پیش‌نویس‌ها آمادهٔ بررسی‌اند.",
+          )}
+          icon={<Check size={22} />}
+          iconTone="approved"
+          className="invoice-import-done"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setSummary(null)}>
+                {t("Close", "بستن")}
+              </Button>
+              <Button
+                onClick={() => {
+                  setSummary(null);
+                  navigate("invoices?tab=needs_review");
+                }}
+              >
+                {t("Open Needs review", "باز کردن نیازمند بررسی")}
+              </Button>
+            </>
+          }
         >
-          <dl className="detail-grid">
+          <dl className="invoice-import-stats">
             <div>
               <dt>{t("Imported", "واردشده")}</dt>
               <dd>{summary.imported.length}</dd>
@@ -662,82 +754,163 @@ export default function InvoiceReadingsImport() {
               <dd>{summary.new_suppliers.length}</dd>
             </div>
             <div>
-              <dt>
-                {t("Invoices needing a location", "فاکتورهای نیازمند مکان")}
-              </dt>
+              <dt>{t("Need a location", "نیازمند مکان")}</dt>
               <dd>{summary.needs_location.length}</dd>
             </div>
           </dl>
           {summary.skipped.length > 0 && (
-            <ul className="invoice-reading-summary">
-              {summary.skipped.map((item, index) => (
-                <li className="list-box" key={`${item.id}:${index}`}>
-                  <LtrValue value={item.id} /> · {t("Skipped", "ردشده")}:{" "}
-                  {skippedReason(item.reason, t)}
-                </li>
-              ))}
-            </ul>
-          )}
-          {summary.new_suppliers.length > 0 && (
-            <p>
-              {t(
-                "New suppliers are active. Contact details can be completed later.",
-                "تأمین‌کنندگان جدید فعال هستند. اطلاعات تماس را می‌توان بعداً تکمیل کرد.",
-              )}
-            </p>
+            <section className="invoice-import-skipped">
+              <h3>{t("Skipped", "ردشده")}</h3>
+              <ul className="invoice-reading-summary">
+                {summary.skipped.map((item, index) => (
+                  <li className="list-box" key={`${item.id}:${index}`}>
+                    <span
+                      className="invoice-import-skip-dot"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <strong>
+                        {t("Invoice", "فاکتور")}{" "}
+                        <LtrValue value={item.invoiceNumber || item.id} />
+                        {item.supplier && (
+                          <>
+                            {" "}
+                            · <LtrValue value={item.supplier} />
+                          </>
+                        )}
+                      </strong>
+                      <p>
+                        {skippedReason(item.displayReason ?? item.reason, t)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
           {(summary.other_locations ?? 0) > 0 && (
-            <p>
-              {t(
-                `${summary.other_locations} more are at other locations`,
-                `${summary.other_locations} مورد دیگر در مکان‌های دیگر هستند`,
-              )}{" "}
+            <div className="invoice-import-location-note">
+              <span>
+                {t(
+                  `${summary.other_locations} more are at other locations`,
+                  `${summary.other_locations} مورد دیگر در مکان‌های دیگر هستند`,
+                )}
+              </span>
               <Button
-                variant="secondary"
+                variant="plain"
                 onClick={async () => {
                   await setBranch("all");
                   setSummary(null);
                   navigate("invoices?tab=needs_review");
                 }}
               >
-                {t("All my locations", "همهٔ مکان‌های من")}
+                {t("Show all locations", "نمایش همهٔ مکان‌ها")}
               </Button>
+            </div>
+          )}
+          {summary.new_suppliers.length > 0 && (
+            <p className="invoice-import-supplier-note">
+              {t(
+                "New suppliers are active. Add phone and email later in Suppliers.",
+                "تأمین‌کنندگان جدید فعال هستند. تلفن و ایمیل را بعداً در تأمین‌کنندگان اضافه کنید.",
+              )}
             </p>
           )}
-          <DialogActions>
-            <Button
-              onClick={() => {
-                setSummary(null);
-                navigate("invoices?tab=needs_review");
-              }}
-            >
-              {t("Open Needs review", "باز کردن نیازمند بررسی")}
-            </Button>
-          </DialogActions>
         </Dialog>
       )}
       <Dialog
         open={emptyOpen}
         onOpenChange={(open) => !removing && setEmptyOpen(open)}
         title={t("Start with an empty store", "شروع با فروشگاه خالی")}
+        heading={t("Start with an empty store?", "با فروشگاه خالی شروع کنید؟")}
+        description={t(
+          "Keep your setup. Remove demo records.",
+          "تنظیمات می‌ماند؛ داده‌های دمو حذف می‌شود.",
+        )}
+        icon={<Trash2 size={22} />}
+        iconTone="danger"
+        className="invoice-empty-store"
+        bodyClassName="ui-form-large"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              disabled={removing}
+              onClick={() => setEmptyOpen(false)}
+            >
+              {t("Cancel", "انصراف")}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={
+                removing ||
+                !["DELETE", "حذف"].includes(emptyConfirmation.trim())
+              }
+              onClick={() => void remove()}
+            >
+              {t("Remove fictional data", "حذف داده‌های خیالی")}
+            </Button>
+          </>
+        }
       >
-        <p>
-          {t(
-            "Keep company settings, locations, people and sign-in, roles, pricing rules and categories, label templates, notification settings and modules.",
-            "تنظیمات شرکت، مکان‌ها، کارکنان و ورود، نقش‌ها، قواعد و دسته‌های قیمت‌گذاری، قالب برچسب، تنظیمات اعلان و بخش‌ها حفظ می‌شوند.",
-          )}
-        </p>
+        <div className="invoice-empty-lists">
+          <section>
+            <h3 className="invoice-empty-keeps">{t("Keeps", "حفظ می‌شود")}</h3>
+            <ul>
+              {[
+                t("Company settings", "تنظیمات شرکت"),
+                t("Locations, people and sign-in", "مکان‌ها، کارکنان و ورود"),
+                t(
+                  "Pricing rules and categories",
+                  "قواعد و دسته‌های قیمت‌گذاری",
+                ),
+                t("Label templates", "قالب‌های برچسب"),
+                t("Notifications and modules", "اعلان‌ها و بخش‌ها"),
+              ].map((text) => (
+                <li key={text}>
+                  <Check size={14} aria-hidden="true" />
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <section>
+            <h3 className="invoice-empty-removes">
+              {t("Removes", "حذف می‌شود")}
+            </h3>
+            <ul>
+              {[
+                t("Products and suppliers", "محصولات و تأمین‌کنندگان"),
+                t(
+                  "Invoices, including imported ones",
+                  "فاکتورها، از جمله واردشده‌ها",
+                ),
+                t(
+                  "Received records and payables",
+                  "دریافت‌ها و حساب‌های پرداختنی",
+                ),
+                t(
+                  "Offers, sales, returns and orders",
+                  "پیشنهادها، فروش‌ها، مرجوعی‌ها و سفارش‌ها",
+                ),
+                t(
+                  "Notes, dates, price updates, alerts and History",
+                  "یادداشت‌ها، تاریخ‌ها، به‌روزرسانی قیمت، هشدارها و تاریخچه",
+                ),
+              ].map((text) => (
+                <li key={text}>
+                  <X size={14} aria-hidden="true" />
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
         {error && (
           <p role="alert" className="form-error">
             {error}
           </p>
         )}
-        <p>
-          {t(
-            "Remove fictional products, suppliers, supplier items, invoices, received records, offers, sales and sale requests, returns, orders, branch requests, payables, notes and notebook entries, tracked dates, price updates, alerts, the label waitlist and their History. This also removes invoices you imported.",
-            "محصولات، تأمین‌کنندگان، اقلام تأمین‌کنندگان، فاکتورها، دریافت‌ها، پیشنهادها، حراج‌ها و درخواست‌های حراج، مرجوعی‌ها، سفارش‌ها، درخواست‌های شعب، حساب‌های پرداختنی، یادداشت‌ها و نوشته‌های دفترچه‌ها، تاریخ‌های پیگیری، به‌روزرسانی قیمت‌ها، هشدارها، صف برچسب و تاریخچهٔ آن‌ها حذف می‌شوند. فاکتورهایی که وارد کرده‌اید نیز حذف می‌شوند.",
-          )}
-        </p>
         <Field label={t("Type DELETE to confirm", "برای تأیید حذف را بنویسید")}>
           <input
             value={emptyConfirmation}
@@ -745,24 +918,6 @@ export default function InvoiceReadingsImport() {
             autoComplete="off"
           />
         </Field>
-        <DialogActions>
-          <Button
-            variant="secondary"
-            disabled={removing}
-            onClick={() => setEmptyOpen(false)}
-          >
-            {t("Cancel", "انصراف")}
-          </Button>
-          <Button
-            variant="danger"
-            disabled={
-              removing || !["DELETE", "حذف"].includes(emptyConfirmation.trim())
-            }
-            onClick={() => void remove()}
-          >
-            {t("Remove fictional data", "حذف داده‌های خیالی")}
-          </Button>
-        </DialogActions>
       </Dialog>
     </>
   );

@@ -1,3 +1,4 @@
+import { openInvoiceDetails } from "./helpers";
 import { createHash } from "node:crypto";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
@@ -33,6 +34,7 @@ async function manualInvoice(page: import("@playwright/test").Page) {
     .getByRole("dialog", { name: "New invoice", exact: true })
     .getByRole("button", { name: "Manual entry", exact: true })
     .click();
+  await openInvoiceDetails(page);
   await expect
     .poll(async () => {
       const current = (await saved(page)).invoice;

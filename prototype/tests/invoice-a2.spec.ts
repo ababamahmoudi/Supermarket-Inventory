@@ -100,7 +100,9 @@ test("invoice lines start closed, confirm once and reopen without opening the ne
   await confirmInvoiceLine(page, editor);
   await expect(first).toHaveAttribute("aria-expanded", "false");
   await expect(page.locator(".receiving-line-editor")).toHaveCount(0);
-  await expect(first).toContainText("Confirmed ✓");
+  await expect(
+    first.getByRole("img", { name: "Confirmed", exact: true }),
+  ).toBeVisible();
   const reopened = await openInvoiceLine(page, 0);
   await expect(first).toHaveAttribute("aria-expanded", "true");
   if (testInfo.project.name === "phone")
