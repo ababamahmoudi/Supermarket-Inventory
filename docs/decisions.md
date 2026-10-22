@@ -437,4 +437,3 @@ A rejected product/price request can be corrected within pricing rules and permi
 **Decision:** `BufferedInput` (and `NumberField`, built on it) shows the person's own text while the box has focus and the saved value again on blur. A saved value that matches something they typed (including numeric forms like "7" for "007", or 0 for a blank box) is treated as an echo and ignored; any other new saved value, such as a price chip or recalculation, replaces the text at once. Changes made without focus are never buffered.
 
 **Why:** correct quantities and costs are the core of receiving; this removes a race without changing validation, Decimal maths or what is saved.
-
