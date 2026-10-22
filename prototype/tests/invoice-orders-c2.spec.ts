@@ -233,7 +233,7 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   const order = before.orders!.at(-1)!;
   expect(order.status).toBe("ordered");
   const line = await manual(page);
-  await line.getByLabel("Invoiced", { exact: true }).fill("18");
+  await line.getByLabel("Invoiced units", { exact: true }).fill("18");
   await line.getByLabel("Unit cost before tax", { exact: true }).fill("1.1000");
   // On phones the line editor is a full-screen sheet; keep its edits and return
   // to invoice details before choosing and reviewing the purchase order.
@@ -252,11 +252,10 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
     exact: true,
   });
   await expect(unavailablePost).toBeDisabled();
-  await expect(unavailablePost.locator("..")).toHaveAttribute(
-    "title",
-    /Review the order differences/,
-  );
   await unavailablePost.locator("..").focus();
+  await expect(
+    unavailablePost.locator("..").getByRole("tooltip"),
+  ).toContainText(/Review the order differences/);
   await page.keyboard.press("Enter");
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),

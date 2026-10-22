@@ -1,18 +1,31 @@
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
-import { chooseOption, invoiceImage, signIn } from "./helpers";
+import { chooseOption, signIn, uploadInvoice } from "./helpers";
 
 async function quickAddSupplier(page: Page, name: string) {
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
+  const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
+    .id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page
     .getByRole("dialog", { name: "New invoice", exact: true })
     .getByRole("button", { name: "Upload", exact: true })
     .click();
-  await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
-    .setInputFiles(invoiceImage);
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    const id = new URLSearchParams(parameters).get("id");
+    return route === "invoices" && Boolean(id && id !== previousInvoiceId);
+  });
+  const acceptedInvoiceId = new URLSearchParams(
+    new URL(page.url()).hash.split("?")[1],
+  ).get("id");
+  // Wait for this accepted draft's retained original and completed reading,
+  // rather than treating the native file-input change as completed review.
+  await uploadInvoice(page);
+  expect((await readCanonicalBusinessEvidence(page)).invoice.id).toBe(
+    acceptedInvoiceId,
+  );
   await expect(page.locator("#invoice-details-fields")).toBeVisible();
   await chooseOption(
     page,

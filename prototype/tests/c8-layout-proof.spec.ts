@@ -95,11 +95,11 @@ async function prepareSupplierShorts(page: Page) {
   await expect(line).toContainText("0002");
   await choose(page, field(line, "Unit"), "Units");
   const cost = (await readC8State(page)).invoice.lines[0].unit_cost_before_tax;
-  await field(line, "Invoiced").fill("6");
+  await field(line, "Invoiced units").fill("6");
   await expect
     .poll(async () => (await readC8State(page)).invoice.lines[0].qty_invoiced)
     .toBe(6);
-  await expect(field(line, "Invoiced")).toHaveValue("6");
+  await expect(field(line, "Invoiced units")).toHaveValue("6");
   await field(line, "Delivered units").fill("2");
   await expect
     .poll(
@@ -192,9 +192,52 @@ for (const language of ["en", "fa"] as const) {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       reference,
     );
+    const posted = await inspectC8Layout(
+      page,
+      "receiving:posted-short",
+      language,
+      width,
+    );
+    expect(posted.actualWidth).toBe(width);
+    expect(posted.words).toBeGreaterThan(0);
+    expect(posted.failures).toEqual([]);
     await setLanguage(page, "en");
     await prepareC8ManualInvoice(page);
     await setReviewLanguage(page, language);
+    if (width <= 760)
+      await button(
+        page.locator("#invoice-line-0-detail"),
+        "Close",
+        "بستن",
+      ).click();
+    const titleReference = page.locator("h1 .invoice-title-reference");
+    await expect(titleReference).toHaveText("C8-QA-CONTAINMENT");
+    expect(
+      await titleReference.evaluate((element) => {
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+        const rects: DOMRect[] = [];
+        let node;
+        while ((node = walker.nextNode())) {
+          if (!node.textContent?.trim()) continue;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          rects.push(
+            ...[...range.getClientRects()].filter(
+              (rect) => rect.width > 0.1 && rect.height > 0.1,
+            ),
+          );
+        }
+        const width = document.documentElement.clientWidth;
+        return {
+          lines: new Set(rects.map((rect) => Math.round(rect.top))).size,
+          contained: rects.every(
+            (rect) => rect.left >= -1 && rect.right <= width + 1,
+          ),
+          pageContained: document.documentElement.scrollWidth <= width + 1,
+        };
+      }),
+    ).toEqual({ lines: 1, contained: true, pageContained: true });
+    await openInvoiceLine(page, 0);
     const expanded = await inspectC8Layout(
       page,
       "receiving:manual-editor",

@@ -241,7 +241,19 @@ for (const language of ["en", "fa"] as const) {
       });
       expect(metrics.failures, `${route} (${language})`).toEqual([]);
       expect(metrics.maxError).toBeLessThanOrEqual(2);
-      if (path === "invoices") expect(metrics.cells).toBeGreaterThanOrEqual(30);
+      if (path === "invoices") {
+        if ((page.viewportSize()?.width ?? 1280) <= 760) {
+          const rows = page.locator(".receiving-lines-table .phone-list-row");
+          await expect(rows).toHaveCount(6);
+          for (const row of await rows.all()) {
+            await expect(row.locator(":scope > td")).toHaveCount(4);
+            for (const cell of ["name", "value", "chevron", "secondary"])
+              await expect(row.locator(`.phone-list-${cell}`)).toBeVisible();
+          }
+          expect(metrics.cards).toBe(6);
+          expect(metrics.cells).toBe(24);
+        } else expect(metrics.cells).toBeGreaterThanOrEqual(30);
+      }
       report.push({
         route,
         tables: metrics.tables,

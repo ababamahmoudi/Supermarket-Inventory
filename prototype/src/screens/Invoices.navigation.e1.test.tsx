@@ -13,7 +13,13 @@ import { DemoProvider, initialState, useDemo } from "../store";
 import { authenticatedProviderFixture } from "../authority-provider-test-fixture";
 import i18n from "../i18n";
 import Invoices from "./Invoices";
-import { renderedUiReady } from "../test/rendered-ui-readiness";
+import {
+  clearRenderedUiReadiness,
+  renderedUiReady,
+} from "../test/rendered-ui-readiness";
+import { authenticatedTestActor } from "../authority-test-fixture";
+import { cloneWithAuthority } from "../authority";
+import { invoiceBlockers } from "../invoice";
 
 let fixture: Awaited<ReturnType<typeof authenticatedProviderFixture>>;
 let currentDemo: ReturnType<typeof useDemo>;
@@ -28,11 +34,124 @@ beforeEach(async () => {
 afterEach(async () => {
   // A failed assertion must not leave a real accepted command pending at teardown.
   releaseSelection?.();
+  clearRenderedUiReadiness();
   cleanup();
   fixture?.dispose();
   vi.unstubAllGlobals();
   releaseSelection = undefined;
 });
+
+it.each(["workspace", "picker"])(
+  "counts only other-location Needs review invoices in the %s list",
+  async (list) => {
+    const state = initialState();
+    const actor = authenticatedTestActor(state, "manager", {
+      selection: { kind: "location", location_id: "Branch 1" },
+    });
+    const product = state.products[0];
+    const ready = structuredClone(state.invoice);
+    Object.assign(ready, {
+      id: "r2-fictional-other-ready",
+      branch: "Branch 2",
+      handling_branch: "Branch 2",
+      reviewer_origin_location_id: "Branch 2",
+      status: "review",
+      entry_mode: "manual",
+      supplier: state.suppliers![0].name,
+      supplier_invoice_number: "R2-OTHER-READY",
+      invoice_date: "2026-10-21",
+      received_at: "2026-10-21T12:00:00Z",
+      receiving_employee: "Fictional Receiver",
+      low_confidence_fields: [],
+      subtotal: "2.00",
+      tax: "0.00",
+      final_total: "2.00",
+      other_charges: [],
+      order_id: undefined,
+      lower_price_answers: { same_expiry: "no_previous_stock" },
+    });
+    ready.lines = [
+      {
+        ...ready.lines[0],
+        product_code: product.code,
+        description: product.name_en,
+        quantity_unit: "units",
+        quantity_entered: "1",
+        sold_by: "each",
+        units_per_case: 1,
+        qty_invoiced: 1,
+        qty_received_at_posting: 1,
+        refused_units: 0,
+        unit_cost_before_tax: "2.0000",
+        line_total: "2.00",
+        date_tracking: false,
+        date_confirmed: true,
+        review_confirmed: true,
+        low_confidence_fields: [],
+        manual_price_decision: "rule",
+      },
+    ];
+    const needsReview = structuredClone(ready);
+    needsReview.id = "r2-fictional-other-needs-review";
+    needsReview.supplier_invoice_number = "R2-OTHER-NEEDS";
+    needsReview.lines[0].review_confirmed = false;
+    const localReady = structuredClone(ready);
+    localReady.id = "r2-fictional-local-ready";
+    localReady.branch = "Branch 1";
+    localReady.handling_branch = "Branch 1";
+    localReady.reviewer_origin_location_id = "Branch 1";
+    state.invoices = [localReady, ready, needsReview];
+    if (list === "picker") state.invoice.company_id = "another-company";
+    const evidence = cloneWithAuthority(state);
+    evidence.invoice = ready;
+    expect(invoiceBlockers(evidence, actor)).toEqual([]);
+    evidence.invoice = needsReview;
+    expect(invoiceBlockers(evidence, actor)).not.toEqual([]);
+    fixture = await authenticatedProviderFixture({
+      state,
+      role: "manager",
+      actorOptions: {
+        selection: { kind: "location", location_id: "Branch 1" },
+      },
+    });
+    render(
+      <DemoProvider options={fixture.options}>
+        <ActualInvoices />
+      </DemoProvider>,
+    );
+    await renderedUiReady(() =>
+      Boolean(screen.queryByRole("tab", { name: "Ready to post 1" })),
+    );
+    expect(
+      screen.getByText("1 more need review at other locations."),
+    ).toBeVisible();
+    expect(
+      screen.queryByText("2 more need review at other locations."),
+    ).not.toBeInTheDocument();
+    await act(async () => {
+      await currentDemo.command(
+        "invoices.edit",
+        {
+          company_id: ready.company_id,
+          kind: "company_shared",
+          entity_id: needsReview.id,
+          mutation: true,
+        },
+        (canonical) => {
+          canonical.invoices!.find(
+            (invoice) => invoice.id === needsReview.id,
+          )!.lines[0].review_confirmed = true;
+        },
+      );
+    });
+    await renderedUiReady(
+      () => !screen.queryByText(/^\d+ more need review at other locations\.$/),
+    );
+    expect(
+      screen.queryByRole("button", { name: "Show all locations" }),
+    ).not.toBeInTheDocument();
+  },
+);
 
 function ActualInvoices() {
   const context = useDemo();

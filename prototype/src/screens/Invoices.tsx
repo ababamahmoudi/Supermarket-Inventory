@@ -411,7 +411,7 @@ function InvoicePickerList({
     branch === "all"
       ? 0
       : all.filter(
-          (invoice) => !located(invoice) && invoice.status === "review",
+          (invoice) => !located(invoice) && stage(invoice) === "needs_review",
         ).length;
   return (
     <>
@@ -1307,7 +1307,8 @@ function InvoiceWorkspace({
     branch === "all"
       ? 0
       : allInvoiceRecords.filter(
-          (item) => !atCurrentLocations(item) && item.status === "review",
+          (item) =>
+            !atCurrentLocations(item) && stageOf(item) === "needs_review",
         ).length;
   const resume = async (saved: InvoiceReadDTO) => {
     await command(

@@ -132,8 +132,8 @@ function distinctiveName(name: string): string {
     .join(" ");
 }
 function nameSimilarity(left: string, right: string): number {
-  if (left === right) return 1;
   if (!left || !right) return 0;
+  if (left === right) return 1;
   let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
   for (let row = 1; row <= left.length; row++) {
     const next = [row];

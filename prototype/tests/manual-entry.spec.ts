@@ -1,6 +1,12 @@
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
-import { chooseOption, invoiceImage, setLanguage, signIn } from "./helpers";
+import {
+  chooseOption,
+  invoiceImage,
+  setLanguage,
+  signIn,
+  uploadInvoice,
+} from "./helpers";
 
 test.setTimeout(60000);
 
@@ -213,13 +219,19 @@ test("worker catalog actions stay hidden while invoice quick-add creates an acti
   ).toHaveCount(0);
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page
-    .getByRole("dialog", { name: "New invoice", exact: true })
+  const entryDialog = page.getByRole("dialog", {
+    name: "New invoice",
+    exact: true,
+  });
+  await expect(
+    entryDialog.getByRole("button", { name: "Manual entry", exact: true }),
+  ).toHaveCount(0);
+  await entryDialog
     .getByRole("button", { name: "Upload", exact: true })
     .click();
-  await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
-    .setInputFiles(invoiceImage);
+  await expect(page.getByTestId("invoice-upload-entry")).toBeVisible();
+  await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
+  await uploadInvoice(page);
   await expect(
     page.getByRole("heading", { level: 1, name: /^Invoice/ }),
   ).toBeVisible();
@@ -322,10 +334,17 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
   await supplierDialog
     .getByRole("button", { name: "Add supplier", exact: true })
     .click();
+  await expect(supplierDialog).not.toBeVisible();
   await expect(page.locator(".invoice-supplier-review")).toHaveCount(0);
-  expect(
-    (await readCanonicalBusinessEvidence(page)).invoice.supplier_confirmed,
-  ).toBe(true);
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        supplier: invoice.supplier,
+        confirmed: invoice.supplier_confirmed,
+      };
+    })
+    .toEqual({ supplier: "Manual Invoice Supply", confirmed: true });
   await page
     .getByLabel("Invoice number", { exact: true })
     .fill("DEMO-MANUAL-1");
@@ -364,10 +383,15 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
   await page.goto(`/#invoices?id=${encodeURIComponent(prior.id)}`);
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
   await expect(post).toBeDisabled();
-  await expect(post.locator("..")).toHaveAttribute(
-    "title",
-    /Attach the original invoice/,
+  const postControl = post.locator("..");
+  await postControl.focus();
+  await expect(page.getByRole("tooltip")).toContainText(
+    "Attach the original invoice",
   );
+  await postControl.press("Enter");
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("Attach the original invoice");
   await page.locator(".invoice-line-summary").click();
   await page
     .getByRole("group", { name: "Track date", exact: true })

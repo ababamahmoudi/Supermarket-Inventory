@@ -170,7 +170,9 @@ export function PostedInvoice({
         <div>
           <h1>
             {t("Invoice", "فاکتور")}{" "}
-            <LtrText>{invoice.supplier_invoice_number}</LtrText>
+            <span className="invoice-title-reference">
+              <LtrText>{invoice.supplier_invoice_number}</LtrText>
+            </span>
           </h1>
           <p>
             <a

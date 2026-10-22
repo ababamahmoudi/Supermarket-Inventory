@@ -114,23 +114,32 @@ export function LineEditor({
     );
   };
   const nameError =
-    showErrors && line.product_code === "NEW" && !english.trim()
+    showErrors &&
+    ((line.product_code === "NEW" && !english.trim()) ||
+      failedField === "new_name_en")
       ? t("Enter the English name.", "نام انگلیسی را وارد کنید.")
       : undefined;
   const categoryError =
-    showErrors && line.product_code === "NEW" && !line.pricing_category
+    showErrors &&
+    ((line.product_code === "NEW" && !line.pricing_category) ||
+      failedField === "pricing_category")
       ? t("Choose a pricing category.", "دسته قیمت‌گذاری را انتخاب کنید.")
       : undefined;
   const quantityError =
-    showErrors && !validInvoiceLineQuantity(line)
+    showErrors &&
+    (!validInvoiceLineQuantity(line) || failedField === "quantity_entered")
       ? t("Enter a valid quantity.", "تعداد معتبر وارد کنید.")
       : undefined;
   const receivedError =
-    showErrors && !validInvoiceLineReceived(line)
+    showErrors &&
+    (!validInvoiceLineReceived(line) ||
+      failedField === "qty_received_at_posting")
       ? t("Check the delivered quantity.", "تعداد تحویل‌شده را بررسی کنید.")
       : undefined;
   const costError =
-    showErrors && !workspace.lineDetails[index]?.costValid
+    showErrors &&
+    (!workspace.lineDetails[index]?.costValid ||
+      failedField === "unit_cost_before_tax")
       ? t(
           "Enter a cost of zero or more with up to four decimal places.",
           "هزینه صفر یا بیشتر با حداکثر چهار رقم اعشار وارد کنید.",
@@ -163,24 +172,6 @@ export function LineEditor({
     anchor();
     setAttempted(true);
     await saveName();
-    const target =
-      line.product_code === "NEW" && !english.trim()
-        ? id("name-en")
-        : line.product_code === "NEW" && !line.pricing_category
-          ? id("category")
-          : !validInvoiceLineQuantity(line)
-            ? id("invoiced")
-            : !validInvoiceLineReceived(line)
-              ? id("delivered")
-              : !validCaseCost
-                ? id("case-cost")
-                : !workspace.lineDetails[index]?.costValid
-                  ? id("cost")
-                  : null;
-    if (target) {
-      document.getElementById(target)?.focus({ preventScroll: true });
-      return;
-    }
     let error = "";
     let field = "";
     const result = await update((draft, actor) => {
@@ -493,6 +484,14 @@ export function LineEditor({
               <Field
                 readingField="units_per_case"
                 label={t("Units per case", "واحد در هر کارتن")}
+                error={
+                  showErrors && failedField === "units_per_case"
+                    ? t(
+                        "Enter a valid number of units per case.",
+                        "تعداد معتبر واحد در هر کارتن را وارد کنید.",
+                      )
+                    : undefined
+                }
                 hint={t(
                   `= ${line.qty_invoiced} units`,
                   `= ${line.qty_invoiced} واحد`,

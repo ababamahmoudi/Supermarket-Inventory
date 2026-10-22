@@ -32,7 +32,9 @@ export function ReviewHeader({
         <div>
           <h1>
             {t("Invoice", "فاکتور")}{" "}
-            <LtrValue value={invoice.supplier_invoice_number} />
+            <span className="invoice-title-reference">
+              <LtrValue value={invoice.supplier_invoice_number} />
+            </span>
           </h1>
           <div className="receiving-meta">
             <a href={`#suppliers?name=${encodeURIComponent(invoice.supplier)}`}>

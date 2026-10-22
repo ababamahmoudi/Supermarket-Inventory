@@ -20,6 +20,10 @@
 .receiving-header h1 {
   margin: 0;
 }
+.invoice-title-reference {
+  display: inline-block;
+  white-space: nowrap;
+}
 .receiving-meta {
   display: flex;
   flex-wrap: wrap;
@@ -73,6 +77,17 @@
 .receiving-date-time > * {
   min-inline-size: 0;
   flex: 1;
+}
+@media (min-width: 761px) and (max-width: 1099px) {
+  .receiving-date-time {
+    flex-wrap: wrap;
+  }
+  .receiving-date-time > * {
+    flex: 1 1 64px;
+  }
+  .receiving-date-time > .ui-date {
+    flex: 2 1 140px;
+  }
 }
 .receiving-lines {
   min-inline-size: 0;

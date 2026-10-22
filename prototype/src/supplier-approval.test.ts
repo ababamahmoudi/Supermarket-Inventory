@@ -135,6 +135,20 @@ describe("R2 suppliers without approval", () => {
     expect(cedar.name).toBe("Cedar Valley Foods Inc.");
   });
 
+  it.each([
+    ["Foods Inc.", "Trading Ltd."],
+    ["The Food Group Inc.", "Import Export Distribution Limited"],
+  ])(
+    "does not warn when %s and %s contain only ignored words",
+    (existingName, newName) => {
+      const existing = saveSupplier(state, manager, edits(existingName));
+      expect(similarSupplierNames(state, newName)).not.toContain(existing);
+      const added = saveSupplier(state, manager, edits(newName));
+      expect(added.name).toBe(newName);
+      expect(similarSupplierNames(state, existingName)).toContain(existing);
+    },
+  );
+
   it.each([false, true])(
     "saves the correct legal name unchanged next to an unrelated Foods Inc supplier (quick add %s)",
     (quickAdd) => {

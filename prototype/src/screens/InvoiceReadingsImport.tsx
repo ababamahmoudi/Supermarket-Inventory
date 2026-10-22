@@ -196,7 +196,7 @@ function ImportPreview({
       open
       onOpenChange={(open) => !open && !busy && onClose()}
       title={t("Import invoice readings", "ورود خوانش فاکتورها")}
-      description={fileName}
+      description={<LtrValue value={fileName} />}
       className="invoice-readings-dialog dialog-wide dialog-phone-fullscreen"
     >
       <div className="invoice-readings-mode">

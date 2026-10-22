@@ -82,15 +82,14 @@ test("invoice lines start closed, confirm once and reopen without opening the ne
   ).toHaveCount(0);
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
   await expect(post).toBeDisabled();
-  await expect(post.locator("..")).toHaveAttribute(
-    "title",
+  await post.locator("..").focus();
+  await expect(post.locator("..").getByRole("tooltip")).toContainText(
     /Lines: 6 not confirmed/,
   );
-  await post.locator("..").focus();
   await page.keyboard.press("Enter");
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
-  ).toBeVisible();
+  ).toContainText("Lines: 6 not confirmed");
   const first = rows.first();
   const editor = await openInvoiceLine(page, 0);
   await expect(first).toHaveAttribute("aria-expanded", "true");

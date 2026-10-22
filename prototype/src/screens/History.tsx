@@ -664,7 +664,7 @@ export default function History() {
                         href={`#invoices?id=${encodeURIComponent(historyInvoiceEvidence(entry)!.id ?? "")}`}
                       >
                         {t("Invoice", "فاکتور")}{" "}
-                        <LtrText>
+                        <LtrText className="history-invoice-reference">
                           {historyInvoiceEvidence(entry)!.number}
                         </LtrText>
                         {" · "}
