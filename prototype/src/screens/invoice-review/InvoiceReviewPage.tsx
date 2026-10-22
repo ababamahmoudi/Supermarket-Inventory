@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useDemo } from "../../store";
 import { Button, Select } from "../../ui";
 import { addManualLine, recalculateInvoice } from "../../invoice";
@@ -18,6 +12,7 @@ import { MissingPanel } from "./MissingPanel";
 import { missingGroups } from "./missing-groups";
 import { OriginalViewer } from "./OriginalViewer";
 import { useInvoiceLineHighlight } from "./useInvoiceLineHighlight";
+import { useReviewScrollAnchor } from "./useReviewScrollAnchor";
 import type { ReviewProps } from "./types";
 import "./invoice-review.css";
 export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
@@ -42,54 +37,10 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
       setReservedHeight(root.current?.getBoundingClientRect().height ?? 0);
     setOpenLine(index);
   };
-  const position = useRef<{
-    element: HTMLElement;
-    top: number;
-    expires: number;
-  } | null>(null);
-  const anchor = (element?: HTMLElement) => {
-    if (element)
-      position.current = {
-        element,
-        top: element.getBoundingClientRect().top,
-        expires: Number.POSITIVE_INFINITY,
-      };
-  };
-  const adjustingScroll = useRef<number | null>(null);
-  useEffect(() => {
-    const scrolled = () => {
-      if (
-        adjustingScroll.current !== null &&
-        Math.abs(window.scrollY - adjustingScroll.current) <= 0.25
-      ) {
-        adjustingScroll.current = null;
-        return;
-      }
-      adjustingScroll.current = null;
-      position.current = null;
-    };
-    window.addEventListener("scroll", scrolled, { passive: true });
-    return () => window.removeEventListener("scroll", scrolled);
-  }, []);
-  useLayoutEffect(() => {
-    const saved = position.current;
-    if (
-      !saved ||
-      !saved.element.isConnected ||
-      performance.now() > saved.expires
-    )
-      return;
-    const delta = saved.element.getBoundingClientRect().top - saved.top;
-    if (Math.abs(delta) > 0.25) {
-      const before = window.scrollY;
-      window.scrollBy({ top: delta, behavior: "instant" });
-      adjustingScroll.current =
-        window.scrollY !== before ? window.scrollY : null;
-    }
-  });
+  const { anchor, clear: clearAnchor } = useReviewScrollAnchor();
   useInvoiceLineHighlight(invoice.id, true);
   const show = (target: string, line?: number) => {
-    position.current = null;
+    clearAnchor();
     setReservedHeight(0);
     if (line !== undefined) setOpenLine(line);
     requestAnimationFrame(() =>
@@ -134,7 +85,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
       ref={root}
       style={{ minHeight: reservedHeight || undefined }}
       onWheelCapture={() => {
-        position.current = null;
+        clearAnchor();
         setReservedHeight(0);
       }}
       onClickCapture={(e) => {
