@@ -1,9 +1,9 @@
 import {
   cleanup,
+  act,
   fireEvent,
   render,
   screen,
-  waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { authenticatedProviderFixture } from "../../authority-provider-test-fixture";
@@ -22,44 +22,61 @@ import { DemoProvider, initialState, useDemo } from "../../store";
 import i18n from "../../i18n";
 import { LineEditor } from "./LineEditor";
 import type { EditLine, ReviewUpdate } from "./types";
+import {
+  renderedUiReady,
+  clearRenderedUiReadiness,
+} from "../../test/rendered-ui-readiness";
 
 const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
+const drains: (() => Promise<void>)[] = [];
 beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
   await i18n.changeLanguage("en");
 });
-afterEach(() => {
-  cleanup();
-  for (const fixture of fixtures.splice(0)) fixture.dispose();
-  vi.unstubAllGlobals();
+afterEach(async () => {
+  try {
+    await Promise.all(drains.splice(0).map((drain) => drain()));
+  } finally {
+    clearRenderedUiReadiness();
+    cleanup();
+    for (const fixture of fixtures.splice(0)) fixture.dispose();
+    vi.unstubAllGlobals();
+  }
 });
 
 function EditorWithDelayedProjection({
   workspace,
   acknowledgment,
   editStarted,
+  commandStarted,
   closed,
 }: {
   workspace: InvoiceWorkspaceRead;
   acknowledgment: Promise<void>;
   editStarted(operation: Promise<unknown>): void;
+  commandStarted(operation: Promise<unknown>, confirmation: boolean): void;
   closed(): void;
 }) {
-  const { actor, command } = useDemo();
-  if (!actor) return null;
+  const { actor, authStage, command } = useDemo();
+  if (!actor || authStage !== "complete") return null;
   const scope = {
     company_id: workspace.invoice.company_id,
     kind: "company_shared" as const,
     entity_id: workspace.invoice.id,
   };
-  const update: ReviewUpdate = (change) =>
-    command("invoices.edit", scope, change);
+  const update: ReviewUpdate = (change) => {
+    const operation = command("invoices.edit", scope, change);
+    commandStarted(operation, true);
+    return operation;
+  };
   const editLine: EditLine = (index, change, recalculate) => {
-    const operation = command("invoices.edit", scope, (draft, current) => {
+    const mutation = command("invoices.edit", scope, (draft, current) => {
       change(draft.invoice.lines[index], draft, current);
       if (recalculate) recalculateInvoice(draft.invoice, draft.config);
-    }).then(async () => acknowledgment);
+    });
+    commandStarted(mutation, false);
+    const operation = mutation.then(async () => acknowledgment);
     editStarted(operation);
   };
   // Keep the displayed read projection while the edit acknowledgment is delayed.
@@ -100,49 +117,77 @@ async function setup(category = "") {
   fixtures.push(fixture);
   const closed = vi.fn();
   const edits: Promise<unknown>[] = [];
+  const commands: Promise<unknown>[] = [];
+  let confirmCompleted: (operation: Promise<unknown>) => void = () => {};
+  const confirmation = new Promise<unknown>((resolve) => {
+    confirmCompleted = resolve;
+  });
   let acknowledge = () => {};
   const acknowledgment = new Promise<void>((resolve) => {
     acknowledge = resolve;
   });
+  const finish = async () => {
+    acknowledge();
+    let completed = 0;
+    const outcomes: PromiseSettledResult<unknown>[] = [];
+    while (completed < commands.length) {
+      const batch = commands.slice(completed);
+      completed += batch.length;
+      outcomes.push(...(await Promise.allSettled(batch)));
+    }
+    outcomes.push(...(await Promise.allSettled(edits)));
+    const rejected = outcomes.find((outcome) => outcome.status === "rejected");
+    if (rejected?.status === "rejected") throw rejected.reason;
+  };
+  drains.push(finish);
   render(
     <DemoProvider options={fixture.options}>
       <EditorWithDelayedProjection
         workspace={workspace}
         acknowledgment={acknowledgment}
         editStarted={(operation) => edits.push(operation)}
+        commandStarted={(operation, isConfirmation) => {
+          commands.push(operation);
+          if (isConfirmation) confirmCompleted(operation);
+        }}
         closed={closed}
       />
     </DemoProvider>,
   );
-  await screen.findByLabelText("Pricing category");
-  return { fixture, closed, edits, acknowledge };
+  await renderedUiReady(() => !!screen.queryByLabelText("Pricing category"));
+  return { fixture, closed, edits, confirmation, finish };
 }
 
 it("confirms a category change with one click while its UI acknowledgment is delayed", async () => {
-  const { fixture, closed, edits, acknowledge } = await setup();
+  const { fixture, closed, edits, confirmation, finish } = await setup();
   try {
     fireEvent.click(screen.getByLabelText("Pricing category"));
-    fireEvent.click(await screen.findByRole("option", { name: "Grocery" }));
-    expect(edits).toHaveLength(1);
-    // No wait for a new category projection or the category command's acknowledgment.
-    fireEvent.click(screen.getByRole("button", { name: "Confirm line" }));
-    await waitFor(() => expect(closed).toHaveBeenCalledOnce());
+    await act(async () => {
+      fireEvent.click(screen.getByRole("option", { name: "Grocery" }));
+      expect(edits).toHaveLength(1);
+      // Press Confirm before awaiting either command or a new category projection.
+      fireEvent.click(screen.getByRole("button", { name: "Confirm line" }));
+      await confirmation;
+    });
+    expect(closed).toHaveBeenCalledOnce();
     const line = (await fixture.readCanonical()).invoice.lines[0];
     expect(line.pricing_category).toBe("grocery");
     expect(line.review_confirmed).toBe(true);
   } finally {
-    acknowledge();
-    await Promise.all(edits);
+    await finish();
   }
 });
 
 it("validates a just-cleared canonical cost and focuses its field despite the delayed projection", async () => {
-  const { fixture, closed, edits, acknowledge } = await setup("grocery");
+  const { fixture, closed, confirmation, finish } = await setup("grocery");
   try {
     const cost = screen.getByLabelText("Unit cost before tax", { exact: true });
-    fireEvent.change(cost, { target: { value: "" } });
-    fireEvent.click(screen.getByRole("button", { name: "Confirm line" }));
-    await waitFor(() => expect(cost).toHaveFocus());
+    await act(async () => {
+      fireEvent.change(cost, { target: { value: "" } });
+      fireEvent.click(screen.getByRole("button", { name: "Confirm line" }));
+      await confirmation;
+    });
+    expect(cost).toHaveFocus();
     expect(cost).toHaveAttribute("aria-invalid", "true");
     expect(
       screen.getByText(
@@ -154,17 +199,19 @@ it("validates a just-cleared canonical cost and focuses its field despite the de
       (await fixture.readCanonical()).invoice.lines[0].review_confirmed,
     ).toBe(false);
   } finally {
-    acknowledge();
-    await Promise.all(edits);
+    await finish();
   }
 });
 
 it("keeps an actually missing category unconfirmed and focuses the required category", async () => {
-  const { fixture, closed, acknowledge } = await setup();
+  const { fixture, closed, confirmation, finish } = await setup();
   try {
-    fireEvent.click(screen.getByRole("button", { name: "Confirm line" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Confirm line" }));
+      await confirmation;
+    });
     const category = screen.getByLabelText("Pricing category");
-    await waitFor(() => expect(category).toHaveFocus());
+    expect(category).toHaveFocus();
     expect(category).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByText("Choose a pricing category.")).toBeVisible();
     expect(closed).not.toHaveBeenCalled();
@@ -172,6 +219,6 @@ it("keeps an actually missing category unconfirmed and focuses the required cate
       (await fixture.readCanonical()).invoice.lines[0].review_confirmed,
     ).toBe(false);
   } finally {
-    acknowledge();
+    await finish();
   }
 });
