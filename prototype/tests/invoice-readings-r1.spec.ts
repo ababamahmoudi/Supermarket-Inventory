@@ -23,7 +23,7 @@ const twoPageFile = fileURLToPath(
 const fictionalNumber = "R1-2026-002";
 const fictionalSupplier = "Maple Test Produce Ltd.";
 
-async function expectWarningOutline(control: Locator) {
+async function expectWarningBorder(control: Locator) {
   const actual = await control.evaluate((element) => {
     const warning = document.createElement("span");
     warning.style.color = "var(--pending-dot)";
@@ -32,15 +32,21 @@ async function expectWarningOutline(control: Locator) {
     warning.remove();
     const style = getComputedStyle(element);
     return {
-      style: style.outlineStyle,
-      width: style.outlineWidth,
-      color: style.outlineColor,
+      borders: ["top", "right", "bottom", "left"].map((side) => ({
+        style: style.getPropertyValue(`border-${side}-style`),
+        width: style.getPropertyValue(`border-${side}-width`),
+        color: style.getPropertyValue(`border-${side}-color`),
+      })),
       warningColor,
     };
   });
-  expect(actual.style).toBe("solid");
-  expect(actual.width).toBe("2px");
-  expect(actual.color).toBe(actual.warningColor);
+  expect(actual.borders).toEqual(
+    Array.from({ length: 4 }, () => ({
+      style: "solid",
+      width: "2px",
+      color: actual.warningColor,
+    })),
+  );
 }
 
 async function openData(page: Page) {
@@ -159,7 +165,15 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
     preview.getByText(fictionalSupplier, { exact: true }),
   ).toBeVisible();
   summary = await importSelected(page, 1);
-  await expect(summary).toContainText("fictional-fv-20417-duplicate");
+  await expect(
+    summary.getByText("Invoice FV-20417 · Fresh Valley Foods", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    summary.getByText(
+      "An original page with the same SHA-256 is already in the app.",
+      { exact: true },
+    ),
+  ).toBeVisible();
   await summary.getByText("Open Needs review", { exact: true }).click();
   await page
     .locator(".invoice-saved-drafts tbody tr")
@@ -182,7 +196,7 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
   await expect(firstEditor).not.toContainText(
     "Enter a cost of zero or more up to four decimal places.",
   );
-  await expectWarningOutline(importedCost);
+  await expectWarningBorder(importedCost);
   await firstEditor.getByRole("button", { name: "Close", exact: true }).click();
   await (await openShellAction(page, "Switch to dark theme")).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -190,7 +204,7 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
   importedCost = firstEditor.getByLabel("Unit cost before tax", {
     exact: true,
   });
-  await expectWarningOutline(importedCost);
+  await expectWarningBorder(importedCost);
   await firstEditor.getByRole("button", { name: "Close", exact: true }).click();
   await (await openShellAction(page, "Switch to light theme")).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
