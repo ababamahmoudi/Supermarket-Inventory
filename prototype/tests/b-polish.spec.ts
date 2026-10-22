@@ -342,7 +342,7 @@ test("R2 invoice names and four-decimal cost values fit on one line", async ({
   for (const name of names)
     expect(name.lines, name.text ?? "product name").toBe(1);
   const costs = page.locator(
-    '.receiving-lines-table tbody td[data-column-key="cost"] > bdi',
+    '.receiving-lines-table tbody :is(td[data-column-key="cost"], td.phone-list-value) > bdi',
   );
   await expect(costs).toHaveCount(6);
   for (const cost of await costs.all()) {
