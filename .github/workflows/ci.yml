@@ -83,6 +83,14 @@ jobs:
           output.write_text(yaml.safe_dump(config, sort_keys=False))
           PY
           .venv/bin/pre-commit run --all-files --config .local/pre-commit-ci.yaml
+      - name: Use official Ubuntu mirrors for browser dependencies
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            printf '%s\t%s\n' \
+              'https://archive.ubuntu.com/ubuntu/' 'priority:1' \
+              'https://security.ubuntu.com/ubuntu/' 'priority:2' | \
+              sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
       - name: Run browser smoke tests
         run: |
           cd frontend
@@ -163,6 +171,14 @@ jobs:
         run: npm ci
       - name: Build the prototype
         run: npm run build
+      - name: Use official Ubuntu mirrors for browser dependencies
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            printf '%s\t%s\n' \
+              'https://archive.ubuntu.com/ubuntu/' 'priority:1' \
+              'https://security.ubuntu.com/ubuntu/' 'priority:2' | \
+              sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
       - name: Install Chromium, WebKit and browser dependencies
         run: npx playwright install --with-deps chromium webkit firefox
       - name: Test desktop and phone browser workflows
