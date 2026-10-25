@@ -1,8 +1,11 @@
-:root .ui-dialog.invoice-correction-dialog {
+:root .ui-dialog.ui-dialog-structured.invoice-correction-dialog {
   inline-size: min(1100px, calc(100vw - 32px));
   max-inline-size: min(1100px, calc(100vw - 32px));
   block-size: min(760px, calc(100dvh - 48px));
   max-block-size: calc(100dvh - 48px);
+}
+.invoice-correction-dialog > .ui-dialog-body {
+  flex: 1;
 }
 .invoice-correction-content,
 .invoice-correction-form {
@@ -51,13 +54,14 @@
   margin: 0;
 }
 @media (max-width: 759px) {
-  :root .ui-dialog.invoice-correction-dialog {
+  :root .ui-dialog.ui-dialog-structured.invoice-correction-dialog {
     inline-size: calc(100dvw - 24px);
     max-inline-size: calc(100dvw - 24px);
     block-size: calc(100dvh - 24px);
     max-block-size: calc(100dvh - 24px);
   }
-  :root .ui-dialog.invoice-correction-dialog.has-open-line {
+  :root
+    .ui-dialog.ui-dialog-structured.invoice-correction-dialog.has-open-line {
     inset: 0;
     inline-size: 100dvw;
     max-inline-size: 100dvw;
@@ -67,8 +71,12 @@
     border: 0;
     border-radius: var(--radius-none);
   }
-  .invoice-correction-dialog.has-open-line > .ui-dialog-header,
-  .invoice-correction-dialog.has-open-line > .ui-dialog-footer {
+  :root
+    .ui-dialog.ui-dialog-structured.invoice-correction-dialog.has-open-line
+    > .ui-dialog-header,
+  :root
+    .ui-dialog.ui-dialog-structured.invoice-correction-dialog.has-open-line
+    > .ui-dialog-footer {
     display: none;
   }
   .invoice-correction-dialog.has-open-line > .ui-dialog-body {

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import Decimal from "decimal.js";
 import { inspect } from "../scripts/c5-browser-proof.mjs";
 import { signIn, setBranch, setLanguage, openShellAction } from "./helpers";
@@ -6,8 +6,113 @@ import { readCanonicalBusinessEvidence } from "./business-evidence";
 import fixtures from "../src/fixtures/a2-demo-data.json" with { type: "json" };
 
 const invoiceId = `a2-fixture:${fixtures.invoices[0].number}`;
+
+async function correctionGeometry(dialog: Locator) {
+  return dialog.evaluate((element) => {
+    const bounds = (target: Element) => {
+      const rect = target.getBoundingClientRect();
+      return {
+        x: rect.x,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+      };
+    };
+    const header = element.querySelector(":scope > .ui-dialog-header")!;
+    const body = element.querySelector(":scope > .ui-dialog-body")!;
+    const footer = element.querySelector(":scope > .ui-dialog-footer")!;
+    const editor = element.querySelector(".receiving-line-editor");
+    const product = editor?.querySelector(".receiving-product-section");
+    const quantity = editor?.querySelector(".receiving-quantity-section");
+    const table = element.querySelector(".receiving-lines-table")!;
+    return {
+      dialog: bounds(element),
+      header: { ...bounds(header), display: getComputedStyle(header).display },
+      body: { ...bounds(body), overflow: getComputedStyle(body).overflowY },
+      footer: { ...bounds(footer), display: getComputedStyle(footer).display },
+      editor: editor ? bounds(editor) : null,
+      product: product ? bounds(product) : null,
+      quantity: quantity ? bounds(quantity) : null,
+      viewport: { width: innerWidth, height: innerHeight },
+      documentOverflow:
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+      tableOverflow: table.scrollWidth - table.clientWidth,
+    };
+  });
+}
+
+function correctionGeometryFailures(
+  geometry: Awaited<ReturnType<typeof correctionGeometry>>,
+  width: number,
+  open: boolean,
+) {
+  const failures: string[] = [];
+  const phone = width < 760;
+  const expectedWidth = phone
+    ? open
+      ? width
+      : width - 24
+    : Math.min(1100, width - 32);
+  if (Math.abs(geometry.dialog.width - expectedWidth) > 1)
+    failures.push(
+      "The correction dialog must use its bounded composition width",
+    );
+  if (geometry.dialog.x < -1 || geometry.dialog.right > width + 1)
+    failures.push("The correction dialog must stay inside the viewport");
+  if (geometry.documentOverflow > 1 || geometry.tableOverflow > 1)
+    failures.push("The correction page and table must not scroll horizontally");
+  if (phone && open) {
+    if (
+      Math.abs(geometry.dialog.top) > 1 ||
+      Math.abs(geometry.dialog.height - geometry.viewport.height) > 1 ||
+      !geometry.editor ||
+      Math.abs(geometry.editor.x) > 1 ||
+      Math.abs(geometry.editor.top) > 1 ||
+      Math.abs(geometry.editor.width - width) > 1 ||
+      Math.abs(geometry.editor.height - geometry.viewport.height) > 1
+    )
+      failures.push("The phone correction editor must fill the viewport");
+    if (
+      geometry.header.display !== "none" ||
+      geometry.footer.display !== "none"
+    )
+      failures.push("The phone editor must use only its own header and footer");
+  } else {
+    if (Math.abs(geometry.footer.bottom - geometry.dialog.bottom) > 1)
+      failures.push("The correction footer must stay at the dialog bottom");
+    if (
+      geometry.body.top < geometry.header.bottom - 1 ||
+      geometry.body.bottom > geometry.footer.top + 1 ||
+      geometry.footer.top < geometry.header.bottom
+    )
+      failures.push(
+        "The correction body must stay between its header and footer",
+      );
+    if (geometry.body.overflow !== "auto")
+      failures.push("The bounded correction body must remain scrollable");
+    if (open) {
+      if (
+        !geometry.product ||
+        !geometry.quantity ||
+        Math.abs(geometry.product.top - geometry.quantity.top) > 1 ||
+        Math.max(
+          geometry.quantity.x - geometry.product.right,
+          geometry.product.x - geometry.quantity.right,
+        ) < 20
+      )
+        failures.push(
+          "The desktop editor sections must share a two-column row",
+        );
+    }
+  }
+  return failures;
+}
+
 for (const language of ["en", "fa"] as const)
-  for (const width of [1440, 390])
+  for (const width of [1440, 1000, 390])
     test(`R2b 3.3 shared correction editor ${language} ${width}px`, async ({
       page,
     }) => {
@@ -45,12 +150,77 @@ for (const language of ["en", "fa"] as const)
           original.lines.length,
         );
         await expect(dialog.locator(".receiving-lines-table")).toBeVisible();
+        await page.evaluate(async () => {
+          await document.fonts.ready;
+        });
+        expect(
+          correctionGeometryFailures(
+            await correctionGeometry(dialog),
+            width,
+            false,
+          ),
+        ).toEqual([]);
+        if (language === "en" && width === 1440 && theme === "light") {
+          const originalStyle = await dialog.getAttribute("style");
+          try {
+            await dialog.evaluate((element) => {
+              element.style.inlineSize = "560px";
+            });
+            expect(
+              correctionGeometryFailures(
+                await correctionGeometry(dialog),
+                width,
+                false,
+              ),
+            ).toContain(
+              "The correction dialog must use its bounded composition width",
+            );
+          } finally {
+            await dialog.evaluate((element, style) => {
+              if (style === null) element.removeAttribute("style");
+              else element.setAttribute("style", style);
+            }, originalStyle);
+          }
+          const body = dialog.locator(":scope > .ui-dialog-body");
+          const bodyStyle = await body.getAttribute("style");
+          try {
+            await body.evaluate((element) => {
+              element.style.flex = "0 1 auto";
+            });
+            expect(
+              correctionGeometryFailures(
+                await correctionGeometry(dialog),
+                width,
+                false,
+              ),
+            ).toContain("The correction footer must stay at the dialog bottom");
+          } finally {
+            await body.evaluate((element, style) => {
+              if (style === null) element.removeAttribute("style");
+              else element.setAttribute("style", style);
+            }, bodyStyle);
+          }
+          expect(
+            correctionGeometryFailures(
+              await correctionGeometry(dialog),
+              width,
+              false,
+            ),
+          ).toEqual([]);
+        }
         await dialog.locator(".invoice-line-toggle").first().click();
         const editor = dialog.getByRole("region", {
           name: t("Line 1", "ردیف 1"),
           exact: true,
         });
         await expect(editor).toHaveClass(/ui-form-surface/);
+        expect(
+          correctionGeometryFailures(
+            await correctionGeometry(dialog),
+            width,
+            true,
+          ),
+        ).toEqual([]);
         const quantity = editor.locator("#invoice-line-0-invoiced");
         const cost = editor.getByRole("textbox", {
           name: t("Unit cost before tax", "هزینه هر واحد پیش از مالیات"),
@@ -128,6 +298,13 @@ for (const language of ["en", "fa"] as const)
           .last()
           .click();
         await expect(dialog.locator(".receiving-line-editor")).toHaveCount(0);
+        expect(
+          correctionGeometryFailures(
+            await correctionGeometry(dialog),
+            width,
+            false,
+          ),
+        ).toEqual([]);
         const staged = await readCanonicalBusinessEvidence(page);
         expect(staged.invoices!.find((row) => row.id === invoiceId)).toEqual(
           original,
