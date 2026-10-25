@@ -24,6 +24,8 @@ Receiving and correction groups opt in to shared `ui-form-surface`: editable fie
 
 Posted invoices reuse the receiving original/details/lines/totals composition, with conditional tracked-date display and safe human reading-note copy. Correction reuses closed rows and a staged editor, requires a reason and canonical old→new/impact preview, and retains the original. Empty-store confirmation has clear footer/input spacing, emphasized DELETE/حذف and a disabled red action; its desktop dialog is wide enough for the lists and still fits phones. Import preview has one truthful status, normal location fields, consistent thumbnails and a stable frame.
 
+Post hints use a short translated count for multiple blockers, with the complete named fixes available by clicking Post. A single reason stays exact. Show hints for deliberate mouse movement or keyboard focus; touch does not leave a hover hint behind. Disabled posting explains its unavailable state without inviting a click.
+
 Dialog descriptions stay concise and may wrap naturally on narrow screens; never clip text to force a single line.
 
 Long receiving lists use compact closed rows with at least 44px targets and small work-column gaps while preserving normal font sizes, card tokens and 44px fields. The 25-line fixture remains within the existing three-viewport/2700px desktop review budget; compact density does not shrink controls or change recorded quantities.

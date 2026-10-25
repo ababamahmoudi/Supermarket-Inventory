@@ -259,9 +259,12 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   });
   await expect(unavailablePost).toBeEnabled();
   await unavailablePost.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(unavailablePost).toBeFocused();
   await expect(
     unavailablePost.locator("..").getByRole("tooltip"),
-  ).toContainText(/decide whether to keep or refuse the extra delivery/);
+  ).toContainText("Click Post invoice for the full What's missing list.");
   await page.keyboard.press("Enter");
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),

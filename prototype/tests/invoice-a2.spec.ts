@@ -83,8 +83,11 @@ test("invoice lines start closed, confirm once and reopen without opening the ne
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
   await expect(post).toBeEnabled();
   await post.focus();
-  await expect(post.locator("..").getByRole("tooltip")).toContainText(
-    /Lines: 6 not confirmed/,
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(post).toBeFocused();
+  await expect(post.locator("..").getByRole("tooltip")).toHaveText(
+    "9 items need attention (6 lines). Click Post invoice for the full What's missing list.",
   );
   await page.keyboard.press("Enter");
   await expect(

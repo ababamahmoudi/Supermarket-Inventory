@@ -660,7 +660,7 @@ export async function postC8SaleCostInvoice(page, originalPath) {
     name: /^(New invoice|فاکتور جدید)$/,
   });
   await expect(chooser).toBeVisible();
-  await button(chooser, "Upload", "بارگذاری").click();
+  await button(chooser, "Photo (AI reading)", "عکس (خوانش هوش مصنوعی)").click();
   await expect
     .poll(async () => {
       const current = (await readC8State(page)).invoice;
@@ -668,7 +668,7 @@ export async function postC8SaleCostInvoice(page, originalPath) {
         current.id !== previousInvoice &&
         current.entry_mode === "upload" &&
         new URL(page.url()).hash ===
-          "#invoices?id=" + encodeURIComponent(current.id)
+          "#invoices?id=" + encodeURIComponent(current.id) + "&entry=photo"
       );
     })
     .toBe(true);

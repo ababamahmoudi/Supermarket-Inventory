@@ -106,6 +106,8 @@ On BFP-0818 line 2, apply the name suggestion or edit a highlighted field. Reope
 
 ### 2.3 — Posting names the exact fix
 
+With many blockers, hover Post with a mouse or focus it using Tab: the hint stays compact. Click Post for the full list of exact fixes. Touching Import or Post must not leave a hover hint covering the phone screen.
+
 Before filling FVP-0819 totals, Post explains the empty Tax and how to enter 0.00, then Show opens/focuses Tax. Invalid terms, lower-cost follow-up fields and order differences likewise point to their actual controls; narrow order rows expand before focus. An incomplete attempt explains requirements without saving/posting. Permission-denied and actively reading states remain disabled. Canonical no-write and rendered-target cases are in [r2b-blockers.spec.ts](../prototype/tests/r2b-blockers.spec.ts); the shared file does not itself contain orders/lower-cost history, so do not expect those extra blockers in it.
 
 ### 2.4 — Readable, level details
