@@ -29,6 +29,46 @@ export function invoiceLineCalculation(
     : calculatePrice(line.unit_cost_before_tax, category, config);
 }
 
+/** Calculate from the original cost basis before rounding the final line amount. */
+export function invoiceLineAmount(line: InvoiceEditableLine): string {
+  if (line.sold_by === "weight")
+    return weightLineAmount(
+      line.source_quantity ?? "",
+      line.source_quantity_unit ?? "lb",
+      line.source_cost_before_tax ?? line.unit_cost_before_tax,
+      line.source_cost_unit ?? "lb",
+      line.weight_conversion_factor,
+    );
+  if (
+    line.quantity_unit === "cases" &&
+    /^\d+(?:\.\d{1,4})?$/.test(line.case_cost_before_tax ?? "")
+  )
+    return new Decimal(line.case_cost_before_tax!)
+      .times(
+        line.quantity_entered ??
+          new Decimal(line.qty_invoiced).div(line.units_per_case ?? 1),
+      )
+      .toFixed(2);
+  if (
+    line.quantity_unit === "units" &&
+    line.converted_case_cost_before_tax !== undefined &&
+    /^\d+(?:\.\d{1,4})?$/.test(line.converted_case_cost_before_tax) &&
+    Number.isSafeInteger(line.converted_case_units_per_case) &&
+    line.converted_case_units_per_case! > 0 &&
+    line.units_per_case === line.converted_case_units_per_case &&
+    new Decimal(line.converted_case_cost_before_tax)
+      .div(line.converted_case_units_per_case!)
+      .toFixed(4) === line.unit_cost_before_tax
+  )
+    return new Decimal(line.converted_case_cost_before_tax)
+      .times(line.qty_invoiced)
+      .div(line.converted_case_units_per_case!)
+      .toFixed(2);
+  return new Decimal(line.unit_cost_before_tax)
+    .times(line.qty_invoiced)
+    .toFixed(2);
+}
+
 /** Source kg/lb precision and original cost are independent of canonical pricing. */
 export function refreshInvoiceWeight(
   line: InvoiceEditableLine,
@@ -178,4 +218,35 @@ export function initializeInvoiceWeight<Line extends InvoiceEditableLine>(
   line.weight_conversion_factor ??= weightConversionFactor(config);
   refreshInvoiceWeight(line, config);
   return line;
+}
+
+/** Choosing a weight unit establishes source evidence before weight initialization. */
+export function selectInvoiceWeightUnit(
+  line: InvoiceEditableLine,
+  unit: WeightUnit,
+  config: Pick<CompanyConfig, "weighed_items">,
+): void {
+  if (line.sold_by !== "weight") {
+    const displayedCost =
+      line.quantity_unit === "cases"
+        ? (line.case_cost_before_tax ?? "")
+        : line.unit_cost_before_tax;
+    const fullyDelivered = new Decimal(line.qty_received_at_posting).eq(
+      line.qty_invoiced,
+    );
+    line.sold_by = "weight";
+    line.source_quantity_unit = unit;
+    line.source_cost_unit = unit;
+    line.source_quantity = String(line.quantity_entered ?? line.qty_invoiced);
+    // Unit changes cannot reinterpret a partial individual-unit receipt as a weight.
+    line.source_received_quantity = fullyDelivered ? line.source_quantity : "";
+    line.source_cost_before_tax = displayedCost;
+  }
+  line.quantity_unit = unit;
+  try {
+    initializeInvoiceWeight(line, config);
+  } catch {
+    line.qty_invoiced = 0;
+    line.qty_received_at_posting = -1;
+  }
 }

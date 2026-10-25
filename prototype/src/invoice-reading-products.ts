@@ -57,6 +57,10 @@ const measuredPack = new RegExp(
   `\\b${container}(${amount})\\s*[x×]\\s*(${amount})\\s*(${sizeUnit})\\b`,
   "i",
 );
+const nestedMeasuredPack = new RegExp(
+  `\\b(?:${amount}\\s*[x×]\\s*){2,}${amount}\\s*${sizeUnit}\\b`,
+  "i",
+);
 const packPrefix = new RegExp(
   `^(?:(?:box|case|carton|pack|ctn)\\s+(?:of\\s+)?\\d|${amount}\\s*[x×])`,
   "i",
@@ -95,6 +99,7 @@ function numericText(value: string) {
 }
 
 function packTextCount(value: string) {
+  if (nestedMeasuredPack.test(value)) return undefined;
   const measured = measuredPack.exec(value);
   if (measured) return positiveCount(measured[1]);
   const count =
@@ -136,6 +141,7 @@ export function splitInvoiceProductDescription({
   const code = supplierCode?.trim() ?? "";
   const withoutCode = removeSupplierCode(description.trim(), code);
   let name = withoutCode.name.replace(/\s*\/\s*(?:case|box|ctn)\s*$/i, "");
+  const nestedDescription = nestedMeasuredPack.test(name);
   let extractedPack = "";
   let inferredCount: number | undefined;
   let uncertain = withoutCode.uncertain;
@@ -164,6 +170,8 @@ export function splitInvoiceProductDescription({
   }
   name = cleanSeparators(name.replace(/\s*\/\s*(?:case|box|ctn)\s*$/i, ""));
   const explicitPack = packSize?.trim() ?? "";
+  const nestedPack = nestedDescription || nestedMeasuredPack.test(explicitPack);
+  uncertain ||= nestedPack;
   const explicitMeasured = measuredPack.exec(explicitPack);
   const packCount = packTextCount(explicitPack);
   if (
@@ -182,7 +190,7 @@ export function splitInvoiceProductDescription({
   const explicitCount = positiveCount(unitsPerCase);
   const hasExplicitCount =
     unitsPerCase != null && String(unitsPerCase).trim() !== "";
-  const parsedCount = packCount ?? inferredCount;
+  const parsedCount = nestedPack ? undefined : (packCount ?? inferredCount);
   if (hasExplicitCount)
     uncertain ||=
       explicitCount === undefined ||

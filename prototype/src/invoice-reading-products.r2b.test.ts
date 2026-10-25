@@ -190,6 +190,47 @@ describe("R2b product names and printed pack evidence", () => {
     ).toMatchObject({ name: "42 Orchard Biscuit", uncertain: false });
   });
 
+  it.each([
+    ["Orchard Tea", "3 x 4 x 500 g"],
+    ["3 x 4 x 500 g Orchard Tea", "3 x 4 x 500 g"],
+    ["12 x 500 g Orchard Tea", "Box of 3 × 4 × 500G"],
+  ])(
+    "does not infer an inner count from nested supplied pack text",
+    (description, packSize) => {
+      const result = splitInvoiceProductDescription({ description, packSize });
+      expect(result.units_per_case).toBeUndefined();
+      expect(result.uncertain).toBe(true);
+      expect(result.pack_size).toContain("3 × 4 × 500 g");
+    },
+  );
+
+  it.each([12, "12"])(
+    "retains an explicit printed count %s while a nested pack still needs review",
+    (unitsPerCase) => {
+      expect(
+        splitInvoiceProductDescription({
+          description: "3 x 4 x 500 g Orchard Tea",
+          packSize: "3 x 4 x 500 g",
+          unitsPerCase,
+        }),
+      ).toMatchObject({ units_per_case: 12, uncertain: true });
+    },
+  );
+
+  it("still infers a positive count from an ordinary supplied measured pack", () => {
+    expect(
+      splitInvoiceProductDescription({
+        description: "Orchard Tea",
+        packSize: "4 x 500 g",
+      }),
+    ).toEqual({
+      name: "Orchard Tea",
+      pack_size: "4 × 500 g",
+      units_per_case: 4,
+      uncertain: false,
+    });
+  });
+
   it("normalizes supplied pack text and leaves printed input untouched", () => {
     const source = Object.freeze({
       description: "  Valley oats X 8  ",

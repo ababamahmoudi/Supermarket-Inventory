@@ -844,8 +844,17 @@ export function mapReadingLine(
     : "";
   const inferredPack =
     !text(source.units_per_case) && split.units_per_case !== undefined;
-  const unit = text(source.unit),
-    pack = decimal(source.units_per_case ?? split.units_per_case) || "1",
+  const printedUnit = text(source.unit).toLocaleLowerCase();
+  const unit = /^(?:case|cases|cs|ctn|carton|cartons|box|boxes)$/.test(
+    printedUnit,
+  )
+    ? "case"
+    : /^(?:each|ea|unit|units|piece|pieces|pcs)$/.test(printedUnit)
+      ? "each"
+      : printedUnit;
+  const pack =
+      decimal(source.units_per_case ?? split.units_per_case) ||
+      (unit === "case" ? "0" : "1"),
     quantity = decimal(source.quantity),
     received =
       decimal(source.units_received) ||
@@ -853,20 +862,27 @@ export function mapReadingLine(
         ? new Decimal(quantity).times(unit === "case" ? pack : 1).toString()
         : "");
   if (
-    !new Decimal(pack).isInteger() ||
-    new Decimal(pack).lte(0) ||
-    new Decimal(pack).gt(Number.MAX_SAFE_INTEGER)
+    pack !== "0" &&
+    (!new Decimal(pack).isInteger() ||
+      new Decimal(pack).lte(0) ||
+      new Decimal(pack).gt(Number.MAX_SAFE_INTEGER))
   )
     throw new ReadingImportError("invalid_number");
   const printedCost = decimal(source.unit_cost_before_tax, 4);
+  const printedCaseCost =
+    decimal(source.cost_per_case_before_tax, 4) ||
+    (text(source.cost_basis).toLowerCase() === "case" ? printedCost : "");
   const derivedCost =
-    printedCost && text(source.cost_basis) === "case"
-      ? new Decimal(printedCost).div(pack).toFixed(4)
-      : printedCost;
+    printedCost && text(source.cost_basis).toLowerCase() !== "case"
+      ? printedCost
+      : printedCaseCost
+        ? new Decimal(pack).gt(0)
+          ? new Decimal(printedCaseCost).div(pack).toFixed(4)
+          : ""
+        : printedCost;
   const cost = decimal(source.cost_per_unit_before_tax ?? derivedCost, 4),
     caseCost =
-      decimal(source.cost_per_case_before_tax, 4) ||
-      (cost ? new Decimal(cost).times(pack).toFixed(4) : "");
+      printedCaseCost || (cost ? new Decimal(cost).times(pack).toFixed(4) : "");
   const checks = statuses.filter(
     (field) =>
       !(field === "supplier_item_code" && inferredCode) &&
@@ -883,10 +899,7 @@ export function mapReadingLine(
   if (unit === "other" || !["case", "each", "kg", "lb"].includes(unit))
     checks.push("quantity_unit");
   if (split.uncertain) checks.push("description");
-  if (
-    unit === "case" &&
-    !decimal(source.units_per_case ?? split.units_per_case)
-  )
+  if (unit === "case" && !new Decimal(pack).gt(0))
     checks.push("units_per_case");
   const line: InvoiceLine = {
     id: createId("invoice-line"),
@@ -901,12 +914,14 @@ export function mapReadingLine(
     unit_cost_before_tax: cost,
     line_total:
       decimal(source.line_total, 2) ||
-      (cost && quantity
-        ? new Decimal(cost)
-            .times(quantity)
-            .times(unit === "case" ? pack : 1)
-            .toFixed(2)
-        : ""),
+      (unit === "case" && caseCost && quantity
+        ? new Decimal(caseCost).times(quantity).toFixed(2)
+        : cost && quantity
+          ? new Decimal(cost)
+              .times(quantity)
+              .times(unit === "case" ? pack : 1)
+              .toFixed(2)
+          : ""),
     taxable,
     taxable_inferred: source.taxable == null,
     tax_profile: taxProfile,
@@ -951,6 +966,32 @@ export function mapReadingLine(
           .toFixed(2)
       : "",
   };
+  if (unit === "case" && quantity && !new Decimal(quantity).isInteger()) {
+    const units = new Decimal(quantity).times(pack);
+    if (
+      units.gt(0) &&
+      units.isInteger() &&
+      units.lte(Number.MAX_SAFE_INTEGER)
+    ) {
+      line.quantity_unit = "units";
+      line.quantity_entered = units.toString();
+      line.case_cost_before_tax = undefined;
+      if (caseCost) {
+        line.converted_case_cost_before_tax = caseCost;
+        line.converted_case_units_per_case = new Decimal(pack).toNumber();
+      }
+    } else {
+      line.qty_invoiced = 0;
+      line.qty_received_at_posting = 0;
+      line.low_confidence_fields = [
+        ...new Set([
+          ...(line.low_confidence_fields ?? []),
+          "quantity_entered",
+          "units_per_case",
+        ]),
+      ];
+    }
+  }
   const expiry = readingExpiryDate(text(source.expiry_as_printed));
   if (expiry) {
     line.date_value = expiry;

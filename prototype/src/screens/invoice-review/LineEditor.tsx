@@ -34,7 +34,8 @@ import {
 import {
   setInvoiceWeightCost,
   setInvoiceWeightReceived,
-  initializeInvoiceWeight,
+  selectInvoiceWeightUnit,
+  invoiceLineAmount,
 } from "../../invoice-weight";
 import { clearInvoiceOrderLine } from "../../invoice-orders";
 import { costPerCase, costPerUnit } from "../../supplier-items";
@@ -248,18 +249,16 @@ export function LineEditor({
   }
   let deduction = "0.00";
   try {
-    deduction = new Decimal(short || 0)
-      .plus(refused || 0)
-      .times(line.unit_cost_before_tax || 0)
+    deduction = new Decimal(invoiceLineAmount(line))
+      .times(new Decimal(short || 0).plus(refused || 0))
+      .div(line.qty_invoiced)
       .toFixed(2);
   } catch {
     /* Keep incomplete edits visible. */
   }
   let calculated = "";
   try {
-    calculated = new Decimal(line.qty_invoiced)
-      .times(line.unit_cost_before_tax)
-      .toFixed(2);
+    calculated = invoiceLineAmount(line);
   } catch {
     /* The cost error explains incomplete input. */
   }
@@ -531,7 +530,7 @@ export function LineEditor({
                         "quantity_unit",
                         (item) => {
                           if (value === "kg" || value === "lb") {
-                            initializeInvoiceWeight(item, state.config);
+                            selectInvoiceWeightUnit(item, value, state.config);
                             onQuantity(
                               item,
                               item.quantity_entered ?? item.qty_invoiced,
@@ -591,45 +590,46 @@ export function LineEditor({
                     }
                   />
                 </Field>
-                {line.quantity_unit === "cases" && (
-                  <Field
-                    readingField="units_per_case"
-                    label={t("Units per case", "واحد در کارتن")}
-                    error={
-                      showErrors && failedField === "units_per_case"
-                        ? t(
-                            "Enter a valid number of units per case.",
-                            "تعداد معتبر واحد در هر کارتن را وارد کنید.",
-                          )
-                        : undefined
-                    }
-                  >
-                    <NumberField
-                      keepTyping
-                      id={id("pack")}
-                      aria-label={t("Units per case", "واحد در هر کارتن")}
-                      dir="ltr"
-                      min="1"
-                      step="1"
-                      value={line.units_per_case ?? 1}
-                      onChange={(value) =>
-                        edit(
-                          "units_per_case",
-                          (item) => {
-                            item.units_per_case = Number(value);
-                            onQuantity(
-                              item,
-                              item.quantity_entered ?? 1,
-                              "cases",
-                              Number(value),
-                            );
-                          },
-                          true,
-                        )
+                {line.quantity_unit === "cases" &&
+                  line.sold_by !== "weight" && (
+                    <Field
+                      readingField="units_per_case"
+                      label={t("Units per case", "واحد در کارتن")}
+                      error={
+                        showErrors && failedField === "units_per_case"
+                          ? t(
+                              "Enter a valid number of units per case.",
+                              "تعداد معتبر واحد در هر کارتن را وارد کنید.",
+                            )
+                          : undefined
                       }
-                    />
-                  </Field>
-                )}
+                    >
+                      <NumberField
+                        keepTyping
+                        id={id("pack")}
+                        aria-label={t("Units per case", "واحد در هر کارتن")}
+                        dir="ltr"
+                        min="1"
+                        step="1"
+                        value={line.units_per_case ?? 1}
+                        onChange={(value) =>
+                          edit(
+                            "units_per_case",
+                            (item) => {
+                              item.units_per_case = Number(value);
+                              onQuantity(
+                                item,
+                                item.quantity_entered ?? 1,
+                                "cases",
+                                Number(value),
+                              );
+                            },
+                            true,
+                          )
+                        }
+                      />
+                    </Field>
+                  )}
                 <Field
                   label={t("Delivered", "تحویل‌شده")}
                   error={receivedError}
@@ -697,7 +697,14 @@ export function LineEditor({
                 )}
                 <Field
                   readingField="unit_cost_before_tax"
-                  label={t("Unit cost", "هزینه واحد")}
+                  label={
+                    line.sold_by === "weight"
+                      ? t(
+                          `Cost per ${line.source_cost_unit ?? "lb"}`,
+                          `هزینه هر ${line.source_cost_unit === "kg" ? "کیلوگرم" : "پوند"}`,
+                        )
+                      : t("Unit cost", "هزینه واحد")
+                  }
                   error={costError}
                 >
                   <BufferedInput
@@ -726,6 +733,8 @@ export function LineEditor({
                               state.config,
                             );
                           else {
+                            item.converted_case_cost_before_tax = undefined;
+                            item.converted_case_units_per_case = undefined;
                             item.unit_cost_before_tax = inputValue;
                             if (
                               /^\d+(\.\d{1,4})?$/.test(inputValue) &&

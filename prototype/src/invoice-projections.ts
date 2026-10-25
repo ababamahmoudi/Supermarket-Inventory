@@ -19,6 +19,8 @@ import { normalizeInvoiceReceivingReview } from "./invoice-checks";
 type InvoiceLineMoney =
   | "unit_cost_before_tax"
   | "case_cost_before_tax"
+  | "converted_case_cost_before_tax"
+  | "converted_case_units_per_case"
   | "source_cost_before_tax"
   | "line_total"
   | "line_tax"
@@ -124,6 +126,8 @@ const lineKeys = [
 const lineMoneyKeys = [
   "unit_cost_before_tax",
   "case_cost_before_tax",
+  "converted_case_cost_before_tax",
+  "converted_case_units_per_case",
   "source_cost_before_tax",
   "line_total",
   "line_tax",

@@ -1086,20 +1086,21 @@ function InvoiceWorkspace({
     unit: NonNullable<InvoiceEditableLine["quantity_unit"]>,
     pack?: number,
   ) {
-    if (line.sold_by === "weight")
-      setInvoiceWeightQuantity(
-        line,
-        value,
-        unit === "units" ? "lb" : unit,
-        state.config,
-      );
-    else
+    if (
+      unit === "kg" ||
+      unit === "lb" ||
+      (line.sold_by === "weight" && unit === "cases")
+    )
+      setInvoiceWeightQuantity(line, value, unit, state.config);
+    else {
+      line.sold_by = "each";
       setEachInvoiceLineQuantity(
         line,
         value,
         unit === "cases" ? "cases" : "units",
         pack,
       );
+    }
   }
 
   function editLine(

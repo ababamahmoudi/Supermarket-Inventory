@@ -10,7 +10,18 @@ import {
   recalculateInvoice,
   invoiceBlockers,
   addManualLine,
+  validInvoiceLineQuantity,
+  setInvoiceLineQuantity,
+  lineShort,
+  lineRefused,
 } from "./invoice";
+import {
+  selectInvoiceWeightUnit,
+  setInvoiceWeightQuantity,
+  setInvoiceWeightCost,
+  invoiceLineCalculation,
+} from "./invoice-weight";
+import { weightCostPerLb } from "./weighed";
 import {
   acknowledgeInvoiceCheck,
   confirmInvoiceLineChecks,
@@ -546,4 +557,177 @@ describe("R2b 1.7 supplier contacts and readable names", () => {
       ),
     ).toBe(true);
   });
+});
+
+describe("R2b 1.8 source quantities and exact costs", () => {
+  it.each(["CTN", "CS", "BOX", "case", "Cases", "ctn"])(
+    "imports %s as cases rather than units",
+    (unit) => {
+      const state = emptyBusiness();
+      const line = mapReadingLine(
+        state,
+        undefined,
+        {
+          description: "Orchard Tea",
+          unit,
+          quantity: "5",
+          units_per_case: "6",
+          unit_cost_before_tax: "12.0000",
+          cost_basis: "case",
+          taxable: false,
+        },
+        0,
+      );
+      expect(line).toMatchObject({
+        quantity_unit: "cases",
+        quantity_entered: "5",
+        qty_invoiced: 30,
+        qty_received_at_posting: 30,
+        unit_cost_before_tax: "2.0000",
+      });
+    },
+  );
+  it("converts fractional cases only to exact whole units and retains the exact case amount after edits/recalculation", () => {
+    const state = emptyBusiness();
+    const line = mapReadingLine(
+      state,
+      undefined,
+      {
+        description: "Orchard Tea",
+        unit: "CS",
+        quantity: "0.5",
+        units_per_case: "6",
+        unit_cost_before_tax: "10.0000",
+        cost_basis: "case",
+        line_total: "5.00",
+        taxable: false,
+      },
+      0,
+    );
+    state.invoice.lines = [line];
+    expect(line).toMatchObject({
+      quantity_unit: "units",
+      quantity_entered: "3",
+      qty_invoiced: 3,
+      qty_received_at_posting: 3,
+      unit_cost_before_tax: "1.6667",
+      line_total: "5.00",
+    });
+    recalculateInvoice(state.invoice, state.config);
+    expect(line.line_total).toBe("5.00");
+    setInvoiceLineQuantity(line, "30000", "units");
+    recalculateInvoice(state.invoice, state.config);
+    expect(line.line_total).toBe("50000.00");
+    line.qty_received_at_posting = 20000;
+    line.refused_units = 10000;
+    expect(lineShort(line).beforeTax).toBe("16666.67");
+    expect(lineRefused(line).beforeTax).toBe("16666.66");
+    line.units_per_case = 5;
+    recalculateInvoice(state.invoice, state.config);
+    expect(line.line_total).toBe("50001.00");
+    line.units_per_case = 6;
+    line.unit_cost_before_tax = "2.0000";
+    recalculateInvoice(state.invoice, state.config);
+    expect(line.line_total).toBe("60000.00");
+    line.case_cost_before_tax = "900.0000";
+    recalculateInvoice(state.invoice, state.config);
+    expect(line.line_total).toBe("60000.00");
+  });
+  it("leaves fractional non-whole or unresolved nested case counts blocked without rounding or a one-unit pack", () => {
+    const state = emptyBusiness();
+    for (const source of [
+      { description: "Orchard Tea", units_per_case: "3", quantity: "0.5" },
+      {
+        description: "3 x 4 x 500 g Orchard Tea",
+        pack_size: "3 x 4 x 500 g",
+        quantity: "2",
+      },
+    ]) {
+      const line = mapReadingLine(
+        state,
+        undefined,
+        {
+          ...source,
+          unit: "CS",
+          unit_cost_before_tax: "12.0000",
+          cost_basis: "case",
+          taxable: false,
+        },
+        0,
+      );
+      expect(validInvoiceLineQuantity(line)).toBe(false);
+      expect(line.low_confidence_fields).toContain("units_per_case");
+      if (!Object.hasOwn(source, "units_per_case"))
+        expect(line.units_per_case).toBe(0);
+    }
+  });
+  it.each(["kg", "lb"] as const)(
+    "keeps imported %s source quantity/cost/line amount and canonical pricing consistent",
+    (unit) => {
+      const state = emptyBusiness();
+      const line = mapReadingLine(
+        state,
+        undefined,
+        {
+          description: "Orchard Loose Tea",
+          unit,
+          quantity: "1.375",
+          units_received: "1.250",
+          unit_cost_before_tax: "11.1234",
+          cost_basis: unit,
+          taxable: false,
+        },
+        0,
+      );
+      state.invoice.lines = [line];
+      line.pricing_category = "grocery";
+      recalculateInvoice(state.invoice, state.config);
+      expect(line).toMatchObject({
+        sold_by: "weight",
+        quantity_unit: unit,
+        source_quantity: "1.375",
+        source_received_quantity: "1.25",
+        source_cost_before_tax: "11.1234",
+        source_cost_unit: unit,
+        line_total: "15.29",
+      });
+      expect(line.unit_cost_before_tax).toBe(
+        weightCostPerLb("11.1234", unit, state.config),
+      );
+      expect(validInvoiceLineQuantity(line)).toBe(true);
+      expect(
+        invoiceLineCalculation(line, "grocery", state.config).selling_price,
+      ).toBeTruthy();
+    },
+  );
+  it.each(["kg", "lb"] as const)(
+    "establishes %s source units when switching an each line, then accepts a rapidly typed20",
+    (unit) => {
+      const state = emptyBusiness();
+      const line = mapReadingLine(
+        state,
+        undefined,
+        {
+          description: "Orchard Loose Tea",
+          unit: "each",
+          quantity: "1",
+          unit_cost_before_tax: "3.2500",
+          taxable: false,
+        },
+        0,
+      );
+      selectInvoiceWeightUnit(line, unit, state.config);
+      setInvoiceWeightQuantity(line, "2", unit, state.config);
+      setInvoiceWeightQuantity(line, "20", unit, state.config);
+      setInvoiceWeightCost(line, "4.1250", unit, state.config);
+      expect(line).toMatchObject({
+        sold_by: "weight",
+        source_quantity: "20",
+        quantity_entered: "20",
+        source_cost_unit: unit,
+        line_total: "82.50",
+      });
+      expect(validInvoiceLineQuantity(line)).toBe(true);
+    },
+  );
 });

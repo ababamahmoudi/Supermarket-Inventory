@@ -327,6 +327,8 @@ export type InvoiceLine = Omit<
   quantity_unit?: "cases" | "units" | "kg" | "lb";
   quantity_entered?: string | number;
   case_cost_before_tax?: string;
+  converted_case_cost_before_tax?: string;
+  converted_case_units_per_case?: number;
   order_item_id?: string;
   refused_units?: number;
   extra_delivery_decision?: "keep" | "refuse";

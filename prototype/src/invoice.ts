@@ -44,6 +44,7 @@ import { trackingChoiceForProduct } from "./date-tracking";
 import {
   initializeInvoiceWeight,
   invoiceLineCalculation,
+  invoiceLineAmount,
   refreshInvoiceWeight,
 } from "./invoice-weight";
 import {
@@ -545,17 +546,7 @@ export function recalculateInvoice(
       !validInvoiceLineQuantity(line)
     )
       continue;
-    if (line.sold_by !== "weight")
-      line.line_total = cents(
-        line.quantity_unit === "cases" &&
-          line.case_cost_before_tax !== undefined &&
-          validCost(line.case_cost_before_tax)
-          ? new Decimal(line.case_cost_before_tax).times(
-              line.quantity_entered ??
-                new Decimal(line.qty_invoiced).div(line.units_per_case ?? 1),
-            )
-          : new Decimal(line.unit_cost_before_tax).times(line.qty_invoiced),
-      );
+    if (line.sold_by !== "weight") line.line_total = invoiceLineAmount(line);
     const profile = config.tax.profiles.find(
       (item) => item.key === line.tax_profile,
     );
