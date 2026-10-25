@@ -96,6 +96,7 @@ const lineKeys = [
   "review_confirmed",
   "review_changed_after_confirmation",
   "new_name_en",
+  "new_name_suggestion",
   "new_name_fa",
   "units_per_case",
   "manual_price_decision",

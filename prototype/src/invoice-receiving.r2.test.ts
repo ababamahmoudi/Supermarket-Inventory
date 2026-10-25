@@ -165,6 +165,7 @@ describe("R2 receiving decisions", () => {
       "supplier_invoice_number",
       "invoice_date",
       "final_total",
+      "payment_terms",
       "subtotal",
     ]);
     expect(checks.lines[0].low_confidence_fields).toEqual([
@@ -172,7 +173,7 @@ describe("R2 receiving decisions", () => {
       "quantity_entered",
       "unit_cost_before_tax",
     ]);
-    expect(invoiceCheckCount(checks)).toBe(9);
+    expect(invoiceCheckCount(checks)).toBe(10);
   });
   it("counts present optional questions and malformed required dates exactly as the review will show them", () => {
     const state = empty();
@@ -196,8 +197,9 @@ describe("R2 receiving decisions", () => {
       "order_reference",
       "received_at",
       "invoice_date",
+      "payment_terms",
     ]);
-    expect(invoiceCheckCount(checks)).toBe(4);
+    expect(invoiceCheckCount(checks)).toBe(5);
   });
   it.each([
     [{ subtotal: "", tax: "1.23", final_total: "12.34" }, "subtotal", "11.11"],

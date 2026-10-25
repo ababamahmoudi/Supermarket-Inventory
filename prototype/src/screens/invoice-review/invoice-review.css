@@ -1220,3 +1220,12 @@
 :root[dir="rtl"] .receiving-editor-body input[id$="-supplier-code"] {
   text-align: right;
 }
+
+.receiving-name-suggestion {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  margin-block-start: 8px;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+}

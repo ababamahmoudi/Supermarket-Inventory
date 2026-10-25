@@ -389,6 +389,34 @@ export function LineEditor({
                       }}
                     />
                   </Field>
+                  {line.new_name_suggestion && (
+                    <div className="receiving-name-suggestion">
+                      <span>
+                        {t("Suggested name:", "نام پیشنهادی:")}{" "}
+                        <LtrValue value={line.new_name_suggestion} />
+                      </span>
+                      <Button
+                        variant="plain"
+                        size="sm"
+                        disabled={english === line.new_name_suggestion}
+                        aria-label={t(
+                          `Use '${line.new_name_suggestion}' as the name`,
+                          `استفاده از «${line.new_name_suggestion}» به‌عنوان نام`,
+                        )}
+                        onClick={() => {
+                          const value = line.new_name_suggestion!;
+                          setEnglish(value);
+                          edit("description", (item) => {
+                            item.new_name_en = value;
+                          });
+                        }}
+                      >
+                        {english === line.new_name_suggestion
+                          ? t("Name applied", "نام اعمال شد")
+                          : t("Use this name", "استفاده از این نام")}
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <div className="receiving-full">
                   <Field

@@ -316,6 +316,7 @@ export type InvoiceLine = Omit<
   short_tax?: string;
   line_tax?: string;
   new_name_en?: string;
+  new_name_suggestion?: string;
   new_name_fa?: string;
   units_per_case?: number;
   manual_price_decision?: "keep" | "rule";

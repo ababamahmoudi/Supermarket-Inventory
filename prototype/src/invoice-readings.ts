@@ -11,6 +11,11 @@ import {
 } from "./invoice-entry";
 import { importedReadingReceived } from "./invoice-reading-dates";
 import {
+  splitInvoiceProductDescription,
+  suggestInvoiceEnglishName,
+} from "./invoice-reading-products";
+export { suggestInvoiceEnglishName } from "./invoice-reading-products";
+import {
   saveSupplier,
   supplierMatches,
   supplierRecords,
@@ -743,44 +748,6 @@ const optionalReadingFields = new Set([
   "ship_to",
 ]);
 
-/** Supplier pack sizes stay recognizable while ALL CAPS words become readable names. */
-export function suggestInvoiceEnglishName(description: string): string {
-  const normalizeSizes = (value: string) =>
-    value.replace(
-      /\b\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?)*\s*(?:kg|g|ml|l|lb|oz)\b/gi,
-      (match) => match.toLowerCase(),
-    );
-  const source = description.trim();
-  const words = source.replace(
-    /\b\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?)*\s*(?:kg|g|ml|l|lb|oz)\b/gi,
-    "",
-  );
-  // Preserve names that already use ordinary mixed case, including brand spelling.
-  if (/\p{Ll}/u.test(words)) return normalizeSizes(source);
-  return normalizeSizes(
-    source
-      .split(/(\s+)/)
-      .map((word) => {
-        if (!/\p{L}/u.test(word)) return word;
-        if (
-          /^(?:\d+(?:\.\d+)?\s*x\s*)*\d+(?:\.\d+)?(?:kg|g|ml|l|lb|oz)\b/i.test(
-            word,
-          ) ||
-          /^x$/i.test(word)
-        )
-          return word.toLowerCase();
-        return word
-          .toLocaleLowerCase()
-          .replace(
-            /(^|[-/])([a-z])/g,
-            (_match, separator: string, letter: string) =>
-              separator + letter.toUpperCase(),
-          );
-      })
-      .join(""),
-  );
-}
-
 function chargeCheckFields(
   source: InvoiceReadingLine,
   statuses: string[] = [],
@@ -861,8 +828,20 @@ export function mapReadingLine(
             new Decimal(profile.rate).gt(0),
           )?.key ?? defaultProfile)
         : "non_taxable";
+  const printedDescription =
+    typeof source.description === "string"
+      ? source.description
+      : text(source.description);
+  const split = splitInvoiceProductDescription({
+    description: printedDescription,
+    supplierCode: text(source.supplier_sku),
+    unitsPerCase: text(source.units_per_case),
+    packSize: text(source.pack_size),
+  });
+  const inferredPack =
+    !text(source.units_per_case) && split.units_per_case !== undefined;
   const unit = text(source.unit),
-    pack = decimal(source.units_per_case) || "1",
+    pack = decimal(source.units_per_case ?? split.units_per_case) || "1",
     quantity = decimal(source.quantity),
     received =
       decimal(source.units_received) ||
@@ -885,7 +864,9 @@ export function mapReadingLine(
       decimal(source.cost_per_case_before_tax, 4) ||
       (cost ? new Decimal(cost).times(pack).toFixed(4) : "");
   const checks = statuses.filter(
-    (field) => !optionalReadingFields.has(field) || text(source[field]),
+    (field) =>
+      !(field === "units_per_case" && inferredPack && !split.uncertain) &&
+      (!optionalReadingFields.has(field) || text(source[field])),
   );
   for (const [field, value] of Object.entries({
     description: text(source.description),
@@ -896,13 +877,17 @@ export function mapReadingLine(
   if (source.taxable == null) checks.push("taxable");
   if (unit === "other" || !["case", "each", "kg", "lb"].includes(unit))
     checks.push("quantity_unit");
-  if (unit === "case" && !decimal(source.units_per_case))
+  if (split.uncertain) checks.push("description");
+  if (
+    unit === "case" &&
+    !decimal(source.units_per_case ?? split.units_per_case)
+  )
     checks.push("units_per_case");
   const line: InvoiceLine = {
     id: createId("invoice-line"),
     company_id: company,
     product_code: product?.code ?? "NEW",
-    description: text(source.description),
+    description: printedDescription,
     qty_invoiced: quantity
       ? new Decimal(quantity).times(unit === "case" ? pack : 1).toNumber()
       : 0,
@@ -928,11 +913,12 @@ export function mapReadingLine(
     review_confirmed: false,
     new_name_en: product
       ? undefined
-      : suggestInvoiceEnglishName(text(source.description)),
+      : split.name || suggestInvoiceEnglishName(printedDescription),
+    new_name_suggestion: product ? undefined : split.suggested_name,
     new_name_fa: product ? undefined : "",
     supplier_item_code: text(source.supplier_sku),
     barcode: text(source.barcode),
-    pack_size: text(source.pack_size),
+    pack_size: split.pack_size || text(source.pack_size),
     units_per_case: new Decimal(pack).toNumber(),
     quantity_unit:
       unit === "case"

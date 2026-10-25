@@ -25,6 +25,7 @@ import {
   importInvoiceReadings,
   parseInvoiceReadings,
   prepareInvoiceReadingPages,
+  mapReadingLine,
 } from "./invoice-readings";
 
 vi.mock("./file-database", async (original) => ({
@@ -371,5 +372,48 @@ describe("R2b 1.4 payment terms", () => {
     expect(withoutHistory.invoices![0].low_confidence_fields).toContain(
       "payment_terms",
     );
+  });
+});
+
+describe("R2b 1.5 product names and packs", () => {
+  it("separates clean names/pack text and infers missing packs without replacing printed evidence", async () => {
+    const { state } = await importFictional();
+    expect(state.invoices![1].lines[0]).toMatchObject({
+      new_name_en: "Highground Rice",
+      pack_size: "4 × 5 lb",
+      units_per_case: 4,
+      description: "71011 HIGHGROUND RICE - 4 x 5 lb / Case",
+    });
+    expect(state.invoices![2].lines[0]).toMatchObject({
+      new_name_en: "Plum Preserve",
+      pack_size: "6 × 330 g",
+      units_per_case: 6,
+      description: "Box of 6 x 330g Plum Preserve",
+    });
+    expect(state.invoices![2].lines[1]).toMatchObject({
+      new_name_suggestion: "Orchard Fig Preserve",
+      description: "Box of 5 x 150g",
+      pack_size: "5 × 150 g",
+    });
+    expect(state.invoices![2].lines[1].low_confidence_fields).toContain(
+      "description",
+    );
+  });
+  it("retains explicit packs and asks about conflicting/uncertain printed evidence", () => {
+    const state = emptyBusiness();
+    const source = {
+      description: "BOX OF 6 X 250g SUMMER FRUIT SPREAD",
+      unit: "case",
+      quantity: "1",
+      units_per_case: "8",
+      unit_cost_before_tax: "16.0000",
+      cost_basis: "case",
+      line_total: "16.00",
+      taxable: false,
+    };
+    const mapped = mapReadingLine(state, undefined, source, 0);
+    expect(mapped.units_per_case).toBe(8);
+    expect(mapped.low_confidence_fields).toContain("description");
+    expect(mapped.description).toBe(source.description);
   });
 });
