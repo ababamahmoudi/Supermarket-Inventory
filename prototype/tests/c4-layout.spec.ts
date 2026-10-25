@@ -1,3 +1,4 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { openInvoiceDetails } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, openInvoiceLine, setLanguage, signIn } from "./helpers";
@@ -32,7 +33,7 @@ async function geometry(page: Page) {
     for (const panel of [
       area,
       ...area.querySelectorAll<HTMLElement>(
-        ".card, .ui-data-table, table, .field, .invoice-correction-line, .invoice-original-media, .lookup-approved-price",
+        ".card, .ui-data-table, table, .field, .receiving-lines, .receiving-line-editor, .invoice-original-media, .lookup-approved-price",
       ),
     ]) {
       if (!panel.getClientRects().length) continue;
@@ -276,20 +277,36 @@ for (const width of [1280, 1440, 1920]) {
         name: copy(language, "Correct invoice", "اصلاح فاکتور"),
         exact: true,
       });
-      await correction
-        .locator(".invoice-correction-line")
-        .first()
-        .getByLabel(
-          copy(language, "Unit cost before tax", "هزینه هر واحد پیش از مالیات"),
-          { exact: true },
-        )
-        .fill("1.01");
+      await expect(correction.locator(".receiving-line-editor")).toHaveCount(0);
+      const correctionBefore = await readCanonicalBusinessEvidence(page);
+      await correction.locator(".invoice-line-toggle").first().click();
+      const correctionEditor = correction.getByRole("region", {
+        name: copy(language, "Line 1", "ردیف 1"),
+        exact: true,
+      });
+      const correctionCost = correctionEditor.getByLabel(
+        copy(language, "Unit cost before tax", "هزینه هر واحد پیش از مالیات"),
+        { exact: true },
+      );
+      await expect(correctionCost).toHaveCSS("height", "44px");
+      await expect(
+        correctionEditor.locator("#invoice-line-0-invoiced"),
+      ).toHaveCSS("height", "44px");
+      await correctionCost.fill("1.01");
       await correction
         .getByLabel(copy(language, "Reason (required)", "دلیل (الزامی)"), {
           exact: true,
         })
         .fill("Correct the bean unit cost.");
       await check("Populated correction fields", ".invoice-correction-dialog");
+      await correctionEditor
+        .getByRole("button", {
+          name: copy(language, "Close", "بستن"),
+          exact: true,
+        })
+        .last()
+        .click();
+      await expect(correction.locator(".receiving-line-editor")).toHaveCount(0);
       await correction
         .getByRole("button", {
           name: copy(language, "Preview correction", "پیش‌نمایش اصلاح"),
@@ -302,6 +319,9 @@ for (const width of [1280, 1440, 1920]) {
       await check(
         "Correction payable, receipt, approval and date preview",
         ".invoice-correction-dialog",
+      );
+      expect(await readCanonicalBusinessEvidence(page)).toEqual(
+        correctionBefore,
       );
 
       await page.goto("/#lookup");
