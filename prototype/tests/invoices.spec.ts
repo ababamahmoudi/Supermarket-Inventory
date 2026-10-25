@@ -93,7 +93,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page
     .getByRole("dialog", { name: "New invoice", exact: true })
-    .getByRole("button", { name: "Upload", exact: true })
+    .getByRole("button", { name: "Photo (AI reading)", exact: true })
     .click();
   const before = await stored(page);
   const beforeStock = before.stock["Branch 1:0009"];
@@ -189,7 +189,7 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
     .getByRole("dialog", { name: "Post invoice", exact: true })
     .getByRole("button", { name: "Post invoice", exact: true })
     .click();
-  await expect(page.locator("header.posted-invoice-title-row")).toContainText(
+  await expect(page.locator(".posted-invoice-title-row")).toContainText(
     "Posted",
   );
   await expect(

@@ -226,9 +226,12 @@ test("worker catalog actions stay hidden while invoice quick-add creates an acti
   });
   await expect(
     entryDialog.getByRole("button", { name: "Manual entry", exact: true }),
-  ).toHaveCount(0);
+  ).toBeDisabled();
+  await expect(
+    entryDialog.getByRole("button", { name: "JSON file", exact: true }),
+  ).toBeDisabled();
   await entryDialog
-    .getByRole("button", { name: "Upload", exact: true })
+    .getByRole("button", { name: "Photo (AI reading)", exact: true })
     .click();
   await expect(page.getByTestId("invoice-upload-entry")).toBeVisible();
   await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);

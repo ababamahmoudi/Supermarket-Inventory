@@ -112,6 +112,7 @@ import "./invoice-entry-c6.css";
 import { InvoiceQueueTable } from "./InvoiceQueueTable";
 import { InvoiceReviewPage } from "./invoice-review/InvoiceReviewPage";
 import { ReviewHeader } from "./invoice-review/ReviewHeader";
+import { InvoiceJsonImport } from "./InvoiceJsonImport";
 import { OriginalViewer } from "./invoice-review/OriginalViewer";
 import "./invoice-settings-labels.css";
 import "./invoices-c7.css";
@@ -216,7 +217,7 @@ export default function Invoices() {
     workspace?.invoice.id === entryPending.targetId
   )
     setEntryPending(null);
-  const startFallback = async (manual: boolean) => {
+  const startFallback = async (manual: boolean, source?: "photo" | "pdf") => {
     if (!actor || actor.selection.kind !== "location") return;
     const location = actor.selection.location_id;
     await startEntry(async () => {
@@ -236,7 +237,9 @@ export default function Invoices() {
           return draft.invoice.id;
         },
       );
-      navigate(`invoices?id=${encodeURIComponent(newId)}`);
+      navigate(
+        `invoices?id=${encodeURIComponent(newId)}${source ? `&entry=${source}` : ""}`,
+      );
       return newId;
     });
   };
@@ -258,8 +261,9 @@ export default function Invoices() {
             <Button
               disabled={
                 entryPending !== null ||
-                actor.selection.kind !== "location" ||
-                !can("invoices.enter", scope)
+                (!can("settings.manage") &&
+                  (actor.selection.kind !== "location" ||
+                    !can("invoices.enter", scope)))
               }
               onClick={() => setEntryChoiceOpen(true)}
             >
@@ -301,46 +305,97 @@ function InvoiceEntryChoices({
 }: {
   open: boolean;
   onClose(): void;
-  onSelect(manual: boolean): void;
+  onSelect(manual: boolean, source?: "photo" | "pdf"): void;
   disabled: boolean;
 }) {
-  const { t, can } = useDemo();
+  const { t, can, actor } = useDemo();
+  const jsonInput = useRef<HTMLInputElement>(null);
+  const hasLocation = actor?.selection.kind === "location";
+  const canEnter = hasLocation && can("invoices.enter");
+  const canManual = hasLocation && can("invoices.enter_manual");
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(value) => {
-        if (!value) onClose();
-      }}
-      title={t("New invoice", "فاکتور جدید")}
-      description={t(
-        "Upload an original or enter the invoice yourself.",
-        "اصل فاکتور را بارگذاری کنید یا اطلاعات آن را وارد کنید.",
-      )}
-    >
-      <div className="actions">
-        <Button
-          disabled={disabled}
-          onClick={() => {
-            onClose();
-            onSelect(false);
+    <>
+      {open && (
+        <Dialog
+          open={open}
+          onOpenChange={(value) => {
+            if (!value) onClose();
           }}
+          title={t("New invoice", "فاکتور جدید")}
+          description={t(
+            "Choose how to add the invoice.",
+            "روش افزودن فاکتور را انتخاب کنید.",
+          )}
         >
-          {t("Upload", "بارگذاری")}
-        </Button>
-        {can("invoices.enter_manual") && (
-          <Button
-            variant="secondary"
-            disabled={disabled}
-            onClick={() => {
-              onClose();
-              onSelect(true);
-            }}
-          >
-            {t("Manual entry", "ورود دستی")}
-          </Button>
-        )}
-      </div>
-    </Dialog>
+          <div className="actions">
+            <Button
+              disabled={disabled || !canEnter}
+              onClick={() => {
+                onClose();
+                onSelect(false, "photo");
+              }}
+            >
+              {t("Photo (AI reading)", "عکس (خوانش هوش مصنوعی)")}
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={disabled || !canEnter}
+              onClick={() => {
+                onClose();
+                onSelect(false, "pdf");
+              }}
+            >
+              {t("PDF (AI reading)", "PDF (خوانش هوش مصنوعی)")}
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={disabled || !canManual}
+              onClick={() => {
+                onClose();
+                onSelect(true);
+              }}
+            >
+              {t("Manual entry", "ورود دستی")}
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={disabled || !can("settings.manage")}
+              onClick={() => jsonInput.current?.click()}
+            >
+              {t("JSON file", "فایل JSON")}
+            </Button>
+          </div>
+          {!hasLocation && (
+            <p className="helper">
+              {t(
+                "Choose one location to add a photo, PDF or manual invoice.",
+                "برای افزودن عکس، PDF یا فاکتور دستی یک مکان انتخاب کنید.",
+              )}
+            </p>
+          )}
+          {!can("settings.manage") && (
+            <p className="helper">
+              {t(
+                "Manual entry and JSON imports are available to Owners and Managers.",
+                "ورود دستی و فایل JSON برای مالک و مدیر در دسترس است.",
+              )}
+            </p>
+          )}
+          <p className="helper">
+            {t(
+              "AI invoice reading is simulated",
+              "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
+            )}
+          </p>
+        </Dialog>
+      )}
+      <InvoiceJsonImport
+        key={`${actor?.session_id}:${actor?.authority_epoch}`}
+        inputRef={jsonInput}
+        disabled={disabled}
+        onChosen={onClose}
+      />
+    </>
   );
 }
 /** Invoices the person may open when no invoice workspace is selected yet. */
@@ -512,6 +567,7 @@ function InvoiceWorkspace({
   const fromFilter = useRouteParam("from");
   const toFilter = useRouteParam("to");
   const tabFilter = useRouteParam("tab");
+  const uploadSource = useRouteParam("entry");
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [entryChoiceOpen, setEntryChoiceOpen] = useState(false);
   const originalInput = useRef<HTMLInputElement>(null);
@@ -851,7 +907,7 @@ function InvoiceWorkspace({
       window.removeEventListener("arzon:demo-invoice-answer", applyDemoAnswer);
   }, [active, locked, lowerLines.length, updateInvoice]);
 
-  async function start(manual = false) {
+  async function start(manual = false, source?: "photo" | "pdf") {
     if (!actor || actor.selection.kind !== "location") return;
     const location = actor.selection.location_id;
     try {
@@ -879,7 +935,9 @@ function InvoiceWorkspace({
           },
         );
         setSelectedView(null);
-        navigate(`invoices?id=${encodeURIComponent(id)}`);
+        navigate(
+          `invoices?id=${encodeURIComponent(id)}${source ? `&entry=${source}` : ""}`,
+        );
 
         setMessage("");
         setUploadError("");
@@ -1461,7 +1519,7 @@ function InvoiceWorkspace({
       <InvoiceEntryChoices
         open={entryChoiceOpen}
         onClose={() => setEntryChoiceOpen(false)}
-        onSelect={(manual) => void start(manual)}
+        onSelect={(manual, source) => void start(manual, source)}
         disabled={uploadPending || entryPending}
       />
       {correctionOpen && (
@@ -1521,12 +1579,13 @@ function InvoiceWorkspace({
             )}
             actions={
               <Button
-                variant={active && !locked ? "neutral" : "primary"}
+                variant="primary"
                 onClick={() => setEntryChoiceOpen(true)}
                 disabled={
                   uploadPending ||
                   entryPending ||
-                  actor?.selection.kind !== "location"
+                  (!can("settings.manage") &&
+                    actor?.selection.kind !== "location")
                 }
                 aria-busy={uploadPending || entryPending}
               >
@@ -1806,7 +1865,13 @@ function InvoiceWorkspace({
             >
               <Dropzone
                 id="invoice-original"
-                accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                accept={
+                  uploadSource === "photo"
+                    ? "image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                    : uploadSource === "pdf"
+                      ? "application/pdf"
+                      : "application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                }
                 onChange={(file) => void attachFile(file)}
                 disabled={uploadPending || entryPending}
               />

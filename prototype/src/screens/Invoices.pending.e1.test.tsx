@@ -140,7 +140,7 @@ async function accepted(
       expect(id).not.toBe(previousId);
       expect(state.invoice.entry_mode).toBe(mode);
       expect(window.location.hash).toBe(
-        `#invoices?id=${encodeURIComponent(id)}`,
+        `#invoices?id=${encodeURIComponent(id)}${mode === "upload" ? "&entry=photo" : ""}`,
       );
       expect(entryControl()).toBeEnabled();
       expect(document.querySelector('[aria-busy="true"][inert]')).toBeNull();
@@ -155,7 +155,7 @@ function begins(buttonName: string) {
     fireEvent.click(button);
     const chooser = screen.getByRole("dialog", { name: "New invoice" });
     button = within(chooser).getByRole("button", {
-      name: "Upload",
+      name: "Photo (AI reading)",
     });
   }
   fireEvent.click(button);

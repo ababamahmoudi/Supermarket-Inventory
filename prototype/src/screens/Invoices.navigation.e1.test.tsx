@@ -316,3 +316,48 @@ it("browser Back retains the Posted list after an accepted invoice workspace rea
   expect(table().querySelector("th[data-column-key=supplier]")).toBeNull();
   expect((await fixture.readCanonical()).invoice.id).toBe(target.id);
 });
+
+it.each(["manager", "floor_worker"] as const)(
+  "offers four invoice sources with genuine %s permissions",
+  async (role) => {
+    fixture = await authenticatedProviderFixture({
+      state: initialState(),
+      role,
+      actorOptions: {
+        selection: { kind: "location", location_id: "Branch 1" },
+      },
+    });
+    render(
+      <DemoProvider options={fixture.options}>
+        <ActualInvoices />
+      </DemoProvider>,
+    );
+    await renderedUiReady(() =>
+      Boolean(screen.queryByRole("button", { name: "New invoice" })),
+    );
+    const primary = screen.getByRole("button", { name: "New invoice" });
+    expect(primary).toHaveClass("button-primary");
+    fireEvent.click(primary);
+    const chooser = screen.getByRole("dialog", { name: "New invoice" });
+    expect(
+      within(chooser).getByRole("button", { name: "Photo (AI reading)" }),
+    ).toBeEnabled();
+    expect(
+      within(chooser).getByRole("button", { name: "PDF (AI reading)" }),
+    ).toBeEnabled();
+    const manual = within(chooser).getByRole("button", {
+      name: "Manual entry",
+    });
+    const json = within(chooser).getByRole("button", { name: "JSON file" });
+    if (role === "manager") {
+      expect(manual).toBeEnabled();
+      expect(json).toBeEnabled();
+    } else {
+      expect(manual).toBeDisabled();
+      expect(json).toBeDisabled();
+    }
+    expect(
+      within(chooser).getByText("AI invoice reading is simulated"),
+    ).toBeVisible();
+  },
+);

@@ -1,3 +1,4 @@
+import { invoiceReadingsImportError as importError } from "../invoice-readings-import-copy";
 import { useEffect, useRef, useState } from "react";
 import { Check, FileInput, Trash2, X } from "lucide-react";
 import {
@@ -12,7 +13,11 @@ import {
   Select,
 } from "../ui";
 import { useDemo } from "../store";
-import { useSettingsConfiguration } from "../settings-configuration";
+import {
+  SettingsConfigurationContext,
+  useSettingsConfiguration,
+} from "../settings-configuration";
+import type { CompanyConfig } from "../types";
 import { branchLabel, configuredBranches } from "../settings";
 import { DateText, LtrValue, NotAdded } from "../presentation";
 import { useProtectedQuery } from "../use-protected-query";
@@ -31,60 +36,13 @@ import { removeFictionalData } from "../empty-store";
 import "./invoice-readings.css";
 
 type Translate = (en: string, fa: string) => string;
-type ImportResultView = Omit<ImportSummary, "skipped"> & {
+export type ImportResultView = Omit<ImportSummary, "skipped"> & {
   skipped: (ImportSummary["skipped"][number] & {
     invoiceNumber?: string;
     supplier?: string;
     displayReason?: string;
   })[];
 };
-function importError(error: unknown, t: Translate): string {
-  const code =
-    error && typeof error === "object" && "code" in error
-      ? String(error.code)
-      : error instanceof Error
-        ? error.message
-        : "invalid_file";
-  if (/permission|actor|company/.test(code))
-    return t(
-      "Only an Owner or Manager can import invoice readings for this company.",
-      "فقط مالک یا مدیر می‌تواند خوانش فاکتور را برای این شرکت وارد کند.",
-    );
-  if (/version/.test(code))
-    return t(
-      "This invoice-readings file uses an unsupported version. Export it again with version 1.",
-      "نسخهٔ این فایل خوانش فاکتور پشتیبانی نمی‌شود. آن را با نسخهٔ ۱ دوباره صادر کنید.",
-    );
-  if (/schema/.test(code))
-    return t(
-      "This file does not use the invoice-reading-v2 reading schema.",
-      "این فایل از ساختار خوانش invoice-reading-v2 استفاده نمی‌کند.",
-    );
-  if (/json|syntax/.test(code))
-    return t(
-      "This file is not valid JSON. Choose the JSON export from the invoice-reader kit.",
-      "این فایل JSON معتبر نیست. خروجی JSON ابزار خواندن فاکتور را انتخاب کنید.",
-    );
-  if (code === "pages")
-    return t(
-      "An invoice page or its original SHA-256 is missing or damaged. Export the file again from the invoice-reader kit.",
-      "یکی از صفحات فاکتور یا SHA-256 اصل آن وجود ندارد یا آسیب دیده است. فایل را دوباره از ابزار خواندن فاکتور صادر کنید.",
-    );
-  if (code === "invalid_number")
-    return t(
-      "This file contains an invalid quantity or amount. Check the export and try again.",
-      "این فایل مقدار یا مبلغ نامعتبری دارد. خروجی را بررسی و دوباره تلاش کنید.",
-    );
-  if (/storage|quota|file_read_failed/.test(code))
-    return t(
-      "The file could not be read or saved. Check available browser storage and try again.",
-      "خواندن یا ذخیرهٔ فایل ممکن نشد. فضای ذخیره‌سازی مرورگر را بررسی و دوباره تلاش کنید.",
-    );
-  return t(
-    "This isn't an invoice-readings file from the invoice-reader kit. Choose a valid JSON export.",
-    "این فایل خوانش فاکتور از ابزار خواندن فاکتور نیست. یک خروجی JSON معتبر انتخاب کنید.",
-  );
-}
 function skippedReason(reason: string, t: Translate): string {
   if (reason === "in_file_partial")
     return t(
@@ -114,6 +72,24 @@ function skippedReason(reason: string, t: Translate): string {
   if (reason === "not_selected")
     return t("You left this invoice unticked.", "این فاکتور را انتخاب نکردید.");
   return t("The invoice could not be imported.", "ورود این فاکتور ممکن نشد.");
+}
+
+/** The invoice page uses the same additive import preview as Settings → Data. */
+export function InvoiceReadingsPreview({
+  configuration,
+  ...props
+}: {
+  configuration: CompanyConfig;
+  exported: InvoiceReadingsExport;
+  fileName: string;
+  onClose(): void;
+  onImported(summary: ImportResultView): void;
+}) {
+  return (
+    <SettingsConfigurationContext.Provider value={configuration}>
+      <ImportPreview {...props} />
+    </SettingsConfigurationContext.Provider>
+  );
 }
 
 function ImportPreview({

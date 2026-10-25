@@ -10,7 +10,7 @@ async function quickAddSupplier(page: Page, name: string) {
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page
     .getByRole("dialog", { name: "New invoice", exact: true })
-    .getByRole("button", { name: "Upload", exact: true })
+    .getByRole("button", { name: "Photo (AI reading)", exact: true })
     .click();
   await expect(page).toHaveURL((url) => {
     const [route, parameters] = url.hash.slice(1).split("?");

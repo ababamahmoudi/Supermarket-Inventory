@@ -299,7 +299,9 @@ export async function openInvoiceUpload(page: Page) {
       exact: true,
     });
     await expect(chooser).toBeVisible();
-    await chooser.getByRole("button", { name: "Upload", exact: true }).click();
+    await chooser
+      .getByRole("button", { name: "Photo (AI reading)", exact: true })
+      .click();
   }
   await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
   await expect(input).toBeAttached();
