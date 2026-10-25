@@ -8,6 +8,7 @@ import {
   similarSupplierNames,
   dismissSimilarSupplier,
   SupplierEditError,
+  supplierNameCaseSuggestion,
   type SupplierEdits,
 } from "../supplier-editor";
 import type { SupplierRecord } from "../types";
@@ -46,6 +47,7 @@ export function SupplierEditor({
     name: supplier?.name ?? "",
     phone: supplier?.phone ?? "",
     email: supplier?.email ?? "",
+    website: supplier?.website ?? "",
     sales_rep_name: supplier?.sales_rep_name ?? "",
     sales_rep_phone: supplier?.sales_rep_phone ?? "",
     payment_terms: supplier?.payment_terms ?? "",
@@ -58,6 +60,8 @@ export function SupplierEditor({
     })),
   });
   const [attemptedSave, setAttemptedSave] = useState(false);
+  const [nameCaseApplied, setNameCaseApplied] = useState(false);
+  const nameCaseSuggestion = supplierNameCaseSuggestion(values.name);
   const [error, setError] = useState<SupplierEditError["code"] | null>(null);
   const similar = useProtectedQuery(
     "suppliers.read",
@@ -244,6 +248,31 @@ export function SupplierEditor({
             onChange={(event) => patch("name", event.target.value)}
           />
         </Field>
+        {(nameCaseSuggestion || nameCaseApplied) && (
+          <div>
+            <p dir="auto">{nameCaseSuggestion || values.name}</p>
+            <Button
+              disabled={!nameCaseSuggestion}
+              aria-label={
+                nameCaseSuggestion
+                  ? t(
+                      `Use ${nameCaseSuggestion}`,
+                      `استفاده از ${nameCaseSuggestion}`,
+                    )
+                  : undefined
+              }
+              onClick={() => {
+                if (!nameCaseSuggestion) return;
+                patch("name", nameCaseSuggestion);
+                setNameCaseApplied(true);
+              }}
+            >
+              {nameCaseApplied
+                ? t("Name applied", "نام اعمال شد")
+                : t("Use Title Case", "استفاده از حروف خوانا")}
+            </Button>
+          </div>
+        )}
         <div className="manual-entry-pair">
           <Field
             label={t("Phone (optional)", "تلفن (اختیاری)")}
@@ -270,6 +299,14 @@ export function SupplierEditor({
               id="supplier-email"
               value={values.email}
               onChange={(event) => patch("email", event.target.value)}
+            />
+          </Field>
+          <Field label={t("Website (optional)", "وب‌سایت (اختیاری)")}>
+            <input
+              dir="ltr"
+              id="supplier-website"
+              value={values.website ?? ""}
+              onChange={(event) => patch("website", event.target.value)}
             />
           </Field>
           <Field

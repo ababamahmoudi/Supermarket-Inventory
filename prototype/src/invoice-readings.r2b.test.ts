@@ -22,6 +22,8 @@ import {
   setInvoicePaymentTerms,
 } from "./invoice-entry";
 import { supplierItemFacts } from "./supplier-items";
+import { saveSupplier, supplierNameCaseSuggestion } from "./supplier-editor";
+import { projectSuppliers } from "./purchase-projections";
 import { selectInvoiceWorkspace } from "./invoice-workspace-read";
 import {
   importInvoiceReadings,
@@ -472,5 +474,76 @@ describe("R2b 1.6 supplier code fallback", () => {
     );
     expect(mapped.supplier_item_code).toBe("Summer Fruit Spread");
     expect(mapped.low_confidence_fields).not.toContain("supplier_item_code");
+  });
+});
+
+describe("R2b 1.7 supplier contacts and readable names", () => {
+  it("extracts contacts into editable supplier fields without changing printed evidence or legal names", async () => {
+    const { state, actor, exported } = await importFictional();
+    const supplier = state.suppliers!.find(
+      (item) => item.name === "BLUEFINCH PANTRY INC.",
+    )!;
+    expect(supplier).toMatchObject({
+      name: "BLUEFINCH PANTRY INC.",
+      address: "12 Fictional Lane, Exampletown",
+      phone: "+1 (416) 555-0142",
+      email: "billing@bluefinch.example",
+      website: "https://bluefinch.example",
+    });
+    expect(exported.invoices[0].ai_reading!.supplier_address).toBe(
+      fixture.invoices[0].ai_reading.supplier_address,
+    );
+    expect(
+      projectSuppliers(state, actor).find((item) => item.id === supplier.id)
+        ?.website,
+    ).toBe("https://bluefinch.example");
+    expect(supplierNameCaseSuggestion(supplier.name)).toBe(
+      "Bluefinch Pantry Inc.",
+    );
+    const renamed = saveSupplier(
+      state,
+      actor,
+      {
+        ...supplier,
+        name: supplierNameCaseSuggestion(supplier.name)!,
+        address: supplier.address ?? "",
+        notes: supplier.notes ?? "",
+        similar_name_confirmed: true,
+      },
+      { id: supplier.id },
+    );
+    expect(renamed.previous_names).toContain("BLUEFINCH PANTRY INC.");
+    expect(state.invoices![0].supplier).toBe("BLUEFINCH PANTRY INC.");
+    expect(supplierNameCaseSuggestion("BlueFinch Pantry Inc.")).toBeUndefined();
+  });
+  it("fills only missing contacts and keeps an established supplier's curated address and phone", async () => {
+    const state = emptyBusiness();
+    const actor = authenticatedTestActor(state, "owner");
+    const supplier = saveSupplier(state, actor, {
+      name: "BLUEFINCH PANTRY INC.",
+      phone: "+1 (416) 555-0199",
+      email: "",
+      website: "",
+      sales_rep_name: "",
+      sales_rep_phone: "",
+      payment_terms: "Net 14",
+      address: "8 Curated Avenue",
+      notes: "Keep supplier notes",
+    });
+    await importFictional(state);
+    expect(supplier).toMatchObject({
+      phone: "+1 (416) 555-0199",
+      address: "8 Curated Avenue",
+      notes: "Keep supplier notes",
+      payment_terms: "Net 14",
+      email: "billing@bluefinch.example",
+      website: "https://bluefinch.example",
+    });
+    expect(
+      state.activity.some(
+        (entry) =>
+          entry.action === "Save supplier" && entry.entity_id === supplier.id,
+      ),
+    ).toBe(true);
   });
 });

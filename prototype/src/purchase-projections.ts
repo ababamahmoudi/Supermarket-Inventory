@@ -412,6 +412,7 @@ export function projectSuppliers(
         : undefined,
       phone: supplier.phone,
       email: supplier.email,
+      website: supplier.website,
       sales_rep_name: supplier.sales_rep_name,
       sales_rep_phone: supplier.sales_rep_phone,
       payment_terms: supplier.payment_terms,

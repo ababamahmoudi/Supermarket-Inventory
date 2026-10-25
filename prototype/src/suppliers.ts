@@ -44,6 +44,7 @@ export interface SupplierOverviewRow {
   source_invoice_number?: string;
   phone: string | null;
   email: string | null;
+  website?: string;
   sales_rep_name: string | null;
   sales_rep_phone: string | null;
   payment_terms: string | null;
@@ -260,6 +261,7 @@ export function suppliersOverview(
         : undefined,
       phone: details?.phone ?? null,
       email: details?.email ?? null,
+      website: details?.website,
       sales_rep_name: details?.sales_rep_name ?? null,
       sales_rep_phone: details?.sales_rep_phone ?? null,
       payment_terms: details?.payment_terms ?? null,

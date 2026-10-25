@@ -654,6 +654,7 @@ export interface SupplierRecord {
   name: string;
   phone: string;
   email: string;
+  website?: string;
   sales_rep_name: string;
   sales_rep_phone: string;
   payment_terms: string;

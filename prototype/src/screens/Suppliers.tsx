@@ -788,6 +788,14 @@ export default function Suppliers() {
               <LtrValue value={current.email} />
             </dd>
           </div>
+          {current.website && (
+            <div>
+              <dt>{t("Website", "وب‌سایت")}</dt>
+              <dd>
+                <LtrValue value={current.website} />
+              </dd>
+            </div>
+          )}
           <div>
             <dt>{t("Sales representative", "نماینده فروش")}</dt>
             <dd>

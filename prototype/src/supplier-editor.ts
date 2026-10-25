@@ -10,11 +10,20 @@ import { requirePurchase, purchaseLocationScope } from "./purchase-authority";
 import { invoiceAuthorityScope } from "./invoice-authority";
 import { paymentTermsDays } from "./invoice-entry";
 import { syncSupplierProfileNotifications } from "./supplier-profiles";
+import { suggestInvoiceEnglishName } from "./invoice-reading-products";
+
+/** Offer a readable spelling without silently changing a supplier's legal name. */
+export function supplierNameCaseSuggestion(name: string): string | undefined {
+  if (!/\p{Lu}/u.test(name) || /\p{Ll}/u.test(name)) return undefined;
+  const suggestion = suggestInvoiceEnglishName(name);
+  return suggestion !== name.trim() ? suggestion : undefined;
+}
 
 export interface SupplierEdits {
   name: string;
   phone: string;
   email: string;
+  website?: string;
   sales_rep_name: string;
   sales_rep_phone: string;
   payment_terms: string;
@@ -336,6 +345,7 @@ export function saveSupplier(
     "notes",
   ] as const)
     record[field] = edits[field].trim();
+  if (edits.website !== undefined) record.website = edits.website.trim();
   record.updated_by_user_id = context.user_id;
   if (!previous) state.suppliers!.push(record);
   for (const row of balances.filter((row) => row.amount.trim()))

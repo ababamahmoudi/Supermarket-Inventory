@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { freshActor } from "./authority";
 import type { AuthenticatedActor } from "./authority-types";
-import { requireCapability } from "./permissions";
+import { can, requireCapability } from "./permissions";
 import { branchId, configuredBranches } from "./settings";
 import { createInvoice, rememberInvoiceSupplierItem } from "./invoice";
 import {
@@ -10,6 +10,7 @@ import {
   isMonthlyPaymentTerms,
 } from "./invoice-entry";
 import { importedReadingReceived } from "./invoice-reading-dates";
+import { extractSupplierContactText } from "./invoice-reading-supplier-contacts";
 import {
   splitInvoiceProductDescription,
   suggestInvoiceEnglishName,
@@ -1188,15 +1189,18 @@ export function importInvoiceReadings(
     invoice.status = "review";
     state.invoice = invoice;
     let supplier = matchReadingSupplier(state, value);
+    const printedAddress = text(value.supplier_address);
+    const contacts = extractSupplierContactText(printedAddress);
     if (!supplier && text(value.supplier_name)) {
       supplier = saveSupplier(
         state,
         actor,
         {
           name: text(value.supplier_name),
-          address: text(value.supplier_address),
-          phone: "",
-          email: "",
+          address: contacts.address,
+          phone: contacts.phone,
+          email: contacts.email,
+          website: contacts.website,
           sales_rep_name: "",
           sales_rep_phone: "",
           payment_terms: text(value.payment_terms),
@@ -1209,6 +1213,42 @@ export function importInvoiceReadings(
       supplier.tax_number = text(value.supplier_tax_number);
       supplier.created_from_import = true;
       summary.new_suppliers.push(supplier.name);
+    } else if (
+      supplier &&
+      can(state, actor, "suppliers.manage", {
+        company_id: state.config.company.seed_key,
+        kind: "company_shared",
+      }).allowed
+    ) {
+      const address =
+        !supplier.address || supplier.address === printedAddress
+          ? contacts.address
+          : supplier.address;
+      const phone = supplier.phone || contacts.phone;
+      const email = supplier.email || contacts.email;
+      const website = supplier.website || contacts.website;
+      if (
+        address !== (supplier.address ?? "") ||
+        phone !== supplier.phone ||
+        email !== supplier.email ||
+        website !== (supplier.website ?? "")
+      ) {
+        supplier = saveSupplier(
+          state,
+          actor,
+          {
+            ...supplier,
+            address,
+            phone,
+            email,
+            website,
+            notes: supplier.notes ?? "",
+            similar_name_confirmed: true,
+          },
+          { id: supplier.id },
+          now,
+        );
+      }
     }
     const checks = readingCheckFields(effective.statuses, value);
     invoice.supplier = supplier?.name ?? text(value.supplier_name);
