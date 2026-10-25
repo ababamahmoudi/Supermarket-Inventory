@@ -273,6 +273,11 @@ export interface Alert extends ScopedRecord {
   order_id?: string;
   order_differences?: InvoiceOrderDifference[];
 }
+export type InvoiceCheckReceipts = Record<
+  string,
+  { checked_by_user_id: string; checked_at: string }
+>;
+
 export type InvoiceLine = Omit<
   (typeof demoSeed.demo_invoice.lines)[number],
   | "confidence"
@@ -297,6 +302,7 @@ export type InvoiceLine = Omit<
   id?: string;
   confidence?: number;
   low_confidence_fields?: string[];
+  checked_fields?: InvoiceCheckReceipts;
   taxable_inferred?: boolean;
   barcode?: string;
   handwritten_note?: string;
@@ -371,6 +377,7 @@ export type DemoInvoice = Omit<
       original_sha256: string;
     }[];
     low_confidence_fields?: string[];
+    checked_fields?: InvoiceCheckReceipts;
     reading_record?: {
       source: "imported";
       file_name: string;
@@ -393,6 +400,7 @@ export type DemoInvoice = Omit<
       amount: string;
       taxable: boolean;
       low_confidence_fields?: string[];
+      checked_fields?: InvoiceCheckReceipts;
     }[];
     demo_original_snapshot?: true;
     legacy_demo_original?: {

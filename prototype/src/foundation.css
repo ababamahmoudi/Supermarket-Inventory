@@ -511,6 +511,38 @@
 .ui-field-label-row > label {
   margin: 0;
 }
+.reading-check-label-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.reading-check-marker-placeholder {
+  display: inline-flex;
+  flex: 0 0 16px;
+  inline-size: 16px;
+  block-size: 16px;
+}
+.ui-field-label-row:has(> .reading-check-label-actions > .button-label-action) {
+  flex-wrap: wrap;
+}
+/* Adjacent optional-review actions share a label track, keeping input tops aligned. */
+.ui-fields-align-labels > .field {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 2;
+  align-content: start;
+}
+.detail-grid:has(
+    > .field
+      > .ui-field-label-row
+      > .reading-check-label-actions
+      > .button-label-action
+  )
+  > .field
+  > :is(label, .ui-field-label-row) {
+  min-block-size: 32px;
+}
 .reading-check-marker {
   position: relative;
   display: inline-flex;

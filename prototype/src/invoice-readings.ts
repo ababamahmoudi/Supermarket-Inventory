@@ -737,18 +737,8 @@ const headerStatusAliases: Record<string, string> = {
   subtotal: "subtotal",
   tax: "tax",
   final_total: "final_total",
+  handwritten_notes: "import_handwritten_notes",
 };
-const optionalReadingFields = new Set([
-  "barcode",
-  "lot_number",
-  "expiry_as_printed",
-  "handwritten_note",
-  "handwritten_notes",
-  "order_reference",
-  "bill_to",
-  "ship_to",
-]);
-
 function chargeCheckFields(
   source: InvoiceReadingLine,
   statuses: string[] = [],
@@ -773,16 +763,10 @@ export function readingCheckFields(
     if (key.startsWith("header.")) {
       const field = key.slice(7);
       if (field === "currency" && value && !text(value.currency)) continue;
-      if (!value || !optionalReadingFields.has(field) || text(value[field]))
-        header.push(headerStatusAliases[field] ?? field);
+      header.push(headerStatusAliases[field] ?? field);
     }
     const line = /^lines\[(\d+)\]\.(.+)$/.exec(key);
-    if (
-      line &&
-      (!value ||
-        !optionalReadingFields.has(line[2]) ||
-        text(value.lines?.[Number(line[1])]?.[line[2]]))
-    )
+    if (line)
       (lines[Number(line[1])] ??= []).push(
         lineStatusAliases[line[2]] ?? line[2],
       );
@@ -886,8 +870,7 @@ export function mapReadingLine(
   const checks = statuses.filter(
     (field) =>
       !(field === "supplier_item_code" && inferredCode) &&
-      !(field === "units_per_case" && inferredPack && !split.uncertain) &&
-      (!optionalReadingFields.has(field) || text(source[field])),
+      !(field === "units_per_case" && inferredPack && !split.uncertain),
   );
   for (const [field, value] of Object.entries({
     description: text(source.description),

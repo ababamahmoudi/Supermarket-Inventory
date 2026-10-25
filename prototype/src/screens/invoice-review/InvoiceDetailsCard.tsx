@@ -23,6 +23,7 @@ import {
 import {
   invoiceCheckField,
   acknowledgeInvoiceCheck,
+  acknowledgeInvoiceFieldAbsence,
 } from "../../invoice-checks";
 import {
   setInvoicePaymentTerms,
@@ -69,7 +70,17 @@ export function InvoiceDetailsCard({
     "supplier_tax_number",
   ];
   const [more, setMore] = useState(() =>
-    fields.some((x) => moreKeys.includes(invoiceCheckField(x))),
+    fields.some(
+      (x) =>
+        moreKeys.includes(invoiceCheckField(x)) &&
+        String(
+          (invoice as unknown as Record<string, unknown>)[
+            invoiceCheckField(x) === "currency"
+              ? "import_currency"
+              : invoiceCheckField(x)
+          ] ?? "",
+        ).trim() !== "",
+    ),
   );
   const edit = (field: string, value: string) =>
     update((draft, actor) => {
@@ -138,6 +149,13 @@ export function InvoiceDetailsCard({
           fields={fields}
           idPrefix="invoice-check-header"
           onAcknowledge={() => {}}
+          record={invoice}
+          onNotOnInvoice={(field) =>
+            update((draft, actor) => {
+              acknowledgeInvoiceFieldAbsence(draft, actor, field);
+              return true;
+            })
+          }
         >
           <div
             className="detail-grid receiving-details-grid"
@@ -307,7 +325,7 @@ export function InvoiceDetailsCard({
             open={more}
             onToggle={(e) => setMore(e.currentTarget.open)}
           >
-            <div className="detail-grid">
+            <div className="detail-grid ui-fields-align-labels">
               {moreKeys.map((key) => {
                 const labels: Record<string, [string, string]> = {
                   order_reference: [

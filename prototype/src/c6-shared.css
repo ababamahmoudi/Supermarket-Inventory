@@ -114,6 +114,18 @@ time {
   font-size: var(--font-size-label);
   border-radius: var(--radius-small);
 }
+/* Explicit compact label action: only the shared Field review affordance uses it. */
+:root .field .ui-button.button.button-label-action {
+  block-size: 32px;
+  min-block-size: 32px;
+  max-block-size: 32px;
+  padding-inline: 8px;
+  border: 0;
+  border-radius: var(--radius-small);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-caption);
+  line-height: 18px;
+}
 :root .ui-button.button.ui-icon-button {
   inline-size: 36px;
   min-inline-size: 36px;

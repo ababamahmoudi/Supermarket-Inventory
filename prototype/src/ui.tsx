@@ -86,7 +86,7 @@ const buttonVariants = cva("button", {
       quiet: "button-quiet",
       ghost: "button-quiet button-ghost",
     },
-    size: { default: "", sm: "button-sm" },
+    size: { default: "", sm: "button-sm", label: "button-label-action" },
   },
   defaultVariants: { variant: "primary", size: "default" },
 });
@@ -108,14 +108,14 @@ export function Button({
     | "danger"
     | "quiet"
     | "ghost";
-  size?: "default" | "sm";
+  size?: "default" | "sm" | "label";
   asChild?: boolean;
 }) {
   const Component = asChild ? Slot : "button";
   return (
     <Component
       className={cn("ui-button", buttonVariants({ variant, size }), className)}
-      data-control-kind="action"
+      data-control-kind={size === "label" ? "label-action" : "action"}
       type={type}
       {...props}
     />

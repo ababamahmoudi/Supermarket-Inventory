@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { createId } from "./ids";
 import { costPerUnit, packUnits } from "./supplier-items";
 import type { AuthenticatedActor } from "./authority-types";
 import { requireInvoiceAuthority } from "./invoice-authority";
@@ -25,6 +26,7 @@ export function invoiceCheckField(field: string): string {
         unit: "quantity_unit",
         supplier_sku: "supplier_item_code",
         cost_per_unit_before_tax: "unit_cost_before_tax",
+        handwritten_notes: "import_handwritten_notes",
       } as Record<string, string>
     )[field.replace(/^calculated:/, "")] ?? field.replace(/^calculated:/, "")
   );
@@ -38,16 +40,36 @@ const optionalInvoiceFields = new Set([
   "order_reference",
   "bill_to",
   "ship_to",
+  "supplier_tax_number",
+  "supplier_item_code",
+  "pack_size",
+  "payment_terms",
+  "due_date",
+  "new_name_fa",
+  "import_handwritten_notes",
 ]);
+export function isEmptyOptionalInvoiceField(
+  record: object,
+  field: string,
+): boolean {
+  const key = invoiceCheckField(field);
+  const value = (record as Record<string, unknown>)[key];
+  return (
+    optionalInvoiceFields.has(key) &&
+    (Array.isArray(value)
+      ? value.every((item) => String(item ?? "").trim() === "")
+      : String(value ?? "").trim() === "")
+  );
+}
 export function visibleInvoiceCheckFields(record: {
   low_confidence_fields?: string[];
 }): string[] {
-  const values = record as Record<string, unknown>;
+  const seen = new Set<string>();
   return (record.low_confidence_fields ?? []).filter((field) => {
     const key = invoiceCheckField(field);
-    return (
-      !optionalInvoiceFields.has(key) || String(values[key] ?? "").trim() !== ""
-    );
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
 }
 
@@ -120,6 +142,66 @@ export function acknowledgeInvoiceCheck(
     (value) =>
       value !== field && invoiceCheckField(value) !== invoiceCheckField(field),
   );
+}
+
+/** An explicit absence is a review decision; an unflagged empty field stays quiet. */
+export function acknowledgeInvoiceFieldAbsence(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  field: string,
+  lineIndex?: number,
+  now = new Date(),
+): void {
+  requireInvoiceAuthority(
+    state,
+    actor,
+    "invoices.edit",
+    state.invoice.id,
+    true,
+  );
+  if (state.invoice.status === "posted")
+    throw new Error("Choose a draft invoice.");
+  const record =
+    lineIndex === undefined ? state.invoice : state.invoice.lines[lineIndex];
+  if (!record || !isEmptyOptionalInvoiceField(record, field))
+    throw new Error("Choose an empty optional invoice field.");
+  const key = invoiceCheckField(field);
+  if (
+    !visibleInvoiceCheckFields(record).some(
+      (value) => invoiceCheckField(value) === key,
+    )
+  )
+    return;
+  acknowledgeInvoiceCheck(state, actor, field, lineIndex);
+  record.checked_fields ??= {};
+  record.checked_fields[key] = {
+    checked_by_user_id: actor.user_id,
+    checked_at: now.toISOString(),
+  };
+  state.activity.push({
+    id: createId("invoice-check"),
+    company_id: state.invoice.company_id,
+    branch: state.invoice.branch,
+    action: "Invoice field not on the invoice",
+    by: actor.username,
+    actor_user_id: actor.user_id,
+    actor_username: actor.username,
+    actor_role_snapshot: actor.role,
+    at: now.toISOString(),
+    reversible: false,
+    entity_type: "invoice",
+    entity_id: state.invoice.id,
+    after: {
+      field: key,
+      ...(lineIndex === undefined
+        ? {}
+        : {
+            line_id: state.invoice.lines[lineIndex].id,
+            line_index: lineIndex,
+          }),
+      absent_on_invoice: true,
+    },
+  });
 }
 
 export class InvoiceLineConfirmationError extends Error {

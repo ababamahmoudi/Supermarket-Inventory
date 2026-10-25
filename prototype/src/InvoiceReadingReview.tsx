@@ -10,11 +10,15 @@ import {
   type ComponentProps,
   type ReactNode,
 } from "react";
-import { invoiceCheckField, invoiceTotalsCheck } from "./invoice-checks";
+import {
+  invoiceCheckField,
+  invoiceTotalsCheck,
+  isEmptyOptionalInvoiceField,
+} from "./invoice-checks";
 import type { InvoiceReadDTO } from "./invoice-projections";
 import { LtrValue, Money, NotAdded } from "./presentation";
 import { useDemo } from "./store";
-import { Field as BaseField, DataTable, Select } from "./ui";
+import { Field as BaseField, DataTable, Select, Button } from "./ui";
 
 export function ImportedReadingNote({ invoice }: { invoice: InvoiceReadDTO }) {
   const { state, t } = useDemo();
@@ -216,27 +220,40 @@ export function InvoiceTotalsWarnings({
 
 const CheckContext = createContext<{
   fields: readonly string[];
+  record?: object;
   idPrefix: string;
   onAcknowledge(field: string): void;
+  onNotOnInvoice?(field: string): unknown | Promise<unknown>;
   onEdit?(field: string, change: () => void): void;
 } | null>(null);
 
 export function ReadingCheckProvider({
   fields,
+  record,
   idPrefix,
   onAcknowledge,
+  onNotOnInvoice,
   onEdit,
   children,
 }: {
   fields?: readonly string[];
+  record?: object;
   idPrefix: string;
   onAcknowledge(field: string): void;
+  onNotOnInvoice?(field: string): unknown | Promise<unknown>;
   onEdit?(field: string, change: () => void): void;
   children: ReactNode;
 }) {
   return (
     <CheckContext.Provider
-      value={{ fields: fields ?? [], idPrefix, onAcknowledge, onEdit }}
+      value={{
+        fields: fields ?? [],
+        record,
+        idPrefix,
+        onAcknowledge,
+        onNotOnInvoice,
+        onEdit,
+      }}
     >
       {children}
     </CheckContext.Provider>
@@ -258,6 +275,7 @@ export function ReadingField({
   const helpId = useId();
   const [helpFocused, setHelpFocused] = useState(false);
   const [helpHovered, setHelpHovered] = useState(false);
+  const [absenceAcknowledged, setAbsenceAcknowledged] = useState(false);
   const childId = isValidElement<{ id?: string }>(props.children)
     ? (props.children.props.id ?? "")
     : "";
@@ -288,18 +306,26 @@ export function ReadingField({
       "The AI wasn't sure about this. Compare it with the photo.",
       "هوش مصنوعی از این مورد مطمئن نبود. با عکس مقایسه کنید.",
     );
+  const canMarkAbsent = !!(
+    field &&
+    context?.record &&
+    context.onNotOnInvoice &&
+    isEmptyOptionalInvoiceField(context.record, field)
+  );
   const child = isValidElement<{ onChange?: (...args: never[]) => unknown }>(
     props.children,
   )
     ? props.children
     : null;
   const children =
-    field && child?.props.onChange && context?.onEdit
+    child?.props.onChange && ((field && context?.onEdit) || absenceAcknowledged)
       ? cloneElement(child, {
-          onChange: (...args: never[]) =>
-            context.onEdit!(field, () => {
-              child.props.onChange?.(...args);
-            }),
+          onChange: (...args: never[]) => {
+            setAbsenceAcknowledged(false);
+            if (field && context?.onEdit)
+              context.onEdit(field, () => child.props.onChange?.(...args));
+            else child.props.onChange?.(...args);
+          },
         })
       : props.children;
   return (
@@ -313,30 +339,61 @@ export function ReadingField({
       labelAdornment={
         <>
           {labelAdornment}
-          {field && (
-            <span
-              className="reading-check-marker"
-              role="img"
-              aria-label={t(
-                "Check this against the original",
-                "با اصل فاکتور بررسی کنید",
-              )}
-              tabIndex={0}
-              aria-describedby={helpFocused || helpHovered ? helpId : undefined}
-              onFocus={() => setHelpFocused(true)}
-              onBlur={() => setHelpFocused(false)}
-              onMouseEnter={() => setHelpHovered(true)}
-              onMouseLeave={() => setHelpHovered(false)}
-            >
-              <span aria-hidden="true">!</span>
-              {(helpFocused || helpHovered) && (
+          {(field || absenceAcknowledged) && (
+            <span className="reading-check-label-actions">
+              {field && (
                 <span
-                  id={helpId}
-                  role="tooltip"
-                  className="reading-check-tooltip reading-ai-tooltip"
+                  className="reading-check-marker"
+                  role="img"
+                  aria-label={t(
+                    "Check this against the original",
+                    "با اصل فاکتور بررسی کنید",
+                  )}
+                  tabIndex={0}
+                  aria-describedby={
+                    helpFocused || helpHovered ? helpId : undefined
+                  }
+                  onFocus={() => setHelpFocused(true)}
+                  onBlur={() => setHelpFocused(false)}
+                  onMouseEnter={() => setHelpHovered(true)}
+                  onMouseLeave={() => setHelpHovered(false)}
                 >
-                  {hint}
+                  <span aria-hidden="true">!</span>
+                  {(helpFocused || helpHovered) && (
+                    <span
+                      id={helpId}
+                      role="tooltip"
+                      className="reading-check-tooltip reading-ai-tooltip"
+                    >
+                      {hint}
+                    </span>
+                  )}
                 </span>
+              )}
+              {!field && absenceAcknowledged && (
+                <span
+                  className="reading-check-marker-placeholder"
+                  aria-hidden="true"
+                />
+              )}
+              {(canMarkAbsent || absenceAcknowledged) && (
+                <Button
+                  variant="secondary"
+                  size="label"
+                  disabled={absenceAcknowledged}
+                  aria-label={t(
+                    `Not on the invoice: ${props.label}`,
+                    `در فاکتور نیست: ${props.label}`,
+                  )}
+                  onClick={async () => {
+                    if (!field || !context?.onNotOnInvoice) return;
+                    setAbsenceAcknowledged(true);
+                    const acknowledged = await context.onNotOnInvoice(field);
+                    if (!acknowledged) setAbsenceAcknowledged(false);
+                  }}
+                >
+                  {t("Not on the invoice", "در فاکتور نیست")}
+                </Button>
               )}
             </span>
           )}

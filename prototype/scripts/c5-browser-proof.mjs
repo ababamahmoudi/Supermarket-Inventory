@@ -179,6 +179,9 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         )
           return "choice";
         const kind = element.getAttribute("data-control-kind");
+        // A compact field-label action remains an action. Its declared shared
+        // structure is validated below before granting its 32px size contract.
+        if (kind === "label-action") return "action";
         if (kind && kind !== "action") return kind;
         const controlRole = element.getAttribute("role");
         if (widgetRoles.includes(controlRole)) return controlRole;
@@ -351,6 +354,54 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           "quiet",
           "plain",
         ].find((value) => element.classList.contains(`button-${value}`));
+        let labelAction = false;
+        if (element.getAttribute("data-control-kind") === "label-action") {
+          const actions = element.parentElement;
+          const labelRow = actions?.parentElement;
+          const field = labelRow?.parentElement;
+          const fieldLabel = labelRow?.querySelector(":scope > label");
+          const fieldControl = fieldLabel?.htmlFor
+            ? Array.from(field?.querySelectorAll("[id]") ?? []).find(
+                (control) => control.id === fieldLabel.htmlFor,
+              )
+            : null;
+          const marker = actions?.querySelector(
+            ':scope > .reading-check-marker[role="img"][tabindex="0"]',
+          );
+          const caption = tidy(element.textContent);
+          const expectedCaption = document.documentElement.lang.startsWith("fa")
+            ? "در فاکتور نیست"
+            : "Not on the invoice";
+          labelAction = Boolean(
+            element.matches(
+              "button.ui-button.button.button-secondary.button-label-action",
+            ) &&
+            actions?.matches(".reading-check-label-actions") &&
+            labelRow?.matches(".ui-field-label-row") &&
+            field?.matches(".field") &&
+            fieldLabel &&
+            fieldControl &&
+            caption === expectedCaption &&
+            label === `${expectedCaption}: ${tidy(fieldLabel.textContent)}` &&
+            (element.disabled ||
+              tidy(
+                marker?.querySelector(':scope > [aria-hidden="true"]')
+                  ?.textContent,
+              ) === "!"),
+          );
+          if (!labelAction)
+            failures.push(`Invalid field label action declaration: ${label}`);
+          else if (
+            Math.abs(parseFloat(style.fontSize) - 13) > 0.01 ||
+            Number(style.fontWeight) !== 600 ||
+            Math.abs(parseFloat(style.paddingLeft) - 8) > 0.01 ||
+            Math.abs(parseFloat(style.paddingRight) - 8) > 0.01 ||
+            ["Top", "Right", "Bottom", "Left"].some(
+              (side) => parseFloat(style[`border${side}Width`]) > 0.01,
+            )
+          )
+            failures.push(`Field label action typography or spacing: ${label}`);
+        }
         const nearestRow = element.closest("tbody tr");
         const dialog = element.closest("dialog");
         const receivingForm = element.closest(
@@ -456,6 +507,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         buttons.push(entry);
         if (kind === "action" || kind === "choice") {
           const small =
+            labelAction ||
             element.classList.contains("button-sm") ||
             element.closest(".table-actions, .catalog-row-actions");
           const expectedRadius = small ? "10px" : "12px";
@@ -470,17 +522,19 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             structuredFooter &&
             variantClass === "secondary" &&
             !element.disabled;
-          const expectedHeight = structuredFooter
-            ? 44
-            : element.closest(".c9-filter-toolbar")
-              ? element.closest(".ui-segments")
-                ? 32
-                : 40
-              : phone || fieldAlignedAdd
-                ? 44
-                : small
+          const expectedHeight = labelAction
+            ? 32
+            : structuredFooter
+              ? 44
+              : element.closest(".c9-filter-toolbar")
+                ? element.closest(".ui-segments")
                   ? 32
-                  : 40;
+                  : 40
+                : phone || fieldAlignedAdd
+                  ? 44
+                  : small
+                    ? 32
+                    : 40;
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {

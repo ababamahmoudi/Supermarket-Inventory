@@ -26,6 +26,9 @@ import {
   acknowledgeInvoiceCheck,
   confirmInvoiceLineChecks,
   fillCalculatedInvoiceTotals,
+  acknowledgeInvoiceFieldAbsence,
+  invoiceCheckCount,
+  normalizeInvoiceReceivingReview,
 } from "./invoice-checks";
 import {
   paymentTermsDays,
@@ -730,4 +733,89 @@ describe("R2b 1.8 source quantities and exact costs", () => {
       expect(validInvoiceLineQuantity(line)).toBe(true);
     },
   );
+});
+
+describe("R2b 1.9 explicit blank optional questions", () => {
+  it("keeps explicitly flagged blanks open, records actor/time when absent, and preserves the receipt on reopen", async () => {
+    const { state, actor } = await importFictional();
+    selectInvoiceWorkspace(state, actor, state.invoices![0].id);
+    expect(state.invoice.low_confidence_fields).toContain(
+      "supplier_tax_number",
+    );
+    expect(state.invoice.lines[0].low_confidence_fields).toContain("barcode");
+    const count = invoiceCheckCount(state.invoice);
+    const checkedAt = new Date("2026-12-31T09:15:00Z");
+    acknowledgeInvoiceFieldAbsence(
+      state,
+      actor,
+      "supplier_tax_number",
+      undefined,
+      checkedAt,
+    );
+    acknowledgeInvoiceFieldAbsence(state, actor, "barcode", 0, checkedAt);
+    expect(invoiceCheckCount(state.invoice)).toBe(count - 2);
+    expect(state.invoice.checked_fields?.supplier_tax_number).toEqual({
+      checked_by_user_id: actor.user_id,
+      checked_at: checkedAt.toISOString(),
+    });
+    expect(state.invoice.lines[0].checked_fields?.barcode).toEqual({
+      checked_by_user_id: actor.user_id,
+      checked_at: checkedAt.toISOString(),
+    });
+    normalizeInvoiceReceivingReview(state.invoice);
+    expect(state.invoice.low_confidence_fields).not.toContain(
+      "supplier_tax_number",
+    );
+    expect(state.invoice.lines[0].low_confidence_fields).not.toContain(
+      "barcode",
+    );
+    const activities = state.activity.filter(
+      (entry) => entry.action === "Invoice field not on the invoice",
+    );
+    expect(activities).toHaveLength(2);
+    expect(
+      activities.every(
+        (entry) =>
+          entry.actor_user_id === actor.user_id &&
+          entry.entity_id === state.invoice.id,
+      ),
+    ).toBe(true);
+    acknowledgeInvoiceFieldAbsence(state, actor, "barcode", 0, checkedAt);
+    expect(
+      state.activity.filter(
+        (entry) => entry.action === "Invoice field not on the invoice",
+      ),
+    ).toHaveLength(2);
+  });
+  it("does not invent optional checks and cannot use absence to clear a nonempty or required field", async () => {
+    const { state, actor } = await importFictional();
+    selectInvoiceWorkspace(state, actor, state.invoices![0].id);
+    expect(state.invoice.lines[0].low_confidence_fields).not.toContain(
+      "lot_number",
+    );
+    expect(() =>
+      acknowledgeInvoiceFieldAbsence(state, actor, "supplier_invoice_number"),
+    ).toThrow("empty optional");
+    state.invoice.lines[0].barcode = "9785550001123";
+    expect(() =>
+      acknowledgeInvoiceFieldAbsence(state, actor, "barcode", 0),
+    ).toThrow("empty optional");
+    expect(state.invoice.lines[0].low_confidence_fields).toContain("barcode");
+    const before = JSON.stringify(state.invoice);
+    expect(() =>
+      acknowledgeInvoiceFieldAbsence(
+        state,
+        { ...actor, user_id: "missing-user" },
+        "supplier_tax_number",
+      ),
+    ).toThrow();
+    expect(JSON.stringify(state.invoice)).toBe(before);
+    state.invoice.due_date = "";
+    state.invoice.low_confidence_fields!.push("due_date");
+    acknowledgeInvoiceFieldAbsence(state, actor, "due_date");
+    expect(state.invoice.low_confidence_fields).not.toContain("due_date");
+    expect(state.invoice.checked_fields?.due_date.checked_by_user_id).toBe(
+      actor.user_id,
+    );
+  });
 });

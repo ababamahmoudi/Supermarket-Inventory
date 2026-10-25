@@ -119,7 +119,7 @@ describe("R2 receiving decisions", () => {
       ).date_tracking,
     ).toBe(true);
   });
-  it("highlights empty required fields and never empty optional fields", () => {
+  it("highlights required blanks and preserves explicitly flagged optional blanks", () => {
     const state = empty(),
       value = {
         supplier_name: "",
@@ -160,6 +160,9 @@ describe("R2 receiving decisions", () => {
       ),
     );
     expect(checks.low_confidence_fields).toEqual([
+      "order_reference",
+      "bill_to",
+      "ship_to",
       "received_at",
       "supplier",
       "supplier_invoice_number",
@@ -169,11 +172,15 @@ describe("R2 receiving decisions", () => {
       "subtotal",
     ]);
     expect(checks.lines[0].low_confidence_fields).toEqual([
+      "lot_number",
+      "expiry_as_printed",
+      "barcode",
+      "handwritten_note",
       "description",
       "quantity_entered",
       "unit_cost_before_tax",
     ]);
-    expect(invoiceCheckCount(checks)).toBe(10);
+    expect(invoiceCheckCount(checks)).toBe(17);
   });
   it("counts present optional questions and malformed required dates exactly as the review will show them", () => {
     const state = empty();
@@ -266,11 +273,10 @@ describe("R2 receiving decisions", () => {
       ),
     ).toBe(true);
     expect(
-      state.invoice.lines.every(
-        (line) =>
-          !line.low_confidence_fields?.some((field) =>
-            ["lot_number", "expiry_as_printed", "barcode"].includes(field),
-          ),
+      state.invoice.lines.every((line) =>
+        ["lot_number", "expiry_as_printed", "barcode"].every((field) =>
+          line.low_confidence_fields?.includes(field),
+        ),
       ),
     ).toBe(true);
   });
@@ -389,7 +395,7 @@ describe("R2 receiving decisions", () => {
       review_confirmed: false,
     });
   });
-  it("opens existing R1 drafts with optional blanks cleared and calculated totals ready to check", async () => {
+  it("opens retained drafts with explicit optional blank checks preserved and calculated totals ready to check", async () => {
     const { state } = await imported();
     state.invoice.subtotal = "";
     state.invoice.low_confidence_fields = [
@@ -405,9 +411,15 @@ describe("R2 receiving decisions", () => {
     });
     normalizeInvoiceReceivingReview(state.invoice);
     expect(state.invoice.low_confidence_fields).toEqual([
+      "order_reference",
+      "bill_to",
       "calculated:subtotal",
     ]);
-    expect(line.low_confidence_fields).toEqual(["description"]);
+    expect(line.low_confidence_fields).toEqual([
+      "lot_number",
+      "barcode",
+      "description",
+    ]);
     expect(line).toMatchObject({ date_tracking: false, date_confirmed: true });
   });
   it("posts an explicitly refused quantity without requiring a linked purchase order", async () => {

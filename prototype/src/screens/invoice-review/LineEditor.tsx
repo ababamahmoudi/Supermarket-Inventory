@@ -21,6 +21,7 @@ import {
 import { LtrValue, LtrText } from "../../presentation";
 import {
   invoiceCheckField,
+  acknowledgeInvoiceFieldAbsence,
   setInvoiceLineCategory,
   confirmInvoiceLineChecks,
   InvoiceLineConfirmationError,
@@ -105,7 +106,12 @@ export function LineEditor({
       !!line.low_confidence_fields?.some(
         (x) =>
           invoiceCheckField(x) !== "description" &&
-          moreKeys.includes(invoiceCheckField(x)),
+          moreKeys.includes(invoiceCheckField(x)) &&
+          String(
+            (line as unknown as Record<string, unknown>)[
+              invoiceCheckField(x)
+            ] ?? "",
+          ).trim() !== "",
       ),
   );
   const [short, setShort] = useState(
@@ -303,6 +309,13 @@ export function LineEditor({
         fields={line.low_confidence_fields}
         idPrefix={`invoice-check-line-${index}`}
         onAcknowledge={() => {}}
+        record={line}
+        onNotOnInvoice={(field) =>
+          update((draft, actor) => {
+            acknowledgeInvoiceFieldAbsence(draft, actor, field, index);
+            return true;
+          })
+        }
       >
         <div
           className="receiving-editor-body"
@@ -1044,7 +1057,7 @@ export function LineEditor({
             open={more}
             onToggle={(e) => setMore(e.currentTarget.open)}
           >
-            <div className="detail-grid">
+            <div className="detail-grid ui-fields-align-labels">
               {moreKeys.map((key) => {
                 const labels: Record<string, [string, string]> = {
                   barcode: ["Barcode on the invoice", "بارکد روی فاکتور"],
