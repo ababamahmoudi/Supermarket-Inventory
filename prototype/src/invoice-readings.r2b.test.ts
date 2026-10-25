@@ -166,3 +166,15 @@ describe("R2b 1.1 imported received dates", () => {
     }
   });
 });
+
+describe("R2b 1.2 configured import currency", () => {
+  it("uses the configured company currency only when the paper has none", async () => {
+    const input = emptyBusiness();
+    input.config.company.currency = "GBP";
+    const { state } = await importFictional(input);
+    expect(state.invoices![0].import_currency).toBe("GBP");
+    expect(state.invoices![1].import_currency).toBe("USD");
+    expect(state.invoices![0].low_confidence_fields).not.toContain("currency");
+    expect(state.invoices![1].low_confidence_fields).toContain("currency");
+  });
+});

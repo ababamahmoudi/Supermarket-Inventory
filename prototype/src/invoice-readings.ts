@@ -795,6 +795,7 @@ export function readingCheckFields(
     if (status !== "check") continue;
     if (key.startsWith("header.")) {
       const field = key.slice(7);
+      if (field === "currency" && value && !text(value.currency)) continue;
       if (!value || !optionalReadingFields.has(field) || text(value[field]))
         header.push(headerStatusAliases[field] ?? field);
     }
@@ -1182,7 +1183,8 @@ export function importInvoiceReadings(
     invoice.bill_to = text(value.bill_to);
     invoice.supplier_tax_number = text(value.supplier_tax_number);
     invoice.order_reference = text(value.order_reference);
-    invoice.import_currency = text(value.currency);
+    invoice.import_currency =
+      text(value.currency) || state.config.company.currency;
     invoice.subtotal = decimal(value.subtotal, 2);
     invoice.tax = decimal(value.tax, 2);
     invoice.final_total = decimal(value.final_total, 2);
