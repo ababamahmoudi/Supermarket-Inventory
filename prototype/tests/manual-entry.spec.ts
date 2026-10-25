@@ -396,15 +396,20 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
   await page.goto(`/#invoices?id=${encodeURIComponent(prior.id)}`);
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
   await expect(post).toBeEnabled();
+  const beforePostAttempt = await readCanonicalBusinessEvidence(page);
   const postControl = post;
   await postControl.focus();
-  await expect(page.getByRole("tooltip")).toContainText(
-    "Original invoice is missing. Attach its PDF or photo.",
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(postControl).toBeFocused();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "2 items need attention. Click Post invoice for the full What's missing list.",
   );
   await postControl.press("Enter");
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toContainText("Original invoice is missing. Attach its PDF or photo.");
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforePostAttempt);
   await page.locator(".invoice-line-summary").click();
   await page
     .getByRole("group", { name: "Track date", exact: true })
