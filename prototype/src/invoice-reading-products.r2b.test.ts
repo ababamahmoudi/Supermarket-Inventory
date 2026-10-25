@@ -9,16 +9,30 @@ describe("R2b product names and printed pack evidence", () => {
     ["Box of 8 x 375G Orchard Preserve", "Orchard Preserve", "8 × 375 g", 8],
     ["MEADOW PICKLES X 10", "Meadow Pickles", "10 units", 10],
     ["Meadow Pickles X 10 / Case", "Meadow Pickles", "10 units", 10],
-    ["42190-Blueberry Preserve X 12", "Blueberry Preserve", "12 units", 12],
-    ["40127 Sunfield Rice - 6 x 5 LB / Case", "Sunfield Rice", "6 × 5 lb", 6],
+    [
+      "42190-Blueberry Preserve X 12",
+      "Blueberry Preserve",
+      "12 units",
+      12,
+      "42190",
+    ],
+    [
+      "40127 Sunfield Rice - 6 x 5 LB / Case",
+      "Sunfield Rice",
+      "6 × 5 lb",
+      6,
+      "40127",
+    ],
     ["TEA LEAVES 24X250ML", "Tea Leaves", "24 × 250 ml", 24],
     ["BOX OF 20 × 1 KG PINE NUTS", "Pine Nuts", "20 × 1 kg", 20],
     ["GentleSoap 4 x 12 OZ", "GentleSoap", "4 × 12 oz", 4],
     ["Apple Drink 6 x 1.5 L", "Apple Drink", "6 × 1.5 l", 6],
   ])(
     "splits %s into a clean name and pack",
-    (description, name, pack, count) => {
-      expect(splitInvoiceProductDescription({ description })).toEqual({
+    (description, name, pack, count, supplierCode?: string) => {
+      expect(
+        splitInvoiceProductDescription({ description, supplierCode }),
+      ).toEqual({
         name,
         pack_size: pack,
         units_per_case: count,
@@ -159,6 +173,21 @@ describe("R2b product names and printed pack evidence", () => {
       uncertain: true,
       suggested_name: "Meadow Tea",
     });
+  });
+
+  it("flags an uncorroborated numeric prefix while trusting a matching printed SKU", () => {
+    expect(
+      splitInvoiceProductDescription({ description: "4826 Orchard Biscuit" }),
+    ).toMatchObject({ name: "Orchard Biscuit", uncertain: true });
+    expect(
+      splitInvoiceProductDescription({
+        description: "4826 Orchard Biscuit",
+        supplierCode: "4826",
+      }),
+    ).toMatchObject({ name: "Orchard Biscuit", uncertain: false });
+    expect(
+      splitInvoiceProductDescription({ description: "42 Orchard Biscuit" }),
+    ).toMatchObject({ name: "42 Orchard Biscuit", uncertain: false });
   });
 
   it("normalizes supplied pack text and leaves printed input untouched", () => {

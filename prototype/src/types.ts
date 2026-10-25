@@ -323,6 +323,7 @@ export type InvoiceLine = Omit<
   short_dated?: boolean;
   supplier_item_id?: string;
   supplier_item_code?: string;
+  supplier_item_code_inferred?: boolean;
   quantity_unit?: "cases" | "units" | "kg" | "lb";
   quantity_entered?: string | number;
   case_cost_before_tax?: string;

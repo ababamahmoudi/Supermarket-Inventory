@@ -488,6 +488,11 @@ export function LineEditor({
                 <Field
                   readingField="supplier_item_code"
                   label={t("Supplier code", "کد تأمین‌کننده")}
+                  hint={
+                    line.supplier_item_code_inferred
+                      ? t("Filled from the name", "از نام پر شده است")
+                      : undefined
+                  }
                 >
                   <BufferedInput
                     id={id("supplier-code")}
@@ -501,6 +506,7 @@ export function LineEditor({
                       const inputValue = e.currentTarget.value;
                       edit("supplier_item_code", (item) => {
                         item.supplier_item_code = inputValue;
+                        item.supplier_item_code_inferred = false;
                       });
                     }}
                   />

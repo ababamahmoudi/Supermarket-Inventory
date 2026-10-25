@@ -103,6 +103,7 @@ const lineKeys = [
   "short_dated",
   "supplier_item_id",
   "supplier_item_code",
+  "supplier_item_code_inferred",
   "quantity_unit",
   "quantity_entered",
   "order_item_id",

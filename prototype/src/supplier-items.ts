@@ -29,6 +29,7 @@ export interface SupplierItemDefinition {
   supplier_name: string;
   product_code: string;
   supplier_item_code: string;
+  supplier_item_code_inferred?: boolean;
   units_per_case: number;
   case_weight?: string;
   case_weight_unit?: "kg" | "lb";
@@ -55,6 +56,7 @@ export interface SupplierItemPurchase {
   supplier: string;
   product_code: string;
   supplier_item_code: string;
+  supplier_item_code_inferred?: boolean;
   original_branch: Branch;
   branch: Branch;
   date: string;
@@ -78,6 +80,7 @@ export interface SupplierItemFact {
   supplier_name: string;
   product_code: string;
   supplier_item_code: string;
+  supplier_item_code_inferred?: boolean;
   name_en: string;
   name_fa: string;
   unit_size: string;
@@ -288,9 +291,13 @@ function canonicalSupplierItemFacts(
     itemCode: string,
     pack: number,
     description = "",
+    codeInferred = false,
   ): SupplierItemFact => {
     const found = facts.get(id);
-    if (found) return found;
+    if (found) {
+      if (codeInferred) found.supplier_item_code_inferred = true;
+      return found;
+    }
     const definition = definitions.find(
       (record) => record.id === id && !record.archived,
     );
@@ -306,6 +313,9 @@ function canonicalSupplierItemFacts(
       supplier_name: supplier?.name ?? supplierName,
       product_code: definition?.product_code ?? productCode,
       supplier_item_code: definition?.supplier_item_code ?? itemCode,
+      ...(definition?.supplier_item_code_inferred || codeInferred
+        ? { supplier_item_code_inferred: true }
+        : {}),
       name_en: product?.name_en ?? description,
       name_fa: product?.name_fa ?? "",
       unit_size: product?.unit_size ?? "",
@@ -404,6 +414,7 @@ function canonicalSupplierItemFacts(
         itemCode,
         pack,
         line.description,
+        line.supplier_item_code_inferred,
       );
       fact.history.push({
         id: `${invoice.id}:supplier-item:${index}`,
@@ -413,6 +424,9 @@ function canonicalSupplierItemFacts(
         supplier: invoice.supplier,
         product_code: line.product_code,
         supplier_item_code: itemCode,
+        ...(line.supplier_item_code_inferred
+          ? { supplier_item_code_inferred: true }
+          : {}),
         original_branch: invoice.branch,
         branch: effectiveInvoiceLocation(state, invoice),
         date,
@@ -814,6 +828,9 @@ export function associatePostedSupplierItem(
     supplier_name: supplier.name,
     product_code: line.product_code,
     supplier_item_code: code,
+    ...(line.supplier_item_code_inferred
+      ? { supplier_item_code_inferred: true }
+      : {}),
     units_per_case: pack,
     created_at: invoice.posted_at ?? new Date().toISOString(),
     created_by: context.actor,

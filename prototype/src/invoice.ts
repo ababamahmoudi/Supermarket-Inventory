@@ -286,6 +286,9 @@ export function rememberInvoiceSupplierItem(
     ...line,
     supplier_item_id: line.supplier_item_id ?? item.id,
     supplier_item_code: line.supplier_item_code ?? item.supplier_item_code,
+    ...(!line.supplier_item_code && item.supplier_item_code_inferred
+      ? { supplier_item_code_inferred: true }
+      : {}),
     units_per_case: line.units_per_case ?? item.units_per_case,
   };
 }
@@ -462,6 +465,9 @@ export function addManualLine(
     date_confirmed: true,
     supplier_item_id: item?.id,
     supplier_item_code: item?.supplier_item_code,
+    ...(item?.supplier_item_code_inferred
+      ? { supplier_item_code_inferred: true }
+      : {}),
     units_per_case: item?.units_per_case ?? 1,
     quantity_unit: "units",
     quantity_entered: "1",

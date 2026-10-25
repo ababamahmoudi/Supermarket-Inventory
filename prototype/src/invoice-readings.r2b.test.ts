@@ -9,6 +9,7 @@ import {
   postInvoice,
   recalculateInvoice,
   invoiceBlockers,
+  addManualLine,
 } from "./invoice";
 import {
   acknowledgeInvoiceCheck,
@@ -20,6 +21,7 @@ import {
   paymentTermsDueDate,
   setInvoicePaymentTerms,
 } from "./invoice-entry";
+import { supplierItemFacts } from "./supplier-items";
 import { selectInvoiceWorkspace } from "./invoice-workspace-read";
 import {
   importInvoiceReadings,
@@ -415,5 +417,60 @@ describe("R2b 1.5 product names and packs", () => {
     expect(mapped.units_per_case).toBe(8);
     expect(mapped.low_confidence_fields).toContain("description");
     expect(mapped.description).toBe(source.description);
+  });
+});
+
+describe("R2b 1.6 supplier code fallback", () => {
+  it("retains inferred identifier provenance through posted history and remembered manual lines", async () => {
+    const { state, actor } = await importFictional();
+    selectInvoiceWorkspace(state, actor, state.invoices![2].id);
+    state.invoice.lines[1].new_name_en =
+      state.invoice.lines[1].new_name_suggestion;
+    for (const line of state.invoice.lines) line.pricing_category = "grocery";
+    recalculateInvoice(state.invoice, state.config);
+    for (const field of [...(state.invoice.low_confidence_fields ?? [])])
+      acknowledgeInvoiceCheck(state, actor, field);
+    state.invoice.lines.forEach((_, i) =>
+      confirmInvoiceLineChecks(state, actor, i),
+    );
+    postInvoice(state, actor);
+    const supplier = state.invoice.supplier;
+    const fact = supplierItemFacts(state, actor, supplier, "all").find(
+      (i) => i.supplier_item_code === "Plum Preserve",
+    )!;
+    expect(fact.supplier_item_code_inferred).toBe(true);
+    expect(fact.history[0].supplier_item_code_inferred).toBe(true);
+    state.invoice = createInvoice(state, actor, "Branch 1", true);
+    state.invoice.supplier = supplier;
+    addManualLine(state, actor, fact.product_code);
+    expect(state.invoice.lines[0].supplier_item_code_inferred).toBe(true);
+  });
+
+  it("fills missing codes from clean names with quiet provenance and preserves every printed code", async () => {
+    const { state } = await importFictional();
+    expect(state.invoices![2].lines[0]).toMatchObject({
+      supplier_item_code: "Plum Preserve",
+      supplier_item_code_inferred: true,
+    });
+    expect(state.invoices![0].lines[0].supplier_item_code).toBe("BF-HZ8");
+    expect(state.invoices![0].lines[0].supplier_item_code_inferred).not.toBe(
+      true,
+    );
+    const mapped = mapReadingLine(
+      state,
+      undefined,
+      {
+        description: "SUMMER FRUIT SPREAD",
+        unit: "each",
+        quantity: "1",
+        unit_cost_before_tax: "3.0000",
+        line_total: "3.00",
+        taxable: false,
+      },
+      0,
+      ["supplier_item_code"],
+    );
+    expect(mapped.supplier_item_code).toBe("Summer Fruit Spread");
+    expect(mapped.low_confidence_fields).not.toContain("supplier_item_code");
   });
 });

@@ -113,10 +113,17 @@ function removeSupplierCode(description: string, code: string) {
       .join("\\s+");
     const known = new RegExp(`^${escaped}(?=$|[\\s:|–—-])`, "i");
     if (known.test(description))
-      return cleanSeparators(description.replace(known, ""));
+      return {
+        name: cleanSeparators(description.replace(known, "")),
+        uncertain: false,
+      };
   }
   // Short numbers may be part of a product name; an explicit SKU handles those.
-  return description.replace(/^\d{4,}(?:\s*[-:|–—]\s*|\s+)(?=\p{L})/u, "");
+  const name = description.replace(
+    /^\d{4,}(?:\s*[-:|–—]\s*|\s+)(?=\p{L})/u,
+    "",
+  );
+  return { name, uncertain: name !== description };
 }
 
 /** Separate editable suggestions without changing the caller's printed evidence. */
@@ -127,13 +134,11 @@ export function splitInvoiceProductDescription({
   packSize,
 }: InvoiceProductDescriptionInput): InvoiceProductDescriptionSplit {
   const code = supplierCode?.trim() ?? "";
-  let name = removeSupplierCode(description.trim(), code).replace(
-    /\s*\/\s*(?:case|box|ctn)\s*$/i,
-    "",
-  );
+  const withoutCode = removeSupplierCode(description.trim(), code);
+  let name = withoutCode.name.replace(/\s*\/\s*(?:case|box|ctn)\s*$/i, "");
   let extractedPack = "";
   let inferredCount: number | undefined;
-  let uncertain = false;
+  let uncertain = withoutCode.uncertain;
   const measured = measuredPack.exec(name);
   if (measured) {
     extractedPack = `${measured[1]} × ${measured[2]} ${measured[3].toLowerCase()}`;

@@ -838,6 +838,9 @@ export function mapReadingLine(
     unitsPerCase: text(source.units_per_case),
     packSize: text(source.pack_size),
   });
+  const inferredCode = !text(source.supplier_sku)
+    ? split.name || product?.name_en || ""
+    : "";
   const inferredPack =
     !text(source.units_per_case) && split.units_per_case !== undefined;
   const unit = text(source.unit),
@@ -865,6 +868,7 @@ export function mapReadingLine(
       (cost ? new Decimal(cost).times(pack).toFixed(4) : "");
   const checks = statuses.filter(
     (field) =>
+      !(field === "supplier_item_code" && inferredCode) &&
       !(field === "units_per_case" && inferredPack && !split.uncertain) &&
       (!optionalReadingFields.has(field) || text(source[field])),
   );
@@ -916,7 +920,8 @@ export function mapReadingLine(
       : split.name || suggestInvoiceEnglishName(printedDescription),
     new_name_suggestion: product ? undefined : split.suggested_name,
     new_name_fa: product ? undefined : "",
-    supplier_item_code: text(source.supplier_sku),
+    supplier_item_code: text(source.supplier_sku) || inferredCode,
+    ...(inferredCode ? { supplier_item_code_inferred: true } : {}),
     barcode: text(source.barcode),
     pack_size: split.pack_size || text(source.pack_size),
     units_per_case: new Decimal(pack).toNumber(),
