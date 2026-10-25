@@ -887,7 +887,16 @@ export default function InvoiceReadingsImport() {
             {error}
           </p>
         )}
-        <Field label={t("Type DELETE to confirm", "برای تأیید حذف را بنویسید")}>
+        <Field
+          label={t("Type DELETE to confirm", "برای تأیید حذف را بنویسید")}
+          labelContent={
+            <>
+              {t("Type ", "برای تأیید ")}
+              <strong>{t("DELETE", "حذف")}</strong>
+              {t(" to confirm", " را بنویسید")}
+            </>
+          }
+        >
           <input
             value={emptyConfirmation}
             onChange={(event) => setEmptyConfirmation(event.target.value)}

@@ -543,6 +543,9 @@
   > :is(label, .ui-field-label-row) {
   min-block-size: 32px;
 }
+.field > label strong {
+  font-weight: var(--font-weight-headline);
+}
 .reading-check-marker {
   position: relative;
   display: inline-flex;
@@ -786,7 +789,7 @@
 .ui-dialog-body {
   min-block-size: 0;
   min-inline-size: 0;
-  padding: 20px 24px 0;
+  padding: 20px 24px 8px;
   overflow: auto;
 }
 :root .ui-dialog-structured > .ui-dialog-footer {
@@ -834,15 +837,22 @@
 :root
   .ui-dialog-structured
   > .ui-dialog-footer
-  > .ui-button.button-destructive:not(:disabled) {
+  > .ui-button.button-destructive {
   background: var(--danger);
   color: var(--klead-white);
 }
 :root[data-theme="dark"]
   .ui-dialog-structured
   > .ui-dialog-footer
-  > .ui-button.button-destructive:not(:disabled) {
+  > .ui-button.button-destructive {
   color: var(--klead-toast-ink);
+}
+
+:root
+  .ui-dialog-structured
+  > .ui-dialog-footer
+  > .ui-button.button-destructive:disabled {
+  opacity: 0.5;
 }
 
 :root

@@ -337,6 +337,7 @@ export const StatusBadge = Badge;
 export function Field({
   adornment,
   labelAdornment,
+  labelContent,
   containerId,
   label,
   children,
@@ -345,6 +346,7 @@ export function Field({
   className,
 }: {
   label: string;
+  labelContent?: ReactNode;
   children: ReactNode;
   adornment?: ReactNode;
   labelAdornment?: ReactNode;
@@ -369,13 +371,14 @@ export function Field({
   const optional = label.match(/^(.*?)\s+(\((?:optional|اختیاری)\))$/);
   const fieldLabel = (
     <label id={labelId} htmlFor={id}>
-      {optional ? (
-        <>
-          {optional[1]} <span className="field-optional">{optional[2]}</span>
-        </>
-      ) : (
-        label
-      )}
+      {labelContent ??
+        (optional ? (
+          <>
+            {optional[1]} <span className="field-optional">{optional[2]}</span>
+          </>
+        ) : (
+          label
+        ))}
     </label>
   );
   return (

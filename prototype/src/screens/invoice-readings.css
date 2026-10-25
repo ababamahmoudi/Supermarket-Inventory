@@ -179,7 +179,7 @@
 }
 
 :root .ui-dialog.ui-dialog-structured.invoice-empty-store {
-  inline-size: 540px;
+  inline-size: 800px;
 }
 
 .invoice-import-file {

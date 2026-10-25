@@ -213,6 +213,9 @@ it("cancelling empty-store confirmation preserves business data, confirming keep
   let confirmation = screen.getByRole("dialog", {
     name: "Start with an empty store",
   });
+  expect(confirmation.querySelector("label strong")).toHaveTextContent(
+    "DELETE",
+  );
   expect(
     within(confirmation).getByRole("heading", { name: "Keeps" }),
   ).toBeInTheDocument();
