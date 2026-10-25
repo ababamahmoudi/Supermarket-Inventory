@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { resetDemo, setBranch, setLanguage, signIn } from "./helpers";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 
 async function showManualPrice(page: Page) {
   const table = page.locator(".catalog-products-table");
@@ -192,8 +193,22 @@ test("branch-only manual prices do not flag the other location", async ({
 }) => {
   await signIn(page, "Supervisor");
   await setBranch(page, "Branch 1");
-  await page.goto("/#lookup");
-  await page.getByLabel("Search products", { exact: true }).fill("0009");
+  const location = page
+    .locator(".topbar")
+    .getByRole("combobox", { name: "Location", exact: true });
+  await expect(location).toHaveText("North York");
+  // Keep the intended product in the route across location/authority refreshes.
+  await page.goto("/#lookup?search=0009");
+  const detail = page.locator(".lookup-detail");
+  await expect(page.getByLabel("Search products", { exact: true })).toHaveValue(
+    "0009",
+  );
+  await expect(detail.getByRole("heading", { level: 2 })).toHaveText(
+    "Potato Chips 150 g",
+  );
+  await expect(detail.locator(".lookup-product-meta")).toContainText("0009");
+  await expect(detail.locator(".price")).toHaveText("$2.99");
+  const before = (await readCanonicalBusinessEvidence(page)).products;
   await page
     .locator(".product-header-actions")
     .getByRole("button", { name: "Change price", exact: true })
@@ -202,6 +217,11 @@ test("branch-only manual prices do not flag the other location", async ({
     name: "Change price",
     exact: true,
   });
+  await expect(
+    editor
+      .locator(".dialog-description")
+      .getByText("Potato Chips 150 g", { exact: true }),
+  ).toBeVisible();
   await editor.getByRole("radio", { name: /^New regular price/ }).click();
   await editor.getByLabel("Price", { exact: true }).fill("3.29");
   await editor
@@ -210,12 +230,44 @@ test("branch-only manual prices do not flag the other location", async ({
   await editor
     .getByRole("button", { name: "Save new price", exact: true })
     .click();
+  await expect(editor).toBeHidden();
+  await expect(detail.getByRole("heading", { level: 2 })).toHaveText(
+    "Potato Chips 150 g",
+  );
+  await expect(detail.locator(".price")).toHaveText("$3.29");
   await expect(page.locator(".lookup-detail .manual-price-pill")).toHaveText(
     "Manual price",
   );
+  const afterSave = (await readCanonicalBusinessEvidence(page)).products;
+  const original = before.find((product) => product.code === "0009")!;
+  const changed = afterSave.find((product) => product.code === "0009")!;
+  expect(changed.selling_price).toBe(original.selling_price);
+  expect(changed.branch_prices).toEqual({
+    ...original.branch_prices,
+    "Branch 1": "3.29",
+  });
+  expect(changed.manual_prices?.["Branch 1"]).toMatchObject({ price: "3.29" });
+  const otherManualScopes = (product: typeof changed) =>
+    Object.fromEntries(
+      Object.entries(product.manual_prices ?? {}).filter(
+        ([scope]) => scope !== "Branch 1",
+      ),
+    );
+  expect(otherManualScopes(changed)).toEqual(otherManualScopes(original));
+  expect(afterSave.filter((product) => product.code !== "0009")).toEqual(
+    before.filter((product) => product.code !== "0009"),
+  );
   await setBranch(page, "Branch 2");
+  await expect(location).toHaveText("Richmond Hill");
+  await expect(detail.getByRole("heading", { level: 2 })).toHaveText(
+    "Potato Chips 150 g",
+  );
+  await expect(detail.locator(".lookup-product-meta")).toContainText("0009");
   await expect(page.locator(".lookup-detail .manual-price-pill")).toHaveCount(
     0,
   );
   await expect(page.locator(".lookup-detail .price")).toHaveText("$2.99");
+  expect((await readCanonicalBusinessEvidence(page)).products).toEqual(
+    afterSave,
+  );
 });
