@@ -81,8 +81,8 @@ test("invoice lines start closed, confirm once and reopen without opening the ne
     }),
   ).toHaveCount(0);
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
-  await expect(post).toBeDisabled();
-  await post.locator("..").focus();
+  await expect(post).toBeEnabled();
+  await post.focus();
   await expect(post.locator("..").getByRole("tooltip")).toContainText(
     /Lines: 6 not confirmed/,
   );
@@ -194,7 +194,7 @@ test("the original sticks beside the work column and the progress bar has a full
     page
       .locator(".receiving-header")
       .getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,

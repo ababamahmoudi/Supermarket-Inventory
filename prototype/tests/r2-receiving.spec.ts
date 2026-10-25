@@ -104,12 +104,20 @@ for (const language of ["en", "fa"] as const) {
       ),
     ).toBe(true);
     expect(imported.subtotal).toBe("96.35");
-    await expect(
-      page.getByRole("button", {
-        name: word(language, "Post invoice", "ثبت فاکتور"),
-        exact: true,
-      }),
-    ).toBeDisabled();
+    const incompletePost = page.getByRole("button", {
+      name: word(language, "Post invoice", "ثبت فاکتور"),
+      exact: true,
+    });
+    await expect(incompletePost).toBeEnabled();
+    await incompletePost.click();
+    const missingPanel = page.getByRole("alert", {
+      name: word(language, "What's missing", "موارد ناقص"),
+      exact: true,
+    });
+    await expect(missingPanel).toBeVisible();
+    await expect(missingPanel).toContainText(
+      word(language, "choose a pricing category", "دسته قیمت‌گذاری"),
+    );
     await openInvoiceDetails(page);
     await page
       .getByRole("button", {

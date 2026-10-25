@@ -58,6 +58,7 @@ export async function importReceivingFixture(
   language: ReceivingLanguage,
   onPreview?: (preview: Locator) => Promise<void>,
   onSummary?: (summary: Locator) => Promise<void>,
+  sourceFile: Parameters<Locator["setInputFiles"]>[0] = receivingFixture,
 ) {
   await signIn(page, "Owner");
   await setBranch(page, "Branch 1");
@@ -65,7 +66,7 @@ export async function importReceivingFixture(
   await removeReceivingDemo(page, language);
   await page
     .getByLabel(word(language, "Choose file…", "انتخاب فایل…"), { exact: true })
-    .setInputFiles(receivingFixture);
+    .setInputFiles(sourceFile);
   const preview = page.getByRole("dialog", {
     name: word(language, "Import invoice readings", "ورود خوانش فاکتورها"),
     exact: true,

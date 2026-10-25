@@ -16,11 +16,11 @@ import {
 } from "../../invoice-checks";
 import { shortTotals, refusedTotals } from "../../invoice";
 import { setInvoiceAmount } from "../../invoice-entry";
+import { invoiceAmountIssue } from "./amount-issue";
 import type { ReviewProps } from "./types";
 export function TotalsCard({
   invoice,
   update,
-  attemptedPost,
 }: Pick<ReviewProps, "invoice" | "update" | "attemptedPost">) {
   const { t } = useDemo();
   const fields = (invoice.low_confidence_fields ?? []).filter((x) =>
@@ -31,10 +31,9 @@ export function TotalsCard({
   );
   const showEditor =
     editing ||
-    (attemptedPost &&
-      [invoice.subtotal, invoice.tax, invoice.final_total].some(
-        (value) => !/^\d+(?:\.\d{1,2})?$/.test(value),
-      ));
+    (["subtotal", "tax", "final_total"] as const).some((field) =>
+      invoiceAmountIssue(field, invoice[field], t),
+    );
   const safe = (value?: string) => {
     try {
       return new Decimal(value || 0);
@@ -153,14 +152,7 @@ export function TotalsCard({
                   <Field
                     readingField={key}
                     label={t(...labels[key])}
-                    error={
-                      attemptedPost && !/^\d+(?:\.\d{1,2})?$/.test(invoice[key])
-                        ? t(
-                            "Enter nonnegative totals with no more than two decimal places.",
-                            "مبالغ غیرمنفی با حداکثر دو رقم اعشار وارد کنید.",
-                          )
-                        : undefined
-                    }
+                    error={invoiceAmountIssue(key, invoice[key], t)}
                     hint={
                       calculated ? (
                         <Badge tone="pending" wrap>

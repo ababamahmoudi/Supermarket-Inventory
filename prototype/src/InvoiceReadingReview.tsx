@@ -435,6 +435,7 @@ function ReadingCheckFields({
           label={t("Charge description", "شرح هزینه")}
         >
           <input
+            id={`${idPrefix}-input-description`}
             value={values.description}
             onChange={(event) => onEdit("description", event.target.value)}
           />
@@ -444,6 +445,7 @@ function ReadingCheckFields({
           label={t("Charge amount", "مبلغ هزینه")}
         >
           <input
+            id={`${idPrefix}-input-line_total`}
             dir="ltr"
             inputMode="decimal"
             value={values.line_total}
@@ -455,6 +457,7 @@ function ReadingCheckFields({
           label={t("Charge taxable", "هزینه مشمول مالیات")}
         >
           <Select
+            id={`${idPrefix}-input-taxable`}
             value={String(values.taxable)}
             onChange={(value) => onEdit("taxable", value)}
             options={[
@@ -491,6 +494,7 @@ export function ReadingUnknownChecks({
   record: object;
 }) {
   const { t } = useDemo();
+  const context = useContext(CheckContext);
   return (
     <>
       {(fields ?? [])
@@ -502,18 +506,41 @@ export function ReadingUnknownChecks({
             label={
               field === "line_type"
                 ? t("Line type", "نوع ردیف")
-                : t("Other reading field", "فیلد دیگر خوانش")
+                : invoiceCheckField(field) === "pack_size"
+                  ? t("Pack description", "شرح بسته")
+                  : invoiceCheckField(field) === "import_handwritten_notes"
+                    ? t("Handwritten notes", "یادداشت‌های دست‌نویس")
+                    : t("Other reading field", "فیلد دیگر خوانش")
             }
             hint={
-              field === "line_type" ? undefined : <LtrValue value={field} />
+              field === "line_type" ? undefined : ![
+                  "pack_size",
+                  "handwritten_notes",
+                  "import_handwritten_notes",
+                ].includes(field) ? (
+                <LtrValue value={field} />
+              ) : (
+                t(
+                  "Compare this reading with the original, then confirm the line or choose Looks right.",
+                  "این خوانش را با اصل فاکتور مقایسه کنید، سپس ردیف یا درست است را تأیید کنید.",
+                )
+              )
             }
           >
             <input
+              id={`${context?.idPrefix}-input-${invoiceCheckField(field)}`}
               readOnly
               value={
                 field === "line_type"
                   ? t("Item", "کالا")
-                  : String((record as Record<string, unknown>)[field] ?? "")
+                  : String(
+                      (record as Record<string, unknown>)[field] ??
+                        (field === "handwritten_notes"
+                          ? (record as Record<string, unknown>)
+                              .import_handwritten_notes
+                          : undefined) ??
+                        "",
+                    )
               }
             />
           </ReadingField>

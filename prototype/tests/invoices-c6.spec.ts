@@ -112,16 +112,22 @@ test("manual invoice uses local time, term dates and editable computed totals wi
   ).toContainText(/Difference.*2\.00/);
   await expect(page.locator(".undo-toast")).toHaveCount(0);
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
-  await expect(post).toBeDisabled();
-  await post.locator("..").press("Enter");
+  await expect(post).toBeEnabled();
+  await post.press("Enter");
   const missing = page.locator("#invoice-missing-list");
   await expect(missing).toBeVisible();
   await missing
     .locator(".receiving-missing-row")
-    .filter({ hasText: "Attach the original invoice" })
+    .filter({
+      hasText: "Original invoice is missing. Attach its PDF or photo.",
+    })
     .getByRole("button", { name: "Show", exact: true })
     .click();
-  await expect(page.locator("#invoice-original-field")).toBeFocused();
+  await expect(
+    page.locator(
+      "#invoice-original-field [data-invoice-attach]:visible, #invoice-original-field .original-viewer-phone-trigger:visible",
+    ),
+  ).toBeFocused();
   expect((await stored(page)).invoice.status).not.toBe("posted");
 });
 
@@ -164,7 +170,7 @@ test("new invoice supplier requires only its name and never creates an approval 
   ).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
 });
 
 test("Remove line is confirmed and reversible while ordinary field edits stay silent", async ({

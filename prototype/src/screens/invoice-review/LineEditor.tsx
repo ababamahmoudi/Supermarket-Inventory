@@ -18,6 +18,7 @@ import {
   ReadingField as Field,
   ReadingMoney as Money,
   ReadingCheckProvider,
+  ReadingUnknownChecks,
 } from "../../InvoiceReadingReview";
 import { LtrValue, LtrText } from "../../presentation";
 import {
@@ -32,6 +33,7 @@ import {
 import {
   removeInvoiceLine,
   validInvoiceLineQuantity,
+  actualDate,
   validInvoiceLineReceived,
   recalculateInvoice,
 } from "../../invoice";
@@ -654,7 +656,10 @@ export function LineEditor({
                       readingField="units_per_case"
                       label={t("Units per case", "واحد در کارتن")}
                       error={
-                        showErrors && failedField === "units_per_case"
+                        showErrors &&
+                        (failedField === "units_per_case" ||
+                          !Number.isSafeInteger(line.units_per_case ?? 1) ||
+                          (line.units_per_case ?? 1) <= 0)
                           ? t(
                               "Enter a valid number of units per case.",
                               "تعداد معتبر واحد در هر کارتن را وارد کنید.",
@@ -946,6 +951,7 @@ export function LineEditor({
                 <div className="receiving-date-fields">
                   <Field label={t("Date type", "نوع تاریخ")}>
                     <Select
+                      id={id("date-type")}
                       value={line.date_type ?? "expiry"}
                       options={[
                         { value: "expiry", label: t("Expiry", "انقضا") },
@@ -963,6 +969,17 @@ export function LineEditor({
                   </Field>
                   <Field
                     label={t("Date", "تاریخ")}
+                    error={
+                      showErrors &&
+                      workspace.blockerLineIndexes.date?.includes(index) &&
+                      line.date_tracking &&
+                      (!line.date_confirmed || !actualDate(line.date_value))
+                        ? t(
+                            "Enter a valid tracked date and confirm the line.",
+                            "تاریخ پیگیری معتبر وارد و ردیف را تأیید کنید.",
+                          )
+                        : undefined
+                    }
                     hint={
                       line.expiry_as_printed
                         ? t(
@@ -1031,9 +1048,20 @@ export function LineEditor({
               )}
             </section>
           </div>
-          {lowerCost && (
-            <Field label={t("Lower-cost receipt", "دریافت با هزینه کمتر")}>
+          {(lowerCost || line.short_dated) && (
+            <Field
+              label={t("Lower-cost receipt", "دریافت با هزینه کمتر")}
+              error={
+                showErrors && line.short_dated && !lowerCost
+                  ? t(
+                      "This receipt is not eligible for an expiry discount. Choose Regular receipt or correct the product and cost.",
+                      "این دریافت شرایط تخفیف انقضا را ندارد. دریافت عادی را انتخاب یا کالا و هزینه را اصلاح کنید.",
+                    )
+                  : undefined
+              }
+            >
               <SegmentedControl
+                id={id("short-dated")}
                 aria-label={t("Lower-cost receipt", "دریافت با هزینه کمتر")}
                 value={line.short_dated ? "short_dated" : "regular"}
                 options={[
@@ -1133,6 +1161,32 @@ export function LineEditor({
                   </Field>
                 );
               })}
+              <ReadingUnknownChecks
+                fields={line.low_confidence_fields}
+                known={[
+                  "description",
+                  "new_name_fa",
+                  "product_code",
+                  "supplier_item_id",
+                  "supplier_item_code",
+                  "pricing_category",
+                  "quantity_entered",
+                  "quantity_unit",
+                  "units_per_case",
+                  "qty_received_at_posting",
+                  "unit_cost_before_tax",
+                  "case_cost_before_tax",
+                  "line_total",
+                  "taxable",
+                  "date_tracking",
+                  "date_type",
+                  "date_value",
+                  "manual_price_decision",
+                  "short_dated",
+                  ...moreKeys,
+                ]}
+                record={line}
+              />
             </div>
           </Disclosure>
           {shortOpen && (
@@ -1153,6 +1207,7 @@ export function LineEditor({
                     keepTyping
                     min="0"
                     dir="ltr"
+                    id={id("refused")}
                     value={refused}
                     onChange={setRefused}
                   />
@@ -1241,6 +1296,7 @@ export function LineEditor({
             <Button
               variant="secondary"
               size="sm"
+              className="receiving-line-report"
               aria-label={t("Report short or refused", "گزارش کسری یا مرجوعی")}
               onClick={() => setShortOpen(!shortOpen)}
             >

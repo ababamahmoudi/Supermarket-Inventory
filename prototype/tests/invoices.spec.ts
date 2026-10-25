@@ -120,11 +120,8 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await chips.getByRole("button", { name: "Close", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
-  await page
-    .getByRole("button", { name: "Post invoice", exact: true })
-    .locator("..")
-    .click();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toBeVisible();
@@ -139,6 +136,13 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
     "unknown",
     "Unknown — add a note",
   );
+  await page
+    .getByRole("alert", { name: "What's missing", exact: true })
+    .locator(".receiving-missing-row")
+    .filter({ hasText: "Lower-cost receipt note is empty" })
+    .getByRole("button", { name: "Show", exact: true })
+    .click();
+  await expect(page.locator("#invoice-lower-note")).toBeFocused();
   await page
     .getByLabel("What information is unknown? (required)", { exact: true })
     .fill("Demo only: old stock label cannot be read.");
@@ -282,14 +286,11 @@ test("manual draft survives a refresh and cannot post without its original", asy
   );
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
-  await page
-    .getByRole("button", { name: "Post invoice", exact: true })
-    .locator("..")
-    .click();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
-  ).toContainText("Attach the original invoice");
+  ).toContainText("Original invoice is missing. Attach its PDF or photo.");
   const state = await stored(page);
   expect(state.invoice.status).toBe("draft");
   expect(

@@ -162,7 +162,18 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
     within(document.querySelector(".receiving-header")!).getByRole("button", {
       name: "Post invoice",
     }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  fireEvent.click(
+    within(document.querySelector(".receiving-header")!).getByRole("button", {
+      name: "Post invoice",
+    }),
+  );
+  expect(
+    screen.getByRole("alert", { name: "What's missing" }),
+  ).toHaveTextContent("unit cost is empty or invalid");
+  expect(
+    screen.queryByRole("dialog", { name: "Post invoice" }),
+  ).not.toBeInTheDocument();
   fireEvent.change(cost, { target: { value: "0.9800" } });
   await renderedUiReady(
     () =>
@@ -225,7 +236,18 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
     within(document.querySelector(".receiving-header")!).getByRole("button", {
       name: "Post invoice",
     }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  fireEvent.click(
+    within(document.querySelector(".receiving-header")!).getByRole("button", {
+      name: "Post invoice",
+    }),
+  );
+  expect(
+    screen.getByRole("alert", { name: "What's missing" }),
+  ).toHaveTextContent("units per case is invalid");
+  expect(
+    screen.queryByRole("dialog", { name: "Post invoice" }),
+  ).not.toBeInTheDocument();
   fireEvent.change(pack, { target: { value: "12" } });
   await renderedUiReady(
     () =>
@@ -316,7 +338,7 @@ it("groups every invalid total and shows local errors without crashing while fie
       final_total: "",
     }),
   );
-  fireEvent.pointerDown(
+  fireEvent.click(
     within(document.querySelector(".receiving-header")!).getByRole("button", {
       name: "Post invoice",
     }),
@@ -324,7 +346,11 @@ it("groups every invalid total and shows local errors without crashing while fie
   expect(
     await screen.findByRole("heading", { name: "What's missing" }),
   ).toBeVisible();
-  expect(screen.getByText("Totals: check the amounts")).toBeVisible();
+  expect(
+    screen.getAllByText(
+      "Tax is invalid. Enter a nonnegative amount with up to two decimal places.",
+    ).length,
+  ).toBeGreaterThan(0);
   for (const label of ["Subtotal", "Tax", "Invoice total"]) {
     expect(screen.getByLabelText(label)).toHaveAttribute(
       "aria-invalid",
@@ -335,7 +361,7 @@ it("groups every invalid total and shows local errors without crashing while fie
     within(document.querySelector(".receiving-header")!).getByRole("button", {
       name: "Post invoice",
     }),
-  ).toBeDisabled();
+  ).toBeEnabled();
 });
 
 it("retains only the expanded order row keys during a fresh protected read so a real Manager can accept the changed cost", async () => {

@@ -262,15 +262,23 @@ test("worker catalog actions stay hidden while invoice quick-add creates an acti
     .getByRole("button", { name: "Add supplier", exact: true })
     .click();
   await expect(dialog).not.toBeVisible();
+  const beforePost = await readCanonicalBusinessEvidence(page).then((value) =>
+    JSON.parse(JSON.stringify(value)!),
+  );
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Confirm supplier", exact: true }),
   ).toHaveCount(0);
   const saved = await readCanonicalBusinessEvidence(page).then(
     (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
+  expect(saved).toEqual(beforePost);
   expect(
     saved.suppliers.find(
       (supplier: { name: string }) =>
@@ -384,16 +392,16 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     .click();
   await page.goto(`/#invoices?id=${encodeURIComponent(prior.id)}`);
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
-  await expect(post).toBeDisabled();
-  const postControl = post.locator("..");
+  await expect(post).toBeEnabled();
+  const postControl = post;
   await postControl.focus();
   await expect(page.getByRole("tooltip")).toContainText(
-    "Attach the original invoice",
+    "Original invoice is missing. Attach its PDF or photo.",
   );
   await postControl.press("Enter");
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
-  ).toContainText("Attach the original invoice");
+  ).toContainText("Original invoice is missing. Attach its PDF or photo.");
   await page.locator(".invoice-line-summary").click();
   await page
     .getByRole("group", { name: "Track date", exact: true })
@@ -405,7 +413,7 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
       .locator(".invoice-line-summary")
       .getByRole("img", { name: "Confirmed", exact: true }),
   ).toBeVisible();
-  await expect(post).toBeDisabled();
+  await expect(post).toBeEnabled();
   await page
     .getByLabel(/^(Attach original|Replace file)$/)
     .setInputFiles(invoiceImage);

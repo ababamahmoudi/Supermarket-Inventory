@@ -1,4 +1,10 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useDemo } from "../../store";
 import { Button, Select } from "../../ui";
 import { addManualLine, recalculateInvoice } from "../../invoice";
@@ -39,6 +45,14 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
   const [attentionNavigationKey, setAttentionNavigationKey] = useState(0);
   const [, refreshLayout] = useState(0);
   const root = useRef<HTMLDivElement>(null);
+  const focusCleanup = useRef<(() => void) | undefined>(undefined);
+  const focusRequest = useRef(0);
+  const cancelFocus = () => {
+    focusRequest.current++;
+    focusCleanup.current?.();
+    focusCleanup.current = undefined;
+  };
+  useEffect(() => () => focusCleanup.current?.(), []);
   useLayoutEffect(() => {
     const topbar = document.querySelector<HTMLElement>(".topbar");
     const progress = root.current?.querySelector<HTMLElement>(
@@ -68,6 +82,8 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
   const { anchor, clear: clearAnchor } = useReviewScrollAnchor();
   useInvoiceLineHighlight(invoice.id, true);
   const show = (target: string, line?: number) => {
+    cancelFocus();
+    const request = focusRequest.current;
     setAttentionNavigationKey((value) => value + 1);
     clearAnchor();
     setReservedHeight(0);
@@ -76,7 +92,8 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
       if (root.current) revealInvoiceReviewTarget(root.current, target);
       requestAnimationFrame(() => {
         clearAnchor();
-        focusInvoiceReviewTarget(target);
+        if (request === focusRequest.current && root.current)
+          focusCleanup.current = focusInvoiceReviewTarget(target, root.current);
       });
     });
   };
@@ -84,14 +101,14 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
     const attention = nextInvoiceAttention(invoice);
     if (attention) show(attention.target, attention.line);
   };
-  const missing = missingGroups(
+  const guidance = missingGroups(
     invoice,
     t,
     workspace.blockers,
     workspace.blockerLineIndexes,
-  )
-    .map((x) => x.label)
-    .join("\n");
+    workspace.orderProblems,
+  );
+  const missing = guidance.map((x) => x.label).join("\n");
   return (
     <div
       className="receiving-review"
@@ -107,6 +124,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
           refreshLayout((n) => n + 1);
       }}
       onKeyDownCapture={(e) => {
+        cancelFocus();
         if (
           !["Enter", " "].includes(e.key) ||
           !(e.target instanceof HTMLElement) ||
@@ -120,6 +138,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
         );
       }}
       onPointerDownCapture={(e) => {
+        cancelFocus();
         const target =
           e.target instanceof Element
             ? e.target.closest<HTMLElement>(
@@ -143,6 +162,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
       <ReviewHeader
         invoice={invoice}
         missing={missing}
+        postDisabled={workspace.blockers.includes("permission")}
         onClose={props.onClose}
         onPost={props.onPost}
         onAttemptPost={props.onAttemptPost}
@@ -150,6 +170,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
       <ProgressStrip
         invoice={invoice}
         onNext={next}
+        postDisabled={workspace.blockers.includes("permission")}
         missing={missing}
         onPost={props.onPost}
         onAttemptPost={props.onAttemptPost}
@@ -159,6 +180,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
           invoice={invoice}
           blockers={workspace.blockers}
           blockerLineIndexes={workspace.blockerLineIndexes}
+          orderProblems={workspace.orderProblems}
           onShow={show}
         />
       )}
@@ -171,6 +193,10 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
             onReceived={props.onReceived}
             receivedLocal={props.receivedLocal}
             attemptedPost={props.attemptedPost}
+            invalidDueDate={
+              workspace.blockers.includes("payment_terms") &&
+              guidance.some((row) => row.target === "invoice-due-date")
+            }
           />
           <LinesTable
             invoice={invoice}

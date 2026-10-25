@@ -81,11 +81,10 @@ test("R2b 2.2 checks persist acknowledgments and Next focuses details, line evid
       }),
     ).toBeVisible();
     await expect(editor).toHaveCount(0);
-    if (index === 0)
-      await expect(page.locator(".receiving-progress-checks")).toHaveText(
-        "1 highlighted field",
-      );
   }
+  await expect(page.locator(".receiving-progress-checks")).toHaveText(
+    "1 highlighted field",
+  );
   await next.click();
   await expect(page.locator("#invoice-subtotal")).toBeFocused();
   await page

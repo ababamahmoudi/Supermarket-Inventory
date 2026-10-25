@@ -11,12 +11,14 @@ export function ProgressStrip({
   missing,
   onPost,
   onAttemptPost,
+  postDisabled = false,
 }: {
   invoice: InvoiceReadDTO;
   onNext(): void;
   missing: string;
   onPost(): void;
   onAttemptPost(): void;
+  postDisabled?: boolean;
 }) {
   const { t } = useDemo();
   const checkCount = invoiceCheckCount(invoice);
@@ -64,6 +66,7 @@ export function ProgressStrip({
         </Button>
         <PostInvoiceControl
           missing={missing}
+          disabled={postDisabled}
           onPost={onPost}
           onAttemptPost={onAttemptPost}
           className="receiving-mobile-post"

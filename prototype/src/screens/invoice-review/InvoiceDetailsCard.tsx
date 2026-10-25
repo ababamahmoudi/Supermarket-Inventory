@@ -19,6 +19,7 @@ import { supplierChoices, supplierMatches } from "../../supplier-editor";
 import {
   ReadingField as Field,
   ReadingCheckProvider,
+  ReadingUnknownChecks,
 } from "../../InvoiceReadingReview";
 import {
   invoiceCheckField,
@@ -40,6 +41,7 @@ export function InvoiceDetailsCard({
   onReceived,
   receivedLocal,
   attemptedPost,
+  invalidDueDate = false,
 }: Pick<
   ReviewProps,
   | "invoice"
@@ -48,7 +50,7 @@ export function InvoiceDetailsCard({
   | "onReceived"
   | "receivedLocal"
   | "attemptedPost"
->) {
+> & { invalidDueDate?: boolean }) {
   const { state, t, lang, can, command } = useDemo();
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationTarget, setLocationTarget] = useState(invoice.branch);
@@ -257,6 +259,14 @@ export function InvoiceDetailsCard({
             <Field
               readingField="due_date"
               label={t("Due date (optional)", "تاریخ سررسید (اختیاری)")}
+              error={
+                attemptedPost && invalidDueDate
+                  ? t(
+                      "Choose the due date for these payment terms.",
+                      "سررسید این شرایط پرداخت را انتخاب کنید.",
+                    )
+                  : undefined
+              }
             >
               <DateField
                 id="invoice-due-date"
@@ -364,6 +374,21 @@ export function InvoiceDetailsCard({
                   </Field>
                 );
               })}
+              <ReadingUnknownChecks
+                fields={fields}
+                known={[
+                  "supplier",
+                  "supplier_invoice_number",
+                  "invoice_date",
+                  "payment_terms",
+                  "due_date",
+                  "received_at",
+                  "receiving_employee",
+                  "order_id",
+                  ...moreKeys,
+                ]}
+                record={invoice}
+              />
             </div>
           </Disclosure>
         </ReadingCheckProvider>

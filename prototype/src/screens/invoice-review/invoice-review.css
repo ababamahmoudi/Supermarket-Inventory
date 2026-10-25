@@ -650,6 +650,7 @@
   position: relative;
 }
 .receiving-post-control > .reading-check-tooltip {
+  pointer-events: none;
   position: absolute;
   inset-block-start: calc(100% + 8px);
   inset-inline-end: 0;

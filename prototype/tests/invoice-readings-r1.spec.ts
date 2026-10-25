@@ -250,7 +250,14 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("not confirmed");
+  await expect(
+    page.getByRole("dialog", { name: "Post invoice", exact: true }),
+  ).toHaveCount(0);
   const beforeReview = await readCanonicalBusinessEvidence(page);
   expect(beforeReview.ledger).toHaveLength(0);
   expect(beforeReview.products).toHaveLength(0);

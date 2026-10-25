@@ -23,6 +23,10 @@ export function invoiceCheckField(field: string): string {
       {
         supplier_name: "supplier",
         invoice_number: "supplier_invoice_number",
+        invoice_date_as_printed: "invoice_date",
+        invoice_total: "final_total",
+        units_received: "qty_received_at_posting",
+        pack_text: "pack_size",
         english_name: "description",
         name_en: "description",
         new_name_en: "description",

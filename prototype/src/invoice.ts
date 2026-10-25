@@ -713,11 +713,11 @@ export function validCost(value: string): boolean {
   return /^\d+(?:\.\d{1,4})?$/.test(value);
 }
 
-function validMoney(value: string): boolean {
+export function validMoney(value: string): boolean {
   return /^\d+(?:\.\d{1,2})?$/.test(value);
 }
 
-function actualDate(value: string | undefined): boolean {
+export function actualDate(value: string | undefined): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value ?? "")) return false;
   const date = new Date(`${value}T12:00:00Z`);
   return (

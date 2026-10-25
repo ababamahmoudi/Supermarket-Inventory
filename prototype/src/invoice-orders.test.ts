@@ -17,6 +17,7 @@ import {
   compatibleInvoiceOrders,
   currentInvoiceOrderComparison,
   invoiceOrderIssues,
+  invoiceOrderProblems,
   setInvoiceExtraDecision,
   setInvoiceOrder,
 } from "./invoice-orders";
@@ -714,5 +715,80 @@ describe("short-dated expiry discounts", () => {
     recalculateInvoice(state.invoice, state.config);
     confirm(state);
     expect(invoiceBlockers(state, actor(state))).toContain("date");
+  });
+});
+
+describe("R2b fresh order blocker provenance", () => {
+  it("distinguishes a stale comparison from an unavailable order", () => {
+    const state = draft();
+    const order = addOrder(state);
+    link(state);
+    order.version++;
+    expect(invoiceOrderProblems(state, actor(state))).toEqual([
+      { kind: "stale" },
+    ]);
+    expect(invoiceOrderIssues(state, actor(state))).toEqual(["order"]);
+    state.orders = [];
+    expect(invoiceOrderProblems(state, actor(state))).toEqual([
+      { kind: "unavailable" },
+    ]);
+  });
+  it.each(["extra", "price", "missing"] as const)(
+    "identifies the exact unresolved %s decision",
+    (kind) => {
+      const state = draft();
+      addOrder(state);
+      if (kind === "extra")
+        setInvoiceLineQuantity(state.invoice.lines[0], "24", "units", 12);
+      if (kind === "price")
+        state.invoice.lines[0].unit_cost_before_tax = "1.5000";
+      if (kind === "missing")
+        state.invoice.lines[0].qty_received_at_posting = 8;
+      link(state);
+      const problem = invoiceOrderProblems(state, actor(state)).find(
+        (item) => item.kind === kind,
+      );
+      expect(problem).toMatchObject(
+        kind === "missing"
+          ? { kind, order_line_id: "order-line-1" }
+          : { kind, line: 0 },
+      );
+      expect(invoiceOrderIssues(state, actor(state))).toEqual([
+        "order_decisions",
+      ]);
+    },
+  );
+  it("identifies an inactive linked supplier without inventing a difference to answer", () => {
+    const state = draft();
+    const order = addOrder(state);
+    link(state);
+    state.suppliers ??= structuredClone([...supplierRecords(state)]);
+    state.suppliers.find(
+      (supplier) => supplier.id === order.supplier_id,
+    )!.active = false;
+    expect(invoiceOrderProblems(state, actor(state))).toEqual([
+      { kind: "supplier" },
+    ]);
+    expect(invoiceOrderIssues(state, actor(state))).toEqual([
+      "order_decisions",
+    ]);
+  });
+});
+
+it("R2b distinguishes a refused-quantity mismatch from an unanswered extra-delivery choice", () => {
+  const state = draft();
+  addOrder(state);
+  setInvoiceLineQuantity(state.invoice.lines[0], "24", "units", 12);
+  link(state);
+  setInvoiceExtraDecision(state, actor(state), 0, "refuse");
+  state.invoice.lines[0].refused_units = 11;
+  expect(invoiceOrderProblems(state, actor(state))).toContainEqual({
+    kind: "extra_quantity",
+    line: 0,
+  });
+  setInvoiceExtraDecision(state, actor(state), 0, "refuse");
+  expect(invoiceOrderProblems(state, actor(state))).not.toContainEqual({
+    kind: "extra_quantity",
+    line: 0,
   });
 });

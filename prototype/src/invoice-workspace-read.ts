@@ -13,6 +13,7 @@ import {
   initializeInvoiceManualPriceDecisions,
   validCost,
 } from "./invoice";
+import { invoiceOrderProblems } from "./invoice-orders";
 import { invoiceLineCalculation } from "./invoice-weight";
 import { invoiceVersion, invoiceContentVersions } from "./invoice-version";
 import { manualPrice } from "./manual-prices";
@@ -193,6 +194,7 @@ export function invoiceWorkspaceRead(
     latestVersionId: versions.at(-1)!.version_id,
     blockers,
     blockerLineIndexes,
+    orderProblems: invoiceOrderProblems(working, actor),
     blockersById,
     lowerLineIndexes: lowerPriceLineIndexes(working, actor),
     lineDetails,

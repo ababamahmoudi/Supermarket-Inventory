@@ -257,15 +257,39 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
     name: "Post invoice",
     exact: true,
   });
-  await expect(unavailablePost).toBeDisabled();
-  await unavailablePost.locator("..").focus();
+  await expect(unavailablePost).toBeEnabled();
+  await unavailablePost.focus();
   await expect(
     unavailablePost.locator("..").getByRole("tooltip"),
-  ).toContainText(/Review the order differences/);
+  ).toContainText(/decide whether to keep or refuse the extra delivery/);
   await page.keyboard.press("Enter");
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
-  ).toContainText("Review the order differences");
+  ).toContainText("decide whether to keep or refuse the extra delivery");
+  const missingPanel = page.getByRole("alert", {
+    name: "What's missing",
+    exact: true,
+  });
+  await missingPanel
+    .locator(".receiving-missing-row")
+    .filter({ hasText: "decide whether to keep or refuse the extra delivery" })
+    .getByRole("button", { name: "Show", exact: true })
+    .click();
+  await expect(
+    page
+      .locator("#invoice-order-line-0-extra-decision")
+      .getByRole("button", { name: "Keep it (we pay for it)", exact: true }),
+  ).toBeFocused();
+  await missingPanel
+    .locator(".receiving-missing-row")
+    .filter({ hasText: "accept the changed cost" })
+    .getByRole("button", { name: "Show", exact: true })
+    .click();
+  await expect(
+    page
+      .locator("#invoice-order-line-0-price-decision")
+      .getByRole("button", { name: "Accept new cost", exact: true }),
+  ).toBeFocused();
   const row = comparison.locator('tr[data-invoice-line="0"]');
   const refusal = comparison.getByRole("button", {
     name: "Refused / sent back with the driver",
@@ -374,12 +398,12 @@ test("short-dated expiry discount requires a real date and preserves an existing
   ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
   const unavailablePost = page.getByRole("button", {
     name: "Post invoice",
     exact: true,
   });
-  await unavailablePost.locator("..").focus();
+  await unavailablePost.focus();
   await page.keyboard.press("Enter");
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
@@ -392,6 +416,27 @@ test("short-dated expiry discount requires a real date and preserves an existing
     .getByRole("dialog", { name: "Choose date", exact: true })
     .getByRole("button", { name: "Today", exact: true })
     .click();
+  await chooseOption(
+    page,
+    line.locator("#invoice-line-0-date-type"),
+    "best_before",
+    "Best before",
+  );
+  await line.getByRole("button", { name: "Close", exact: true }).click();
+  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await page
+    .getByRole("alert", { name: "What's missing", exact: true })
+    .locator(".receiving-missing-row")
+    .filter({ hasText: "Change Date type to Expiry" })
+    .getByRole("button", { name: "Show", exact: true })
+    .click();
+  await expect(page.locator("#invoice-line-0-date-type")).toBeFocused();
+  await chooseOption(
+    page,
+    page.locator("#invoice-line-0-date-type"),
+    "expiry",
+    "Expiry",
+  );
   await confirmInvoiceLine(page, line);
   await post(page);
   const after = await stored(page);

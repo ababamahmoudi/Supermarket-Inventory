@@ -32,7 +32,7 @@ function receiving() {
 describe("receiving missing-item navigation", () => {
   it.each([
     { blocker: "cost", target: "cost" },
-    { blocker: "quantity", target: "invoiced" },
+    { blocker: "quantity", target: "delivered" },
     { blocker: "matching", target: "matching" },
   ] as const)(
     "opens the first affected line for $blocker instead of a valid first line",

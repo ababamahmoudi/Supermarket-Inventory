@@ -270,7 +270,7 @@ function OriginalInvoiceContent({
             {t("No original attached", "اصل فاکتور پیوست نشده است")}
           </p>
           {onAttach && (
-            <Button onClick={onAttach}>
+            <Button data-invoice-attach="" onClick={onAttach}>
               {t("Attach original", "پیوست اصل فاکتور")}
             </Button>
           )}

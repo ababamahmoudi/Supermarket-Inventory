@@ -171,6 +171,7 @@ export function InvoiceOrderReview() {
                       )}
                     >
                       <Select
+                        id={`invoice-order-match-${encodeURIComponent(temporary.id)}`}
                         value={matchedIndex < 0 ? "" : String(matchedIndex)}
                         disabled={!!stale}
                         onChange={async (value) => {
@@ -281,6 +282,7 @@ export function InvoiceOrderReview() {
             )}
           </p>
           <Button
+            id="invoice-order-refresh"
             variant="secondary"
             disabled={!choices.some((candidate) => candidate.id === order.id)}
             onClick={() =>
@@ -378,6 +380,7 @@ export function InvoiceOrderReview() {
                             <LtrText>{row.extra_units}</LtrText>
                           </Badge>
                           <SegmentedControl
+                            id={`invoice-order-line-${row.invoice_line_index}-extra-decision`}
                             aria-label={t(
                               "Extra delivered decision",
                               "تصمیم تحویل اضافه",
@@ -465,6 +468,7 @@ export function InvoiceOrderReview() {
                           </p>
                           {row.accepted_units > 0 && (
                             <SegmentedControl
+                              id={`invoice-order-line-${row.invoice_line_index}-price-decision`}
                               aria-label={t(
                                 "Changed cost decision",
                                 "تصمیم هزینه تغییرکرده",
@@ -568,6 +572,7 @@ export function InvoiceOrderReview() {
                           : t("Short", "کسری")}
                       </Badge>
                       <SegmentedControl
+                        id={`invoice-order-missing-${encodeURIComponent(row.order_line_id)}-decision`}
                         aria-label={t(
                           "Missing item decision",
                           "تصمیم کالای تحویل‌نشده",

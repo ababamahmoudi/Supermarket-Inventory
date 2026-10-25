@@ -11,17 +11,23 @@ export function ReviewHeader({
   onClose,
   onPost,
   onAttemptPost,
+  postDisabled = false,
 }: {
   invoice: InvoiceReadDTO;
   missing: string;
   onClose(): void;
   onPost(): void;
   onAttemptPost(): void;
+  postDisabled?: boolean;
 }) {
   const { state, t, lang } = useDemo();
   return (
-    <header className="receiving-header">
-      <a className="back-link" href="#invoices">
+    <header
+      className="receiving-header"
+      id="invoice-review-header"
+      tabIndex={-1}
+    >
+      <a id="invoice-back-link" className="back-link" href="#invoices">
         <ArrowLeft size={16} />
         {t("Invoices", "فاکتورها")}
       </a>
@@ -61,6 +67,7 @@ export function ReviewHeader({
           </Button>
           <PostInvoiceControl
             missing={missing}
+            disabled={postDisabled}
             onPost={onPost}
             onAttemptPost={onAttemptPost}
             className="receiving-desktop-post"
@@ -76,11 +83,13 @@ export function PostInvoiceControl({
   onPost,
   onAttemptPost,
   className,
+  disabled = false,
 }: {
   missing: string;
   onPost(): void;
   onAttemptPost(): void;
   className?: string;
+  disabled?: boolean;
 }) {
   const { t } = useDemo();
   const tooltipId = useId();
@@ -89,20 +98,26 @@ export function PostInvoiceControl({
   return (
     <span
       className={`receiving-post-control ${className ?? ""}`}
-      tabIndex={missing ? 0 : undefined}
+      tabIndex={disabled && missing ? 0 : undefined}
       aria-describedby={missing && (focused || hovered) ? tooltipId : undefined}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onPointerDownCapture={() => {
-        if (missing) onAttemptPost();
-      }}
-      onKeyDown={(e) => {
-        if (missing && (e.key === "Enter" || e.key === " ")) onAttemptPost();
-      }}
     >
-      <Button disabled={!!missing} onClick={onPost}>
+      <Button
+        disabled={disabled}
+        aria-describedby={
+          missing && (focused || hovered) ? tooltipId : undefined
+        }
+        onClick={() => {
+          if (missing) {
+            setFocused(false);
+            setHovered(false);
+            onAttemptPost();
+          } else onPost();
+        }}
+      >
         {t("Post invoice", "ثبت فاکتور")}
       </Button>
       {missing && (focused || hovered) && (

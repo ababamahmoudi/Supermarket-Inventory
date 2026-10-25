@@ -1864,6 +1864,7 @@ function InvoiceWorkspace({
         <div className="receiving-review">
           <ReviewHeader
             invoice={invoice}
+            postDisabled
             missing={t(
               "Read the invoice before posting.",
               "پیش از ثبت، فاکتور را بخوانید.",
@@ -2044,6 +2045,19 @@ function InvoiceWorkspace({
                             "Units left at the higher cost",
                             "واحدهای باقی‌مانده با هزینه بالاتر",
                           )}
+                          error={
+                            attemptedPost &&
+                            (!Number.isSafeInteger(
+                              invoice.lower_price_answers.units_left,
+                            ) ||
+                              (invoice.lower_price_answers.units_left ?? -1) <
+                                0)
+                              ? t(
+                                  "Enter a whole number of zero or more.",
+                                  "عدد صحیح صفر یا بیشتر وارد کنید.",
+                                )
+                              : undefined
+                          }
                         >
                           <NumberField
                             className="control-narrow"
@@ -2051,6 +2065,7 @@ function InvoiceWorkspace({
                             min="0"
                             step="1"
                             dir="ltr"
+                            id="invoice-lower-units-left"
                             value={invoice.lower_price_answers.units_left ?? ""}
                             onChange={(value) =>
                               updateInvoice((draft) => {
@@ -2068,8 +2083,18 @@ function InvoiceWorkspace({
                               "Previous goods expiry",
                               "انقضای کالاهای قبلی",
                             )}
+                            error={
+                              attemptedPost &&
+                              !invoice.lower_price_answers.old_expiry
+                                ? t(
+                                    "Choose the previous goods expiry.",
+                                    "تاریخ انقضای موجودی قبلی را انتخاب کنید.",
+                                  )
+                                : undefined
+                            }
                           >
                             <DateField
+                              id="invoice-lower-old-expiry"
                               dir="ltr"
                               value={
                                 invoice.lower_price_answers.old_expiry ?? ""
@@ -2087,8 +2112,18 @@ function InvoiceWorkspace({
                               "New delivery expiry",
                               "انقضای تحویل جدید",
                             )}
+                            error={
+                              attemptedPost &&
+                              !invoice.lower_price_answers.new_expiry
+                                ? t(
+                                    "Choose the new delivery expiry.",
+                                    "تاریخ انقضای تحویل جدید را انتخاب کنید.",
+                                  )
+                                : undefined
+                            }
                           >
                             <DateField
+                              id="invoice-lower-new-expiry"
                               dir="ltr"
                               value={
                                 invoice.lower_price_answers.new_expiry ?? ""
@@ -2110,8 +2145,18 @@ function InvoiceWorkspace({
                             "What information is unknown? (required)",
                             "چه اطلاعاتی نامعلوم است؟ (الزامی)",
                           )}
+                          error={
+                            attemptedPost &&
+                            !invoice.lower_price_answers.note?.trim()
+                              ? t(
+                                  "Explain what information is unknown.",
+                                  "توضیح دهید چه اطلاعاتی نامعلوم است.",
+                                )
+                              : undefined
+                          }
                         >
                           <textarea
+                            id="invoice-lower-note"
                             value={
                               invoice.lower_price_answers.note ===
                               "Previous goods label cannot be read."
