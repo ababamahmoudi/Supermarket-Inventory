@@ -318,6 +318,93 @@ export async function inspect(page, screen, variant, role = "supervisor") {
       if (phone)
         for (const review of document.querySelectorAll(".receiving-review")) {
           if (!visible(review)) continue;
+          if (review.matches(".posted-receiving")) {
+            const header = review.querySelector(":scope > .receiving-header");
+            const composition =
+              review.dataset.invoiceStatus === "posted" &&
+              Boolean(review.dataset.invoiceId) &&
+              ["true", "false"].includes(review.dataset.canCorrect) &&
+              ["true", "false"].includes(review.dataset.canMove) &&
+              header?.querySelector("h1") &&
+              header.querySelector(".badge.approved") &&
+              review.querySelector(".receiving-work .posted-invoice-lines") &&
+              review.querySelector(".receiving-work .posted-invoice-totals") &&
+              review.querySelector(
+                ":scope > .receiving-layout > .original-viewer",
+              );
+            if (composition) {
+              const controls = [
+                ...header.querySelectorAll("[data-posted-action]"),
+              ].filter(visible);
+              const required = [
+                ...(review.dataset.canCorrect === "true" ? ["correct"] : []),
+                ...(review.dataset.canMove === "true" ? ["move"] : []),
+              ];
+              if (
+                controls.length !== required.length ||
+                required.some(
+                  (action) =>
+                    controls.filter(
+                      (control) => control.dataset.postedAction === action,
+                    ).length !== 1,
+                )
+              )
+                failures.push(
+                  "Posted receiving header must show exactly its authorized actions",
+                );
+              const headerBounds = header.getBoundingClientRect();
+              const bounds = controls.map((control) =>
+                control.getBoundingClientRect(),
+              );
+              if (
+                bounds.some(
+                  (rect) =>
+                    rect.left < headerBounds.left - 2 ||
+                    rect.right > headerBounds.right + 2 ||
+                    rect.top < headerBounds.top - 2 ||
+                    rect.bottom > headerBounds.bottom + 2,
+                )
+              )
+                failures.push(
+                  "Posted receiving header actions must stay inside the header",
+                );
+              if (
+                bounds.some(
+                  (rect) =>
+                    Math.abs(rect.height - 44) > 1 ||
+                    Math.abs(rect.top - bounds[0].top) > 2,
+                ) ||
+                controls.some(
+                  (control) =>
+                    !control.classList.contains(
+                      control.dataset.postedAction === "correct"
+                        ? "button-primary"
+                        : "button-secondary",
+                    ),
+                )
+              )
+                failures.push(
+                  "Posted receiving header actions must use the shared 44px row and variants",
+                );
+              for (let index = 0; index < bounds.length; index++)
+                for (const next of bounds.slice(index + 1))
+                  if (
+                    Math.min(bounds[index].right, next.right) -
+                      Math.max(bounds[index].left, next.left) >
+                      1 &&
+                    Math.min(bounds[index].bottom, next.bottom) -
+                      Math.max(bounds[index].top, next.top) >
+                      1
+                  )
+                    failures.push(
+                      "Posted receiving header actions must not overlap",
+                    );
+              continue;
+            }
+            failures.push(
+              "Posted receiving composition and state must be complete",
+            );
+          }
           const group = review.querySelector(
             ":scope > .receiving-progress > .receiving-progress-actions",
           );

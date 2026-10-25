@@ -312,20 +312,20 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     const document = page.locator(".posted-invoice-document");
     await expect(document).toContainText("FV-20390");
     const displayedCosts = page.locator(
-      ".posted-invoice-lines tbody tr > td:nth-child(3)",
+      ".posted-invoice-lines .receiving-cost-cell",
     );
-    await expect(displayedCosts.first()).toHaveText("$0.98");
+    await expect(displayedCosts.first()).toHaveText("$0.9800");
     // This signed fictional document retains its exact six source costs.
-    // All have cents; the separate weighed fixture above must retain 4.9895.
+    // Posted costs keep four decimals; source amounts and weighed precision stay exact.
     await expect(displayedCosts).toHaveText([
-      "$0.98",
-      "$1.20",
-      "$1.55",
-      "$1.95",
-      "$3.40",
-      "$1.60",
+      "$0.9800",
+      "$1.2000",
+      "$1.5500",
+      "$1.9500",
+      "$3.4000",
+      "$1.6000",
     ]);
-    const title = page.locator("header.posted-invoice-title-row");
+    const title = page.locator(".posted-receiving > header");
     expect(
       await title.evaluate((element) => {
         const heading = element.querySelector("h1")!.getBoundingClientRect();
@@ -470,6 +470,10 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
           `${totalRows[index].label}/${next.label}: total groups do not overlap`,
         ).toBe(false);
       }
+    if ((page.viewportSize()?.width ?? 1280) < 760)
+      await page
+        .getByRole("button", { name: /^(View original|مشاهده اصل)/ })
+        .click();
     const media = page.locator(".invoice-original-media");
     const image = media.locator("img");
     await expect(image).toBeVisible();
@@ -522,6 +526,12 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       .click();
     await expect(media).toHaveAttribute("data-fit", "page");
     await expect.poll(fits).toBe(true);
+    if ((page.viewportSize()?.width ?? 1280) < 760)
+      await page
+        .locator(
+          ".original-viewer-dialog[open] .ui-dialog-header .ui-icon-button",
+        )
+        .click();
     const posted = await assertContract(page, "Posted invoice", variant);
     await button(page, "Move invoice", "انتقال فاکتور").click();
     await assertContract(page, "Move invoice dialog", variant);

@@ -1,0 +1,76 @@
+.posted-receiving .posted-invoice-header {
+  margin-block: 16px 0;
+}
+:root .posted-receiving .posted-invoice-header {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.posted-receiving .posted-invoice-header dd {
+  min-block-size: 24px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.posted-receiving .posted-handwriting {
+  grid-column: 1 / -1;
+}
+.posted-handwriting-action {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  margin-block-start: 8px;
+}
+.posted-reading-notes {
+  margin-block-start: 12px;
+}
+.posted-reading-notes ul {
+  margin-block: 8px;
+  padding-inline-start: 20px;
+}
+.posted-reading-notes li + li {
+  margin-block-start: 8px;
+}
+.posted-receiving .receiving-lines h2,
+.posted-receiving .receiving-totals h2 {
+  margin-block: 0;
+}
+.posted-receiving .posted-invoice-lines .receiving-product-cell {
+  overflow-wrap: anywhere;
+}
+
+.posted-receiving .posted-invoice-lines .receiving-product-meta {
+  margin-block: 4px 0;
+}
+.posted-phone-tracked-date {
+  display: none;
+}
+:root .posted-receiving .posted-invoice-totals {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-inline-size: none;
+  inline-size: 100%;
+  margin-block: 0;
+}
+:root .posted-receiving .posted-invoice-totals > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 16px;
+}
+:root .posted-receiving .posted-invoice-totals dt {
+  margin: 0;
+}
+@media (max-width: 759px) {
+  :root .posted-receiving .posted-invoice-header {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .posted-receiving .posted-tracked-cell {
+    display: none;
+  }
+  .posted-phone-tracked-date {
+    display: block;
+    margin-block-start: 4px;
+    color: var(--text-muted);
+  }
+  .posted-receiving .posted-invoice-lines > tbody > tr + tr {
+    margin-block-start: 8px;
+  }
+}

@@ -13,9 +13,13 @@ const saved = (page: Page): Promise<DemoState> =>
     JSON.parse(JSON.stringify(canonicalState)!),
   );
 
-async function showReviewOriginal(page: Page) {
+async function showReviewOriginal(page: Page, language: "en" | "fa" = "en") {
   if ((page.viewportSize()?.width ?? 1440) <= 760)
-    await page.getByRole("button", { name: /^View original \(/ }).click();
+    await page
+      .getByRole("button", {
+        name: language === "en" ? /^View original \(/ : /^مشاهده اصل \(/,
+      })
+      .click();
 }
 
 for (const language of ["en", "fa"] as const)
@@ -42,7 +46,7 @@ for (const language of ["en", "fa"] as const)
       .locator(".invoice-posted-workspace")
       .evaluate((element) => {
         const header = element.querySelector(".posted-invoice-header")!;
-        const original = element.querySelector(".invoice-original-card")!;
+        const original = element.querySelector(".original-viewer")!;
         return !!(
           header.compareDocumentPosition(original) &
           Node.DOCUMENT_POSITION_FOLLOWING
@@ -54,6 +58,7 @@ for (const language of ["en", "fa"] as const)
         exact: true,
       }),
     ).toHaveCount(0);
+    await showReviewOriginal(page, language);
     const image = page.getByRole("img", {
       name: fa ? "تصویر اصل فاکتور" : "Original invoice image",
       exact: true,
@@ -74,6 +79,13 @@ for (const language of ["en", "fa"] as const)
       .click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe(original.file_name);
+
+    if ((page.viewportSize()?.width ?? 1440) < 760)
+      await page
+        .locator(
+          ".original-viewer-dialog[open] .ui-dialog-header .ui-icon-button",
+        )
+        .click();
 
     await page
       .getByRole("button", {

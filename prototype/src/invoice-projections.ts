@@ -1,3 +1,4 @@
+import { effectiveInvoiceReceivedAt } from "./invoice-received-version";
 import type { AuthenticatedActor } from "./authority-types";
 import { can } from "./permissions";
 import { businessAuditRead } from "./business-audit-read";
@@ -298,6 +299,7 @@ export function invoiceView(
   );
   const view = {
     ...select(invoice, invoiceKeys),
+    received_at: effectiveInvoiceReceivedAt(state, invoice),
     ...(costs
       ? {
           ...select(invoice, invoiceMoneyKeys),

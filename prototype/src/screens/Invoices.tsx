@@ -103,7 +103,6 @@ import {
 import { ProductEditor } from "./Catalog";
 import { InvoiceCorrectionDialog } from "./InvoiceCorrectionDialog";
 import { InvoiceOrderReview } from "./InvoiceOrderReview";
-import { OriginalInvoice } from "./OriginalInvoice";
 import { PostedInvoice } from "./PostedInvoice";
 import { SupplierEditor } from "./SupplierEditor";
 import "./c5-catalog-offers.css";
@@ -1759,44 +1758,34 @@ function InvoiceWorkspace({
           </EmptyState>
         </Card>
       ) : locked ? (
-        <div className="invoice-workspace invoice-posted-workspace">
-          <div className="invoice-review-pane">
-            <PostedInvoice
-              original={invoice}
-              invoice={displayedVersion.invoice}
-              versionId={displayedVersion.version_id}
-              onCorrect={() => setCorrectionOpen(true)}
-              onMove={() => {
-                setMoveTarget("");
-                setMoveReason("");
-                setMoveError("");
-                setMoveOpen(true);
-              }}
-            >
-              {displayedVersion.version_id === workspace.latestVersionId &&
-                laterShortDeliveries}
-            </PostedInvoice>
-          </div>
-          <aside
-            className="invoice-document-pane"
-            aria-label={t("Original invoice", "اصل فاکتور")}
+        <>
+          <PostedInvoice
+            original={invoice}
+            invoice={displayedVersion.invoice}
+            versionId={displayedVersion.version_id}
+            onAttachOriginal={
+              !invoice.original_available &&
+              can("invoices.attach_posted_original", scope)
+                ? () => originalInput.current?.click()
+                : undefined
+            }
+            onCorrect={() => setCorrectionOpen(true)}
+            onMove={() => {
+              setMoveTarget("");
+              setMoveReason("");
+              setMoveError("");
+              setMoveOpen(true);
+            }}
           >
-            <OriginalInvoice
-              invoice={invoice}
-              onAttach={
-                !invoice.original_available &&
-                can("invoices.attach_posted_original", scope)
-                  ? () => originalInput.current?.click()
-                  : undefined
-              }
-            />
-            {uploadError && (
-              <p role="alert" className="form-error">
-                {uploadError}
-              </p>
-            )}
-          </aside>
-        </div>
+            {displayedVersion.version_id === workspace.latestVersionId &&
+              laterShortDeliveries}
+          </PostedInvoice>
+          {uploadError && (
+            <p role="alert" className="form-error">
+              {uploadError}
+            </p>
+          )}
+        </>
       ) : routeId &&
         invoice.entry_mode === "upload" &&
         invoice.status === "draft" &&

@@ -1,3 +1,4 @@
+import { effectiveMovementReceivedAt } from "./invoice-received-version";
 import type { AuthenticatedActor } from "./authority-types";
 import { freshActor } from "./authority";
 import { can } from "./permissions";
@@ -186,7 +187,7 @@ export function projectPurchaseOperational(
         type: movement.type,
         reference: movement.reference,
         by: movement.by,
-        at: movement.at,
+        at: effectiveMovementReceivedAt(state, movement),
         ...(movement.invoice_id &&
         canInvoiceAuthority(state, actor, "invoices.read", movement.invoice_id)
           ? { invoice_id: movement.invoice_id, line_index: movement.line_index }

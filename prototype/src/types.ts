@@ -6,6 +6,7 @@ import type { InvoiceLocationCorrection } from "./received";
 import type { SupplierItemDefinition } from "./supplier-items";
 import type { Order, OrderComparison, InvoiceNewItemMatch } from "./orders";
 import type { InvoiceContentCorrection } from "./invoice-corrections";
+import type { InvoiceReceivedCorrection } from "./invoice-received-version";
 import type { ReturnMemo, ReturnPickupCorrection } from "./return-workflow";
 import type { ReceiptLot } from "./receipt-lots";
 import type { BranchRequest, RequestTransferEvent } from "./branch-requests";
@@ -730,6 +731,7 @@ export interface DemoState {
   sale_label_effects?: string[];
   receipt_lots?: ReceiptLot[];
   invoice_content_corrections?: InvoiceContentCorrection[];
+  invoice_received_corrections?: InvoiceReceivedCorrection[];
   supplier_items?: SupplierItemDefinition[];
   orders?: Order[];
   branch_requests?: BranchRequest[];

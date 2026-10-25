@@ -1,3 +1,4 @@
+import { effectiveInvoiceReceivedAt } from "./invoice-received-version";
 import Decimal from "decimal.js";
 import type { AuthenticatedActor } from "./authority-types";
 import { requireCapability } from "./permissions";
@@ -298,7 +299,9 @@ export function receivedLog(
           .minus(line.refused_units ?? 0)
           .toNumber(),
         `${invoice.id}:received:${index}`,
-        invoice.received_at ?? invoice.invoice_date ?? invoice.posted_at,
+        effectiveInvoiceReceivedAt(state, invoice) ??
+          invoice.invoice_date ??
+          invoice.posted_at,
         invoice.receiving_employee ?? "",
         "invoice",
       );

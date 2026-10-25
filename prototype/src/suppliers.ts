@@ -1,3 +1,4 @@
+import { effectiveInvoiceReceivedAt } from "./invoice-received-version";
 import { companyCalendarDate } from "./company-time";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { missingSupplierProfileDetails } from "./supplier-profiles";
@@ -159,7 +160,9 @@ function postedInvoices(state: DemoState, context: AuthenticatedActor) {
 function receivedDate(state: DemoState, invoice: DemoInvoice) {
   return companyCalendarDate(
     state.config,
-    invoice.received_at ?? invoice.invoice_date ?? invoice.posted_at,
+    effectiveInvoiceReceivedAt(state, invoice) ??
+      invoice.invoice_date ??
+      invoice.posted_at,
   );
 }
 function supplierShorts(

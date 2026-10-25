@@ -111,6 +111,10 @@ const actions: Record<string, [string, string]> = {
   "Restore template": ["Restore template", "بازیابی قالب"],
   "Move invoice": ["Move invoice", "انتقال فاکتور"],
   "Correct invoice": ["Correct invoice", "اصلاح فاکتور"],
+  "Correct invoice received date": [
+    "Correct invoice received date",
+    "اصلاح زمان دریافت فاکتور",
+  ],
   "Attach original": ["Attach original", "پیوست اصل"],
   "Return settings changed": [
     "Return settings changed",
@@ -241,6 +245,7 @@ const fields: Record<string, [string, string]> = {
   location: ["Location", "مکان"],
   outstanding_amount: ["Outstanding amount", "مبلغ پرداخت‌نشده"],
   reason: ["Reason", "دلیل"],
+  received_at: ["Received", "زمان دریافت"],
   name: ["Name", "نام"],
   name_en: ["English name", "نام انگلیسی"],
   name_fa: ["Persian name", "نام فارسی"],

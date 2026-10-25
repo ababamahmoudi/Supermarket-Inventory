@@ -40,6 +40,9 @@ export function removeFictionalData(
   state.invoice_content_corrections = retained(
     state.invoice_content_corrections,
   );
+  state.invoice_received_corrections = retained(
+    state.invoice_received_corrections,
+  );
   state.invoice_location_corrections = retained(
     state.invoice_location_corrections,
   );
