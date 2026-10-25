@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import { freshActor } from "./authority";
+import { canInvoiceAuthority } from "./invoice-authority";
 import type { AuthenticatedActor } from "./authority-types";
 import { can, requireCapability } from "./permissions";
 import { branchId, configuredBranches } from "./settings";
@@ -346,70 +347,262 @@ function allInvoices(state: DemoState): DemoInvoice[] {
     ).values(),
   ];
 }
+type MatchProvenance = NonNullable<InvoiceLine["reading_product_match"]>;
+export interface ReadingProductMatch {
+  product: Product;
+  provenance: MatchProvenance;
+}
+
+/** Matching uses printed evidence; generated display names are never supplier SKUs. */
+export function resolveReadingProductMatch(
+  state: DemoState,
+  supplier: SupplierRecord | undefined,
+  line: InvoiceReadingLine,
+  actor?: AuthenticatedActor,
+): ReadingProductMatch | undefined {
+  const company = state.config.company.seed_key;
+  if (actor) freshActor(state, actor);
+  if (supplier && (supplier.company_id !== company || !supplier.active))
+    return undefined;
+  const products = state.products.filter(
+    (product) =>
+      product.company_id === company && product.status !== "archived",
+  );
+  const history = allInvoices(state)
+    .filter(
+      (invoice) =>
+        !actor ||
+        canInvoiceAuthority(state, actor, "invoices.read", invoice.id),
+    )
+    .sort(
+      (left, right) =>
+        Number(right.status === "posted") - Number(left.status === "posted") ||
+        (Date.parse(
+          right.received_at || right.posted_at || right.invoice_date || "",
+        ) || 0) -
+          (Date.parse(
+            left.received_at || left.posted_at || left.invoice_date || "",
+          ) || 0),
+    )
+    .flatMap((invoice) =>
+      invoice.lines
+        .filter((prior) => prior.company_id === company)
+        .map((prior) => ({
+          invoice,
+          line: prior,
+          product: products.find(
+            (product) => product.code === prior.product_code,
+          ),
+        })),
+    )
+    .filter((entry): entry is typeof entry & { product: Product } =>
+      Boolean(entry.product),
+    );
+  const ownHistory = supplier
+    ? history.filter((entry) =>
+        supplierMatches(supplier, entry.invoice.supplier),
+      )
+    : [];
+  const bindings = (state.supplier_items ?? []).filter(
+    (item) =>
+      item.company_id === company &&
+      item.supplier_id === supplier?.id &&
+      !item.archived,
+  );
+  const split = splitInvoiceProductDescription({
+    description: text(line.description),
+    supplierCode: text(line.supplier_sku),
+    unitsPerCase: text(line.units_per_case),
+    packSize: text(line.pack_size),
+  });
+  const printedName = normalizeReadingName(text(line.description));
+  const names = new Set(
+    [printedName, normalizeReadingName(split.name)].filter(Boolean),
+  );
+  const code = text(line.supplier_sku),
+    barcode = text(line.barcode);
+  const inferredCode = (value: {
+    supplier_item_code?: string;
+    supplier_item_code_inferred?: boolean;
+  }) => value.supplier_item_code_inferred === true;
+  const size = (value: string) => {
+    const parts = [
+      ...value.matchAll(/(\d+(?:\.\d+)?)\s*(kg|g|lb|oz|ml|l)\b/gi),
+    ];
+    const last = parts.at(-1);
+    return last
+      ? `${new Decimal(last[1]).toString()}${last[2].toLowerCase()}`
+      : "";
+  };
+  const sourceSize = size(split.pack_size);
+  const sourceCount =
+    /^(case|cases|cs|ctn|box)$/i.test(text(line.unit)) || split.pack_size
+      ? split.units_per_case
+      : undefined;
+  const packQuestion = (product: Product) => {
+    const counts = [
+      ...bindings
+        .filter((item) => item.product_code === product.code)
+        .map((item) => item.units_per_case),
+      ...ownHistory
+        .filter((entry) => entry.product.code === product.code)
+        .map((entry) => entry.line.units_per_case),
+    ].filter(
+      (count): count is number => typeof count === "number" && count > 0,
+    );
+    const productSize = size(product.unit_size);
+    return Boolean(
+      (sourceCount && counts.length && !counts.includes(sourceCount)) ||
+      (sourceSize && productSize && sourceSize !== productSize),
+    );
+  };
+  const sameSupplier = (product: Product) =>
+    Boolean(
+      supplier &&
+      (supplierMatches(supplier, product.main_supplier) ||
+        bindings.some((item) => item.product_code === product.code) ||
+        ownHistory.some((entry) => entry.product.code === product.code)),
+    );
+  const match = (
+    product: Product,
+    basis: MatchProvenance["basis"],
+    evidence?: (typeof history)[number],
+    uncertain = false,
+  ): ReadingProductMatch => {
+    const earlier =
+      evidence ??
+      ownHistory.find(
+        (entry) =>
+          entry.product.code === product.code &&
+          entry.invoice.status === "posted",
+      );
+    return {
+      product,
+      provenance: {
+        product_code: product.code,
+        basis,
+        earlier_delivery: earlier?.invoice.status === "posted",
+        requires_check:
+          uncertain ||
+          !sameSupplier(product) ||
+          packQuestion(product) ||
+          Boolean(
+            barcode &&
+            products.some(
+              (candidate) =>
+                candidate.barcode === barcode &&
+                candidate.code !== product.code,
+            ),
+          ),
+        ...(earlier ? { source_invoice_id: earlier.invoice.id } : {}),
+      },
+    };
+  };
+  const fromHistory = (
+    entries: typeof history,
+    basis: MatchProvenance["basis"],
+  ) => {
+    const ordered = [...entries].sort(
+      (a, b) =>
+        Number(packQuestion(a.product)) - Number(packQuestion(b.product)),
+    );
+    const first = ordered[0];
+    if (!first) return undefined;
+    const equallyPlausible = new Set(
+      ordered
+        .filter(
+          (entry) =>
+            packQuestion(entry.product) === packQuestion(first.product),
+        )
+        .map((entry) => entry.product.code),
+    );
+    return match(
+      first.product,
+      basis,
+      first,
+      equallyPlausible.size > 1 ||
+        first.invoice.status !== "posted" ||
+        basis === "other_supplier_description",
+    );
+  };
+  if (code && supplier) {
+    const candidates = bindings
+      .filter((item) => !inferredCode(item) && item.supplier_item_code === code)
+      .flatMap((item) =>
+        products.filter((product) => product.code === item.product_code),
+      );
+    if (candidates.length)
+      return match(
+        candidates[0],
+        "supplier_code",
+        undefined,
+        new Set(candidates.map((product) => product.code)).size > 1,
+      );
+    const prior = fromHistory(
+      ownHistory.filter(
+        (entry) =>
+          !inferredCode(entry.line) && entry.line.supplier_item_code === code,
+      ),
+      "supplier_code",
+    );
+    if (prior) return prior;
+  }
+  if (printedName) {
+    const prior = fromHistory(
+      ownHistory.filter(
+        (entry) => normalizeReadingName(entry.line.description) === printedName,
+      ),
+      "supplier_description",
+    );
+    if (prior) return prior;
+  }
+  if (barcode) {
+    const product = products.find((item) => item.barcode === barcode);
+    if (product) return match(product, "barcode");
+    const prior = fromHistory(
+      history.filter((entry) => entry.line.barcode === barcode),
+      "barcode",
+    );
+    if (prior) return prior;
+  }
+  const named = products
+    .filter((product) =>
+      [product.name_en, product.name_fa].some(
+        (name) => name && names.has(normalizeReadingName(name)),
+      ),
+    )
+    .sort(
+      (a, b) =>
+        Number(!sameSupplier(a)) - Number(!sameSupplier(b)) ||
+        Number(packQuestion(a)) - Number(packQuestion(b)),
+    );
+  if (named.length) {
+    const first = named[0];
+    const plausible = named.filter(
+      (product) =>
+        sameSupplier(product) === sameSupplier(first) &&
+        packQuestion(product) === packQuestion(first),
+    );
+    return match(first, "catalog_name", undefined, plausible.length > 1);
+  }
+  return printedName
+    ? fromHistory(
+        history.filter(
+          (entry) =>
+            normalizeReadingName(entry.line.description) === printedName,
+        ),
+        "other_supplier_description",
+      )
+    : undefined;
+}
+
+/** Compatibility for callers that only need the selected product. */
 export function matchReadingProduct(
   state: DemoState,
   supplier: SupplierRecord | undefined,
   line: InvoiceReadingLine,
 ): Product | undefined {
-  const products = state.products.filter(
-    (product) =>
-      product.company_id === state.config.company.seed_key &&
-      product.status !== "archived",
-  );
-  const code = text(line.supplier_sku),
-    barcode = text(line.barcode),
-    name = normalizeReadingName(text(line.description));
-  if (supplier && code) {
-    const binding = state.supplier_items?.find(
-      (item) =>
-        item.company_id === supplier.company_id &&
-        item.supplier_id === supplier.id &&
-        !item.archived &&
-        item.supplier_item_code === code,
-    );
-    const existing =
-      binding &&
-      products.find((product) => product.code === binding.product_code);
-    if (existing) return existing;
-    for (const invoice of allInvoices(state).filter((invoice) =>
-      supplierMatches(supplier, invoice.supplier),
-    )) {
-      const prior = invoice.lines.find(
-        (item) => item.supplier_item_code === code,
-      );
-      const product =
-        prior &&
-        products.find((product) => product.code === prior.product_code);
-      if (product) return product;
-    }
-  }
-  if (barcode) {
-    const product = products.find((product) => product.barcode === barcode);
-    if (product) return product;
-    for (const invoice of allInvoices(state)) {
-      const prior = invoice.lines.find((item) => item.barcode === barcode);
-      const matched =
-        prior && products.find((item) => item.code === prior.product_code);
-      if (matched) return matched;
-    }
-  }
-  if (!name) return undefined;
-  const direct = products.find((product) =>
-    [product.name_en, product.name_fa].some(
-      (value) => value && normalizeReadingName(value) === name,
-    ),
-  );
-  if (direct) return direct;
-  for (const invoice of allInvoices(state)) {
-    const previous = invoice.lines.find(
-      (item) => normalizeReadingName(item.description) === name,
-    );
-    const product =
-      previous &&
-      products.find((product) => product.code === previous.product_code);
-    if (product) return product;
-  }
-  return undefined;
+  return resolveReadingProductMatch(state, supplier, line)?.product;
 }
 export function suggestReadingLocation(
   state: DemoState,
@@ -784,8 +977,10 @@ export function mapReadingLine(
   source: InvoiceReadingLine,
   index: number,
   statuses: string[] = [],
+  actor?: AuthenticatedActor,
 ): InvoiceLine {
-  const product = matchReadingProduct(state, supplier, source),
+  const matched = resolveReadingProductMatch(state, supplier, source, actor);
+  const product = matched?.product,
     company = state.config.company.seed_key;
   const category = product?.pricing_category ?? "",
     configCategory =
@@ -884,8 +1079,10 @@ export function mapReadingLine(
   if (split.uncertain) checks.push("description");
   if (unit === "case" && !new Decimal(pack).gt(0))
     checks.push("units_per_case");
+  if (matched?.provenance.requires_check) checks.push("product_code");
   const line: InvoiceLine = {
     id: createId("invoice-line"),
+    ...(matched ? { reading_product_match: matched.provenance } : {}),
     company_id: company,
     product_code: product?.code ?? "NEW",
     description: printedDescription,
@@ -1340,7 +1537,14 @@ export function importInvoiceReadings(
           state,
           actor,
           invoice,
-          mapReadingLine(state, supplier, line, index, checks.lines[index]),
+          mapReadingLine(
+            state,
+            supplier,
+            line,
+            index,
+            checks.lines[index],
+            actor,
+          ),
         );
         mapped.current_selling_price = regularPrice(
           state,

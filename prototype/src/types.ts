@@ -278,6 +278,19 @@ export type InvoiceCheckReceipts = Record<
   { checked_by_user_id: string; checked_at: string }
 >;
 
+export interface InvoiceReadingProductMatch {
+  product_code: string;
+  basis:
+    | "supplier_code"
+    | "supplier_description"
+    | "barcode"
+    | "catalog_name"
+    | "other_supplier_description";
+  earlier_delivery: boolean;
+  requires_check: boolean;
+  /** Retained evidence only; never included in the invoice read DTO. */
+  source_invoice_id?: string;
+}
 export type InvoiceLine = Omit<
   (typeof demoSeed.demo_invoice.lines)[number],
   | "confidence"
@@ -330,6 +343,7 @@ export type InvoiceLine = Omit<
   supplier_item_id?: string;
   supplier_item_code?: string;
   supplier_item_code_inferred?: boolean;
+  reading_product_match?: InvoiceReadingProductMatch;
   quantity_unit?: "cases" | "units" | "kg" | "lb";
   quantity_entered?: string | number;
   case_cost_before_tax?: string;

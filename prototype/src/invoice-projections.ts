@@ -12,9 +12,13 @@ import { effectiveInvoiceLocation } from "./received";
 import {
   invoiceAuthorityScope,
   requireInvoiceAuthority,
+  canInvoiceAuthority,
 } from "./invoice-authority";
 import type { DemoInvoice, DemoState, InvoiceLine } from "./types";
-import { normalizeInvoiceReceivingReview } from "./invoice-checks";
+import {
+  invoiceCheckField,
+  normalizeInvoiceReceivingReview,
+} from "./invoice-checks";
 
 type InvoiceLineMoney =
   | "unit_cost_before_tax"
@@ -26,11 +30,17 @@ type InvoiceLineMoney =
   | "line_tax"
   | "short_before_tax"
   | "short_tax";
+export type InvoiceProductMatchReadDTO = Pick<
+  NonNullable<InvoiceLine["reading_product_match"]>,
+  "product_code" | "basis" | "earlier_delivery" | "requires_check"
+>;
 export type InvoiceLineView = Omit<
   InvoiceLine,
-  "demo_note" | InvoiceLineMoney
+  "demo_note" | InvoiceLineMoney | "reading_product_match"
 > &
-  Partial<Pick<InvoiceLine, InvoiceLineMoney>>;
+  Partial<Pick<InvoiceLine, InvoiceLineMoney>> & {
+    reading_product_match?: InvoiceProductMatchReadDTO;
+  };
 type InvoiceMoney =
   "subtotal" | "tax" | "final_total" | "payable_after_open_shorts";
 export type InvoiceView = Omit<
@@ -193,6 +203,53 @@ const invoiceMoneyKeys = [
 ] as const;
 
 /** No raw correction, approval reason, source handle or margin enters this view. */
+function projectReadingProductMatch(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  line: InvoiceLine,
+): { reading_product_match?: InvoiceProductMatchReadDTO } {
+  const match = line.reading_product_match;
+  if (
+    !match ||
+    match.product_code !== line.product_code ||
+    ![
+      "supplier_code",
+      "supplier_description",
+      "barcode",
+      "catalog_name",
+      "other_supplier_description",
+    ].includes(match.basis) ||
+    !state.products.some(
+      (product) =>
+        product.company_id === state.config.company.seed_key &&
+        product.code === line.product_code,
+    )
+  )
+    return {};
+  const prior = [state.invoice, ...(state.invoices ?? [])].find(
+    (invoice) =>
+      invoice.company_id === state.config.company.seed_key &&
+      invoice.id === match.source_invoice_id,
+  );
+  return {
+    reading_product_match: {
+      product_code: match.product_code,
+      basis: match.basis,
+      requires_check:
+        match.requires_check === true &&
+        Boolean(
+          line.low_confidence_fields?.some(
+            (field) => invoiceCheckField(field) === "product_code",
+          ),
+        ),
+      earlier_delivery:
+        match.earlier_delivery === true &&
+        prior?.status === "posted" &&
+        canInvoiceAuthority(state, actor, "invoices.read", prior.id),
+    },
+  };
+}
+
 export function invoiceView(
   state: DemoState,
   actor: AuthenticatedActor,
@@ -252,6 +309,7 @@ export function invoiceView(
         : original.branch,
     lines: invoice.lines.map((line) => ({
       ...select(line, lineKeys),
+      ...projectReadingProductMatch(state, current, line),
       ...(costs ? select(line, lineMoneyKeys) : {}),
       ...(line.order_new_item_match
         ? {

@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import { Check, X } from "lucide-react";
 import { useDemo } from "../../store";
 import {
+  Badge,
   BufferedInput,
   Button,
   ConfirmDialog,
@@ -62,11 +63,20 @@ export function LineEditor({
   onClose(): void;
   anchor(): void;
 }) {
-  const { state, t, money } = useDemo();
+  const { state, t, money, lang } = useDemo();
   const line = invoice.lines[index];
   const product = state.products.find(
     (x) => x.company_id === invoice.company_id && x.code === line.product_code,
   );
+  const importedMatch =
+    line.reading_product_match?.product_code === line.product_code
+      ? line.reading_product_match
+      : undefined;
+  const checkMatch =
+    importedMatch?.requires_check &&
+    line.low_confidence_fields?.some(
+      (field) => invoiceCheckField(field) === "product_code",
+    );
   const [english, setEnglish] = useState(
     line.new_name_en ?? product?.name_en ?? line.description,
   );
@@ -344,6 +354,41 @@ export function LineEditor({
                 <Field
                   className="receiving-full"
                   label={t("Matched product", "کالای مرتبط")}
+                  readingField="product_code"
+                  readingHint={t(
+                    "Check the match against the product and pack printed on the invoice.",
+                    "تطبیق کالا و بسته‌بندی را با موارد چاپ‌شده روی فاکتور بررسی کنید.",
+                  )}
+                  hint={
+                    importedMatch &&
+                    product &&
+                    (importedMatch.earlier_delivery || checkMatch) ? (
+                      <>
+                        {importedMatch.earlier_delivery && (
+                          <>
+                            {t("Matched to “", "تطبیق با «")}
+                            <bdi dir="auto">
+                              {lang === "fa" && product.name_fa
+                                ? product.name_fa
+                                : product.name_en}
+                            </bdi>
+                            {t(
+                              "” from an earlier delivery.",
+                              "» از دریافت قبلی.",
+                            )}
+                          </>
+                        )}
+                        {checkMatch && (
+                          <>
+                            {" "}
+                            <Badge tone="pending">
+                              {t("Check the match", "تطبیق را بررسی کنید")}
+                            </Badge>
+                          </>
+                        )}
+                      </>
+                    ) : undefined
+                  }
                 >
                   <Select
                     id={id("matching")}
@@ -358,6 +403,7 @@ export function LineEditor({
                               x.code === value,
                           );
                           item.product_code = value;
+                          item.reading_product_match = undefined;
                           item.supplier_item_id = undefined;
                           item.pricing_category =
                             matched?.pricing_category ?? "";
