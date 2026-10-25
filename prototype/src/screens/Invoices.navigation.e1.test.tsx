@@ -163,6 +163,57 @@ function ActualInvoices() {
   ) : null;
 }
 
+it("lists the active posted invoice once at its location and in All locations", async () => {
+  const state = initialState();
+  const posted = structuredClone(
+    state.invoices!.find(
+      (invoice) => invoice.status === "posted" && invoice.branch === "Branch 1",
+    )!,
+  );
+  state.invoice = posted;
+  const locationCount = state.invoices!.filter(
+    (invoice) => invoice.status === "posted" && invoice.branch === "Branch 1",
+  ).length;
+  const allCount = state.invoices!.filter(
+    (invoice) => invoice.status === "posted",
+  ).length;
+  fixture = await authenticatedProviderFixture({
+    state,
+    role: "manager",
+    actorOptions: { selection: { kind: "location", location_id: "Branch 1" } },
+  });
+  render(
+    <DemoProvider options={fixture.options}>
+      <ActualInvoices />
+    </DemoProvider>,
+  );
+  await renderedUiReady(() => currentDemo?.authStage === "complete");
+  fireEvent.click(
+    await screen.findByRole("tab", { name: `Posted ${locationCount}` }),
+  );
+  const postedTable = () =>
+    document.querySelector<HTMLDivElement>(".invoice-posted-table")!;
+  await waitFor(() => expect(postedTable()).not.toBeNull());
+  expect(
+    within(postedTable()).getAllByRole("link", {
+      name: posted.supplier_invoice_number,
+    }),
+  ).toHaveLength(1);
+  expect(
+    currentDemo.state.invoices.some((invoice) => invoice.id === posted.id),
+  ).toBe(false);
+  expect(currentDemo.state.invoice?.id).toBe(posted.id);
+  await act(async () => {
+    await currentDemo.setBranch("all");
+  });
+  await screen.findByRole("tab", { name: `Posted ${allCount}` });
+  expect(
+    within(postedTable()).getAllByRole("link", {
+      name: posted.supplier_invoice_number,
+    }),
+  ).toHaveLength(1);
+});
+
 it("browser Back retains the Posted list after an accepted invoice workspace read finishes late", async () => {
   const state = initialState();
   const target = state.invoices!.find(

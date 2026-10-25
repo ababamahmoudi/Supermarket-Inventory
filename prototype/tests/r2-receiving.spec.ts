@@ -1,4 +1,4 @@
-import { openInvoiceDetails } from "./helpers";
+import { openInvoiceDetails, setBranch } from "./helpers";
 import { expect, test } from "@playwright/test";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { openShellAction } from "./helpers";
@@ -227,6 +227,33 @@ for (const language of ["en", "fa"] as const) {
         .filter((entry) => entry.supplier === "Cedar Valley Foods Inc.")
         .map((entry) => entry.amount),
     ).toEqual(["96.35"]);
+    // The public saved list omits the active workspace; Posted must include it
+    // immediately at its receiving location and in the aggregate selection.
+    await page.goto("/#invoices?tab=posted");
+    const postedRow = page.locator(".invoice-posted-table tbody tr").filter({
+      has: page.getByRole("link", {
+        name: imported.supplier_invoice_number,
+        exact: true,
+      }),
+    });
+    await expect(postedRow).toBeVisible({ timeout: 1000 });
+    await expect(postedRow).toHaveCount(1);
+    await expect(
+      page.getByRole("tab", {
+        name: word(language, "Posted 1", "ثبت‌شده 1"),
+        exact: true,
+      }),
+    ).toBeVisible();
+    await setBranch(page, "all");
+    await expect(postedRow).toBeVisible({ timeout: 1000 });
+    await expect(postedRow).toHaveCount(1);
+    await expect(
+      page.getByRole("tab", {
+        name: word(language, "Posted 1", "ثبت‌شده 1"),
+        exact: true,
+      }),
+    ).toBeVisible();
+    await setBranch(page, imported.branch);
     await page.goto("/#approvals");
     const group = page.getByTestId(`invoice-approval-group-${imported.id}`);
     const approveAll = group.getByRole("button", {

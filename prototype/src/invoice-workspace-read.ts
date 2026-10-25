@@ -28,6 +28,7 @@ import {
 import { createId } from "./ids";
 import type { DemoState, DemoInvoice } from "./types";
 import { normalizeInvoiceReceivingReview } from "./invoice-checks";
+import { invoiceRecords } from "./invoice-records";
 
 function canonicalInvoice(state: DemoState, id: string): DemoInvoice {
   const invoice =
@@ -168,7 +169,7 @@ export function invoiceWorkspaceRead(
   > = {};
   const blockers = invoiceBlockers(working, actor, blockerLineIndexes);
   const blockersById: Record<string, ReturnType<typeof invoiceBlockers>> = {};
-  for (const row of [state.invoice, ...(state.invoices ?? [])]) {
+  for (const row of invoiceRecords(state, state.config.company.seed_key)) {
     if (!canInvoiceAuthority(state, actor, "invoices.cost_read", row.id))
       continue;
     const draft = cloneWithAuthority(state);

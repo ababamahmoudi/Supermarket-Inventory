@@ -52,6 +52,11 @@ import {
 } from "../invoice-file-access";
 import { clearInvoiceOrderLine } from "../invoice-orders";
 import type { InvoiceReadDTO } from "../invoice-projections";
+import {
+  invoiceRecords,
+  invoiceListStage,
+  type InvoiceListTab as InvoiceTab,
+} from "../invoice-records";
 import { setInvoiceWeightQuantity } from "../invoice-weight";
 import {
   applyReviewedInvoiceMove,
@@ -114,13 +119,6 @@ import "./invoices-c7.css";
 import "./manual-entry.css";
 import "./received-c.css";
 
-type InvoiceTab =
-  | "drafts"
-  | "processing"
-  | "needs_review"
-  | "ready_to_post"
-  | "posted"
-  | "cancelled";
 /** Keep the previous workspace as a resumable record before opening another. */
 function retainInvoiceWorkspace(draft: DemoState) {
   if (
@@ -377,25 +375,14 @@ function InvoicePickerList({
     },
     "invoice-picker-classification",
   );
-  const all = state.invoices ?? [];
+  const all = invoiceRecords(state, state.config.company.seed_key);
   const located = (invoice: InvoiceReadDTO) =>
     branch === "all" ||
     effectiveInvoiceLocation(state, invoice) === branch ||
     (invoice.status !== "posted" &&
       invoice.reviewer_origin_location_id === branch);
-  const stage = (invoice: InvoiceReadDTO): InvoiceTab | null => {
-    if (invoice.status === "posted") return "posted";
-    if (invoice.status === "reading") return "processing";
-    if (
-      invoice.status === "draft" ||
-      (invoice.status === "empty" && invoice.original_available)
-    )
-      return "drafts";
-    if (invoice.status !== "review") return null;
-    return classification.data?.[invoice.id]?.length === 0
-      ? "ready_to_post"
-      : "needs_review";
-  };
+  const stage = (invoice: InvoiceReadDTO) =>
+    invoiceListStage(invoice, classification.data ?? {});
   const count = (tab: InvoiceTab) =>
     all.filter((invoice) => located(invoice) && stage(invoice) === tab).length;
   const tab =
@@ -685,29 +672,16 @@ function InvoiceWorkspace({
   } | null>("invoices.tab", null);
   const validSelection =
     selectedView?.invoiceId === invoice.id && selectedView.stage === currentTab;
-  const allInvoiceRecords = [
-    ...new Map(
-      [...(state.invoices ?? []), invoice]
-        .filter((item) => item.company_id === state.config.company.seed_key)
-        .map((item) => [item.id, item]),
-    ).values(),
-  ];
+  const allInvoiceRecords = invoiceRecords(
+    { invoice, invoices: state.invoices },
+    state.config.company.seed_key,
+  );
   const atCurrentLocations = (item: InvoiceReadDTO) =>
     branch === "all" ||
     effectiveInvoiceLocation(state, item) === branch ||
     (item.status !== "posted" && item.reviewer_origin_location_id === branch);
-  const stageOf = (item: InvoiceReadDTO): InvoiceTab | null => {
-    if (item.status === "posted") return "posted";
-    if (item.status === "reading") return "processing";
-    if (
-      item.status === "draft" ||
-      (item.status === "empty" && item.original_available)
-    )
-      return "drafts";
-    if (item.status !== "review") return null;
-    const checks = workspace.blockersById[item.id];
-    return !checks || checks.length ? "needs_review" : "ready_to_post";
-  };
+  const stageOf = (item: InvoiceReadDTO) =>
+    invoiceListStage(item, workspace.blockersById);
   const tabCount = (value: InvoiceTab) =>
     allInvoiceRecords.filter(
       (item) => atCurrentLocations(item) && stageOf(item) === value,
@@ -1274,31 +1248,29 @@ function InvoiceWorkspace({
     setDeliveryErrors((current) => ({ ...current, [index]: {} }));
   }
 
-  const branchInvoices =
-    state.invoices?.filter(
-      (item) =>
-        item.company_id === state.config.company.seed_key &&
-        item.status === "posted" &&
-        (branch === "all" ||
-          effectiveInvoiceLocation(state, item) === branch) &&
-        (!supplierFilter ||
-          item.supplier === supplierFilter ||
-          supplierRecords(state).some(
-            (record) =>
-              record.name === supplierFilter &&
-              supplierMatches(record, item.supplier),
-          )) &&
-        (!fromFilter ||
-          companyCalendarDate(
-            state.config,
-            item.received_at ?? item.invoice_date,
-          ) >= fromFilter) &&
-        (!toFilter ||
-          companyCalendarDate(
-            state.config,
-            item.received_at ?? item.invoice_date,
-          ) <= toFilter),
-    ) ?? [];
+  const branchInvoices = allInvoiceRecords.filter(
+    (item) =>
+      item.company_id === state.config.company.seed_key &&
+      item.status === "posted" &&
+      (branch === "all" || effectiveInvoiceLocation(state, item) === branch) &&
+      (!supplierFilter ||
+        item.supplier === supplierFilter ||
+        supplierRecords(state).some(
+          (record) =>
+            record.name === supplierFilter &&
+            supplierMatches(record, item.supplier),
+        )) &&
+      (!fromFilter ||
+        companyCalendarDate(
+          state.config,
+          item.received_at ?? item.invoice_date,
+        ) >= fromFilter) &&
+      (!toFilter ||
+        companyCalendarDate(
+          state.config,
+          item.received_at ?? item.invoice_date,
+        ) <= toFilter),
+  );
   const savedDrafts = allInvoiceRecords.filter(
     (item) =>
       atCurrentLocations(item) &&

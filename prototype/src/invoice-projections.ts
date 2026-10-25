@@ -19,6 +19,7 @@ import {
   invoiceCheckField,
   normalizeInvoiceReceivingReview,
 } from "./invoice-checks";
+import { invoiceRecords } from "./invoice-records";
 
 type InvoiceLineMoney =
   | "unit_cost_before_tax"
@@ -430,13 +431,7 @@ export function projectInvoiceState(
   invoice_workspace: InvoiceWorkspaceRead | null;
 } {
   actor = freshActor(state, actor);
-  const records = new Map(
-    [...(state.invoices ?? []), state.invoice].map((invoice) => [
-      invoice.id,
-      invoice,
-    ]),
-  );
-  const views = [...records.values()]
+  const views = invoiceRecords(state, state.config.company.seed_key)
     .filter((invoice) => {
       try {
         return can(
