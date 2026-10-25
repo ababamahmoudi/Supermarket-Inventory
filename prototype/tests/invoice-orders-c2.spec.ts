@@ -343,7 +343,18 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
     "Refused / sent back with the driver · 6 · $6.60",
   );
   await expect(postedLine).toContainText("Accept new cost");
-  await expect(postedLine.getByRole("cell").nth(2)).toHaveText("$1.10");
+  expect(
+    new Decimal(after.invoice.lines[0].unit_cost_before_tax).toFixed(4),
+  ).toBe("1.1000");
+  if ((page.viewportSize()?.width ?? 1440) < 760) {
+    const summary = postedLine.locator(".receiving-phone-quantity");
+    await expect(summary).toBeVisible();
+    await expect(summary).toContainText("· $1.1000");
+  } else {
+    const cost = postedLine.locator(".receiving-cost-cell");
+    await expect(cost).toBeVisible();
+    await expect(cost).toHaveText("$1.1000");
+  }
   await expect(
     page.locator(
       ".posted-invoice-document input, .posted-invoice-document select",

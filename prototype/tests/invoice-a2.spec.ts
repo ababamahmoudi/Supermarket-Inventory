@@ -324,7 +324,21 @@ test("Supplier invoice links open the actual posted document and retained origin
   }
   await invoiceLink.click();
   await expect(page).toHaveURL(/#invoices\?id=/);
-  const original = page.locator(".invoice-original-media img");
+  const phone = (page.viewportSize()?.width ?? 1440) < 760;
+  const originalDialog = () =>
+    page.getByRole("dialog", {
+      name: /^(Original invoice|اصل فاکتور)$/,
+    });
+  const showOriginal = async () => {
+    if (!phone) return;
+    await page
+      .getByRole("button", { name: /^(View original|مشاهده اصل)/ })
+      .click();
+    await expect(originalDialog()).toBeVisible();
+  };
+  await showOriginal();
+  const original = page.locator(".invoice-original-media img:visible");
+  await expect(original).toHaveCount(1);
   await expect(original).toBeVisible();
   await expect(original).toHaveJSProperty("complete", true);
   expect(
@@ -431,11 +445,36 @@ test("Supplier invoice links open the actual posted document and retained origin
   await expect(document).toContainText("FV-20390");
   await expect(document.locator("input,select,textarea")).toHaveCount(0);
   await expect(page.locator(".invoice-preview-text")).toHaveCount(0);
+  if (phone) {
+    await originalDialog().locator(".ui-dialog-header .ui-icon-button").click();
+    await expect(originalDialog()).not.toBeVisible();
+  }
   await setLanguage(page, "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await expect(original).toHaveAttribute("src", source.data);
+  await showOriginal();
+  if (phone) {
+    // Closing/reopening the fullscreen viewer creates a new Blob URL. The
+    // source bytes must remain identical across the language change.
+    const translatedSource = await original.evaluate(async (image) => {
+      const bytes = await (
+        await fetch(image.getAttribute("src")!)
+      ).arrayBuffer();
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      return {
+        text: new TextDecoder().decode(bytes),
+        sha256: Array.from(new Uint8Array(digest))
+          .map((byte) => byte.toString(16).padStart(2, "0"))
+          .join(""),
+      };
+    });
+    expect(translatedSource).toEqual({
+      text: retainedSource,
+      sha256: source.sha256,
+    });
+  } else await expect(original).toHaveAttribute("src", source.data);
   await expect(document).toContainText("FV-20390");
   await page.reload();
+  await showOriginal();
   await expect(original).toBeVisible();
   await expect(original).toHaveJSProperty("complete", true);
   expect(
