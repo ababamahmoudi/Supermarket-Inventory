@@ -403,9 +403,7 @@ it("pairs each posted total label with its amount and retains all original invoi
       expect(row.querySelector("dd")?.textContent).toMatch(/\$/);
     });
     expect(rows[4]).toHaveClass("posted-invoice-payable");
-    const title = mounted.container.querySelector(
-      ".posted-invoice-title-row",
-    )!;
+    const title = mounted.container.querySelector(".posted-invoice-title-row")!;
     expect(title).toHaveTextContent(original.supplier_invoice_number);
     expect(
       within(title as HTMLElement).getByText("Posted"),
