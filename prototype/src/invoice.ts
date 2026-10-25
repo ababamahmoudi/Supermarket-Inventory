@@ -1411,7 +1411,7 @@ export function postInvoice(
         type: "received",
         reference: `${invoice.supplier_invoice_number}:line:${lineIndex + 1}`,
         by: invoice.receiving_employee!,
-        at: now,
+        at: invoice.received_at ?? now,
         invoice_id: invoice.id,
         line_index: lineIndex,
       });

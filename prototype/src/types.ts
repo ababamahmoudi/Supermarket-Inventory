@@ -398,6 +398,7 @@ export type DemoInvoice = Omit<
     };
     invoice_date?: string;
     received_at?: string;
+    imported_received_source?: "handwriting" | "invoice_date" | "unresolved";
     receiving_employee?: string;
     due_date?: string;
     posted_at?: string;

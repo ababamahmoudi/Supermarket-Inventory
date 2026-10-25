@@ -9,6 +9,7 @@ import {
   rememberInvoiceSupplierItem,
 } from "./invoice";
 import { paymentTermsDays } from "./invoice-entry";
+import { importedReadingReceived } from "./invoice-reading-dates";
 import {
   saveSupplier,
   supplierMatches,
@@ -522,13 +523,14 @@ export function actionableReadingChecks(
     supplier: text(value.supplier_name),
     supplier_invoice_number: text(value.supplier_invoice_number),
     invoice_date: readingExpiryDate(text(value.invoice_date)) ?? "",
+    received_at: importedReadingReceived(state.config, value).received_at,
     order_reference: text(value.order_reference),
     bill_to: text(value.bill_to),
     ship_to: text(value.ship_to) || text(value.branch_hint),
     subtotal: decimal(value.subtotal, 2),
     tax: decimal(value.tax, 2),
     final_total: decimal(value.final_total, 2),
-    low_confidence_fields: checks.header,
+    low_confidence_fields: [...checks.header, "received_at"],
   };
   for (const field of [
     "supplier",
@@ -1187,11 +1189,13 @@ export function importInvoiceReadings(
     invoice.final_total_manual = true;
     invoice.payable_after_open_shorts = invoice.final_total;
     invoice.short_lines = [];
-    invoice.received_at = now.toISOString();
+    const received = importedReadingReceived(state.config, value);
+    invoice.received_at = received.received_at;
+    invoice.imported_received_source = received.source;
     invoice.receiving_employee = actor.actor;
     invoice.import_warnings = list(value.warnings);
     invoice.import_handwritten_notes = list(value.handwritten_notes);
-    invoice.low_confidence_fields = checks.header;
+    invoice.low_confidence_fields = [...checks.header, "received_at"];
     for (const field of [
       "supplier",
       "supplier_invoice_number",

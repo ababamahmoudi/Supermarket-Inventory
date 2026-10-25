@@ -822,8 +822,9 @@ function InvoiceWorkspace({
         invoice.received_at,
       );
       setReceivedError(undefined);
-      updateInvoice((draft) => {
+      updateInvoice((draft, actor) => {
         draft.invoice.received_at = instant;
+        acknowledgeInvoiceCheck(draft, actor, "received_at");
       });
     } catch (cause) {
       setReceivedError(

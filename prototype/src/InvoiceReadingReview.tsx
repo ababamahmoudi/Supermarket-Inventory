@@ -246,9 +246,13 @@ export function ReadingCheckProvider({
 /** Adds review affordances to the normal editable field without replacing its input. */
 export function ReadingField({
   readingField,
+  readingHint,
   labelAdornment,
   ...props
-}: ComponentProps<typeof BaseField> & { readingField?: string }) {
+}: ComponentProps<typeof BaseField> & {
+  readingField?: string;
+  readingHint?: string;
+}) {
   const context = useContext(CheckContext);
   const { t } = useDemo();
   const helpId = useId();
@@ -278,10 +282,12 @@ export function ReadingField({
   const field = context?.fields.find(
     (value) => invoiceCheckField(value) === key,
   );
-  const hint = t(
-    "The AI wasn't sure about this. Compare it with the photo.",
-    "هوش مصنوعی از این مورد مطمئن نبود. با عکس مقایسه کنید.",
-  );
+  const hint =
+    readingHint ??
+    t(
+      "The AI wasn't sure about this. Compare it with the photo.",
+      "هوش مصنوعی از این مورد مطمئن نبود. با عکس مقایسه کنید.",
+    );
   const child = isValidElement<{ onChange?: (...args: never[]) => unknown }>(
     props.children,
   )

@@ -1,7 +1,14 @@
 import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { useDemo } from "../../store";
-import { Button, DateField, Field, Select, usePopover } from "../../ui";
+import {
+  Button,
+  DateField,
+  Field as BaseField,
+  Select,
+  usePopover,
+} from "../../ui";
+import { ReadingField as Field } from "../../InvoiceReadingReview";
 import { formatDate, LtrValue } from "../../presentation";
 
 /** A compact summary keeps three details columns level; edits stay in one popup. */
@@ -9,12 +16,14 @@ export function ReceivedField({
   date,
   time,
   employee,
+  source,
   onReceived,
   onEmployee,
 }: {
   date: string;
   time: string;
   employee: string;
+  source?: "handwriting" | "invoice_date" | "unresolved";
   onReceived(date: string, time: string): void;
   onEmployee(value: string): void;
 }) {
@@ -28,7 +37,22 @@ export function ReceivedField({
       popupRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
   }, [open, popupRef]);
   return (
-    <Field className="receiving-received-field" label={t("Received", "دریافت")}>
+    <Field
+      className="receiving-received-field"
+      readingField="received_at"
+      readingHint={
+        source === "handwriting"
+          ? t(
+              "Taken from the handwriting on the invoice",
+              "از دست‌نوشتهٔ روی فاکتور گرفته شده است",
+            )
+          : t(
+              "Set to the invoice date; change it if delivery was another day",
+              "بر اساس تاریخ فاکتور تنظیم شده؛ اگر تحویل روز دیگری بود آن را تغییر دهید",
+            )
+      }
+      label={t("Received", "دریافت")}
+    >
       <div className="receiving-readonly-field receiving-received-summary">
         <span
           title={`${date}, ${time} · ${employee || t("Not added", "اضافه نشده")}`}
@@ -68,22 +92,22 @@ export function ReceivedField({
                 }
               }}
             >
-              <Field label={t("Received date", "تاریخ دریافت")}>
+              <BaseField label={t("Received date", "تاریخ دریافت")}>
                 <DateField
                   id="invoice-received-date"
                   value={date}
                   onChange={(value) => onReceived(value, time)}
                 />
-              </Field>
-              <Field label={t("Received time", "زمان دریافت")}>
+              </BaseField>
+              <BaseField label={t("Received time", "زمان دریافت")}>
                 <input
                   id="invoice-received-time"
                   dir="ltr"
                   value={time}
                   onChange={(event) => onReceived(date, event.target.value)}
                 />
-              </Field>
-              <Field label={t("Received by", "دریافت‌کننده")}>
+              </BaseField>
+              <BaseField label={t("Received by", "دریافت‌کننده")}>
                 <Select
                   id="invoice-employee"
                   value={employee}
@@ -95,7 +119,7 @@ export function ReceivedField({
                       label: person.name,
                     }))}
                 />
-              </Field>
+              </BaseField>
               <Button variant="secondary" onClick={() => close(true)}>
                 {t("Done", "انجام شد")}
               </Button>

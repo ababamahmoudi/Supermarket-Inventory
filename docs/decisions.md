@@ -439,3 +439,7 @@ A rejected product/price request can be corrected within pricing rules and permi
 **Why:** correct quantities and costs are the core of receiving; this removes a race without changing validation, Decimal maths or what is saved.
 
 **Scope:** opt-in. Screens that correct a value at once while typing (Labels copies snap back to 1 with an error) keep the plain `NumberField`.
+
+### 2026-10-25 — R2b 1.1 imported delivery dates (default pending owner confirmation)
+
+Imported historical readings use a recognizable handwritten delivery date/time in the configured company timezone, stored as UTC. Otherwise use the invoice date at local noon; live/simulated upload and manual entry keep now. Mark either imported choice as a Received question with its source explanation. Initial received stock events use that delivery instant; import/posting/audit timestamps remain the actual command time. Date-only handwriting uses noon and a missing handwritten year uses the invoice year. Multiple competing handwritten dates, expiry/phone-note dates, ambiguous numeric dates, invalid dates and nonexistent local DST times are not guessed: fall back to invoice-date noon, or leave Received unresolved when no valid invoice date exists. The reviewer can change or acknowledge the result. This is the requested migration default for Ali to confirm.

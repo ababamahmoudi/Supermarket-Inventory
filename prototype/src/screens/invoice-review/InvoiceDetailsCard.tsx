@@ -270,6 +270,7 @@ export function InvoiceDetailsCard({
               date={receivedLocal.date}
               time={receivedLocal.time}
               employee={invoice.receiving_employee ?? ""}
+              source={invoice.imported_received_source}
               onReceived={onReceived}
               onEmployee={(value) => {
                 void edit("receiving_employee", value);

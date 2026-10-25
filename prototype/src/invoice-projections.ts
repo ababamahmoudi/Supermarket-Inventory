@@ -155,6 +155,7 @@ const invoiceKeys = [
   "demo_original_snapshot",
   "invoice_date",
   "received_at",
+  "imported_received_source",
   "receiving_employee",
   "due_date",
   "posted_at",
