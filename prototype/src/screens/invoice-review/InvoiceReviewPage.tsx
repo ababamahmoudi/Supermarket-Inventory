@@ -111,7 +111,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
   const missing = guidance.map((x) => x.label).join("\n");
   return (
     <div
-      className="receiving-review"
+      className="receiving-review ui-form-surface"
       data-testid="invoice-review"
       ref={root}
       style={{ minHeight: reservedHeight || undefined }}

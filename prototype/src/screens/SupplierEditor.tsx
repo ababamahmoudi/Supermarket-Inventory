@@ -191,7 +191,7 @@ export function SupplierEditor({
           ? t("Edit supplier", "ویرایش تأمین‌کننده")
           : t("Add supplier", "افزودن تأمین‌کننده")
       }
-      className="manual-entry-dialog supplier-editor-dialog"
+      className="manual-entry-dialog supplier-editor-dialog ui-form-surface"
     >
       <form
         className="stack manual-entry-form"

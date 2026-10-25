@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { ChevronDown } from "lucide-react";
 import { useDemo } from "../../store";
 import {
   BufferedInput,
+  BufferedTextarea,
   Button,
   Disclosure,
   DateField,
@@ -354,23 +355,28 @@ export function InvoiceDetailsCard({
                     "شماره مالیاتی تأمین‌کننده (اختیاری)",
                   ],
                 };
+                const inputProps = {
+                  id: `invoice-${key.replaceAll("_", "-")}`,
+                  dir: "ltr" as const,
+                  value:
+                    key === "currency"
+                      ? (invoice.import_currency ?? "")
+                      : (readingRecord[key] ?? ""),
+                  onChange: (
+                    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+                  ) =>
+                    edit(
+                      key === "currency" ? "import_currency" : key,
+                      event.target.value,
+                    ),
+                };
                 return (
                   <Field key={key} readingField={key} label={t(...labels[key])}>
-                    <BufferedInput
-                      id={`invoice-${key.replaceAll("_", "-")}`}
-                      dir="ltr"
-                      value={
-                        key === "currency"
-                          ? (invoice.import_currency ?? "")
-                          : (readingRecord[key] ?? "")
-                      }
-                      onChange={(e) =>
-                        edit(
-                          key === "currency" ? "import_currency" : key,
-                          e.target.value,
-                        )
-                      }
-                    />
+                    {key === "bill_to" || key === "ship_to" ? (
+                      <BufferedTextarea {...inputProps} rows={2} />
+                    ) : (
+                      <BufferedInput {...inputProps} />
+                    )}
                   </Field>
                 );
               })}

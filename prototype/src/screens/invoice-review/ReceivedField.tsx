@@ -46,10 +46,12 @@ export function ReceivedField({
               "Taken from the handwriting on the invoice",
               "از دست‌نوشتهٔ روی فاکتور گرفته شده است",
             )
-          : t(
-              "Set to the invoice date; change it if delivery was another day",
-              "بر اساس تاریخ فاکتور تنظیم شده؛ اگر تحویل روز دیگری بود آن را تغییر دهید",
-            )
+          : source === "invoice_date"
+            ? t(
+                "Set to the invoice date; change it if delivery was another day",
+                "بر اساس تاریخ فاکتور تنظیم شده؛ اگر تحویل روز دیگری بود آن را تغییر دهید",
+              )
+            : undefined
       }
       label={t("Received", "دریافت")}
     >
@@ -81,7 +83,7 @@ export function ReceivedField({
               id={id}
               role="dialog"
               aria-label={t("Change received details", "تغییر اطلاعات دریافت")}
-              className="ui-popover ui-form-large receiving-received-popover"
+              className="ui-popover ui-form-large ui-form-surface receiving-received-popover"
               data-popover-root=""
               style={position}
               onKeyDown={(event) => {

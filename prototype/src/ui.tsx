@@ -17,6 +17,7 @@ import {
   type ReactNode,
   type ComponentPropsWithRef,
   type InputHTMLAttributes,
+  type TextareaHTMLAttributes,
   type Ref,
   type CSSProperties,
   type KeyboardEvent,
@@ -2072,6 +2073,41 @@ export function BufferedInput({
   const buffer = useTypingBuffer(value);
   return (
     <input
+      {...props}
+      value={buffer.shown}
+      onFocus={(event) => {
+        buffer.focus();
+        onFocus?.(event);
+      }}
+      onChange={(event) => {
+        buffer.change(
+          event.target.value,
+          event.target.ownerDocument.activeElement === event.target,
+        );
+        onChange?.(event);
+      }}
+      onBlur={(event) => {
+        buffer.blur();
+        onBlur?.(event);
+      }}
+    />
+  );
+}
+
+/** A multiline saved value uses the same keystroke buffer as receiving inputs. */
+export function BufferedTextarea({
+  value,
+  onChange,
+  onFocus,
+  onBlur,
+  ...props
+}: Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "value"> & {
+  value: string | number | null | undefined;
+  ref?: Ref<HTMLTextAreaElement>;
+}) {
+  const buffer = useTypingBuffer(value);
+  return (
+    <textarea
       {...props}
       value={buffer.shown}
       onFocus={(event) => {

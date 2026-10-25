@@ -851,3 +851,8 @@
   > .ui-button.button-destructive:not(:disabled):is(:hover, :active) {
   background: var(--danger);
 }
+
+/* Opt-in surface fields for receiving and structured dialog compositions. */
+.ui-form-surface {
+  --field-fill: var(--surface);
+}
