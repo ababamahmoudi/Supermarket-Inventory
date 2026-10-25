@@ -8,6 +8,7 @@ import type {
   InvoiceLine,
   CompanyConfig,
   DemoInvoice,
+  InvoiceCheckReceipts,
 } from "./types";
 import {
   validCost,
@@ -21,6 +22,21 @@ export function invoiceCheckField(field: string): string {
     (
       {
         supplier_name: "supplier",
+        invoice_number: "supplier_invoice_number",
+        english_name: "description",
+        name_en: "description",
+        new_name_en: "description",
+        product_name: "description",
+        printed_description: "description",
+        qty_received: "qty_received_at_posting",
+        delivered_quantity: "qty_received_at_posting",
+        quantity_invoiced: "quantity_entered",
+        source_quantity: "quantity_entered",
+        source_received_quantity: "qty_received_at_posting",
+        source_quantity_unit: "quantity_unit",
+        source_cost_before_tax: "unit_cost_before_tax",
+        cost_per_case_before_tax: "case_cost_before_tax",
+        import_currency: "currency",
         quantity: "quantity_entered",
         qty_invoiced: "quantity_entered",
         unit: "quantity_unit",
@@ -138,10 +154,53 @@ export function acknowledgeInvoiceCheck(
   if (!record) throw new Error("Choose an invoice line.");
   if (lineIndex !== undefined && field === "taxable")
     state.invoice.lines[lineIndex].taxable_inferred = false;
+  acknowledgeRecordCheck(record, actor.user_id, field);
+}
+
+/** Receipts use canonical field names; aliases are one human question. */
+function acknowledgeRecordCheck(
+  record: {
+    low_confidence_fields?: string[];
+    checked_fields?: InvoiceCheckReceipts;
+  },
+  userId: string,
+  field: string,
+): void {
+  const key = invoiceCheckField(field);
+  if (
+    !(record.low_confidence_fields ?? []).some(
+      (value) => invoiceCheckField(value) === key,
+    )
+  )
+    return;
   record.low_confidence_fields = record.low_confidence_fields?.filter(
-    (value) =>
-      value !== field && invoiceCheckField(value) !== invoiceCheckField(field),
+    (value) => invoiceCheckField(value) !== key,
   );
+  record.checked_fields ??= {};
+  record.checked_fields[key] = {
+    checked_by_user_id: userId,
+    checked_at: new Date().toISOString(),
+  };
+}
+
+export function acknowledgeInvoiceOtherChargeCheck(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  index: number,
+  field: string,
+): void {
+  requireInvoiceAuthority(
+    state,
+    actor,
+    "invoices.edit",
+    state.invoice.id,
+    true,
+  );
+  if (state.invoice.status === "posted")
+    throw new Error("Choose a draft invoice.");
+  const charge = state.invoice.other_charges?.[index];
+  if (!charge) throw new Error("Choose an invoice charge.");
+  acknowledgeRecordCheck(charge, actor.user_id, field);
 }
 
 /** An explicit absence is a review decision; an unflagged empty field stays quiet. */
@@ -292,6 +351,8 @@ export function confirmInvoiceLineChecks(
         "Check that the case cost matches the unit cost and units per case.",
       );
   }
+  for (const field of [...(line.low_confidence_fields ?? [])])
+    acknowledgeRecordCheck(line, actor.user_id, field);
   line.low_confidence_fields = [];
   line.taxable_inferred = false;
   line.review_confirmed = true;

@@ -10,6 +10,7 @@ import {
 } from "../../InvoiceReadingReview";
 import {
   acknowledgeInvoiceCheck,
+  acknowledgeInvoiceOtherChargeCheck,
   invoiceCheckField,
   invoiceTotalsCheck,
 } from "../../invoice-checks";
@@ -78,8 +79,16 @@ export function TotalsCard({
               update((draft, actor) => {
                 for (const field of fields)
                   acknowledgeInvoiceCheck(draft, actor, field);
-                for (const charge of draft.invoice.other_charges ?? [])
-                  charge.low_confidence_fields = [];
+                for (const [index, charge] of (
+                  draft.invoice.other_charges ?? []
+                ).entries())
+                  for (const field of [...(charge.low_confidence_fields ?? [])])
+                    acknowledgeInvoiceOtherChargeCheck(
+                      draft,
+                      actor,
+                      index,
+                      field,
+                    );
               })
             }
           >

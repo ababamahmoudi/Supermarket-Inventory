@@ -23,6 +23,8 @@ import { LtrValue, LtrText } from "../../presentation";
 import {
   invoiceCheckField,
   acknowledgeInvoiceFieldAbsence,
+  visibleInvoiceCheckFields,
+  acknowledgeInvoiceCheck,
   setInvoiceLineCategory,
   confirmInvoiceLineChecks,
   InvoiceLineConfirmationError,
@@ -65,6 +67,7 @@ export function LineEditor({
 }) {
   const { state, t, money, lang } = useDemo();
   const line = invoice.lines[index];
+  const checkCount = visibleInvoiceCheckFields(line).length;
   const product = state.products.find(
     (x) => x.company_id === invoice.company_id && x.code === line.product_code,
   );
@@ -141,9 +144,7 @@ export function LineEditor({
       index,
       (item, draft, actor) => {
         change(item, draft, actor);
-        item.low_confidence_fields = item.low_confidence_fields?.filter(
-          (x) => invoiceCheckField(x) !== field,
-        );
+        acknowledgeInvoiceCheck(draft, actor, field, index);
       },
       recalculate,
     );
@@ -193,14 +194,12 @@ export function LineEditor({
       : undefined;
   const saveName = async () => {
     if (english !== (line.new_name_en ?? product?.name_en ?? line.description))
-      await update((draft) => {
+      await update((draft, actor) => {
         const item = draft.invoice.lines[index];
         item.new_name_en = english;
         item.review_changed_after_confirmation ||= item.review_confirmed;
         item.review_confirmed = false;
-        item.low_confidence_fields = item.low_confidence_fields?.filter(
-          (x) => !["description", "new_name_en"].includes(invoiceCheckField(x)),
-        );
+        acknowledgeInvoiceCheck(draft, actor, "description", index);
       });
   };
   const confirm = async () => {
@@ -338,12 +337,12 @@ export function LineEditor({
             } as import("react").CSSProperties
           }
         >
-          {!!line.low_confidence_fields?.length && (
+          {checkCount > 0 && (
             <p className="receiving-editor-check-note">
               <span aria-hidden="true" />
               {t(
-                `${line.low_confidence_fields.length} highlighted fields: compare them with the original before you confirm.`,
-                `${line.low_confidence_fields.length} فیلد مشخص‌شده: پیش از تأیید با اصل فاکتور مقایسه کنید.`,
+                `${checkCount} highlighted ${checkCount === 1 ? "field" : "fields"}: compare ${checkCount === 1 ? "it" : "them"} with the original before you confirm.`,
+                `${checkCount} فیلد مشخص‌شده: پیش از تأیید با اصل فاکتور مقایسه کنید.`,
               )}
             </p>
           )}
@@ -1267,6 +1266,7 @@ export function LineEditor({
             </Button>
             <Button
               className="receiving-line-confirm"
+              id={id("confirm")}
               onClick={() => {
                 void confirm();
               }}

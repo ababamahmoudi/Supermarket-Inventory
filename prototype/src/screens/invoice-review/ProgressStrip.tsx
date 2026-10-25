@@ -19,6 +19,7 @@ export function ProgressStrip({
   onAttemptPost(): void;
 }) {
   const { t } = useDemo();
+  const checkCount = invoiceCheckCount(invoice);
   const confirmed = invoice.lines.filter((x) => x.review_confirmed).length;
   const difference = invoiceTotalsCheck(invoice);
   const amount = difference.totalDifference ?? difference.subtotalDifference;
@@ -40,8 +41,8 @@ export function ProgressStrip({
       <span className="receiving-progress-checks">
         <CircleAlert size={16} aria-hidden="true" />
         {t(
-          `${invoiceCheckCount(invoice)} highlighted fields`,
-          `${invoiceCheckCount(invoice)} فیلد مشخص‌شده`,
+          `${checkCount} highlighted ${checkCount === 1 ? "field" : "fields"}`,
+          `${checkCount} فیلد مشخص‌شده`,
         )}
       </span>
       <span className="receiving-progress-totals" data-match={!amount}>

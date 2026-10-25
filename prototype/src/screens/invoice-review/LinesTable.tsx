@@ -4,6 +4,7 @@ import Decimal from "decimal.js";
 import { useDemo } from "../../store";
 import { SegmentedControl, TableRowLink } from "../../ui";
 import { LtrValue, QuantityText } from "../../presentation";
+import { visibleInvoiceCheckFields } from "../../invoice-checks";
 import { invoiceLineId } from "../../invoice-line-links";
 import { categoryLabel } from "../../formatters";
 import { weightQuantityFromLb } from "../../weighed";
@@ -140,7 +141,7 @@ export function LinesTable({
               (x) =>
                 x.key === (line.pricing_category ?? product?.pricing_category),
             );
-            const count = line.low_confidence_fields?.length ?? 0;
+            const count = visibleInvoiceCheckFields(line).length;
             const lineId = invoiceLineId(line, index);
             const rowId = `invoice-line-row-${index}`;
             const expanded = openLine === index;

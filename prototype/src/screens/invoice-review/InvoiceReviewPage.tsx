@@ -9,8 +9,14 @@ import { InvoiceDetailsCard } from "./InvoiceDetailsCard";
 import { LinesTable } from "./LinesTable";
 import { TotalsCard } from "./TotalsCard";
 import { MissingPanel } from "./MissingPanel";
+import {
+  nextInvoiceAttention,
+  revealInvoiceReviewTarget,
+  focusInvoiceReviewTarget,
+} from "./review-attention";
 import { missingGroups } from "./missing-groups";
 import { OriginalViewer } from "./OriginalViewer";
+import { acknowledgeInvoiceOtherChargeCheck } from "../../invoice-checks";
 import { useInvoiceLineHighlight } from "./useInvoiceLineHighlight";
 import { useReviewScrollAnchor } from "./useReviewScrollAnchor";
 import type { ReviewProps } from "./types";
@@ -65,39 +71,18 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
     setAttentionNavigationKey((value) => value + 1);
     clearAnchor();
     setReservedHeight(0);
-    if (target === "invoice-details-fields") {
-      const disclosure = root.current?.querySelector<HTMLButtonElement>(
-        ".receiving-details-phone-toggle[aria-expanded='false']",
-      );
-      disclosure?.click();
-    }
     if (line !== undefined) setOpenLine(line);
-    requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      if (root.current) revealInvoiceReviewTarget(root.current, target);
       requestAnimationFrame(() => {
-        const element = document.getElementById(target);
-        element?.scrollIntoView({ block: "center", behavior: "smooth" });
-        element?.focus({ preventScroll: true });
-      }),
-    );
+        clearAnchor();
+        focusInvoiceReviewTarget(target);
+      });
+    });
   };
   const next = () => {
-    const index = invoice.lines.findIndex(
-      (x) => !x.review_confirmed || x.low_confidence_fields?.length,
-    );
-    if (index >= 0) {
-      show(`invoice-line-${index}-detail`, index);
-      return;
-    }
-    show(
-      (invoice.low_confidence_fields ?? []).some((x) =>
-        /subtotal|tax|final_total/.test(x),
-      ) ||
-        (invoice.other_charges ?? []).some(
-          (charge) => charge.low_confidence_fields?.length,
-        )
-        ? "invoice-totals"
-        : "invoice-details-fields",
-    );
+    const attention = nextInvoiceAttention(invoice);
+    if (attention) show(attention.target, attention.line);
   };
   const missing = missingGroups(
     invoice,
@@ -202,14 +187,13 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
           <InvoiceOtherCharges
             invoice={invoice}
             onEdit={(index, field, value) => {
-              void update((draft) => {
+              void update((draft, actor) => {
                 const charge = draft.invoice.other_charges?.[index];
                 if (!charge) return;
                 if (field === "line_total") charge.amount = value;
                 else if (field === "taxable") charge.taxable = value === "true";
                 else if (field === "description") charge.description = value;
-                charge.low_confidence_fields =
-                  charge.low_confidence_fields?.filter((key) => key !== field);
+                acknowledgeInvoiceOtherChargeCheck(draft, actor, index, field);
                 recalculateInvoice(draft.invoice, draft.config);
               });
             }}

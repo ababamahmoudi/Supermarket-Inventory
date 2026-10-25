@@ -248,7 +248,10 @@ export function InvoiceDetailsCard({
               value={invoice.payment_terms ?? ""}
               inferred={invoice.payment_terms_inferred}
               onChange={(value) =>
-                update((draft) => setInvoicePaymentTerms(draft.invoice, value))
+                update((draft, actor) => {
+                  setInvoicePaymentTerms(draft.invoice, value);
+                  acknowledgeInvoiceCheck(draft, actor, "payment_terms");
+                })
               }
             />
             <Field
@@ -259,7 +262,8 @@ export function InvoiceDetailsCard({
                 id="invoice-due-date"
                 value={invoice.due_date ?? ""}
                 onChange={(value) =>
-                  update((draft) => {
+                  update((draft, actor) => {
+                    acknowledgeInvoiceCheck(draft, actor, "due_date");
                     draft.invoice.due_date = value;
                     draft.invoice.due_date_manual = true;
                   })
@@ -343,6 +347,7 @@ export function InvoiceDetailsCard({
                 return (
                   <Field key={key} readingField={key} label={t(...labels[key])}>
                     <BufferedInput
+                      id={`invoice-${key.replaceAll("_", "-")}`}
                       dir="ltr"
                       value={
                         key === "currency"

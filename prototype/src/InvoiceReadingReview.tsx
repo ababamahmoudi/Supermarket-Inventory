@@ -118,6 +118,7 @@ export function InvoiceOtherCharges({
                       {onEdit ? (
                         <a
                           href="#invoice-charge-editor"
+                          data-charge-index={index}
                           data-control-kind="disclosure"
                           aria-expanded={openCharge === index}
                           onClick={(event) => {
@@ -298,7 +299,7 @@ export function ReadingField({
       } as Record<string, string>
     )[suffix];
   const field = context?.fields.find(
-    (value) => invoiceCheckField(value) === key,
+    (value) => invoiceCheckField(value) === invoiceCheckField(key ?? ""),
   );
   const hint =
     readingHint ??
