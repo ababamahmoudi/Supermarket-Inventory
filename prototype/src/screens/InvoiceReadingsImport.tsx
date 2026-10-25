@@ -110,6 +110,8 @@ function ImportPreview({
   const [locations, setLocations] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const previewList = useRef<HTMLDivElement>(null);
+  const [previewListHeight, setPreviewListHeight] = useState(0);
   const scope = {
     company_id: state.config.company.seed_key,
     kind: "company_shared" as const,
@@ -222,7 +224,7 @@ function ImportPreview({
       title={t("Import invoice readings", "ورود خوانش فاکتورها")}
       description={t("Choose what to import.", "موارد ورود را انتخاب کنید.")}
       icon={<FileInput size={22} />}
-      className="invoice-readings-dialog dialog-wide dialog-phone-fullscreen"
+      className={`invoice-readings-dialog dialog-wide dialog-phone-fullscreen ui-form-surface${exported.invoices.length === 1 ? " invoice-readings-single" : ""}`}
       footer={
         <>
           <Button variant="secondary" disabled={busy} onClick={onClose}>
@@ -238,7 +240,9 @@ function ImportPreview({
             onClick={() => void importSelected()}
           >
             {t(
-              `Import ${selectedRows.length} invoices`,
+              selectedRows.length === 1
+                ? "Import 1 invoice"
+                : `Import ${selectedRows.length} invoices`,
               `ورود ${selectedRows.length} فاکتور`,
             )}
           </Button>
@@ -254,6 +258,10 @@ function ImportPreview({
           aria-label={t("Reading values", "مقادیر خوانش")}
           value={mode}
           onChange={(value) => {
+            const height =
+              previewList.current?.getBoundingClientRect().height ?? 0;
+            // Keep the body's scroll range while the protected query replaces its rows.
+            setPreviewListHeight((current) => Math.max(current, height));
             setMode(value as ImportMode);
             setSelected(null);
           }}
@@ -271,250 +279,252 @@ function ImportPreview({
           ]}
         />
       </div>
-      {preview.pending && (
-        <p role="status">{t("Preparing preview…", "آماده‌سازی پیش‌نمایش…")}</p>
-      )}
-      {preview.error ? (
-        <p role="alert" className="form-error">
-          {importError(preview.error, t)}
-        </p>
-      ) : (
-        <DataTable
-          className="invoice-readings-table"
-          columns={[
-            {
-              key: "selected",
-              label: t("Import", "ورود"),
-              required: true,
-              fixedWidth: true,
-              width: 64,
-            },
-            {
-              key: "page",
-              label: t("Page 1", "صفحهٔ ۱"),
-              required: true,
-              fixedWidth: true,
-              width: 88,
-            },
-            {
-              key: "supplier",
-              label: t("Supplier", "تأمین‌کننده"),
-              required: true,
-            },
-            {
-              key: "number",
-              label: t("Invoice number", "شمارهٔ فاکتور"),
-              priority: 2,
-              minWidth: 140,
-            },
-            {
-              key: "date",
-              label: t("Invoice date", "تاریخ فاکتور"),
-              priority: 5,
-              align: "end",
-              minWidth: 128,
-            },
-            {
-              key: "location",
-              label: t("Location", "مکان"),
-              priority: 2,
-              minWidth: locationWidth,
-            },
-            {
-              key: "lines",
-              label: t("Lines", "ردیف‌ها"),
-              required: true,
-              fixedWidth: true,
-              width: 64,
-              align: "end",
-            },
-            {
-              key: "total",
-              label: t("Total", "جمع کل"),
-              priority: 3,
-              align: "end",
-              minWidth: 100,
-            },
-            {
-              key: "checks",
-              label: t("Review", "بررسی"),
-              priority: 4,
-              minWidth: 160,
-            },
-            {
-              key: "status",
-              label: t("Status", "وضعیت"),
-              required: true,
-              minWidth: 160,
-            },
-          ]}
-          phoneList={{
-            name: "supplier",
-            value: "status",
-            selection: "selected",
-            secondary: [
-              "number",
-              "page",
-              "date",
-              "location",
-              "lines",
-              "total",
-              "checks",
-            ],
-          }}
-        >
-          <thead>
-            <tr>
-              <th>{t("Import", "ورود")}</th>
-              <th>{t("Page 1", "صفحهٔ ۱")}</th>
-              <th>{t("Supplier", "تأمین‌کننده")}</th>
-              <th>{t("Invoice number", "شمارهٔ فاکتور")}</th>
-              <th>{t("Invoice date", "تاریخ فاکتور")}</th>
-              <th>{t("Location", "مکان")}</th>
-              <th>{t("Lines", "ردیف‌ها")}</th>
-              <th>{t("Total", "جمع کل")}</th>
-              <th>{t("Review", "بررسی")}</th>
-              <th>{t("Status", "وضعیت")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const disabled = Boolean(row.duplicate_reason || row.error);
-              const original = exported.invoices.find(
-                (invoice) => invoice.id === row.id,
-              );
-              const firstPage = original?.pages[0];
-              const number = row.invoice_number || row.id;
-              const location = locations[row.id] ?? row.location ?? "";
-              return (
-                <tr key={row.id} data-import-id={row.id}>
-                  <td>
-                    <Checkbox
-                      checked={!disabled && selection.includes(row.id)}
-                      disabled={disabled || busy}
-                      aria-label={`${t("Import", "ورود")} ${number}`}
-                      onChange={(checked) =>
-                        setSelected((current) =>
-                          selectInvoiceReading(
-                            rows,
-                            current ?? selection,
-                            row.id,
-                            checked,
-                          ),
-                        )
-                      }
-                    />
-                  </td>
-                  <td>
-                    {firstPage ? (
-                      <img
-                        className="invoice-reading-thumbnail"
-                        src={`data:${firstPage.mime};base64,${firstPage.data}`}
-                        alt={`${t("Page 1 of", "صفحهٔ ۱ از")} ${number}`}
+      <p className="invoice-readings-mode-help">
+        {t(
+          "Choose the original AI reading or your saved corrections; invoices without corrections use AI.",
+          "خوانش اصلی هوش مصنوعی یا اصلاحات ذخیره‌شدهٔ خود را انتخاب کنید؛ برای فاکتورهای بدون اصلاح از هوش مصنوعی استفاده می‌شود.",
+        )}
+      </p>
+      <div
+        className="invoice-import-preview-list"
+        ref={previewList}
+        style={{ minBlockSize: previewListHeight || undefined }}
+      >
+        {preview.pending && (
+          <p role="status">
+            {t("Preparing preview…", "آماده‌سازی پیش‌نمایش…")}
+          </p>
+        )}
+        {preview.error ? (
+          <p role="alert" className="form-error">
+            {importError(preview.error, t)}
+          </p>
+        ) : (
+          <DataTable
+            className="invoice-readings-table ui-table-form"
+            columns={[
+              {
+                key: "selected",
+                label: t("Import", "ورود"),
+                required: true,
+                fixedWidth: true,
+                width: 64,
+              },
+              {
+                key: "page",
+                label: t("Page 1", "صفحهٔ ۱"),
+                required: true,
+                fixedWidth: true,
+                width: 84,
+              },
+              {
+                key: "supplier",
+                label: t("Supplier", "تأمین‌کننده"),
+                required: true,
+                minWidth: 160,
+              },
+              {
+                key: "number",
+                label: t("Invoice number", "شمارهٔ فاکتور"),
+                required: true,
+                minWidth: 164,
+              },
+              {
+                key: "date",
+                label: t("Invoice date", "تاریخ فاکتور"),
+                priority: 5,
+                align: "end",
+                minWidth: 128,
+              },
+              {
+                key: "location",
+                label: t("Location", "مکان"),
+                priority: 2,
+                minWidth: locationWidth,
+              },
+              {
+                key: "lines",
+                label: t("Lines", "ردیف‌ها"),
+                required: true,
+                fixedWidth: true,
+                width: 64,
+                align: "end",
+              },
+              {
+                key: "total",
+                label: t("Total", "جمع کل"),
+                priority: 3,
+                align: "end",
+                minWidth: 100,
+              },
+              {
+                key: "status",
+                label: t("Status", "وضعیت"),
+                required: true,
+                minWidth: 160,
+              },
+            ]}
+            phoneList={{
+              name: "supplier",
+              value: "status",
+              selection: "selected",
+              secondary: [
+                "number",
+                "page",
+                "date",
+                "location",
+                "lines",
+                "total",
+              ],
+            }}
+          >
+            <thead>
+              <tr>
+                <th>{t("Import", "ورود")}</th>
+                <th>{t("Page 1", "صفحهٔ ۱")}</th>
+                <th>{t("Supplier", "تأمین‌کننده")}</th>
+                <th>{t("Invoice number", "شمارهٔ فاکتور")}</th>
+                <th>{t("Invoice date", "تاریخ فاکتور")}</th>
+                <th>{t("Location", "مکان")}</th>
+                <th>{t("Lines", "ردیف‌ها")}</th>
+                <th>{t("Total", "جمع کل")}</th>
+                <th>{t("Status", "وضعیت")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const disabled = Boolean(row.duplicate_reason || row.error);
+                const original = exported.invoices.find(
+                  (invoice) => invoice.id === row.id,
+                );
+                const firstPage = original?.pages[0];
+                const number = row.invoice_number || row.id;
+                const location = locations[row.id] ?? row.location ?? "";
+                return (
+                  <tr key={row.id} data-import-id={row.id}>
+                    <td>
+                      <Checkbox
+                        checked={!disabled && selection.includes(row.id)}
+                        disabled={disabled || busy}
+                        aria-label={`${t("Import", "ورود")} ${number}`}
+                        onChange={(checked) =>
+                          setSelected((current) =>
+                            selectInvoiceReading(
+                              rows,
+                              current ?? selection,
+                              row.id,
+                              checked,
+                            ),
+                          )
+                        }
                       />
-                    ) : (
-                      <NotAdded />
-                    )}
-                  </td>
-                  <td>
-                    <LtrValue value={row.supplier} />
-                  </td>
-                  <td>
-                    <LtrValue value={row.invoice_number} />
-                  </td>
-                  <td>
-                    {row.invoice_date ? (
-                      <DateText value={row.invoice_date} />
-                    ) : (
-                      <NotAdded />
-                    )}
-                  </td>
-                  <td>
-                    <Select
-                      value={location}
-                      aria-label={`${t("Location for", "مکان برای")} ${number}`}
-                      aria-invalid={
-                        !disabled && selection.includes(row.id) && !location
-                      }
-                      disabled={disabled || busy}
-                      options={[
-                        {
-                          value: "",
-                          label: t(
-                            "Choose a location…",
-                            "یک مکان انتخاب کنید…",
-                          ),
-                        },
-                        ...configuredBranches(config).map((value) => ({
-                          value,
-                          label: branchLabel(config, value, lang),
-                        })),
-                      ]}
-                      onChange={(value) =>
-                        setLocations((current) => ({
-                          ...current,
-                          [row.id]: value,
-                        }))
-                      }
-                    />
-                  </td>
-                  <td>{row.line_count}</td>
-                  <td>{row.total ? money(row.total) : <NotAdded />}</td>
-                  <td>
-                    <div className="invoice-reading-badges">
-                      {row.checked && (
-                        <Badge tone="approved">
-                          {t("Checked by you", "بررسی‌شده توسط شما")}
-                        </Badge>
+                    </td>
+                    <td>
+                      {firstPage ? (
+                        <img
+                          className="invoice-reading-thumbnail"
+                          src={`data:${firstPage.mime};base64,${firstPage.data}`}
+                          alt={`${t("Page 1 of", "صفحهٔ ۱ از")} ${number}`}
+                        />
+                      ) : (
+                        <NotAdded />
                       )}
-                      {row.check_count > 0 && (
-                        <Badge tone="pending">
-                          {t(
-                            `${row.check_count} to check`,
-                            `${row.check_count} مورد برای بررسی`,
-                          )}
-                        </Badge>
-                      )}
+                    </td>
+                    <td>
+                      <LtrValue value={row.supplier} />
                       {mode === "checked" && !row.using_checked && (
-                        <span className="muted">
+                        <p className="invoice-import-reading-source">
                           {t(
                             "Uses AI reading; no checked values",
                             "خوانش هوش مصنوعی؛ مقادیر بررسی‌شده ندارد",
                           )}
-                        </span>
+                        </p>
                       )}
-                    </div>
-                  </td>
-                  <td>
-                    {row.duplicate_reason ? (
-                      <Badge wrap>
-                        {t("Already in the app", "از قبل در برنامه است")}
-                      </Badge>
-                    ) : row.in_file_duplicate_group ? (
-                      <Badge tone="pending" wrap>
-                        {t(
-                          "Same invoice twice in this file",
-                          "همین فاکتور دو بار در این فایل است",
+                    </td>
+                    <td>
+                      <LtrValue value={row.invoice_number} />
+                    </td>
+                    <td>
+                      {row.invoice_date ? (
+                        <DateText value={row.invoice_date} />
+                      ) : (
+                        <NotAdded />
+                      )}
+                    </td>
+                    <td>
+                      <Select
+                        value={location}
+                        aria-label={`${t("Location for", "مکان برای")} ${number}`}
+                        aria-invalid={
+                          !disabled && selection.includes(row.id) && !location
+                        }
+                        disabled={disabled || busy}
+                        options={[
+                          {
+                            value: "",
+                            label: t(
+                              "Choose a location…",
+                              "یک مکان انتخاب کنید…",
+                            ),
+                          },
+                          ...configuredBranches(config).map((value) => ({
+                            value,
+                            label: branchLabel(config, value, lang),
+                          })),
+                        ]}
+                        onChange={(value) =>
+                          setLocations((current) => ({
+                            ...current,
+                            [row.id]: value,
+                          }))
+                        }
+                      />
+                    </td>
+                    <td>{row.line_count}</td>
+                    <td>{row.total ? money(row.total) : <NotAdded />}</td>
+                    <td>
+                      <div className="invoice-import-status">
+                        {row.duplicate_reason ? (
+                          <Badge wrap>
+                            {t("Already in the app", "از قبل در برنامه است")}
+                          </Badge>
+                        ) : row.in_file_duplicate_group ? (
+                          <Badge tone="pending" wrap>
+                            {t(
+                              "Same invoice twice in this file",
+                              "همین فاکتور دو بار در این فایل است",
+                            )}
+                          </Badge>
+                        ) : row.error ? (
+                          <Badge tone="danger" wrap>
+                            {t("No usable reading", "خوانش قابل استفاده ندارد")}
+                          </Badge>
+                        ) : !location ? (
+                          <Badge tone="pending" wrap>
+                            {t("Choose a location", "یک مکان انتخاب کنید")}
+                          </Badge>
+                        ) : (
+                          <Badge
+                            tone={row.check_count > 0 ? "pending" : "approved"}
+                            wrap
+                          >
+                            {row.check_count > 0
+                              ? t(
+                                  `Ready · ${row.check_count} to check`,
+                                  `آماده · ${row.check_count} مورد برای بررسی`,
+                                )
+                              : t("Ready", "آماده")}
+                          </Badge>
                         )}
-                      </Badge>
-                    ) : row.error ? (
-                      <Badge tone="danger" wrap>
-                        {t("No usable reading", "خوانش قابل استفاده ندارد")}
-                      </Badge>
-                    ) : !location ? (
-                      <Badge tone="pending" wrap>
-                        {t("Choose a location", "یک مکان انتخاب کنید")}
-                      </Badge>
-                    ) : (
-                      <Badge wrap>{t("Ready", "آماده")}</Badge>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </DataTable>
-      )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </DataTable>
+        )}
+      </div>
       {missingLocation.length > 0 && (
         <p role="status">
           {t(
@@ -805,7 +815,7 @@ export default function InvoiceReadingsImport() {
         )}
         icon={<Trash2 size={22} />}
         iconTone="danger"
-        className="invoice-empty-store"
+        className="invoice-empty-store ui-form-surface"
         bodyClassName="ui-form-large"
         footer={
           <>

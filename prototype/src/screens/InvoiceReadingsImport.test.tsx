@@ -186,7 +186,7 @@ it("marks both in-file copies, preselects the complete one and lets a person swi
     within(dialog).queryByText("Already in the app"),
   ).not.toBeInTheDocument();
   expect(
-    within(dialog).getByRole("button", { name: "Import 1 invoices" }),
+    within(dialog).getByRole("button", { name: "Import 1 invoice" }),
   ).toBeEnabled();
   const mode = within(dialog).getByRole("group", { name: "Reading values" });
   expect(
@@ -202,6 +202,49 @@ it("marks both in-file copies, preselects the complete one and lets a person swi
   fireEvent.click(choices[1]);
   expect(choices[0]).toHaveAttribute("aria-checked", "false");
   expect(choices[1]).toHaveAttribute("aria-checked", "true");
+});
+
+it("shows one readiness status for the selected reading instead of contradictory review badges", async () => {
+  await openData();
+  const exported = parseInvoiceReadings(JSON.stringify(receivingFixture));
+  const entry = exported.invoices[1];
+  entry.checked_answer = structuredClone(entry.ai_reading);
+  exported.invoices = [entry];
+  fireEvent.change(screen.getByLabelText("Choose file…"), {
+    target: { files: [new File(["{}"], "fictional-preview.json")] },
+  });
+  await act(async () =>
+    ImportWorker.current.onmessage?.({
+      data: { ok: true, exported },
+    } as MessageEvent),
+  );
+  const dialog = await screen.findByRole("dialog", {
+    name: "Import invoice readings",
+  });
+  await renderedUiReady(() =>
+    Boolean(dialog.querySelector(".invoice-import-status .badge")),
+  );
+  let status = dialog.querySelector(".invoice-import-status")!;
+  const originalStatus = status.textContent;
+  expect(status).toHaveTextContent(/^Ready · \d+ to check$/);
+  expect(status.querySelectorAll(".badge")).toHaveLength(1);
+  expect(within(dialog).queryByText("Checked by you")).not.toBeInTheDocument();
+  expect(
+    within(dialog).getByText(
+      /Choose the original AI reading or your saved corrections/,
+    ),
+  ).toBeInTheDocument();
+  fireEvent.click(
+    within(dialog).getByRole("button", { name: "My checked values" }),
+  );
+  await renderedUiReady(() => {
+    const replacement = dialog.querySelector(".invoice-import-status");
+    return Boolean(replacement && replacement.textContent !== originalStatus);
+  });
+  status = dialog.querySelector(".invoice-import-status")!;
+  expect(status).toHaveTextContent(/^Ready(?: · \d+ to check)?$/);
+  expect(status.querySelectorAll(".badge")).toHaveLength(1);
+  expect(within(dialog).queryByText("Checked by you")).not.toBeInTheDocument();
 });
 
 it("cancelling empty-store confirmation preserves business data, confirming keeps settings", async () => {

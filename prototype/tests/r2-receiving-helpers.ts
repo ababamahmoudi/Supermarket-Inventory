@@ -98,7 +98,7 @@ export async function importReceivingFixture(
   await onPreview?.(preview);
   await preview
     .getByRole("button", {
-      name: word(language, "Import 1 invoices", "ورود 1 فاکتور"),
+      name: word(language, "Import 1 invoice", "ورود 1 فاکتور"),
       exact: true,
     })
     .click();

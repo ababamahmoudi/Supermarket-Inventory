@@ -404,7 +404,7 @@ Per-field buttons caused excessive controls. Confirm line acknowledges the entir
 
 ### 2026-10-21 — Highlight only actual questions
 
-Empty optional barcode, lot, printed expiry, handwritten note, order reference, bill-to and ship-to fields are never uncertainty. Missing required supplier, invoice number/date/total, line description/quantity/cost remains highlighted.
+Ordinary blank optional barcode, lot, printed expiry, handwritten note, order reference, bill-to and ship-to fields are quiet. R2b retains an explicit AI question even when the optional value is empty; Not on the invoice acknowledges its absence with who/when. Missing required supplier, invoice number/date/total, line description/quantity/cost remains highlighted.
 
 ### 2026-10-21 — Calculate missing paper totals
 
@@ -412,7 +412,7 @@ When total and tax exist derive subtotal as total minus tax; when subtotal and t
 
 ### 2026-10-21 — Rare printed evidence stays under More details
 
-Keep lot number, printed expiry, barcode and printed description out of the compact line editor by default. Only highlighted hidden barcode, lot, printed expiry or note evidence opens More details automatically; a question already visible in English name/description leaves it closed. Opening the section retains printed description and all evidence fields after acknowledgment.
+Keep lot number, printed expiry, barcode and printed description out of the compact line editor by default. Only nonempty highlighted hidden barcode, lot, printed expiry or note evidence opens More details automatically; explicit Next/Show may reveal an empty flagged field; a question already visible in English name/description leaves it closed. Opening the section retains printed description and all evidence fields after acknowledgment.
 
 ### 2026-10-21 — Correct and resubmit approvals
 
@@ -422,7 +422,7 @@ A rejected product/price request can be corrected within pricing rules and permi
 
 **Context:** the approved receiving reference requires a compact five-column table and quiet totals while the existing 2px stability and 25-line/2700px desktop budgets remain mandatory.
 
-**Decision:** use a dedicated receiving table, 48px closed rows for long lists and 8px work gaps, retaining normal typography, card tokens and 44px fields. Totals defaults to label/amount rows with calculated tags; Edit exposes the real fields, automatically shown for actual non-calculated questions or invalid attempted totals. Keep one whole-card Looks right and stable line identities. Phone details starts as a compact disclosure and expands through its chevron or needed-header navigation.
+**Decision:** use a dedicated receiving table, compact closed rows with at least 44px targets and small work gaps, retaining normal typography, card tokens and 44px fields. Totals defaults to label/amount rows with calculated tags; Edit exposes the real fields, automatically shown for actual non-calculated questions or invalid attempted totals. Keep one whole-card Looks right and stable line identities. Phone details starts as a compact disclosure and expands through its chevron or needed-header navigation.
 
 **Scoped reference variants:** `.ui-dialog-structured` footers use 44px intrinsic actions, surface-fill/1px-field-border secondary and filled danger, preserving general 40px/borderless rules elsewhere. Phone receiving Confirm spans its footer above two equal secondary actions; phone progress Next/Post use equal columns. Those two phone layouts allow stretched 44px actions; other buttons remain intrinsic. Below a 340px toolbar-container width, Rotate moves into More rather than wrapping, fitting the retained sidebar/top-bar layout.
 
@@ -443,3 +443,15 @@ A rejected product/price request can be corrected within pricing rules and permi
 ### 2026-10-25 — R2b 1.1 imported delivery dates (default pending owner confirmation)
 
 Imported historical readings use a recognizable handwritten delivery date/time in the configured company timezone, stored as UTC. Otherwise use the invoice date at local noon; live/simulated upload and manual entry keep now. Mark either imported choice as a Received question with its source explanation. Initial received stock events use that delivery instant; import/posting/audit timestamps remain the actual command time. Date-only handwriting uses noon and a missing handwritten year uses the invoice year. Multiple competing handwritten dates, expiry/phone-note dates, ambiguous numeric dates, invalid dates and nonexistent local DST times are not guessed: fall back to invoice-date noon, or leave Received unresolved when no valid invoice date exists. The reviewer can change or acknowledge the result. This is the requested migration default for Ali to confirm.
+
+### 2026-10-25 — Conservative import defaults retain evidence
+
+**Context:** historical papers omit fields and use inconsistent names, packs and terms. **Decision:** use configured currency; derive only compatible totals; infer terms from the latest strictly earlier same-supplier recognized paper; interpret Monthly as next-month first. Retain printed evidence, generated-code provenance and exact fractional-case cost basis. Extract only unambiguous contacts and never overwrite curated values. **Why:** reduce typing without manufacturing unresolved quantities, money or source evidence.
+
+### 2026-10-25 — Explicit absence and targeted review
+
+**Context:** an AI can explicitly question an empty optional field. **Decision:** keep that question until an edit, line confirmation or Not on the invoice receipt. Ordinary blanks stay quiet. Auto-open More details only for nonempty hidden questions; explicit Next/Show may reveal empty ones. Incomplete Post explains and focuses the actual fix without writing; authority/pending restrictions remain. **Why:** make review complete without unnecessary open sections or fabricated values.
+
+### 2026-10-25 — Reuse protected invoice state and correction flows
+
+**Context:** posted visibility, JSON entry and corrections must agree with receiving. **Decision:** share authorized workspace/saved selectors, retained Original viewing and receiving layout; add JSON entry without a reset. Received-date correction appends metadata; financial correction stays local until a reasoned canonical preview and confirmed append-only delta. Use shared 32px label actions and scoped surface-fill forms, keeping ordinary controls and the existing 2px/25-line stability budgets. **Why:** improve the workflow while retaining authority, source, money and physical evidence.

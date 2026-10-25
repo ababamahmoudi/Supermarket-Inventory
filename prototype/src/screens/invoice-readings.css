@@ -1,8 +1,9 @@
 .invoice-readings-mode {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  margin-block: 16px;
+  margin-block: 16px 8px;
   min-inline-size: 0;
 }
 .invoice-reading-thumbnail {
@@ -11,11 +12,17 @@
   block-size: 72px;
   object-fit: contain;
 }
-.invoice-reading-badges {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+.invoice-readings-mode-help {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-label);
+}
+.invoice-import-reading-source {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
 }
 .invoice-reading-summary {
   display: grid;
@@ -28,6 +35,7 @@
 }
 .invoice-readings-mode > .ui-segments {
   min-inline-size: 0;
+  max-inline-size: 100%;
 }
 .settings-form-card > p + button,
 .settings-form-card > p + input[hidden] + button {
@@ -186,4 +194,20 @@
   margin: 0;
   color: var(--text-muted);
   overflow-wrap: anywhere;
+}
+
+:root .ui-dialog.ui-dialog-structured.invoice-readings-dialog {
+  block-size: min(780px, calc(100dvh - 32px));
+}
+@media (min-width: 760px) {
+  :root
+    .ui-dialog.ui-dialog-structured.invoice-readings-dialog.invoice-readings-single {
+    block-size: min(520px, calc(100dvh - 32px));
+  }
+}
+.invoice-readings-dialog > .ui-dialog-body {
+  flex: 1;
+}
+.invoice-import-preview-list {
+  min-inline-size: 0;
 }

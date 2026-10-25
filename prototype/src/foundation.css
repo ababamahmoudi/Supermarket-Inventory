@@ -17,6 +17,11 @@
   --table-cell-padding: 12px;
 }
 
+/* Opt-in forms on surface cards retain the ordinary field states and borders. */
+.ui-form-surface {
+  --field-fill: var(--surface);
+}
+
 /* ── Fields: always look editable, on white cards and on grey panels ──
  * One selector, with its states nested inside it, so a state (hover, focus,
  * error, disabled) always outranks the resting border instead of losing to it. */
@@ -100,6 +105,17 @@
 :root .ui-data-table td.numeric > :is(div, span):only-child {
   justify-content: flex-end;
   justify-items: end;
+}
+
+/* Editable form controls inside a table use the ordinary field treatment. */
+:root .ui-data-table.ui-table-form .ui-input {
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: var(--shadow-focus);
+  }
 }
 
 /* The New order footer total lines up with the table's last money column
@@ -713,6 +729,9 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
+:root .ui-badge.badge.is-wrappable > .ui-status-dot {
+  margin-inline-end: 4px;
+}
 :root .ui-badge.badge.is-wrappable .ltr-fragment {
   display: inline;
   white-space: normal;
@@ -860,9 +879,4 @@
   > .ui-dialog-footer
   > .ui-button.button-destructive:not(:disabled):is(:hover, :active) {
   background: var(--danger);
-}
-
-/* Opt-in surface fields for receiving and structured dialog compositions. */
-.ui-form-surface {
-  --field-fill: var(--surface);
 }

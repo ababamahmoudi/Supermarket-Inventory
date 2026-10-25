@@ -110,7 +110,10 @@ async function chooseImport(page: Page, file: string) {
 async function importSelected(page: Page, count: number) {
   await page
     .getByRole("dialog", { name: "Import invoice readings", exact: true })
-    .getByRole("button", { name: `Import ${count} invoices`, exact: true })
+    .getByRole("button", {
+      name: count === 1 ? "Import 1 invoice" : `Import ${count} invoices`,
+      exact: true,
+    })
     .click();
   const summary = page.getByRole("dialog", {
     name: "Import complete",
@@ -137,7 +140,9 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
   // duplicate has a genuine persisted original and supplier invoice number.
   let preview = await chooseImport(page, sampleFile);
   await expect(
-    preview.getByText("Checked by you", { exact: true }),
+    preview
+      .locator(".invoice-import-status")
+      .getByText(/Ready(?: · \d+ to check)?/),
   ).toBeVisible();
   await preview
     .getByRole("button", { name: "My checked values", exact: true })

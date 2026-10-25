@@ -1,5 +1,13 @@
 # Project changelog
 
+## 2026-10-25 — R2b import, review and posted invoices
+
+- **1.1–1.10:** historical delivery-date provenance, configured currency, compatible total arithmetic, recognized/inferred terms, clean names/packs/codes, optional supplier contacts/title-case suggestion, exact case/weight handling, attributed absence acknowledgment and rename-safe supplier matching. Retain unresolved questions and original evidence.
+- **2.1–2.4:** stable Original viewing and buffered typing, durable alias acknowledgments and reachable checks, exact posting explanations/focus with no-write incomplete attempts, and level surface-fill details/address fields. Keep permission/pending guards, Decimal costs and existing 2px/25-line layout budgets.
+- **3.1–3.4:** consistent scoped Posted counts/lists, receiving-style posted layout and safe reading notes, append-only Received correction, staged reasoned financial corrections, and additive Photo/PDF/Manual/JSON entry. Original, financial, physical, stale-preview and authority protections remain.
+- **4.1–4.2:** clear typed empty-store confirmation and truthful stable import preview, including readiness, checked-source fallback, duplicates, destinations and thumbnails.
+- Added a [public click guide](PR_R2B_REVIEW.md) covering every item with wholly invented embedded-image papers, including staged MATCH-1/2/3 rename/fallback imports. Updated active requirements/model/workflow/design/default prose and linked the prior R2 guide. Exact-commit verification results belong to PR #29/latest checks; all seven checks remain required. No private exports, evidence images, startup/loading, service-worker, deployment or merge changes.
+
 ## 2026-10-22 — R2 approved receiving design
 
 - Review fixes (Claude): number and text boxes bound to saved values now keep every keystroke while they have focus (`BufferedInput`, used in the receiving editor, invoice details and totals, and by `NumberField` there through `keepTyping`). Before, a slower browser-database save could land between keystrokes, so typing "20" into Delivered could become "240" and "1.3" in Unit cost could become "13". A cleared box stays blank while typing and shows the saved value when the person leaves it. Supplier and payment-terms boxes in invoice details stay on one line with "…" (rule 7). The phone "View original" is a full-width card with page count and chevron, and the closed phone details card shows "N to check" (reference screen 05). Persian editor numbers and codes sit on the right edge (screen 07).
