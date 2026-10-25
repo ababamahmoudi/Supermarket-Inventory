@@ -10,7 +10,7 @@ import { categoryLabel } from "../../formatters";
 import { weightQuantityFromLb } from "../../weighed";
 import { ReadingMoney as Money } from "../../InvoiceReadingReview";
 import { LineEditor } from "./LineEditor";
-import type { ReviewProps } from "./types";
+import type { LineCommands, ReviewProps } from "./types";
 
 type LineFilter = "all" | "attention" | "confirmed";
 
@@ -19,6 +19,7 @@ export function LinesTable({
   workspace,
   update,
   editLine,
+  correction,
   onQuantity,
   openLine,
   onOpen,
@@ -28,16 +29,14 @@ export function LinesTable({
 }: {
   invoice: ReviewProps["invoice"];
   workspace: ReviewProps["workspace"];
-  update: ReviewProps["update"];
-  editLine: ReviewProps["editLine"];
   onQuantity: ReviewProps["onQuantity"];
   attemptedPost: boolean;
   openLine: number | null;
   attentionNavigationKey?: number;
   onOpen(index: number | null): void;
   anchor(element?: HTMLElement): void;
-}) {
-  const { state, t, lang } = useDemo();
+} & LineCommands) {
+  const { state, t, tCount, lang } = useDemo();
   const [filter, setFilter] = useState<LineFilter>("all");
   const [pinnedLine, setPinnedLine] = useState<{
     id: string;
@@ -75,33 +74,45 @@ export function LinesTable({
     <section className="list-box receiving-lines">
       <div className="receiving-lines-heading">
         <h2>{t("Invoice lines", "ردیف‌های فاکتور")}</h2>
-        <SegmentedControl
-          aria-label={t("Filter invoice lines", "فیلتر ردیف‌های فاکتور")}
-          value={filter}
-          showZeroCounts
-          options={[
-            {
-              value: "all",
-              label: t("All", "همه"),
-              count: invoice.lines.length,
-            },
-            {
-              value: "attention",
-              label: t("Needs attention", "نیازمند بررسی"),
-              count: attention,
-            },
-            {
-              value: "confirmed",
-              label: t("Confirmed", "تأییدشده"),
-              count: confirmed,
-            },
-          ]}
-          onChange={(value) => {
-            setPinnedLine(null);
-            setFilter(value as LineFilter);
-            onOpen(null);
-          }}
-        />
+        {correction ? (
+          <span className="muted">
+            {tCount(
+              "{{count}} line changed",
+              "{{count}} lines changed",
+              "{{count}} ردیف تغییر کرده",
+              "{{count}} ردیف تغییر کرده",
+              correction.changed.size,
+            )}
+          </span>
+        ) : (
+          <SegmentedControl
+            aria-label={t("Filter invoice lines", "فیلتر ردیف‌های فاکتور")}
+            value={filter}
+            showZeroCounts
+            options={[
+              {
+                value: "all",
+                label: t("All", "همه"),
+                count: invoice.lines.length,
+              },
+              {
+                value: "attention",
+                label: t("Needs attention", "نیازمند بررسی"),
+                count: attention,
+              },
+              {
+                value: "confirmed",
+                label: t("Confirmed", "تأییدشده"),
+                count: confirmed,
+              },
+            ]}
+            onChange={(value) => {
+              setPinnedLine(null);
+              setFilter(value as LineFilter);
+              onOpen(null);
+            }}
+          />
+        )}
       </div>
       <div
         className="receiving-lines-table"
@@ -135,17 +146,23 @@ export function LinesTable({
                 x.company_id === invoice.company_id &&
                 x.code === line.product_code,
             );
-            const name =
-              line.new_name_en || product?.name_en || line.description;
+            const name = correction
+              ? product?.name_en || line.new_name_en || line.description
+              : line.new_name_en || product?.name_en || line.description;
             const category = state.config.pricing_categories.find(
               (x) =>
                 x.key === (line.pricing_category ?? product?.pricing_category),
             );
-            const count = visibleInvoiceCheckFields(line).length;
+            const count = correction
+              ? 0
+              : visibleInvoiceCheckFields(line).length;
+            const confirmedLine = correction
+              ? !correction.changed.has(index)
+              : line.review_confirmed;
             const lineId = invoiceLineId(line, index);
             const rowId = `invoice-line-row-${index}`;
             const expanded = openLine === index;
-            const needsAttention = !line.review_confirmed || count > 0;
+            const needsAttention = !confirmedLine || count > 0;
             if (
               !expanded &&
               visiblePin !== lineId &&
@@ -153,21 +170,25 @@ export function LinesTable({
                 (filter === "confirmed" && !line.review_confirmed))
             )
               return null;
-            const status = line.review_confirmed
+            const status = confirmedLine
               ? "confirmed"
-              : count
+              : count || correction
                 ? "check"
                 : "unconfirmed";
-            const statusLabel = line.review_confirmed
-              ? t("Confirmed", "تأیید شد")
-              : line.review_changed_after_confirmation
-                ? t(
-                    "Changed after confirming: confirm again",
-                    "پس از تأیید تغییر کرد: دوباره تأیید کنید",
-                  )
-                : count
-                  ? t(`${count} to check`, `${count} برای بررسی`)
-                  : t("Not confirmed", "تأیید نشده");
+            const statusLabel = correction
+              ? confirmedLine
+                ? t("Retained posted line", "ردیف ثبت‌شده بدون تغییر")
+                : t("Changed in this correction", "در این اصلاح تغییر کرده")
+              : line.review_confirmed
+                ? t("Confirmed", "تأیید شد")
+                : line.review_changed_after_confirmation
+                  ? t(
+                      "Changed after confirming: confirm again",
+                      "پس از تأیید تغییر کرد: دوباره تأیید کنید",
+                    )
+                  : count
+                    ? t(`${count} to check`, `${count} برای بررسی`)
+                    : t("Not confirmed", "تأیید نشده");
             const toggle = (row?: HTMLElement) => {
               if (row) anchor(row);
               open(expanded ? null : index);
@@ -294,9 +315,9 @@ export function LinesTable({
                         aria-label={statusLabel}
                         title={statusLabel}
                       >
-                        {line.review_confirmed ? (
+                        {confirmedLine ? (
                           <Check size={13} strokeWidth={3} aria-hidden="true" />
-                        ) : count ? (
+                        ) : count || correction ? (
                           "!"
                         ) : null}
                       </span>
@@ -311,6 +332,10 @@ export function LinesTable({
                   >
                     <a
                       href="#invoice-line-editor"
+                      ref={(element) => {
+                        if (correction && index === 0)
+                          element?.setAttribute("autofocus", "");
+                      }}
                       className="invoice-line-toggle"
                       data-control-kind="disclosure"
                       aria-expanded={expanded}
@@ -416,8 +441,9 @@ export function LinesTable({
                         workspace={workspace}
                         index={index}
                         attemptedPost={attemptedPost}
-                        update={update}
-                        editLine={editLine}
+                        {...(correction
+                          ? { correction }
+                          : { update: update!, editLine: editLine! })}
                         onQuantity={onQuantity}
                         onClose={() => open(null)}
                         anchor={() => {

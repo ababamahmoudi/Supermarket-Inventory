@@ -15,6 +15,20 @@ export type EditLine = (
   ) => void,
   recalculate?: boolean,
 ) => void;
+/** A correction edits its local, authorized DTO; receiving commands stay separate. */
+export interface CorrectionLineActions {
+  onEdit(
+    index: number,
+    change: (line: InvoiceEditableLine) => void,
+    field?: string,
+  ): void;
+  onSelectProduct(index: number, code: string): void;
+  changed: ReadonlySet<number>;
+  retainedProductCodes: readonly string[];
+}
+export type LineCommands =
+  | { correction?: undefined; update: ReviewUpdate; editLine: EditLine }
+  | { correction: CorrectionLineActions; update?: never; editLine?: never };
 export interface ReviewProps {
   invoice: InvoicePurchaseReadDTO;
   workspace: InvoiceWorkspaceRead;

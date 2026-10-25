@@ -25,6 +25,9 @@ import {
 } from "./received";
 import { companyDate } from "./invoice";
 import { ledgerSummary, postPayment } from "./operations";
+import { mapReadingLine } from "./invoice-readings";
+import { invoiceLineAmount } from "./invoice-weight";
+import { invalidateCorrectionCaseBasis } from "./invoice-correction-fields";
 import type { DemoState } from "./types";
 import type { AuthenticatedActor } from "./authority-types";
 import { authenticatedTestActor } from "./authority-test-fixture";
@@ -53,7 +56,11 @@ function context(state: DemoState, branch = "Branch 1") {
   return actor;
 }
 
-function posted(taxable = false, delivered = 10) {
+function posted(
+  taxable = false,
+  delivered = 10,
+  prepare?: (state: DemoState) => void,
+) {
   const state = initialState();
   state.invoice = createInvoice(state, context(state), "Branch 1", true);
   Object.assign(state.invoice, {
@@ -69,6 +76,7 @@ function posted(taxable = false, delivered = 10) {
   setInvoiceLineQuantity(line, "10", "units", 1);
   line.qty_received_at_posting = delivered;
   line.unit_cost_before_tax = "1.0000";
+  prepare?.(state);
   recalculateInvoice(state.invoice, state.config);
   line.review_confirmed = true;
   line.date_tracking = false;
@@ -89,7 +97,9 @@ function input(state: DemoState, cost = "2.0000") {
 }
 function apply(
   state: DemoState,
-  proposal = input(state),
+  proposal: import("./invoice-corrections").InvoiceCorrectionInput = input(
+    state,
+  ),
   request = "correction-request-1",
 ) {
   const preview = invoiceContentCorrectionPreview(
@@ -118,6 +128,167 @@ function liability(state: DemoState, branch = "Branch 1") {
 }
 
 describe("immutable invoice content corrections", () => {
+  it("retains the explicit repeating-division case cost through preview, corrected totals and ledger delta", () => {
+    const state = posted(false, 10, (draft) => {
+      const line = draft.invoice.lines[0];
+      setInvoiceLineQuantity(line, "5000", "cases", 6);
+      line.case_cost_before_tax = "1.0000";
+      line.unit_cost_before_tax = "0.1667";
+    });
+    const original = structuredClone(state.invoice);
+    expect(original.final_total).toBe("5000.00");
+    const lines = structuredClone(original.lines);
+    lines[0].case_cost_before_tax = "2.0000";
+    lines[0].unit_cost_before_tax = "0.3333";
+    expect(invoiceLineAmount(lines[0])).toBe("10000.00");
+    const proposal = {
+      lines,
+      reason: "Correct the fictional exact case price.",
+    };
+    const preview = invoiceContentCorrectionPreview(
+      state,
+      context(state),
+      original.id,
+      proposal,
+    );
+    expect(preview.after.lines[0]).toMatchObject({
+      case_cost_before_tax: "2.0000",
+      unit_cost_before_tax: "0.3333",
+      line_total: "10000.00",
+    });
+    expect(preview.payable_delta).toBe("5000.00");
+    apply(state, proposal);
+    expect(effectiveInvoiceVersion(state, state.invoice).final_total).toBe(
+      "10000.00",
+    );
+    expect(liability(state)).toBe("10000.00");
+    expect(state.invoice).toEqual(original);
+  });
+  it.each(["", "no cost", "-1", "1.00001"])(
+    "rejects invalid case price %j with no business writes",
+    (caseCost) => {
+      const state = posted(false, 10, (draft) => {
+        const line = draft.invoice.lines[0];
+        setInvoiceLineQuantity(line, "2", "cases", 6);
+        line.unit_cost_before_tax = "1.0000";
+        line.case_cost_before_tax = "6.0000";
+      });
+      const before = structuredClone(state);
+      const proposal = input(state, "1.0000");
+      proposal.lines[0].case_cost_before_tax = caseCost;
+      expect(() =>
+        invoiceContentCorrectionPreview(
+          state,
+          context(state),
+          state.invoice.id,
+          proposal,
+        ),
+      ).toThrow("Enter a case cost with up to four decimal places on line 1.");
+      expect(state).toEqual(before);
+    },
+  );
+
+  it.each(["0", null, {}, [-1], [0.5], [1], ["0"], [Number.NaN], Array(1)])(
+    "rejects malformed cost-intent %j before any business write",
+    (unitCostIntent) => {
+      const state = posted();
+      const original = structuredClone(state);
+      const proposal = {
+        ...input(state),
+        unit_cost_reentered: unitCostIntent as never,
+      };
+      expect(() =>
+        invoiceContentCorrectionPreview(
+          state,
+          context(state),
+          state.invoice.id,
+          proposal,
+        ),
+      ).toThrow("Review the corrected unit-cost line selection.");
+      expect(state).toEqual(original);
+    },
+  );
+
+  for (const change of ["cost", "pack", "reentered cost"] as const) {
+    it(`invalidates an exact converted case basis for a ${change} correction without rewriting its evidence`, () => {
+      const state = posted(false, 10, (draft) => {
+        const line = draft.invoice.lines[0];
+        const mapped = mapReadingLine(
+          draft,
+          undefined,
+          {
+            description: "Fictional Orchard Tea",
+            unit: "CS",
+            quantity: "5000.5",
+            units_per_case: "6",
+            unit_cost_before_tax: "2.0000",
+            cost_basis: "case",
+            line_total: "10001.00",
+            taxable: false,
+          },
+          0,
+        );
+        const product = draft.products.find((item) => item.code === "0002")!;
+        Object.assign(line, mapped, {
+          product_code: "0002",
+          pricing_category: product.pricing_category,
+          tax_profile: product.tax_profile,
+          date_tracking: false,
+        });
+        expect(line).toMatchObject({
+          quantity_unit: "units",
+          qty_invoiced: 30003,
+          unit_cost_before_tax: "0.3333",
+          converted_case_cost_before_tax: "2.0000",
+          converted_case_units_per_case: 6,
+        });
+      });
+      const original = structuredClone(state.invoice);
+      const movements = structuredClone(state.stock_movements!);
+      expect(original.final_total).toBe("10001.00");
+      const lines = structuredClone(original.lines);
+      if (change === "cost") lines[0].unit_cost_before_tax = "0.3334";
+      if (change === "pack") lines[0].units_per_case = 12;
+      invalidateCorrectionCaseBasis(
+        original.lines[0],
+        lines[0],
+        change === "reentered cost",
+      );
+      const expected = change === "cost" ? "10003.00" : "10000.00";
+      expect(invoiceLineAmount(lines[0])).toBe(expected);
+      // Arbitrary client conversion values never become a canonical basis.
+      lines[0].converted_case_cost_before_tax = "9999.0000";
+      lines[0].converted_case_units_per_case = 1;
+      const proposal = {
+        lines,
+        reason:
+          "Replace the fictional converted case cost with the reviewed unit cost.",
+        unit_cost_reentered: change === "reentered cost" ? [0] : [],
+      };
+      const preview = invoiceContentCorrectionPreview(
+        state,
+        context(state),
+        original.id,
+        proposal,
+      );
+      expect(preview.after.final_total).toBe(expected);
+      expect(
+        preview.after.lines[0].converted_case_cost_before_tax,
+      ).toBeUndefined();
+      expect(preview.payable_delta).toBe(change === "cost" ? "2.00" : "-1.00");
+      const correction = apply(state, proposal, `converted-${change}`);
+      expect(correction.after.final_total).toBe(expected);
+      expect(effectiveInvoiceVersion(state, state.invoice).final_total).toBe(
+        expected,
+      );
+      expect(liability(state)).toBe(expected);
+      expect(state.invoice).toEqual(original);
+      expect(state.stock_movements!.slice(0, movements.length)).toEqual(
+        movements,
+      );
+    });
+  }
+
   it("appends cost deltas once, retains originals/files/previous versions and creates non-reversible History", () => {
     const state = posted();
     const original = structuredClone(state.invoice);
@@ -211,6 +382,13 @@ describe("immutable invoice content corrections", () => {
   });
   it("projects corrected products/quantities through Received while original physical events remain", () => {
     const state = posted();
+    for (const record of [
+      state.invoice,
+      ...state.invoices!.filter((row) => row.id === state.invoice.id),
+    ]) {
+      record.lines[0].new_name_en = "Original fictional line name";
+      record.lines[0].new_name_fa = "نام خیالی اصلی";
+    }
     const proposal = input(state);
     proposal.lines[0].product_code = "0005";
     setInvoiceLineQuantity(proposal.lines[0], "12", "units", 1);
@@ -218,6 +396,14 @@ describe("immutable invoice content corrections", () => {
     const originalMovement = structuredClone(state.stock_movements!.at(-1));
     const result = apply(state, proposal);
     expect(result.physical_movement_ids).toHaveLength(2);
+    const target = state.products.find((product) => product.code === "0005")!;
+    expect(result.after.lines[0]).toMatchObject({
+      new_name_en: target.name_en,
+      new_name_fa: target.name_fa,
+    });
+    expect(state.invoice.lines[0].new_name_en).toBe(
+      "Original fictional line name",
+    );
     expect(state.stock_movements).toContainEqual(originalMovement);
     expect(
       receivedLog(state, context(state)).filter(

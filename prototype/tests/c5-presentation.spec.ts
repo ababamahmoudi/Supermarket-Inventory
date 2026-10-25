@@ -539,6 +539,14 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     await button(page, "Correct invoice", "اصلاح فاکتور").click();
     const correction = page.locator(".invoice-correction-dialog");
     await expect(correction).toBeVisible();
+    await expect(correction.locator(".receiving-line-editor")).toHaveCount(0);
+    await correction.locator(".invoice-line-toggle").first().click();
+    // The shared editor takes focus after the collapsed list. Let the previous
+    // field finish its ordinary blur transition before checking idle glow.
+    await expect(correction.locator("#invoice-correction-reason")).toHaveCSS(
+      "box-shadow",
+      "none",
+    );
     const contrast = await fieldContrast(page, ".invoice-correction-dialog");
     expect(contrast.length).toBeGreaterThan(5);
     for (const control of contrast) {

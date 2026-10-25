@@ -1,3 +1,4 @@
+import { ProductPrice } from "../../weight-price-presentation";
 import { useRef, useState } from "react";
 import Decimal from "decimal.js";
 import { Check, X } from "lucide-react";
@@ -45,13 +46,15 @@ import {
 } from "../../invoice-weight";
 import { clearInvoiceOrderLine } from "../../invoice-orders";
 import { costPerCase, costPerUnit } from "../../supplier-items";
-import type { ReviewProps } from "./types";
+import type { LineCommands, ReviewProps } from "./types";
+import type { InvoiceEditableLine } from "../../invoice-edit-types";
 export function LineEditor({
   invoice,
   workspace,
   index,
   update,
   editLine,
+  correction,
   onQuantity,
   onClose,
   anchor,
@@ -61,15 +64,20 @@ export function LineEditor({
   workspace: ReviewProps["workspace"];
   index: number;
   attemptedPost: boolean;
-  update: ReviewProps["update"];
-  editLine: ReviewProps["editLine"];
   onQuantity: ReviewProps["onQuantity"];
   onClose(): void;
   anchor(): void;
-}) {
+} & LineCommands) {
   const { state, t, money, lang } = useDemo();
   const line = invoice.lines[index];
-  const checkCount = visibleInvoiceCheckFields(line).length;
+  const checkCount = correction ? 0 : visibleInvoiceCheckFields(line).length;
+  const reviewUpdate: ReviewProps["update"] = (change) => {
+    if (!update)
+      throw new Error(
+        "Receiving commands are unavailable in a posted correction.",
+      );
+    return update(change);
+  };
   const product = state.products.find(
     (x) => x.company_id === invoice.company_id && x.code === line.product_code,
   );
@@ -137,18 +145,36 @@ export function LineEditor({
   const id = (suffix: string) => `invoice-line-${index}-${suffix}`;
   const edit = (
     field: string,
-    change: Parameters<ReviewProps["editLine"]>[1],
+    change: (line: InvoiceEditableLine) => void,
     recalculate = false,
   ) => {
+    setFailedField("");
+    setFailure("");
+    if (correction) {
+      correction.onEdit(index, change, field);
+      return;
+    }
+    if (!editLine) throw new Error("Receiving edits are unavailable.");
+    editLine(
+      index,
+      (item, draft, actor) => {
+        change(item);
+        acknowledgeInvoiceCheck(draft, actor, field, index);
+      },
+      recalculate,
+    );
+  };
+  const editCategory = (value: string) => {
+    if (correction || !editLine) return;
     setFailedField("");
     setFailure("");
     editLine(
       index,
       (item, draft, actor) => {
-        change(item, draft, actor);
-        acknowledgeInvoiceCheck(draft, actor, field, index);
+        setInvoiceLineCategory(item, value, draft.config);
+        acknowledgeInvoiceCheck(draft, actor, "pricing_category", index);
       },
-      recalculate,
+      true,
     );
   };
   const nameError =
@@ -176,7 +202,13 @@ export function LineEditor({
       : undefined;
   const costError =
     showErrors &&
-    (!workspace.lineDetails[index]?.costValid ||
+    (!(correction
+      ? /^\d+(?:\.\d{1,4})?$/.test(
+          line.sold_by === "weight"
+            ? (line.source_cost_before_tax ?? "")
+            : line.unit_cost_before_tax,
+        )
+      : workspace.lineDetails[index]?.costValid) ||
       failedField === "unit_cost_before_tax")
       ? t(
           "Enter a cost of zero or more with up to four decimal places.",
@@ -195,8 +227,9 @@ export function LineEditor({
         )
       : undefined;
   const saveName = async () => {
+    if (correction) return;
     if (english !== (line.new_name_en ?? product?.name_en ?? line.description))
-      await update((draft, actor) => {
+      await reviewUpdate((draft, actor) => {
         const item = draft.invoice.lines[index];
         item.new_name_en = english;
         item.review_changed_after_confirmation ||= item.review_confirmed;
@@ -208,9 +241,28 @@ export function LineEditor({
     anchor();
     setAttempted(true);
     await saveName();
+    if (correction) {
+      if (
+        !validInvoiceLineQuantity(line) ||
+        !validInvoiceLineReceived(line) ||
+        !validCaseCost ||
+        !/^\d+(?:\.\d{1,4})?$/.test(line.unit_cost_before_tax) ||
+        (line.date_tracking && !line.date_value)
+      ) {
+        setFailure(
+          t(
+            "Check the quantity, cost and required date before confirming.",
+            "پیش از تأیید، تعداد، هزینه و تاریخ لازم را بررسی کنید.",
+          ),
+        );
+        return;
+      }
+      onClose();
+      return;
+    }
     let error = "";
     let field = "";
-    const result = await update((draft, actor) => {
+    const result = await reviewUpdate((draft, actor) => {
       try {
         confirmInvoiceLineChecks(draft, actor, index, true);
         return true;
@@ -254,6 +306,8 @@ export function LineEditor({
     }
   };
 
+  const approvedPrice =
+    product?.branch_prices?.[invoice.branch] || product?.selling_price;
   let lowerCost = false;
   try {
     lowerCost =
@@ -281,7 +335,7 @@ export function LineEditor({
   }
   return (
     <section
-      className="receiving-line-editor ui-form-large"
+      className={`receiving-line-editor ui-form-large${correction ? " ui-form-surface receiving-correction-editor" : ""}`}
       onPointerDownCapture={reserveBody}
       onKeyDownCapture={reserveBody}
       onChangeCapture={reserveBody}
@@ -312,20 +366,29 @@ export function LineEditor({
             )}
           </small>
           <strong>
-            <LtrValue value={english} />
+            <LtrValue
+              value={
+                correction
+                  ? product?.name_en || line.new_name_en || line.description
+                  : english
+              }
+            />
           </strong>
         </div>
       </header>
       <ReadingCheckProvider
-        fields={line.low_confidence_fields}
+        fields={correction ? [] : line.low_confidence_fields}
         idPrefix={`invoice-check-line-${index}`}
         onAcknowledge={() => {}}
         record={line}
-        onNotOnInvoice={(field) =>
-          update((draft, actor) => {
-            acknowledgeInvoiceFieldAbsence(draft, actor, field, index);
-            return true;
-          })
+        onNotOnInvoice={
+          correction
+            ? undefined
+            : (field) =>
+                reviewUpdate((draft, actor) => {
+                  acknowledgeInvoiceFieldAbsence(draft, actor, field, index);
+                  return true;
+                })
         }
       >
         <div
@@ -394,7 +457,11 @@ export function LineEditor({
                   <Select
                     id={id("matching")}
                     value={line.product_code}
-                    onChange={(value) =>
+                    onChange={(value) => {
+                      if (correction) {
+                        correction.onSelectProduct(index, value);
+                        return;
+                      }
                       edit(
                         "product_code",
                         (item) => {
@@ -412,15 +479,26 @@ export function LineEditor({
                           item.date_confirmed = true;
                         },
                         true,
-                      )
-                    }
+                      );
+                    }}
                     options={[
-                      { value: "NEW", label: t("New product", "کالای جدید") },
+                      ...(!correction
+                        ? [
+                            {
+                              value: "NEW",
+                              label: t("New product", "کالای جدید"),
+                            },
+                          ]
+                        : []),
                       ...state.products
                         .filter(
                           (x) =>
                             x.company_id === invoice.company_id &&
-                            x.status !== "archived",
+                            (x.status !== "archived" ||
+                              (!!correction &&
+                                (x.code === line.product_code ||
+                                  x.code ===
+                                    correction.retainedProductCodes[index]))),
                         )
                         .map((x) => ({
                           value: x.code,
@@ -438,7 +516,14 @@ export function LineEditor({
                     <input
                       id={id("name-en")}
                       dir="ltr"
-                      value={english}
+                      readOnly={!!correction}
+                      value={
+                        correction
+                          ? product?.name_en ||
+                            line.new_name_en ||
+                            line.description
+                          : english
+                      }
                       onChange={(e) => {
                         const inputValue = e.currentTarget.value;
                         setEnglish(inputValue);
@@ -448,7 +533,7 @@ export function LineEditor({
                       }}
                     />
                   </Field>
-                  {line.new_name_suggestion && (
+                  {!correction && line.new_name_suggestion && (
                     <div className="receiving-name-suggestion">
                       <span>
                         {t("Suggested name:", "نام پیشنهادی:")}{" "}
@@ -484,12 +569,18 @@ export function LineEditor({
                     <input
                       id={id("name-fa")}
                       dir="rtl"
-                      value={persian}
+                      readOnly={!!correction}
+                      value={
+                        correction
+                          ? product?.name_fa || line.new_name_fa || ""
+                          : persian
+                      }
                       onChange={(e) => {
                         const inputValue = e.currentTarget.value;
                         setPersian(inputValue);
                       }}
                       onBlur={() => {
+                        if (correction) return;
                         if (
                           persian !==
                           (line.new_name_fa ?? product?.name_fa ?? "")
@@ -508,17 +599,11 @@ export function LineEditor({
                 >
                   <Select
                     id={id("category")}
+                    disabled={!!correction}
                     value={
                       line.pricing_category ?? product?.pricing_category ?? ""
                     }
-                    onChange={(value) =>
-                      edit(
-                        "pricing_category",
-                        (item, draft) =>
-                          setInvoiceLineCategory(item, value, draft.config),
-                        true,
-                      )
-                    }
+                    onChange={editCategory}
                     options={[
                       {
                         value: "",
@@ -555,6 +640,7 @@ export function LineEditor({
                 >
                   <BufferedInput
                     id={id("supplier-code")}
+                    readOnly={!!correction}
                     aria-label={t(
                       "Supplier item code (optional)",
                       "کد کالای تأمین‌کننده (اختیاری)",
@@ -861,6 +947,7 @@ export function LineEditor({
                 >
                   <BufferedInput
                     id={id("line-total")}
+                    readOnly={!!correction}
                     dir="ltr"
                     inputMode="decimal"
                     value={line.line_total}
@@ -886,8 +973,16 @@ export function LineEditor({
                   aria-label={t("Taxable", "مشمول مالیات")}
                   value={String(line.taxable)}
                   options={[
-                    { value: "false", label: t("No", "خیر") },
-                    { value: "true", label: t("Yes", "بله") },
+                    {
+                      value: "false",
+                      label: t("No", "خیر"),
+                      disabled: !!correction,
+                    },
+                    {
+                      value: "true",
+                      label: t("Yes", "بله"),
+                      disabled: !!correction,
+                    },
                   ]}
                   onChange={(value) =>
                     edit(
@@ -1006,38 +1101,67 @@ export function LineEditor({
             <section className="receiving-line-price">
               <div className="receiving-selling-price">
                 <div>
-                  <span>{t("Selling price", "قیمت فروش")}</span>
+                  <span>
+                    {correction
+                      ? t("Approved selling price", "قیمت فروش تأییدشده")
+                      : t("Selling price", "قیمت فروش")}
+                  </span>
                   <strong className="price-display numeric">
-                    {workspace.lineDetails[index]?.price ? (
-                      <Money
-                        value={
-                          line.short_dated
-                            ? product?.branch_prices?.[invoice.branch] ||
-                              product?.selling_price ||
-                              workspace.lineDetails[index]!.price!
-                            : workspace.lineDetails[index]!.price!
-                        }
-                      />
+                    {correction ? (
+                      approvedPrice && product ? (
+                        <ProductPrice
+                          value={approvedPrice}
+                          product={product}
+                          config={state.config}
+                          stacked
+                        />
+                      ) : (
+                        t("No approved price yet", "هنوز قیمت تأییدشده‌ای نیست")
+                      )
                     ) : (
-                      t("Not added", "اضافه نشده")
+                      <>
+                        {workspace.lineDetails[index]?.price ? (
+                          <Money
+                            value={
+                              line.short_dated
+                                ? product?.branch_prices?.[invoice.branch] ||
+                                  product?.selling_price ||
+                                  workspace.lineDetails[index]!.price!
+                                : workspace.lineDetails[index]!.price!
+                            }
+                          />
+                        ) : (
+                          t("Not added", "اضافه نشده")
+                        )}
+                      </>
                     )}
                   </strong>
                 </div>
-                <div className="receiving-approved-price">
-                  <span>{t("Approved:", "تأییدشده:")}</span>
-                  {product?.branch_prices?.[invoice.branch] ||
-                  product?.selling_price ? (
-                    <Money
-                      value={
-                        product.branch_prices?.[invoice.branch] ||
-                        product.selling_price!
-                      }
-                    />
-                  ) : (
-                    t("No approved price yet", "هنوز قیمت تأییدشده‌ای نیست")
-                  )}
-                </div>
+                {!correction && (
+                  <div className="receiving-approved-price">
+                    <span>{t("Approved:", "تأییدشده:")}</span>
+                    {product?.branch_prices?.[invoice.branch] ||
+                    product?.selling_price ? (
+                      <Money
+                        value={
+                          product.branch_prices?.[invoice.branch] ||
+                          product.selling_price!
+                        }
+                      />
+                    ) : (
+                      t("No approved price yet", "هنوز قیمت تأییدشده‌ای نیست")
+                    )}
+                  </div>
+                )}
               </div>
+              {correction && (
+                <p className="muted">
+                  {t(
+                    "Proposed prices appear in Preview correction.",
+                    "قیمت‌های پیشنهادی در پیش‌نمایش اصلاح نمایش داده می‌شوند.",
+                  )}
+                </p>
+              )}
               {line.short_dated && (
                 <p className="muted">
                   {t(
@@ -1048,7 +1172,7 @@ export function LineEditor({
               )}
             </section>
           </div>
-          {(lowerCost || line.short_dated) && (
+          {!correction && (lowerCost || line.short_dated) && (
             <Field
               label={t("Lower-cost receipt", "دریافت با هزینه کمتر")}
               error={
@@ -1091,7 +1215,8 @@ export function LineEditor({
               />
             </Field>
           )}
-          {workspace.lineDetails[index]?.manualReplacement &&
+          {!correction &&
+            workspace.lineDetails[index]?.manualReplacement &&
             !line.short_dated && (
               <section>
                 <Field label={t("Manual price decision", "تصمیم قیمت دستی")}>
@@ -1146,6 +1271,7 @@ export function LineEditor({
                   <Field key={key} readingField={key} label={t(...labels[key])}>
                     <BufferedInput
                       id={id(key)}
+                      readOnly={!!correction && key !== "lot_number"}
                       dir="ltr"
                       value={String(
                         (line as unknown as Record<string, unknown>)[key] ?? "",
@@ -1255,7 +1381,7 @@ export function LineEditor({
               <Button
                 variant="secondary"
                 onClick={() => {
-                  void update((draft) => {
+                  void reviewUpdate((draft) => {
                     const item = draft.invoice.lines[index];
                     const wasConfirmed = item.review_confirmed;
                     clearInvoiceOrderLine(item);
@@ -1289,6 +1415,15 @@ export function LineEditor({
               className="receiving-line-remove"
               variant="destructive"
               size="sm"
+              disabled={!!correction}
+              title={
+                correction
+                  ? t(
+                      "Posted lines are retained; correct their quantity instead.",
+                      "ردیف‌های ثبت‌شده حفظ می‌شوند؛ تعداد را اصلاح کنید.",
+                    )
+                  : undefined
+              }
               onClick={() => setRemoveOpen(true)}
             >
               {t("Remove line", "حذف ردیف")}
@@ -1297,14 +1432,30 @@ export function LineEditor({
               variant="secondary"
               size="sm"
               className="receiving-line-report"
-              aria-label={t("Report short or refused", "گزارش کسری یا مرجوعی")}
-              onClick={() => setShortOpen(!shortOpen)}
+              aria-label={
+                correction
+                  ? t("Edit delivered quantity", "ویرایش تعداد تحویل‌شده")
+                  : t("Report short or refused", "گزارش کسری یا مرجوعی")
+              }
+              onClick={() => {
+                if (correction) {
+                  document
+                    .getElementById(id("delivered"))
+                    ?.focus({ preventScroll: true });
+                  return;
+                }
+                setShortOpen(!shortOpen);
+              }}
             >
               <span className="receiving-report-desktop">
-                {t("Report short or refused", "گزارش کسری یا مرجوعی")}
+                {correction
+                  ? t("Edit delivered quantity", "ویرایش تعداد تحویل‌شده")
+                  : t("Report short or refused", "گزارش کسری یا مرجوعی")}
               </span>
               <span className="receiving-report-phone">
-                {t("Report short/refused", "گزارش کسری/مرجوعی")}
+                {correction
+                  ? t("Edit delivered", "ویرایش تحویل")
+                  : t("Report short/refused", "گزارش کسری/مرجوعی")}
               </span>
             </Button>
           </div>
@@ -1343,7 +1494,7 @@ export function LineEditor({
         )}
         confirmLabel={t("Remove line", "حذف ردیف")}
         onConfirm={async () => {
-          await update((draft, actor) =>
+          await reviewUpdate((draft, actor) =>
             removeInvoiceLine(draft, actor, index),
           );
           onClose();

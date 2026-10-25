@@ -518,9 +518,21 @@ export function setInvoiceLineQuantity(
   line.review_confirmed = false;
 }
 
+export type InvoiceCalculationInput = Pick<
+  DemoInvoice,
+  | "reading_record"
+  | "other_charges"
+  | "subtotal"
+  | "tax"
+  | "final_total"
+  | "final_total_manual"
+  | "low_confidence_fields"
+  | "payable_after_open_shorts"
+> & { lines: InvoiceEditableLine[] };
+
 export function recalculateInvoice(
-  invoice: DemoInvoice,
-  config: CompanyConfig,
+  invoice: InvoiceCalculationInput,
+  config: Pick<CompanyConfig, "tax" | "weighed_items">,
 ): void {
   let subtotal = new Decimal(0);
   let tax = new Decimal(0);

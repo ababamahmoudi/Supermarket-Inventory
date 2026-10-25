@@ -97,7 +97,9 @@ for (const language of ["en", "fa"] as const)
       name: fa ? "اصلاح فاکتور" : "Correct invoice",
       exact: true,
     });
-    const first = dialog.locator(".invoice-correction-line").first();
+    await expect(dialog.locator(".receiving-line-editor")).toHaveCount(0);
+    await dialog.locator(".invoice-line-toggle").first().click();
+    const first = dialog.locator(".receiving-line-editor");
     const nextCost = new Decimal(original.lines[0].unit_cost_before_tax)
       .plus("0.5000")
       .toFixed(4);
@@ -106,6 +108,10 @@ for (const language of ["en", "fa"] as const)
         exact: true,
       })
       .fill(nextCost);
+    await first
+      .getByRole("button", { name: fa ? "بستن" : "Close", exact: true })
+      .last()
+      .click();
     await dialog
       .getByLabel(fa ? "دلیل (الزامی)" : "Reason (required)", { exact: true })
       .fill("Correct the recorded fictional unit cost.");
