@@ -10,15 +10,30 @@ import {
 
 test.setTimeout(60000);
 
-async function chooseNewInvoice(page: Page, mode: "Upload" | "Manual entry") {
+async function chooseNewInvoice(
+  page: Page,
+  mode: "Photo (AI reading)" | "Manual entry",
+) {
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   const chooser = page.getByRole("dialog", {
     name: "New invoice",
     exact: true,
   });
-  // The no-workspace entry remains a direct authorized Upload creation.
-  if (await chooser.isVisible())
-    await chooser.getByRole("button", { name: mode, exact: true }).click();
+  await expect(chooser).toBeVisible();
+  await chooser.getByRole("button", { name: mode, exact: true }).click();
+  if (mode === "Photo (AI reading)")
+    await expect(page).toHaveURL((url) => {
+      const [route, parameters] = url.hash.slice(1).split("?");
+      const entry = new URLSearchParams(parameters);
+      return (
+        route === "invoices" &&
+        Boolean(entry.get("id")) &&
+        entry.get("entry") === "photo"
+      );
+    });
+}
+function photoInput(page: Page) {
+  return page.getByLabel("Upload a PDF or photo", { exact: true });
 }
 function originalInput(page: Page) {
   return page.locator('input[type="file"][aria-label="Attach original"]');
@@ -32,8 +47,8 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await page.goto("/#invoices");
   const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
     .id;
-  await chooseNewInvoice(page, "Upload");
-  // Both entry actions create real drafts. Bind the accepted Upload route before
+  await chooseNewInvoice(page, "Photo (AI reading)");
+  // Both entry actions create real drafts. Bind the accepted photo route before
   // requesting Manual entry; the old form can remain visible during the command.
   await expect(page).toHaveURL((url) => {
     const [route, parameters] = url.hash.slice(1).split("?");
@@ -44,7 +59,7 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
     new URL(page.url()).hash.split("?")[1],
   ).get("id");
   if (!uploadInvoiceId)
-    throw new Error("The accepted Upload draft ID is missing.");
+    throw new Error("The accepted photo draft ID is missing.");
   await page
     .getByRole("button", { name: "Save and close", exact: true })
     .click();
@@ -129,7 +144,7 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await expect(
     page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toHaveCount(0);
-  await chooseNewInvoice(page, "Upload");
+  await chooseNewInvoice(page, "Photo (AI reading)");
   await expect(page).toHaveURL((url) => {
     const [route, parameters] = url.hash.slice(1).split("?");
     const id = new URLSearchParams(parameters).get("id");
@@ -171,7 +186,7 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
   // selected-store draft instead of uploading into that existing origin.
   const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
     .id;
-  await chooseNewInvoice(page, "Upload");
+  await chooseNewInvoice(page, "Photo (AI reading)");
   await expect(page).toHaveURL((url) => {
     const [route, parameters] = url.hash.slice(1).split("?");
     const id = new URLSearchParams(parameters).get("id");
@@ -188,10 +203,11 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
       return { id: invoice.id, branch: invoice.branch, status: invoice.status };
     })
     .toEqual({ id: acceptedInvoiceId, branch: "Branch 2", status: "draft" });
-  await expect(originalInput(page)).toBeAttached();
+  await expect(photoInput(page)).toBeAttached();
+  await expect(photoInput(page)).toBeEnabled();
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
-  await originalInput(page).setInputFiles(invoiceImage);
+  await photoInput(page).setInputFiles(invoiceImage);
   await expect(
     page.getByText("Reading invoice…", { exact: true }),
   ).toBeVisible();
