@@ -8,6 +8,7 @@ import { createInvoice, postInvoice, recalculateInvoice } from "./invoice";
 import {
   acknowledgeInvoiceCheck,
   confirmInvoiceLineChecks,
+  fillCalculatedInvoiceTotals,
 } from "./invoice-checks";
 import { selectInvoiceWorkspace } from "./invoice-workspace-read";
 import {
@@ -176,5 +177,93 @@ describe("R2b 1.2 configured import currency", () => {
     expect(state.invoices![1].import_currency).toBe("USD");
     expect(state.invoices![0].low_confidence_fields).not.toContain("currency");
     expect(state.invoices![1].low_confidence_fields).toContain("currency");
+  });
+});
+
+describe("R2b 1.3 missing paper amounts", () => {
+  it.each([
+    [
+      { subtotal: "", tax: "1.23", final_total: "12.34" },
+      { subtotal: "11.11", tax: "1.23", final_total: "12.34" },
+      ["calculated:subtotal"],
+    ],
+    [
+      { subtotal: "11.11", tax: "", final_total: "12.34" },
+      { subtotal: "11.11", tax: "1.23", final_total: "12.34" },
+      ["calculated:tax"],
+    ],
+    [
+      { subtotal: "11.11", tax: "1.23", final_total: "" },
+      { subtotal: "11.11", tax: "1.23", final_total: "12.34" },
+      ["calculated:final_total"],
+    ],
+    [
+      { subtotal: "", tax: "", final_total: "12.34" },
+      { subtotal: "12.34", tax: "0.00", final_total: "12.34" },
+      ["calculated:subtotal", "calculated:tax"],
+    ],
+  ])(
+    "derives supported missing amounts exactly and marks each derived field",
+    (source, expected, checks) => {
+      const invoice = { ...source, low_confidence_fields: [] as string[] };
+      fillCalculatedInvoiceTotals(invoice);
+      expect(invoice).toMatchObject(expected);
+      expect(invoice.low_confidence_fields).toEqual(checks);
+      fillCalculatedInvoiceTotals(invoice);
+      expect(invoice.low_confidence_fields).toEqual(checks);
+    },
+  );
+  it("leaves unresolved or contradictory evidence blank and names each missing field", () => {
+    const empty = {
+      subtotal: "",
+      tax: "",
+      final_total: "",
+      low_confidence_fields: [] as string[],
+    };
+    fillCalculatedInvoiceTotals(empty);
+    expect(empty).toEqual({
+      subtotal: "",
+      tax: "",
+      final_total: "",
+      low_confidence_fields: ["subtotal", "tax", "final_total"],
+    });
+    const conflict = {
+      subtotal: "20.00",
+      tax: "",
+      final_total: "10.00",
+      low_confidence_fields: [] as string[],
+    };
+    fillCalculatedInvoiceTotals(conflict);
+    expect(conflict.tax).toBe("");
+    expect(conflict.low_confidence_fields).toEqual(["tax"]);
+    const supplied = { subtotal: "20.00", tax: "1.00", final_total: "10.00" };
+    fillCalculatedInvoiceTotals(supplied);
+    expect(supplied).toEqual({
+      subtotal: "20.00",
+      tax: "1.00",
+      final_total: "10.00",
+    });
+  });
+  it("fills imported tax/subtotal, preserving the calculated markers through reopen until acknowledgment", async () => {
+    const { state, actor } = await importFictional();
+    expect(state.invoices![0]).toMatchObject({
+      subtotal: "32.00",
+      tax: "0.00",
+      final_total: "32.00",
+    });
+    expect(state.invoices![0].low_confidence_fields).toEqual(
+      expect.arrayContaining(["calculated:subtotal", "calculated:tax"]),
+    );
+    selectInvoiceWorkspace(state, actor, state.invoices![0].id);
+    acknowledgeInvoiceCheck(state, actor, "calculated:tax");
+    expect(state.invoice.low_confidence_fields).not.toContain("calculated:tax");
+    expect(state.invoice.low_confidence_fields).toContain(
+      "calculated:subtotal",
+    );
+    expect(state.invoices![3]).toMatchObject({
+      subtotal: "",
+      tax: "",
+      final_total: "",
+    });
   });
 });

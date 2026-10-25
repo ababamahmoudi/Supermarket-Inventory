@@ -216,7 +216,7 @@ export function confirmInvoiceLineChecks(
   line.review_changed_after_confirmation = false;
 }
 
-/** Fill only a missing paper total; retain a review marker until the totals card is checked. */
+/** Complete supported missing-paper combinations and retain each calculated question. */
 export function fillCalculatedInvoiceTotals(invoice: {
   subtotal: string;
   tax: string;
@@ -224,27 +224,51 @@ export function fillCalculatedInvoiceTotals(invoice: {
   low_confidence_fields?: string[];
 }): void {
   const valid = (value: string) => /^\d+(?:\.\d{1,2})?$/.test(value);
-  if (!valid(invoice.tax)) return;
-  let field: "subtotal" | "final_total" | undefined;
-  if (!invoice.subtotal.trim() && valid(invoice.final_total)) {
-    const subtotal = new Decimal(invoice.final_total).minus(invoice.tax);
-    if (subtotal.gte(0)) {
-      invoice.subtotal = subtotal.toFixed(2);
-      field = "subtotal";
-    }
-  } else if (!invoice.final_total.trim() && valid(invoice.subtotal)) {
-    invoice.final_total = new Decimal(invoice.subtotal)
-      .plus(invoice.tax)
-      .toFixed(2);
-    field = "final_total";
-  }
-  if (field)
+  const fill = (field: "subtotal" | "tax" | "final_total", value: Decimal) => {
+    invoice[field] = value.toFixed(2);
     invoice.low_confidence_fields = [
       ...(invoice.low_confidence_fields ?? []).filter(
-        (value) => invoiceCheckField(value) !== field,
+        (key) => invoiceCheckField(key) !== field,
       ),
       `calculated:${field}`,
     ];
+  };
+  if (
+    !invoice.subtotal.trim() &&
+    !invoice.tax.trim() &&
+    valid(invoice.final_total)
+  ) {
+    fill("subtotal", new Decimal(invoice.final_total));
+    fill("tax", new Decimal(0));
+  } else if (
+    !invoice.subtotal.trim() &&
+    valid(invoice.final_total) &&
+    valid(invoice.tax)
+  ) {
+    const subtotal = new Decimal(invoice.final_total).minus(invoice.tax);
+    if (subtotal.gte(0)) fill("subtotal", subtotal);
+  } else if (
+    !invoice.tax.trim() &&
+    valid(invoice.final_total) &&
+    valid(invoice.subtotal)
+  ) {
+    const tax = new Decimal(invoice.final_total).minus(invoice.subtotal);
+    if (tax.gte(0)) fill("tax", tax);
+  } else if (
+    !invoice.final_total.trim() &&
+    valid(invoice.subtotal) &&
+    valid(invoice.tax)
+  ) {
+    fill("final_total", new Decimal(invoice.subtotal).plus(invoice.tax));
+  }
+  for (const field of ["subtotal", "tax", "final_total"] as const)
+    if (
+      !invoice[field].trim() &&
+      !(invoice.low_confidence_fields ?? []).some(
+        (key) => invoiceCheckField(key) === field,
+      )
+    )
+      (invoice.low_confidence_fields ??= []).push(field);
 }
 
 export function invoiceTotalsCheck(invoice: {
