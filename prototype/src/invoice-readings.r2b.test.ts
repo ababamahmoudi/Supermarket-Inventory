@@ -4,12 +4,22 @@ import { initialState } from "./e1-bootstrap";
 import { authenticatedTestActor } from "./authority-test-fixture";
 import { companyDateTime } from "./company-time";
 import { importedReadingReceived } from "./invoice-reading-dates";
-import { createInvoice, postInvoice, recalculateInvoice } from "./invoice";
+import {
+  createInvoice,
+  postInvoice,
+  recalculateInvoice,
+  invoiceBlockers,
+} from "./invoice";
 import {
   acknowledgeInvoiceCheck,
   confirmInvoiceLineChecks,
   fillCalculatedInvoiceTotals,
 } from "./invoice-checks";
+import {
+  paymentTermsDays,
+  paymentTermsDueDate,
+  setInvoicePaymentTerms,
+} from "./invoice-entry";
 import { selectInvoiceWorkspace } from "./invoice-workspace-read";
 import {
   importInvoiceReadings,
@@ -39,8 +49,11 @@ function emptyBusiness() {
   state.activity = [];
   return state;
 }
-async function importFictional(state = emptyBusiness()) {
-  const exported = parseInvoiceReadings(JSON.stringify(fixture));
+async function importFictional(
+  state = emptyBusiness(),
+  source: unknown = fixture,
+) {
+  const exported = parseInvoiceReadings(JSON.stringify(source));
   const actor = authenticatedTestActor(state, "owner");
   const selectedIds = exported.invoices.map((entry) => entry.id);
   const pages = await prepareInvoiceReadingPages(
@@ -149,6 +162,27 @@ describe("R2b 1.1 imported received dates", () => {
       )?.at,
     ).toBe(delivery);
     expect(state.invoice.posted_at).toBe("2026-12-30T20:30:00.000Z");
+  });
+  it("recognizes a generic yearless date plus separate 24-hour clock and never attaches a clock to an unknown day", () => {
+    const config = emptyBusiness().config;
+    expect(
+      companyDateTime(
+        config,
+        importedReadingReceived(config, {
+          invoice_date: "2027-11-08",
+          handwritten_notes: ["nov 9", "16:25"],
+        }).received_at,
+      ),
+    ).toEqual({ date: "2027-11-09", time: "16:25" });
+    expect(
+      companyDateTime(
+        config,
+        importedReadingReceived(config, {
+          invoice_date: "2027-11-08",
+          handwritten_notes: ["16:25"],
+        }).received_at,
+      ),
+    ).toEqual({ date: "2027-11-08", time: "12:00" });
   });
   it("keeps now for live upload and manual entry", () => {
     vi.useFakeTimers();
@@ -265,5 +299,77 @@ describe("R2b 1.3 missing paper amounts", () => {
       tax: "",
       final_total: "",
     });
+  });
+});
+
+describe("R2b 1.4 payment terms", () => {
+  it.each([
+    "COD",
+    "Cash on delivery",
+    "Due on receipt",
+    "Due upon receipt",
+    "DUE UPON RECEIPT",
+  ])("recognizes %s without inventing a delay", (terms) =>
+    expect(paymentTermsDays(terms)).toBe(0),
+  );
+  it("computes calendar-month first days across year boundaries and blocks invalid entered days on imports", async () => {
+    expect(paymentTermsDueDate("2026-10-15", "Monthly")).toBe("2026-11-01");
+    expect(paymentTermsDueDate("2026-12-20", "Monthly")).toBe("2027-01-01");
+    expect(paymentTermsDueDate("2026-10-15", "Net 30")).toBe("2026-11-14");
+    const { state, actor } = await importFictional();
+    selectInvoiceWorkspace(state, actor, state.invoices![0].id);
+    setInvoicePaymentTerms(state.invoice, "Net ");
+    expect(invoiceBlockers(state, actor)).toContain("payment_terms");
+  });
+
+  it("recognizes receipt/net spellings and keeps Monthly separate from Net30", async () => {
+    const { state } = await importFictional();
+    expect(state.invoices![0]).toMatchObject({
+      payment_term_days: 0,
+      due_date: "2026-08-10",
+    });
+    expect(state.invoices![1]).toMatchObject({
+      payment_term_days: 45,
+      due_date: "2026-09-25",
+    });
+    expect(state.invoices![2]).toMatchObject({
+      payment_terms: "Due upon receipt",
+      payment_terms_inferred: true,
+      due_date: "2026-08-18",
+    });
+    expect(state.invoices![2].low_confidence_fields).toContain("payment_terms");
+    expect(state.invoices![3].due_date).toBe("2026-08-19");
+    expect(state.invoices![3].low_confidence_fields).toContain("due_date");
+    expect(state.invoices![4].due_date).toBe("2026-09-19");
+    expect(state.invoices![4].low_confidence_fields).toContain("due_date");
+    expect(state.invoices![5]).toMatchObject({
+      payment_terms: "Monthly",
+      due_date: "2027-01-01",
+    });
+    expect(state.invoices![6]).toMatchObject({
+      payment_term_days: 17,
+      due_date: "2026-09-08",
+    });
+  });
+  it("uses only earlier recognized same-supplier terms, independent of file order", async () => {
+    const source = structuredClone(fixture);
+    source.invoices.reverse();
+    const { state } = await importFictional(emptyBusiness(), source);
+    expect(
+      state.invoices!.find((i) => i.supplier_invoice_number === "BFP-0818")
+        ?.payment_terms,
+    ).toBe("Due upon receipt");
+    const future = structuredClone(fixture);
+    future.invoices = future.invoices.filter((i) =>
+      ["r2b-name-suggestion", "r2b-renamed-product"].includes(i.id),
+    );
+    const { state: withoutHistory } = await importFictional(
+      emptyBusiness(),
+      future,
+    );
+    expect(withoutHistory.invoices![0].payment_terms).toBe("");
+    expect(withoutHistory.invoices![0].low_confidence_fields).toContain(
+      "payment_terms",
+    );
   });
 });

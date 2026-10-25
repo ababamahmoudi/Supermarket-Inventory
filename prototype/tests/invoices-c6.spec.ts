@@ -78,7 +78,7 @@ test("manual invoice uses local time, term dates and editable computed totals wi
     page,
     page.getByLabel("Payment terms (optional)", { exact: true }),
     "30",
-    "Monthly (30 days)",
+    "Net 30 (30 days)",
   );
   const invoice = (await stored(page)).invoice;
   const expectedDue = new Date(`${invoice.invoice_date}T12:00:00Z`);

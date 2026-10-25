@@ -406,6 +406,7 @@ export type DemoInvoice = Omit<
     entry_mode?: "upload" | "manual";
     payment_terms?: string;
     payment_term_days?: number;
+    payment_terms_inferred?: boolean;
     due_date_manual?: boolean;
     final_total_manual?: boolean;
     supplier_review_required?: boolean;

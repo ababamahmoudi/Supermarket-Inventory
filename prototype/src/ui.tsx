@@ -1550,6 +1550,8 @@ type ControlAttributes = Pick<
 export type SelectOption = {
   value: string;
   label: string;
+  /** Short selected text; the complete label remains in the open option list. */
+  selectedLabel?: string;
   content?: ReactNode;
   disabled?: boolean;
   count?: number;
@@ -1811,7 +1813,8 @@ export function Select({
         ))}
         <span className={selected ? undefined : "muted"}>
           <bdi dir="auto">
-            {selected?.content ??
+            {selected?.selectedLabel ??
+              selected?.content ??
               selected?.label ??
               t("Choose an option", "یک گزینه انتخاب کنید")}
           </bdi>

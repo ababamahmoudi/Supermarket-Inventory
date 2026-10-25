@@ -123,7 +123,7 @@ test("profile notification opens its editor, clears when completed, and does not
     page,
     dialog.getByLabel("Payment terms (optional)", { exact: true }),
     "30",
-    "Monthly (30 days)",
+    "Net 30 (30 days)",
   );
   await dialog
     .getByLabel("Address (optional)", { exact: true })

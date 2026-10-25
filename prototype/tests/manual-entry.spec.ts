@@ -37,7 +37,7 @@ test("Supervisor Add supplier saves Active with optional profile details and a d
     page,
     dialog.getByLabel("Payment terms (optional)", { exact: true }),
     "30",
-    "Monthly (30 days)",
+    "Net 30 (30 days)",
   );
   await dialog
     .getByLabel("Opening balance", { exact: true })
@@ -319,7 +319,7 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     page,
     supplierDialog.getByLabel("Payment terms (optional)", { exact: true }),
     "30",
-    "Monthly (30 days)",
+    "Net 30 (30 days)",
   );
   await supplierDialog
     .getByLabel("Phone (optional)", { exact: true })

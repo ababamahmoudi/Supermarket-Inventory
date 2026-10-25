@@ -162,6 +162,7 @@ const invoiceKeys = [
   "supplier_confirmed",
   "entry_mode",
   "payment_term_days",
+  "payment_terms_inferred",
   "due_date_manual",
   "final_total_manual",
   "supplier_review_required",

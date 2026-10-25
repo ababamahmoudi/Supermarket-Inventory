@@ -29,7 +29,11 @@ import {
   confirmSupplier,
 } from "./supplier-editor";
 import { companyCalendarDate } from "./company-time";
-import { invoiceComputedTotal, paymentTermsDays } from "./invoice-entry";
+import {
+  invoiceComputedTotal,
+  paymentTermsDays,
+  isMonthlyPaymentTerms,
+} from "./invoice-entry";
 import { recordInvoiceReceiptLots } from "./receipt-lots";
 import { nextProductCode } from "./manual-product";
 import { manualPrice } from "./manual-prices";
@@ -1020,12 +1024,12 @@ export function invoiceBlockers(
   )
     blockers.push("supplier");
   if (
-    invoice.entry_mode === "manual" &&
     invoice.payment_terms &&
     ((/^net/i.test(invoice.payment_terms) &&
       paymentTermsDays(invoice.payment_terms) === undefined) ||
       (!invoice.due_date_manual &&
-        paymentTermsDays(invoice.payment_terms) !== undefined &&
+        (paymentTermsDays(invoice.payment_terms) !== undefined ||
+          isMonthlyPaymentTerms(invoice.payment_terms)) &&
         !actualDate(invoice.due_date)))
   )
     blockers.push("payment_terms");

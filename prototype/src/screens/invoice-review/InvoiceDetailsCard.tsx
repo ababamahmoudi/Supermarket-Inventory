@@ -228,6 +228,7 @@ export function InvoiceDetailsCard({
               id="invoice-payment-terms"
               label={t("Payment terms (optional)", "شرایط پرداخت (اختیاری)")}
               value={invoice.payment_terms ?? ""}
+              inferred={invoice.payment_terms_inferred}
               onChange={(value) =>
                 update((draft) => setInvoicePaymentTerms(draft.invoice, value))
               }
