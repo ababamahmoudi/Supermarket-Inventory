@@ -249,7 +249,7 @@
   padding: 0;
 }
 .receiving-table > tbody > .invoice-line-summary > td {
-  padding: 4px 8px;
+  padding: 3px 8px;
   vertical-align: top;
   border: 0;
   background: var(--surface);

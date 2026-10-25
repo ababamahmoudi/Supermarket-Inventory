@@ -317,7 +317,9 @@ export function LinesTable({
                       >
                         {confirmedLine ? (
                           <Check size={13} strokeWidth={3} aria-hidden="true" />
-                        ) : count || correction ? (
+                        ) : count ? (
+                          count
+                        ) : correction ? (
                           "!"
                         ) : null}
                       </span>
@@ -367,11 +369,6 @@ export function LinesTable({
                       {!product && (
                         <span className="receiving-new-product">
                           {t("New product", "کالای جدید")}
-                        </span>
-                      )}
-                      {count > 0 && (
-                        <span className="receiving-check-summary">
-                          · {t(`${count} to check`, `${count} برای بررسی`)}
                         </span>
                       )}
                     </small>

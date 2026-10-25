@@ -21,45 +21,12 @@ import { readCanonicalBusinessEvidence } from "./business-evidence";
 function readingFile(index: number, supplier: string) {
   const file = JSON.parse(
     readFileSync(
-      new URL("./fixtures/r2b-fictional-readings-export.json", import.meta.url),
+      new URL("./fixtures/r2b-matching-readings-export.json", import.meta.url),
       "utf8",
     ),
   );
   const entry = file.invoices[index];
-  entry.id = `fictional-matching-${index}`;
-  entry.checked_answer = null;
-  entry.ai_statuses = {};
-  entry.ai_reading = {
-    supplier_name: supplier,
-    supplier_invoice_number: `MATCH-${index + 1}`,
-    supplier_tax_number:
-      supplier === "Northstar Test Foods" ? "TEST-NORTHSTAR" : "TEST-ELMWOOD",
-    invoice_date: `2026-08-${12 + index}`,
-    due_date: `2026-08-${12 + index}`,
-    payment_terms: "COD",
-    bill_to: "North York",
-    currency: "CAD",
-    subtotal: "30.00",
-    tax: "0.00",
-    final_total: "30.00",
-    lines: [
-      {
-        line_type: "item",
-        description: "CARROT 24",
-        supplier_sku: "",
-        quantity: "1",
-        unit: "case",
-        units_per_case: "24",
-        pack_size: "24 × 300 g",
-        unit_cost_before_tax: "1.2500",
-        cost_basis: "each",
-        cost_per_unit_before_tax: "1.2500",
-        cost_per_case_before_tax: "30.0000",
-        line_total: "30.00",
-        taxable: false,
-      },
-    ],
-  };
+  expect(entry.ai_reading.supplier_name).toBe(supplier);
   file.invoices = [entry];
   return {
     name: "fictional-matching.json",

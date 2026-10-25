@@ -94,15 +94,20 @@ for (const language of ["en", "fa"] as const) {
     await expect(
       page.locator('[id^="invoice-line-"][id$="-name-en"]'),
     ).toHaveCount(0);
-    // Empty optional fields marked check in the export must not create review work.
+    // Explicitly flagged blank optional evidence remains a human question (R2b 1.9).
     expect(
-      imported.lines.every(
-        (line) =>
-          !(line.low_confidence_fields ?? []).some((field) =>
-            /lot|expiry|barcode/.test(field),
-          ),
+      imported.lines.map((line) =>
+        (line.low_confidence_fields ?? []).filter((field) =>
+          /lot|expiry|barcode/.test(field),
+        ),
       ),
-    ).toBe(true);
+    ).toEqual(
+      Array.from({ length: 25 }, () => [
+        "lot_number",
+        "expiry_as_printed",
+        "barcode",
+      ]),
+    );
     expect(imported.subtotal).toBe("96.35");
     const incompletePost = page.getByRole("button", {
       name: word(language, "Post invoice", "ثبت فاکتور"),
@@ -183,9 +188,29 @@ for (const language of ["en", "fa"] as const) {
                   },
                 ],
           ),
+          unacknowledged: ready.lines.flatMap((line, index) => {
+            const missingReceipts = (
+              imported.lines[index].low_confidence_fields ?? []
+            ).filter(
+              (field) =>
+                !line.checked_fields?.[field]?.checked_by_user_id ||
+                !Number.isFinite(
+                  Date.parse(line.checked_fields?.[field]?.checked_at ?? ""),
+                ),
+            );
+            return line.low_confidence_fields?.length || missingReceipts.length
+              ? [
+                  {
+                    line: index + 1,
+                    highlights: line.low_confidence_fields ?? [],
+                    missingReceipts,
+                  },
+                ]
+              : [];
+          }),
         };
       })
-      .toEqual({ lines: 25, unconfirmed: [] });
+      .toEqual({ lines: 25, unconfirmed: [], unacknowledged: [] });
     expect(
       (await readCanonicalBusinessEvidence(page)).suppliers?.find(
         (entry) => entry.name === "Cedar Valley Foods Inc.",
