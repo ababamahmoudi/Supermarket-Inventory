@@ -1,5 +1,6 @@
 import { expect, test, type Locator } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 test.setTimeout(60000);
 
@@ -55,6 +56,7 @@ test("Offers combines name/code/label search, category, supplier, type and statu
   page,
 }) => {
   await signIn(page, "supervisor");
+  await approvedLookupPrices(page, ["0003"]);
   await page.goto("/#offers");
   const filters = page.getByLabel("Offer filters", { exact: true });
   const current = page.locator("section.card").filter({

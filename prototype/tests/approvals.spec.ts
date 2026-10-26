@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 import {
   chooseOption,
   signIn,
@@ -47,6 +48,8 @@ test("live role switches keep cashier approved price until branch approval; new 
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  await signIn(page, "supervisor");
+  await approvedLookupPrices(page, ["0006"]);
   await signIn(page, "cashier");
   await lookup(page, "0006", "$1.99");
   await expect(
@@ -82,6 +85,7 @@ test("live role switches keep cashier approved price until branch approval; new 
     .click();
   await setBranch(page, "Richmond Hill");
   await lookup(page, "0015", "$5.49");
+  await expect(page.locator(".lookup-pending-price")).toHaveCount(0);
   await expect(
     page.getByText("Pending: confirm with a Supervisor before selling", {
       exact: true,

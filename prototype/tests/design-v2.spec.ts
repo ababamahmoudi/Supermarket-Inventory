@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
+import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
 import {
   chooseOption,
   setLanguage,
@@ -293,6 +295,11 @@ test("dark theme, comfortable text and Persian RTL persist when the page reloads
 test("lookup supports keyboard results and a second barcode without adding it to the first", async ({
   page,
 }) => {
+  const sumac = demoSeed.products.find((product) =>
+    product.name_en.includes("Sumac"),
+  )!;
+  await signIn(page, "Manager");
+  await approvedLookupPrices(page, [sumac.code]);
   await signIn(page, "Cashier");
   const search = page.getByLabel("Search products", { exact: true });
   const rows = page
@@ -305,9 +312,6 @@ test("lookup supports keyboard results and a second barcode without adding it to
   await expect(rows.nth(1)).toHaveAttribute("aria-selected", "true");
   await search.fill("0006");
   await search.press("Enter");
-  const sumac = demoSeed.products.find((product) =>
-    product.name_en.includes("Sumac"),
-  )!;
   await page.keyboard.type(sumac.barcode);
   await page.keyboard.press("Enter");
   await expect(search).toHaveValue(sumac.barcode);
@@ -315,7 +319,7 @@ test("lookup supports keyboard results and a second barcode without adding it to
   await expect(search).toBeFocused();
   await search.fill("0015");
   await expect(page.locator(".lookup-detail")).toContainText(
-    "No approved price yet",
+    "Not approved here yet",
   );
   await expect(page.locator(".lookup-pending-price")).toContainText("$5.49");
   await expect(page.locator(".price")).toHaveCount(0);
@@ -329,6 +333,10 @@ test("the topbar product search opens an encoded English or Persian lookup query
     "The phone uses the hero product search.",
   );
   await signIn(page, "Manager");
+  const sumac = demoSeed.products.find((product) =>
+    product.name_en.includes("Sumac"),
+  )!;
+  await approvedLookupPrices(page, [sumac.code]);
   await page.locator("#main-content").focus();
   await page.keyboard.press("/");
   const shellSearch = page.getByLabel("Search all products", { exact: true });
@@ -391,14 +399,7 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
     (await page.locator(".signin-card").boundingBox())!.width,
   ).toBeLessThanOrEqual(420);
   await signIn(page, "Manager");
-  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(5);
-  await expect(page.locator(".kpi-label")).toHaveText([
-    "Approvals waiting",
-    "Price updates to apply",
-    "Open alerts",
-    "Open shorts",
-    "Expiring soon",
-  ]);
+  await assertDashboardOperationalAndShiftTiles(page);
   expect(
     await page
       .locator(".sidebar")
