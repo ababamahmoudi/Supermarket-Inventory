@@ -35,6 +35,9 @@ export function setInvoiceAmount(
   value: string,
 ): void {
   invoice[field] = value;
+  invoice.calculated_fields = invoice.calculated_fields?.filter(
+    (key) => key !== field,
+  );
   const computed = invoiceComputedTotal(invoice);
   if (field === "final_total") {
     invoice.final_total_manual =

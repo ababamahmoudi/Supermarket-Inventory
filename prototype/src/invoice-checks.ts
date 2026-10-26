@@ -86,6 +86,7 @@ export function visibleInvoiceCheckFields(record: {
 }): string[] {
   const seen = new Set<string>();
   return (record.low_confidence_fields ?? []).filter((field) => {
+    if (field.startsWith("calculated:")) return false;
     const key = invoiceCheckField(field);
     if (seen.has(key)) return false;
     seen.add(key);
@@ -104,7 +105,13 @@ export function normalizeInvoiceReceivingReview(invoice: DemoInvoice): void {
   ] as const;
   invoice.low_confidence_fields = [
     ...new Set([
-      ...visibleInvoiceCheckFields(invoice),
+      ...visibleInvoiceCheckFields(invoice).filter(
+        (field) =>
+          !(
+            invoice.imported_received_source === "invoice_date" &&
+            invoiceCheckField(field) === "received_at"
+          ),
+      ),
       ...required.filter((field) => !String(invoice[field] ?? "").trim()),
     ]),
   ];
@@ -363,13 +370,25 @@ export function confirmInvoiceLineChecks(
   line.review_changed_after_confirmation = false;
 }
 
-/** Complete supported missing-paper combinations and retain each calculated question. */
+/** Complete supported missing-paper combinations; provenance is quiet, never an invented AI question. */
 export function fillCalculatedInvoiceTotals(invoice: {
   subtotal: string;
   tax: string;
   final_total: string;
   low_confidence_fields?: string[];
+  calculated_fields?: string[];
 }): void {
+  const legacyCalculated = (invoice.low_confidence_fields ?? [])
+    .filter((field) => field.startsWith("calculated:"))
+    .map(invoiceCheckField);
+  if (legacyCalculated.length) {
+    invoice.calculated_fields = [
+      ...new Set([...(invoice.calculated_fields ?? []), ...legacyCalculated]),
+    ];
+    invoice.low_confidence_fields = invoice.low_confidence_fields?.filter(
+      (field) => !field.startsWith("calculated:"),
+    );
+  }
   const valid = (value: string) => /^\d+(?:\.\d{1,2})?$/.test(value);
   const fill = (field: "subtotal" | "tax" | "final_total", value: Decimal) => {
     invoice[field] = value.toFixed(2);
@@ -377,7 +396,9 @@ export function fillCalculatedInvoiceTotals(invoice: {
       ...(invoice.low_confidence_fields ?? []).filter(
         (key) => invoiceCheckField(key) !== field,
       ),
-      `calculated:${field}`,
+    ];
+    invoice.calculated_fields = [
+      ...new Set([...(invoice.calculated_fields ?? []), field]),
     ];
   };
   if (

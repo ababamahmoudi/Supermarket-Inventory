@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { useState } from "react";
 import { useDemo } from "../../store";
-import { Badge, BufferedInput, Button } from "../../ui";
+import { BufferedInput, Button } from "../../ui";
 
 import {
   ReadingMoney as Money,
@@ -26,9 +26,7 @@ export function TotalsCard({
   const fields = (invoice.low_confidence_fields ?? []).filter((x) =>
     ["subtotal", "tax", "final_total"].includes(invoiceCheckField(x)),
   );
-  const [editing, setEditing] = useState(() =>
-    fields.some((field) => !field.startsWith("calculated:")),
-  );
+  const [editing, setEditing] = useState(() => fields.length > 0);
   const showEditor =
     editing ||
     (["subtotal", "tax", "final_total"] as const).some((field) =>
@@ -121,10 +119,7 @@ export function TotalsCard({
               tax: ["Tax", "مالیات"],
               final_total: ["Invoice total", "جمع فاکتور"],
             };
-            const calculated = fields.some(
-              (x) =>
-                x.startsWith("calculated:") && invoiceCheckField(x) === key,
-            );
+            const calculated = invoice.calculated_fields?.includes(key);
             const difference =
               key === "subtotal"
                 ? differences.subtotalDifference
@@ -138,12 +133,12 @@ export function TotalsCard({
                     <span>
                       {t(...labels[key])}
                       {calculated && (
-                        <Badge tone="pending" wrap>
+                        <small className="muted">
                           {t(
                             "Calculated · not on the paper",
                             "محاسبه‌شده · روی کاغذ نیست",
                           )}
-                        </Badge>
+                        </small>
                       )}
                     </span>
                     <Money value={invoice[key]} />
@@ -155,12 +150,12 @@ export function TotalsCard({
                     error={invoiceAmountIssue(key, invoice[key], t)}
                     hint={
                       calculated ? (
-                        <Badge tone="pending" wrap>
+                        <small className="muted">
                           {t(
                             "Calculated · not on the paper",
                             "محاسبه‌شده · روی کاغذ نیست",
                           )}
-                        </Badge>
+                        </small>
                       ) : undefined
                     }
                   >

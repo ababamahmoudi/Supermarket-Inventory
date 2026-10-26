@@ -346,7 +346,7 @@ export function LinesTable({
                         {confirmedLine ? (
                           <Check size={13} strokeWidth={3} aria-hidden="true" />
                         ) : count ? (
-                          count
+                          "!"
                         ) : correction ? (
                           "!"
                         ) : null}
@@ -402,6 +402,11 @@ export function LinesTable({
                           ? categoryLabel(category.label, lang)
                           : t("Choose a category", "انتخاب دسته")}
                       </span>
+                      {count > 0 && (
+                        <span className="receiving-check-summary">
+                          {t(`· ${count} to check`, `· ${count} برای بررسی`)}
+                        </span>
+                      )}
                       {!product && (
                         <span className="receiving-new-product">
                           {t("New product", "کالای جدید")}

@@ -112,8 +112,10 @@ describe("R2b 1.1 imported received dates", () => {
       companyDateTime(state.config, state.invoices![3].received_at),
     ).toEqual({ date: "2026-08-20", time: "13:40" });
     expect(
-      state.invoices!.every((invoice) =>
-        invoice.low_confidence_fields?.includes("received_at"),
+      state.invoices!.every(
+        (invoice) =>
+          invoice.low_confidence_fields?.includes("received_at") ===
+          (invoice.imported_received_source !== "invoice_date"),
       ),
     ).toBe(true);
     expect(
@@ -258,12 +260,22 @@ describe("R2b 1.3 missing paper amounts", () => {
   ])(
     "derives supported missing amounts exactly and marks each derived field",
     (source, expected, checks) => {
-      const invoice = { ...source, low_confidence_fields: [] as string[] };
+      const invoice = {
+        ...source,
+        low_confidence_fields: [] as string[],
+        calculated_fields: [] as string[],
+      };
       fillCalculatedInvoiceTotals(invoice);
       expect(invoice).toMatchObject(expected);
-      expect(invoice.low_confidence_fields).toEqual(checks);
+      expect(invoice.low_confidence_fields).toEqual([]);
+      expect(invoice.calculated_fields).toEqual(
+        checks.map((field) => field.replace("calculated:", "")),
+      );
       fillCalculatedInvoiceTotals(invoice);
-      expect(invoice.low_confidence_fields).toEqual(checks);
+      expect(invoice.low_confidence_fields).toEqual([]);
+      expect(invoice.calculated_fields).toEqual(
+        checks.map((field) => field.replace("calculated:", "")),
+      );
     },
   );
   it("leaves unresolved or contradictory evidence blank and names each missing field", () => {
@@ -304,15 +316,17 @@ describe("R2b 1.3 missing paper amounts", () => {
       tax: "0.00",
       final_total: "32.00",
     });
-    expect(state.invoices![0].low_confidence_fields).toEqual(
-      expect.arrayContaining(["calculated:subtotal", "calculated:tax"]),
+    expect(state.invoices![0].calculated_fields).toEqual(
+      expect.arrayContaining(["subtotal", "tax"]),
+    );
+    expect(state.invoices![0].low_confidence_fields).not.toContain(
+      "calculated:subtotal",
     );
     selectInvoiceWorkspace(state, actor, state.invoices![0].id);
     acknowledgeInvoiceCheck(state, actor, "calculated:tax");
     expect(state.invoice.low_confidence_fields).not.toContain("calculated:tax");
-    expect(state.invoice.low_confidence_fields).toContain(
-      "calculated:subtotal",
-    );
+    expect(state.invoice.calculated_fields).toContain("subtotal");
+    expect(state.invoice.calculated_fields).toContain("tax");
     expect(state.invoices![3]).toMatchObject({
       subtotal: "",
       tax: "",
@@ -356,7 +370,10 @@ describe("R2b 1.4 payment terms", () => {
       payment_terms_inferred: true,
       due_date: "2026-08-18",
     });
-    expect(state.invoices![2].low_confidence_fields).toContain("payment_terms");
+    expect(state.invoices![2].low_confidence_fields).not.toContain(
+      "payment_terms",
+    );
+    expect(state.invoices![2].payment_terms_inferred).toBe(true);
     expect(state.invoices![3].due_date).toBe("2026-08-19");
     expect(state.invoices![3].low_confidence_fields).toContain("due_date");
     expect(state.invoices![4].due_date).toBe("2026-09-19");

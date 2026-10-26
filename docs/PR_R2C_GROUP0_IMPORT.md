@@ -17,3 +17,9 @@ To test: import fictional `CTN24`, quantity 2, line total 48.00 → 48 units, co
 Common measured/boxed packs, Pieces in Carton labels, parenthesized packs, attached sizes, trailing UA and printed date codes are removed from editable names while the printed description remains exact. ALL-CAPS names become Title Case; mixed-case brand spelling remains. Pack-only names automatically use a name-like printed supplier code and retain the prior name/code for Undo. Ambiguous partly named descriptions still offer a suggestion. Generated supplier codes use the clean name. The summary metadata shows pack, distinct code and category without repeating the name.
 
 To test: a fictional `CEDAR JAM (12x640 gr)` becomes Cedar Jam with pack 12 × 640 g and its exact printed description in More details. `Box of 20 x 1kg` with code `CEDAR DRY BEANS` starts as Cedar Dry Beans; open the line and click Undo to restore the printed name/code.
+
+## 0.10 Genuine checks and quiet provenance
+
+Derived totals, default company currency, name-filled codes, computed due dates and invoice-date Received keep muted provenance rather than invented amber questions. Handwriting, explicitly reading-flagged values (including empty optional evidence), unresolved values and genuine matching/pack ambiguities remain checks. Legacy calculated fields migrate to quiet provenance without fabricating who checked them. The line status icon is a plain !; its count is in metadata text. Internal branch hints are used only to suggest location and never create an unresolvable field check or substitute for an address.
+
+The independent twelve-line Cedar Path fixture has one explicit barcode check, under one highlighted check per line. It is intentionally a typical import, while the earlier R2b fixture continues to test many deliberately flagged and unresolved edge cases.

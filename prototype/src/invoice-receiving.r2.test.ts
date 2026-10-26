@@ -218,10 +218,15 @@ describe("R2 receiving decisions", () => {
   ] as const)(
     "calculates a missing total exactly and retains its totals-card question",
     (source, field, expected) => {
-      const invoice = { ...source, low_confidence_fields: [field] };
+      const invoice = {
+        ...source,
+        low_confidence_fields: [field],
+        calculated_fields: [] as string[],
+      };
       fillCalculatedInvoiceTotals(invoice);
       expect(invoice[field]).toBe(expected);
-      expect(invoice.low_confidence_fields).toEqual([`calculated:${field}`]);
+      expect(invoice.low_confidence_fields).toEqual([]);
+      expect(invoice.calculated_fields).toEqual([field]);
     },
   );
   it("suggests Title Case names with lowercase sizes and pack units", () => {
@@ -263,7 +268,8 @@ describe("R2 receiving decisions", () => {
     expect(state.invoice.lines).toHaveLength(25);
     expect(state.invoice.other_charges).toHaveLength(2);
     expect(state.invoice.subtotal).toBe("96.35");
-    expect(state.invoice.low_confidence_fields).toContain(
+    expect(state.invoice.calculated_fields).toContain("subtotal");
+    expect(state.invoice.low_confidence_fields).not.toContain(
       "calculated:subtotal",
     );
     expect(invoiceCheckCount(state.invoice)).toBe(rows[1].check_count);
@@ -413,8 +419,8 @@ describe("R2 receiving decisions", () => {
     expect(state.invoice.low_confidence_fields).toEqual([
       "order_reference",
       "bill_to",
-      "calculated:subtotal",
     ]);
+    expect(state.invoice.calculated_fields).toContain("subtotal");
     expect(line.low_confidence_fields).toEqual([
       "lot_number",
       "barcode",

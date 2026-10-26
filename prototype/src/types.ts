@@ -406,6 +406,8 @@ export type DemoInvoice = Omit<
       original_sha256: string;
     }[];
     low_confidence_fields?: string[];
+    calculated_fields?: string[];
+    import_currency_inferred?: boolean;
     checked_fields?: InvoiceCheckReceipts;
     reading_record?: {
       source: "imported";

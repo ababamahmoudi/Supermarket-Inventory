@@ -265,6 +265,14 @@ export function InvoiceDetailsCard({
             />
             <Field
               readingField="due_date"
+              hint={
+                invoice.calculated_fields?.includes("due_date")
+                  ? t(
+                      `Calculated from ${invoice.payment_terms}`,
+                      `محاسبه‌شده از ${invoice.payment_terms}`,
+                    )
+                  : undefined
+              }
               label={t("Due date (optional)", "تاریخ سررسید (اختیاری)")}
               error={
                 attemptedPost && invalidDueDate
@@ -391,6 +399,11 @@ export function InvoiceDetailsCard({
                     className={
                       key === "bill_to" || key === "ship_to"
                         ? "receiving-address-field"
+                        : undefined
+                    }
+                    hint={
+                      key === "currency" && invoice.import_currency_inferred
+                        ? t("Company currency", "ارز شرکت")
                         : undefined
                     }
                   >

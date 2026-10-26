@@ -321,8 +321,10 @@ describe("normal invoice field mappings", () => {
       "14.8140",
     );
     expect(mapped.line_total).toBe("2.47");
+    expect(mapped.taxable_inferred).toBe(true);
+    expect(mapped.low_confidence_fields).not.toContain("taxable");
     expect(mapped.low_confidence_fields).toEqual(
-      expect.arrayContaining(["description", "taxable"]),
+      expect.arrayContaining(["description"]),
     );
   });
   it("offers complete Gregorian and Persian expiry dates, but retains partial dates as printed text", () => {

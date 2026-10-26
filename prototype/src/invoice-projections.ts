@@ -163,6 +163,8 @@ const invoiceKeys = [
   "import_warnings",
   "import_handwritten_notes",
   "import_currency",
+  "import_currency_inferred",
+  "calculated_fields",
   "order_reference",
   "invoice_date_relative_days",
   "payment_terms",

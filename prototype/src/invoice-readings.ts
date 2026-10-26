@@ -733,18 +733,23 @@ export function actionableReadingChecks(
   statuses: Record<string, "auto" | "check">,
 ) {
   const checks = readingCheckFields(statuses, value);
+  const received = importedReadingReceived(state.config, value);
   const header = {
     supplier: text(value.supplier_name),
     supplier_invoice_number: text(value.supplier_invoice_number),
     invoice_date: readingExpiryDate(text(value.invoice_date)) ?? "",
-    received_at: importedReadingReceived(state.config, value).received_at,
+    received_at: received.received_at,
     order_reference: text(value.order_reference),
     bill_to: text(value.bill_to),
-    ship_to: text(value.ship_to) || text(value.branch_hint),
+    ship_to: text(value.ship_to),
     subtotal: decimal(value.subtotal, 2),
     tax: decimal(value.tax, 2),
     final_total: decimal(value.final_total, 2),
-    low_confidence_fields: [...checks.header, "received_at"],
+    low_confidence_fields: [
+      ...checks.header,
+      ...(received.source !== "invoice_date" ? ["received_at"] : []),
+    ],
+    calculated_fields: [] as string[],
   };
   for (const field of [
     "supplier",
@@ -970,6 +975,21 @@ export function readingCheckFields(
     if (status !== "check") continue;
     if (key.startsWith("header.")) {
       const field = key.slice(7);
+      if (
+        ![
+          ...Object.keys(headerStatusAliases),
+          "payment_terms",
+          "order_reference",
+          "bill_to",
+          "ship_to",
+          "currency",
+          "supplier_tax_number",
+          "received_at",
+          "receiving_employee",
+          "order_id",
+        ].includes(field)
+      )
+        continue;
       if (field === "currency" && value && !text(value.currency)) continue;
       header.push(headerStatusAliases[field] ?? field);
     }
@@ -1051,20 +1071,19 @@ export function mapReadingLine(
     : /^(?:each|ea|unit|units|piece|pieces|pcs)$/.test(printedUnit)
       ? "each"
       : printedUnit;
-  const pack = decimal(source.units_per_case ?? split.units_per_case) || "1",
+  const printedPack = decimal(source.units_per_case ?? split.units_per_case);
+  const validPack =
+    printedPack &&
+    new Decimal(printedPack).isInteger() &&
+    new Decimal(printedPack).gt(0) &&
+    new Decimal(printedPack).lte(Number.MAX_SAFE_INTEGER);
+  const pack = validPack ? printedPack : "1",
     quantity = decimal(source.quantity),
     received =
       decimal(source.units_received) ||
       (quantity
         ? new Decimal(quantity).times(unit === "case" ? pack : 1).toString()
         : "");
-  if (
-    pack !== "0" &&
-    (!new Decimal(pack).isInteger() ||
-      new Decimal(pack).lte(0) ||
-      new Decimal(pack).gt(Number.MAX_SAFE_INTEGER))
-  )
-    throw new ReadingImportError("invalid_number");
   const printedCost = decimal(source.unit_cost_before_tax, 4);
   const printedCaseCost =
     decimal(source.cost_per_case_before_tax, 4) ||
@@ -1113,14 +1132,10 @@ export function mapReadingLine(
     unit_cost_before_tax: cost,
   }))
     if (!value) checks.push(field);
-  if (source.taxable == null) checks.push("taxable");
   if (unit === "other" || !["case", "each", "kg", "lb"].includes(unit))
     checks.push("quantity_unit");
   if (split.uncertain) checks.push("description");
-  const missingPack =
-    unit === "case" &&
-    !text(source.units_per_case) &&
-    split.units_per_case === undefined;
+  const missingPack = unit === "case" && !validPack;
   if (missingPack) checks.push("units_per_case");
   if (matched?.provenance.requires_check) checks.push("product_code");
   const line: InvoiceLine = {
@@ -1567,13 +1582,15 @@ export function importInvoiceReadings(
     );
     if (computedDue && paperDue && paperDue !== computedDue)
       checks.header.push("due_date");
-    if (!printedTerms) checks.header.push("payment_terms");
-    invoice.ship_to = text(value.ship_to) || text(value.branch_hint);
+    if (!invoice.payment_terms) checks.header.push("payment_terms");
+    invoice.ship_to = text(value.ship_to);
     invoice.bill_to = text(value.bill_to);
     invoice.supplier_tax_number = text(value.supplier_tax_number);
     invoice.order_reference = text(value.order_reference);
     invoice.import_currency =
       text(value.currency) || state.config.company.currency;
+    invoice.import_currency_inferred = !text(value.currency);
+    invoice.calculated_fields = computedDue && !paperDue ? ["due_date"] : [];
     invoice.subtotal = decimal(value.subtotal, 2);
     invoice.tax = decimal(value.tax, 2);
     invoice.final_total = decimal(value.final_total, 2);
@@ -1587,7 +1604,10 @@ export function importInvoiceReadings(
     invoice.receiving_employee = actor.actor;
     invoice.import_warnings = list(value.warnings);
     invoice.import_handwritten_notes = list(value.handwritten_notes);
-    invoice.low_confidence_fields = [...checks.header, "received_at"];
+    invoice.low_confidence_fields = [
+      ...checks.header,
+      ...(received.source !== "invoice_date" ? ["received_at"] : []),
+    ];
     for (const field of [
       "supplier",
       "supplier_invoice_number",
