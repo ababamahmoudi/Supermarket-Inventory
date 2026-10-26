@@ -90,10 +90,11 @@ for (const language of ["en", "fa"] as const) {
             })
             .getByRole("link", { includeHidden: true }),
         ).toHaveText(
-          // S1 (Ali's rule): everyone, including the Cashier, adds dates.
+          // Everyone, including Cashiers, can record their shift, create a
+          // return and add dates. The exact list still excludes private pages.
           language === "fa"
-            ? ["جست‌وجو", "پیگیری تاریخ"]
-            : ["Lookup", "Date tracking"],
+            ? ["جست‌وجو", "کارکرد", "مرجوعی‌ها", "پیگیری تاریخ"]
+            : ["Lookup", "Timesheets", "Returns", "Date tracking"],
         );
       }
       await signOut(page, language);
