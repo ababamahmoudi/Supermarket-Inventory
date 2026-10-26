@@ -67,6 +67,9 @@ export type CompanyReadConfig = Omit<
 /** No canonical invoice or unavailable money is synthesized to satisfy a component. */
 export interface ScopedReadView extends Omit<
   DemoState,
+  | "timesheet_staff"
+  | "timesheet_days"
+  | "timesheet_rows"
   | "price_update_baseline"
   | "price_task_prints"
   | "config"
@@ -93,6 +96,9 @@ export interface ScopedReadView extends Omit<
   | "orders"
   | "supplier_items"
 > {
+  timesheet_staff?: DemoState["timesheet_staff"];
+  timesheet_days?: DemoState["timesheet_days"];
+  timesheet_rows?: DemoState["timesheet_rows"];
   price_change_hints?: PriceChangeHint[];
   config: CompanyReadConfig;
   products: ProductReadDTO[];
@@ -139,6 +145,9 @@ export interface ReadModelProjectors {
     actor: AuthenticatedActor,
   ): Pick<
     ScopedReadView,
+    | "timesheet_staff"
+    | "timesheet_days"
+    | "timesheet_rows"
     | "receipt_lots"
     | "clearance_lots"
     | "stock_movements"
@@ -226,6 +235,9 @@ export function signedOutReadView(config: CompanyConfig): ScopedReadView {
   return {
     version: 1,
     config: operationalConfig(config),
+    timesheet_staff: [],
+    timesheet_days: [],
+    timesheet_rows: [],
     products: [],
     clearance_lots: [],
     invoice: null,
@@ -289,7 +301,9 @@ export function createReadModel(projectors: ReadModelProjectors) {
         ? projectors.suppliers(state, actor)
         : [],
       activity:
-        allows("history.read_all") || allows("history.read_own")
+        allows("history.read_all") ||
+        allows("history.read_own") ||
+        allows("timesheets.read")
           ? projectors.history(state, actor)
           : [],
       ledger: allows("supplier_balances.read")

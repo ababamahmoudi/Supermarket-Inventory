@@ -1,4 +1,9 @@
-import type { TimesheetSettings } from "./timesheet-types";
+import type {
+  TimesheetSettings,
+  TimesheetStaff,
+  TimesheetDay,
+  TimesheetRow,
+} from "./timesheet-types";
 import type { NoteDoneRule } from "./note-engagement";
 import type { configSeed, demoSeed } from "./config";
 import type { NotebookDefinition, NotebookEntry } from "./notebooks";
@@ -51,15 +56,16 @@ export type CompanyConfig = Omit<
   | "roles"
   | "notebooks"
   | "invoices"
+  | "timesheets"
+  | "modules"
 > & {
   invoices: Omit<typeof configSeed.invoices, "delivery_window"> & {
     delivery_window?: { start: string; end: string };
   };
   roles: RoleDefinition[];
   timesheets?: TimesheetSettings;
-  modules: Omit<typeof configSeed.modules, "timesheets"> & {
-    timesheets?: boolean;
-  };
+  /** Persisted legacy input is upgraded before publication. */
+  modules: typeof configSeed.modules;
   notebooks: {
     built_in: {
       kind: string;
@@ -727,6 +733,10 @@ export interface HistoryRecoveryMarker {
 }
 export interface DemoState {
   version: 1;
+  prototype_r2d_timesheet_schema?: 1;
+  timesheet_staff?: TimesheetStaff[];
+  timesheet_days?: TimesheetDay[];
+  timesheet_rows?: TimesheetRow[];
   /** The supplied balance figures are a dated demo snapshot, not ledger entries. */
   supplier_balance_snapshot_date?: string;
   supplier_balance_snapshot_currency?: string;

@@ -15,6 +15,10 @@ export function removeFictionalData(
   const retained = <T extends { company_id: string }>(rows?: T[]): T[] =>
     (rows ?? []).filter((row) => row.company_id !== company);
 
+  state.timesheet_staff = retained(state.timesheet_staff);
+  state.timesheet_days = retained(state.timesheet_days);
+  state.timesheet_rows = retained(state.timesheet_rows);
+  state.prototype_r2d_timesheet_schema = 1;
   state.products = retained(state.products);
   state.suppliers = retained(state.suppliers);
   state.supplier_items = retained(state.supplier_items);

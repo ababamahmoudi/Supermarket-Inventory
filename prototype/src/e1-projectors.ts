@@ -1,3 +1,4 @@
+import { projectTimesheets } from "./timesheets-projections";
 import { projectCatalogReadView } from "./catalog-read-model";
 import { projectInvoiceState } from "./invoice-projections";
 import { returnViews } from "./return-projections";
@@ -27,6 +28,7 @@ export function completeReadModelProjectors(): ReadModelProjectors {
     operational: (state, actor) => ({
       ...projectPurchaseOperational(state, actor),
       ...projectNotesDatesRequests(state, actor),
+      ...projectTimesheets(state, actor),
     }),
     sales: projectSalesReadView,
     suppliers: projectSuppliers,

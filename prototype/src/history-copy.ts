@@ -6,6 +6,28 @@ import { configSeed } from "./config";
 import { configuredRoleLabel } from "./role-config";
 
 const actions: Record<string, [string, string]> = {
+  "Timesheet settings changed": [
+    "Timesheet settings changed",
+    "تنظیمات کارکرد تغییر کرد",
+  ],
+  "Add timesheet staff": ["Add timesheet staff", "افزودن فرد به فهرست کارکرد"],
+  "Edit timesheet staff": [
+    "Edit timesheet staff",
+    "ویرایش فرد در فهرست کارکرد",
+  ],
+  "Archive timesheet staff": [
+    "Archive timesheet staff",
+    "بایگانی فرد در فهرست کارکرد",
+  ],
+  "Restore timesheet staff": [
+    "Restore timesheet staff",
+    "بازگردانی فرد در فهرست کارکرد",
+  ],
+  "Add timesheet day": ["Add timesheet day", "افزودن روز کارکرد"],
+  "Add timesheet row": ["Add timesheet row", "افزودن ردیف کارکرد"],
+  "Edit timesheet row": ["Edit timesheet row", "ویرایش ردیف کارکرد"],
+  "Remove timesheet row": ["Remove timesheet row", "برداشتن ردیف کارکرد"],
+  "Edit timesheet notes": ["Edit timesheet notes", "ویرایش یادداشت کارکرد"],
   "Change approval category": [
     "Change approval category",
     "تغییر دسته‌بندی درخواست تأیید",
@@ -218,6 +240,13 @@ export function historyActionLabel(action: string, lang: Language): string {
   return copy ? translate(...copy, lang) : activityLabel(action, lang);
 }
 const fields: Record<string, [string, string]> = {
+  in_time: ["In", "ورود"],
+  out_time: ["Out", "خروج"],
+  department_key: ["Department", "بخش"],
+  department_name_en: ["Department (English)", "بخش (انگلیسی)"],
+  department_name_fa: ["Department (Persian)", "بخش (فارسی)"],
+  usual_department_key: ["Usual department", "بخش معمول"],
+  departments: ["Departments", "بخش‌ها"],
   sale_price: ["Sale price", "قیمت تخفیف"],
   requested_price: ["Sale price", "قیمت تخفیف"],
   regular_price: ["Regular price", "قیمت عادی"],

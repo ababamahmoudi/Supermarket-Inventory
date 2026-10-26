@@ -1,3 +1,4 @@
+import { migrateTimesheetState } from "./timesheet-state";
 import {
   migratePriceUpdates,
   evaluatePriceUpdates,
@@ -44,6 +45,7 @@ export function browserShellOptions(projectors: ReadModelProjectors) {
     ) => {
       await migratePriceUpdates(...args);
       await migrateSalePriceInvariants(...args);
+      await migrateTimesheetState(...args);
     },
     historyRecovery: {
       status: historyRecoveryStatus,

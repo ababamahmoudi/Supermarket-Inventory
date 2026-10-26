@@ -1,3 +1,4 @@
+import { isTimesheetActivity, timesheetScope } from "./timesheets";
 import { canApplyNotebookHistoryActivity } from "./notebooks";
 import { businessAuditRead } from "./business-audit-read";
 import { clearOfferStoreSuppression, offerVersion } from "./offer-store-scopes";
@@ -711,6 +712,13 @@ function accessible(
   )
     return true;
   if (entry.company_id !== state.config.company.seed_key) return false;
+  if (isTimesheetActivity(entry))
+    return can(
+      state,
+      context,
+      "timesheets.read",
+      timesheetScope(entry.company_id, entry.branch),
+    ).allowed;
   return (
     can(state, context, "history.read_all", historyScope(state, entry))
       .allowed ||
