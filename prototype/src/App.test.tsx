@@ -151,9 +151,30 @@ describe("E1 authentication and role-aware shell", () => {
         { timeout: 10000 },
       ),
     );
-    // Cashiers use Lookup and may add dates (Ali, Oct 2026).
-    expect(nav.getAllByRole("link")).toHaveLength(2);
-    expect(nav.getByRole("link", { name: "Date tracking" })).toBeVisible();
+    // Cashiers retain their public Lookup/date access and their assigned-store
+    // Timesheets and Returns routes, without acquiring financial navigation.
+    expect(
+      nav.getAllByRole("link").map((link) => ({
+        name: link.getAttribute("aria-label"),
+        href: link.getAttribute("href"),
+      })),
+    ).toEqual([
+      { name: "Lookup", href: "#lookup" },
+      { name: "Timesheets", href: "#timesheets" },
+      { name: "Returns", href: "#returns" },
+      { name: "Date tracking", href: "#expiry" },
+    ]);
+    for (const name of ["Timesheets", "Returns", "Date tracking"])
+      expect(nav.getByRole("link", { name })).toBeVisible();
+    for (const name of [
+      "Dashboard",
+      "Invoices",
+      "Products",
+      "Approvals",
+      "Payables",
+      "Settings",
+    ])
+      expect(nav.queryByRole("link", { name })).not.toBeInTheDocument();
     expect(nav.getByRole("link", { name: "Lookup" })).toHaveAttribute(
       "aria-current",
       "page",
