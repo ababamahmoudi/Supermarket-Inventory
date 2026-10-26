@@ -329,15 +329,13 @@ describe("R2b 1.3 missing paper amounts", () => {
     expect(state.invoice.calculated_fields).toContain("tax");
     expect(state.invoices![3]).toMatchObject({
       subtotal: "15.13",
-      tax: "0.00",
-      final_total: "15.13",
+      tax: "",
+      final_total: "",
       calculated_from_lines: true,
     });
-    expect(state.invoices![3].calculated_fields).toEqual(
-      expect.arrayContaining(["subtotal", "tax", "final_total"]),
-    );
-    expect(state.invoices![3].low_confidence_fields).not.toContain(
-      "final_total",
+    expect(state.invoices![3].calculated_fields).toEqual(["subtotal"]);
+    expect(state.invoices![3].low_confidence_fields).toEqual(
+      expect.arrayContaining(["tax", "final_total"]),
     );
   });
 });

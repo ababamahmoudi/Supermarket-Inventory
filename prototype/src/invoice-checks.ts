@@ -426,8 +426,8 @@ export function fillCalculatedInvoiceTotals(invoice: {
       );
       if (subtotal.gte(0)) {
         fill("subtotal", subtotal);
-        fill("tax", new Decimal(0));
-        fill("final_total", subtotal);
+        // A derived subtotal alone does not establish whether the supplier charged tax.
+        // Keep tax/total unresolved until a second paper amount or a person supplies it.
         invoice.calculated_from_lines = true;
       }
     }

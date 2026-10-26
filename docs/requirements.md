@@ -8,7 +8,7 @@ All app times use a 24-hour clock. Unqualified handwritten hours 1–6 use after
 
 Common carton/box/measured pack patterns are parsed; an unknown imported pack becomes one plus an amber question, never zero. Case quantity × pack within 0.01 of a whole unit uses that whole number; other fractions stay unresolved. Imported unit cost is printed line total divided by units, four decimals, retaining an exact line-money basis to preserve paper cents. Names drop pack/date suffixes into retained printed evidence and ALL-CAPS names become Title Case. A pack-only name and name-like supplier code swap automatically with an amber Undo.
 
-Amber represents explicit reading checks or genuinely unresolved/uncertain evidence. Computed due dates/totals, configured currency, generated codes and invoice-date Received keep quiet provenance; handwriting remains amber. With no printed totals, complete line amounts plus signed other charges derive subtotal, tax zero and total. Missing component amounts remain unresolved. See the Group 0 guides for detailed test paths.
+Amber represents explicit reading checks or genuinely unresolved/uncertain evidence. Computed due dates/totals, configured currency, generated codes and invoice-date Received keep quiet provenance; handwriting remains amber. With no printed totals, complete line amounts plus signed other charges derive subtotal; unknown tax and total stay named checks until a second amount is supplied. Missing component amounts remain unresolved. See the Group 0 guides for detailed test paths.
 
 ## R2c 0.13 — Aggregate Lookup (2026-10-26)
 

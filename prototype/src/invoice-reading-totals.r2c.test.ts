@@ -8,7 +8,7 @@ import { fillCalculatedInvoiceTotals } from "./invoice-checks";
 import { initialState } from "./e1-bootstrap";
 
 describe("R2c 0.11 totals from complete line evidence", () => {
-  it("derives all absent invoice totals from exact item and signed charge amounts", () => {
+  it("derives the absent subtotal from lines while keeping unknown tax and total unresolved", () => {
     const invoice = {
       subtotal: "",
       tax: "",
@@ -22,11 +22,32 @@ describe("R2c 0.11 totals from complete line evidence", () => {
     fillCalculatedInvoiceTotals(invoice);
     expect(invoice).toMatchObject({
       subtotal: "16.57",
-      tax: "0.00",
-      final_total: "16.57",
+      tax: "",
+      final_total: "",
       calculated_from_lines: true,
-      calculated_fields: ["subtotal", "tax", "final_total"],
-      low_confidence_fields: [],
+      calculated_fields: ["subtotal"],
+      low_confidence_fields: ["tax", "final_total"],
+    });
+  });
+  it("derives the total once a person supplies the missing tax", () => {
+    const invoice = {
+      subtotal: "",
+      tax: "",
+      final_total: "",
+      lines: [{ line_total: "16.57" }],
+    };
+    fillCalculatedInvoiceTotals(invoice);
+    expect(invoice).toMatchObject({
+      subtotal: "16.57",
+      tax: "",
+      final_total: "",
+    });
+    invoice.tax = "2.15";
+    fillCalculatedInvoiceTotals(invoice);
+    expect(invoice).toMatchObject({
+      subtotal: "16.57",
+      tax: "2.15",
+      final_total: "18.72",
     });
   });
   it("does not invent zero totals when any line or charge amount is unresolved", () => {
@@ -71,10 +92,13 @@ describe("R2c 0.11 totals from complete line evidence", () => {
     const checked = actionableReadingChecks(initialState(), reading, {});
     expect(checked).toMatchObject({
       subtotal: "119.65",
-      tax: "0.00",
-      final_total: "119.65",
+      tax: "",
+      final_total: "",
       calculated_from_lines: true,
     });
-    expect(checked.low_confidence_fields).not.toContain("final_total");
+    expect(checked.low_confidence_fields).not.toContain("subtotal");
+    expect(checked.low_confidence_fields).toEqual(
+      expect.arrayContaining(["tax", "final_total"]),
+    );
   });
 });

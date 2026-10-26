@@ -135,7 +135,7 @@ describe("R2b persisted check receipts", () => {
     const { state, actor, line } = fixture();
     state.invoice.low_confidence_fields = [
       "supplier_invoice_number",
-      "calculated:subtotal",
+      "subtotal",
     ];
     line.low_confidence_fields = ["description", "new_name_en"];
     expect(invoiceCheckCount(state.invoice)).toBe(3);
@@ -160,6 +160,18 @@ describe("R2b persisted check receipts", () => {
     ).toEqual({
       target: "invoice-subtotal",
     });
+  });
+  it("keeps legacy calculated provenance quiet without inventing check receipts", () => {
+    const { state, actor } = fixture();
+    state.invoice.low_confidence_fields = ["calculated:subtotal"];
+    state.invoice.lines.forEach((entry) => {
+      entry.review_confirmed = true;
+    });
+    expect(invoiceCheckCount(state.invoice)).toBe(0);
+    expect(
+      nextInvoiceAttention(invoiceView(state, actor, state.invoice.id)),
+    ).toBeUndefined();
+    expect(state.invoice.checked_fields).toBeUndefined();
   });
   it("does not create receipts without edit authority", () => {
     const { state } = fixture();
