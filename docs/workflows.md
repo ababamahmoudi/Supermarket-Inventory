@@ -1,5 +1,15 @@
 # Workflows and state machines
 
+## R2d — Branch timesheets
+
+1. An authorized Owner, Manager, Branch Supervisor or Cashier opens Daily → Timesheets. Resolve the current company/person/session/module/allowed branches again at the protected boundary. Floor Worker and module Off reveal no sheet, History, CSV or print data. Aggregate selection asks for a branch; its first implicit date uses that branch's local Today. Explicit past dates/week views remain selected, and ordinary save refresh does not move an open day across midnight.
+2. Choose existing branch staff or atomically add a staff member and first shift. Staff may have a safe optional app-login link but need no login. Configured bilingual departments drive the cards and paper; editing, archiving, restoring and removing a shift retain evidence and attributed History.
+3. Type In/Out or Notes → local buffer → normalize valid 24-hour input → serialize actual protected saves against the original editing identity and location. Earlier Out means next day, equal times zero, and integer minutes supply totals. Missing past Out and shifts over 16 hours show checks without inventing a clock-out.
+4. Date/view/export/print and Back/hash navigation wait for valid pending entries. Invalid or failed saves retain the sheet, typed text and Retry. Only the latest accepted route can open; stale callbacks cannot reopen an old page or write as a replacement person. Native reload/close warns while dirty or saving and stops warning after the actual save.
+5. Week view reads the selected branch's Monday–Sunday rows and staff/department/day/week totals. A day cell opens that exact daily sheet. CSV flushes valid edits, rechecks authority and downloads the actual selected day/week with formula-safe cells. Print also rechecks and opens the bilingual three-column day paper or weekly totals, with Notes and Made with Klead; physical output remains a hardware review.
+6. The authorized dashboard's On shift now tile reads distinct staff with a nonfuture In and no Out, including prior unclosed days. It opens that concrete branch's sheet; aggregate selection asks for a branch and module Off removes the tile.
+7. Existing-store upgrade first verifies an exact private backup and unchanged canonical revision, then adds absent defaults and empty timesheet collections. Fresh demo/explicit Reset alone seeds fictional practice rows; Empty store keeps its marker and stays empty after reload. This prototype introduces no shared server, wage calculation or payroll payment execution.
+
 ## R2c Groups 2–6 — Search, statements, atomic approvals and personal inbox
 
 1. Open a product/supplier picker → search public names/code/barcode/aliases → keyboard or click selects a real option. Closed-box Choose… instructions never enter the list. No matches leaves the current selection intact; Escape closes without change. Flip/bound popovers inside the visible viewport, retaining input position and existing shelf Enter/refocus behavior.

@@ -1,5 +1,13 @@
 # Decisions
 
+## R2c/R2d — Final route and loaded-font integration (2026-10-26)
+
+**Context:** combined browser checks exposed actual label/reference clipping, a supplier-filtered Returns render loop and Timesheet edits that could be canceled before the autosave delay by navigation.
+
+**Decision:** reserve complete Supplier status text, fit long invoice references with complete accessible names/tooltips and use one actual record action. Keep list preference setters stable and unchanged updates idempotent, rejecting delayed setters from a retired person/location. Statement presence stays inside the existing authorized financial projection; history-free zero balances are static and fully paid history remains actionable.
+
+For Timesheets, wait for actual pending saves before accepting Back/hash navigation. Keep failed entries mounted with Retry, release only the latest destination, retain original edit callbacks and recheck their actor/session/location in the canonical transaction. Native unload protection applies while dirty or saving. Synchronize implicit Today when the actual branch changes, while preserving explicit dates and an open sheet during ordinary refresh across midnight. This preserves data and current intent without relaxing table, timing, permission or financial guards.
+
 ## R2c Groups 2–6 — Public choices, atomic review and personal event grouping (2026-10-26)
 
 **Shared choices:** derive explicit public search metadata and semantic placeholders; keep genuine empty-valued All/None choices. Bounded popovers and one full-record control fix presentation without expanding domain data or changing quantity/price/authority. Record-details opt-in applies only to the requested overview families.

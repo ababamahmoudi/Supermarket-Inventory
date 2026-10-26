@@ -60,6 +60,8 @@ See `PR_R2D_DOMAIN.md` and `PR_R2D_REVIEW.md` for the full daily, staff, setting
 | B4  | Manager/Owner/Branch Supervisor Dashboard → On shift now. It counts distinct staff with a nonfuture In and no Out, including prior unclosed days, and opens Timesheets. Aggregate location asks for a branch. Module Off restores five operational Manager tiles.                                                                                                                          |
 | C   | A fresh/reset isolated demo has three invented days, eight staff across departments, one overnight and one missing-Out example. Existing stores gain empty timesheet collections through the verified upgrade; fictional staff are not injected into saved customer records.                                                                                                               |
 
+Timesheet Back/hash navigation waits for pending edits. If a save fails, the sheet and typed text remain available with Retry. Reload/close warns while an entry is dirty or saving, and stops warning after it saves. First branch choice uses that branch's local Today; an ordinary save does not move an already open sheet across midnight.
+
 ## R2c Groups 2–7
 
 | ID  | Click path and expected result                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -82,7 +84,7 @@ See `PR_R2D_DOMAIN.md` and `PR_R2D_REVIEW.md` for the full daily, staff, setting
 | 7.3 | Choose one branch → Lookup. Delivered/stocked/priced products are local. Type a search to also see permitted other-branch matches under At other locations. A branch's own approved price wins; absent approval is labeled and shows permitted other prices without inventing a company-default local approval. A genuine Sale End/expiry restores its matching reviewed regular basis without a new price write.               |
 | 7.4 | Settings → Data has one History link with its actual navigation; attribution remains visible without a duplicate History link.                                                                                                                                                                                                                                                                                                  |
 
-Detailed group guides: [shared controls](PR_R2C_SHARED.md), [Suppliers/Payables](PR_R2C_SUPPLIERS.md), [Approvals](PR_R2C_APPROVALS.md), [Offers](PR_R2C_OFFERS.md), [Notifications](PR_R2C_NOTIFICATIONS.md), [Returns](PR_R2C_RETURNS.md), and [Lookup/Settings](PR_R2C_LOOKUP.md).
+Detailed group guides: [shared controls](PR_R2C_SHARED.md), [Suppliers/Payables](PR_R2C_SUPPLIERS.md), [Approvals](PR_R2C_APPROVALS.md), [Offers](PR_R2C_OFFERS.md), [Notifications](PR_R2C_NOTIFICATIONS.md), [Returns](PR_R2C_RETURNS.md), and [Lookup/Settings](PR_R2C_LOOKUP.md). The [combined browser follow-up](PR_R2C_CI_FOLLOWUP.md) records the loaded-font, full-record navigation and direct Returns-route fixes. A history-free supplier's zero Balance stays static; an actual statement remains clickable even after its balance reaches zero.
 
 ## Defaults and limits
 

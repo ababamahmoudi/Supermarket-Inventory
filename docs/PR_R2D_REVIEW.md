@@ -10,13 +10,13 @@ Use `feat/prototype-r2-receiving` and PR #29. Changes stay unmerged. From `proto
 4. An Out earlier than In shows **+1 day**. An open shift today shows **On shift**. A past day's missing Out or a shift over 16 hours has an amber warning; hours are always calculated.
 5. Open **Manage staff** to add or edit English/Persian names, the usual department and an optional app login. Archive retains past shifts; Show archived → Restore makes the person available again. Remove a daily shift asks for confirmation and retains its History.
 6. Open the day's **History** to see the actual person, local time and changed values. Notes save as you type. Staff entries need no app login.
-7. Sign in as **manager**, choose All locations, and open Timesheets. Choose a branch before viewing or editing a daily sheet; the app never silently chooses the first branch.
+7. Sign in as **manager**, choose All locations, and open Timesheets. Choose a branch before viewing or editing a daily sheet; the app never silently chooses the first branch. An implicit day uses that branch's local Today, including when its date differs from the company date. Explicit past dates and a selected open day survive ordinary save refresh across midnight.
 8. Under **Settings → Timesheets**, add, rename, reorder or remove departments. English and Persian labels and order come from settings. Removed departments retain their historical shifts. Settings → Modules includes the Timesheets switch.
 9. Sign in as **ny-floor**. There is no Timesheets menu item. Opening `#timesheets` directly reveals no staff or shifts. Module Off also removes the route and denies protected operations for every role.
 
 The default is a branch staff list with an optional app-login link. Past days remain editable by the four permitted roles, and every meaningful change is audited. Actual browser storage and domain commands enforce company/location access; this prototype does not add a production backend or cross-device shared storage.
 
-Invalid partial times stay in their original field with an accessible explanation and Retry. Date, view, print and export actions wait for valid edits. Leaving the page during a delayed save cannot reopen the old sheet. Returning a time to its original value while an earlier save is running preserves that latest edit.
+Invalid partial times stay in their original field with an accessible explanation and Retry. Date, view, print, export and Back/hash navigation wait for valid edits. A failed save keeps the existing sheet, typed value and Retry visible; retrying successfully lets Back reach its actual previous page. Leaving the page during a delayed save cannot reopen the old sheet or replace a later destination. Returning a time to its original value while an earlier save is running preserves that latest edit. Reload/close uses the browser's unsaved-change protection while dirty or saving, and stops warning after the actual save.
 
 ## B2: week view and payroll CSV
 
@@ -46,7 +46,7 @@ Executed B4 browser proof: Manager count reconciles to canonical unclosed staff,
 
 The Timesheets visual proof passed all 12 combinations of 1440 / 1000 / 390 pixels, English / Persian and light / dark. Each combination captured the daily sheet, week view, staff manager, settings and print output. Geometry checks verified the 3 / 2 / 1 department grid, 44-pixel ordinary controls, surface-colored form fields and no page or daily-row overflow. Contact boards and representative full-size captures were reviewed manually; phone snapshots are browser emulation, not physical-device testing.
 
-The final production-preview Timesheets suite passed all 14 cases across desktop and phone: typing/reload, role denial, week/CSV, print, invalid-time stability, staff management and settings/module changes. Seven focused unit tests passed, including three that use real IndexedDB commands with delayed save scheduling to verify navigation cancellation and the original-value save race. The production build and targeted lint passed.
+The original production-preview Timesheets suite passed all 14 cases across desktop and phone: typing/reload, role denial, week/CSV, print, invalid-time stability, staff management and settings/module changes. Seven focused unit tests passed, including three that use real IndexedDB commands with delayed save scheduling to verify navigation cancellation and the original-value save race. The production build and targeted lint passed. Additional integration regressions cover edits queued before debounce without blur, actual failed canonical writes with retained Retry, competing destinations, identity changes, native reload protection, branch-local Today and same-branch saves across midnight. The exact final combined-head CI result is recorded on PR #29.
 
 Print proof covers browser media rendering and an actual Chromium A4 PDF, while a physical printer remains untested. Evidence contains fictional demo staff only.
 

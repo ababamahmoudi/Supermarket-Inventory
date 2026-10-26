@@ -1,3 +1,11 @@
+## 2026-10-26 — R2c and R2d final browser integration
+
+- Corrected real loaded-font clipping in Supplier Status and long Dashboard invoice references; retained complete accessible references and one actual invoice-record control.
+- Kept history-free Supplier Balance static while preserving navigation for actual statements, including zero balances with retained history. The financial projection retains its existing authority boundary.
+- Stabilized scoped list preference setters and unchanged-value updates after a supplier-filtered Returns route exposed a parent render loop. Shared table allocation remains unchanged.
+- Preserve queued Timesheet edits before Back/hash navigation; failed saves retain the sheet, text and Retry. Native reload/close protection applies while an edit is dirty or saving. Newly selected branches use their own local Today, without moving an open sheet on an ordinary save across midnight.
+- Updated legacy browser expectations for the approved operational/On shift tiles, phone approval cards, scoped 44 px controls and full record destinations. Negative geometry controls, financial/no-write checks and all existing timing/skip budgets remain. See [integration evidence and behavior](PR_R2C_CI_FOLLOWUP.md); the exact final CI head is recorded on PR #29.
+
 ## 2026-10-26 — R2c 7.3 Sale-end Lookup correction
 
 - Preserve the genuine approved Sale’s matching reviewed regular basis after End/expiry, scoped to its product/company/store and currency. The query writes no regular price or approval. Added actual-command and negative evidence tests, including canonical weighed units.
