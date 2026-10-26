@@ -430,11 +430,11 @@ async function checkNamesAndSupplier(page: Page, language: ReceivingLanguage) {
     "https://bluefinch.example",
   );
   await page
+    .locator(".supplier-detail-header")
     .getByRole("button", {
-      name: word(language, "Edit supplier", "ویرایش تأمین‌کننده"),
+      name: word(language, "Edit", "ویرایش"),
       exact: true,
     })
-    .first()
     .click();
   const dialog = page.getByRole("dialog", {
     name: word(language, "Edit supplier", "ویرایش تأمین‌کننده"),

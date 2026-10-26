@@ -56,7 +56,7 @@ test("Supervisor Add supplier saves Active with optional profile details and a d
   ).toBeVisible();
   await expect(
     page
-      .locator(".supplier-header-card")
+      .locator(".supplier-detail-header")
       .getByText("Profile incomplete", { exact: true }),
   ).toBeVisible();
   const saved = await readCanonicalBusinessEvidence(page).then(
@@ -77,7 +77,7 @@ test("Supervisor Add supplier saves Active with optional profile details and a d
     reference: "Opening balance",
   });
   await page
-    .locator(".page-header")
+    .locator(".supplier-detail-header")
     .getByRole("button", { name: "More", exact: true })
     .click();
   await page.getByRole("menuitem", { name: "Deactivate", exact: true }).click();
@@ -87,7 +87,7 @@ test("Supervisor Add supplier saves Active with optional profile details and a d
     .click();
   await expect(
     page
-      .locator(".supplier-header-card")
+      .locator(".supplier-detail-header")
       .getByText("Archived", { exact: true }),
   ).toBeVisible();
 });

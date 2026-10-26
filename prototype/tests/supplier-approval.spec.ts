@@ -96,7 +96,10 @@ test("profile notification opens its editor, clears when completed, and does not
   await page.getByRole("button", { name: /^Notifications, / }).click();
   const notification = page
     .getByRole("menuitem")
-    .filter({ hasText: "Complete supplier profile: Orchard Profile Supply" });
+    .filter({
+      has: page.getByText("Complete supplier profile", { exact: true }),
+    })
+    .filter({ has: page.getByText(supplier.name, { exact: true }) });
   await expect(notification).toHaveCount(1);
   await notification.click();
   const dialog = page.getByRole("dialog", {
@@ -133,14 +136,12 @@ test("profile notification opens its editor, clears when completed, and does not
     .click();
   await expect(dialog).not.toBeVisible();
   await expect(
-    page.locator(".supplier-header-card").getByText("Active", { exact: true }),
+    page
+      .locator(".supplier-detail-header")
+      .getByText("Active", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: /^Notifications, / }).click();
-  await expect(
-    page
-      .getByRole("menuitem")
-      .filter({ hasText: "Complete supplier profile: Orchard Profile Supply" }),
-  ).toHaveCount(0);
+  await expect(notification).toHaveCount(0);
   const state = await readCanonicalBusinessEvidence(page);
   const notifications = state.notifications!.filter(
     (row) => row.supplier_id === supplier.id,
