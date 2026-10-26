@@ -1,26 +1,41 @@
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useDemo } from "./store";
 import {
-  markNotificationRead,
+  clearAllNotifications,
   markAllNotificationsRead,
+  openNotificationGroup,
   type NotificationRecord,
 } from "./sales";
+import {
+  groupedNotifications,
+  notificationTimestamp,
+} from "./notification-groups";
 import { branchLabel } from "./settings";
-import { companyTimestampText } from "./company-time";
 import { ProductName, LtrText } from "./presentation";
-import { MenuItem } from "./ui";
+import { Button, MenuItem, useMenuClose } from "./ui";
 
 export function PersonalNotifications() {
-  const { state, command, actor, can, setBranch, navigate, lang, t } =
+  const { state, command, actor, branch, can, setBranch, navigate, lang, t } =
     useDemo();
+  const closeMenu = useMenuClose();
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const intentKey = actor
     ? `${actor.company_id}:${actor.session_id}:${actor.authority_epoch}:${actor.person_version}`
     : "";
-  const currentIntent = useRef(intentKey);
-  useEffect(() => {
-    currentIntent.current = intentKey;
-  }, [intentKey]);
+  const currentIntent = useRef({ key: intentKey, branch });
+  const requestSequence = useRef(0);
+  useLayoutEffect(() => {
+    currentIntent.current = { key: intentKey, branch };
+  }, [intentKey, branch]);
+  useLayoutEffect(
+    () => () => {
+      // Closing the popover or switching identity cancels its pending navigation.
+      currentIntent.current = { key: "", branch: "" };
+      requestSequence.current += 1;
+    },
+    [],
+  );
   if (
     !actor ||
     !can("notifications.read", {
@@ -30,78 +45,78 @@ export function PersonalNotifications() {
     })
   )
     return null;
-  const notifications = [...(state.notifications ?? [])].sort((a, b) =>
-    b.created_at.localeCompare(a.created_at),
-  );
-  const markAll = async () => {
+  const groups = groupedNotifications(state.notifications ?? []);
+  const scope = {
+    company_id: actor.company_id,
+    kind: "company_shared" as const,
+    owner_user_id: actor.user_id,
+    mutation: true,
+  };
+  const unavailable = () =>
+    setError(
+      t(
+        "This notification is no longer available. Open its list again.",
+        "این اعلان دیگر در دسترس نیست. فهرست آن را دوباره باز کنید.",
+      ),
+    );
+  const updateAll = async (clear: boolean) => {
+    const request = ++requestSequence.current;
+    setBusy(true);
     try {
-      await command(
-        "notifications.mark_read",
-        {
-          company_id: actor.company_id,
-          kind: "company_shared",
-          owner_user_id: actor.user_id,
-          mutation: true,
-        },
-        (draft, freshActor) => markAllNotificationsRead(draft, freshActor),
+      await command("notifications.mark_read", scope, (draft, freshActor) =>
+        clear
+          ? clearAllNotifications(draft, freshActor)
+          : markAllNotificationsRead(draft, freshActor),
       );
-      if (currentIntent.current === intentKey) setError("");
+      if (
+        currentIntent.current.key === intentKey &&
+        requestSequence.current === request
+      )
+        setError("");
     } catch {
-      if (currentIntent.current === intentKey)
-        setError(
-          t(
-            "This notification is no longer available. Open its list again.",
-            "این اعلان دیگر در دسترس نیست. فهرست آن را دوباره باز کنید.",
-          ),
-        );
+      if (
+        currentIntent.current.key === intentKey &&
+        requestSequence.current === request
+      )
+        unavailable();
+    } finally {
+      if (
+        currentIntent.current.key === intentKey &&
+        requestSequence.current === request
+      )
+        setBusy(false);
     }
   };
   const open = async (id: string) => {
+    const request = ++requestSequence.current;
+    const route = window.location.hash;
+    const initialBranch = branch;
+    const isCurrent = () =>
+      currentIntent.current.key === intentKey &&
+      requestSequence.current === request &&
+      window.location.hash === route;
     try {
       const destination = await command(
         "notifications.mark_read",
-        {
-          company_id: actor.company_id,
-          kind: "company_shared",
-          owner_user_id: actor.user_id,
-          mutation: true,
-        },
-        (draft, freshActor) => {
-          const source = (draft.notifications ?? []).find(
-            (item) =>
-              item.id === id &&
-              item.company_id === freshActor.company_id &&
-              item.recipient_user_id === freshActor.user_id &&
-              (item.branch === "all" ||
-                freshActor.allowed_branches.includes(item.branch)),
-          );
-          if (
-            !source ||
-            !/^(?:#)?(?:product\?code=|suppliers\?name=|approvals(?:[?]|$)|alerts(?:[?]|$)|notes(?:[?]|$)|price-update\?id=|price-updates(?:[?]|$)|requests(?:[?]|$)|returns(?:[?]|$)|expiry(?:[?]|$))/.test(
-              source.href,
-            )
-          )
-            throw new Error("permission");
-          markNotificationRead(draft, freshActor, id);
-          return { branch: source.branch, href: source.href };
-        },
+        scope,
+        (draft, freshActor) => openNotificationGroup(draft, freshActor, id),
       );
-      if (currentIntent.current !== intentKey) return;
+      if (!isCurrent() || currentIntent.current.branch !== initialBranch)
+        return;
       if (destination.branch !== "all") await setBranch(destination.branch);
-      if (currentIntent.current !== intentKey) return;
-      navigate(destination.href);
+      if (
+        !isCurrent() ||
+        (currentIntent.current.branch !== initialBranch &&
+          currentIntent.current.branch !== destination.branch)
+      )
+        return;
       setError("");
+      navigate(destination.href);
+      closeMenu?.();
     } catch {
-      if (currentIntent.current === intentKey)
-        setError(
-          t(
-            "This notification is no longer available. Open its list again.",
-            "این اعلان دیگر در دسترس نیست. فهرست آن را دوباره باز کنید.",
-          ),
-        );
+      if (isCurrent()) unavailable();
     }
   };
-  if (!notifications.length) return null;
   const titles: Record<NotificationRecord["kind"], string> = {
     supplier_profile_incomplete: t(
       "Complete supplier profile",
@@ -158,62 +173,105 @@ export function PersonalNotifications() {
     ),
   };
   return (
-    <>
-      {error && <p role="alert">{error}</p>}
-      {notifications.some((item) => !item.read_at) && (
-        <MenuItem onClick={markAll}>
-          {t("Mark all as read", "همه را خوانده‌شده علامت بزن")}
-        </MenuItem>
-      )}
-      {notifications.map((notification) => {
-        const supplier =
-          notification.kind === "supplier_profile_incomplete" &&
-          state.suppliers?.find(
-            (record) =>
-              record.id === notification.supplier_id &&
-              record.company_id === notification.company_id,
-          );
-        const product = state.products.find(
-          (item) =>
-            item.company_id === notification.company_id &&
-            item.code === notification.product_code,
-        );
-        return (
-          <MenuItem
-            className={`personal-notification${notification.read_at ? " is-read" : ""}`}
-            key={notification.id}
-            onClick={() => open(notification.id)}
+    <section
+      className="personal-notifications"
+      aria-label={t("Notifications", "اعلان‌ها")}
+    >
+      <header className="personal-notifications-header">
+        <h2>{t("Notifications", "اعلان‌ها")}</h2>
+        <div className="personal-notifications-actions">
+          <Button
+            role="menuitem"
+            variant="secondary"
+            disabled={busy || !groups.some((group) => group.unread)}
+            onClick={() => void updateAll(false)}
           >
-            <span className="personal-notification-copy">
-              <strong>
-                {titles[notification.kind]}
-                {supplier && (
-                  <>
-                    : <LtrText>{supplier.name}</LtrText>
-                  </>
-                )}
-              </strong>
-              {product && <ProductName product={product} language={lang} />}
-              <small>
-                {branchLabel(state.config, notification.branch, lang)} ·{" "}
-                <LtrText>
-                  {companyTimestampText(state.config, notification.created_at)}
-                </LtrText>
-              </small>
-              {notification.kind === "price_update_escalation" &&
-                notification.count !== undefined && (
-                  <small>
-                    {t(
-                      `${branchLabel(state.config, notification.branch, "en")} has ${notification.count} price updates waiting`,
-                      `${branchLabel(state.config, notification.branch, "fa")} دارای ${notification.count} به‌روزرسانی قیمت در انتظار است`,
+            {t("Mark all as read", "همه را خوانده‌شده علامت بزن")}
+          </Button>
+          <Button
+            role="menuitem"
+            variant="secondary"
+            disabled={busy || !groups.length}
+            onClick={() => void updateAll(true)}
+          >
+            {t("Clear all", "پاک کردن همه")}
+          </Button>
+        </div>
+      </header>
+      {error && (
+        <p className="personal-notifications-error" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="personal-notifications-scroll" tabIndex={-1}>
+        {!groups.length && (
+          <p className="personal-notifications-empty">
+            {t("No new notifications.", "اعلان جدیدی وجود ندارد.")}
+          </p>
+        )}
+        {groups.map((group) => {
+          const notification = group.notification;
+          const supplier =
+            notification.kind === "supplier_profile_incomplete" &&
+            state.suppliers?.find(
+              (record) =>
+                record.id === notification.supplier_id &&
+                record.company_id === notification.company_id,
+            );
+          const product = state.products.find(
+            (item) =>
+              item.company_id === notification.company_id &&
+              item.code === notification.product_code,
+          );
+          return (
+            <MenuItem
+              className={`personal-notification${group.unread ? " is-unread" : " is-read"}`}
+              data-control-kind="disclosure"
+              closeOnSelect={false}
+              key={group.id}
+              onClick={() => void open(group.id)}
+            >
+              <span
+                className="personal-notification-dot"
+                aria-label={
+                  group.unread ? t("Unread", "خوانده‌نشده") : undefined
+                }
+              />
+              <span className="personal-notification-copy">
+                <span className="personal-notification-heading">
+                  <strong>{titles[notification.kind]}</strong>
+                  <time dateTime={notification.created_at}>
+                    {notificationTimestamp(
+                      state.config,
+                      notification.created_at,
+                      lang,
                     )}
-                  </small>
-                )}
-              {notification.reason && <small>{notification.reason}</small>}
-            </span>
-          </MenuItem>
-        );
-      })}
-    </>
+                  </time>
+                </span>
+                {supplier && <LtrText>{supplier.name}</LtrText>}
+                {product && <ProductName product={product} language={lang} />}
+                <small className="personal-notification-branches">
+                  {group.branches
+                    .map((location) =>
+                      branchLabel(state.config, location, lang),
+                    )
+                    .join(lang === "fa" ? "، " : ", ")}
+                </small>
+                {notification.kind === "price_update_escalation" &&
+                  notification.count !== undefined && (
+                    <small>
+                      {t(
+                        `${notification.count} price updates waiting`,
+                        `${notification.count} به‌روزرسانی قیمت در انتظار`,
+                      )}
+                    </small>
+                  )}
+                {notification.reason && <small>{notification.reason}</small>}
+              </span>
+            </MenuItem>
+          );
+        })}
+      </div>
+    </section>
   );
 }

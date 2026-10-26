@@ -1683,6 +1683,14 @@ export function usePopover<T extends HTMLElement = HTMLButtonElement>(
       )
         close();
     };
+    const escape = (event: globalThis.KeyboardEvent) => {
+      // A completed inbox action can disable its focused button; Escape must still close.
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close(true);
+      }
+    };
+    document.addEventListener("keydown", escape);
     document.addEventListener("pointerdown", outside);
     document.addEventListener("focusin", blur);
     window.addEventListener("resize", measure);
@@ -1697,6 +1705,7 @@ export function usePopover<T extends HTMLElement = HTMLButtonElement>(
     if (triggerRef.current) observer?.observe(triggerRef.current);
     measure();
     return () => {
+      document.removeEventListener("keydown", escape);
       document.removeEventListener("pointerdown", outside);
       document.removeEventListener("focusin", blur);
       window.removeEventListener("resize", measure);
@@ -2737,12 +2746,18 @@ export function IconButton({
 }
 
 const MenuContext = createContext<(() => void) | null>(null);
+/** Async related-record menus keep their content mounted until current intent is checked. */
+export function useMenuClose() {
+  return useContext(MenuContext);
+}
 export function Menu({
   label,
   icon,
   showChevron = true,
   iconOnly = false,
   minWidth = 224,
+  popupClassName,
+  maxViewportHeight = 1,
   children,
   className,
   ...props
@@ -2752,6 +2767,9 @@ export function Menu({
   showChevron?: boolean;
   iconOnly?: boolean;
   minWidth?: number;
+  popupClassName?: string;
+  /** Fraction of the visible viewport; ordinary menus retain their existing bound. */
+  maxViewportHeight?: number;
   children: ReactNode;
   className?: string;
   "aria-label"?: string;
@@ -2825,8 +2843,15 @@ export function Menu({
                 props["aria-label"] ??
                 (typeof label === "string" ? label : undefined)
               }
-              className="ui-popover ui-menu-popover"
-              style={popupPosition}
+              className={cn("ui-popover ui-menu-popover", popupClassName)}
+              style={{
+                ...popupPosition,
+                maxHeight: Math.min(
+                  Number(popupPosition.maxHeight) || window.innerHeight,
+                  (window.visualViewport?.height ?? window.innerHeight) *
+                    maxViewportHeight,
+                ),
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Escape") {
                   event.preventDefault();
@@ -2867,12 +2892,14 @@ export function MenuItem({
   onClick,
   disabled,
   className,
+  closeOnSelect = true,
   ...props
 }: {
   children: ReactNode;
   onClick: () => void;
   disabled?: boolean;
   className?: string;
+  closeOnSelect?: boolean;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">) {
   const close = useContext(MenuContext);
   return (
@@ -2884,7 +2911,7 @@ export function MenuItem({
       className={cn("ui-menu-item", className)}
       onClick={() => {
         onClick();
-        close?.();
+        if (closeOnSelect) close?.();
       }}
     >
       {children}

@@ -48,6 +48,7 @@ import { branchLabel, moduleEnabled } from "./settings";
 import UndoToasts from "./UndoToasts";
 import { demoSeed } from "./config";
 import { PersonalNotifications } from "./PersonalNotifications";
+import { groupedNotifications } from "./notification-groups";
 import { StoredFileImage } from "./stored-file";
 import HistoryScreen from "./screens/History";
 import "./shell-catalog-polish.css";
@@ -1186,11 +1187,9 @@ export default function App() {
   const pendingPriceUpdates = (state.price_update_tasks ?? []).filter(
     (item) => item.status === "pending",
   ).length;
-  const personalNotifications = state.notifications ?? [];
-  const personalUnread = personalNotifications.filter(
-    (record) => !record.read_at,
+  const notifications = groupedNotifications(state.notifications ?? []).filter(
+    (group) => group.unread,
   ).length;
-  const notifications = personalUnread;
   const groupNames: Record<string, [string, string]> = {
     Daily: ["Daily", "روزانه"],
     Catalog: ["Catalog", "کاتالوگ"],
@@ -1554,6 +1553,9 @@ export default function App() {
           )}
           <Menu
             className="notifications-menu"
+            popupClassName="notifications-popover"
+            minWidth={380}
+            maxViewportHeight={0.7}
             iconOnly
             showChevron={false}
             aria-label={t(
@@ -1570,11 +1572,6 @@ export default function App() {
             }
           >
             <PersonalNotifications />
-            {personalNotifications.length === 0 && (
-              <p className="helper">
-                {t("No new notifications.", "اعلان جدیدی وجود ندارد.")}
-              </p>
-            )}
           </Menu>
           {!isMobile && (
             <Menu className="demo-menu" label={t("Demo", "دمو")}>

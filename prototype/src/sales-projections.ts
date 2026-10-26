@@ -1,4 +1,5 @@
 import { notificationReadable } from "./notification-access";
+import { notificationGroupIdentity } from "./notification-identity";
 import { freshActor } from "./authority";
 import { businessAuditRead } from "./business-audit-read";
 import type {
@@ -194,7 +195,7 @@ export type NotificationReadDTO = Pick<
   | "href"
   | "created_at"
   | "read_at"
-> & { reason?: string };
+> & { reason?: string; group_key: string };
 export interface SalesReadProjection {
   sales: SaleReadDTO[];
   sale_requests: SaleRequestReadDTO[];
@@ -296,6 +297,7 @@ export function projectSalesReadView(
             );
           return {
             id: item.id,
+            group_key: notificationGroupIdentity(state, item),
             company_id: item.company_id,
             branch: item.branch,
             kind: item.kind,

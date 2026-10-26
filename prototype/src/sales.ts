@@ -1,4 +1,8 @@
-import { notificationReadable } from "./notification-access";
+import {
+  notificationDestination,
+  notificationReadable,
+} from "./notification-access";
+import { notificationGroupIdentity } from "./notification-identity";
 import { migrateSupplierProfiles } from "./supplier-profiles";
 import {
   invoiceEvidenceActor,
@@ -256,6 +260,8 @@ export interface NotificationRecord {
   href: string;
   created_at: string;
   read_at?: string;
+  /** Personal soft dismissal; retained event keys prevent reconciliation replay. */
+  dismissed_at?: string;
 }
 export interface SaleDeliveryHold {
   id: string;
@@ -2400,6 +2406,47 @@ export function markAllNotificationsRead(
   });
   for (const record of userNotifications(state, context))
     record.read_at ??= now.toISOString();
+}
+
+/** Read every currently permitted branch of one genuine event, then choose its related route. */
+export function openNotificationGroup(
+  state: DemoState,
+  context: SalesContext,
+  id: string,
+  now = new Date(),
+): { branch: Branch; href: string } {
+  const current = freshActor(state, context);
+  const rows = userNotifications(state, current);
+  const selected = rows.find((row) => row.id === id);
+  if (!selected) throw new SalesError("permission");
+  const key = notificationGroupIdentity(state, selected);
+  const members = rows.filter(
+    (row) => notificationGroupIdentity(state, row) === key,
+  );
+  const source =
+    members.find((row) => row.branch === current.branch) ?? selected;
+  const destination = notificationDestination(state, current, source);
+  if (!destination) throw new SalesError("permission");
+  for (const member of members)
+    markNotificationRead(state, current, member.id, now);
+  return destination;
+}
+
+/** Personal inbox state only: business records and other recipients remain untouched. */
+export function clearAllNotifications(
+  state: DemoState,
+  context: SalesContext,
+  now = new Date(),
+): void {
+  const current = freshActor(state, context);
+  requireCapability(state, current, "notifications.mark_read", {
+    ...domainScope(state),
+    owner_user_id: current.user_id,
+  });
+  for (const row of userNotifications(state, current)) {
+    row.read_at ??= now.toISOString();
+    row.dismissed_at ??= now.toISOString();
+  }
 }
 
 export interface SaleReceiptCostInput {

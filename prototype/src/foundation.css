@@ -1058,3 +1058,126 @@
 :root .r2c-screen textarea {
   min-block-size: 88px;
 }
+
+/* R2c 6: one bounded inbox; the header stays outside its padded scrolling list. */
+:root .ui-menu-popover.notifications-popover {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+.personal-notifications {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  inline-size: 100%;
+}
+.personal-notifications-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 16px 16px 12px;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface);
+}
+.personal-notifications-header h2 {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-headline);
+}
+.personal-notifications-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+:root .personal-notifications-actions > .ui-button.button:not(.ui-icon-button) {
+  block-size: 44px;
+  max-block-size: 44px;
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  padding-inline: 8px;
+  white-space: nowrap;
+  font-size: var(--font-size-caption);
+}
+.personal-notifications-scroll {
+  display: grid;
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 8px;
+  min-block-size: 0;
+  padding: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+:root .personal-notifications-scroll > .personal-notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-block-size: 44px;
+  inline-size: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  text-align: start;
+  white-space: normal;
+}
+:root .personal-notification:hover,
+:root .personal-notification:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface-soft);
+}
+.personal-notification-dot {
+  flex: 0 0 6px;
+  inline-size: 6px;
+  block-size: 6px;
+  margin-block-start: 7px;
+  border-radius: var(--radius-round);
+  background: var(--color-clear);
+}
+.personal-notification.is-unread .personal-notification-dot {
+  background: var(--accent);
+}
+.personal-notification-copy {
+  flex: 1;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+.personal-notification-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.personal-notification-heading > strong {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-headline);
+}
+.personal-notification.is-read .personal-notification-heading > strong {
+  font-weight: var(--font-weight-body);
+}
+.personal-notification-heading > time {
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+}
+.personal-notification-branches {
+  line-height: 1.5;
+}
+.personal-notifications-empty,
+.personal-notifications-error {
+  margin: 0;
+  padding: 12px;
+  color: var(--text-muted);
+  font-size: var(--font-size-body);
+}
+.personal-notifications-error {
+  color: var(--danger);
+}
