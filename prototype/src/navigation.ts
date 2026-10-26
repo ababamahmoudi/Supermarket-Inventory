@@ -93,6 +93,45 @@ export function useRouteParam(name: string): string | null {
   return useSyncExternalStore(subscribeRoute, get, () => null);
 }
 
+/** Remember the source of an invoice within this person's location/session scope. */
+export function rememberInvoiceReturnRoute(
+  company: string,
+  username: string,
+  location: string,
+  from: string,
+  to: string,
+) {
+  const [page, query = ""] = to.replace(/^#/, "").split("?");
+  const invoiceId = new URLSearchParams(query).get("id");
+  if (page !== "invoices" || !invoiceId) return;
+  const [fromPage, fromQuery = ""] = from.replace(/^#/, "").split("?");
+  // Editing, posting and switching content versions keep the genuine entry page.
+  if (fromPage === "invoices" && new URLSearchParams(fromQuery).has("id"))
+    return;
+  const destination =
+    fromPage === "invoices" || !fromPage ? "#invoices?tab=posted" : from;
+  if (!/^#[a-z][a-z0-9-]*(?:\?.*)?$/.test(destination)) return;
+  saveNavigationValue(
+    navigationKey(company, username, location, `invoice-return:${invoiceId}`),
+    destination,
+  );
+}
+
+export function readInvoiceReturnRoute(
+  company: string,
+  username: string,
+  location: string,
+  invoiceId: string,
+) {
+  const destination = readNavigationValue(
+    navigationKey(company, username, location, `invoice-return:${invoiceId}`),
+    "#invoices?tab=posted",
+  );
+  return /^#[a-z][a-z0-9-]*(?:\?.*)?$/.test(destination)
+    ? destination
+    : "#invoices?tab=posted";
+}
+
 interface RouteScroll {
   top: number;
   left: number;
@@ -145,6 +184,13 @@ export function useNavigationRestoration() {
     };
     const onRoute = () => {
       save();
+      rememberInvoiceReturnRoute(
+        company,
+        username,
+        branch,
+        route,
+        window.location.hash,
+      );
       route = window.location.hash;
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {

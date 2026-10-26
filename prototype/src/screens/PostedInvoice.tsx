@@ -1,3 +1,4 @@
+import { readInvoiceReturnRoute } from "../navigation";
 import { companyTimestampText } from "../company-time";
 import { invoiceLineId } from "../invoice-line-links";
 import { useInvoiceLineHighlight } from "./invoice-review/useInvoiceLineHighlight";
@@ -130,7 +131,8 @@ export function PostedInvoice({
   onAttachOriginal?: () => void;
   children?: ReactNode;
 }) {
-  const { state, actor, can, command, lang, t } = useDemo();
+  const { state, actor, can, command, lang, t, user, branch, navigate } =
+    useDemo();
   const [originalVisible, setOriginalVisible] = useState(true);
   const [receivedPending, setReceivedPending] = useState(false);
   const [receivedError, setReceivedError] = useState("");
@@ -253,26 +255,47 @@ export function PostedInvoice({
               </small>
             )}
           </div>
-          {current &&
-            (can("invoices.correct", scope) ||
-              can("invoices.relocate", scope)) && (
-              <div className="actions">
-                {can("invoices.correct", scope) && (
-                  <Button data-posted-action="correct" onClick={onCorrect}>
-                    {t("Correct invoice", "اصلاح فاکتور")}
-                  </Button>
-                )}
-                {can("invoices.relocate", scope) && (
-                  <Button
-                    data-posted-action="move"
-                    variant="secondary"
-                    onClick={onMove}
-                  >
-                    {t("Move invoice", "انتقال فاکتور")}
-                  </Button>
-                )}
-              </div>
-            )}
+          <div className="actions">
+            {current &&
+              (can("invoices.correct", scope) ||
+                can("invoices.relocate", scope)) && (
+                <>
+                  {can("invoices.correct", scope) && (
+                    <Button
+                      variant="secondary"
+                      data-posted-action="correct"
+                      onClick={onCorrect}
+                    >
+                      {t("Correct invoice", "اصلاح فاکتور")}
+                    </Button>
+                  )}
+                  {can("invoices.relocate", scope) && (
+                    <Button
+                      data-posted-action="move"
+                      variant="secondary"
+                      onClick={onMove}
+                    >
+                      {t("Move invoice", "انتقال فاکتور")}
+                    </Button>
+                  )}
+                </>
+              )}
+            <Button
+              data-posted-action="done"
+              onClick={() =>
+                navigate(
+                  readInvoiceReturnRoute(
+                    state.config.company.seed_key,
+                    user?.username ?? "signed-out",
+                    branch,
+                    invoice.id,
+                  ).slice(1),
+                )
+              }
+            >
+              {t("Done", "تمام")}
+            </Button>
+          </div>
         </div>
       </header>
       <div
