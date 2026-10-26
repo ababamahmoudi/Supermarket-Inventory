@@ -1034,6 +1034,10 @@ export function mapReadingLine(
     packSize: text(source.pack_size),
     unit: text(source.unit),
   });
+  const swappedName =
+    !product && !split.name && split.suggested_name
+      ? split.suggested_name
+      : undefined;
   const inferredCode = !text(source.supplier_sku)
     ? split.name || product?.name_en || ""
     : "";
@@ -1152,10 +1156,22 @@ export function mapReadingLine(
     review_confirmed: false,
     new_name_en: product
       ? undefined
-      : split.name || suggestInvoiceEnglishName(printedDescription),
+      : swappedName ||
+        split.name ||
+        suggestInvoiceEnglishName(printedDescription),
+    ...(swappedName
+      ? {
+          new_name_swap: {
+            name: printedDescription,
+            supplier_item_code: text(source.supplier_sku),
+          },
+        }
+      : {}),
     new_name_suggestion: product ? undefined : split.suggested_name,
     new_name_fa: product ? undefined : "",
-    supplier_item_code: text(source.supplier_sku) || inferredCode,
+    supplier_item_code: swappedName
+      ? printedDescription
+      : text(source.supplier_sku) || inferredCode,
     ...(inferredCode ? { supplier_item_code_inferred: true } : {}),
     barcode: text(source.barcode),
     pack_size: split.pack_size || text(source.pack_size),

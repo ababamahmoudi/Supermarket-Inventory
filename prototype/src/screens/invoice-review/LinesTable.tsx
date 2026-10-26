@@ -379,12 +379,20 @@ export function LinesTable({
                       </span>
                     </a>
                     <small className="receiving-product-meta">
-                      {line.supplier_item_code && (
+                      {line.pack_size && (
                         <>
-                          <LtrValue value={line.supplier_item_code} />
+                          <LtrValue value={line.pack_size} />
                           <span aria-hidden="true">·</span>
                         </>
                       )}
+                      {line.supplier_item_code &&
+                        line.supplier_item_code.trim().toLocaleLowerCase() !==
+                          name.trim().toLocaleLowerCase() && (
+                          <>
+                            <LtrValue value={line.supplier_item_code} />
+                            <span aria-hidden="true">·</span>
+                          </>
+                        )}
                       <span
                         className={
                           category ? undefined : "receiving-check-summary"

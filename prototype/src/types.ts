@@ -341,6 +341,7 @@ export type InvoiceLine = Omit<
   line_tax?: string;
   new_name_en?: string;
   new_name_suggestion?: string;
+  new_name_swap?: { name: string; supplier_item_code: string };
   new_name_fa?: string;
   units_per_case?: number;
   units_per_case_inferred?: boolean;

@@ -564,28 +564,47 @@ export function LineEditor({
                   {!correction && line.new_name_suggestion && (
                     <div className="receiving-name-suggestion">
                       <span>
-                        {t("Suggested name:", "نام پیشنهادی:")}{" "}
+                        {line.new_name_swap
+                          ? t(
+                              "Name and printed code swapped:",
+                              "نام و کد چاپ‌شده جابه‌جا شدند:",
+                            )
+                          : t("Suggested name:", "نام پیشنهادی:")}{" "}
                         <LtrValue value={line.new_name_suggestion} />
                       </span>
                       <Button
                         variant="plain"
                         size="sm"
-                        disabled={english === line.new_name_suggestion}
+                        disabled={
+                          !line.new_name_swap &&
+                          english === line.new_name_suggestion
+                        }
                         aria-label={t(
-                          `Use '${line.new_name_suggestion}' as the name`,
-                          `استفاده از «${line.new_name_suggestion}» به‌عنوان نام`,
+                          line.new_name_swap
+                            ? "Undo name and code swap"
+                            : `Use '${line.new_name_suggestion}' as the name`,
+                          line.new_name_swap
+                            ? "برگرداندن جابه‌جایی نام و کد"
+                            : `استفاده از «${line.new_name_suggestion}» به‌عنوان نام`,
                         )}
                         onClick={() => {
-                          const value = line.new_name_suggestion!;
+                          const swap = line.new_name_swap;
+                          const value = swap?.name ?? line.new_name_suggestion!;
                           setEnglish(value);
                           edit("description", (item) => {
                             item.new_name_en = value;
+                            if (swap) {
+                              item.supplier_item_code = swap.supplier_item_code;
+                              item.new_name_swap = undefined;
+                            }
                           });
                         }}
                       >
-                        {english === line.new_name_suggestion
-                          ? t("Name applied", "نام اعمال شد")
-                          : t("Use this name", "استفاده از این نام")}
+                        {line.new_name_swap
+                          ? t("Undo", "برگردان")
+                          : english === line.new_name_suggestion
+                            ? t("Name applied", "نام اعمال شد")
+                            : t("Use this name", "استفاده از این نام")}
                       </Button>
                     </div>
                   )}

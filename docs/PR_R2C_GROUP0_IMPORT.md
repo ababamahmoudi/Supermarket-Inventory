@@ -11,3 +11,9 @@ To test: import an invented reading with `Aug 11 2:15`, open Invoice details and
 CTN24/CTN16/Cs15, count-per-box, Pieces in Carton, star/multiplication measured packs and single measured units per case are recognized. Unresolved packs use one unit plus Units per case isn't printed, never a zero pack. Rounded fractional cases within 0.01 of a whole converted unit are accepted; other fractions keep their actual paper quantity visible and remain blocked. Printed line amount divided by actual units gives the four-place unit cost. A retained exact amount/units basis prevents a later recalculation multiplying a rounded cost and changing paper cents. A meaningful cost/pack change invalidates that retained basis.
 
 To test: import fictional `CTN24`, quantity 2, line total 48.00 → 48 units, cost 1.0000. Import 2.8333 cases × 12, line total 47.00 → 34 units, cost 1.3824, retained total 47.00. Unknown pack shows 1 plus its amber question. A non-whole conversion still requires correction.
+
+## 0.9 Product names
+
+Common measured/boxed packs, Pieces in Carton labels, parenthesized packs, attached sizes, trailing UA and printed date codes are removed from editable names while the printed description remains exact. ALL-CAPS names become Title Case; mixed-case brand spelling remains. Pack-only names automatically use a name-like printed supplier code and retain the prior name/code for Undo. Ambiguous partly named descriptions still offer a suggestion. Generated supplier codes use the clean name. The summary metadata shows pack, distinct code and category without repeating the name.
+
+To test: a fictional `CEDAR JAM (12x640 gr)` becomes Cedar Jam with pack 12 × 640 g and its exact printed description in More details. `Box of 20 x 1kg` with code `CEDAR DRY BEANS` starts as Cedar Dry Beans; open the line and click Undo to restore the printed name/code.

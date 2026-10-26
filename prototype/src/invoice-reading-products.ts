@@ -184,7 +184,7 @@ export function splitInvoiceProductDescription({
       inferredCount = undefined;
       uncertain = true;
     }
-    name = `${name.slice(0, start)} ${name.slice(measured.index + measured[0].length)}`;
+    name = `${name.slice(0, start)} ${name.slice(measured.index + measured[0].length).replace(/^\s*(?:bottles?|jars?|bags?|cans?)\b/i, "")}`;
     uncertain ||= !positiveCount(measured[1]) || measuredPack.test(name);
   } else if (singleCase) {
     extractedPack = `1 × ${singleCase[1]} ${canonicalSizeUnit(singleCase[2])}`;
@@ -207,7 +207,27 @@ export function splitInvoiceProductDescription({
       uncertain ||= inferredCount === undefined;
     }
   }
-  name = cleanSeparators(name.replace(/\s*\/\s*(?:case|box|ctn)\s*$/i, ""));
+  // Sizes, packaging labels and printed date codes remain in the unmodified printed description.
+  name = name
+    .replace(/\(\s*\)/g, " ")
+    .replace(/\b\d{1,2}[-/]\d{1,2}[-/]\d{4}\b/g, " ")
+    .replace(/\s+UA\s*$/i, "");
+  const attachedSize = new RegExp(
+    `\\b(${amount})\\s*(${sizeUnit})\\s*-\\s*(?=\\p{L})`,
+    "giu",
+  );
+  name = name.replace(
+    attachedSize,
+    (_whole, size: string, sizeUnit: string) => {
+      extractedPack ||= `${size} ${canonicalSizeUnit(sizeUnit)}`;
+      return " ";
+    },
+  );
+  name = cleanSeparators(
+    name
+      .replace(/\s*\/\s*(?:case|box|ctn)\s*$/i, "")
+      .replace(/^[()\s]+|[()\s]+$/g, ""),
+  );
   const explicitPack = packSize?.trim() ?? "";
   const nestedPack = nestedDescription || nestedMeasuredPack.test(explicitPack);
   uncertain ||= nestedPack;
