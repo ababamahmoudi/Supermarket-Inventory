@@ -15,6 +15,7 @@ import {
   visitC8,
 } from "../scripts/capture-c8-proof.mjs";
 import { setBranch, setLanguage, signIn } from "./helpers";
+import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
 
 for (const language of ["en", "fa"] as const) {
   test(`C8 supplier purchase bars keep 3:1 contrast and dark filled primary/summary cards use approved blue (${language})`, async ({
@@ -28,6 +29,10 @@ for (const language of ["en", "fa"] as const) {
       await appearance(page, theme === "dark" ? "en-dark" : "en-light");
       await setLanguage(page, language);
       await visitC8(page, "dashboard");
+      await assertDashboardOperationalAndShiftTiles(page, {
+        language,
+        navigate: false,
+      });
       await expect(page.locator(".purchase-bar-row").first()).toBeVisible();
       await page.mouse.move(0, 0);
       const proof = await page.evaluate(() => {
@@ -145,7 +150,7 @@ for (const language of ["en", "fa"] as const) {
           bar.supplier ?? "Supplier bar contrast",
         ).toBeGreaterThanOrEqual(3);
       }
-      expect(proof.summaryCount).toBe(5);
+      expect(proof.summaryCount).toBe(6);
       for (const tile of proof.tiles) {
         expect(tile.fill).toBe(proof.tiles[0].fill);
         expect(tile.contrast).toBeGreaterThanOrEqual(4.5);

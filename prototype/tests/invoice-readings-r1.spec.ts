@@ -12,6 +12,7 @@ import {
   signIn,
 } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
 import { openReceivingLine, receivingRow } from "./r2-receiving-helpers";
 
 const sampleFile = fileURLToPath(
@@ -421,8 +422,18 @@ test("an empty store renders intentional lists at desktop and phone widths in En
   for (const language of ["en", "fa"] as const) {
     await setLanguage(page, language);
     await page.goto("/#dashboard");
-    await expect(page.locator(".kpi-value")).toHaveCount(4);
-    await expect(page.locator(".kpi-value")).toHaveText(["0", "0", "0", "0"]);
+    await assertDashboardOperationalAndShiftTiles(page, {
+      language,
+      navigate: false,
+    });
+    const operationalValues = page.locator(
+      ".dashboard-kpis > .ui-summary-tile:not(.timesheet-on-shift-tile) > .kpi-value",
+    );
+    await expect(operationalValues).toHaveCount(5);
+    await expect(operationalValues).toHaveText(["0", "0", "0", "0", "0"]);
+    await expect(
+      page.locator(".timesheet-on-shift-tile > .kpi-value"),
+    ).toHaveText("0");
     for (const route of [
       "lookup",
       "products",

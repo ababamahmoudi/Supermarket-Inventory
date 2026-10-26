@@ -1,6 +1,7 @@
 import { expect, test, type Locator } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
-import { signIn, setLanguage } from "./helpers";
+import { signIn, setLanguage, setBranch } from "./helpers";
+import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
 import { inspectResponsiveLayout } from "../scripts/c6-layout-proof.mjs";
 
 async function expectDelayedNavigationTooltip(
@@ -76,6 +77,7 @@ for (const language of ["en", "fa"] as const)
       test.setTimeout(180000);
       await page.setViewportSize({ width, height: 1080 });
       await signIn(page, "Supervisor");
+      await setBranch(page, "Branch 1");
       await setLanguage(page, language);
       for (const control of await page
         .locator(".topbar > button,.topbar > .ui-select")
@@ -107,6 +109,10 @@ for (const language of ["en", "fa"] as const)
         expect(proof.actualWidth).toBe(width);
         expect(proof.failures, `${scene} ${language} ${width}`).toEqual([]);
         if (scene === "dashboard") {
+          await assertDashboardOperationalAndShiftTiles(page, {
+            language,
+            navigate: false,
+          });
           const actual = await page.evaluate(() => {
             const rect = (element: Element) => {
               const value = element.getBoundingClientRect();
@@ -153,7 +159,7 @@ for (const language of ["en", "fa"] as const)
           );
           expect(actual.topbar.height).toBe(60);
           expect(actual.accounts).toBe(1);
-          expect(actual.kpis).toHaveLength(5);
+          expect(actual.kpis).toHaveLength(6);
           expect(
             new Set(actual.kpis.map((card) => Math.round(card.y))).size,
           ).toBe(width < 760 ? 3 : 1);
