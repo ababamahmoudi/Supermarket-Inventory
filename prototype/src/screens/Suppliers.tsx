@@ -347,7 +347,7 @@ export default function Suppliers() {
 
   if (!name)
     return (
-      <>
+      <div className="r2c-screen" data-r2c-screen="suppliers">
         <PageHeader
           title={t("Suppliers", "تأمین‌کنندگان")}
           description={t(
@@ -635,7 +635,7 @@ export default function Suppliers() {
               </EmptyState>
             )}
         </Card>
-      </>
+      </div>
     );
   if (supplierRead.pending && name) return null;
   if (!detail || !current)
@@ -670,7 +670,7 @@ export default function Suppliers() {
   const monthTo = dateAfter(nextMonth.toISOString().slice(0, 10), -1);
 
   return (
-    <>
+    <div className="r2c-screen" data-r2c-screen="suppliers">
       <Button
         variant="plain"
         className="supplier-back"
@@ -749,17 +749,26 @@ export default function Suppliers() {
       <Card className="supplier-header-card supplier-contact-card">
         <div className="supplier-contact-heading">
           <h2>{t("Contact details", "اطلاعات تماس")}</h2>
-          {current.profile_missing.length > 0 && canManage && (
-            <a
-              href={`#suppliers?name=${encodeURIComponent(current.name)}&edit=1`}
-              onClick={(event) => {
-                event.preventDefault();
-                setEditor("edit");
-              }}
-            >
-              {t("Complete profile", "تکمیل مشخصات")}
-            </a>
-          )}
+          {[
+            current.phone,
+            current.email,
+            current.website,
+            current.address,
+            current.sales_rep_name,
+            current.sales_rep_phone,
+            current.payment_terms,
+          ].some((value) => !value?.trim()) &&
+            canManage && (
+              <a
+                href={`#suppliers?name=${encodeURIComponent(current.name)}&edit=1`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setEditor("edit");
+                }}
+              >
+                {t("Complete profile", "تکمیل مشخصات")}
+              </a>
+            )}
         </div>
         <dl className="supplier-contact-grid">
           {(
@@ -812,7 +821,7 @@ export default function Suppliers() {
             current.last_delivery ? (
               <DateText value={current.last_delivery} />
             ) : (
-              t("No deliveries yet", "هنوز تحویلی ثبت نشده")
+              <NotAdded />
             )
           }
           detail={
@@ -1235,6 +1244,6 @@ export default function Suppliers() {
           </EmptyState>
         )}
       </Card>
-    </>
+    </div>
   );
 }

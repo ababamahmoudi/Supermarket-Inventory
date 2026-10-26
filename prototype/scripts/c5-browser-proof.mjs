@@ -666,6 +666,78 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             );
           else dashboardWideActions.add(control);
         }
+      // R2c grants 44px only to an actual opted-in screen/dialog composition.
+      // A copied class or a missing page section never weakens the legacy contract.
+      const r2cRoots = new Set();
+      for (const root of document.querySelectorAll(".r2c-screen")) {
+        const module = root.getAttribute("data-r2c-screen");
+        const route = window.location.hash.split("?")[0];
+        const directPage =
+          root.parentElement?.matches("main#main-content") &&
+          root.querySelector(":scope > .page-header");
+        const supplierList =
+          root.querySelector(
+            ":scope > .suppliers-overview .suppliers-toolbar",
+          ) &&
+          root.querySelector(":scope > .suppliers-overview .suppliers-table");
+        const supplierDetail =
+          root.querySelectorAll(
+            ":scope > .supplier-contact-card .supplier-contact-grid > div",
+          ).length === 7 &&
+          root.querySelectorAll(":scope > .supplier-kpis > .ui-summary-tile")
+            .length === 4 &&
+          root.querySelector(":scope > .supplier-tabs .ui-segments");
+        const payableList =
+          root.querySelector(":scope > .payables-overview .payables-filters") &&
+          root.querySelector(
+            ":scope > .payables-overview .payables-overview-table",
+          );
+        const payableStatement =
+          root.querySelector(":scope > .payables-toolbar") &&
+          root.querySelector(":scope > .payables-report") &&
+          root.querySelector(":scope > .payables-back");
+        const payableUnavailable =
+          root.querySelector(":scope > .payables-back") &&
+          root.querySelector(":scope > .ui-empty-state") &&
+          !root.querySelector(".money,.payables-toolbar,.payables-overview");
+        const supplierEditor =
+          root.matches("dialog.supplier-editor-dialog[open]") &&
+          root.querySelector(":scope > .ui-dialog-header h2") &&
+          root.querySelector("form.manual-entry-form #supplier-name") &&
+          root.querySelectorAll(
+            "form.manual-entry-form input,form.manual-entry-form textarea",
+          ).length >= 7;
+        const valid =
+          supplierEditor ||
+          (directPage &&
+            ((module === "suppliers" &&
+              route === "#suppliers" &&
+              (supplierList || supplierDetail)) ||
+              (module === "payables" &&
+                route === "#payables" &&
+                (payableList || payableStatement || payableUnavailable))));
+        if (valid) r2cRoots.add(root);
+        else
+          failures.push(
+            `Invalid R2c screen composition: ${module ?? "unknown"}`,
+          );
+      }
+      const r2cOrdinaryButton = (element) =>
+        element.matches(
+          'button:not(.ui-icon-button):not(.table-details-toggle):not(.ui-summary-tile):not(.ui-kpi):not([data-control-kind="disclosure"]):not([data-control-kind="label-action"])',
+        );
+      for (const element of document.querySelectorAll(
+        '.r2c-screen input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),.r2c-screen select',
+      )) {
+        if (
+          visible(element) &&
+          r2cRoots.has(element.closest(".r2c-screen")) &&
+          Math.abs(element.getBoundingClientRect().height - 44) > 1
+        )
+          failures.push(
+            `R2c field height: ${tidy(element.getAttribute("aria-label") || element.id)}`,
+          );
+      }
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
       )) {
@@ -682,6 +754,13 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         )
           failures.push(
             `Invoice source tile outside the validated four-choice composition: ${label}`,
+          );
+        const r2cControl =
+          r2cRoots.has(element.closest(".r2c-screen")) &&
+          r2cOrdinaryButton(element);
+        if (r2cControl && Math.abs(rect.height - 44) > 1)
+          failures.push(
+            `R2c control height: ${label} (${round(rect.height)}px)`,
           );
         const choiceTextContrast =
           kind === "choice" ? textContrastOf(element) : null;
@@ -868,17 +947,19 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           );
           const expectedHeight = labelAction
             ? 32
-            : structuredFooter || dashboardAction
+            : r2cControl || dashboardAction
               ? 44
-              : element.closest(".c9-filter-toolbar")
-                ? element.closest(".ui-segments")
-                  ? 32
-                  : 40
-                : phone || fieldAlignedAdd
-                  ? 44
-                  : small
+              : structuredFooter
+                ? 44
+                : element.closest(".c9-filter-toolbar")
+                  ? element.closest(".ui-segments")
                     ? 32
-                    : 40;
+                    : 40
+                  : phone || fieldAlignedAdd
+                    ? 44
+                    : small
+                      ? 32
+                      : 40;
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {

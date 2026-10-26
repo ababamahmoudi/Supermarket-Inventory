@@ -1027,3 +1027,34 @@
   > a:first-child {
   color: var(--link-text);
 }
+
+/* R2c opts finished screens into 44px controls without changing older screen contracts. */
+:root .r2c-screen {
+  min-inline-size: 0;
+}
+:root
+  .r2c-screen
+  button:not(.ui-icon-button):not(.table-details-toggle):not(
+    .ui-summary-tile
+  ):not(.ui-kpi):not([data-control-kind="disclosure"]):not(
+    [data-control-kind="label-action"]
+  ),
+:root
+  .r2c-screen
+  input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+:root .r2c-screen select {
+  box-sizing: border-box;
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: 44px;
+}
+:root .r2c-screen .ui-segments {
+  min-block-size: 52px;
+}
+:root .r2c-screen .ui-segments > button {
+  block-size: 44px;
+  min-block-size: 44px;
+}
+:root .r2c-screen textarea {
+  min-block-size: 88px;
+}
