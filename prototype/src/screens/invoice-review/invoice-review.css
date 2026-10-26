@@ -186,6 +186,23 @@
 .receiving-received-summary > button {
   flex: 0 0 auto;
 }
+.receiving-received-content {
+  min-inline-size: 0;
+}
+.receiving-received-choice {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+  padding-block-start: 4px;
+}
+.receiving-received-choice > small {
+  font-size: 12px;
+  line-height: 18px;
+}
+.receiving-received-choice > button {
+  inline-size: 100%;
+  min-block-size: 44px;
+}
 .receiving-received-popover {
   inline-size: min(320px, calc(100vw - 32px));
   display: grid;

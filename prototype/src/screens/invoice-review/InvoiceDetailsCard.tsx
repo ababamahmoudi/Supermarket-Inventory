@@ -315,6 +315,7 @@ export function InvoiceDetailsCard({
               </div>
             </Field>
             <ReceivedField
+              key={invoice.id}
               date={receivedLocal.date}
               time={receivedLocal.time}
               employee={invoice.receiving_employee ?? ""}
