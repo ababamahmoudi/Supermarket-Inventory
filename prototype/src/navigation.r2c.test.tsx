@@ -67,6 +67,37 @@ it("does not schedule a render for setting the current value again", () => {
   expect(renders).toBe(before);
 });
 
+it("rejects an old cold-key setter without using the next scope's initializer", () => {
+  const { result, rerender } = renderHook(
+    ({ initial }) => useListState("test.cold-scope", () => initial),
+    { initialProps: { initial: "Branch 1 default" } },
+  );
+  const branchOneSetter = result.current[1];
+  expect(result.current[0]).toBe("Branch 1 default");
+  demo.value.branch = "Branch 2";
+  rerender({ initial: "Branch 2 default" });
+  expect(result.current[0]).toBe("Branch 2 default");
+  const staleUpdate = vi.fn((value: string) => `${value}!`);
+  act(() => branchOneSetter(staleUpdate));
+  expect(staleUpdate).not.toHaveBeenCalled();
+  expect(result.current[0]).toBe("Branch 2 default");
+  expect(
+    sessionStorage.getItem(
+      navigationKey(
+        "fictional-filter-company",
+        "fictional-manager",
+        "Branch 1",
+        "test.cold-scope",
+      ),
+    ),
+  ).toBeNull();
+  act(() => result.current[1]((value) => `${value}!`));
+  expect(result.current[0]).toBe("Branch 2 default!");
+  demo.value.branch = "Branch 1";
+  rerender({ initial: "Branch 1 default" });
+  expect(result.current[0]).toBe("Branch 1 default");
+});
+
 it("adopts route filters once and still lets a person change them", () => {
   let renders = 0;
   function RouteFilters() {

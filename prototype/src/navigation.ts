@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useRef,
   useState,
   useSyncExternalStore,
   type Dispatch,
@@ -57,10 +56,6 @@ export function useListState<T>(
   );
   const initialValue = () =>
     typeof initial === "function" ? (initial as () => T)() : initial;
-  const latestInitial = useRef(initial);
-  useEffect(() => {
-    latestInitial.current = initial;
-  }, [initial]);
   const [entry, setEntry] = useState(() => ({
     key,
     value: readNavigationValue(key, initialValue()),
@@ -71,24 +66,15 @@ export function useListState<T>(
   const setValue: Dispatch<SetStateAction<T>> = useCallback(
     (next) => {
       setEntry((previous) => {
-        const initial = latestInitial.current;
-        const current =
-          previous.key === key
-            ? previous.value
-            : readNavigationValue(
-                key,
-                typeof initial === "function"
-                  ? (initial as () => T)()
-                  : initial,
-              );
+        // A delayed callback from another person/location must not change
+        // the active filters or initialize its old key with another default.
+        if (previous.key !== key) return previous;
         const value =
           typeof next === "function"
-            ? (next as (current: T) => T)(current)
+            ? (next as (current: T) => T)(previous.value)
             : next;
         saveNavigationValue(key, value);
-        return previous.key === key && Object.is(previous.value, value)
-          ? previous
-          : { key, value };
+        return Object.is(previous.value, value) ? previous : { key, value };
       });
     },
     [key],
