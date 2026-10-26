@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { Camera, FileText, FileJson, PenLine, Receipt } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -322,47 +323,88 @@ function InvoiceEntryChoices({
             if (!value) onClose();
           }}
           title={t("New invoice", "فاکتور جدید")}
+          className="invoice-entry-choice-dialog"
+          icon={<Receipt size={22} aria-hidden="true" />}
+          footer={
+            <DialogActions>
+              <Button variant="neutral" onClick={onClose}>
+                {t("Cancel", "انصراف")}
+              </Button>
+            </DialogActions>
+          }
           description={t(
             "Choose how to add the invoice.",
             "روش افزودن فاکتور را انتخاب کنید.",
           )}
         >
-          <div className="actions">
+          <div className="invoice-entry-choice-grid">
             <Button
+              variant="neutral"
+              className="invoice-entry-choice-tile"
+              aria-label={t("Photo (AI reading)", "عکس (خوانش هوش مصنوعی)")}
               disabled={disabled || !canEnter}
               onClick={() => {
                 onClose();
                 onSelect(false, "photo");
               }}
             >
-              {t("Photo (AI reading)", "عکس (خوانش هوش مصنوعی)")}
+              <Camera size={22} aria-hidden="true" />
+              <strong>{t("Photo", "عکس")}</strong>
+              <span>
+                {t(
+                  "Take or upload a photo; AI reads it",
+                  "عکس بگیرید یا بارگذاری کنید؛ هوش مصنوعی آن را می‌خواند",
+                )}
+              </span>
             </Button>
             <Button
-              variant="secondary"
+              variant="neutral"
+              className="invoice-entry-choice-tile"
+              aria-label={t("PDF (AI reading)", "PDF (خوانش هوش مصنوعی)")}
               disabled={disabled || !canEnter}
               onClick={() => {
                 onClose();
                 onSelect(false, "pdf");
               }}
             >
-              {t("PDF (AI reading)", "PDF (خوانش هوش مصنوعی)")}
+              <FileText size={22} aria-hidden="true" />
+              <strong>{t("PDF", "PDF")}</strong>
+              <span>
+                {t(
+                  "Upload a PDF; AI reads it",
+                  "PDF بارگذاری کنید؛ هوش مصنوعی آن را می‌خواند",
+                )}
+              </span>
             </Button>
             <Button
-              variant="secondary"
+              variant="neutral"
+              className="invoice-entry-choice-tile"
+              aria-label={t("Manual entry", "ورود دستی")}
               disabled={disabled || !canManual}
               onClick={() => {
                 onClose();
                 onSelect(true);
               }}
             >
-              {t("Manual entry", "ورود دستی")}
+              <PenLine size={22} aria-hidden="true" />
+              <strong>{t("Manual entry", "ورود دستی")}</strong>
+              <span>{t("Type the invoice in", "فاکتور را تایپ کنید")}</span>
             </Button>
             <Button
-              variant="secondary"
+              variant="neutral"
+              className="invoice-entry-choice-tile"
+              aria-label={t("JSON file", "فایل JSON")}
               disabled={disabled || !can("settings.manage")}
               onClick={() => jsonInput.current?.click()}
             >
-              {t("JSON file", "فایل JSON")}
+              <FileJson size={22} aria-hidden="true" />
+              <strong>{t("JSON file", "فایل JSON")}</strong>
+              <span>
+                {t(
+                  "Add readings exported from the invoice reader",
+                  "خوانش‌های خروجی از خوانشگر فاکتور را اضافه کنید",
+                )}
+              </span>
             </Button>
           </div>
           {!hasLocation && (
@@ -383,8 +425,8 @@ function InvoiceEntryChoices({
           )}
           <p className="helper">
             {t(
-              "AI invoice reading is simulated",
-              "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
+              "AI reading is simulated in this demo",
+              "خوانش هوش مصنوعی در این دمو شبیه‌سازی شده است",
             )}
           </p>
         </Dialog>

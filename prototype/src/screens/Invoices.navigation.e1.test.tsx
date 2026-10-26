@@ -356,8 +356,19 @@ it.each(["manager", "floor_worker"] as const)(
       expect(manual).toBeDisabled();
       expect(json).toBeDisabled();
     }
+    expect(chooser.querySelectorAll(".invoice-entry-choice-tile")).toHaveLength(
+      4,
+    );
+    for (const tile of chooser.querySelectorAll(".invoice-entry-choice-tile")) {
+      expect(tile.querySelector("svg")).not.toBeNull();
+      expect(tile.querySelector("strong")).not.toBeNull();
+      expect(tile.querySelector("span")).not.toBeNull();
+    }
     expect(
-      within(chooser).getByText("AI invoice reading is simulated"),
+      within(chooser).getByRole("button", { name: "Cancel" }),
+    ).toBeVisible();
+    expect(
+      within(chooser).getByText("AI reading is simulated in this demo"),
     ).toBeVisible();
   },
 );

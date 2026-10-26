@@ -35,3 +35,9 @@ Test: review a fictional invoice in dark mode, post it and compare the line rows
 Unknown internal reading keys are omitted rather than displayed as a generic Other reading field or raw identifier. Retained extra evidence has bilingual human labels; branch hints remain import-location inputs only. Not on the invoice stays inline beside its check marker on a shared label track. More details uses two columns (one on phones); addresses retain the receiving typing buffer and fit two to four lines with ordinary field padding, reserving the address track to avoid shifting the following rows while typing.
 
 Test: open More details on a fictional import with an empty optional check and long bill/ship addresses. Check aligned field tops, the inline paper-absence action, complete lines and no internal key labels. Automated: ReadingUnknownChecks.r2b and InvoiceReadingReview.r1 regressions, plus existing details-layout browser proof.
+
+## 0.12 Four invoice source tiles
+
+New invoice uses the standard icon/title/description/dialog footer with four equal outlined icon tiles in a two-by-two grid, or a single column on phones. Each tile states what it does; the muted simulation note is explicit. Current location/role guards and additive JSON import are unchanged. These descriptive choice tiles are deliberately taller than a normal 44px action.
+
+Test: Invoices → New invoice. Check all four icons/titles/descriptions, the simulation note and Cancel; test Photo/PDF/Manual/JSON under the same permissions as before. Automated: Invoices.navigation.e1.test.tsx and existing r2b-invoice-entry browser routes.

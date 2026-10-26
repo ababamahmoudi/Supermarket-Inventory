@@ -49,3 +49,56 @@
     white-space: normal;
   }
 }
+
+.invoice-entry-choice-dialog {
+  inline-size: min(720px, calc(100vw - 32px));
+  max-inline-size: min(720px, calc(100vw - 32px));
+}
+.invoice-entry-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.invoice-entry-choice-grid > .invoice-entry-choice-tile {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  justify-content: start;
+  gap: 8px 12px;
+  block-size: auto;
+  min-block-size: 116px;
+  padding: 20px;
+  white-space: normal;
+  text-align: start;
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-control);
+}
+.invoice-entry-choice-tile > svg {
+  grid-row: 1 / -1;
+  color: var(--accent);
+}
+.invoice-entry-choice-tile > strong {
+  font-size: var(--font-size-body);
+  color: var(--text);
+}
+.invoice-entry-choice-tile > span {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-body);
+}
+.invoice-entry-choice-tile:hover:not(:disabled),
+.invoice-entry-choice-tile:focus-visible {
+  border-color: var(--accent);
+}
+@media (max-width: 759px) {
+  .invoice-entry-choice-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .invoice-entry-choice-grid > .invoice-entry-choice-tile {
+    min-block-size: 104px;
+    padding: 16px;
+  }
+}
