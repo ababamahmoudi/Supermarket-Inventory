@@ -25,6 +25,80 @@ function equalPrice(left: string | undefined, right: string) {
   }
 }
 
+function currencyAtReview(
+  state: DemoState,
+  company: string,
+  reviewedAt: string,
+) {
+  let currency = state.config.company.currency;
+  for (const change of state.activity
+    .filter(
+      (row) =>
+        row.company_id === company &&
+        row.entity_type === "settings" &&
+        row.entity_id === "company" &&
+        row.at > reviewedAt,
+    )
+    .sort((a, b) => b.at.localeCompare(a.at))) {
+    const before = change.before as { currency?: string } | null;
+    const after = change.after as { currency?: string } | null;
+    if (
+      typeof before?.currency === "string" &&
+      typeof after?.currency === "string" &&
+      before.currency !== after.currency
+    )
+      currency = before.currency;
+  }
+  return currency;
+}
+
+/** Ending an accepted sale restores the exact regular basis reviewed in that store.
+ * The snapshot is canonical (per lb for weight), never the kg display price. */
+function reviewedSaleBasis(
+  state: DemoState,
+  product: Product,
+  location: string,
+  price: string,
+) {
+  const approvedRole = (role: string | undefined) =>
+    role === "owner" || role === "manager";
+  return (state.sales ?? []).some((sale) => {
+    if (
+      sale.company_id !== product.company_id ||
+      sale.product_code !== product.code ||
+      sale.branch !== location ||
+      sale.branch_id !== location ||
+      !["active", "ended"].includes(sale.status) ||
+      !sale.created_by_user_id ||
+      !approvedRole(sale.created_by_role_snapshot) ||
+      !equalPrice(sale.regular_price_snapshot, price) ||
+      !Number.isFinite(Date.parse(sale.created_at)) ||
+      (sale.decision_attribution &&
+        sale.decision_attribution.company_id !== product.company_id)
+    )
+      return false;
+    const reviews = (state.sale_events ?? [])
+      .filter(
+        (event) =>
+          event.company_id === product.company_id &&
+          event.sale_id === sale.id &&
+          event.product_code === product.code &&
+          event.branch === location &&
+          ["scheduled", "started", "changed"].includes(event.kind) &&
+          equalPrice(event.after.regular_price_snapshot, price) &&
+          event.source_decision?.company_id === product.company_id &&
+          approvedRole(event.source_decision.role_snapshot),
+      )
+      .map((event) => event.source_decision!.at)
+      .filter((at) => Number.isFinite(Date.parse(at)));
+    const reviewedAt = [sale.created_at, ...reviews].sort().at(-1)!;
+    return (
+      currencyAtReview(state, product.company_id, reviewedAt) ===
+      state.config.company.currency
+    );
+  });
+}
+
 /** A company default alone is not evidence that a store approved this product. */
 function approvedHere(state: DemoState, product: Product, location: string) {
   if (!branchSellsToCustomers(state.config, location)) return false;
@@ -32,6 +106,7 @@ function approvedHere(state: DemoState, product: Product, location: string) {
   if (product.branch_prices?.[location]) return true;
   const price = product.selling_price;
   if (!price) return false;
+  if (reviewedSaleBasis(state, product, location, price)) return true;
   if (equalPrice(product.manual_prices?.all?.price, price)) return true;
   const source =
     product.price_provenance?.[location] ?? product.price_provenance?.all;

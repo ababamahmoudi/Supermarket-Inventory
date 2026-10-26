@@ -42,3 +42,9 @@ npx playwright test tests/r2c-lookup-branch.spec.ts tests/r2c-lookup-filters.spe
 ## Docs and open question
 
 Active requirements, screens, decisions and changelog were updated. `docs/open-questions.md` explicitly records the requested 7.3 default pending Ali's confirmation: branch-local initial lists, typed-search discovery elsewhere, and comparison prices only until local approval. This does not grant access to another person's unassigned locations or introduce an inventory count display.
+
+## Reviewed Sale basis follow-up
+
+An actual approved Sale retains its reviewed canonical regular basis at that Store when it ends or expires. Lookup returns to that exact regular price without writing a new approval. The retained creator/decision must be Owner/Manager, product/company/location and current amount must match, and audited currency changes must not reinterpret the snapshot in another currency. A changed company default, another Store/company, unreviewed or stopped Sale cannot establish this local price. The regular snapshot stays canonical per lb even when the Sale was entered per kg.
+
+Verification includes real Start → active Lookup → End → regular Lookup commands, readonly query/no-regular-write assertions, weighed-unit preservation and branch/company/unreviewed/changed-default/stopped/currency negatives. The stated Ali-to-confirm default scope remains unchanged.

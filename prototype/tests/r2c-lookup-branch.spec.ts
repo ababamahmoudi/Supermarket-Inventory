@@ -54,6 +54,55 @@ async function installProducts(page: Page) {
   await expect(page.locator(".lookup-results-card")).toBeVisible();
 }
 
+test("a genuine sale returns to its reviewed local regular basis after End", async ({
+  page,
+}) => {
+  await signIn(page, "Manager");
+  await installProducts(page);
+  await page.goto("/#lookup?search=F9103");
+  const detail = page.locator(".lookup-detail");
+  await expect(detail).toContainText("Not approved here yet");
+  await detail
+    .getByRole("button", { name: "Change price", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog", {
+    name: "Change price",
+    exact: true,
+  });
+  await dialog
+    .getByRole("button", { name: "Only North York", exact: true })
+    .click();
+  await dialog.getByLabel("Price", { exact: true }).fill("7.99");
+  await dialog.getByRole("button", { name: "Start sale", exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(detail.locator(".sale-price")).toContainText("$7.99");
+  await detail
+    .getByRole("button", { name: "Product actions", exact: true })
+    .click();
+  await page
+    .getByRole("menuitem", { name: "End sale now", exact: true })
+    .click();
+  const end = page.getByRole("dialog", { name: "End sale now", exact: true });
+  await end.getByRole("button", { name: "End sale now", exact: true }).click();
+  await expect(end).not.toBeVisible();
+  await expect(detail.locator(".sale-price")).toHaveCount(0);
+  await expect(detail.locator(".price")).toHaveText("$9.99");
+  await expect(detail.locator(".lookup-other-prices")).toHaveCount(0);
+  const state = await readCanonicalBusinessEvidence(page);
+  expect(
+    state.products.find((product) => product.code === "F9103"),
+  ).toMatchObject({
+    selling_price: "9.99",
+    branch_prices: { "Branch 2": "6.49" },
+  });
+  expect(
+    state.activity.filter(
+      (row) =>
+        row.product_code === "F9103" && row.action === "Set regular price",
+    ),
+  ).toEqual([]);
+});
+
 test("branch list shows its products, typed search groups other stores, and an actual own-store approval removes comparison prices", async ({
   page,
 }) => {

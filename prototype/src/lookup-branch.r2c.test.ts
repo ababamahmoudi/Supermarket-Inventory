@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { initialState } from "./e1-bootstrap";
 import { migrateE1BusinessState } from "./e1-state-migration";
 import { authenticatedTestFixture } from "./authority-test-fixture";
@@ -7,6 +7,9 @@ import { lookupBranchCatalog } from "./lookup-branch";
 import { applyApprovedPrice } from "./approvals";
 import { addProduct } from "./manual-product";
 import type { RoleId } from "./authority-types";
+import { savePriceChange, endSale, saleCanonicalPrice } from "./sales";
+import { companyDate } from "./invoice";
+import { saveCompanySettings } from "./settings";
 
 function fixture(role: RoleId = "cashier") {
   const state = migrateE1BusinessState(initialState());
@@ -31,6 +34,144 @@ function fixture(role: RoleId = "cashier") {
 }
 
 describe("R2c 7.3 guarded branch Lookup", () => {
+  function endedSale(weight = false) {
+    const context = fixture("manager");
+    const { state, actor, product } = context;
+    if (weight) {
+      product.sold_by = "weight";
+      product.unit_size = "lb";
+    }
+    const now = new Date(Date.now() - 1000);
+    const result = savePriceChange(
+      state,
+      actor,
+      {
+        product_code: product.code,
+        mode: "sale",
+        scope: "current",
+        branches: ["Branch 1"],
+        price: weight ? "17.00" : "7.99",
+        price_unit: weight ? "kg" : "each",
+        starts_on: companyDate(state.config, now),
+        last_day: null,
+        accept_below_margin: false,
+        below_cost_reason: "",
+        add_labels: false,
+      },
+      now,
+    );
+    expect(context.facts().price).toBe(
+      saleCanonicalPrice(result.sales[0], state.config),
+    );
+    const sale = result.sales[0];
+    endSale(
+      state,
+      actor,
+      sale.id,
+      { expected_revision: sale.revision },
+      new Date(now.getTime() + 100),
+    );
+    return {
+      ...context,
+      sale: state.sales!.find((row) => row.id === sale.id)!,
+    };
+  }
+  it("restores the actual approved sale's reviewed regular basis after End without writing a regular-price decision", () => {
+    const { state, facts } = endedSale();
+    const before = structuredClone(state);
+    expect(facts().price).toBe("9.99");
+    expect(facts().other_prices).toEqual([]);
+    expect(state).toEqual(before);
+    expect(
+      state.activity
+        .filter(
+          (row) => row.product_code === "F-9100" && row.entity_type === "sale",
+        )
+        .map((row) => row.action),
+    ).toEqual(["Start sale", "End sale"]);
+    expect(
+      state.activity.some(
+        (row) =>
+          row.product_code === "F-9100" && row.action === "Set regular price",
+      ),
+    ).toBe(false);
+  });
+  it("keeps the reviewed weighed basis in canonical lb after a kg sale ends", () => {
+    const { sale, facts } = endedSale(true);
+    expect(sale.price_unit).toBe("kg");
+    expect(sale.regular_price_snapshot).toBe("9.99");
+    expect(facts().price).toBe("9.99");
+  });
+  it("returns the reviewed basis at clock expiry before a lifecycle write, through a fresh Cashier query", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const now = new Date();
+      const { state, actor, product } = fixture("manager");
+      const result = savePriceChange(
+        state,
+        actor,
+        {
+          product_code: product.code,
+          mode: "sale",
+          scope: "current",
+          branches: ["Branch 1"],
+          price: "7.99",
+          price_unit: "each",
+          starts_on: companyDate(state.config, now),
+          last_day: companyDate(state.config, now),
+          accept_below_margin: false,
+          below_cost_reason: "",
+          add_labels: false,
+        },
+        now,
+      );
+      expect(result.sales[0].status).toBe("active");
+      vi.setSystemTime(new Date(now.getTime() + 36 * 60 * 60 * 1000));
+      const cashier = authenticatedTestFixture(state, "cashier", {
+        locations: ["Branch 1"],
+        selection: { kind: "location", location_id: "Branch 1" },
+      }).actor;
+      const before = structuredClone(state);
+      expect(
+        lookupBranchCatalog(state, cashier).find(
+          (row) => row.code === product.code,
+        )?.price,
+      ).toBe("9.99");
+      expect(
+        state.sales!.find((row) => row.id === result.sales[0].id)?.status,
+      ).toBe("active");
+      expect(state).toEqual(before);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it.each([
+    "branch",
+    "company",
+    "unreviewed",
+    "changed_default",
+    "stopped",
+    "currency",
+  ] as const)(
+    "cannot use a %s sale basis as this location's approval",
+    (kind) => {
+      const { state, actor, sale, facts } = endedSale();
+      if (kind === "branch") sale.branch = sale.branch_id = "Branch 2";
+      if (kind === "company") sale.company_id = "foreign-company";
+      if (kind === "unreviewed") sale.created_by_role_snapshot = "floor_worker";
+      if (kind === "changed_default")
+        state.products.find((row) => row.code === "F-9100")!.selling_price =
+          "10.99";
+      if (kind === "stopped") Object.assign(sale, { status: "stopped" });
+      if (kind === "currency")
+        saveCompanySettings(
+          state,
+          { ...state.config.company, currency: "USD" },
+          actor,
+        );
+      expect(facts().price).toBeNull();
+    },
+  );
   it("does not turn a bare company default into a branch approval or branch membership", () => {
     const { facts } = fixture();
     expect(facts()).toEqual({

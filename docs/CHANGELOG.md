@@ -1,3 +1,7 @@
+## 2026-10-26 — R2c 7.3 Sale-end Lookup correction
+
+- Preserve the genuine approved Sale’s matching reviewed regular basis after End/expiry, scoped to its product/company/store and currency. The query writes no regular price or approval. Added actual-command and negative evidence tests, including canonical weighed units.
+
 ## 2026-10-26 — R2c and R2d integrated review
 
 - Completed the requested published order on the existing PR #29 branch: R2c0 → R2c1 → R2d A/B/C → R2c2–7, with separate group pushes and no merge/force push. [Every item and click path](PR_R2CD_REVIEW.md) includes Ubuntu setup and the recorded defaults.
