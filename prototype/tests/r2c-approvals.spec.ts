@@ -136,6 +136,9 @@ for (const language of ["en", "fa"] as const) {
       })
       .click();
     await expect(page.locator(".posted-receiving")).toBeVisible();
+    await expect(page).toHaveURL(
+      (url) => url.hash === `#invoices?id=${encodeURIComponent(imported.id)}`,
+    );
     await page.goto("/#approvals");
     await expect(page.locator(".approval-detail-row")).toHaveCount(3);
     const before = await readCanonicalBusinessEvidence(page);
