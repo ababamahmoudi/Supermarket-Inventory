@@ -24,7 +24,9 @@ async function independentTimesheetRows(
       const bakery = departments?.find((item) => item.name_en === "Bakery");
       const cash = departments?.find((item) => item.name_en === "Cash");
       if (!bakery || !cash)
-        throw new Error("The configured Bakery and Cash departments are required.");
+        throw new Error(
+          "The configured Bakery and Cash departments are required.",
+        );
       const branch = "Branch 1";
       const location = draft.config.branches.find((item) => item.id === branch);
       const now = new Date();
