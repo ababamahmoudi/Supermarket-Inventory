@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { resetDemo, setBranch, setLanguage, signIn } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 async function showManualPrice(page: Page) {
   const table = page.locator(".catalog-products-table");
@@ -185,13 +186,23 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
   await expect(page.locator(".lookup-detail .manual-price-pill")).toHaveCount(
     0,
   );
-  await expect(page.locator(".lookup-detail .price")).toHaveText("$2.99");
+  await expect(
+    page.locator(".lookup-detail .lookup-other-prices"),
+  ).toContainText("Not approved here yet");
+  await expect(page.locator(".lookup-detail .price")).toHaveCount(0);
+  const reset = await readCanonicalBusinessEvidence(page);
+  const resetProduct = reset.products.find(
+    (product) => product.code === "0009",
+  )!;
+  expect(resetProduct.selling_price).toBe("2.99");
+  expect(resetProduct.branch_prices).toEqual({});
 });
 
 test("branch-only manual prices do not flag the other location", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
+  await approvedLookupPrices(page, ["0009"]);
   await setBranch(page, "Branch 1");
   const location = page
     .locator(".topbar")

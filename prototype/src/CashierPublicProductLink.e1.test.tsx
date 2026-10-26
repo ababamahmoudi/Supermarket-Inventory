@@ -90,6 +90,7 @@ it("retains the genuine Cashier's exact public product-code link through Lookup 
   expect(screen.getByRole("combobox", { name: "Search products" })).toHaveValue(
     "0009",
   );
+  await screen.findByRole("heading", { level: 2, name: "Potato Chips 150 g" });
   expect(document.querySelectorAll(".lookup-result-row")).toHaveLength(1);
   expect(document.querySelector(".lookup-detail")).toBeVisible();
   noPrivateProduct();

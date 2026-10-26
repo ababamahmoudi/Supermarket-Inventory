@@ -2,6 +2,7 @@ import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { openInvoiceDetails } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 import { chooseOption, openInvoiceLine, setLanguage, signIn } from "./helpers";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 test.setTimeout(180000);
 test.use({ actionTimeout: 10000 });
@@ -111,6 +112,7 @@ for (const width of [1280, 1440, 1920]) {
       );
       await page.setViewportSize({ width, height: 1080 });
       await signIn(page, "Supervisor");
+      await approvedLookupPrices(page, ["0016"]);
       const report: {
         scene: string;
         proof: Awaited<ReturnType<typeof geometry>>;

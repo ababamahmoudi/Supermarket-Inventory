@@ -11,6 +11,7 @@ import {
 } from "../scripts/capture-c8-proof.mjs";
 import { openAlert, setBranch, setLanguage, signIn } from "./helpers";
 import { configuredPersonExpectation } from "./configured-person-expectations";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 async function prepare(
   page: Page,
@@ -355,6 +356,8 @@ for (const language of ["en", "fa"] as const) {
   test(`C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (${language})`, async ({
     page,
   }) => {
+    await signIn(page, "Manager");
+    await approvedLookupPrices(page, ["0002"]);
     await prepare(page, language, "Floor Worker");
     const before = await readC8State(page);
     const dialog = await openC8PriceDialog(page, "0002");

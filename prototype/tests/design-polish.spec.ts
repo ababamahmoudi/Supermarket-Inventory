@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
 import { setLanguage, signIn, uploadInvoice, openShellAction } from "./helpers";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 const routes = [
   "dashboard",
@@ -128,6 +129,8 @@ for (const variant of ["light", "dark", "Persian"] as const) {
 test("Persian lookup preserves unit order and makes the Persian name primary", async ({
   page,
 }) => {
+  await signIn(page, "Manager");
+  await approvedLookupPrices(page, ["0003"]);
   await signIn(page, "Cashier");
   await setLanguage(page, "fa");
   await page.getByLabel("جست‌وجوی محصولات", { exact: true }).fill("0003");

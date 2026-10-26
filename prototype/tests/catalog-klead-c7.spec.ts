@@ -12,6 +12,7 @@ import {
 } from "../scripts/c5-browser-proof.mjs";
 import { inspectResponsiveLayout } from "../scripts/c6-layout-proof.mjs";
 import { setupCatalogScene } from "../scripts/c6-catalog-scenes.mjs";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 const helpers = { button, field, exact, today, choose };
 const widths = [390, 768, 900, 1024, 1180, 1280, 1440, 1920];
@@ -63,6 +64,7 @@ for (const width of widths)
     }, info) => {
       await page.setViewportSize({ width, height: width === 390 ? 844 : 1080 });
       await signIn(page, "Supervisor");
+      await approvedLookupPrices(page, ["0003"]);
       await visit(page, "lookup");
       await setLanguage(page, language);
       const before = businessSnapshot(await state(page));
@@ -324,6 +326,8 @@ for (const role of ["Floor Worker", "Cashier"] as const)
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
+    await signIn(page, "Manager");
+    await approvedLookupPrices(page, ["0009"]);
     await signIn(page, role);
     await visit(page, role === "Cashier" ? "lookup" : "products");
     await expect(page.getByRole("button", { name: /^Edit / })).toHaveCount(0);

@@ -2,6 +2,7 @@ import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator } from "@playwright/test";
 import { addSelectedLabels, selectLabelGroup } from "./label-selection";
 import { chooseOption, setLanguage, signIn } from "./helpers";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 const STORAGE_KEY = "supermarket-prototype-v1";
 const PRODUCT_CODE = "0016";
@@ -102,7 +103,9 @@ for (const role of ["Supervisor", "Floor Worker", "Cashier"] as const) {
   test(`${role} sees approved weighed prices in Lookup with isolated bilingual units`, async ({
     page,
   }) => {
-    await signIn(page, role);
+    await signIn(page, "Supervisor");
+    await approvedLookupPrices(page, [PRODUCT_CODE]);
+    if (role !== "Supervisor") await signIn(page, role);
     await page.goto("/#lookup");
     await page
       .getByLabel("Search products", { exact: true })
@@ -133,6 +136,7 @@ test("weighed defaults persist, change only display/rules, and a kg editor save 
   page,
 }) => {
   await signIn(page, "Supervisor");
+  await approvedLookupPrices(page, [PRODUCT_CODE]);
   const productsBefore = await readCanonicalBusinessEvidence(page).then(
     (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
   );

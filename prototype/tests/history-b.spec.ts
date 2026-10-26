@@ -2,6 +2,7 @@ import { configuredPersonExpectation } from "./configured-person-expectations";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page, type Locator } from "@playwright/test";
 import { setLanguage, signIn } from "./helpers";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 async function saveName(page: Page, name: string) {
   // Lavash has existing active date evidence, so this remains a name-only
@@ -200,6 +201,7 @@ test("Undo stays above a native modal and keyboard focus pauses its own timer", 
   page,
 }) => {
   await signIn(page, "Supervisor");
+  await approvedLookupPrices(page, ["0003"]);
   await freezeClock(page);
   await stopOffer(page, "0003");
   await page.goto("/#lookup");
