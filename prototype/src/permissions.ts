@@ -159,7 +159,8 @@ function roleHasCapability(
   if (!knownCapabilities.has(capability)) return false;
   if (
     (capability.startsWith("timesheets.") &&
-      (state.config.modules?.timesheets === false || role === "floor_worker")) ||
+      (state.config.modules?.timesheets === false ||
+        role === "floor_worker")) ||
     ((capability === "returns.read" || capability === "returns.create") &&
       state.config.modules?.returns === false)
   )
