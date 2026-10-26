@@ -1,5 +1,7 @@
 # R2b: receiving, import and invoices
 
+For the current R2c/R2d changes, Ubuntu setup, every item ID and all defaults, use the [combined review guide](PR_R2CD_REVIEW.md). The R2b cases below remain regression reference.
+
 These steps use only invented documents in [the main fictional export](../prototype/tests/fixtures/r2b-fictional-readings-export.json) and [the staged matching export](../prototype/tests/fixtures/r2b-matching-readings-export.json). The main file contains eight fictional invoices, nine item lines and embedded fictional PNG originals; the matching file contains three separate invented papers. Neither is based on a private invoice. The guide describes the implemented behavior; final exact-commit CI results are recorded in PR #29 and its latest checks.
 
 [PR #29](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/29) remains unmerged. Keep real exports, names, amounts, photos and screenshots outside GitHub.

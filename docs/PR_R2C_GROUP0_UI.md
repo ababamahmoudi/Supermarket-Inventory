@@ -26,7 +26,7 @@ Test: inspect a fictional case line beside a single-line unit quantity in review
 
 ## 0.5 Rounded review rows and plain posted lines
 
-Review/correction fills have rounded first and last cells over a transparent row, avoiding the darker square beneath rounded cells. Posted lines omit the settled status/number column and green fill; plain rows use hairline dividers. Posted case quantities now use the same centered primary/conversion block and start alignment as review. Posted Totals uses the review card body font sizes, spacing and payable emphasis.
+Desktop review/correction fills have rounded first and last cells over a transparent row, avoiding the darker square beneath rounded cells. Responsive phone rows put the continuous fill on the rounded row and keep every cell transparent. Posted lines omit the settled status/number column and green fill; plain rows use hairline dividers. Posted case quantities now use the same centered primary/conversion block and start alignment as review. Posted Totals uses the review card body font sizes, spacing and payable emphasis.
 
 Test: review a fictional invoice in dark mode, post it and compare the line rows and Totals. Open Correct invoice to inspect the shared closed-row treatment.
 

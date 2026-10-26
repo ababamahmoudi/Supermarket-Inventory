@@ -1,3 +1,10 @@
+## 2026-10-26 — R2c and R2d integrated review
+
+- Completed the requested published order on the existing PR #29 branch: R2c0 → R2c1 → R2d A/B/C → R2c2–7, with separate group pushes and no merge/force push. [Every item and click path](PR_R2CD_REVIEW.md) includes Ubuntu setup and the recorded defaults.
+- Integrated photographed return creation with retained receipt currency, immutable source cost, original manual-posting evidence and three-decimal weight pickup compatibility. Currency/source ambiguity remains explicit; waiting-pickup previews do not deduct.
+- Preserved strict existing financial, role/company/location, original-byte, typing, 2px and rendering guards. Updated stale test navigation for the intentionally replaced dashboard/approval/Payables views. Supplier filters retain Clear during pending/error reads; Payables has one screen supplier heading while print retains its name.
+- Added only approved fictional dashboard reference PNGs and an independently invented return-condition image. Uploaded screenshots, recordings and real reading exports remain private and are not repository fixtures. Final exact head/check runs are recorded on PR #29.
+
 ## 2026-10-26 — R2c Groups 2–6
 
 - G2 (2.1–2.4): shared public bilingual picker search/highlights/keyboard support, explicit non-option placeholders, visible-viewport popover bounds and one record-details control for Suppliers/Payables/Offers/Returns. Genuine None/All choices and shelf scan/refocus remain.
@@ -5,7 +12,7 @@
 - G4 (4.1–4.3): compact decision rows, protected full shared ProductEditor with atomic metadata/date/supplier/approval commit and one retained audit, plus structured selected-only invoice review with select-all/cost/price/margin and amber checks. Cancel/failure preserves canonical data and original/ledger/physical evidence.
 - G5 (5.1–5.2): clearer product/offer/regular-saving hierarchy and aligned searchable Create offer with visible configured read-only quantity/total. Existing pricing, confirmation/dismissal/stop/idempotency/location/Undo behavior remains.
 - G6: bounded personal inbox with sticky controls, boxed read/unread groups, 24-hour dates, recipient-only soft Clear all, handled-source filtering and fresh canonical related navigation. Same source decisions group eligible stores; different decisions and legacy identities remain distinct. Public grouping tokens exclude raw legacy routing/recipient payloads.
-- Fictional domain/component/browser proofs cover current authority/privacy/atomicity, real search/record/statement/offer/notification operations, layout matrices and strict C5 corruption controls. G4's production matrix covers 12 width/language/theme variants with 36 captures and ≤2px editor save/cancel checks. See the per-group review guides for executed evidence; final combined CI belongs to the integrated head. No private business fixtures, production HTTP/deployment/push or physical-device/printer proof is claimed.
+- Fictional domain/component/browser proofs cover current authority/privacy/atomicity, real search/record/statement/offer/notification operations, layout matrices and strict C5 corruption controls. G4's production matrix covers 12 width/language/theme variants with 36 captures and ≤2px editor save/cancel checks. See the per-group review guides for executed evidence; final combined CI belongs to the integrated head. No private business fixtures, production HTTP backend, external push-notification service, deployment or physical-device/printer proof is claimed.
 
 ## 2026-10-26 — R2d timesheets (A1–A3, B1–B4, C)
 
