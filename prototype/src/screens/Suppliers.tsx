@@ -442,11 +442,18 @@ export default function Suppliers() {
                 {t(en, fa)}
               </FilterChip>
             ))}
-            {hasFilters && rows.length > 0 && (
-              <Button variant="plain" size="sm" onClick={clearSupplierFilters}>
-                {t("Clear filters", "پاک کردن فیلترها")}
-              </Button>
-            )}
+            {hasFilters &&
+              (rows.length > 0 ||
+                supplierRead.pending ||
+                Boolean(supplierRead.error)) && (
+                <Button
+                  variant="plain"
+                  size="sm"
+                  onClick={clearSupplierFilters}
+                >
+                  {t("Clear filters", "پاک کردن فیلترها")}
+                </Button>
+              )}
           </FilterToolbar>
           <DataTable
             recordDetails
