@@ -707,12 +707,34 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           root.querySelectorAll(
             "form.manual-entry-form input,form.manual-entry-form textarea",
           ).length >= 7;
+        const offerPage =
+          root.querySelector(":scope > .ui-segments") &&
+          (root.querySelector(
+            ":scope > .ui-card .current-offers-table.has-record-details",
+          ) ||
+            root.querySelector(":scope > .r2c-offer-pools"));
+        const offerEditor =
+          root.matches("dialog.r2c-offer-create[open]") &&
+          root.querySelector(":scope > .ui-dialog-header h2") &&
+          root.querySelector(
+            ":scope > .ui-dialog-header .dialog-description",
+          ) &&
+          root.querySelector(
+            ":scope > .ui-dialog-body > form.r2c-offer-form .r2c-offer-kind-grid",
+          ) &&
+          root.querySelector(
+            ":scope > .ui-dialog-body > form.r2c-offer-form .r2c-offer-fields",
+          ) &&
+          root.querySelectorAll(":scope > .ui-dialog-footer > button")
+            .length === 2;
         const valid =
+          offerEditor ||
           supplierEditor ||
           (directPage &&
-            ((module === "suppliers" &&
-              route === "#suppliers" &&
-              (supplierList || supplierDetail)) ||
+            ((module === "offers" && route === "#offers" && offerPage) ||
+              (module === "suppliers" &&
+                route === "#suppliers" &&
+                (supplierList || supplierDetail)) ||
               (module === "payables" &&
                 route === "#payables" &&
                 (payableList || payableStatement || payableUnavailable))));

@@ -4,8 +4,8 @@ import {
   sellingBranches,
 } from "../settings";
 import { translateCount } from "../i18n";
-import { useState } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { useId, useState } from "react";
+import { MoreHorizontal, Tag } from "lucide-react";
 import {
   activateOffer,
   businessDate,
@@ -36,6 +36,7 @@ import { SalePrice } from "../sales-presentation";
 import {
   categoryLabel,
   formatOffer,
+  formatMoney,
   DateText,
   LtrText,
   Money,
@@ -114,6 +115,7 @@ export function Offers() {
     null,
   );
   const [stopId, setStopId] = useState<string | null>(null);
+  const createFormId = useId();
   const [createOpen, setCreateOpen] = useState(false);
   const [openedOffer, setOpenedOffer] = useState<Offer[] | null>(null);
   const [openedSale, setOpenedSale] = useState<SaleRow | null>(null);
@@ -410,6 +412,10 @@ export function Offers() {
           end_date: end || undefined,
         }
       : null;
+  const bundle =
+    mapping && manualPrice
+      ? offerSuggestionAmounts(mapping.offer, manualPrice)
+      : undefined;
   const dateError =
     candidate && offerReadiness(state, candidate) === "dates_invalid"
       ? readyMessage("dates_invalid")
@@ -537,7 +543,7 @@ export function Offers() {
     </FilterToolbar>
   );
   return (
-    <>
+    <div className="stack r2c-screen r2c-offers-page" data-r2c-screen="offers">
       <PageHeader
         title={t("Offers", "پیشنهادهای فروش")}
         description={t(
@@ -644,7 +650,7 @@ export function Offers() {
                     });
                   return (
                     <section
-                      className="offer-task r2c-offer-task list-box"
+                      className="offer-task r2c-offer-task list-box ui-form-surface"
                       key={offer.id}
                     >
                       <div className="r2c-offer-heading">
@@ -1100,7 +1106,10 @@ export function Offers() {
         </>
       ) : (
         <>
-          <Card title={t("Mix-and-match pools", "گروه‌های ترکیبی")}>
+          <Card
+            className="r2c-offer-pools"
+            title={t("Mix-and-match pools", "گروه‌های ترکیبی")}
+          >
             <p>
               {t("Showing effective offers for", "نمایش پیشنهادهای مؤثر برای")}:{" "}
               <strong className="branch-label">{branchName(viewBranch)}</strong>
@@ -1191,25 +1200,28 @@ export function Offers() {
           if (!open) setMessage(null);
         }}
         title={t("Create offer", "ایجاد پیشنهاد")}
-        description={
-          selected ? (
-            <>
-              <ProductName product={selected} language={lang} />
-              {" · "}
-              {createType === "sale" || scope === "branch"
-                ? branchName(viewBranch)
-                : t("Company default price", "قیمت پیش‌فرض شرکت")}
-            </>
-          ) : (
-            t(
-              "Choose a product with an approved price to create an offer.",
-              "برای ایجاد پیشنهاد، کالایی با قیمت تأییدشده انتخاب کنید.",
-            )
-          )
+        icon={<Tag size={22} aria-hidden="true" />}
+        description={t(
+          "Choose a product and review its offer terms.",
+          "کالا را انتخاب و شرایط پیشنهاد آن را بررسی کنید.",
+        )}
+        className={`c3-operation-dialog offers-create-dialog r2c-offer-create${createOpen ? " r2c-screen" : ""}`}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setCreateOpen(false)}>
+              {t("Cancel", "انصراف")}
+            </Button>
+            <Button type="submit" form={createFormId}>
+              {createType === "sale"
+                ? t("Continue", "ادامه")
+                : t("Create offer", "ایجاد پیشنهاد")}
+            </Button>
+          </>
         }
-        className="c3-operation-dialog offers-create-dialog"
       >
         <form
+          id={createFormId}
+          className="r2c-offer-form ui-form-surface"
           aria-label={t("Create offer", "ایجاد پیشنهاد")}
           onSubmit={(event) => {
             event.preventDefault();
@@ -1227,29 +1239,47 @@ export function Offers() {
               activate(candidate);
           }}
         >
-          <Field label={t("Offer type", "نوع پیشنهاد")}>
-            <Select
-              value={createType}
-              onChange={(value) => {
-                setCreateType(value as "multi_buy" | "sale");
-                setCreateAttempted(false);
-              }}
-              options={[
-                ...(mayManageMultiBuy
-                  ? [
-                      {
-                        value: "multi_buy",
-                        label: t("Multi-buy", "خرید چندتایی"),
-                      },
-                    ]
-                  : []),
-                ...(mayCreateSale
-                  ? [{ value: "sale", label: t("Sale price", "قیمت حراج") }]
-                  : []),
-              ]}
-            />
-          </Field>
-          <div className="grid-2">
+          <div className="grid-2 ui-fields-align-labels r2c-offer-kind-grid">
+            <Field label={t("Offer type", "نوع پیشنهاد")}>
+              <Select
+                value={createType}
+                onChange={(value) => {
+                  setCreateType(value as "multi_buy" | "sale");
+                  setCreateAttempted(false);
+                }}
+                options={[
+                  ...(mayManageMultiBuy
+                    ? [
+                        {
+                          value: "multi_buy",
+                          label: t("Multi-buy", "خرید چندتایی"),
+                        },
+                      ]
+                    : []),
+                  ...(mayCreateSale
+                    ? [{ value: "sale", label: t("Sale price", "قیمت حراج") }]
+                    : []),
+                ]}
+              />
+            </Field>
+            <Field label={t("Regular price", "قیمت عادی")}>
+              <input
+                className="ui-input"
+                readOnly
+                dir="ltr"
+                value={
+                  manualPrice
+                    ? formatMoney(manualPrice, {
+                        currency: state.config.company.currency,
+                        decimals: 2,
+                      })
+                    : ""
+                }
+                placeholder={t("Not added", "اضافه نشده")}
+              />
+            </Field>
+          </div>
+          <div className="grid-2 ui-fields-align-labels r2c-offer-fields">
             <Field
               label={t("Product", "کالا")}
               error={
@@ -1318,6 +1348,31 @@ export function Offers() {
                     ]}
                   />
                 </Field>
+                <Field label={t("Offer quantity", "تعداد پیشنهاد")}>
+                  <input
+                    className="ui-input"
+                    readOnly
+                    dir="ltr"
+                    value={bundle?.quantity ?? ""}
+                    placeholder={t("Not added", "اضافه نشده")}
+                  />
+                </Field>
+                <Field label={t("Offer total", "مبلغ پیشنهاد")}>
+                  <input
+                    className="ui-input"
+                    readOnly
+                    dir="ltr"
+                    value={
+                      bundle
+                        ? formatMoney(bundle.total, {
+                            currency: state.config.company.currency,
+                            decimals: 2,
+                          })
+                        : ""
+                    }
+                    placeholder={t("Not added", "اضافه نشده")}
+                  />
+                </Field>
                 <Field
                   label={t("Start date (optional)", "تاریخ شروع (اختیاری)")}
                 >
@@ -1377,16 +1432,6 @@ export function Offers() {
               )}
             </>
           )}
-          <DialogActions>
-            <Button variant="neutral" onClick={() => setCreateOpen(false)}>
-              {t("Cancel", "انصراف")}
-            </Button>
-            <Button type="submit">
-              {createType === "sale"
-                ? t("Continue", "ادامه")
-                : t("Create offer", "ایجاد پیشنهاد")}
-            </Button>
-          </DialogActions>
         </form>
       </Dialog>
       {openedOffer && (
@@ -1624,7 +1669,7 @@ export function Offers() {
           onConfirm={() => stop(stopId)}
         />
       )}
-    </>
+    </div>
   );
 }
 

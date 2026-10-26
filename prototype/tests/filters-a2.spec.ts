@@ -196,15 +196,35 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
     has: page.getByRole("heading", { name: "Current offers", exact: true }),
   });
   await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(5);
-  await expect(current.locator('tr[data-product-code="0003"]')).toHaveCount(1);
-  const juiceScope = await responsiveColumn(
-    current.locator('tr[data-product-code="0003"]'),
-    "Scope",
-  );
-  await expect(juiceScope.locator(".offer-group-entry")).toHaveCount(2);
-  await expect(
-    current.locator("tbody").getByText("Richmond Hill", { exact: true }),
-  ).toBeVisible();
+  const juice = current.locator('tr[data-product-code="0003"]');
+  await expect(juice).toHaveCount(1);
+  const assertJuiceRecordLocations = async (expected: string[]) => {
+    await juice
+      .getByRole("button", { name: "Open offer", exact: true })
+      .click();
+    const record = page.getByRole("dialog", { name: "Offer", exact: true });
+    await expect(record.locator(".offer-record")).toHaveCount(expected.length);
+    const locations = record
+      .locator(".offer-record dl > div")
+      .filter({ has: page.getByText("Location", { exact: true }) })
+      .locator("dd");
+    await expect(locations).toHaveText(expected);
+    await record.getByRole("button", { name: "Close", exact: true }).click();
+  };
+  if (
+    (await juice.evaluate((element) => element.matches(".phone-list-row"))) ||
+    (await juice.locator('td[data-column-label="Scope"]').count())
+  ) {
+    const juiceScope = await responsiveColumn(juice, "Scope");
+    await expect(juiceScope.locator(".offer-group-entry")).toHaveCount(2);
+    await expect(
+      current.locator("tbody").getByText("Richmond Hill", { exact: true }),
+    ).toBeVisible();
+  } else {
+    // R2c keeps one record disclosure when the table omits Scope. Read the
+    // actual retained offer records rather than requiring a second expander.
+    await assertJuiceRecordLocations(["All branches", "Richmond Hill"]);
+  }
   await signIn(page, "floor_worker");
   await page.goto("/#offers");
   await expect(
@@ -230,6 +250,7 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
   await expect(
     current.locator("tbody").getByText("Richmond Hill", { exact: true }),
   ).toHaveCount(0);
+  await assertJuiceRecordLocations(["All branches"]);
   await filters
     .getByRole("button", { name: "Clear filters", exact: true })
     .click();

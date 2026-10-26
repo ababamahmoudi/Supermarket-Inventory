@@ -48,3 +48,55 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+:root dialog.ui-dialog.r2c-offer-create[open] {
+  inline-size: min(760px, calc(100vw - 32px));
+  max-inline-size: 760px;
+  block-size: min(760px, calc(100dvh - 32px));
+  max-block-size: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+}
+.r2c-offer-create > .ui-dialog-header,
+.r2c-offer-create > .ui-dialog-footer {
+  flex: 0 0 auto;
+}
+.r2c-offer-create > .ui-dialog-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.r2c-offer-create .dialog-description {
+  min-block-size: 40px;
+}
+.r2c-offer-form .grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.r2c-offer-form > p {
+  min-block-size: 44px;
+}
+.r2c-offer-form .ui-checked-control {
+  min-block-size: 44px;
+}
+@media (max-width: 759px) {
+  .r2c-offer-form .grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Form fields share the column edges while their popovers size independently. */
+:root .r2c-offer-form .field > .ui-select {
+  inline-size: 100%;
+  max-inline-size: 100%;
+}
+.r2c-offer-form .field > .ui-select > .select-sizing {
+  display: none;
+}
+.r2c-offer-form .field > .ui-select > span:not(.select-sizing) {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
