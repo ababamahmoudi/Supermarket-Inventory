@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   useSyncExternalStore,
   type Dispatch,
@@ -56,6 +57,10 @@ export function useListState<T>(
   );
   const initialValue = () =>
     typeof initial === "function" ? (initial as () => T)() : initial;
+  const latestInitial = useRef(initial);
+  useEffect(() => {
+    latestInitial.current = initial;
+  }, [initial]);
   const [entry, setEntry] = useState(() => ({
     key,
     value: readNavigationValue(key, initialValue()),
@@ -63,20 +68,31 @@ export function useListState<T>(
   if (entry.key !== key) {
     setEntry({ key, value: readNavigationValue(key, initialValue()) });
   }
-  const setValue: Dispatch<SetStateAction<T>> = (next) => {
-    setEntry((previous) => {
-      const current =
-        previous.key === key
-          ? previous.value
-          : readNavigationValue(key, initialValue());
-      const value =
-        typeof next === "function"
-          ? (next as (current: T) => T)(current)
-          : next;
-      saveNavigationValue(key, value);
-      return { key, value };
-    });
-  };
+  const setValue: Dispatch<SetStateAction<T>> = useCallback(
+    (next) => {
+      setEntry((previous) => {
+        const initial = latestInitial.current;
+        const current =
+          previous.key === key
+            ? previous.value
+            : readNavigationValue(
+                key,
+                typeof initial === "function"
+                  ? (initial as () => T)()
+                  : initial,
+              );
+        const value =
+          typeof next === "function"
+            ? (next as (current: T) => T)(current)
+            : next;
+        saveNavigationValue(key, value);
+        return previous.key === key && Object.is(previous.value, value)
+          ? previous
+          : { key, value };
+      });
+    },
+    [key],
+  );
   return [entry.value, setValue];
 }
 
