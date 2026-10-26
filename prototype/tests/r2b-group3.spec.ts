@@ -89,6 +89,20 @@ for (const language of ["en", "fa"] as const)
             exact: true,
           }),
         ).toBeVisible();
+        await expect(root.locator('[data-posted-action="done"]')).toHaveClass(
+          /button-primary/,
+        );
+        await expect(
+          root.locator(
+            ".posted-invoice-lines .receiving-status-cell, .posted-invoice-lines .receiving-status-icon",
+          ),
+        ).toHaveCount(0);
+        await expect(
+          root.locator(".posted-invoice-lines .receiving-row-confirmed"),
+        ).toHaveCount(0);
+        await expect(
+          root.locator(".posted-invoice-lines th").filter({ hasText: /^#$/ }),
+        ).toHaveCount(0);
         const presentation = await inspect(
           page,
           "R2b posted invoice",
@@ -97,6 +111,25 @@ for (const language of ["en", "fa"] as const)
         );
         expect(presentation.failures).toEqual([]);
         if (width === 390 && language === "en" && theme === "light") {
+          const done = root.locator('[data-posted-action="done"]');
+          await done.evaluate((element) => {
+            element.style.display = "none";
+          });
+          expect(
+            (
+              await inspect(
+                page,
+                "R2c missing Done negative control",
+                "en-light",
+                "owner",
+              )
+            ).failures,
+          ).toContain(
+            "Posted receiving header must show exactly its authorized actions",
+          );
+          await done.evaluate((element) => {
+            element.style.removeProperty("display");
+          });
           const correct = root.locator("[data-posted-action=correct]");
           const beforeBox = await correct.boundingBox();
           const priorStyle = await correct.getAttribute("style");
@@ -178,4 +211,7 @@ for (const language of ["en", "fa"] as const)
       expect(after.invoice_content_corrections).toEqual(
         before.invoice_content_corrections,
       );
+      await root.locator('[data-posted-action="done"]').click();
+      await expect(page).toHaveURL(/#invoices\?tab=posted$/);
+      await expect(page.locator(".invoice-posted-list")).toBeVisible();
     });

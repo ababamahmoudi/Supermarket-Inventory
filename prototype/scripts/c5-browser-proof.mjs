@@ -337,6 +337,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
                 ...header.querySelectorAll("[data-posted-action]"),
               ].filter(visible);
               const required = [
+                "done",
                 ...(review.dataset.canCorrect === "true" ? ["correct"] : []),
                 ...(review.dataset.canMove === "true" ? ["move"] : []),
               ];
@@ -377,7 +378,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
                 controls.some(
                   (control) =>
                     !control.classList.contains(
-                      control.dataset.postedAction === "correct"
+                      control.dataset.postedAction === "done"
                         ? "button-primary"
                         : "button-secondary",
                     ),
