@@ -10,6 +10,13 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import App from "../App";
 import { DemoProvider, initialState } from "../store";
 import { authenticatedProviderFixture } from "../authority-provider-test-fixture";
+import type { DemoState } from "../types";
+import {
+  addTimesheetRow,
+  addTimesheetStaff,
+  timesheetClock,
+  timesheetScope,
+} from "../timesheets";
 import i18n from "../i18n";
 import {
   renderedUiReady,
@@ -18,6 +25,52 @@ import {
 
 let fixture: Awaited<ReturnType<typeof authenticatedProviderFixture>>;
 let release: (() => void) | undefined;
+
+async function independentTimesheetFixture() {
+  const state = initialState();
+  // B is verified before C's optional demo sheets. Set up this test's own
+  // invented person and shift through the real protected canonical command.
+  state.timesheet_staff = [];
+  state.timesheet_days = [];
+  state.timesheet_rows = [];
+  state.config.modules.timesheets = true;
+  const branch = "Branch 1";
+  const department = state.config.timesheets?.departments[0];
+  if (!department) throw new Error("The timesheet fixture needs a department.");
+  const date = timesheetClock(state.config, branch).date;
+  const prepared = await authenticatedProviderFixture({
+    state,
+    role: "manager",
+    actorOptions: {
+      locations: [branch],
+      selection: { kind: "location", location_id: branch },
+    },
+  });
+  await prepared.repository.runBusinessCommand<DemoState, void>(
+    prepared.identity,
+    (draft, actor) => {
+      const staff = addTimesheetStaff(draft, actor, {
+        branch,
+        name_en: "Emery Vale",
+        usual_department_key: department.key,
+      });
+      addTimesheetRow(draft, actor, {
+        branch,
+        date,
+        department_key: department.key,
+        staff_id: staff.id,
+        in_time: "06:00",
+        out_time: "14:00",
+      });
+    },
+    {
+      capability: "timesheets.edit",
+      resource: timesheetScope(state.config.company.seed_key, branch, true),
+    },
+  );
+  window.history.replaceState(null, "", `/#timesheets?date=${date}`);
+  return prepared;
+}
 beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
@@ -37,14 +90,7 @@ afterEach(() => {
 it.each(["Previous day", "Week view"])(
   "a late %s continuation cannot reopen Timesheets after leaving during an actual save",
   async (action) => {
-    fixture = await authenticatedProviderFixture({
-      state: initialState(),
-      role: "manager",
-      actorOptions: {
-        locations: ["Branch 1"],
-        selection: { kind: "location", location_id: "Branch 1" },
-      },
-    });
+    fixture = await independentTimesheetFixture();
     const original = fixture.repository.runBusinessCommand.bind(
       fixture.repository,
     );
@@ -114,14 +160,7 @@ it.each(["Previous day", "Week view"])(
 );
 
 it("returning to the original time during a delayed save retains the latest typed intent", async () => {
-  fixture = await authenticatedProviderFixture({
-    state: initialState(),
-    role: "manager",
-    actorOptions: {
-      locations: ["Branch 1"],
-      selection: { kind: "location", location_id: "Branch 1" },
-    },
-  });
+  fixture = await independentTimesheetFixture();
   const original = fixture.repository.runBusinessCommand.bind(
     fixture.repository,
   );
