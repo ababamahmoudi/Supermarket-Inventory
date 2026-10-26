@@ -119,6 +119,22 @@ describe("R2c grouped personal notifications", () => {
     delete task.steps[0].source_activity_id;
     expect(priceGroups()).toHaveLength(2);
   });
+  it("does not copy unmatched legacy routing payload or recipient IDs into projected identity tokens", () => {
+    change();
+    const row = state.notifications!.find(
+      (row) =>
+        row.kind === "price_update_created" &&
+        row.recipient_user_id === manager.user_id,
+    )!;
+    row.event_key = `fictional-private-routing-payload:${manager.user_id}`;
+    const projected = priceRows().find((item) => item.id === row.id)!;
+    expect(projected.group_key).not.toContain(
+      "fictional-private-routing-payload",
+    );
+    expect(projected.group_key).not.toContain(manager.user_id);
+    expect(JSON.parse(projected.group_key).at(-1)).toBe(row.id);
+    expect(priceGroups()).toHaveLength(2);
+  });
   it("counts mixed read and unread members once and marks only this recipient's entire group", () => {
     change();
     const first = priceRows()[0];

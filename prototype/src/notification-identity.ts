@@ -46,7 +46,7 @@ export function notificationGroupIdentity(
       row.kind,
       row.company_id,
       task?.id ?? row.id,
-      version?.version ?? row.event_key,
+      version?.version ?? row.id,
     ]);
   }
   return JSON.stringify([row.company_id, row.id]);

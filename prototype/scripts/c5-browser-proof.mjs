@@ -169,6 +169,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         ".notebook-tabs",
       ].join(",");
       const invoiceSourceTiles = new Set();
+      const notificationHeaderActions = new Set();
       const kindOf = (element) => {
         if (invoiceSourceTiles.has(element)) return "source-tile";
         // Category choices are actual pressed-state chips; their menu trigger
@@ -185,6 +186,13 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         // structure is validated below before granting its 32px size contract.
         if (kind === "label-action") return "action";
         if (kind && kind !== "action") return kind;
+        // Inbox header controls remain ordinary actions even though menu keyboard
+        // navigation gives them menuitem semantics. The exact composition below
+        // alone grants their 44px desktop contract.
+        if (
+          element.matches(".personal-notifications-actions > .ui-button.button")
+        )
+          return "action";
         const controlRole = element.getAttribute("role");
         if (widgetRoles.includes(controlRole)) return controlRole;
         if (
@@ -835,6 +843,186 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           );
         else controls.forEach((control) => approvalEditorFooters.add(control));
       }
+      for (const popup of document.querySelectorAll(".notifications-popover")) {
+        if (!visible(popup)) continue;
+        const fa = document.documentElement.lang.startsWith("fa");
+        const title = fa ? "اعلان‌ها" : "Notifications";
+        const captions = fa
+          ? ["همه را خوانده‌شده علامت بزن", "پاک کردن همه"]
+          : ["Mark all as read", "Clear all"];
+        const panel = popup.querySelector(
+          ":scope > section.personal-notifications",
+        );
+        const header = panel?.querySelector(
+          ":scope > header.personal-notifications-header",
+        );
+        const heading = header?.querySelector(":scope > h2");
+        const actions = header?.querySelector(
+          ":scope > .personal-notifications-actions",
+        );
+        const controls = [
+          ...(actions?.querySelectorAll(":scope > button") ?? []),
+        ];
+        const list = panel?.querySelector(
+          ":scope > .personal-notifications-scroll",
+        );
+        const bell = [
+          ...document.querySelectorAll(
+            '.topbar > button.notifications-menu.ui-icon-button[aria-haspopup="menu"][aria-expanded="true"]',
+          ),
+        ].filter(
+          (element) =>
+            visible(element) &&
+            element.getAttribute("aria-controls") === popup.id,
+        );
+        const actualBell =
+          bell.length === 1 &&
+          Boolean(
+            bell[0].querySelector(
+              '.notification-button > svg.lucide-bell[aria-hidden="true"]',
+            ),
+          ) &&
+          (fa
+            ? /^اعلان‌ها، \d+ خوانده‌نشده$/
+            : /^Notifications, \d+ unread$/
+          ).test(bell[0].getAttribute("aria-label") ?? "");
+        let valid = Boolean(
+          popup.matches('.ui-popover.ui-menu-popover[role="menu"]') &&
+          popup.id &&
+          actualBell &&
+          panel?.getAttribute("aria-label") === title &&
+          heading &&
+          tidy(heading.textContent) === title &&
+          controls.length === 2 &&
+          controls.every(
+            (control, index) =>
+              control.matches(
+                '.ui-button.button.button-secondary[data-control-kind="action"][role="menuitem"]',
+              ) && tidy(control.textContent) === captions[index],
+          ) &&
+          list &&
+          getComputedStyle(header).position === "sticky" &&
+          !list.contains(header),
+        );
+        if (!valid)
+          failures.push(
+            "Notification inbox requires its real expanded bell, title, two header actions and separate scroll body",
+          );
+        const box = popup.getBoundingClientRect();
+        const viewport = window.visualViewport;
+        const view = {
+          left: viewport?.offsetLeft ?? 0,
+          top: viewport?.offsetTop ?? 0,
+          width: viewport?.width ?? window.innerWidth,
+          height: viewport?.height ?? window.innerHeight,
+        };
+        if (
+          Math.abs(box.width - Math.min(380, Math.max(0, view.width - 24))) >
+            1 ||
+          box.height > view.height * 0.7 + 1 ||
+          box.left < view.left + 11 ||
+          box.right > view.left + view.width - 11 ||
+          box.top < view.top + 15 ||
+          box.bottom > view.top + view.height - 15 ||
+          popup.scrollHeight > popup.clientHeight + 2
+        ) {
+          valid = false;
+          failures.push(
+            "Notification inbox must remain 380px wide within the visible viewport and 70% height without outer scrolling",
+          );
+        }
+        if (header && actions && list) {
+          const headBox = header.getBoundingClientRect(),
+            listBox = list.getBoundingClientRect();
+          const listStyle = getComputedStyle(list);
+          const actionBoxes = controls.map((control) =>
+            control.getBoundingClientRect(),
+          );
+          const sorted = [...actionBoxes].sort((a, b) => a.left - b.left);
+          if (
+            controls.some(
+              (control, index) =>
+                Math.abs(actionBoxes[index].height - 44) > 1 ||
+                actionBoxes[index].left < headBox.left ||
+                actionBoxes[index].right > headBox.right ||
+                actionBoxes[index].top < headBox.top ||
+                actionBoxes[index].bottom > headBox.bottom,
+            ) ||
+            (sorted.length === 2 &&
+              (sorted[1].left - sorted[0].right < 7 ||
+                Math.abs(sorted[1].top - sorted[0].top) > 2)) ||
+            listBox.top < headBox.bottom - 1 ||
+            !["auto", "scroll"].includes(listStyle.overflowY) ||
+            ["Top", "Right", "Bottom", "Left"].some(
+              (side) => parseFloat(listStyle[`padding${side}`]) < 12,
+            )
+          ) {
+            valid = false;
+            failures.push(
+              "Notification header actions require their separate 44px row above a padded internal scroll body",
+            );
+          }
+          const items = [
+            ...list.querySelectorAll(":scope > button.personal-notification"),
+          ];
+          const empty = list.querySelector(
+            ":scope > .personal-notifications-empty",
+          );
+          if (!items.length && (!empty || list.children.length !== 1)) {
+            valid = false;
+            failures.push(
+              "Notification inbox needs boxed related records or its one empty state",
+            );
+          }
+          for (const item of items) {
+            const copy = item.querySelector(
+              ":scope > .personal-notification-copy",
+            );
+            const dot = item.querySelector(
+              ":scope > .personal-notification-dot",
+            );
+            const date = copy?.querySelector(
+              ":scope > .personal-notification-heading > time[datetime]",
+            );
+            const itemStyle = getComputedStyle(item),
+              itemBox = item.getBoundingClientRect();
+            if (
+              !item.matches(
+                '.ui-menu-item[role="menuitem"][data-control-kind="disclosure"]',
+              ) ||
+              !copy ||
+              !dot ||
+              !copy.querySelector(
+                ":scope > .personal-notification-heading > strong",
+              ) ||
+              !copy.querySelector(":scope > .personal-notification-branches") ||
+              !date ||
+              getComputedStyle(date).whiteSpace !== "nowrap" ||
+              /\b(?:am|pm)\b/i.test(date.textContent ?? "") ||
+              itemBox.height < 44 ||
+              item.scrollHeight > item.clientHeight + 2 ||
+              item.scrollWidth > item.clientWidth + 2 ||
+              ["Top", "Right", "Bottom", "Left"].some(
+                (side) => parseFloat(itemStyle[`border${side}Width`]) < 0.5,
+              )
+            ) {
+              valid = false;
+              failures.push(
+                "Notification related records require intrinsic boxed content, unread state and one-line 24-hour dates",
+              );
+            }
+          }
+        }
+        if (valid)
+          controls.forEach((control) => notificationHeaderActions.add(control));
+      }
+      for (const control of document.querySelectorAll(
+        ".personal-notifications-actions > .ui-button.button",
+      ))
+        if (visible(control) && !notificationHeaderActions.has(control))
+          failures.push(
+            `Invalid notification header action composition: ${tidy(control.textContent)}`,
+          );
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
       )) {
@@ -1048,7 +1236,8 @@ export async function inspect(page, screen, variant, role = "supervisor") {
                 dashboardAction ||
                 structuredFooter ||
                 approvalDecisionButtons.has(element) ||
-                approvalEditorFooters.has(element)
+                approvalEditorFooters.has(element) ||
+                notificationHeaderActions.has(element)
               ? 44
               : element.closest(".c9-filter-toolbar")
                 ? element.closest(".ui-segments")
