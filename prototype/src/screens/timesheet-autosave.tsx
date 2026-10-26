@@ -2,6 +2,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { BufferedInput, BufferedTextarea, Button } from "../ui";
 import { useDemo } from "../store";
 import { parseTimesheetTime } from "../timesheets";
+import { beginAppWork } from "../app-work";
 
 import { TimesheetSaveContext } from "./timesheet-save-context";
 
@@ -38,6 +39,12 @@ export function TimesheetSavedField({
     queue = useRef(Promise.resolve(true));
   const lastCommitted = useRef(value),
     alive = useRef(true);
+  const releaseWork = useRef<null | (() => void)>(null);
+  const pendingEntry = useRef<{
+    version: number;
+    value: string;
+    promise: Promise<boolean>;
+  } | null>(null);
   useEffect(() => {
     callback.current = save;
   }, [save]);
@@ -66,8 +73,15 @@ export function TimesheetSavedField({
       return false;
     }
     const ownVersion = version.current;
-    if (normalized === lastCommitted.current) {
+    if (
+      pendingEntry.current?.version === ownVersion &&
+      pendingEntry.current.value === normalized
+    )
+      return pendingEntry.current.promise;
+    if (normalized === lastCommitted.current && !pendingEntry.current) {
       dirty.current = false;
+      releaseWork.current?.();
+      releaseWork.current = null;
       if (!focused.current) {
         raw.current = normalized;
         setText(normalized);
@@ -85,6 +99,8 @@ export function TimesheetSavedField({
           lastCommitted.current = normalized;
           if (alive.current && ownVersion === version.current) {
             dirty.current = false;
+            releaseWork.current?.();
+            releaseWork.current = null;
             setError("");
             setSaved(true);
             if (!focused.current) {
@@ -103,10 +119,17 @@ export function TimesheetSavedField({
             );
           return false;
         } finally {
+          if (pendingEntry.current?.version === ownVersion)
+            pendingEntry.current = null;
           if (alive.current) setSaving(false);
         }
       });
     queue.current = operation;
+    pendingEntry.current = {
+      version: ownVersion,
+      value: normalized,
+      promise: operation,
+    };
     return operation;
   }, [time, t]);
   useEffect(() => registry?.register(id, flush), [registry, id, flush]);
@@ -115,11 +138,14 @@ export function TimesheetSavedField({
     return () => {
       alive.current = false;
       if (timer.current) clearTimeout(timer.current);
+      releaseWork.current?.();
+      releaseWork.current = null;
     };
   }, []);
   const change = (next: string) => {
     raw.current = next;
     dirty.current = true;
+    releaseWork.current ??= beginAppWork();
     version.current += 1;
     setText(next);
     setError("");
@@ -155,10 +181,12 @@ export function TimesheetSavedField({
   return (
     <div className={`timesheet-saved-field${time ? " is-time" : ""}`}>
       {multiline ? (
-        <BufferedTextarea {...common} rows={3} />
+        <BufferedTextarea {...common} className="ui-input" rows={3} />
       ) : (
         <BufferedInput
           {...common}
+          className="ui-input"
+          type="text"
           inputMode={time ? "numeric" : undefined}
           dir={time ? "ltr" : undefined}
           autoComplete="off"
@@ -183,22 +211,24 @@ export function TimesheetSavedField({
         className={`timesheet-save-state${error ? " form-error" : " muted"}`}
         aria-live="polite"
       >
-        {error ||
-          (saving
-            ? t("Saving…", "در حال ذخیره…")
-            : saved
-              ? t("Saved", "ذخیره شد")
-              : "")}
+        {error ? (
+          <Button
+            variant="plain"
+            className="timesheet-retry"
+            title={error}
+            aria-label={`${t("Try again", "تلاش دوباره")}. ${error}`}
+            onClick={() => void flush()}
+          >
+            {time ? t("Retry", "تلاش") : error}
+          </Button>
+        ) : saving ? (
+          t("Saving…", "در حال ذخیره…")
+        ) : saved ? (
+          t("Saved", "ذخیره شد")
+        ) : (
+          ""
+        )}
       </span>
-      {error && (
-        <Button
-          variant="plain"
-          className="timesheet-retry"
-          onClick={() => void flush()}
-        >
-          {t("Try again", "تلاش دوباره")}
-        </Button>
-      )}
     </div>
   );
 }

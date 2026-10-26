@@ -32,9 +32,14 @@ export default function TimesheetWeek({
         <DataTable
           className="timesheet-week-table"
           columns={[
-            { key: "person", required: true, width: "24%" },
-            ...data.dates.map((date) => ({ key: date, required: true })),
-            { key: "total", required: true },
+            { key: "person", required: true, width: "24%", minWidth: 148 },
+            ...data.dates.map((date) => ({
+              key: date,
+              required: true,
+              width: "9%",
+              minWidth: 52,
+            })),
+            { key: "total", required: true, width: "13%", minWidth: 64 },
           ]}
         >
           <thead>

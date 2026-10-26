@@ -16,7 +16,7 @@ Use `feat/prototype-r2-receiving` and PR #29. Changes stay unmerged. From `proto
 
 The default is a branch staff list with an optional app-login link. Past days remain editable by the four permitted roles, and every meaningful change is audited. Actual browser storage and domain commands enforce company/location access; this prototype does not add a production backend or cross-device shared storage.
 
-Validation is recorded only after execution. B1's initial browser proof covers actual Cashier sign-in, two new staff entries, fast time/Notes typing, canonical persistence/reload and Floor Worker denial on desktop and phone. Later sections record week/export/print/dashboard verification when implemented.
+Invalid partial times stay in their original field with an accessible explanation and Retry. Date, view, print and export actions wait for valid edits. Leaving the page during a delayed save cannot reopen the old sheet. Returning a time to its original value while an earlier save is running preserves that latest edit.
 
 ## B2: week view and payroll CSV
 
@@ -41,3 +41,11 @@ Executed B3 proof: desktop and phone print-media rendering contains all eight bi
 3. Settings → Modules → Timesheets Off removes the tile. The Manager dashboard retains its five operational tiles; enabling Timesheets adds the sixth tile in the same surface style.
 
 Executed B4 browser proof: Manager count reconciles to canonical unclosed staff, click opens the correct branch, module Off restores five tiles, and Branch Supervisor aggregate selection asks for a branch. Desktop and phone passed. Strict dashboard control proof also rejects a sixth tile when access is denied or its label is unrelated; restored genuine composition passes.
+
+## Visual and regression review
+
+The Timesheets visual proof passed all 12 combinations of 1440 / 1000 / 390 pixels, English / Persian and light / dark. Each combination captured the daily sheet, week view, staff manager, settings and print output. Geometry checks verified the 3 / 2 / 1 department grid, 44-pixel ordinary controls, surface-colored form fields and no page or daily-row overflow. Contact boards and representative full-size captures were reviewed manually; phone snapshots are browser emulation, not physical-device testing.
+
+The final production-preview Timesheets suite passed all 14 cases across desktop and phone: typing/reload, role denial, week/CSV, print, invalid-time stability, staff management and settings/module changes. Seven focused unit tests passed, including three that use real IndexedDB commands with delayed save scheduling to verify navigation cancellation and the original-value save race. The production build and targeted lint passed.
+
+Print proof covers browser media rendering and an actual Chromium A4 PDF, while a physical printer remains untested. Evidence contains fictional demo staff only.

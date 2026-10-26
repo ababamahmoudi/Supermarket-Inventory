@@ -43,6 +43,10 @@
     color: #000 !important;
     box-shadow: none !important;
   }
+  .timesheet-paper-document :is(table, thead, tbody, tfoot, tr, th, td) {
+    background: #fff !important;
+    border-radius: 0 !important;
+  }
   .timesheet-paper-header {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -1,11 +1,13 @@
 .timesheets-page {
   min-width: 0;
 }
-.timesheets-page .ui-button,
-.timesheet-settings .ui-button,
-.timesheet-manage-staff .ui-button,
-.timesheet-staff-editor .ui-button {
-  min-height: 44px;
+:root .timesheets-page .ui-button.button:not(.ui-icon-button),
+:root .timesheet-settings .ui-button.button:not(.ui-icon-button),
+:root .timesheet-manage-staff .ui-button.button:not(.ui-icon-button),
+:root .timesheet-staff-editor .ui-button.button:not(.ui-icon-button) {
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: 44px;
 }
 .timesheet-toolbar,
 .timesheet-date-controls,
@@ -22,11 +24,17 @@
   margin-block: 20px 24px;
 }
 .timesheet-date-controls {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
 }
-.timesheet-date-controls .ui-date-field {
-  width: 156px;
+:root .timesheets-page .timesheet-date-controls > .ui-date {
+  inline-size: 156px;
+  min-inline-size: 156px;
+  flex: 0 0 156px;
+  gap: 8px;
+}
+.timesheet-date-controls > .ui-date > bdi {
+  white-space: nowrap;
 }
 .timesheet-day-total {
   color: var(--text-muted);
@@ -70,7 +78,7 @@
 .timesheet-table-head,
 .timesheet-row {
   display: grid;
-  grid-template-columns: minmax(64px, 1fr) 66px 66px 56px;
+  grid-template-columns: minmax(64px, 1fr) 66px 66px 64px;
   gap: 8px;
 }
 .timesheet-table-head {
@@ -125,7 +133,7 @@
 }
 .timesheet-save-state {
   display: block;
-  min-height: 18px;
+  height: 44px;
   margin-block-start: 4px;
   font-size: 12px;
   line-height: 18px;
@@ -134,7 +142,12 @@
   font-size: 12px;
 }
 .timesheet-retry {
-  margin-block-start: 4px;
+  margin: 0;
+  padding-inline: 4px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 12px;
 }
 .timesheet-hours {
   display: flex;
@@ -193,7 +206,7 @@
 }
 .timesheet-notes textarea {
   width: 100%;
-  min-height: 112px;
+  min-block-size: 112px;
   padding: 12px;
 }
 .timesheet-history-list {
@@ -423,7 +436,13 @@
   .timesheet-settings-department .actions {
     justify-content: flex-end;
   }
-  .timesheet-date-controls .ui-date-field {
-    width: 140px;
+  :root .timesheets-page .timesheet-date-controls > .ui-date {
+    inline-size: 140px;
+    min-inline-size: 140px;
+    flex-basis: 140px;
   }
+}
+
+.timesheet-department-heading span[lang="fa"] {
+  text-align: match-parent;
 }

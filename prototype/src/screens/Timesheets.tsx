@@ -71,7 +71,11 @@ const timesheetErrorText = (t: Translate) =>
     "This could not be saved. Check your location and permissions, then try again.",
     "ذخیره نشد. مکان و مجوزها را بررسی کنید و دوباره تلاش کنید.",
   );
-function historyChanges(event: Activity, lang: Language) {
+function historyChanges(
+  event: Activity,
+  lang: Language,
+  departments: TimesheetDepartmentRead[],
+) {
   const before =
     event.before && typeof event.before === "object"
       ? (event.before as Record<string, unknown>)
@@ -85,6 +89,9 @@ function historyChanges(event: Activity, lang: Language) {
     "name_fa",
     "department_name_en",
     "department_name_fa",
+    "usual_department_key",
+    "removed_at",
+    "app_person_id",
     "in_time",
     "out_time",
     "notes",
@@ -95,11 +102,58 @@ function historyChanges(event: Activity, lang: Language) {
     const right = typeof after[key] === "string" ? String(after[key]) : "";
     if (left === right) return [];
     const empty = lang === "fa" ? "ثبت نشده" : "Not added";
+    const format = (value: string, previous = false) => {
+      if (!value) return empty;
+      if (key === "usual_department_key") {
+        const department = departments.find((item) => item.key === value);
+        return department
+          ? lang === "fa"
+            ? department.name_fa
+            : department.name_en
+          : lang === "fa"
+            ? "بخش پیشین"
+            : "Past department";
+      }
+      if (key === "removed_at") return lang === "fa" ? "برداشته شد" : "Removed";
+      if (key === "app_person_id")
+        return previous
+          ? lang === "fa"
+            ? "حساب قبلی پیوندخورده"
+            : "Previously linked app account"
+          : lang === "fa"
+            ? "حساب ورود پیوند داده شده"
+            : "Linked app account";
+      if (key === "status")
+        return value === "archived"
+          ? lang === "fa"
+            ? "بایگانی‌شده"
+            : "Archived"
+          : value === "active"
+            ? lang === "fa"
+              ? "فعال"
+              : "Active"
+            : value;
+      return value;
+    };
+    const label =
+      key === "removed_at"
+        ? lang === "fa"
+          ? "شیفت"
+          : "Shift"
+        : key === "app_person_id"
+          ? lang === "fa"
+            ? "حساب برنامه"
+            : "App account"
+          : key === "date"
+            ? lang === "fa"
+              ? "تاریخ"
+              : "Date"
+            : historyFieldLabel(key, lang);
     return [
       <p key={key}>
-        <span className="muted">{historyFieldLabel(key, lang)}: </span>
-        <bdi dir="auto">{left || empty}</bdi> →{" "}
-        <bdi dir="auto">{right || empty}</bdi>
+        <span className="muted">{label}: </span>
+        <bdi dir="auto">{format(left, true)}</bdi> →{" "}
+        <bdi dir="auto">{format(right)}</bdi>
       </p>,
     ];
   });
@@ -750,6 +804,7 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
     [],
   );
   const saves = useRef(new Map<string, () => Promise<boolean>>());
+  const navigationVersion = useRef(0);
   const register = useCallback((id: string, flush: () => Promise<boolean>) => {
     saves.current.set(id, flush);
     return () => {
@@ -763,6 +818,9 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
     ).every(Boolean);
   const changeDate = async (next: string, nextView = view) => {
     if (!validTrackedDate(next)) return;
+    const expected = intent,
+      hash = window.location.hash,
+      ownNavigation = ++navigationVersion.current;
     if (!(await flush())) {
       setError(
         t(
@@ -772,6 +830,12 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
       );
       return;
     }
+    if (
+      currentIntent.current !== expected ||
+      window.location.hash !== hash ||
+      ownNavigation !== navigationVersion.current
+    )
+      return;
     setDate(next);
     setView(nextView);
     window.history.replaceState(
@@ -781,6 +845,9 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
     );
   };
   const changeView = async (next: "day" | "week") => {
+    const expected = intent,
+      hash = window.location.hash,
+      ownNavigation = ++navigationVersion.current;
     if (!(await flush())) {
       setError(
         t(
@@ -790,6 +857,12 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
       );
       return;
     }
+    if (
+      currentIntent.current !== expected ||
+      window.location.hash !== hash ||
+      ownNavigation !== navigationVersion.current
+    )
+      return;
     setView(next);
     window.history.replaceState(
       null,
@@ -1042,7 +1115,16 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
             <Select
               value={location}
               onChange={async (value) => {
-                if (await flush()) setChosenBranch(value);
+                const expected = intent,
+                  hash = window.location.hash,
+                  ownNavigation = ++navigationVersion.current;
+                if (
+                  (await flush()) &&
+                  currentIntent.current === expected &&
+                  window.location.hash === hash &&
+                  ownNavigation === navigationVersion.current
+                )
+                  setChosenBranch(value);
               }}
               options={allowed.map(({ id }) => ({
                 value: id,
@@ -1071,9 +1153,7 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
                   <header className="timesheet-department-heading">
                     <div>
                       <h2>{department.name_en}</h2>
-                      <span lang="fa" dir="rtl">
-                        {department.name_fa}
-                      </span>
+                      <span lang="fa">{department.name_fa}</span>
                     </div>
                     <small className="muted">
                       {department.people_count}{" "}
@@ -1171,7 +1251,7 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
                           {companyTimestampText(state.config, event.at)}
                         </bdi>
                       </small>
-                      {historyChanges(event, lang)}
+                      {historyChanges(event, lang, data.departments)}
                     </div>
                   ))}
                   {!data.history.length && (
