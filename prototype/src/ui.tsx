@@ -1,6 +1,7 @@
 import {
   useEffect,
   useLayoutEffect,
+  useCallback,
   useId,
   useRef,
   useState,
@@ -50,6 +51,7 @@ import {
   normalizeSelectSearch,
 } from "./select-search";
 import { SelectMatch } from "./SelectMatch";
+import { boundedPopoverPosition } from "./popover-position";
 import { translate } from "./i18n";
 import {
   navigationKey,
@@ -1571,55 +1573,44 @@ export type SelectOption = {
   count?: number;
 };
 
-export function usePopover(minWidth = 224) {
+export function usePopover<T extends HTMLElement = HTMLButtonElement>(
+  minWidth = 224,
+) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<CSSProperties>({});
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<T>(null);
   const popupRef = useRef<HTMLDivElement>(null);
-  const measure = () => {
+  const measure = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const width = Math.min(
-      Math.max(rect.width, minWidth),
-      window.innerWidth - 24,
+    const viewport = window.visualViewport;
+    const next = boundedPopoverPosition(
+      rect,
+      {
+        left: viewport?.offsetLeft ?? 0,
+        top: viewport?.offsetTop ?? 0,
+        width: viewport?.width ?? window.innerWidth,
+        height: viewport?.height ?? window.innerHeight,
+        layoutHeight: window.innerHeight,
+      },
+      {
+        minWidth,
+        rtl: document.documentElement.dir === "rtl",
+        obstruction: document
+          .querySelector(".undo-toast-stack")
+          ?.getBoundingClientRect(),
+      },
     );
-    const rtl = document.documentElement.dir === "rtl";
-    const left = Math.max(
-      12,
-      Math.min(
-        rtl ? rect.right - width : rect.left,
-        window.innerWidth - width - 12,
-      ),
+    setPosition((previous) =>
+      Object.keys(previous).length === Object.keys(next).length &&
+      Object.entries(next).every(
+        ([key, value]) => previous[key as keyof CSSProperties] === value,
+      )
+        ? previous
+        : next,
     );
-    // Undo remains above dialogs. Keep an overlapping popup above that live
-    // message as well, so its last option can still receive real pointer clicks.
-    const toast = document
-      .querySelector(".undo-toast-stack")
-      ?.getBoundingClientRect();
-    const overlapsToast =
-      toast &&
-      toast.width > 0 &&
-      toast.height > 0 &&
-      toast.right > left &&
-      toast.left < left + width;
-    const bottomLimit = Math.min(
-      window.innerHeight - 16,
-      overlapsToast ? toast.top - 8 : window.innerHeight - 16,
-    );
-    const roomBelow = bottomLimit - rect.bottom;
-    const aboveBottom = Math.min(rect.top - 8, bottomLimit);
-    const above = roomBelow < 240 && aboveBottom > roomBelow;
-    setPosition({
-      position: "fixed",
-      left,
-      width,
-      ...(above
-        ? { bottom: window.innerHeight - aboveBottom }
-        : { top: rect.bottom + 8 }),
-      maxHeight: Math.max(120, above ? aboveBottom - 16 : roomBelow),
-    });
-  };
+  }, [minWidth]);
   const close = (restoreFocus = false) => {
     setOpen(false);
     if (restoreFocus) triggerRef.current?.focus();
@@ -1654,13 +1645,25 @@ export function usePopover(minWidth = 224) {
     document.addEventListener("focusin", blur);
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", measure);
+    viewport?.addEventListener("scroll", measure);
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(measure);
+    if (triggerRef.current) observer?.observe(triggerRef.current);
+    measure();
     return () => {
       document.removeEventListener("pointerdown", outside);
       document.removeEventListener("focusin", blur);
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
+      viewport?.removeEventListener("resize", measure);
+      viewport?.removeEventListener("scroll", measure);
+      observer?.disconnect();
     };
-  });
+  }, [open, measure]);
   return { open, show, close, position, portalTarget, triggerRef, popupRef };
 }
 
@@ -1793,8 +1796,28 @@ export function Select({
   useEffect(() => {
     if (!popupOpen) return;
     const option = document.getElementById(`${listId}-${activeOptionIndex}`);
-    option?.scrollIntoView?.({ block: "nearest" });
+    const list = option?.parentElement;
+    if (option && list) {
+      const row = option.getBoundingClientRect();
+      const bounds = list.getBoundingClientRect();
+      if (row.top < bounds.top) list.scrollTop -= bounds.top - row.top;
+      else if (row.bottom > bounds.bottom)
+        list.scrollTop += row.bottom - bounds.bottom;
+    }
   }, [activeOptionIndex, popupOpen, listId]);
+  useLayoutEffect(() => {
+    const popup = popupRef.current;
+    const maximum = popupPosition.maxHeight;
+    if (!popupOpen || !popup || typeof maximum !== "number") return;
+    const retained = Number(popup.dataset.initialHeight ?? 0);
+    const height = Math.min(
+      maximum,
+      retained || popup.getBoundingClientRect().height,
+    );
+    if (!retained && height > 0) popup.dataset.initialHeight = String(height);
+    // Filtering an upward-opening list must not move its search field.
+    popup.style.minBlockSize = `${height}px`;
+  }, [popupOpen, popupPosition.maxHeight, popupRef]);
   return (
     <>
       <button

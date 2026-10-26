@@ -975,3 +975,29 @@
   background: var(--surface);
   border: 1px solid var(--field-border);
 }
+
+/* The search header stays visible while only choices scroll. */
+.ui-select-popover {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ui-select-popover > .ui-select-search {
+  position: static;
+  flex: 0 0 auto;
+}
+.ui-select-popover > .ui-option-list {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+/* The editable barcode/date picker uses the same viewport placement. */
+.date-product-options.ui-popover {
+  inset-inline-start: auto;
+  inset-block-start: auto;
+  max-block-size: none;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}

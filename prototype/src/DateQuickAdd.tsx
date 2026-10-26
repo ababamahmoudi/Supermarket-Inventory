@@ -1,6 +1,7 @@
 import "./date-tracking.css";
 import { useId, useRef, useState, type FormEvent } from "react";
 import { Search } from "lucide-react";
+import { createPortal } from "react-dom";
 import { normalizeSearch, searchProducts } from "./catalog";
 import {
   addTrackedDate,
@@ -18,7 +19,14 @@ import { permittedLocationIdsView } from "./notes-dates-read";
 import { useDemo } from "./store";
 import type { Branch } from "./types";
 import type { ProductReadDTO } from "./e1-read-model";
-import { Button, DateField, Field, NumberField, Select } from "./ui";
+import {
+  Button,
+  DateField,
+  Field,
+  NumberField,
+  Select,
+  usePopover,
+} from "./ui";
 
 type DateQuickAddProps = {
   productCode?: string;
@@ -57,7 +65,17 @@ export function DateQuickAdd({
   );
   const [selectedCode, setSelectedCode] = useState(initialProduct?.code ?? "");
   const [activeCode, setActiveCode] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
+  const {
+    open: searchOpen,
+    show: openSearch,
+    close: closeSearch,
+    position: searchPosition,
+    portalTarget: searchPortal,
+    triggerRef: productRef,
+    popupRef: searchPopupRef,
+  } = usePopover<HTMLInputElement>(224);
+  const setSearchOpen = (value: boolean) =>
+    value ? openSearch() : closeSearch();
   const [expanded, setExpanded] = useState(false);
   const [message, setMessage] = useState<"added" | "tracking_enabled" | null>(
     null,
@@ -93,13 +111,10 @@ export function DateQuickAdd({
           : "";
     if (draft.branch !== location) setDraft({ ...draft, branch: location });
   }
-  const productRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLDivElement>(null);
   const suggestionsId = useId();
   const moreId = useId();
-  const results = query.trim()
-    ? searchProducts(products, query).slice(0, 8)
-    : [];
+  const results = query.trim() ? searchProducts(products, query) : [];
   const selectedProduct = products.find(
     (product) => product.code === selectedCode,
   );
@@ -305,81 +320,85 @@ export function DateQuickAdd({
               strokeWidth={1.5}
               aria-hidden="true"
             />
-            {showSuggestions && (
-              <div
-                id={suggestionsId}
-                role="listbox"
-                aria-label={t("Product results", "نتایج محصولات")}
-                className="date-product-options"
-              >
-                {results.length ? (
-                  results.map((product) => (
-                    <button
-                      key={product.code}
-                      id={`${suggestionsId}-${product.code}`}
-                      type="button"
-                      role="option"
-                      aria-selected={product.code === active?.code}
-                      className="date-product-option"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => choose(product)}
-                    >
-                      <span className="product-name">
-                        <strong>
-                          <bdi dir="auto">
-                            <SelectMatch
-                              value={
-                                lang === "fa"
-                                  ? product.name_fa || product.name_en
-                                  : product.name_en
-                              }
-                              query={query}
-                            />
-                          </bdi>
-                        </strong>
-                        {product.name_fa && (
-                          <small>
+            {showSuggestions &&
+              createPortal(
+                <div
+                  ref={searchPopupRef}
+                  style={searchPosition}
+                  id={suggestionsId}
+                  role="listbox"
+                  aria-label={t("Product results", "نتایج محصولات")}
+                  className="ui-popover date-product-options"
+                >
+                  {results.length ? (
+                    results.map((product) => (
+                      <button
+                        key={product.code}
+                        id={`${suggestionsId}-${product.code}`}
+                        type="button"
+                        role="option"
+                        aria-selected={product.code === active?.code}
+                        className="date-product-option"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => choose(product)}
+                      >
+                        <span className="product-name">
+                          <strong>
                             <bdi dir="auto">
                               <SelectMatch
                                 value={
                                   lang === "fa"
-                                    ? product.name_en
-                                    : product.name_fa
+                                    ? product.name_fa || product.name_en
+                                    : product.name_en
                                 }
                                 query={query}
                               />
                             </bdi>
-                          </small>
-                        )}
-                        {matchingSelectTerms(
-                          productSelectOption(product, lang),
-                          query,
-                        )
-                          .filter(
-                            (term) =>
-                              term !==
-                              (lang === "fa"
-                                ? product.name_en
-                                : product.name_fa),
-                          )
-                          .map((term) => (
-                            <small key={term}>
+                          </strong>
+                          {product.name_fa && (
+                            <small>
                               <bdi dir="auto">
-                                <SelectMatch value={term} query={query} />
+                                <SelectMatch
+                                  value={
+                                    lang === "fa"
+                                      ? product.name_en
+                                      : product.name_fa
+                                  }
+                                  query={query}
+                                />
                               </bdi>
                             </small>
-                          ))}
-                      </span>
-                      <LtrText>
-                        <SelectMatch value={product.code} query={query} />
-                      </LtrText>
-                    </button>
-                  ))
-                ) : (
-                  <p className="muted">{t("No matches", "موردی پیدا نشد")}</p>
-                )}
-              </div>
-            )}
+                          )}
+                          {matchingSelectTerms(
+                            productSelectOption(product, lang),
+                            query,
+                          )
+                            .filter(
+                              (term) =>
+                                term !==
+                                (lang === "fa"
+                                  ? product.name_en
+                                  : product.name_fa),
+                            )
+                            .map((term) => (
+                              <small key={term}>
+                                <bdi dir="auto">
+                                  <SelectMatch value={term} query={query} />
+                                </bdi>
+                              </small>
+                            ))}
+                        </span>
+                        <LtrText>
+                          <SelectMatch value={product.code} query={query} />
+                        </LtrText>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="muted">{t("No matches", "موردی پیدا نشد")}</p>
+                  )}
+                </div>,
+                searchPortal ?? document.body,
+              )}
           </div>
         )}
         <div ref={dateRef} className="date-quick-date">
