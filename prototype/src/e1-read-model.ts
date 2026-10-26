@@ -202,6 +202,7 @@ function operationalConfig(config: CompanyConfig): CompanyReadConfig {
     history: source.history,
     receiving: source.receiving,
     modules: source.modules,
+    timesheets: source.timesheets,
     weighed_items: source.weighed_items,
     sales: source.sales,
     orders: source.orders,

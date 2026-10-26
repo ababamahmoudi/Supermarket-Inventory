@@ -1,3 +1,4 @@
+import type { TimesheetSettings } from "./timesheet-types";
 import type { NoteDoneRule } from "./note-engagement";
 import type { configSeed, demoSeed } from "./config";
 import type { NotebookDefinition, NotebookEntry } from "./notebooks";
@@ -55,6 +56,10 @@ export type CompanyConfig = Omit<
     delivery_window?: { start: string; end: string };
   };
   roles: RoleDefinition[];
+  timesheets?: TimesheetSettings;
+  modules: Omit<typeof configSeed.modules, "timesheets"> & {
+    timesheets?: boolean;
+  };
   notebooks: {
     built_in: {
       kind: string;

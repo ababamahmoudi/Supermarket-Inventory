@@ -371,7 +371,8 @@
     "payables": true,
     "suppliers": true,
     "register": false,
-    "online_orders": false
+    "online_orders": false,
+    "timesheets": true
   },
   "weighed_items": {
     "conversion_factor": "2.20462",
@@ -407,5 +408,57 @@
       "sale_decisions": ["branch_supervisor", "floor_worker"],
       "cost_went_up_during_sale": ["owner", "manager"]
     }
+  },
+  "timesheets": {
+    "departments": [
+      {
+        "key": "bakery",
+        "name_en": "Bakery",
+        "name_fa": "نانوایی",
+        "order": 0
+      },
+      {
+        "key": "cash",
+        "name_en": "Cash",
+        "name_fa": "صندوق",
+        "order": 1
+      },
+      {
+        "key": "kitchen",
+        "name_en": "Kitchen",
+        "name_fa": "آشپزخانه",
+        "order": 2
+      },
+      {
+        "key": "kebab",
+        "name_en": "Kebab",
+        "name_fa": "کباب",
+        "order": 3
+      },
+      {
+        "key": "pastry",
+        "name_en": "Pastry",
+        "name_fa": "شیرینی پزی",
+        "order": 4
+      },
+      {
+        "key": "buffet",
+        "name_en": "Buffet",
+        "name_fa": "بوفه",
+        "order": 5
+      },
+      {
+        "key": "floor",
+        "name_en": "Floor",
+        "name_fa": "فلور",
+        "order": 6
+      },
+      {
+        "key": "butchery",
+        "name_en": "Butchery",
+        "name_fa": "قصابی",
+        "order": 7
+      }
+    ]
   }
 }
