@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { useNavigationIntent } from "../use-navigation-intent";
 import { Camera, FileText, FileJson, PenLine, Receipt } from "lucide-react";
 import {
   useCallback,
@@ -603,6 +604,18 @@ function InvoiceWorkspace({
     navigate,
   } = useDemo();
   const routeId = useRouteParam("id");
+  const captureNavigationIntent = useNavigationIntent(
+    JSON.stringify([
+      actor?.company_id,
+      actor?.user_id,
+      actor?.session_id,
+      actor?.authority_epoch,
+      actor?.person_version,
+      actor?.selection,
+      branch,
+      workspace.invoice.id,
+    ]),
+  );
   const supplierFilter = useRouteParam("supplier");
   const fromFilter = useRouteParam("from");
   const toFilter = useRouteParam("to");
@@ -1235,11 +1248,12 @@ function InvoiceWorkspace({
       );
       return;
     }
+    const navigationIsCurrent = captureNavigationIntent();
     const posted = await updateInvoice(
       (draft, currentActor) => postInvoice(draft, currentActor),
       "invoices.post",
     );
-    if (!posted) return;
+    if (!posted || !navigationIsCurrent()) return;
     setSelectedView(null);
     navigate(`invoices?id=${encodeURIComponent(invoice.id)}`);
     setMessage("");
