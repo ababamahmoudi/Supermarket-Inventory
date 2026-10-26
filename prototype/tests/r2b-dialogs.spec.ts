@@ -1,7 +1,23 @@
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { openShellAction, setLanguage, signIn } from "./helpers";
+import { openShellAction, setBranch, setLanguage, signIn } from "./helpers";
 import { expectReceivingStable, word } from "./r2-receiving-helpers";
+
+function importBusinessEvidence(
+  state: Awaited<ReturnType<typeof readCanonicalBusinessEvidence>>,
+) {
+  return {
+    invoice: state.invoice,
+    invoices: state.invoices,
+    ledger: state.ledger,
+    stock: state.stock,
+    stock_movements: state.stock_movements,
+    products: state.products,
+    suppliers: state.suppliers,
+    returns: state.returns,
+  };
+}
 
 for (const language of ["en", "fa"] as const) {
   for (const theme of ["light", "dark"] as const) {
@@ -164,6 +180,11 @@ for (const language of ["en", "fa"] as const) {
       const phone = testInfo.project.name === "phone";
       await page.setViewportSize({ width: phone ? 390 : 1440, height: 900 });
       await signIn(page, "Owner");
+      // With no printed branch hint and All locations, the real import needs a choice.
+      await setBranch(page, "all");
+      const beforePreview = importBusinessEvidence(
+        await readCanonicalBusinessEvidence(page),
+      );
       await setLanguage(page, language);
       if (theme === "dark")
         await (
@@ -195,22 +216,64 @@ for (const language of ["en", "fa"] as const) {
         word(language, "Choose file…", "انتخاب فایل…"),
         { exact: true },
       );
-      await file.setInputFiles({
-        name: "fictional-preview.json",
-        mimeType: "application/json",
-        buffer: Buffer.from(JSON.stringify(fixture)),
-      });
       const dialog = page.getByRole("dialog", {
         name: word(language, "Import invoice readings", "ورود خوانش فاکتورها"),
         exact: true,
       });
-      await expect(dialog).toBeVisible();
-      for (const width of phone ? [390] : [1440, 1000]) {
+      const widths = phone ? [390] : [1440, 1000];
+      for (const [widthIndex, width] of widths.entries()) {
         await page.setViewportSize({ width, height: 900 });
+        await file.setInputFiles({
+          name: "fictional-preview.json",
+          mimeType: "application/json",
+          buffer: Buffer.from(JSON.stringify(fixture)),
+        });
+        await expect(dialog).toBeVisible();
         const row = dialog.locator(
           'tr[data-import-id="fictional-r2-complete"]',
         );
         const status = row.locator(".invoice-import-status");
+        const location = row.getByRole("combobox");
+        await expect(location).toBeVisible();
+        await expect(location).toHaveText(
+          word(language, "Choose a location…", "یک مکان انتخاب کنید…"),
+        );
+        await expect(location).toHaveAttribute("aria-invalid", "true");
+        await expect(status).toHaveText(
+          word(language, "Choose a location", "یک مکان انتخاب کنید"),
+        );
+        await expect(
+          dialog.getByRole("button", {
+            name: word(language, "Import 1 invoice", "ورود 1 فاکتور"),
+            exact: true,
+          }),
+        ).toBeDisabled();
+        const invalidColor = await location.evaluate((element) => {
+          const probe = document.createElement("span");
+          probe.style.color = "var(--danger)";
+          document.body.append(probe);
+          const expected = getComputedStyle(probe).color;
+          probe.remove();
+          return { actual: getComputedStyle(element).borderTopColor, expected };
+        });
+        expect(invalidColor.actual).toBe(invalidColor.expected);
+        expect(
+          importBusinessEvidence(await readCanonicalBusinessEvidence(page)),
+        ).toEqual(beforePreview);
+        await location.click();
+        await expect(
+          page.getByRole("option", {
+            name: word(language, "Choose a location…", "یک مکان انتخاب کنید…"),
+            exact: true,
+          }),
+        ).toHaveCount(0);
+        await page
+          .getByRole("option", {
+            name: word(language, "North York", "نورث یورک"),
+            exact: true,
+          })
+          .click();
+        await expect(location).toHaveAttribute("aria-invalid", "false");
         await expect(status).toContainText(word(language, "Ready", "آماده"));
         await expect(status.locator(".badge")).toHaveCount(1);
         const number = row.getByText("R2-FICTIONAL-025", { exact: true });
@@ -267,8 +330,6 @@ for (const language of ["en", "fa"] as const) {
           dialog.locator(".invoice-readings-mode-help"),
         ).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
-        const location = row.getByRole("combobox");
-        await expect(location).toBeVisible();
         await dialog.getByRole("heading").click();
         const field = await location.evaluate((element) => {
           const style = getComputedStyle(element);
@@ -294,7 +355,6 @@ for (const language of ["en", "fa"] as const) {
         expect(field.outline).toBe("none");
         expect(field.color).toBe(field.expectedColor);
         expect(field.fill).toBe(field.expectedFill);
-        const originalLocation = await location.innerText();
         await location.focus();
         await page.keyboard.press("Tab");
         await page.keyboard.press("Shift+Tab");
@@ -305,31 +365,6 @@ for (const language of ["en", "fa"] as const) {
             width: getComputedStyle(element).outlineWidth,
           })),
         ).toEqual({ style: "solid", width: "2px" });
-        await location.click();
-        await page
-          .getByRole("option", {
-            name: word(language, "Choose a location…", "یک مکان انتخاب کنید…"),
-            exact: true,
-          })
-          .click();
-        await expect(location).toHaveAttribute("aria-invalid", "true");
-        const invalidColor = await location.evaluate((element) => {
-          const probe = document.createElement("span");
-          probe.style.color = "var(--danger)";
-          document.body.append(probe);
-          const expected = getComputedStyle(probe).color;
-          probe.remove();
-          return { actual: getComputedStyle(element).borderTopColor, expected };
-        });
-        expect(invalidColor.actual).toBe(invalidColor.expected);
-        await expect(status).toHaveText(
-          word(language, "Choose a location", "یک مکان انتخاب کنید"),
-        );
-        await location.click();
-        await page
-          .getByRole("option", { name: originalLocation, exact: true })
-          .click();
-        await expect(location).toHaveAttribute("aria-invalid", "false");
         await dialog.getByRole("heading").click();
         const dimensions = await dialog
           .locator(".invoice-reading-thumbnail")
@@ -378,6 +413,18 @@ for (const language of ["en", "fa"] as const) {
         await dialog.screenshot({
           path: testInfo.outputPath(`import-preview-${width}.png`),
         });
+        if (widthIndex < widths.length - 1) {
+          await dialog
+            .getByRole("button", {
+              name: word(language, "Cancel", "انصراف"),
+              exact: true,
+            })
+            .click();
+          await expect(dialog).toHaveCount(0);
+          expect(
+            importBusinessEvidence(await readCanonicalBusinessEvidence(page)),
+          ).toEqual(beforePreview);
+        }
       }
       const checked = dialog.getByRole("button", {
         name: word(language, "My checked values", "مقادیر بررسی‌شدهٔ من"),
@@ -395,6 +442,9 @@ for (const language of ["en", "fa"] as const) {
           exact: true,
         })
         .click();
+      expect(
+        importBusinessEvidence(await readCanonicalBusinessEvidence(page)),
+      ).toEqual(beforePreview);
       await file.setInputFiles(fixturePath.pathname);
       const duplicateRows = dialog.locator("tr[data-import-id]");
       await expect(duplicateRows).toHaveCount(2);
@@ -422,6 +472,16 @@ for (const language of ["en", "fa"] as const) {
         { width: 56, height: 72 },
         { width: 56, height: 72 },
       ]);
+      await dialog
+        .getByRole("button", {
+          name: word(language, "Cancel", "انصراف"),
+          exact: true,
+        })
+        .click();
+      await expect(dialog).toHaveCount(0);
+      expect(
+        importBusinessEvidence(await readCanonicalBusinessEvidence(page)),
+      ).toEqual(beforePreview);
     });
   }
 }

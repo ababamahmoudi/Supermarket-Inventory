@@ -12,7 +12,7 @@ async function open(page: Page) {
   await visitPage(page, "Settings");
 }
 
-test("Settings presents the exact 12 groups and unfinished groups cannot save", async ({
+test("Settings presents the exact 13 authorized groups and unfinished groups cannot save", async ({
   page,
 }) => {
   await open(page);
@@ -29,6 +29,7 @@ test("Settings presents the exact 12 groups and unfinished groups cannot save", 
     "Offers",
     "Taxes",
     "Receiving",
+    "Timesheets",
     "Returns/date tracking/labels",
     "Notifications",
     "Modules",
@@ -155,6 +156,26 @@ test("Settings presents the exact 12 groups and unfinished groups cannot save", 
       { exact: true },
     ),
   ).toHaveCount(0);
+  const beforeRestrictedVisits = await readCanonicalBusinessEvidence(page);
+  for (const role of [
+    "Branch Supervisor",
+    "Floor Worker",
+    "Cashier",
+  ] as const) {
+    await signIn(page, role);
+    const pages = page.getByRole("navigation", { name: "Pages", exact: true });
+    await expect(
+      pages.getByRole("link", { name: "Settings", exact: true }),
+    ).toHaveCount(0);
+    await page.goto("/#settings?group=timesheets");
+    await expect(page.locator(".topbar")).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Settings groups", exact: true }),
+    ).toHaveCount(0);
+  }
+  const afterRestrictedVisits = await readCanonicalBusinessEvidence(page);
+  expect(afterRestrictedVisits.config).toEqual(beforeRestrictedVisits.config);
+  expect(afterRestrictedVisits.ledger).toEqual(beforeRestrictedVisits.ledger);
 });
 test("company settings save deliberately, persist and record before/after History", async ({
   page,
