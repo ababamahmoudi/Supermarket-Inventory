@@ -43,19 +43,22 @@
       "key": "owner",
       "label": "Owner",
       "label_fa": "مالک",
-      "summary": "Company-wide approvals, money, people and settings"
+      "summary": "Company-wide approvals, money, people and settings",
+      "capabilities": ["timesheets.read", "timesheets.edit"]
     },
     {
       "key": "manager",
       "label": "Manager",
       "label_fa": "مدیر",
-      "summary": "Company-wide approvals, money, people and settings"
+      "summary": "Company-wide approvals, money, people and settings",
+      "capabilities": ["timesheets.read", "timesheets.edit"]
     },
     {
       "key": "branch_supervisor",
       "label": "Branch Supervisor",
       "label_fa": "سرپرست شعبه",
-      "summary": "Assigned-location invoices, receiving, pickup, labels, dates, notes, requests and orders"
+      "summary": "Assigned-location invoices, receiving, pickup, labels, dates, notes, requests and orders",
+      "capabilities": ["timesheets.read", "timesheets.edit"]
     },
     {
       "key": "floor_worker",
@@ -67,7 +70,8 @@
       "key": "cashier",
       "label": "Cashier",
       "label_fa": "صندوق‌دار",
-      "summary": "Assigned-store product and price lookup"
+      "summary": "Assigned-store product and price lookup",
+      "capabilities": ["timesheets.read", "timesheets.edit"]
     }
   ],
   "pricing_categories": [

@@ -1,11 +1,24 @@
 /** Configured role captions and one-time legacy ACL decoding; never authority grants. */
-import type { RoleId } from "./authority-types";
+import { ALL_CAPABILITIES } from "./capability-names";
+import type { Capability, RoleId } from "./authority-types";
 export type Role = RoleId;
 export interface RoleDefinition {
   key: Role;
   label: string;
   label_fa?: string;
   summary: string;
+  /** Descriptive metadata only; canonical grants are evaluated separately. */
+  capabilities?: Capability[];
+}
+
+function configuredCapabilities(value: unknown): Capability[] | undefined {
+  if (value === undefined) return undefined;
+  if (
+    !Array.isArray(value) ||
+    value.some((item) => !ALL_CAPABILITIES.includes(item))
+  )
+    throw new Error("Invalid configured capability");
+  return [...new Set(value)] as Capability[];
 }
 
 const currentKeys: readonly Role[] = [
@@ -55,6 +68,9 @@ export function readConfiguredRoleDefinitions(
       label_fa:
         typeof row.label_fa === "string" ? row.label_fa.trim() : undefined,
       summary: row.summary,
+      ...(row.capabilities === undefined
+        ? {}
+        : { capabilities: configuredCapabilities(row.capabilities) }),
     };
   });
   if (
@@ -118,6 +134,13 @@ export function normalizeRoleDefinitions(
       label,
       label_fa,
       summary: text("summary") ?? fallback.summary,
+      ...((row?.capabilities ?? fallback.capabilities) === undefined
+        ? {}
+        : {
+            capabilities: configuredCapabilities(
+              row?.capabilities ?? fallback.capabilities,
+            ),
+          }),
     };
   });
 }

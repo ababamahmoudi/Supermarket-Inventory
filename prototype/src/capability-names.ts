@@ -2,6 +2,8 @@ import type { Capability } from "./authority-types";
 
 export const ALL_CAPABILITIES = [
   "lookup.read",
+  "timesheets.read",
+  "timesheets.edit",
   "catalog.read",
   "catalog.edit",
   "catalog.create_active",

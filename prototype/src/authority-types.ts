@@ -179,6 +179,8 @@ export type Capability =
   | "price_updates.register_confirm"
   | "price_updates.label_confirm"
   | "price_updates.complete"
+  | "timesheets.read"
+  | "timesheets.edit"
   | "demo.reset";
 
 export interface PersonRecord {
@@ -255,6 +257,7 @@ export interface BusinessState {
       type?: "store" | "warehouse";
       sells_to_customers?: boolean;
     }[];
+    modules?: { [key: string]: boolean | undefined; timesheets?: boolean };
     orders?: { allow_floor_worker: boolean };
     price_updates?: { allow_floor_worker_complete: boolean };
     session?: { reprompt_password_after_minutes: number };
