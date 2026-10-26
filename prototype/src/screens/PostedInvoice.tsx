@@ -25,7 +25,6 @@ import {
   ProductName,
 } from "../presentation";
 import { Badge, Button, Card, Disclosure } from "../ui";
-import { Check } from "lucide-react";
 import { OriginalViewer } from "./invoice-review/OriginalViewer";
 import { importedReadingReceived } from "../invoice-reading-dates";
 import { correctHandwrittenReceivedDate } from "../invoice-received-time";
@@ -76,27 +75,27 @@ export function InvoiceQuantity({ line }: { line: InvoiceEditableLine }) {
   if (line.quantity_unit === "cases") {
     return (
       <>
-        <QuantityText
-          value={
-            line.quantity_entered ??
-            new Decimal(line.qty_invoiced)
-              .div(line.units_per_case ?? 1)
-              .toString()
-          }
-          unit="cases"
-          language={lang}
-        />
-        {" × "}
-        <LtrText>{line.units_per_case ?? 1}</LtrText>
-        <span className="muted">
-          {" "}
-          ·{" "}
+        <span className="receiving-quantity-primary">
+          <QuantityText
+            value={
+              line.quantity_entered ??
+              new Decimal(line.qty_invoiced)
+                .div(line.units_per_case ?? 1)
+                .toString()
+            }
+            unit="cases"
+            language={lang}
+          />
+          {" × "}
+          <LtrText>{line.units_per_case ?? 1}</LtrText>
+        </span>
+        <small className="muted">
           <QuantityText
             value={line.qty_invoiced}
             unit="units"
             language={lang}
           />
-        </span>
+        </small>
       </>
     );
   }
@@ -443,7 +442,6 @@ export function PostedInvoice({
             </div>
             <table className="receiving-table posted-invoice-lines">
               <colgroup>
-                <col style={{ width: "40px" }} />
                 <col />
                 <col style={{ width: "24%" }} />
                 <col style={{ width: "18%" }} />
@@ -452,7 +450,6 @@ export function PostedInvoice({
               </colgroup>
               <thead>
                 <tr>
-                  <th scope="col">#</th>
                   <th>{t("Product", "کالا")}</th>
                   <th>{t("Quantity", "تعداد")}</th>
                   <th>{t("Unit cost", "هزینه واحد")}</th>
@@ -474,24 +471,10 @@ export function PostedInvoice({
                   return (
                     <tr
                       key={invoiceLineId(line, index)}
-                      className="invoice-line-summary receiving-row-confirmed"
+                      className="invoice-line-summary"
                       data-posted-line={index}
                       data-line-id={invoiceLineId(line, index)}
                     >
-                      <td className="receiving-status-cell">
-                        <span className="receiving-status-number">
-                          <span
-                            className="receiving-status-icon is-confirmed"
-                            role="img"
-                            aria-label={t("Posted", "ثبت‌شده")}
-                          >
-                            <Check size={12} />
-                          </span>
-                          <span className="receiving-line-number">
-                            <LtrText>{index + 1}</LtrText>
-                          </span>
-                        </span>
-                      </td>
                       <td className="receiving-product-cell">
                         <ProductName
                           product={{
@@ -601,7 +584,7 @@ export function PostedInvoice({
                           )}
                         </div>
                       </td>
-                      <td className="numeric receiving-quantity-cell">
+                      <td className="receiving-quantity-cell">
                         <InvoiceQuantity line={line} />
                         {(short.quantity > 0 || refusedLine.quantity > 0) && (
                           <p className="muted">

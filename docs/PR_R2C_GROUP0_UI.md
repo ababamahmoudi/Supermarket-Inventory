@@ -23,3 +23,9 @@ Test: select Needs attention, open a valid fictional line and Confirm line. Chec
 Review, posted and shared correction-table cells vertically center the status/line number and numerical values. A two-line quantity remains one centered block, with the unit conversion beneath its primary quantity.
 
 Test: inspect a fictional case line beside a single-line unit quantity in review, posted and correction, in both themes. The icon, number, costs and totals center on the row; the two quantity lines center together.
+
+## 0.5 Rounded review rows and plain posted lines
+
+Review/correction fills have rounded first and last cells over a transparent row, avoiding the darker square beneath rounded cells. Posted lines omit the settled status/number column and green fill; plain rows use hairline dividers. Posted case quantities now use the same centered primary/conversion block and start alignment as review. Posted Totals uses the review card body font sizes, spacing and payable emphasis.
+
+Test: review a fictional invoice in dark mode, post it and compare the line rows and Totals. Open Correct invoice to inspect the shared closed-row treatment.

@@ -74,3 +74,68 @@
     margin-block-start: 8px;
   }
 }
+
+/* Posted lines are settled evidence, with plain rows and quiet separators. */
+.posted-receiving .posted-invoice-lines {
+  border-spacing: 0;
+}
+.posted-receiving .posted-invoice-lines > tbody > .invoice-line-summary {
+  cursor: default;
+  background: var(--color-clear);
+}
+.posted-receiving .posted-invoice-lines > tbody > .invoice-line-summary > td {
+  background: var(--color-clear);
+  border-radius: 0;
+  border-block-end: 1px solid var(--divider);
+  padding-block: 8px;
+}
+.posted-receiving
+  .posted-invoice-lines
+  > tbody
+  > .invoice-line-summary:last-child
+  > td {
+  border-block-end: 0;
+}
+:root .posted-receiving .posted-invoice-totals {
+  gap: 4px;
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+:root .posted-receiving .posted-invoice-totals dt {
+  color: var(--text);
+  font-size: inherit;
+  text-align: start;
+}
+:root .posted-receiving .posted-invoice-totals dd {
+  font-weight: 400;
+}
+:root .posted-receiving .posted-invoice-totals .posted-invoice-payable dd {
+  font-weight: 700;
+}
+@media (max-width: 759px) {
+  .posted-receiving .posted-invoice-lines > tbody > .invoice-line-summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+    border: 0;
+    border-block-end: 1px solid var(--divider);
+    border-radius: 0;
+    padding: 12px 0;
+  }
+  .posted-receiving
+    .posted-invoice-lines
+    > tbody
+    > .invoice-line-summary
+    > .receiving-product-cell {
+    grid-column: 1;
+  }
+  .posted-receiving
+    .posted-invoice-lines
+    > tbody
+    > .invoice-line-summary
+    > .receiving-total-cell {
+    grid-column: 2;
+  }
+  .posted-receiving .posted-invoice-lines > tbody > .invoice-line-summary > td {
+    border: 0;
+    padding: 0;
+  }
+}

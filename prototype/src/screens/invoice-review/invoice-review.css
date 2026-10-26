@@ -267,14 +267,12 @@
   cursor: pointer;
   background: var(--color-clear);
 }
-.receiving-table > tbody > .receiving-row-confirmed {
-  background: var(--approved-bg);
-}
-.receiving-table > tbody > .receiving-row-check {
-  background: var(--pending-bg);
-}
+/* Cells own only the continuous fill; a transparent row cannot square off its
+   first/last cell's rounded corners in the separate-border table model. */
+.receiving-table > tbody > .receiving-row-confirmed,
+.receiving-table > tbody > .receiving-row-check,
 .receiving-table > tbody > .invoice-line-summary.is-expanded {
-  background: var(--accent-soft);
+  background: var(--color-clear);
 }
 .receiving-table > tbody > .invoice-line-summary:focus-visible {
   outline: 2px solid var(--accent);
