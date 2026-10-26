@@ -257,7 +257,8 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
     name: "Post invoice",
     exact: true,
   });
-  await expect(unavailablePost).toBeEnabled();
+  await expect(unavailablePost).toBeDisabled();
+  await expect(unavailablePost).toHaveAttribute("aria-disabled", "true");
   await unavailablePost.focus();
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Tab");
@@ -412,7 +413,7 @@ test("short-dated expiry discount requires a real date and preserves an existing
   ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
+  ).toBeDisabled();
   const unavailablePost = page.getByRole("button", {
     name: "Post invoice",
     exact: true,
@@ -437,7 +438,9 @@ test("short-dated expiry discount requires a real date and preserves an existing
     "Best before",
   );
   await line.getByRole("button", { name: "Close", exact: true }).click();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click({ force: true });
   await page
     .getByRole("alert", { name: "What's missing", exact: true })
     .locator(".receiving-missing-row")

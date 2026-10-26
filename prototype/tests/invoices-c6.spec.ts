@@ -112,7 +112,8 @@ test("manual invoice uses local time, term dates and editable computed totals wi
   ).toContainText(/Difference.*2\.00/);
   await expect(page.locator(".undo-toast")).toHaveCount(0);
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
-  await expect(post).toBeEnabled();
+  await expect(post).toBeDisabled();
+  await expect(post).toHaveAttribute("aria-disabled", "true");
   await post.press("Enter");
   const missing = page.locator("#invoice-missing-list");
   await expect(missing).toBeVisible();

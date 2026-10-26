@@ -255,8 +255,10 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click({ force: true });
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toContainText("not confirmed");

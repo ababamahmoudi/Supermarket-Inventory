@@ -113,8 +113,9 @@ for (const language of ["en", "fa"] as const) {
       name: word(language, "Post invoice", "ثبت فاکتور"),
       exact: true,
     });
-    await expect(incompletePost).toBeEnabled();
-    await incompletePost.click();
+    await expect(incompletePost).toBeDisabled();
+    await expect(incompletePost).toHaveAttribute("aria-disabled", "true");
+    await incompletePost.click({ force: true });
     const missingPanel = page.getByRole("alert", {
       name: word(language, "What's missing", "موارد ناقص"),
       exact: true,

@@ -50,7 +50,9 @@ for (const language of ["en", "fa"] as const)
         name: word(language, "Post invoice", "ثبت فاکتور"),
         exact: true,
       });
-      await expect(post).toBeEnabled();
+      await expect(post).toBeDisabled();
+      await expect(post).toHaveAttribute("aria-disabled", "true");
+      await expect(post).toHaveClass(/button-neutral/);
       // A control revealed under the old import pointer has no synthetic hover help.
       await expect(control.getByRole("tooltip")).toHaveCount(0);
       await post.scrollIntoViewIfNeeded();
@@ -98,8 +100,10 @@ for (const language of ["en", "fa"] as const)
       await expect(tooltip).toHaveCount(0);
 
       const beforeClick = await position(post);
-      if (phone) await post.tap();
-      else await post.click();
+      // aria-disabled prevents posting, while this intentional real click still
+      // opens exact guidance. Force skips Playwright's disabled actionability.
+      if (phone) await post.tap({ force: true });
+      else await post.click({ force: true });
       await expect(tooltip).toHaveCount(0);
       await stays(post, beforeClick);
       const panel = page.getByRole("alert", {

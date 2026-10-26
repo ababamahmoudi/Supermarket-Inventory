@@ -270,8 +270,10 @@ test("worker catalog actions stay hidden while invoice quick-add creates an acti
   );
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click({ force: true });
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toBeVisible();
@@ -395,7 +397,8 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     .click();
   await page.goto(`/#invoices?id=${encodeURIComponent(prior.id)}`);
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
-  await expect(post).toBeEnabled();
+  await expect(post).toBeDisabled();
+  await expect(post).toHaveAttribute("aria-disabled", "true");
   const beforePostAttempt = await readCanonicalBusinessEvidence(page);
   const postControl = post;
   await postControl.focus();

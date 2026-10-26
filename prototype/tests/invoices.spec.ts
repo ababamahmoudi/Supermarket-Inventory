@@ -120,8 +120,10 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   await chips.getByRole("button", { name: "Close", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click({ force: true });
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toBeVisible();
@@ -286,8 +288,10 @@ test("manual draft survives a refresh and cannot post without its original", asy
   );
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click({ force: true });
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toContainText("Original invoice is missing. Attach its PDF or photo.");

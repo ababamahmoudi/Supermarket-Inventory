@@ -24,8 +24,9 @@ for (const language of ["en", "fa"] as const) {
     const post = page
       .locator(".receiving-post-control:visible")
       .getByRole("button");
-    await expect(post).toBeEnabled();
-    await post.click();
+    await expect(post).toBeDisabled();
+    await expect(post).toHaveAttribute("aria-disabled", "true");
+    await post.click({ force: true });
     expect(await readCanonicalBusinessEvidence(page)).toEqual(before);
     const panel = page.getByRole("alert", {
       name: word(language, "What's missing", "موارد ناقص"),

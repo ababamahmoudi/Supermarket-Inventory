@@ -81,7 +81,8 @@ test("invoice lines start closed, confirm once and reopen without opening the ne
     }),
   ).toHaveCount(0);
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
-  await expect(post).toBeEnabled();
+  await expect(post).toBeDisabled();
+  await expect(post).toHaveAttribute("aria-disabled", "true");
   await post.focus();
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Tab");
@@ -197,7 +198,7 @@ test("the original sticks beside the work column and the progress bar has a full
     page
       .locator(".receiving-header")
       .getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
+  ).toBeDisabled();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
