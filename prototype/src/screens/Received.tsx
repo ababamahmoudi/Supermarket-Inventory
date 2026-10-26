@@ -349,6 +349,7 @@ export default function Received({
         )}
         {!supplier && (
           <Select
+            searchable
             value={supplierFilter}
             onChange={setSupplier}
             aria-label={t("Supplier", "تأمین‌کننده")}
@@ -360,6 +361,7 @@ export default function Received({
                     record.company_id === state.config.company.seed_key,
                 )
                 .map((record) => ({
+                  searchTerms: [record.name, ...(record.previous_names ?? [])],
                   value: record.name,
                   label: `\u2066${record.name}\u2069`,
                 })),
@@ -367,6 +369,7 @@ export default function Received({
           />
         )}
         <Select
+          searchable
           value={product}
           onChange={setProduct}
           aria-label={t("Product", "کالا")}
@@ -377,6 +380,12 @@ export default function Received({
                 (item) => item.company_id === state.config.company.seed_key,
               )
               .map((item) => ({
+                searchTerms: [
+                  item.name_en,
+                  item.name_fa ?? "",
+                  item.code,
+                  item.barcode ?? "",
+                ],
                 value: item.code,
                 label: `${lang === "fa" ? item.name_fa : item.name_en} · ${item.code}`,
               })),

@@ -169,6 +169,12 @@ function AddDateForm({
                   label: t("Choose product", "محصول را انتخاب کنید"),
                 },
                 ...products.map((product) => ({
+                  searchTerms: [
+                    product.name_en,
+                    product.name_fa ?? "",
+                    product.code,
+                    product.barcode ?? "",
+                  ],
                   value: product.code,
                   label: `${lang === "fa" ? product.name_fa || product.name_en : product.name_en} · ${lang === "fa" ? product.name_en : product.name_fa} · ${product.code}`,
                 })),

@@ -44,6 +44,12 @@ import {
   Columns3,
 } from "lucide-react";
 import { useDemo } from "./store";
+import {
+  matchesSelectOption,
+  matchingSelectTerms,
+  normalizeSelectSearch,
+} from "./select-search";
+import { SelectMatch } from "./SelectMatch";
 import { translate } from "./i18n";
 import {
   navigationKey,
@@ -1556,6 +1562,8 @@ export type SelectOption = {
   label: string;
   /** Short selected text; the complete label remains in the open option list. */
   selectedLabel?: string;
+  /** Additional already-authorized public names, product codes or barcodes. */
+  searchTerms?: readonly string[];
   content?: ReactNode;
   disabled?: boolean;
   count?: number;
@@ -1685,10 +1693,10 @@ export function Select({
   const [active, setActive] = useState(value);
   const searchRef = useRef<HTMLInputElement>(null);
   const typeahead = useRef({ value: "", time: 0 });
-  const canSearch = searchable ?? options.length > 8;
+  const canSearch = searchable || options.length > 8;
   const selected = options.find((option) => option.value === value);
   const filtered = options.filter((option) =>
-    option.label.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
+    matchesSelectOption(option, query),
   );
   const enabled = filtered.filter((option) => !option.disabled);
   const open = (edge?: "first" | "last") => {
@@ -1712,6 +1720,7 @@ export function Select({
     closePopup(true);
   };
   const keydown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.nativeEvent.isComposing) return;
     if (event.key === "Escape" && popupOpen) {
       event.preventDefault();
       event.stopPropagation();
@@ -1763,7 +1772,9 @@ export function Select({
       const match = options.find(
         (option) =>
           !option.disabled &&
-          option.label.toLocaleLowerCase().startsWith(typeahead.current.value),
+          normalizeSelectSearch(option.label).startsWith(
+            normalizeSelectSearch(typeahead.current.value),
+          ),
       );
       if (match) {
         if (!popupOpen) open();
@@ -1854,9 +1865,7 @@ export function Select({
                       options.find(
                         (option) =>
                           !option.disabled &&
-                          option.label
-                            .toLocaleLowerCase()
-                            .includes(nextQuery.toLocaleLowerCase()),
+                          matchesSelectOption(option, nextQuery),
                       )?.value ?? "",
                     );
                   }}
@@ -1876,9 +1885,7 @@ export function Select({
                   id={`${listId}-${options.findIndex((item) => item.value === option.value)}`}
                   type="button"
                   role="option"
-                  aria-label={
-                    option.content === undefined ? undefined : option.label
-                  }
+                  aria-label={option.label}
                   aria-selected={option.value === value}
                   aria-disabled={option.disabled || undefined}
                   disabled={option.disabled}
@@ -1892,7 +1899,18 @@ export function Select({
                   onClick={() => choose(option)}
                 >
                   <span>
-                    <bdi dir="auto">{option.content ?? option.label}</bdi>
+                    <bdi dir="auto">
+                      {option.content ?? (
+                        <SelectMatch value={option.label} query={query} />
+                      )}
+                    </bdi>
+                    {matchingSelectTerms(option, query).map((term) => (
+                      <small className="ui-option-match-detail" key={term}>
+                        <bdi dir="auto">
+                          <SelectMatch value={term} query={query} />
+                        </bdi>
+                      </small>
+                    ))}
                   </span>
                   {option.value === value && (
                     <Check size={16} strokeWidth={1.5} aria-hidden="true" />
@@ -1901,7 +1919,7 @@ export function Select({
               ))}
               {!filtered.length && (
                 <p className="ui-option-empty" role="status">
-                  {t("No matching options", "گزینه‌ای پیدا نشد")}
+                  {t("No matches", "موردی پیدا نشد")}
                 </p>
               )}
             </div>

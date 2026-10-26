@@ -181,6 +181,7 @@ export function InvoiceDetailsCard({
               }
             >
               <Select
+                searchable
                 id="invoice-supplier"
                 value={invoice.supplier}
                 options={[
@@ -189,6 +190,7 @@ export function InvoiceDetailsCard({
                     label: t("Choose supplier", "انتخاب تأمین‌کننده"),
                   },
                   ...supplierChoices(state).map((s) => ({
+                    searchTerms: [s.name, ...(s.previous_names ?? [])],
                     value: s.name,
                     label: s.name,
                   })),

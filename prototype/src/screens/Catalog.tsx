@@ -1022,6 +1022,7 @@ export function ProductEditor({
                   }
                 >
                   <Select
+                    searchable
                     id={`${formId}-main_supplier`}
                     value={values.main_supplier}
                     onChange={(value) => patch("main_supplier", value)}
@@ -3245,6 +3246,7 @@ export function Products() {
             ]}
           />
           <Select
+            searchable
             aria-label={t("Supplier", "تأمین‌کننده")}
             value={supplier}
             onChange={(value) => {

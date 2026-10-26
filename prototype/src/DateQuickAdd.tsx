@@ -9,7 +9,9 @@ import {
   validTrackedDate,
   type AddTrackedDateInput,
 } from "./date-tracking";
-import { LtrText, ProductName } from "./presentation";
+import { LtrText } from "./presentation";
+import { SelectMatch } from "./SelectMatch";
+import { matchingSelectTerms, productSelectOption } from "./select-search";
 import { branchLabel } from "./settings";
 import { actorAtLocation } from "./authority";
 import { permittedLocationIdsView } from "./notes-dates-read";
@@ -322,17 +324,59 @@ export function DateQuickAdd({
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => choose(product)}
                     >
-                      <ProductName product={product} language={lang} />
-                      <LtrText>{product.code}</LtrText>
+                      <span className="product-name">
+                        <strong>
+                          <bdi dir="auto">
+                            <SelectMatch
+                              value={
+                                lang === "fa"
+                                  ? product.name_fa || product.name_en
+                                  : product.name_en
+                              }
+                              query={query}
+                            />
+                          </bdi>
+                        </strong>
+                        {product.name_fa && (
+                          <small>
+                            <bdi dir="auto">
+                              <SelectMatch
+                                value={
+                                  lang === "fa"
+                                    ? product.name_en
+                                    : product.name_fa
+                                }
+                                query={query}
+                              />
+                            </bdi>
+                          </small>
+                        )}
+                        {matchingSelectTerms(
+                          productSelectOption(product, lang),
+                          query,
+                        )
+                          .filter(
+                            (term) =>
+                              term !==
+                              (lang === "fa"
+                                ? product.name_en
+                                : product.name_fa),
+                          )
+                          .map((term) => (
+                            <small key={term}>
+                              <bdi dir="auto">
+                                <SelectMatch value={term} query={query} />
+                              </bdi>
+                            </small>
+                          ))}
+                      </span>
+                      <LtrText>
+                        <SelectMatch value={product.code} query={query} />
+                      </LtrText>
                     </button>
                   ))
                 ) : (
-                  <p className="muted">
-                    {t(
-                      "Choose an active product.",
-                      "یک محصول فعال انتخاب کنید.",
-                    )}
-                  </p>
+                  <p className="muted">{t("No matches", "موردی پیدا نشد")}</p>
                 )}
               </div>
             )}

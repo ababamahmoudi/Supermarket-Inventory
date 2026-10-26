@@ -797,6 +797,7 @@ function PayablesContent({
                 error={validationError("payables-supplier")}
               >
                 <Select
+                  searchable
                   id="payables-supplier"
                   value={supplier}
                   onChange={(value) => {

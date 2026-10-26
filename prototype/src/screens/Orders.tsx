@@ -989,6 +989,7 @@ export default function Orders() {
                   }
                 >
                   <Select
+                    searchable
                     id="order-supplier"
                     value={form.supplier}
                     onChange={(value) => {
@@ -1016,6 +1017,10 @@ export default function Orders() {
                         label: t("Choose supplier", "انتخاب تأمین‌کننده"),
                       },
                       ...suppliers.map((supplier) => ({
+                        searchTerms: [
+                          supplier.name,
+                          ...(supplier.previous_names ?? []),
+                        ],
                         value: supplier.name,
                         label: supplier.name,
                       })),
@@ -1537,6 +1542,7 @@ export default function Orders() {
                               }
                             >
                               <Select
+                                searchable
                                 id={`order-note-${note.id}`}
                                 value={form.noteItems[note.id] ?? ""}
                                 onChange={(value) => {
@@ -1557,6 +1563,16 @@ export default function Orders() {
                                   },
                                   ...candidates.map((item) => ({
                                     value: item.id,
+                                    searchTerms: [
+                                      item.name_en,
+                                      item.name_fa ?? "",
+                                      item.product_code,
+                                      item.supplier_item_code ?? "",
+                                      state.products.find(
+                                        (product) =>
+                                          product.code === item.product_code,
+                                      )?.barcode ?? "",
+                                    ],
                                     label: `${lang === "fa" ? item.name_fa || item.name_en : item.name_en} · ${item.supplier_item_code || item.product_code}`,
                                   })),
                                   ...form.newItems.map((item) => ({
@@ -1942,6 +1958,7 @@ export default function Orders() {
             </Field>
             <Field label={t("Supplier", "تأمین‌کننده")}>
               <Select
+                searchable
                 value={supplierFilter}
                 onChange={setSupplierFilter}
                 options={[

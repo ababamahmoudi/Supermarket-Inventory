@@ -479,6 +479,7 @@ export function Offers() {
         ]}
       />
       <Select
+        searchable
         aria-label={t("Offer supplier", "تأمین‌کننده پیشنهاد")}
         value={supplier}
         onChange={setSupplier}
@@ -1216,6 +1217,7 @@ export function Offers() {
               }
             >
               <Select
+                searchable
                 value={code}
                 onChange={(value) => {
                   setCode(value);
@@ -1233,6 +1235,12 @@ export function Offers() {
                     label: t("Choose a product", "یک کالا انتخاب کنید"),
                   },
                   ...products.map((product) => ({
+                    searchTerms: [
+                      product.name_en,
+                      product.name_fa ?? "",
+                      product.code,
+                      product.barcode ?? "",
+                    ],
                     value: product.code,
                     label: `${lang === "fa" ? product.name_fa || product.name_en : product.name_en} · \u2066${product.code}\u2069`,
                   })),

@@ -1002,6 +1002,7 @@ export function ReturnActionForms({
                               )}
                             >
                               <Select
+                                searchable
                                 id={fieldId(code, "replacement_product_code")}
                                 value={item.replacement_product_code}
                                 onChange={(value) =>
@@ -1019,6 +1020,12 @@ export function ReturnActionForms({
                                       product.status === "active",
                                   )
                                   .map((product) => ({
+                                    searchTerms: [
+                                      product.name_en,
+                                      product.name_fa ?? "",
+                                      product.code,
+                                      product.barcode ?? "",
+                                    ],
                                     value: product.code,
                                     label: name(product.code),
                                   }))}

@@ -264,6 +264,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
           <section className="list-box receiving-add-line">
             <div className="actions">
               <Select
+                searchable
                 aria-label={t(
                   "Add a product to the invoice",
                   "افزودن کالا به فاکتور",
@@ -278,7 +279,16 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
                         x.company_id === invoice.company_id &&
                         x.status !== "archived",
                     )
-                    .map((x) => ({ value: x.code, label: x.name_en })),
+                    .map((x) => ({
+                      searchTerms: [
+                        x.name_en,
+                        x.name_fa ?? "",
+                        x.code,
+                        x.barcode ?? "",
+                      ],
+                      value: x.code,
+                      label: x.name_en,
+                    })),
                   { value: "NEW", label: t("New product", "کالای جدید") },
                 ]}
                 onChange={setAddProduct}

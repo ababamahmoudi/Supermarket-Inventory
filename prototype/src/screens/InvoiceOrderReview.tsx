@@ -171,6 +171,7 @@ export function InvoiceOrderReview() {
                       )}
                     >
                       <Select
+                        searchable
                         id={`invoice-order-match-${encodeURIComponent(temporary.id)}`}
                         value={matchedIndex < 0 ? "" : String(matchedIndex)}
                         disabled={!!stale}
@@ -233,6 +234,15 @@ export function InvoiceOrderReview() {
                                     line.description;
                               return {
                                 value: String(index),
+                                searchTerms: [
+                                  product?.name_en ??
+                                    line.new_name_en ??
+                                    line.description,
+                                  product?.name_fa ?? line.new_name_fa ?? "",
+                                  line.product_code,
+                                  line.supplier_item_code ?? "",
+                                  product?.barcode ?? line.barcode ?? "",
+                                ],
                                 label: `${index + 1} · ${name}${line.supplier_item_code ? ` · ${line.supplier_item_code}` : ""}`,
                               };
                             }),

@@ -954,3 +954,24 @@
   inset-block-end: 16px;
   color: var(--text-muted);
 }
+
+/* Search emphasizes matching public text without changing glyph width. */
+.ui-select-match {
+  color: inherit;
+  background: var(--accent-soft);
+  border-radius: var(--radius-mark);
+}
+.ui-option-match-detail {
+  display: block;
+  margin-block-start: 4px;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+}
+.ui-select-popover .ui-option,
+.ui-select-search input {
+  min-block-size: 44px;
+}
+.ui-select-search input {
+  background: var(--surface);
+  border: 1px solid var(--field-border);
+}

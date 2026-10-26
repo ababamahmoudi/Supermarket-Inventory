@@ -808,6 +808,7 @@ export function Notes() {
                   }
                 >
                   <Select
+                    searchable
                     id="note-product"
                     value={product}
                     onChange={(value) => {
@@ -824,6 +825,12 @@ export function Notes() {
                               item.code === editing?.entry.product_code),
                         )
                         .map((item) => ({
+                          searchTerms: [
+                            item.name_en,
+                            item.name_fa ?? "",
+                            item.code,
+                            item.barcode ?? "",
+                          ],
                           value: item.code,
                           label:
                             lang === "fa"

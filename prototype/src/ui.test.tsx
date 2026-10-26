@@ -176,7 +176,7 @@ describe("styled Select", () => {
     await user.click(select);
     await user.type(screen.getByRole("textbox"), "Missing supplier");
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
-    expect(screen.getByText("No matching options")).toBeVisible();
+    expect(screen.getByText("No matches")).toBeVisible();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     expect(select).toHaveFocus();

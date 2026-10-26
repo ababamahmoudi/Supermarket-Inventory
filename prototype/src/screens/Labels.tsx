@@ -1634,6 +1634,7 @@ export function Labels() {
                 ]}
               />
               <Select
+                searchable
                 aria-label={t("Supplier", "تأمین‌کننده")}
                 value={filters.supplier}
                 onChange={(value) =>

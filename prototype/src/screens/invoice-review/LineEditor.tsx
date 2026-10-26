@@ -483,6 +483,7 @@ export function LineEditor({
                   }
                 >
                   <Select
+                    searchable
                     id={id("matching")}
                     value={line.product_code}
                     onChange={(value) => {
@@ -529,6 +530,12 @@ export function LineEditor({
                                     correction.retainedProductCodes[index]))),
                         )
                         .map((x) => ({
+                          searchTerms: [
+                            x.name_en,
+                            x.name_fa ?? "",
+                            x.code,
+                            x.barcode ?? "",
+                          ],
                           value: x.code,
                           label: `${x.name_en} · ${x.code}`,
                         })),
