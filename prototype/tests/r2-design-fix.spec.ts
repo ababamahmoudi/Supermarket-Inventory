@@ -841,9 +841,23 @@ for (const language of ["en", "fa"] as const) {
     const confirmed = receivingRow(page, 0);
     const approvedFill = await tokenColor(confirmed, "--approved-bg");
     // Phone cards own their fill; rounded desktop cells own the table's continuous fill.
-    if (phone)
+    if (phone) {
       await expect(confirmed).toHaveCSS("background-color", approvedFill);
-    else
+      const clear = await tokenColor(confirmed, "--color-clear");
+      for (const cell of await confirmed.locator(":scope > td").all())
+        await expect(cell).toHaveCSS("background-color", clear);
+      const radius = await confirmed.evaluate((element) =>
+        getComputedStyle(element).getPropertyValue("--radius-search").trim(),
+      );
+      expect(radius).not.toBe("");
+      for (const corner of [
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+      ])
+        await expect(confirmed).toHaveCSS(`border-${corner}-radius`, radius);
+    } else
       for (const cell of await confirmed.locator(":scope > td").all())
         await expect(cell).toHaveCSS("background-color", approvedFill);
     await expect(
