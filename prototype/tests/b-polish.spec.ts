@@ -63,6 +63,7 @@ async function visibleGeometry(page: Page, route: string) {
               ? "choice"
               : control.getAttribute("data-control-kind"),
           small: control.classList.contains("button-sm"),
+          iconOnly: control.classList.contains("ui-icon-button"),
         })),
         selects,
         searches,
@@ -71,7 +72,7 @@ async function visibleGeometry(page: Page, route: string) {
 }
 
 for (const language of ["en", "fa"] as const) {
-  test(`C9 filter controls are 40px, readable, searchable and compact in ${language}`, async ({
+  test(`list filter controls retain their scoped height, readable choices and compact spacing in ${language}`, async ({
     page,
     isMobile,
   }) => {
@@ -80,13 +81,27 @@ for (const language of ["en", "fa"] as const) {
     for (const route of ["products", "offers", "expiry", "returns", "notes"]) {
       const geometry = await visibleGeometry(page, route);
       expect(geometry.controls.length, route).toBeGreaterThan(0);
+      if (route === "offers")
+        await expect(
+          page.locator(
+            'main > [data-r2c-screen="offers"] .current-offers-table',
+          ),
+        ).toBeVisible();
       for (const control of geometry.controls) {
         expect(
           ["field", "action", "icon", "choice"],
           `${route}: ${control.name} has a defined control kind`,
         ).toContain(control.kind);
+        // R2c explicitly opts Offers into 44px ordinary controls. Genuine
+        // icon controls and the unchanged C9 screens retain their own sizes.
+        const expectedHeight =
+          route === "offers" && !control.iconOnly
+            ? 44
+            : control.kind === "choice"
+              ? 32
+              : 40;
         expect(
-          Math.abs(control.height - (control.kind === "choice" ? 32 : 40)),
+          Math.abs(control.height - expectedHeight),
           `${route}: ${control.name}`,
         ).toBeLessThanOrEqual(1);
       }

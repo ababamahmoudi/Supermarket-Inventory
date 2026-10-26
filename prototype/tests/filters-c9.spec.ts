@@ -43,6 +43,13 @@ async function checkToolbar(toolbar: Locator, route: string) {
         right: rect.right,
         height: rect.height,
         center: rect.top + rect.height / 2,
+        kind: control.matches(".filter-search-pill")
+          ? "search-container"
+          : control.matches(".ui-segments")
+            ? "segment-track"
+            : control.matches(".ui-icon-button")
+              ? "icon"
+              : "ordinary",
       }));
     const trailing = element
       .querySelector(".filter-toolbar-trailing")
@@ -56,6 +63,16 @@ async function checkToolbar(toolbar: Locator, route: string) {
         : null,
       direction: getComputedStyle(element).direction,
       gap: getComputedStyle(element).gap,
+      searchInputs: [
+        ...element.querySelectorAll<HTMLInputElement>(
+          ".filter-search-pill input",
+        ),
+      ]
+        .filter((input) => input.getBoundingClientRect().height > 0)
+        .map((input) => ({
+          name: input.getAttribute("aria-label"),
+          height: input.getBoundingClientRect().height,
+        })),
     };
   });
   expect(geometry.controls.length, route).toBeGreaterThan(1);
@@ -69,8 +86,25 @@ async function checkToolbar(toolbar: Locator, route: string) {
     `${route} end inset`,
   ).toBeCloseTo(20, 0);
   const rows: (typeof geometry.controls)[] = [];
+  const r2cScreen = ["suppliers", "payables", "offers"].includes(route);
+  if (r2cScreen)
+    await expect(
+      toolbar.locator(`xpath=ancestor::*[@data-r2c-screen="${route}"]`),
+      `${route}: the actual R2c screen owns its control size`,
+    ).toHaveCount(1);
   for (const control of geometry.controls) {
-    expect(control.height, `${route}: ${control.name}`).toBeCloseTo(40, 0);
+    // The search wrapper keeps C9's 40px frame; R2c ordinary inputs/buttons
+    // grow to 44px inside it. A segmented track reserves its 8px inner inset.
+    const expectedHeight =
+      r2cScreen && control.kind === "segment-track"
+        ? 52
+        : r2cScreen && control.kind === "ordinary"
+          ? 44
+          : 40;
+    expect(control.height, `${route}: ${control.name}`).toBeCloseTo(
+      expectedHeight,
+      0,
+    );
     expect(control.x, `${route}: start overflow`).toBeGreaterThanOrEqual(
       geometry.bar.left - 1,
     );
@@ -81,6 +115,11 @@ async function checkToolbar(toolbar: Locator, route: string) {
     if (row) row.push(control);
     else rows.push([control]);
   }
+  for (const input of geometry.searchInputs)
+    expect(input.height, `${route}: ${input.name}`).toBeCloseTo(
+      r2cScreen ? 44 : 40,
+      0,
+    );
   for (const row of rows) {
     expect(
       Math.max(...row.map((item) => item.center)) -

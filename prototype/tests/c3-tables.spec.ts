@@ -108,6 +108,49 @@ async function proveTables(page: Page) {
   });
 }
 
+function plainValue(value: string | null) {
+  return (value ?? "")
+    .replace(/[\u200e\u200f\u2066-\u2069]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function proveSupplierRecord(page: Page) {
+  await page.evaluate(async () => document.fonts.ready);
+  return page.evaluate(() => {
+    const failures: string[] = [];
+    let fragments = 0;
+    const fields = document.querySelectorAll<HTMLElement>(
+      ".supplier-detail-header h1,.supplier-contact-grid dd,.supplier-kpis .kpi-value,.supplier-overview-facts dd",
+    );
+    for (const field of fields) {
+      const bounds = field.getBoundingClientRect();
+      if (bounds.width <= 0 || bounds.height <= 0)
+        failures.push(`Supplier fact is hidden: ${field.textContent}`);
+      if (bounds.left < -2 || bounds.right > innerWidth + 2)
+        failures.push(`Supplier fact leaves viewport: ${field.textContent}`);
+      const walker = document.createTreeWalker(field, NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        if (
+          !node.textContent?.trim() ||
+          !node.parentElement?.getClientRects().length ||
+          node.parentElement.closest(".sr-only,[aria-hidden=true],[hidden]")
+        )
+          continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        for (const rect of range.getClientRects()) {
+          fragments++;
+          if (rect.left < bounds.left - 2 || rect.right > bounds.right + 2)
+            failures.push(`Clipped supplier fact: ${node.textContent.trim()}`);
+        }
+      }
+    }
+    return { fields: fields.length, fragments, failures };
+  });
+}
+
 for (const width of [1280, 1440, 1920]) {
   for (const language of ["en", "fa"] as const) {
     test(`all seven table pages fit and retain their complete text at ${width}px (${language})`, async ({
@@ -200,8 +243,8 @@ for (const width of [1280, 1440, 1920]) {
             })
             .click();
           const supplierTable = page.locator(".suppliers-table");
-          // C8 keeps the twelve Supplier columns, including the required
-          // end Action column; optional values may move into row details.
+          // All twelve permitted columns remain configurable. R2c routes
+          // omitted facts through the one full-record control at the row end.
           const supplierColumns = [
             ["name", "Supplier", "تأمین‌کننده"],
             ["status", "Status", "وضعیت"],
@@ -248,26 +291,148 @@ for (const width of [1280, 1440, 1920]) {
               .filter(([key]) => visibleKeys.includes(key))
               .map(([key]) => key),
           );
-          if (widthHidden) {
-            await supplierTable
-              .locator(".table-details-toggle")
-              .first()
-              .click();
-            await expect(
-              supplierTable.locator(".table-expanded-row dl > div"),
-            ).toHaveCount(widthHidden);
-            await expect(
-              supplierTable.locator(".table-expanded-row dl dt"),
-            ).toHaveText(
-              hiddenColumns.map((column) => column[language === "en" ? 1 : 2]),
-            );
-            await check("suppliers width-hidden values remain in row details");
-            await supplierTable
-              .locator(".table-details-toggle")
-              .first()
-              .click();
-          }
+          await expect(
+            supplierTable.locator(".table-details-toggle,.table-expanded-row"),
+          ).toHaveCount(0);
           await check("suppliers with every optional column enabled");
+          const supplierRow = supplierTable
+            .locator(".supplier-overview-row")
+            .filter({ hasText: "Fresh Valley Foods" });
+          await expect(supplierRow).toHaveCount(1);
+          const recordLink = supplierRow.locator(
+            'td[data-column-key="actions"] .table-row-link',
+          );
+          await expect(recordLink).toHaveCount(1);
+          await expect(supplierRow.locator(".table-row-link")).toHaveCount(1);
+          await expect(recordLink).toHaveAttribute(
+            "href",
+            "#suppliers?name=Fresh%20Valley%20Foods",
+          );
+          const visibleValues = await supplierRow
+            .locator("td[data-column-key]")
+            .evaluateAll((cells) =>
+              Object.fromEntries(
+                cells.map((cell) => [
+                  cell.getAttribute("data-column-key"),
+                  cell.textContent,
+                ]),
+              ),
+            );
+          const before = await readCanonicalBusinessEvidence(page);
+          const source = before.suppliers!.find(
+            (supplier) => supplier.name === "Fresh Valley Foods",
+          )!;
+          expect(source).toBeDefined();
+          await recordLink.click();
+          await expect(page).toHaveURL(
+            /#suppliers\?name=Fresh%20Valley%20Foods$/,
+          );
+          await expect(page.locator(".supplier-detail-header h1")).toHaveText(
+            source.name,
+          );
+          if (visibleKeys.includes("status"))
+            expect(
+              plainValue(
+                await page
+                  .locator(".supplier-detail-title .ui-badge")
+                  .textContent(),
+              ),
+            ).toBe(plainValue(visibleValues.status));
+          const contact = page.locator(".supplier-contact-grid");
+          for (const [field, en, fa] of [
+            ["phone", "Phone", "تلفن"],
+            ["email", "Email", "ایمیل"],
+            ["website", "Website", "وب‌سایت"],
+            ["address", "Address", "نشانی"],
+            ["sales_rep_name", "Sales representative", "نماینده فروش"],
+            ["sales_rep_phone", "Sales rep phone", "تلفن نماینده فروش"],
+            ["payment_terms", "Payment terms", "شرایط پرداخت"],
+          ] as const) {
+            const fact = contact.locator(":scope > div").filter({
+              has: page.getByText(language === "en" ? en : fa, {
+                exact: true,
+              }),
+            });
+            await expect(fact).toBeVisible();
+            await expect(fact.locator("dd")).toHaveText(
+              source[field]?.trim() ||
+                (language === "en" ? "Not added" : "ثبت نشده"),
+            );
+          }
+          const tile = (en: string, fa: string) =>
+            page.locator(".supplier-kpis .ui-summary-tile").filter({
+              has: page.locator(".kpi-label", {
+                hasText: language === "en" ? en : fa,
+              }),
+            });
+          const overviewFact = (en: string, fa: string) =>
+            page.locator(".supplier-overview-facts > div").filter({
+              has: page.getByText(language === "en" ? en : fa, {
+                exact: true,
+              }),
+            });
+          const destinations = {
+            last_delivery: tile("Last delivery", "آخرین تحویل").locator(
+              ".kpi-value",
+            ),
+            deliveries: tile(
+              "Deliveries this month",
+              "تحویل‌های این ماه",
+            ).locator(".kpi-value"),
+            returns: tile("Open returns", "مرجوعی‌های باز").locator(
+              ".kpi-value",
+            ),
+            shorts: overviewFact("Open shorts", "کسری‌های باز").locator("dd"),
+            balance: tile("Balance", "مانده").locator(".kpi-value"),
+            overdue: overviewFact("Overdue", "سررسید گذشته").locator("dd"),
+            due: overviewFact("Next due date", "سررسید بعدی").locator("dd"),
+          };
+          for (const [key, destination] of Object.entries(destinations)) {
+            await expect(destination, `${key}: full record fact`).toBeVisible();
+            await expect(
+              destination,
+              `${key}: real fact or empty value`,
+            ).not.toBeEmpty();
+            if (visibleKeys.includes(key))
+              expect(plainValue(await destination.textContent()), key).toBe(
+                plainValue(visibleValues[key]),
+              );
+          }
+          for (const [key] of hiddenColumns)
+            expect(
+              [...Object.keys(destinations), "terms", "contact"],
+              `${key}: omitted column has a tested full-record destination`,
+            ).toContain(key);
+          const detailProof = await proveSupplierRecord(page);
+          expect(detailProof.fields).toBeGreaterThan(10);
+          expect(detailProof.fragments).toBeGreaterThan(10);
+          expect(detailProof.failures).toEqual([]);
+          const after = await readCanonicalBusinessEvidence(page);
+          for (const field of [
+            "suppliers",
+            "invoices",
+            "invoice",
+            "ledger",
+            "returns",
+          ] as const)
+            expect(
+              after[field],
+              `Reading supplier details preserves ${field}`,
+            ).toEqual(before[field]);
+          await testInfo.attach(`supplier-record-${width}-${language}.json`, {
+            body: JSON.stringify({ hiddenColumns, detailProof }, null, 2),
+            contentType: "application/json",
+          });
+          await page
+            .getByRole("button", {
+              name:
+                language === "en"
+                  ? "Back to Suppliers"
+                  : "بازگشت به تأمین‌کنندگان",
+              exact: true,
+            })
+            .click();
+          await check("supplier full-record Back retains the complete table");
         }
       }
       await page.goto(orderUrl);
