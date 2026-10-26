@@ -9,6 +9,7 @@ import {
   usePopover,
 } from "../../ui";
 import { ReadingField as Field } from "../../InvoiceReadingReview";
+import { companyDateTime } from "../../company-time";
 import { formatDate, LtrValue } from "../../presentation";
 
 /** A compact summary keeps three details columns level; edits stay in one popup. */
@@ -17,6 +18,7 @@ export function ReceivedField({
   time,
   employee,
   source,
+  alternative,
   onReceived,
   onEmployee,
 }: {
@@ -24,6 +26,7 @@ export function ReceivedField({
   time: string;
   employee: string;
   source?: "handwriting" | "invoice_date" | "unresolved";
+  alternative?: string;
   onReceived(date: string, time: string): void;
   onEmployee(value: string): void;
 }) {
@@ -31,6 +34,7 @@ export function ReceivedField({
   const { open, close, show, position, portalTarget, triggerRef, popupRef } =
     usePopover(320);
   const id = useId();
+  const alternate = companyDateTime(state.config, alternative);
   const today = formatDate(new Date(), state.config.company.timezone);
   useEffect(() => {
     if (open)
@@ -42,10 +46,15 @@ export function ReceivedField({
       readingField="received_at"
       readingHint={
         source === "handwriting"
-          ? t(
-              "Taken from the handwriting on the invoice",
-              "از دست‌نوشتهٔ روی فاکتور گرفته شده است",
-            )
+          ? alternative
+            ? t(
+                `Read as ${time} from the handwriting`,
+                `از دست‌نوشته ${time} خوانده شد`,
+              )
+            : t(
+                "Taken from the handwriting on the invoice",
+                "از دست‌نوشتهٔ روی فاکتور گرفته شده است",
+              )
           : source === "invoice_date"
             ? t(
                 "Set to the invoice date; change it if delivery was another day",
@@ -76,6 +85,18 @@ export function ReceivedField({
         >
           {t("Change", "تغییر")}
         </Button>
+        {alternative && alternate.time && (
+          <Button
+            variant="plain"
+            size="sm"
+            onClick={() => onReceived(alternate.date, alternate.time)}
+          >
+            {t(
+              `Use ${alternate.time} instead`,
+              `استفاده از ${alternate.time} به‌جای آن`,
+            )}
+          </Button>
+        )}
         {open &&
           createPortal(
             <div

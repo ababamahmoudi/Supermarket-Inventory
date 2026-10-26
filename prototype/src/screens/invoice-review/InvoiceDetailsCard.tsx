@@ -311,6 +311,13 @@ export function InvoiceDetailsCard({
               time={receivedLocal.time}
               employee={invoice.receiving_employee ?? ""}
               source={invoice.imported_received_source}
+              alternative={
+                fields.some(
+                  (field) => invoiceCheckField(field) === "received_at",
+                )
+                  ? invoice.imported_received_alternative
+                  : undefined
+              }
               onReceived={onReceived}
               onEmployee={(value) => {
                 void edit("receiving_employee", value);

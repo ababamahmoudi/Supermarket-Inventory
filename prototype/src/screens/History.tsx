@@ -645,6 +645,7 @@ export default function History() {
                         {new Intl.DateTimeFormat("en-GB", {
                           hour: "2-digit",
                           minute: "2-digit",
+                          hourCycle: "h23",
                           timeZone: state.config.company.timezone,
                         }).format(new Date(entry.at))}
                       </LtrText>

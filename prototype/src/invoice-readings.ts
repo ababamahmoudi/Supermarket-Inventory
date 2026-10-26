@@ -1514,6 +1514,7 @@ export function importInvoiceReadings(
     const received = importedReadingReceived(state.config, value);
     invoice.received_at = received.received_at;
     invoice.imported_received_source = received.source;
+    invoice.imported_received_alternative = received.alternative_received_at;
     invoice.receiving_employee = actor.actor;
     invoice.import_warnings = list(value.warnings);
     invoice.import_handwritten_notes = list(value.handwritten_notes);

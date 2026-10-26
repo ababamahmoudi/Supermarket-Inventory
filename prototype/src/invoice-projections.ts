@@ -176,6 +176,7 @@ const invoiceKeys = [
   "invoice_date",
   "received_at",
   "imported_received_source",
+  "imported_received_alternative",
   "receiving_employee",
   "due_date",
   "posted_at",

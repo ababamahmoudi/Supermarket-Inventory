@@ -49,7 +49,11 @@ export type CompanyConfig = Omit<
   | "notifications"
   | "roles"
   | "notebooks"
+  | "invoices"
 > & {
+  invoices: Omit<typeof configSeed.invoices, "delivery_window"> & {
+    delivery_window?: { start: string; end: string };
+  };
   roles: RoleDefinition[];
   notebooks: {
     built_in: {
@@ -426,6 +430,7 @@ export type DemoInvoice = Omit<
     invoice_date?: string;
     received_at?: string;
     imported_received_source?: "handwriting" | "invoice_date" | "unresolved";
+    imported_received_alternative?: string;
     receiving_employee?: string;
     due_date?: string;
     posted_at?: string;
