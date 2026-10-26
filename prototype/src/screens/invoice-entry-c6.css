@@ -50,22 +50,28 @@
   }
 }
 
-.invoice-entry-choice-dialog {
+:root .ui-dialog.ui-dialog-structured.invoice-entry-choice-dialog {
   inline-size: min(720px, calc(100vw - 32px));
   max-inline-size: min(720px, calc(100vw - 32px));
 }
 .invoice-entry-choice-grid {
   display: grid;
+  grid-auto-rows: 1fr;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
-.invoice-entry-choice-grid > .invoice-entry-choice-tile {
+:root
+  .ui-dialog.invoice-entry-choice-dialog
+  .invoice-entry-choice-grid
+  > .ui-button.invoice-entry-choice-tile {
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   align-items: start;
   justify-content: start;
   gap: 8px 12px;
+  inline-size: 100%;
+  max-inline-size: none;
   block-size: auto;
   min-block-size: 116px;
   padding: 20px;
@@ -79,26 +85,43 @@
   grid-row: 1 / -1;
   color: var(--accent);
 }
-.invoice-entry-choice-tile > strong {
+:root
+  .ui-dialog.invoice-entry-choice-dialog
+  .invoice-entry-choice-tile
+  > strong {
   font-size: var(--font-size-body);
   color: var(--text);
 }
-.invoice-entry-choice-tile > span {
+:root .ui-dialog.invoice-entry-choice-dialog .invoice-entry-choice-tile > span {
+  min-inline-size: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
   color: var(--text-muted);
   font-weight: 400;
   font-size: var(--font-size-label);
   line-height: var(--line-height-body);
 }
-.invoice-entry-choice-tile:hover:not(:disabled),
-.invoice-entry-choice-tile:focus-visible {
+:root
+  .ui-dialog.invoice-entry-choice-dialog
+  .invoice-entry-choice-tile:hover:not(:disabled),
+:root
+  .ui-dialog.invoice-entry-choice-dialog
+  .invoice-entry-choice-tile:focus-visible {
   border-color: var(--accent);
 }
 @media (max-width: 759px) {
   .invoice-entry-choice-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-  .invoice-entry-choice-grid > .invoice-entry-choice-tile {
+  :root
+    .ui-dialog.invoice-entry-choice-dialog
+    .invoice-entry-choice-grid
+    > .ui-button.invoice-entry-choice-tile {
     min-block-size: 104px;
     padding: 16px;
   }
+}
+
+:root .ui-dialog.invoice-entry-choice-dialog .ui-dialog-body > .helper {
+  margin-block: 12px 0;
 }

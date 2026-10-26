@@ -47,3 +47,7 @@ Test: Invoices → New invoice. Check all four icons/titles/descriptions, the si
 Dark receiving/correction attention rows use an 8% mix of the existing amber dot token over the surface token. Text keeps its normal contrast, and the amber check icon identifies outstanding evidence; confirmed green rows remain distinct. No new color is introduced.
 
 Test: switch a fictional receiving invoice with checks to dark theme and compare to a confirmed row on desktop and phone.
+
+## Executed UI verification
+
+Targeted unit tests cover actual canonical line validation, delayed confirmation presentation/rollback and scoped Done destinations. Existing details-layout and four-source browser flows pass in EN/FA on desktop/phone. Additional browser geometry checks measure rounded review corners, centered line values, disabled Post semantics, 8% amber fill, and all four source tiles at 1440/1000/390 in both languages/themes. The source tiles use a scoped selector to preserve their equal grid geometry against ordinary action-button defaults; description text wraps within its tile. A later deliberate line navigation cancels the earlier confirmation's scheduled focus handoff.

@@ -326,11 +326,9 @@ function InvoiceEntryChoices({
           className="invoice-entry-choice-dialog"
           icon={<Receipt size={22} aria-hidden="true" />}
           footer={
-            <DialogActions>
-              <Button variant="neutral" onClick={onClose}>
-                {t("Cancel", "انصراف")}
-              </Button>
-            </DialogActions>
+            <Button variant="neutral" onClick={onClose}>
+              {t("Cancel", "انصراف")}
+            </Button>
           }
           description={t(
             "Choose how to add the invoice.",
