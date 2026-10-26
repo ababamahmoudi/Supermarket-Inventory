@@ -600,8 +600,23 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               ":scope > .dashboard-kpis > button.ui-summary-tile",
             ),
           ];
+          const onShift = tiles.filter((tile) =>
+            tile.classList.contains("timesheet-on-shift-tile"),
+          );
+          const timesheets =
+            root.dataset.timesheetsModule === "on" &&
+            root.dataset.timesheetsAccess === "allowed";
+          const validTileCount = timesheets
+            ? tiles.length === 6 &&
+              onShift.length === 1 &&
+              ["On shift now", "اکنون در حال کار"].includes(
+                onShift[0]
+                  .querySelector(":scope > .kpi-label")
+                  ?.textContent?.trim() ?? "",
+              )
+            : tiles.length === 5 && onShift.length === 0;
           return (
-            tiles.length === 5 &&
+            validTileCount &&
             tiles.every(
               (tile) =>
                 tile.querySelector(":scope > .kpi-label") &&

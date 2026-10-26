@@ -23,7 +23,7 @@ for (const width of [1440, 1000, 390])
         await expect(dashboard).toBeVisible();
         await expect(
           dashboard.locator(".dashboard-kpis > .kpi-card"),
-        ).toHaveCount(5);
+        ).toHaveCount(6);
         await page.evaluate(() => document.fonts.ready);
         const proof = await dashboard.evaluate((root) => {
           const rect = (el: Element) => {
@@ -245,6 +245,42 @@ test("R2c dashboard shared-control proof has effective negative controls", async
     ),
   ).toBe(true);
   await tile.evaluate((element) => element.classList.add("ui-summary-tile"));
+  const root = page.locator(".r2c-dashboard");
+  await root.evaluate((element) => {
+    element.dataset.timesheetsAccess = "denied";
+  });
+  const deniedSix = await inspect(
+    page,
+    "r2d-denied-sixth-tile",
+    "en-light",
+    "manager",
+  );
+  expect(
+    deniedSix.failures.some((failure: string) =>
+      failure.includes("Text action height"),
+    ),
+  ).toBe(true);
+  await root.evaluate((element) => {
+    element.dataset.timesheetsAccess = "allowed";
+  });
+  const onShiftLabel = page.locator(".timesheet-on-shift-tile > .kpi-label");
+  await onShiftLabel.evaluate((element) => {
+    element.textContent = "Unexpected sixth tile";
+  });
+  const misnamedSix = await inspect(
+    page,
+    "r2d-misnamed-sixth-tile",
+    "en-light",
+    "manager",
+  );
+  expect(
+    misnamedSix.failures.some((failure: string) =>
+      failure.includes("Text action height"),
+    ),
+  ).toBe(true);
+  await onShiftLabel.evaluate((element) => {
+    element.textContent = "On shift now";
+  });
   const restored = await inspect(
     page,
     "r2c-dashboard-restored",

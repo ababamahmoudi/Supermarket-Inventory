@@ -5,6 +5,7 @@ import {
 } from "../settings";
 import { FitText } from "../FitText";
 import { SummaryTile } from "../SummaryTile";
+import { TimesheetOnShiftTile } from "../TimesheetOnShiftTile";
 import { translateCount } from "../i18n";
 import { useEffect, useState, type ReactNode } from "react";
 import Decimal from "decimal.js";
@@ -446,6 +447,8 @@ export function Dashboard() {
   const count = (value: number, en: string, plural: string, fa: string) =>
     translateCount(en, plural, fa, fa, value, lang);
   const approvalCount = approvalRows.length;
+  const hasTimesheets =
+    state.config.modules.timesheets !== false && can("timesheets.read");
   const kpis = [
     {
       label: t("Approvals waiting", "تأییدهای در انتظار"),
@@ -545,7 +548,13 @@ export function Dashboard() {
     groupedActivity.set(date, [...(groupedActivity.get(date) ?? []), entry]);
   }
   return (
-    <div className="r2c-dashboard">
+    <div
+      className="r2c-dashboard"
+      data-timesheets-access={hasTimesheets ? "allowed" : "denied"}
+      data-timesheets-module={
+        state.config.modules.timesheets === false ? "off" : "on"
+      }
+    >
       <PageHeader
         title={t(
           `${configuredRoleLabel(state.config.roles, "manager", "en")} dashboard`,
@@ -572,7 +581,9 @@ export function Dashboard() {
           {message}
         </div>
       )}
-      <div className="dashboard-kpis">
+      <div
+        className={`dashboard-kpis${hasTimesheets ? " has-timesheets" : ""}`}
+      >
         {kpis.map((item) => (
           <SummaryTile
             key={item.page}
@@ -584,6 +595,7 @@ export function Dashboard() {
             onClick={() => navigate(item.page)}
           />
         ))}
+        <TimesheetOnShiftTile />
       </div>
       <div className="dashboard-layout">
         <div className="dashboard-main">

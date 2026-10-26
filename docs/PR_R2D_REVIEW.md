@@ -33,3 +33,11 @@ Executed B2 browser proof: actual daily canonical shifts reconcile with the disp
 3. Week view → Print produces the staff/day/department totals for the selected week. The print output contains no app navigation or editing controls.
 
 Executed B3 proof: desktop and phone print-media rendering contains all eight bilingual sections, Notes, three paper columns and the footer; the app shell is hidden. Chromium generated an A4 PDF. Floor Worker navigation contains no hidden print sheet. Physical printer alignment and paper output remain untested.
+
+## B4: On shift now
+
+1. As Owner or Manager, choose North York and open Dashboard. The additional **On shift now** tile counts unique staff with an In and no Out, including unclosed prior days. Future clock-ins are excluded. Click it to open Timesheets.
+2. With All locations, the tile asks for a branch and never silently uses the first one. Branch Supervisors see the same tile for their permitted locations.
+3. Settings → Modules → Timesheets Off removes the tile. The Manager dashboard retains its five operational tiles; enabling Timesheets adds the sixth tile in the same surface style.
+
+Executed B4 browser proof: Manager count reconciles to canonical unclosed staff, click opens the correct branch, module Off restores five tiles, and Branch Supervisor aggregate selection asks for a branch. Desktop and phone passed. Strict dashboard control proof also rejects a sixth tile when access is denied or its label is unrelated; restored genuine composition passes.
