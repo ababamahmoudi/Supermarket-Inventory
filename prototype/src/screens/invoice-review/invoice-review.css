@@ -255,7 +255,7 @@
   background: var(--surface);
 }
 .receiving-table > tbody > .receiving-row-check > td {
-  background: var(--pending-bg);
+  background: var(--receiving-check-fill, var(--pending-bg));
 }
 .receiving-table > tbody > .receiving-row-confirmed > td {
   background: var(--approved-bg);
@@ -974,7 +974,7 @@
     background: var(--approved-bg);
   }
   .receiving-table > tbody > .receiving-row-check {
-    background: var(--pending-bg);
+    background: var(--receiving-check-fill, var(--pending-bg));
   }
   .receiving-table > tbody > .invoice-line-summary.is-expanded {
     background: var(--accent-soft);
@@ -1275,4 +1275,12 @@
   .receiving-more > .detail-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+:root[data-theme="dark"] .receiving-review {
+  --receiving-check-fill: color-mix(
+    in srgb,
+    var(--pending-dot) 8%,
+    var(--surface)
+  );
 }

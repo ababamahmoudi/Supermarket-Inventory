@@ -41,3 +41,9 @@ Test: open More details on a fictional import with an empty optional check and l
 New invoice uses the standard icon/title/description/dialog footer with four equal outlined icon tiles in a two-by-two grid, or a single column on phones. Each tile states what it does; the muted simulation note is explicit. Current location/role guards and additive JSON import are unchanged. These descriptive choice tiles are deliberately taller than a normal 44px action.
 
 Test: Invoices → New invoice. Check all four icons/titles/descriptions, the simulation note and Cancel; test Photo/PDF/Manual/JSON under the same permissions as before. Automated: Invoices.navigation.e1.test.tsx and existing r2b-invoice-entry browser routes.
+
+## 0.14 Quiet dark attention rows
+
+Dark receiving/correction attention rows use an 8% mix of the existing amber dot token over the surface token. Text keeps its normal contrast, and the amber check icon identifies outstanding evidence; confirmed green rows remain distinct. No new color is introduced.
+
+Test: switch a fictional receiving invoice with checks to dark theme and compare to a confirmed row on desktop and phone.
