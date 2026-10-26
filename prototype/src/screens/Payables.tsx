@@ -1582,7 +1582,7 @@ function PayablesContent({
             )}
           >
             <header className="payables-report-heading">
-              <h2>
+              <h2 className="payables-print-supplier">
                 <LtrText>{supplier}</LtrText>
               </h2>
               <p>

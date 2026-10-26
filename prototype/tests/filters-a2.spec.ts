@@ -334,9 +334,13 @@ test("Payables filters supplier totals and keeps its own statement in the same b
     await grain
       .getByRole("link", { name: "Golden Grain Distributors", exact: true })
       .click();
-    await expect(page.locator(".payables-report-heading h2")).toHaveText(
-      "Golden Grain Distributors",
-    );
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "Golden Grain Distributors",
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect(
       report.locator(".payables-summary-grid .ui-summary-tile").filter({
         has: page.getByText("Overdue", { exact: true }),

@@ -83,3 +83,14 @@
     display: none;
   }
 }
+
+/* The screen already names the supplier in its page heading. Printed reports
+   retain their own supplier heading because the page chrome is omitted. */
+.payables-print-supplier {
+  display: none;
+}
+@media print {
+  .payables-print-supplier {
+    display: block;
+  }
+}

@@ -259,6 +259,9 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
     .getByRole("link", { name: "Fresh Valley Foods", exact: true })
     .click();
   await expect(
+    page.getByRole("heading", { name: "Fresh Valley Foods", exact: true }),
+  ).toHaveCount(1);
+  await expect(
     page.getByText("$169.79", { exact: true }).first(),
   ).toBeVisible();
   await page
@@ -329,6 +332,7 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   await expect(page.locator(".payables-report-heading")).toContainText(
     "Fresh Valley Foods",
   );
+  await expect(page.locator(".payables-print-supplier")).toBeVisible();
   await expect(
     page
       .locator(".payables-report")
