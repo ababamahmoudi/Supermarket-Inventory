@@ -106,3 +106,80 @@ it("keeps a long list searchable even when a caller passes false and announces n
   expect(screen.getByRole("status")).toHaveTextContent("No matches");
   expect(screen.queryByRole("option")).not.toBeInTheDocument();
 });
+
+it("shows a placeholder only in the closed box, excludes it from keyboard choices and the search threshold", async () => {
+  const user = userEvent.setup();
+  await renderAuthenticatedUI(
+    <AuthenticatedUiProvider>
+      <Select
+        aria-label="Product"
+        value=""
+        onChange={() => undefined}
+        options={[
+          { value: "", label: "Choose a product", placeholder: true },
+          ...Array.from({ length: 8 }, (_, index) => ({
+            value: `P-${index + 1}`,
+            label: `Fictional product ${index + 1}`,
+          })),
+        ]}
+      />
+    </AuthenticatedUiProvider>,
+  );
+  const trigger = screen.getByRole("combobox", { name: "Product" });
+  expect(trigger).toHaveTextContent("Choose a product");
+  await user.click(trigger);
+  expect(
+    screen.queryByRole("textbox", { name: "Search options" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("option", { name: "Choose a product" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getAllByRole("option")).toHaveLength(8);
+  const activeId = trigger.getAttribute("aria-activedescendant");
+  expect(activeId).toBeTruthy();
+  expect(document.getElementById(activeId!)).toHaveTextContent(
+    "Fictional product 1",
+  );
+  expect(
+    screen
+      .getAllByRole("option")
+      .every((option) => option.getAttribute("aria-selected") === "false"),
+  ).toBe(true);
+  await user.keyboard("{Escape}");
+  expect(trigger).toHaveTextContent("Choose a product");
+});
+
+it("keeps genuine empty-value All and None choices selectable and accessible", async () => {
+  const user = userEvent.setup();
+  function Filter() {
+    const [value, setValue] = useState("supplier-1");
+    return (
+      <>
+        <Select
+          aria-label="Supplier filter"
+          value={value}
+          onChange={setValue}
+          options={[
+            { value: "", label: "All suppliers" },
+            { value: "supplier-1", label: "Cedarbridge Supply" },
+          ]}
+        />
+        <output data-testid="supplier-filter">{value || "all"}</output>
+      </>
+    );
+  }
+  await renderAuthenticatedUI(
+    <AuthenticatedUiProvider>
+      <Filter />
+    </AuthenticatedUiProvider>,
+  );
+  const trigger = screen.getByRole("combobox", { name: "Supplier filter" });
+  await user.click(trigger);
+  await user.keyboard("{Home}{Enter}");
+  expect(screen.getByTestId("supplier-filter")).toHaveTextContent("all");
+  expect(trigger).toHaveTextContent("All suppliers");
+  await user.click(trigger);
+  const all = screen.getByRole("option", { name: "All suppliers" });
+  expect(all).toHaveAttribute("aria-selected", "true");
+  expect(trigger.getAttribute("aria-activedescendant")).toBe(all.id);
+});

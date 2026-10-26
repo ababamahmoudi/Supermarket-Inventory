@@ -1092,7 +1092,11 @@ export function ProductEditor({
                     clearIssue(`${formId}-date-location`);
                   }}
                   options={[
-                    { value: "", label: t("Choose location", "انتخاب مکان") },
+                    {
+                      placeholder: true,
+                      value: "",
+                      label: t("Choose location", "انتخاب مکان"),
+                    },
                     ...branches.map((value) => ({
                       value,
                       label: configuredBranchLabel(state.config, value, lang),
@@ -1969,7 +1973,11 @@ function ProductDetail({ product }: { product: Product }) {
                   if (locations.includes(value)) void setBranch(value);
                 }}
                 options={[
-                  { value: "", label: t("Choose location", "انتخاب مکان") },
+                  {
+                    placeholder: true,
+                    value: "",
+                    label: t("Choose location", "انتخاب مکان"),
+                  },
                   ...locations.map((value) => ({
                     value,
                     label: configuredBranchLabel(state.config, value, lang),

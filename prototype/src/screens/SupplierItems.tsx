@@ -579,7 +579,11 @@ function SupplierItemEditor({
             }}
             searchable
             options={[
-              { value: "", label: t("Choose a product", "انتخاب کالا") },
+              {
+                placeholder: true,
+                value: "",
+                label: t("Choose a product", "انتخاب کالا"),
+              },
               ...state.products
                 .filter(
                   (record) =>

@@ -186,6 +186,7 @@ export function InvoiceDetailsCard({
                 value={invoice.supplier}
                 options={[
                   {
+                    placeholder: true,
                     value: "",
                     label: t("Choose supplier", "انتخاب تأمین‌کننده"),
                   },

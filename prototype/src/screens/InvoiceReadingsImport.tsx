@@ -461,6 +461,7 @@ function ImportPreview({
                         disabled={disabled || busy}
                         options={[
                           {
+                            placeholder: true,
                             value: "",
                             label: t(
                               "Choose a location…",

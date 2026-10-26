@@ -679,6 +679,7 @@ export function ReturnActionForms({
                           }}
                           options={[
                             {
+                              placeholder: true,
                               value: "",
                               label: t("Choose an outcome", "انتخاب نتیجه"),
                             },
@@ -974,6 +975,7 @@ export function ReturnActionForms({
                                   }
                                   options={[
                                     {
+                                      placeholder: true,
                                       value: "",
                                       label: t(
                                         "Choose an invoice",
@@ -1406,6 +1408,7 @@ export function ReturnCancellationForm({
                       }}
                       options={[
                         {
+                          placeholder: true,
                           value: "",
                           label: t("Choose disposition", "انتخاب وضعیت"),
                         },

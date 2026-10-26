@@ -201,6 +201,7 @@ export function InvoiceOrderReview() {
                         }}
                         options={[
                           {
+                            placeholder: true,
                             value: "",
                             label: t(
                               "Choose invoice line",

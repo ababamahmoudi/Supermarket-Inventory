@@ -165,6 +165,7 @@ function AddDateForm({
               searchable
               options={[
                 {
+                  placeholder: true,
                   value: "",
                   label: t("Choose product", "محصول را انتخاب کنید"),
                 },
@@ -353,7 +354,11 @@ function RemoveDateForm({
             setError("");
           }}
           options={[
-            { value: "", label: t("Choose reason", "دلیل را انتخاب کنید") },
+            {
+              placeholder: true,
+              value: "",
+              label: t("Choose reason", "دلیل را انتخاب کنید"),
+            },
             ...dateRemovalReasons.map((value) => ({
               value,
               label: dateRemovalReasonLabel(value, t),
@@ -463,6 +468,7 @@ function StopTrackingForm({
           }}
           options={[
             {
+              placeholder: true,
               value: "",
               label: t(
                 "Choose what to do with the dates",

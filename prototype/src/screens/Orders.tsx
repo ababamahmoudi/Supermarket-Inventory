@@ -974,7 +974,11 @@ export default function Orders() {
                       });
                     }}
                     options={[
-                      { value: "", label: t("Choose location", "انتخاب مکان") },
+                      {
+                        placeholder: true,
+                        value: "",
+                        label: t("Choose location", "انتخاب مکان"),
+                      },
                       ...locations.map((id) => ({
                         value: id,
                         label: branchLabel(state.config, id, lang),
@@ -1013,6 +1017,7 @@ export default function Orders() {
                     }}
                     options={[
                       {
+                        placeholder: true,
                         value: "",
                         label: t("Choose supplier", "انتخاب تأمین‌کننده"),
                       },
@@ -1558,6 +1563,7 @@ export default function Orders() {
                                 }}
                                 options={[
                                   {
+                                    placeholder: true,
                                     value: "",
                                     label: t("Choose item", "انتخاب کالا"),
                                   },

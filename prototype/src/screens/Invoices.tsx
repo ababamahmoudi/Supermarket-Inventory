@@ -2081,6 +2081,7 @@ function InvoiceWorkspace({
                           disabled={locked}
                           options={[
                             {
+                              placeholder: true,
                               value: "",
                               label: t(
                                 "Choose an answer",

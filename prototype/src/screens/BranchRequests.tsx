@@ -679,7 +679,11 @@ export default function BranchRequests() {
                   clearError("location");
                 }}
                 options={[
-                  { value: "", label: t("Choose location", "انتخاب محل") },
+                  {
+                    placeholder: true,
+                    value: "",
+                    label: t("Choose location", "انتخاب محل"),
+                  },
                   ...active
                     .filter((location) => location !== source)
                     .map((location) => ({
@@ -706,7 +710,11 @@ export default function BranchRequests() {
                 }}
                 disabled={branch !== "all" || Boolean(editing)}
                 options={[
-                  { value: "", label: t("Choose location", "انتخاب محل") },
+                  {
+                    placeholder: true,
+                    value: "",
+                    label: t("Choose location", "انتخاب محل"),
+                  },
                   ...active
                     .filter((location) => allowed.includes(location))
                     .map((location) => ({
@@ -1064,7 +1072,11 @@ export default function BranchRequests() {
                       clearError("location");
                     }}
                     options={[
-                      { value: "", label: t("Choose location", "انتخاب محل") },
+                      {
+                        placeholder: true,
+                        value: "",
+                        label: t("Choose location", "انتخاب محل"),
+                      },
                       ...[request.from_branch, request.to_branch]
                         .filter(
                           (location) =>

@@ -660,6 +660,7 @@ export function LineEditor({
                     onChange={editCategory}
                     options={[
                       {
+                        placeholder: true,
                         value: "",
                         label: t(
                           "Choose a pricing category",

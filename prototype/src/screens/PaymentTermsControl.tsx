@@ -34,6 +34,7 @@ function TermsInputs({
         onChange={onChoice}
         options={[
           {
+            placeholder: true,
             value: "",
             label: t("Choose payment terms", "انتخاب شرایط پرداخت"),
           },

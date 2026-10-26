@@ -1231,6 +1231,7 @@ export function Offers() {
                 }}
                 options={[
                   {
+                    placeholder: true,
                     value: "",
                     label: t("Choose a product", "یک کالا انتخاب کنید"),
                   },

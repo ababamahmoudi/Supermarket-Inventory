@@ -1564,6 +1564,8 @@ export type SelectOption = {
   selectedLabel?: string;
   /** Additional already-authorized public names, product codes or barcodes. */
   searchTerms?: readonly string[];
+  /** Closed-box instruction; never appears as a selectable row. */
+  placeholder?: boolean;
   content?: ReactNode;
   disabled?: boolean;
   count?: number;
@@ -1667,6 +1669,7 @@ export function Select({
   onChange,
   options,
   searchable,
+  placeholder,
   className,
   disabled,
   leadingIcon,
@@ -1676,6 +1679,7 @@ export function Select({
   onChange: (value: string) => void;
   options: SelectOption[];
   searchable?: boolean;
+  placeholder?: string;
   leadingIcon?: ReactNode;
 }) {
   const { t } = useDemo();
@@ -1693,15 +1697,19 @@ export function Select({
   const [active, setActive] = useState(value);
   const searchRef = useRef<HTMLInputElement>(null);
   const typeahead = useRef({ value: "", time: 0 });
-  const canSearch = searchable || options.length > 8;
+  const selectableOptions = options.filter((option) => !option.placeholder);
+  const canSearch = searchable || selectableOptions.length > 8;
   const selected = options.find((option) => option.value === value);
-  const filtered = options.filter((option) =>
+  const filtered = selectableOptions.filter((option) =>
     matchesSelectOption(option, query),
   );
   const enabled = filtered.filter((option) => !option.disabled);
+  const activeOptionIndex = options.findIndex(
+    (option) => option.value === active && filtered.includes(option),
+  );
   const open = (edge?: "first" | "last") => {
     setQuery("");
-    const choices = options.filter((option) => !option.disabled);
+    const choices = selectableOptions.filter((option) => !option.disabled);
     setActive(
       edge === "first"
         ? (choices[0]?.value ?? "")
@@ -1715,7 +1723,7 @@ export function Select({
     if (canSearch) requestAnimationFrame(() => searchRef.current?.focus());
   };
   const choose = (option: SelectOption) => {
-    if (option.disabled) return;
+    if (option.disabled || option.placeholder) return;
     onChange(option.value);
     closePopup(true);
   };
@@ -1769,7 +1777,7 @@ export function Select({
         (now - typeahead.current.time < 700 ? typeahead.current.value : "") +
         event.key.toLocaleLowerCase();
       typeahead.current.time = now;
-      const match = options.find(
+      const match = selectableOptions.find(
         (option) =>
           !option.disabled &&
           normalizeSelectSearch(option.label).startsWith(
@@ -1784,11 +1792,9 @@ export function Select({
   };
   useEffect(() => {
     if (!popupOpen) return;
-    const option = document.getElementById(
-      `${listId}-${options.findIndex((item) => item.value === active)}`,
-    );
+    const option = document.getElementById(`${listId}-${activeOptionIndex}`);
     option?.scrollIntoView?.({ block: "nearest" });
-  }, [active, popupOpen, options, listId]);
+  }, [activeOptionIndex, popupOpen, listId]);
   return (
     <>
       <button
@@ -1806,8 +1812,8 @@ export function Select({
         aria-expanded={popupOpen}
         aria-controls={listId}
         aria-activedescendant={
-          popupOpen && active
-            ? `${listId}-${options.findIndex((item) => item.value === active)}`
+          popupOpen && activeOptionIndex >= 0
+            ? `${listId}-${activeOptionIndex}`
             : undefined
         }
         onClick={() => (popupOpen ? closePopup() : open())}
@@ -1826,11 +1832,14 @@ export function Select({
             data-sizing-label={option.label}
           />
         ))}
-        <span className={selected ? undefined : "muted"}>
+        <span
+          className={selected && !selected.placeholder ? undefined : "muted"}
+        >
           <bdi dir="auto">
             {selected?.selectedLabel ??
               selected?.content ??
               selected?.label ??
+              placeholder ??
               t("Choose an option", "یک گزینه انتخاب کنید")}
           </bdi>
         </span>
@@ -1854,15 +1863,15 @@ export function Select({
                   aria-label={t("Search options", "جستجوی گزینه‌ها")}
                   aria-controls={listId}
                   aria-activedescendant={
-                    active
-                      ? `${listId}-${options.findIndex((item) => item.value === active)}`
+                    activeOptionIndex >= 0
+                      ? `${listId}-${activeOptionIndex}`
                       : undefined
                   }
                   onChange={(event) => {
                     const nextQuery = event.target.value;
                     setQuery(nextQuery);
                     setActive(
-                      options.find(
+                      selectableOptions.find(
                         (option) =>
                           !option.disabled &&
                           matchesSelectOption(option, nextQuery),

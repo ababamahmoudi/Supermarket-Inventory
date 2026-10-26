@@ -771,7 +771,11 @@ export function Notes() {
                       clearFieldError("location");
                     }}
                     options={[
-                      { value: "", label: notesText(t, "chooseLocation") },
+                      {
+                        value: "",
+                        placeholder: true,
+                        label: notesText(t, "chooseLocation"),
+                      },
                       ...locations.map((location) => ({
                         value: location,
                         label: branchLabel(state.config, location, lang),
@@ -816,7 +820,14 @@ export function Notes() {
                       clearFieldError("product");
                     }}
                     options={[
-                      { value: "", label: t("Choose product", "انتخاب محصول") },
+                      {
+                        placeholder: activeTab === "store_use",
+                        value: "",
+                        label:
+                          activeTab === "store_use"
+                            ? t("Choose product", "انتخاب محصول")
+                            : t("No product", "بدون محصول"),
+                      },
                       ...state.products
                         .filter(
                           (item) =>

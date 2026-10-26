@@ -907,6 +907,7 @@ function TemplateDesigner({
             onChange={choose}
             options={[
               {
+                placeholder: true,
                 value: "",
                 label: t("Choose a template", "یک قالب انتخاب کنید"),
               },
@@ -2160,6 +2161,7 @@ export function Labels() {
                     }}
                     options={[
                       {
+                        placeholder: true,
                         value: "",
                         label: t("Choose a template", "یک قالب انتخاب کنید"),
                       },
