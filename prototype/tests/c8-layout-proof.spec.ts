@@ -502,6 +502,51 @@ for (const language of ["en", "fa"] as const)
             ).toBeVisible();
           }
           await inspect(entry.route, entry.table);
+          if (entry.route === "dashboard") {
+            const identity = page
+              .locator(".dashboard-invoice-reference")
+              .filter({
+                has: page.locator(
+                  `.dashboard-invoice-reference-text[title="${shortReference}"]`,
+                ),
+              });
+            await expect(identity).toHaveCount(1);
+            await expect(identity).toHaveAttribute("title", shortReference);
+            await expect(identity).toHaveAccessibleName(
+              `${language === "en" ? "Invoice" : "فاکتور"} ${shortReference}`,
+            );
+            const fitted = identity.locator(
+              ".dashboard-invoice-reference-text",
+            );
+            await expect(fitted).toBeVisible();
+            if (width >= 760) {
+              await expect(fitted).not.toHaveText(shortReference);
+              const original = await fitted.innerHTML();
+              try {
+                await fitted.locator("bdi").evaluate((element, reference) => {
+                  element.textContent = reference;
+                }, shortReference);
+                const unfit = await inspectC8Layout(
+                  page,
+                  "dashboard:unfitted-reference",
+                  language,
+                  width,
+                );
+                expect(
+                  unfit.failures.some((failure) =>
+                    failure.startsWith(
+                      "dashboard:unfitted-reference: text leaves cell:",
+                    ),
+                  ),
+                ).toBe(true);
+              } finally {
+                await fitted.evaluate((element, html) => {
+                  element.innerHTML = html;
+                }, original);
+              }
+              await inspect("dashboard:reference-restored", true);
+            }
+          }
           if (entry.route === "labels") {
             const rows = page.locator(".labels-product-table tbody tr");
             expect(await rows.count()).toBeGreaterThan(8);

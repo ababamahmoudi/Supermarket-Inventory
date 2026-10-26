@@ -6,6 +6,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { openShellAction, setLanguage, signIn, uploadInvoice } from "./helpers";
 import { inspect, settled } from "../scripts/c5-browser-proof.mjs";
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 
 async function visibleGeometry(page: Page, route: string) {
   await page.goto(`/#${route}`);
@@ -280,9 +281,9 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
   }
   const invoices = page.locator(".dashboard-invoices");
   await expect(invoices.locator("tbody tr").first()).toBeVisible();
-  // Responsive tables expose width-hidden Branch values in expanded details.
-  for (const toggle of await invoices.locator(".table-details-toggle").all())
-    await toggle.click();
+  // Recent invoices use one genuine record destination; the full invoice
+  // presents Branch when the responsive summary omits its column.
+  await expect(invoices.locator(".table-details-toggle")).toHaveCount(0);
   const branchCells = await page.locator(".dashboard-invoices").evaluate(
     (card, branchNames) => {
       const compactRows = [...card.querySelectorAll("tr.phone-list-row")];
@@ -319,6 +320,63 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
     },
     configuration.branches.map((branch) => branch.name),
   );
+  if (branchCells.values.length === 0) {
+    const canonical = await readCanonicalBusinessEvidence(page);
+    const routes = await invoices
+      .locator("tbody tr[data-row-href]")
+      .evaluateAll((rows) =>
+        rows.map((row) => row.getAttribute("data-row-href")!),
+      );
+    expect(routes.length).toBeGreaterThan(0);
+    for (const href of routes) {
+      await page.goto("/#dashboard");
+      const row = invoices.locator(`tr[data-row-href="${href}"]`);
+      await expect(row.locator(".table-row-link")).toHaveCount(1);
+      await expect(row.locator(".dashboard-invoice-reference")).toHaveAttribute(
+        "href",
+        href,
+      );
+      const id = new URLSearchParams(href.split("?")[1]).get("id");
+      const invoice = [canonical.invoice, ...(canonical.invoices ?? [])].find(
+        (item) => item.id === id,
+      );
+      expect(invoice?.status).toBe("posted");
+      let location = invoice!.branch;
+      for (const correction of canonical.invoice_location_corrections ?? [])
+        if (
+          correction.company_id === invoice!.company_id &&
+          correction.invoice_id === invoice!.id &&
+          correction.from_branch === location
+        )
+          location = correction.to_branch;
+      const expectedBranch = canonical.config.branches.find(
+        (branch) => branch.id === location,
+      )?.name_en;
+      expect(expectedBranch).toBeTruthy();
+      await row.locator(".table-row-link").click();
+      await expect(page).toHaveURL((url) => url.hash === href);
+      const branch = page
+        .locator(`[data-invoice-id="${id}"] .posted-invoice-header > div`)
+        .filter({ has: page.getByText("Location", { exact: true }) })
+        .locator("dd");
+      await expect(branch).toHaveText(expectedBranch!);
+      branchCells.values.push(
+        await branch.evaluate((cell) => {
+          const range = document.createRange();
+          range.selectNodeContents(cell);
+          return {
+            text: cell.textContent,
+            visible:
+              cell.getBoundingClientRect().width > 0 &&
+              cell.getBoundingClientRect().height > 0,
+            lineCount: new Set(
+              [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+            ).size,
+          };
+        }),
+      );
+    }
+  }
   for (const count of branchCells.compactBranchCounts) expect(count).toBe(1);
   expect(branchCells.values.length).toBeGreaterThan(0);
   for (const cell of branchCells.values) {

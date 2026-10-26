@@ -50,14 +50,17 @@ it("labels a USD invoice in a CAD company without relabelling or converting its 
   );
   const reference = await screen.findByRole(
     "link",
-    { name: "CURRENCY-USD-01" },
+    { name: "Invoice CURRENCY-USD-01" },
     { timeout: 10000 },
   );
+  expect(reference).toHaveAttribute("title", "CURRENCY-USD-01");
   const usdRow = within(reference.closest("tr")!);
   expect(usdRow.getByText("$123.45", { exact: true })).toBeVisible();
   expect(usdRow.getByText("USD", { exact: true })).toBeVisible();
   const cadRow = within(
-    screen.getByRole("link", { name: "CURRENCY-CAD-01" }).closest("tr")!,
+    screen
+      .getByRole("link", { name: "Invoice CURRENCY-CAD-01" })
+      .closest("tr")!,
   );
   expect(cadRow.getByText("$67.89", { exact: true })).toBeVisible();
   expect(cadRow.queryByText("USD", { exact: true })).not.toBeInTheDocument();

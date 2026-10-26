@@ -346,6 +346,23 @@ for (const language of ["en", "fa"] as const) {
         await expect(row).toContainText(line.description);
       }
       const disclosure = row.locator(".table-details-toggle");
+      if (route === "dashboard") {
+        const href = await row.getAttribute("data-row-href");
+        const id = new URLSearchParams(href!.split("?")[1]).get("id");
+        const invoice = [
+          navigationState.invoice,
+          ...(navigationState.invoices ?? []),
+        ].find((item) => item.id === id);
+        expect(invoice).toBeDefined();
+        const reference = invoice!.supplier_invoice_number || invoice!.id;
+        const identity = row.locator("a.dashboard-invoice-reference");
+        await expect(identity).toHaveAttribute("href", href!);
+        await expect(identity).toHaveAttribute("title", reference);
+        await expect(identity).toHaveAccessibleName(
+          `${copy(language, "Invoice", "فاکتور")} ${reference}`,
+        );
+        await expect(disclosure).toHaveCount(0);
+      }
       if (await row.evaluate((element) => element.matches(".phone-list-row"))) {
         await expect(row.locator(".table-row-link")).toHaveCount(1);
         await expect(row.locator(".table-row-link")).toHaveAttribute(
@@ -423,6 +440,13 @@ for (const language of ["en", "fa"] as const) {
             ),
           ).toHaveCount(1);
         }
+      }
+      if (route === "dashboard") {
+        const href = await row.getAttribute("data-row-href");
+        await row.locator(".table-row-link").click();
+        await expect(page).toHaveURL((url) => url.hash === href);
+        const id = new URLSearchParams(href!.split("?")[1]).get("id");
+        await expect(page.locator(`[data-invoice-id="${id}"]`)).toBeVisible();
       }
     }
     await page.setViewportSize({ width: 1920, height: 1080 });
