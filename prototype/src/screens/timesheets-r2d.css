@@ -431,7 +431,7 @@
     height: 100dvh;
     max-height: 100dvh;
     margin: 0;
-    border-radius: 0;
+    border-radius: var(--radius-none);
   }
   .timesheet-settings-department .actions {
     justify-content: flex-end;

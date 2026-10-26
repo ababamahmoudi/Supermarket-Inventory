@@ -49,3 +49,5 @@ The Timesheets visual proof passed all 12 combinations of 1440 / 1000 / 390 pixe
 The final production-preview Timesheets suite passed all 14 cases across desktop and phone: typing/reload, role denial, week/CSV, print, invalid-time stability, staff management and settings/module changes. Seven focused unit tests passed, including three that use real IndexedDB commands with delayed save scheduling to verify navigation cancellation and the original-value save race. The production build and targeted lint passed.
 
 Print proof covers browser media rendering and an actual Chromium A4 PDF, while a physical printer remains untested. Evidence contains fictional demo staff only.
+
+Integrated token verification also keeps the phone's full-screen staff sheet square through the shared `--radius-none` token. The existing token audit remains unchanged.
