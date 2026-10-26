@@ -1,0 +1,173 @@
+.timesheet-print-output {
+  display: none;
+}
+@page timesheet-document {
+  size: auto;
+  margin: 8mm;
+}
+@media print {
+  .timesheet-print-output,
+  .timesheet-print-output * {
+    visibility: visible !important;
+  }
+  html:has(.timesheet-print-output),
+  body:has(.timesheet-print-output) {
+    color-scheme: light !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  body:has(.timesheet-print-output) > :not(.timesheet-print-output) {
+    display: none !important;
+  }
+  .timesheet-print-output {
+    display: block !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    color: #000;
+    background: #fff;
+  }
+  .timesheet-paper-document {
+    page: timesheet-document;
+    width: 100%;
+    max-width: 200mm;
+    margin: 0 auto;
+    color: #000;
+    background: #fff;
+    font-size: 9pt;
+  }
+  .timesheet-paper-document *,
+  .timesheet-paper-document *::before,
+  .timesheet-paper-document *::after {
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+  .timesheet-paper-header {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 0.3mm solid #000;
+  }
+  .timesheet-paper-header > div {
+    min-height: 18mm;
+    padding: 3mm;
+    border-inline-end: 0.3mm solid #000;
+  }
+  .timesheet-paper-header > div:last-child {
+    border-inline-end: 0;
+  }
+  .timesheet-paper-header > div > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-block-end: 3mm;
+  }
+  .timesheet-paper-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+    border-inline-start: 0.3mm solid #000;
+  }
+  .timesheet-paper-department,
+  .timesheet-paper-notes {
+    min-width: 0;
+    border-inline-end: 0.3mm solid #000;
+    border-block-end: 0.3mm solid #000;
+    break-inside: avoid;
+  }
+  .timesheet-paper-grid.is-eight > .timesheet-paper-department:nth-child(7) {
+    grid-row: 3;
+    grid-column: 2;
+  }
+  .timesheet-paper-grid.is-eight > .timesheet-paper-department:nth-child(8) {
+    grid-row: 3;
+    grid-column: 3;
+  }
+  .timesheet-paper-grid.is-eight > .timesheet-paper-notes {
+    grid-row: 3;
+    grid-column: 1;
+  }
+  .timesheet-paper-grid:not(.is-eight) > .timesheet-paper-notes {
+    grid-column: 1 / -1;
+  }
+  .timesheet-paper-document h2 {
+    margin: 0;
+    padding: 2mm 1mm;
+    min-height: 12mm;
+    text-align: center;
+    line-height: 1.2;
+    border-block-end: 0.3mm solid #000;
+    font-size: 10pt;
+  }
+  .timesheet-paper-document h2 > span {
+    display: block;
+    font-weight: 500;
+  }
+  .timesheet-paper-document h2 > span[lang="fa"] {
+    font-size: 13pt;
+    font-weight: 800;
+    margin-block-end: 1mm;
+  }
+  .timesheet-paper-document table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 9pt;
+  }
+  .timesheet-paper-document table th,
+  .timesheet-paper-document table td {
+    padding: 1mm;
+    border-inline-end: 0.2mm solid #777;
+    border-block-end: 0.2mm solid #777;
+    height: 6mm;
+    text-align: center;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+  }
+  .timesheet-paper-department th:first-child {
+    width: 44%;
+  }
+  .timesheet-paper-department th > span,
+  .timesheet-paper-document small {
+    display: block;
+    font-size: 8pt;
+    font-weight: 400;
+  }
+  .timesheet-paper-department th > span[lang="fa"] {
+    font-size: 10pt;
+  }
+  .timesheet-paper-document table tr:last-child td {
+    border-block-end: 0;
+  }
+  .timesheet-paper-document table :is(th, td):last-child {
+    border-inline-end: 0;
+  }
+  .timesheet-paper-notes p {
+    margin: 0;
+    padding: 2mm;
+    min-height: 6mm;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .timesheet-paper-note-line {
+    min-height: 6mm;
+    border-block-start: 0.2mm solid #777;
+  }
+  .timesheet-paper-document footer {
+    font-size: 8pt;
+    text-align: center;
+    margin-block-start: 3mm;
+  }
+  .timesheet-paper-week-table {
+    border: 0.3mm solid #000;
+  }
+  .timesheet-paper-week-table th:first-child {
+    width: 26%;
+  }
+  .timesheet-paper-week-table tr {
+    break-inside: avoid;
+  }
+  .timesheet-paper-week-table thead {
+    display: table-header-group;
+  }
+}

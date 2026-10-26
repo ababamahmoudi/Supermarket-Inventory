@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Download,
+  Printer,
   History,
   Plus,
   Trash2,
@@ -30,7 +31,9 @@ import {
   exportTimesheetCsv,
   listTimesheetPeople,
   patchTimesheetRow,
+  readTimesheetDay,
   readTimesheetDayView,
+  readTimesheetWeek,
   readTimesheetWeekView,
   removeTimesheetRow,
   saveTimesheetNotes,
@@ -41,6 +44,8 @@ import {
   type TimesheetDepartmentRead,
   type TimesheetRowRead,
   type TimesheetStaff,
+  type TimesheetDayRead,
+  type TimesheetWeekRead,
 } from "../timesheets";
 import {
   Badge,
@@ -58,6 +63,7 @@ import { TimesheetSaveContext } from "./timesheet-save-context";
 import "./timesheets-r2d.css";
 import type { Activity, Language } from "../types";
 import TimesheetWeek from "./TimesheetWeek";
+import TimesheetPrint from "./TimesheetPrint";
 
 type Translate = (en: string, fa: string) => string;
 const timesheetErrorText = (t: Translate) =>
@@ -724,6 +730,11 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
       : "day",
   );
   const location = branch === "all" ? chosenBranch : branch;
+  const [printSnapshot, setPrintSnapshot] = useState<{
+    intent: string;
+    day: TimesheetDayRead;
+    week: TimesheetWeekRead | null;
+  } | null>(null);
   const [manage, setManage] = useState(false),
     [history, setHistory] = useState(false),
     [error, setError] = useState("");
@@ -787,6 +798,7 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
     );
   };
   const exportCsv = async () => {
+    const expected = intent;
     if (!(await flush())) {
       setError(
         t(
@@ -796,7 +808,7 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
       );
       return;
     }
-    const expected = currentIntent.current;
+    if (currentIntent.current !== expected) return;
     try {
       const result = await query(
         "timesheets.read",
@@ -828,6 +840,58 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
         );
     }
   };
+  const print = async () => {
+    const expected = intent;
+    if (!(await flush())) {
+      setError(
+        t(
+          "Check the entries that could not be saved.",
+          "ورودی‌هایی را که ذخیره نشدند بررسی کنید.",
+        ),
+      );
+      return;
+    }
+    if (currentIntent.current !== expected) return;
+    try {
+      const result = await query(
+        "timesheets.read",
+        timesheetScope(actor!.company_id, location),
+        (canonical, current) => ({
+          day: readTimesheetDay(canonical, current, location, date),
+          week:
+            view === "week"
+              ? readTimesheetWeek(canonical, current, location, date)
+              : null,
+        }),
+      );
+      if (currentIntent.current === expected)
+        setPrintSnapshot({ intent: expected, ...result });
+    } catch {
+      if (currentIntent.current === expected)
+        setError(
+          t(
+            "The print sheet could not be prepared. Check your access and try again.",
+            "برگه چاپ آماده نشد. مجوزها را بررسی و دوباره تلاش کنید.",
+          ),
+        );
+    }
+  };
+  useEffect(() => {
+    if (!printSnapshot || printSnapshot.intent !== intent) return;
+    let active = true;
+    const clear = () => setPrintSnapshot(null);
+    window.addEventListener("afterprint", clear);
+    void document.fonts.ready.then(() => {
+      requestAnimationFrame(() => {
+        if (active && currentIntent.current === printSnapshot.intent)
+          window.print();
+      });
+    });
+    return () => {
+      active = false;
+      window.removeEventListener("afterprint", clear);
+    };
+  }, [printSnapshot, intent]);
   const allowed = state.config.branches
     .map((item, index) => ({ id: branchId(item, index), item }))
     .filter(
@@ -947,6 +1011,10 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
             </Button>
           </div>
           <div className="timesheet-view-actions">
+            <Button variant="neutral" onClick={() => void print()}>
+              <Printer size={18} />
+              {t("Print", "چاپ")}
+            </Button>
             <Button variant="neutral" onClick={() => void exportCsv()}>
               <Download size={18} />
               {t("Export CSV", "خروجی CSV")}
@@ -1119,8 +1187,12 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
             </Card>
           </>
         )}
+        {printSnapshot?.intent === intent && (
+          <TimesheetPrint snapshot={printSnapshot} config={state.config} />
+        )}
         {manage && (
           <ManageStaff
+            key={location}
             location={location}
             staff={data.staff}
             close={() => setManage(false)}

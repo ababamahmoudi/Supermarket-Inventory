@@ -25,3 +25,11 @@ Validation is recorded only after execution. B1's initial browser proof covers a
 3. Choose **Export CSV** in either view. The file contains staff, department, date, In, Out and decimal hours for that branch/day or branch/week. Export rechecks current authority and waits for valid pending edits; changing person or location while it loads cancels the old export.
 
 Executed B2 browser proof: actual daily canonical shifts reconcile with the displayed weekly total; a real downloaded CSV has the exact payroll header and selected dates; a week cell opens the same day and survives reload. Desktop and phone passed.
+
+## B3: print the paper sheet
+
+1. Open a daily sheet and choose **Print**. The app saves valid pending entries, reads the current authorized branch sheet again and opens the browser's print dialog.
+2. Expect bilingual Date / Branch / Day, all eight configured departments and Name / In / Out columns, the Notes box and **Made with Klead** at the bottom. The default layout follows the supplied three-column paper. Empty sections retain writing lines. Choose A4 or Letter in the browser.
+3. Week view → Print produces the staff/day/department totals for the selected week. The print output contains no app navigation or editing controls.
+
+Executed B3 proof: desktop and phone print-media rendering contains all eight bilingual sections, Notes, three paper columns and the footer; the app shell is hidden. Chromium generated an A4 PDF. Floor Worker navigation contains no hidden print sheet. Physical printer alignment and paper output remain untested.

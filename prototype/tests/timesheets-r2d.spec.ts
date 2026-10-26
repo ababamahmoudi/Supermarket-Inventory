@@ -173,3 +173,61 @@ test("week totals match actual day shifts and payroll CSV opens the same days", 
   await page.reload();
   await expect(page.locator(".timesheet-departments")).toBeVisible();
 });
+
+test("Print prepares the protected bilingual paper with all eight sections and Notes", async ({
+  page,
+}, testInfo) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "print", {
+      configurable: true,
+      value: () => {
+        document.documentElement.dataset.timesheetPrinted = "true";
+      },
+    });
+  });
+  await page.goto("/");
+  await signIn(page, "Cashier");
+  await visitPage(page, "Timesheets");
+  await page.getByRole("button", { name: "Print", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-timesheet-printed",
+    "true",
+  );
+  await page.emulateMedia({ media: "print" });
+  const paper = page.locator(".timesheet-print-output");
+  await expect(paper).toBeVisible();
+  await expect(paper.locator("[data-print-department]")).toHaveCount(8);
+  for (const [english, persian] of [
+    ["Bakery", "نانوایی"],
+    ["Cash", "صندوق"],
+    ["Kitchen", "آشپزخانه"],
+    ["Kebab", "کباب"],
+    ["Pastry", "شیرینی پزی"],
+    ["Buffet", "بوفه"],
+    ["Floor", "فلور"],
+    ["Butchery", "قصابی"],
+  ]) {
+    const title = paper.locator("h2").filter({ hasText: english });
+    await expect(title).toBeVisible();
+    await expect(title).toContainText(persian);
+  }
+  await expect(paper.locator(".timesheet-paper-notes")).toContainText("Notes");
+  await expect(paper.locator("footer")).toHaveText("Made with Klead");
+  await expect(page.locator("#root")).toBeHidden();
+  const columns = await paper
+    .locator(".timesheet-paper-grid")
+    .evaluate(
+      (node) => getComputedStyle(node).gridTemplateColumns.split(" ").length,
+    );
+  expect(columns).toBe(3);
+  if (testInfo.project.name === "desktop") {
+    const pdf = await page.pdf({ format: "A4", printBackground: true });
+    expect(pdf.byteLength).toBeGreaterThan(1000);
+  }
+  await page.emulateMedia({ media: "screen" });
+  await page.evaluate(() => window.dispatchEvent(new Event("afterprint")));
+  await expect(paper).toHaveCount(0);
+  await signIn(page, "Floor Worker");
+  await page.goto("/#timesheets");
+  await expect(page.locator(".timesheet-print-output")).toHaveCount(0);
+});
