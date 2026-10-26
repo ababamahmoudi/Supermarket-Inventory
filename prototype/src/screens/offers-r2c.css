@@ -1,0 +1,50 @@
+:root .offer-task.r2c-offer-task {
+  display: grid;
+  gap: 16px;
+  min-inline-size: 0;
+}
+.r2c-offer-heading {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+}
+:root .r2c-offer-heading h3,
+:root .r2c-offer-heading .product-name strong {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+:root .r2c-offer-terms {
+  font-size: var(--font-size-large-title);
+  font-weight: var(--font-weight-large-title);
+  line-height: var(--line-height-large-title);
+}
+.r2c-offer-summary,
+.r2c-offer-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+.r2c-offer-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+:root .offer-task.r2c-offer-task .ui-button.button[data-control-kind="action"] {
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: none;
+}
+.r2c-offer-task .grid-2 {
+  gap: 20px;
+}
+@media (max-width: 759px) {
+  .r2c-offer-task .grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

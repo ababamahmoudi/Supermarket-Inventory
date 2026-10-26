@@ -35,6 +35,7 @@ import { ProductPrice } from "../weight-price-presentation";
 import { SalePrice } from "../sales-presentation";
 import {
   categoryLabel,
+  formatOffer,
   DateText,
   LtrText,
   Money,
@@ -51,6 +52,8 @@ import {
 import "./filters-a2.css";
 import "./c3-labels-notes-offers.css";
 import "./c5-catalog-offers.css";
+import "./offers-r2c.css";
+import { offerSuggestionAmounts } from "../offer-suggestion";
 import {
   Badge,
   Button,
@@ -625,38 +628,62 @@ export function Offers() {
                     end_date: options.end || undefined,
                   };
                   const readiness = offerReadiness(state, task);
+                  const regular =
+                    (product
+                      ? regularPrice(
+                          state,
+                          product,
+                          offer.scope === "all" ? "all" : offer.branch,
+                        )
+                      : null) ?? offer.price;
+                  const amounts = offerSuggestionAmounts(offer.label, regular);
                   const change = (values: Partial<typeof options>) =>
                     setTaskOptions({
                       ...taskOptions,
                       [offer.id]: { ...options, ...values },
                     });
                   return (
-                    <section className="offer-task list-box" key={offer.id}>
-                      <div className="row">
+                    <section
+                      className="offer-task r2c-offer-task list-box"
+                      key={offer.id}
+                    >
+                      <div className="r2c-offer-heading">
                         <h3>
                           {product ? (
-                            <ProductName product={product} language={lang} />
+                            <a
+                              className="entity-link"
+                              href={`#product?code=${encodeURIComponent(product.code)}`}
+                            >
+                              <ProductName product={product} language={lang} />
+                            </a>
                           ) : (
                             <LtrText>{offer.product_code}</LtrText>
                           )}
                         </h3>
-                        <Badge tone="pending">
-                          {t("Pending", "در انتظار")}
-                        </Badge>
-                        <span className="branch-label">
-                          {branchName(offer.branch)}
-                        </span>
-                      </div>
-                      <p>
-                        <strong>
-                          {t("Confirm offer", "تأیید پیشنهاد")}:{" "}
+                        <strong className="r2c-offer-terms">
                           {offerLabel(offer.label)}
-                        </strong>{" "}
-                        · {t("Approved price", "قیمت تأییدشده")}:{" "}
-                        <Money
-                          value={offer.price}
-                          currency={state.config.company.currency}
-                        />
+                        </strong>
+                      </div>
+                      <p className="r2c-offer-summary muted">
+                        <span>
+                          {t("Regular", "عادی")}{" "}
+                          <Money value={regular} currency={offer.currency} />
+                        </span>
+                        {amounts?.saving && (
+                          <span>
+                            · {t("saves", "صرفه‌جویی")}{" "}
+                            <Money
+                              value={amounts.saving}
+                              currency={offer.currency}
+                            />
+                          </span>
+                        )}
+                        <span>
+                          ·{" "}
+                          {offer.scope === "all"
+                            ? t("All selling locations", "همهٔ مکان‌های فروش")
+                            : branchName(offer.branch)}
+                        </span>
                         {product && (
                           <ManualPricePill
                             product={product}
@@ -665,6 +692,11 @@ export function Offers() {
                           />
                         )}
                       </p>
+                      <div className="r2c-offer-status">
+                        <Badge tone="pending">
+                          {t("Pending", "در انتظار")}
+                        </Badge>
+                      </div>
                       <Checkbox
                         checked={options.mix}
                         onChange={(value) => change({ mix: value })}
@@ -699,17 +731,17 @@ export function Offers() {
                         </Field>
                       </div>
                       <p className="muted">{readyMessage(readiness)}</p>
-                      <div className="actions">
+                      <div className="actions r2c-offer-actions">
                         <Button
                           variant="primary"
                           disabled={readiness !== "ready"}
+                          aria-label={`${t("Confirm offer", "تأیید پیشنهاد")}: ${formatOffer(offer.label, lang, offer.currency)}`}
                           onClick={() => activate(task)}
                         >
-                          {t("Confirm offer", "تأیید پیشنهاد")}:{" "}
-                          {offerLabel(offer.label)}
+                          {t("Confirm offer", "تأیید پیشنهاد")}
                         </Button>
                         <Button
-                          variant="neutral"
+                          variant="plain"
                           onClick={() => stop(offer.id, true)}
                         >
                           {t("Dismiss", "کنار گذاشتن")}
