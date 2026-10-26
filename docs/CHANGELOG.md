@@ -38,6 +38,12 @@
 
 # Project changelog
 
+## R2c 7.1 — Scoped photographed supplier returns (2026-10-26)
+
+- Added the complete New return form for all five roles, including assigned-Store Cashier read/create, with genuine attribution, mandatory Damaged/Expired photos, Other notes, posted-receipt supplier/product choices, source pinning, current authority/file guards and idempotent canonical creation. Shared 44 px fields, stable buffered typing, searchable picks and full-screen phone behavior retain EN/FA/theme contracts. No Cashier financial/pickup/cancellation powers are granted.
+- New Waiting for pickup returns immediately appear in Returns, supplier open returns and a separate **Expected credit · Not deducted yet** Payables preview. Freeze original cost/currency; resolve manual missing import-currency from retained actual posting, block conflicting/missing/foreign currency, and prevent later company settings or unrelated receipt ambiguity from repricing/relabeling evidence. Creation changes no stock/price/approval/ledger or owed; existing signed pickup and settlement remain independent.
+- Added wholly fictional domain/photo/role/browser/currency regressions and [the detailed click guide](PR_R2C_RETURNS.md). Source-bound verification passed 113 affected unit cases across seven suites, all five role flows on desktop and phone, 12 distinct EN/FA/theme/width visual states, and two additional actual Settings→Payables currency browser checks; build/targeted lint/format passed. The guide distinguishes the original readiness timeout/unchanged isolated pass and intentionally stopped duplicate matrix from completed proof. Final combined CI is reported on the PR's checked head; no merge, deployment or real attachment data is included.
+
 ## R2c Group 0 — Receiving follow-ups (2026-10-26)
 
 Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted Done, optimistic line confirmation/rollback, centered rounded/plain rows, human evidence labels and growing addresses, 24-hour handwriting choices, expanded packs and exact line-cost basis, cleaner names/undo, quieter provenance, line-derived totals, four invoice-entry tiles, aggregate Lookup and lighter dark check rows. Fictional tests and review guides are included; executed final CI and full combined verification are recorded after the remaining R2c/R2d groups.
