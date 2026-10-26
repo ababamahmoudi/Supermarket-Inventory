@@ -343,6 +343,15 @@ export type InvoiceLine = Omit<
   new_name_suggestion?: string;
   new_name_fa?: string;
   units_per_case?: number;
+  units_per_case_inferred?: boolean;
+  imported_unit_cost_basis?: {
+    amount: string;
+    units: string;
+    unit_cost_before_tax: string;
+    units_per_case: number;
+    product_code: string;
+    printed_unit_cost_before_tax: string;
+  };
   manual_price_decision?: "keep" | "rule";
   short_dated?: boolean;
   supplier_item_id?: string;

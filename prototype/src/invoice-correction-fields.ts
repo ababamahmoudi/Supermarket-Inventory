@@ -62,6 +62,7 @@ export function invalidateCorrectionCaseBasis(
     ).some((field) => before[field] !== after[field])
   ) {
     after.converted_case_cost_before_tax = undefined;
+    after.imported_unit_cost_basis = undefined;
     after.converted_case_units_per_case = undefined;
   }
 }

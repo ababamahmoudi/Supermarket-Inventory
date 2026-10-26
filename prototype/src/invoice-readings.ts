@@ -271,6 +271,20 @@ export function effectiveInvoiceReading(
       }
       if (
         answer &&
+        [
+          "quantity",
+          "units_per_case",
+          "unit",
+          "cost_basis",
+          "unit_cost_before_tax",
+          "cost_per_unit_before_tax",
+          "cost_per_case_before_tax",
+        ].some((field) => Object.hasOwn(answer, field)) &&
+        !Object.hasOwn(answer, "line_total")
+      )
+        delete result.line_total;
+      if (
+        answer &&
         (Object.hasOwn(answer, "quantity") ||
           Object.hasOwn(answer, "units_per_case") ||
           Object.hasOwn(answer, "unit")) &&
@@ -414,6 +428,7 @@ export function resolveReadingProductMatch(
     supplierCode: text(line.supplier_sku),
     unitsPerCase: text(line.units_per_case),
     packSize: text(line.pack_size),
+    unit: text(line.unit),
   });
   const printedName = normalizeReadingName(text(line.description));
   const names = new Set(
@@ -1017,6 +1032,7 @@ export function mapReadingLine(
     supplierCode: text(source.supplier_sku),
     unitsPerCase: text(source.units_per_case),
     packSize: text(source.pack_size),
+    unit: text(source.unit),
   });
   const inferredCode = !text(source.supplier_sku)
     ? split.name || product?.name_en || ""
@@ -1024,16 +1040,14 @@ export function mapReadingLine(
   const inferredPack =
     !text(source.units_per_case) && split.units_per_case !== undefined;
   const printedUnit = text(source.unit).toLocaleLowerCase();
-  const unit = /^(?:case|cases|cs|ctn|carton|cartons|box|boxes)$/.test(
+  const unit = /^(?:case|cases|cs\d*|ctn\d*|carton|cartons|box|boxes)$/.test(
     printedUnit,
   )
     ? "case"
     : /^(?:each|ea|unit|units|piece|pieces|pcs)$/.test(printedUnit)
       ? "each"
       : printedUnit;
-  const pack =
-      decimal(source.units_per_case ?? split.units_per_case) ||
-      (unit === "case" ? "0" : "1"),
+  const pack = decimal(source.units_per_case ?? split.units_per_case) || "1",
     quantity = decimal(source.quantity),
     received =
       decimal(source.units_received) ||
@@ -1059,9 +1073,31 @@ export function mapReadingLine(
           ? new Decimal(printedCaseCost).div(pack).toFixed(4)
           : ""
         : printedCost;
-  const cost = decimal(source.cost_per_unit_before_tax ?? derivedCost, 4),
+  const roundedUnits =
+    unit === "case" && quantity
+      ? new Decimal(quantity).times(pack).toNearest(1)
+      : undefined;
+  const closeWholeUnits =
+    roundedUnits &&
+    roundedUnits.gt(0) &&
+    roundedUnits.minus(new Decimal(quantity).times(pack)).abs().lte("0.01")
+      ? roundedUnits
+      : undefined;
+  const costUnits =
+    closeWholeUnits ??
+    (quantity
+      ? new Decimal(quantity).times(unit === "case" ? pack : 1)
+      : undefined);
+  const printedLineTotal = decimal(source.line_total, 2);
+  const cost =
+      printedLineTotal && costUnits?.gt(0)
+        ? new Decimal(printedLineTotal).div(costUnits).toFixed(4)
+        : decimal(source.cost_per_unit_before_tax ?? derivedCost, 4),
     caseCost =
-      printedCaseCost || (cost ? new Decimal(cost).times(pack).toFixed(4) : "");
+      cost && quantity && printedLineTotal && unit === "case"
+        ? new Decimal(printedLineTotal).div(quantity).toFixed(4)
+        : printedCaseCost ||
+          (cost ? new Decimal(cost).times(pack).toFixed(4) : "");
   const checks = statuses.filter(
     (field) =>
       !(field === "supplier_item_code" && inferredCode) &&
@@ -1077,8 +1113,11 @@ export function mapReadingLine(
   if (unit === "other" || !["case", "each", "kg", "lb"].includes(unit))
     checks.push("quantity_unit");
   if (split.uncertain) checks.push("description");
-  if (unit === "case" && !new Decimal(pack).gt(0))
-    checks.push("units_per_case");
+  const missingPack =
+    unit === "case" &&
+    !text(source.units_per_case) &&
+    split.units_per_case === undefined;
+  if (missingPack) checks.push("units_per_case");
   if (matched?.provenance.requires_check) checks.push("product_code");
   const line: InvoiceLine = {
     id: createId("invoice-line"),
@@ -1121,6 +1160,7 @@ export function mapReadingLine(
     barcode: text(source.barcode),
     pack_size: split.pack_size || text(source.pack_size),
     units_per_case: new Decimal(pack).toNumber(),
+    ...(missingPack ? { units_per_case_inferred: true } : {}),
     quantity_unit:
       unit === "case"
         ? "cases"
@@ -1147,22 +1187,22 @@ export function mapReadingLine(
       : "",
   };
   if (unit === "case" && quantity && !new Decimal(quantity).isInteger()) {
-    const units = new Decimal(quantity).times(pack);
-    if (
-      units.gt(0) &&
-      units.isInteger() &&
-      units.lte(Number.MAX_SAFE_INTEGER)
-    ) {
+    const units = closeWholeUnits ?? new Decimal(quantity).times(pack);
+    if (closeWholeUnits && units.lte(Number.MAX_SAFE_INTEGER)) {
       line.quantity_unit = "units";
       line.quantity_entered = units.toString();
       line.case_cost_before_tax = undefined;
+      line.qty_invoiced = units.toNumber();
+      if (!text(source.units_received))
+        line.qty_received_at_posting = units.toNumber();
       if (caseCost) {
         line.converted_case_cost_before_tax = caseCost;
         line.converted_case_units_per_case = new Decimal(pack).toNumber();
       }
     } else {
-      line.qty_invoiced = 0;
-      line.qty_received_at_posting = 0;
+      // Retain paper quantities visibly while the non-whole conversion remains blocked.
+      line.quantity_unit = "units";
+      line.quantity_entered = units.toString();
       line.low_confidence_fields = [
         ...new Set([
           ...(line.low_confidence_fields ?? []),
@@ -1171,6 +1211,19 @@ export function mapReadingLine(
         ]),
       ];
     }
+  }
+  if (line.sold_by !== "weight" && printedLineTotal && costUnits?.gt(0)) {
+    line.imported_unit_cost_basis = {
+      amount: printedLineTotal,
+      units: costUnits.toString(),
+      unit_cost_before_tax: cost,
+      units_per_case: line.units_per_case!,
+      product_code: line.product_code,
+      printed_unit_cost_before_tax: decimal(
+        source.cost_per_unit_before_tax ?? source.unit_cost_before_tax,
+        4,
+      ),
+    };
   }
   const expiry = readingExpiryDate(text(source.expiry_as_printed));
   if (expiry) {

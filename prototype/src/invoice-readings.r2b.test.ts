@@ -636,7 +636,7 @@ describe("R2b 1.8 source quantities and exact costs", () => {
     recalculateInvoice(state.invoice, state.config);
     expect(line.line_total).toBe("60000.00");
   });
-  it("leaves fractional non-whole or unresolved nested case counts blocked without rounding or a one-unit pack", () => {
+  it("keeps non-whole cases blocked and gives unresolved packs the R2c one-unit check", () => {
     const state = emptyBusiness();
     for (const source of [
       { description: "Orchard Tea", units_per_case: "3", quantity: "0.5" },
@@ -658,10 +658,16 @@ describe("R2b 1.8 source quantities and exact costs", () => {
         },
         0,
       );
-      expect(validInvoiceLineQuantity(line)).toBe(false);
+      expect(validInvoiceLineQuantity(line)).toBe(
+        !Object.hasOwn(source, "units_per_case"),
+      );
       expect(line.low_confidence_fields).toContain("units_per_case");
-      if (!Object.hasOwn(source, "units_per_case"))
-        expect(line.units_per_case).toBe(0);
+      if (!Object.hasOwn(source, "units_per_case")) {
+        expect(line.units_per_case).toBe(1);
+        expect(line.units_per_case_inferred).toBe(true);
+        expect(line.qty_invoiced).toBe(2);
+        expect(line.unit_cost_before_tax).toBe("12.0000");
+      }
     }
   });
   it.each(["kg", "lb"] as const)(

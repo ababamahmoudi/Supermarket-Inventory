@@ -3,6 +3,7 @@ export interface InvoiceProductDescriptionInput {
   supplierCode?: string | null;
   unitsPerCase?: string | number | null;
   packSize?: string | null;
+  unit?: string | null;
 }
 
 export interface InvoiceProductDescriptionSplit {
@@ -17,12 +18,12 @@ export interface InvoiceProductDescriptionSplit {
 export function suggestInvoiceEnglishName(description: string): string {
   const normalizeSizes = (value: string) =>
     value.replace(
-      /\b\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?)*\s*(?:kg|g|ml|l|lb|oz)\b/gi,
+      /\b\d+(?:\.\d+)?(?:\s*[x×*]\s*\d+(?:\.\d+)?)*\s*(?:kg|g|ml|l|lb|oz)\b/gi,
       (match) => match.toLowerCase(),
     );
   const source = description.trim();
   const words = source.replace(
-    /\b\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?)*\s*(?:kg|g|ml|l|lb|oz)\b/gi,
+    /\b\d+(?:\.\d+)?(?:\s*[x×*]\s*\d+(?:\.\d+)?)*\s*(?:kg|g|ml|l|lb|oz)\b/gi,
     "",
   );
   if (/\p{Ll}/u.test(words)) return normalizeSizes(source);
@@ -51,18 +52,18 @@ export function suggestInvoiceEnglishName(description: string): string {
 }
 
 const amount = "\\d+(?:\\.\\d+)?";
-const sizeUnit = "(?:kg|ml|lb|oz|g|l)";
+const sizeUnit = "(?:kg|ml|lbs?|oz|gr?|l(?:it(?:res?|ers?)?|tr?s?)?)";
 const container = "(?:(?:box|case|carton|pack|ctn)\\s+(?:of\\s+)?)?";
 const measuredPack = new RegExp(
-  `\\b${container}(${amount})\\s*[x×]\\s*(${amount})\\s*(${sizeUnit})\\b`,
+  `\\b${container}(${amount})\\s*[x×*]\\s*(${amount})\\s*(${sizeUnit})\\b`,
   "i",
 );
 const nestedMeasuredPack = new RegExp(
-  `\\b(?:${amount}\\s*[x×]\\s*){2,}${amount}\\s*${sizeUnit}\\b`,
+  `\\b(?:${amount}\\s*[x×*]\\s*){2,}${amount}\\s*${sizeUnit}\\b`,
   "i",
 );
 const packPrefix = new RegExp(
-  `^(?:(?:box|case|carton|pack|ctn)\\s+(?:of\\s+)?\\d|${amount}\\s*[x×])`,
+  `^(?:(?:box|case|carton|pack|ctn)\\s+(?:of\\s+)?\\d|${amount}\\s*[x×*])`,
   "i",
 );
 const cleanSeparators = (value: string) =>
@@ -79,14 +80,23 @@ function positiveCount(value: string | number | null | undefined) {
   return Number.isSafeInteger(count) && count > 0 ? count : undefined;
 }
 
+function canonicalSizeUnit(value: string) {
+  return /^gr?$/i.test(value)
+    ? "g"
+    : /^l(?:it|tr)/i.test(value)
+      ? "l"
+      : /^lbs?$/i.test(value)
+        ? "lb"
+        : value.toLowerCase();
+}
 function normalizePack(value: string) {
   return value
     .trim()
-    .replace(/(\d)\s*[x×]\s*(?=\d)/gi, "$1 × ")
+    .replace(/(\d)\s*[x×*]\s*(?=\d)/gi, "$1 × ")
     .replace(
       new RegExp(`(${amount})\\s*(${sizeUnit})\\b`, "gi"),
       (_match, number: string, unit: string) =>
-        `${number} ${unit.toLowerCase()}`,
+        `${number} ${canonicalSizeUnit(unit)}`,
     )
     .replace(/\s+/g, " ");
 }
@@ -102,6 +112,18 @@ function packTextCount(value: string) {
   if (nestedMeasuredPack.test(value)) return undefined;
   const measured = measuredPack.exec(value);
   if (measured) return positiveCount(measured[1]);
+  const labeled =
+    /^(?:ctn|cs)\s*(\d+)$/i.exec(value.trim()) ??
+    /\b(\d+)\s*(?:\/|in\s+)\s*(?:box|case|carton)\b/i.exec(value) ??
+    /\bpieces\s+in\s+carton\s*:\s*(\d+)\b/i.exec(value);
+  if (labeled) return positiveCount(labeled[1]);
+  if (
+    new RegExp(
+      `^\\s*${amount}\\s*${sizeUnit}\\s*\\/\\s*(?:case|box|carton)\\s*$`,
+      "i",
+    ).test(value)
+  )
+    return 1;
   const count =
     /^(?:(?:box|case|carton|pack|ctn)\s+(?:of\s+)?)?(\d+(?:\.\d+)?)\s*(?:units?|pcs?|pieces?|each)?$/i.exec(
       value.trim(),
@@ -137,9 +159,14 @@ export function splitInvoiceProductDescription({
   supplierCode,
   unitsPerCase,
   packSize,
+  unit,
 }: InvoiceProductDescriptionInput): InvoiceProductDescriptionSplit {
   const code = supplierCode?.trim() ?? "";
   const withoutCode = removeSupplierCode(description.trim(), code);
+  const singleCase = new RegExp(
+    `\\b(${amount})\\s*(${sizeUnit})\\s*\\/\\s*(?:case|box|carton)\\s*$`,
+    "i",
+  ).exec(withoutCode.name);
   let name = withoutCode.name.replace(/\s*\/\s*(?:case|box|ctn)\s*$/i, "");
   const nestedDescription = nestedMeasuredPack.test(name);
   let extractedPack = "";
@@ -147,10 +174,10 @@ export function splitInvoiceProductDescription({
   let uncertain = withoutCode.uncertain;
   const measured = measuredPack.exec(name);
   if (measured) {
-    extractedPack = `${measured[1]} × ${measured[2]} ${measured[3].toLowerCase()}`;
+    extractedPack = `${measured[1]} × ${measured[2]} ${canonicalSizeUnit(measured[3])}`;
     inferredCount = positiveCount(measured[1]);
     let start = measured.index;
-    const nested = /(\d+(?:\.\d+)?)\s*[x×]\s*$/i.exec(name.slice(0, start));
+    const nested = /(\d+(?:\.\d+)?)\s*[x×*]\s*$/i.exec(name.slice(0, start));
     if (nested) {
       start = nested.index;
       extractedPack = `${nested[1]} × ${extractedPack}`;
@@ -159,8 +186,20 @@ export function splitInvoiceProductDescription({
     }
     name = `${name.slice(0, start)} ${name.slice(measured.index + measured[0].length)}`;
     uncertain ||= !positiveCount(measured[1]) || measuredPack.test(name);
+  } else if (singleCase) {
+    extractedPack = `1 × ${singleCase[1]} ${canonicalSizeUnit(singleCase[2])}`;
+    inferredCount = 1;
+    name = withoutCode.name.slice(0, singleCase.index);
   } else {
-    const countOnly = /\s+[x×]\s*(\d+(?:\.\d+)?)\s*$/i.exec(name);
+    const labeled =
+      /\(?\b(\d+)\s*(?:\/|in\s+)\s*(?:box|case|carton)\b\)?/i.exec(name) ??
+      /\bpieces\s+in\s+carton\s*:\s*(\d+)\b/i.exec(name);
+    if (labeled) {
+      inferredCount = positiveCount(labeled[1]);
+      extractedPack = `${labeled[1]} units`;
+      name = `${name.slice(0, labeled.index)} ${name.slice(labeled.index + labeled[0].length)}`;
+    }
+    const countOnly = /\s+[x×*]\s*(\d+(?:\.\d+)?)\s*$/i.exec(name);
     if (countOnly) {
       inferredCount = positiveCount(countOnly[1]);
       extractedPack = `${countOnly[1]} units`;
@@ -190,7 +229,16 @@ export function splitInvoiceProductDescription({
   const explicitCount = positiveCount(unitsPerCase);
   const hasExplicitCount =
     unitsPerCase != null && String(unitsPerCase).trim() !== "";
-  const parsedCount = nestedPack ? undefined : (packCount ?? inferredCount);
+  const unitCount = packTextCount(unit ?? "");
+  if (
+    unitCount &&
+    (packCount ?? inferredCount) &&
+    unitCount !== (packCount ?? inferredCount)
+  )
+    uncertain = true;
+  const parsedCount = nestedPack
+    ? undefined
+    : (packCount ?? inferredCount ?? unitCount);
   if (hasExplicitCount)
     uncertain ||=
       explicitCount === undefined ||
@@ -205,7 +253,7 @@ export function splitInvoiceProductDescription({
     );
   const formattedPack = explicitPack
     ? onlyMeasuredPack
-      ? `${explicitMeasured[1]} × ${explicitMeasured[2]} ${explicitMeasured[3].toLowerCase()}`
+      ? `${explicitMeasured[1]} × ${explicitMeasured[2]} ${canonicalSizeUnit(explicitMeasured[3])}`
       : normalizePack(explicitPack)
     : extractedPack;
   const normalizedName = suggestInvoiceEnglishName(name);

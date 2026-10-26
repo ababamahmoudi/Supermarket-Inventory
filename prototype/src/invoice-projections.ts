@@ -23,6 +23,7 @@ import {
 import { invoiceRecords } from "./invoice-records";
 
 type InvoiceLineMoney =
+  | "imported_unit_cost_basis"
   | "unit_cost_before_tax"
   | "case_cost_before_tax"
   | "converted_case_cost_before_tax"
@@ -114,6 +115,7 @@ const lineKeys = [
   "new_name_suggestion",
   "new_name_fa",
   "units_per_case",
+  "units_per_case_inferred",
   "manual_price_decision",
   "short_dated",
   "supplier_item_id",
@@ -137,6 +139,7 @@ const lineKeys = [
   "order_new_item_match",
 ] as const satisfies readonly (keyof InvoiceLine)[];
 const lineMoneyKeys = [
+  "imported_unit_cost_basis",
   "unit_cost_before_tax",
   "case_cost_before_tax",
   "converted_case_cost_before_tax",

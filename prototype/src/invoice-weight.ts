@@ -39,6 +39,21 @@ export function invoiceLineAmount(line: InvoiceEditableLine): string {
       line.source_cost_unit ?? "lb",
       line.weight_conversion_factor,
     );
+  const basis = line.imported_unit_cost_basis;
+  if (
+    basis &&
+    /^\d+(?:\.\d{1,2})?$/.test(basis.amount) &&
+    /^\d+(?:\.\d+)?$/.test(basis.units) &&
+    new Decimal(basis.units).gt(0) &&
+    basis.product_code === line.product_code &&
+    basis.unit_cost_before_tax === line.unit_cost_before_tax &&
+    basis.units_per_case === line.units_per_case
+  ) {
+    return new Decimal(basis.amount)
+      .times(line.qty_invoiced)
+      .div(basis.units)
+      .toFixed(2);
+  }
   if (
     line.quantity_unit === "cases" &&
     /^\d+(?:\.\d{1,4})?$/.test(line.case_cost_before_tax ?? "")

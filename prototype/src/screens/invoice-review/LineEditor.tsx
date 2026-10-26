@@ -768,6 +768,14 @@ export function LineEditor({
                   line.sold_by !== "weight" && (
                     <Field
                       readingField="units_per_case"
+                      readingHint={
+                        line.units_per_case_inferred
+                          ? t(
+                              "Units per case isn't printed",
+                              "تعداد واحد در کارتن چاپ نشده است",
+                            )
+                          : undefined
+                      }
                       label={t("Units per case", "واحد در کارتن")}
                       error={
                         showErrors &&
@@ -911,6 +919,7 @@ export function LineEditor({
                             );
                           else {
                             item.converted_case_cost_before_tax = undefined;
+                            item.imported_unit_cost_basis = undefined;
                             item.converted_case_units_per_case = undefined;
                             item.unit_cost_before_tax = inputValue;
                             if (
