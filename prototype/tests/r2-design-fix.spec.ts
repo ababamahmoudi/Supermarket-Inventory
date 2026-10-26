@@ -830,7 +830,8 @@ for (const language of ["en", "fa"] as const) {
         exact: true,
       }),
     ).toBeVisible();
-    await expect(receivingRow(page, 0)).toBeVisible();
+    // R2c immediately removes a confirmed line from Needs attention.
+    await expect(receivingRow(page, 0)).toHaveCount(0);
     await filters
       .getByRole("button", {
         name: word(language, "Confirmed 1", "تأییدشده 1"),
@@ -838,10 +839,13 @@ for (const language of ["en", "fa"] as const) {
       })
       .click();
     const confirmed = receivingRow(page, 0);
-    await expect(confirmed).toHaveCSS(
-      "background-color",
-      await tokenColor(confirmed, "--approved-bg"),
-    );
+    const approvedFill = await tokenColor(confirmed, "--approved-bg");
+    // Phone cards own their fill; rounded desktop cells own the table's continuous fill.
+    if (phone)
+      await expect(confirmed).toHaveCSS("background-color", approvedFill);
+    else
+      for (const cell of await confirmed.locator(":scope > td").all())
+        await expect(cell).toHaveCSS("background-color", approvedFill);
     await expect(
       confirmed.locator(".receiving-status-icon"),
     ).toHaveAccessibleName(word(language, "Confirmed", "تأیید شد"));

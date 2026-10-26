@@ -169,9 +169,10 @@ test("new invoice supplier requires only its name and never creates an approval 
   await expect(
     page.getByRole("button", { name: "Confirm supplier", exact: true }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
+  // A confirmed supplier does not make an empty, unattached draft postable.
+  const post = page.getByRole("button", { name: "Post invoice", exact: true });
+  await expect(post).toBeDisabled();
+  await expect(post).toHaveAttribute("aria-disabled", "true");
 });
 
 test("Remove line is confirmed and reversible while ordinary field edits stay silent", async ({

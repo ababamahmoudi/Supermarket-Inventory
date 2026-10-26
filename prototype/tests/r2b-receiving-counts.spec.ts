@@ -34,7 +34,14 @@ for (const language of ["en", "fa"] as const) {
       );
       expect(counts.every((count) => count >= 3)).toBe(true);
       const statuses = rows.locator(".receiving-status-icon");
-      await expect(statuses).toHaveText(counts.map(String));
+      // R2c uses a plain ! marker and keeps the numeric count in the grey text.
+      await expect(statuses).toHaveText(counts.map(() => "!"));
+      for (const [index, count] of counts.entries())
+        await expect(
+          rows.nth(index).locator(".receiving-line-check-count"),
+        ).toContainText(
+          word(language, `${count} to check`, `${count} برای بررسی`),
+        );
       for (const [index, count] of counts.entries())
         await expect(statuses.nth(index)).toHaveAttribute(
           "aria-label",

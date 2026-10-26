@@ -424,7 +424,9 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
       .locator(".invoice-line-summary")
       .getByRole("img", { name: "Confirmed", exact: true }),
   ).toBeVisible();
-  await expect(post).toBeEnabled();
+  // R2c disables Post until the required original is attached, even after line confirmation.
+  await expect(post).toBeDisabled();
+  await expect(post).toHaveAttribute("aria-disabled", "true");
   await page
     .getByLabel(/^(Attach original|Replace file)$/)
     .setInputFiles(invoiceImage);

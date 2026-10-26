@@ -62,7 +62,7 @@ for (const language of ["en", "fa"] as const)
       const tooltip = control.getByRole("tooltip");
       await bounded(page, tooltip);
       await expect(tooltip).toContainText(
-        word(language, "53 items need attention", "53 مورد نیاز به بررسی دارد"),
+        word(language, "52 items need attention", "52 مورد نیاز به بررسی دارد"),
       );
       await expect(tooltip).toContainText(
         word(language, "25 lines", "25 ردیف"),
@@ -112,25 +112,21 @@ for (const language of ["en", "fa"] as const)
       });
       await expect(panel).toBeVisible();
       const rows = panel.locator(".receiving-missing-row");
-      await expect(rows).toHaveCount(53);
+      await expect(rows).toHaveCount(52);
       await expect(
         rows.filter({
           hasText: word(
             language,
-            "Invoice details: 3 highlighted fields",
-            "اطلاعات فاکتور: 3 فیلد مشخص‌شده",
+            "Invoice details: 2 highlighted fields",
+            "اطلاعات فاکتور: 2 فیلد مشخص‌شده",
           ),
         }),
       ).toHaveCount(1);
+      // R2c derives the absent subtotal and final total from complete lines
+      // plus the printed zero tax; these are quiet provenance, not questions.
       await expect(
-        rows.filter({
-          hasText: word(
-            language,
-            "Totals: 1 to check",
-            "جمع‌ها: 1 مورد برای بررسی",
-          ),
-        }),
-      ).toHaveCount(1);
+        rows.filter({ hasText: word(language, "Totals:", "جمع‌ها:") }),
+      ).toHaveCount(0);
       for (let index = 0; index < 25; index++) {
         const count = (invoice.lines[index].low_confidence_fields ?? []).length;
         await expect(
