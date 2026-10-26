@@ -173,6 +173,20 @@ describe("R2b persisted check receipts", () => {
     ).toBeUndefined();
     expect(state.invoice.checked_fields).toBeUndefined();
   });
+  it("does not expose internal reader keys as invisible blocking tasks", () => {
+    const { state, line } = fixture();
+    state.invoice.low_confidence_fields = [
+      "branch_hint",
+      "reader_internal_metadata",
+    ];
+    line.low_confidence_fields = ["reader_line_internal", "pack_size"];
+    expect(invoiceCheckCount(state.invoice)).toBe(1);
+    expect(line.low_confidence_fields).toEqual([
+      "reader_line_internal",
+      "pack_size",
+    ]);
+    expect(line.checked_fields).toBeUndefined();
+  });
   it("does not create receipts without edit authority", () => {
     const { state } = fixture();
     const actor = authenticatedTestActor(state, "cashier");

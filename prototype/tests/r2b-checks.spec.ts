@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import readingsFixture from "./fixtures/r2-fictional-readings-export.json" with { type: "json" };
 import {
   importReceivingFixture,
   openReceivingLine,
@@ -10,7 +11,22 @@ import {
 test("R2b 2.2 checks persist acknowledgments and Next focuses details, line evidence and totals", async ({
   page,
 }) => {
-  const imported = await importReceivingFixture(page, "en");
+  const readings = structuredClone(readingsFixture);
+  for (const entry of readings.invoices) {
+    Object.assign(entry.ai_reading, { tax: "0.00" });
+    Object.assign(entry.ai_statuses, { "header.tax": "check" });
+  }
+  const imported = await importReceivingFixture(
+    page,
+    "en",
+    undefined,
+    undefined,
+    {
+      name: "fictional-tax-check.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(readings)),
+    },
+  );
   const next = page
     .locator(".receiving-progress")
     .getByRole("button", { name: "Next to check", exact: true });
@@ -82,11 +98,15 @@ test("R2b 2.2 checks persist acknowledgments and Next focuses details, line evid
     ).toBeVisible();
     await expect(editor).toHaveCount(0);
   }
+  // A real flagged paper tax remains actionable; derived subtotal stays quiet.
   await expect(page.locator(".receiving-progress-checks")).toHaveText(
     "1 highlighted field",
   );
+  await expect(page.getByTestId("invoice-totals-card")).toContainText(
+    "Calculated",
+  );
   await next.click();
-  await expect(page.locator("#invoice-subtotal")).toBeFocused();
+  await expect(page.locator("#invoice-tax")).toBeFocused();
   await page
     .getByRole("button", { name: "Looks right: Totals", exact: true })
     .click();
@@ -114,5 +134,6 @@ test("R2b 2.2 checks persist acknowledgments and Next focuses details, line evid
       checked_at: expect.any(String),
     },
   });
-  expect(invoice.checked_fields?.subtotal.checked_by_user_id).toBeTruthy();
+  expect(invoice.checked_fields?.tax?.checked_by_user_id).toBeTruthy();
+  expect(invoice.checked_fields?.subtotal).toBeUndefined();
 });

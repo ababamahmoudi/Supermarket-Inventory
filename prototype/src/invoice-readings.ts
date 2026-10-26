@@ -1010,6 +1010,8 @@ export function readingCheckFields(
           "received_at",
           "receiving_employee",
           "order_id",
+          "delivery_reference",
+          "import_handwritten_notes",
         ].includes(field)
       )
         continue;

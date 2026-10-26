@@ -372,6 +372,31 @@ async function checkNamesAndSupplier(page: Page, language: ReceivingLanguage) {
   );
   await closeLine(editor, language);
   editor = await openInvoiceLine(page, 1);
+  await expect(editor.locator("#invoice-line-1-name-en")).toHaveValue(
+    "Orchard Fig Preserve",
+  );
+  const swapped = (await currentInvoice(page, "BFP-0818")).lines[1]
+    .new_name_swap;
+  expect(swapped).toBeTruthy();
+  await editor
+    .getByRole("button", {
+      name: word(
+        language,
+        "Undo name and code swap",
+        "برگرداندن جابه‌جایی نام و کد",
+      ),
+      exact: true,
+    })
+    .click();
+  await expect(editor.locator("#invoice-line-1-name-en")).toHaveValue(
+    swapped!.name,
+  );
+  await expect
+    .poll(
+      async () =>
+        (await currentInvoice(page, "BFP-0818")).lines[1].new_name_swap,
+    )
+    .toBeUndefined();
   await editor
     .getByRole("button", {
       name: word(
@@ -506,7 +531,8 @@ async function checkTerms(page: Page, language: ReceivingLanguage) {
 async function checkWeights(page: Page, language: ReceivingLanguage) {
   await openImported(page, "FVP-0819");
   const totals = page.getByTestId("invoice-totals-card");
-  for (const field of ["subtotal", "tax", "final-total"])
+  await expect(totals.locator("#invoice-subtotal")).toHaveValue("15.13");
+  for (const field of ["tax", "final-total"])
     await expect(totals.locator(`#invoice-${field}`)).toHaveValue("");
   let editor = await openInvoiceLine(page, 0);
   await expect(editor.locator("#invoice-line-0-invoiced")).toHaveValue("1.375");
@@ -635,7 +661,10 @@ for (const language of ["en", "fa"] as const) {
           tax: "0.00",
           final_total: "32.00",
         });
-        expect(handwritten.low_confidence_fields).toEqual(
+        expect(handwritten.calculated_fields).toEqual(
+          expect.arrayContaining(["subtotal", "tax"]),
+        );
+        expect(handwritten.low_confidence_fields).not.toEqual(
           expect.arrayContaining(["calculated:subtotal", "calculated:tax"]),
         );
         const fractional = invoiceFrom(baseline, "WJG-0811");

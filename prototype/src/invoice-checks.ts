@@ -81,12 +81,68 @@ export function isEmptyOptionalInvoiceField(
       : String(value ?? "").trim() === "")
   );
 }
+// Only checks with a human label and a real receiving control can block review.
+// Unsupported reader metadata remains source evidence rather than an invisible task.
+const reviewableInvoiceFields = new Set([
+  "supplier",
+  "supplier_invoice_number",
+  "invoice_date",
+  "received_at",
+  "receiving_employee",
+  "payment_terms",
+  "due_date",
+  "order_id",
+  "order_reference",
+  "bill_to",
+  "ship_to",
+  "currency",
+  "supplier_tax_number",
+  "subtotal",
+  "tax",
+  "final_total",
+  "description",
+  "new_name_fa",
+  "product_code",
+  "supplier_item_id",
+  "supplier_item_code",
+  "quantity_entered",
+  "qty_received_at_posting",
+  "quantity_unit",
+  "units_per_case",
+  "unit_cost_before_tax",
+  "case_cost_before_tax",
+  "line_total",
+  "pricing_category",
+  "date_value",
+  "date_tracking",
+  "date_type",
+  "taxable",
+  "barcode",
+  "lot_number",
+  "expiry_as_printed",
+  "handwritten_note",
+  "manual_price_decision",
+  "refused_units",
+  "short_dated",
+  "confirm",
+  "line_type",
+  "pack_size",
+  "import_handwritten_notes",
+  "delivery_reference",
+  "amount",
+]);
+export function isReviewableInvoiceCheck(field: string): boolean {
+  return (
+    !field.startsWith("calculated:") &&
+    reviewableInvoiceFields.has(invoiceCheckField(field))
+  );
+}
 export function visibleInvoiceCheckFields(record: {
   low_confidence_fields?: string[];
 }): string[] {
   const seen = new Set<string>();
   return (record.low_confidence_fields ?? []).filter((field) => {
-    if (field.startsWith("calculated:")) return false;
+    if (!isReviewableInvoiceCheck(field)) return false;
     const key = invoiceCheckField(field);
     if (seen.has(key)) return false;
     seen.add(key);
