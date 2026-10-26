@@ -893,3 +893,7 @@ The owner approved C8/E1/E2/E3, then requested one C9 pull request. Preserve all
 - Shared price display, list filters and Branch request layout follow the new design-language rules in both languages/themes/phone layouts. Preserve Decimal values and frozen Price update targets, permission masking and actual printing geometry. Read-only cost cents never change stored four-decimal cost.
 
 Proof is required before declaring completion: the new no-reload test in Chromium and a WebKit project scoped to only that test; decided sale requests; above/equal/below regular-price conflicts; valid atomic inline price display; multi-reader seen/done/reopen/Undo; twelve list filter bars at 1440/900/390. Existing checks remain. The C9 review includes real screenshots, reference comparisons, Ubuntu/device-access instructions and limitations. No hosting account, deployment or paid resource is authorized.
+
+## R2c 7.2 — Lookup category filters (2026-10-26)
+
+Lookup filters use configured active pricing categories with product counts, independently of optional AI categories. Retain AI chips when present; combine them with Taxable (the actual tax profile) and Not approved here yet (a protected current-location approval fact). Remember choices per company, person and location using the existing session preference boundary. Clear filters resets all choices; typing and route changes preserve them. All locations retains its public catalog and location comparisons.

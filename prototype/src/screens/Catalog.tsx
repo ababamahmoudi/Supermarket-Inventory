@@ -20,6 +20,12 @@ import {
 import { useDemo } from "../store";
 import { LookupLocations } from "../LookupLocations";
 import { SupplierItemError } from "../supplier-items";
+import { lookupBranchCatalog } from "../lookup-branch";
+import {
+  emptyLookupFilters,
+  matchesLookupFilters,
+  type LookupFilters,
+} from "../lookup-filters";
 import { useListState, useRouteParam } from "../navigation";
 import { permittedLocationIdsView } from "../notes-dates-read";
 import {
@@ -2928,7 +2934,21 @@ function searchFromLookupHash() {
 export function Lookup() {
   const { state, branch, t, lang } = useDemo();
   const [search, setSearch] = useState(searchFromLookupHash);
-  const [category, setCategory] = useState("");
+  const [filters, setFilters] = useListState<LookupFilters>(
+    "lookup.filters",
+    emptyLookupFilters,
+  );
+  const { category } = filters;
+  const setCategory = (value: string) =>
+    setFilters((current) => ({ ...current, category: value }));
+  const branchFacts = useCatalogQuery(
+    "lookup.read",
+    { company_id: state.config.company.seed_key, kind: "company_shared" },
+    "lookup-branch-catalog",
+    (canonical, actor) =>
+      actor.branch === "all" ? [] : lookupBranchCatalog(canonical, actor),
+  );
+  const factsByCode = new Map(branchFacts.data?.map((row) => [row.code, row]));
   const [selectedCode, setSelectedCode] = useState("");
   const [activeCode, setActiveCode] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
@@ -2940,8 +2960,14 @@ export function Lookup() {
       product.company_id === state.config.company.seed_key &&
       product.status !== "archived",
   );
-  const results = searchProducts(products, search).filter(
-    (product) => !category || product.ai_category === category,
+  const results = searchProducts(products, search).filter((product) =>
+    matchesLookupFilters(
+      state.config,
+      product,
+      filters,
+      factsByCode.get(product.code),
+      branch === "all",
+    ),
   );
   const selected =
     results.find((product) => product.code === selectedCode) ?? results[0];
@@ -2960,7 +2986,6 @@ export function Lookup() {
     const syncSearch = () => {
       if (window.location.hash.slice(1).split("?")[0] !== "lookup") return;
       setSearch(searchFromLookupHash());
-      setCategory("");
       setSelectedCode("");
       setActiveCode("");
       searchRef.current?.focus();
@@ -2993,7 +3018,7 @@ export function Lookup() {
   };
   const clearSearch = () => {
     setSearch("");
-    setCategory("");
+    setFilters(emptyLookupFilters);
     setSelectedCode("");
     setActiveCode("");
     searchRef.current?.focus();
@@ -3056,6 +3081,50 @@ export function Lookup() {
           </button>
         </div>
         <div className="lookup-filterbar filter-toolbar">
+          <div className="lookup-pricing-filters">
+            <Select
+              aria-label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
+              value={filters.pricingCategory}
+              onChange={(value) => {
+                setFilters((current) => ({
+                  ...current,
+                  pricingCategory: value,
+                }));
+                setSelectedCode("");
+                setActiveCode("");
+              }}
+              options={[
+                {
+                  value: "",
+                  label: `${t("All pricing categories", "همهٔ دسته‌های قیمت‌گذاری")} (${products.length})`,
+                },
+                ...activePricingCategories(state.config).map((item) => ({
+                  value: item.key,
+                  label: `${lang === "fa" ? item.label_fa || item.label : item.label} (${products.filter((product) => product.pricing_category === item.key).length})`,
+                })),
+              ]}
+            />
+            <FilterChip
+              checked={filters.taxable}
+              onChange={(value) => {
+                setFilters((current) => ({ ...current, taxable: value }));
+                setSelectedCode("");
+                setActiveCode("");
+              }}
+            >
+              {t("Taxable", "مشمول مالیات")}
+            </FilterChip>
+            <FilterChip
+              checked={filters.unapproved}
+              onChange={(value) => {
+                setFilters((current) => ({ ...current, unapproved: value }));
+                setSelectedCode("");
+                setActiveCode("");
+              }}
+            >
+              {t("Not approved here yet", "هنوز در این مکان تأیید نشده")}
+            </FilterChip>
+          </div>
           <div
             className="lookup-category-chips"
             role="group"
@@ -3117,7 +3186,11 @@ export function Lookup() {
               "برای انتخاب محصول از ↑ ↓ و Enter استفاده کنید.",
             )}
           </p>
-          {(search || category) && (
+          {(search ||
+            category ||
+            filters.pricingCategory ||
+            filters.taxable ||
+            filters.unapproved) && (
             <Button variant="ghost" onClick={clearSearch}>
               {t("Clear filters", "پاک کردن فیلترها")}
             </Button>

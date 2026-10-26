@@ -487,3 +487,7 @@ Imported historical readings use a recognizable handwritten delivery date/time i
 ## R2c Group 1 — Manager dashboard composition (2026-10-26)
 
 Context: the owner approved three replacement dashboard PNGs. Decision: retain the existing shell and canonical protected queries while replacing the old four colored/equal-height composition with five surface tiles and content-height 2:1 cards. Use Monday–Sunday calendar purchase weeks, exact retained invoice totals and current protected approval/sale margins. Phone keeps all five tile values in two columns; the fifth starts the next row. Notes/Activity remain below the primary phone sequence, and prior receiving/return/price-change lists remain under More operations. Why: match the approved hierarchy while keeping every existing operational destination and financial/permission rule.
+
+## R2c 7.2 — Configured Lookup categories (2026-10-26)
+
+Context: imported products may have no AI category. Decision: configured active pricing categories and counts are the stable category filter; optional AI categories remain an independent refinement. Combined filters use the existing per-person/company/location session preferences. Not approved here uses a protected public selling-price query rather than interpreting a company default as a branch decision. Why: imports stay discoverable and pricing evidence stays behind the query boundary.

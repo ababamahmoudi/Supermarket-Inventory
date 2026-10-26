@@ -14,6 +14,10 @@
 - Added buffered responsive daily sheets, staff management/History, Monday–Sunday totals, actual guarded payroll CSV, bilingual A4/Letter paper print and the scoped On shift now dashboard tile. Aggregate selection asks for a branch; prior unclosed shifts remain counted without inferred clock-outs.
 - Existing-store initialization verifies an exact private backup and current revision, preserves data/custom settings and adds empty arrays. Only fresh demo/explicit Reset loads eight invented staff and three days/24 shifts; Empty store remains empty after reload.
 - Domain verification covers role/company/branch/module denial, stale actors/versions, parsing/totals/audit, real repository transactions and exact backup/concurrent migration/restore. Browser proofs exercise Cashier fast typing/reload, Floor Worker denial, week/CSV reconciliation, print media/PDF and dashboard count/module controls on desktop/phone. See [domain guide](PR_R2D_DOMAIN.md) and [UI guide](PR_R2D_REVIEW.md); final combined CI is recorded after integration. Physical printing and cross-device/server/payroll-provider behavior are not claimed.
+## 2026-10-26 — R2c 7.2 Lookup filters
+
+- Added configured pricing categories and counts, Taxable and Not approved here yet, retaining optional AI categories. Combined choices persist within the existing per-person/company/location session boundary.
+- Added pure filter, public-price and preference isolation proofs plus a browser case for an imported product with no AI category.
 
 ## 2026-10-26 — R2c Group 1 Manager dashboard
 
