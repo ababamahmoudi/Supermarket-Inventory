@@ -495,56 +495,48 @@ export function ReadingUnknownChecks({
 }) {
   const { t } = useDemo();
   const context = useContext(CheckContext);
+  const labels: Record<string, [string, string]> = {
+    line_type: ["Line type", "نوع ردیف"],
+    pack_size: ["Pack description", "شرح بسته"],
+    import_handwritten_notes: ["Handwritten notes", "یادداشت‌های دست‌نویس"],
+    delivery_reference: ["Delivery reference", "مرجع تحویل"],
+  };
   return (
     <>
       {(fields ?? [])
-        .filter((field) => !known.includes(invoiceCheckField(field)))
-        .map((field) => (
-          <ReadingField
-            key={field}
-            readingField={invoiceCheckField(field)}
-            label={
-              field === "line_type"
-                ? t("Line type", "نوع ردیف")
-                : invoiceCheckField(field) === "pack_size"
-                  ? t("Pack description", "شرح بسته")
-                  : invoiceCheckField(field) === "import_handwritten_notes"
-                    ? t("Handwritten notes", "یادداشت‌های دست‌نویس")
-                    : t("Other reading field", "فیلد دیگر خوانش")
-            }
-            hint={
-              field === "line_type" ? undefined : ![
-                  "pack_size",
-                  "handwritten_notes",
-                  "import_handwritten_notes",
-                ].includes(field) ? (
-                <LtrValue value={field} />
-              ) : (
-                t(
-                  "Compare this reading with the original, then confirm the line or choose Looks right.",
-                  "این خوانش را با اصل فاکتور مقایسه کنید، سپس ردیف یا درست است را تأیید کنید.",
-                )
-              )
-            }
-          >
-            <input
-              id={`${context?.idPrefix}-input-${invoiceCheckField(field)}`}
-              readOnly
-              value={
-                field === "line_type"
-                  ? t("Item", "کالا")
-                  : String(
-                      (record as Record<string, unknown>)[field] ??
-                        (field === "handwritten_notes"
-                          ? (record as Record<string, unknown>)
-                              .import_handwritten_notes
-                          : undefined) ??
-                        "",
-                    )
-              }
-            />
-          </ReadingField>
-        ))}
+        .filter(
+          (field) =>
+            !known.includes(invoiceCheckField(field)) &&
+            labels[invoiceCheckField(field)],
+        )
+        .map((field) => {
+          const key = invoiceCheckField(field);
+          return (
+            <ReadingField
+              key={field}
+              readingField={key}
+              label={t(...labels[key])}
+              hint={t(
+                "Compare this reading with the original, then confirm the line or choose Looks right.",
+                "این خوانش را با اصل فاکتور مقایسه کنید، سپس ردیف یا درست است را تأیید کنید.",
+              )}
+            >
+              <input
+                id={`${context?.idPrefix}-input-${key}`}
+                readOnly
+                value={
+                  key === "line_type"
+                    ? t("Item", "کالا")
+                    : String(
+                        (record as Record<string, unknown>)[key] ??
+                          (record as Record<string, unknown>)[field] ??
+                          "",
+                      )
+                }
+              />
+            </ReadingField>
+          );
+        })}
     </>
   );
 }

@@ -29,3 +29,9 @@ Test: inspect a fictional case line beside a single-line unit quantity in review
 Review/correction fills have rounded first and last cells over a transparent row, avoiding the darker square beneath rounded cells. Posted lines omit the settled status/number column and green fill; plain rows use hairline dividers. Posted case quantities now use the same centered primary/conversion block and start alignment as review. Posted Totals uses the review card body font sizes, spacing and payable emphasis.
 
 Test: review a fictional invoice in dark mode, post it and compare the line rows and Totals. Open Correct invoice to inspect the shared closed-row treatment.
+
+## 0.6 Safe labels and invoice detail alignment
+
+Unknown internal reading keys are omitted rather than displayed as a generic Other reading field or raw identifier. Retained extra evidence has bilingual human labels; branch hints remain import-location inputs only. Not on the invoice stays inline beside its check marker on a shared label track. More details uses two columns (one on phones); addresses retain the receiving typing buffer and fit two to four lines with ordinary field padding, reserving the address track to avoid shifting the following rows while typing.
+
+Test: open More details on a fictional import with an empty optional check and long bill/ship addresses. Check aligned field tops, the inline paper-absence action, complete lines and no internal key labels. Automated: ReadingUnknownChecks.r2b and InvoiceReadingReview.r1 regressions, plus existing details-layout browser proof.

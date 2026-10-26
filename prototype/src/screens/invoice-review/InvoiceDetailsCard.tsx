@@ -1,4 +1,10 @@
-import { useState, type ChangeEvent } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ComponentProps,
+} from "react";
 import { ChevronDown } from "lucide-react";
 import { useDemo } from "../../store";
 import {
@@ -371,9 +377,18 @@ export function InvoiceDetailsCard({
                     ),
                 };
                 return (
-                  <Field key={key} readingField={key} label={t(...labels[key])}>
+                  <Field
+                    key={key}
+                    readingField={key}
+                    label={t(...labels[key])}
+                    className={
+                      key === "bill_to" || key === "ship_to"
+                        ? "receiving-address-field"
+                        : undefined
+                    }
+                  >
                     {key === "bill_to" || key === "ship_to" ? (
-                      <BufferedTextarea {...inputProps} rows={2} />
+                      <ReceivingAddress {...inputProps} expanded={more} />
                     ) : (
                       <BufferedInput {...inputProps} />
                     )}
@@ -453,5 +468,35 @@ export function InvoiceDetailsCard({
         </DialogActions>
       </Dialog>
     </section>
+  );
+}
+
+/** Keep the receiving buffer while fitting up to four lines of the address. */
+function ReceivingAddress({
+  expanded,
+  ...props
+}: ComponentProps<typeof BufferedTextarea> & { expanded: boolean }) {
+  const element = useRef<HTMLTextAreaElement>(null);
+  const fit = (node: HTMLTextAreaElement) => {
+    const style = getComputedStyle(node);
+    const line = parseFloat(style.lineHeight) || 21;
+    const padding =
+      parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+    const border =
+      parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+    node.style.height = "auto";
+    node.style.height = `${Math.min(line * 4 + padding + border, Math.max(line * 2 + padding + border, node.scrollHeight + border))}px`;
+  };
+  useLayoutEffect(() => {
+    if (element.current) fit(element.current);
+  }, [props.value, expanded]);
+  return (
+    <BufferedTextarea
+      {...props}
+      rows={2}
+      ref={element}
+      onInput={(event) => fit(event.currentTarget)}
+      className="receiving-address-input"
+    />
   );
 }

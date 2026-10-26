@@ -1,11 +1,12 @@
-import { render, screen } from "@testing-library/react";
-import { expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
 import {
   ReadingCheckProvider,
   ReadingUnknownChecks,
 } from "./InvoiceReadingReview";
 import { invoiceCheckTarget } from "./screens/invoice-review/review-attention";
 vi.mock("./store", () => ({ useDemo: () => ({ t: (en: string) => en }) }));
+afterEach(cleanup);
 it.each([
   {
     field: "handwritten_notes",
@@ -41,3 +42,44 @@ it.each([
     );
   },
 );
+
+it("never renders a raw reading key in text, labels or help (R2c0.6)", () => {
+  const fields = [
+    "branch_hint",
+    "private_reader_key",
+    "pack_size",
+    "delivery_reference",
+  ];
+  const { container } = render(
+    <ReadingCheckProvider
+      fields={fields}
+      idPrefix="safe-labels"
+      onAcknowledge={() => {}}
+    >
+      <ReadingUnknownChecks
+        fields={fields}
+        known={[]}
+        record={{
+          branch_hint: "Internal suggested destination",
+          private_reader_key: "Internal metadata",
+          pack_size: "12 x 500g",
+          delivery_reference: "FICTIONAL-REF",
+        }}
+      />
+    </ReadingCheckProvider>,
+  );
+  expect(screen.getByRole("textbox", { name: "Pack description" })).toHaveValue(
+    "12 x 500g",
+  );
+  expect(
+    screen.getByRole("textbox", { name: "Delivery reference" }),
+  ).toHaveValue("FICTIONAL-REF");
+  expect(container.textContent).not.toMatch(/\b[a-z]+(?:_[a-z]+)+\b/);
+  for (const node of container.querySelectorAll("[aria-label], [title]"))
+    expect(
+      `${node.getAttribute("aria-label") ?? ""} ${node.getAttribute("title") ?? ""}`,
+    ).not.toMatch(/\b[a-z]+(?:_[a-z]+)+\b/);
+  expect(
+    screen.queryByDisplayValue("Internal suggested destination"),
+  ).not.toBeInTheDocument();
+});

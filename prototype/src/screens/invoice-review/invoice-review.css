@@ -1248,3 +1248,31 @@
     animation: none;
   }
 }
+
+/* Keep the optional-paper action beside its marker, on the shared label track. */
+.receiving-more > .detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.receiving-more .ui-field-label-row:has(.button-label-action) {
+  flex-wrap: nowrap;
+}
+.receiving-more .ui-field-label-row > label {
+  min-inline-size: 0;
+  flex: 1 1 auto;
+}
+.receiving-more .reading-check-label-actions {
+  margin-inline-start: auto;
+}
+.receiving-more .receiving-address-field {
+  min-block-size: calc(32px + 4lh + 24px);
+}
+.receiving-address-input {
+  align-self: start;
+  overflow-y: auto;
+  resize: none;
+}
+@media (max-width: 759px) {
+  .receiving-more > .detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

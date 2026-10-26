@@ -121,7 +121,7 @@ describe("R1 fields needing a human check", () => {
   });
 });
 
-it("localizes an unknown reading label in Persian while preserving its identifier, value and check", () => {
+it("localizes a retained delivery-reference reading without exposing an internal key", () => {
   locale.language = "fa";
   try {
     render(
@@ -137,13 +137,13 @@ it("localizes an unknown reading label in Persian while preserving its identifie
         />
       </ReadingCheckProvider>,
     );
-    const input = screen.getByRole("textbox", { name: "فیلد دیگر خوانش" });
+    const input = screen.getByRole("textbox", { name: "مرجع تحویل" });
     expect(input).toHaveValue("LOT-FICTIONAL-025");
     expect(input).toHaveAttribute("readonly");
-    expect(input).toHaveAccessibleDescription("delivery_reference");
-    expect(
-      screen.getByText("delivery_reference").closest("bdi"),
-    ).toHaveAttribute("dir", "ltr");
+    expect(input).toHaveAccessibleDescription(
+      "این خوانش را با اصل فاکتور مقایسه کنید، سپس ردیف یا درست است را تأیید کنید.",
+    );
+    expect(screen.queryByText("delivery_reference")).not.toBeInTheDocument();
     expect(input.closest(".field")).toHaveClass("please-check-field");
     expect(
       screen.getByRole("img", { name: "با اصل فاکتور بررسی کنید" }),
