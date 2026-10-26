@@ -798,7 +798,16 @@ export function actionableReadingChecks(
       }),
   };
   fillCalculatedInvoiceTotals(totals);
-  return { ...totals, lines };
+  return {
+    ...header,
+    subtotal: totals.subtotal,
+    tax: totals.tax,
+    final_total: totals.final_total,
+    low_confidence_fields: totals.low_confidence_fields,
+    calculated_fields: totals.calculated_fields,
+    calculated_from_lines: totals.calculated_from_lines,
+    lines,
+  };
 }
 
 export function previewInvoiceReadings(
