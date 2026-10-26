@@ -1,6 +1,6 @@
 ## 2026-10-26 — R2c and R2d final browser integration
 
-- Corrected real loaded-font clipping in Supplier Status and long Dashboard invoice references; retained complete accessible references and one actual invoice-record control.
+- Corrected loaded-font clipping in Supplier Status, the Persian Overdue header and long Dashboard invoice references; retained complete accessible references and one actual invoice-record control.
 - Kept history-free Supplier Balance static while preserving navigation for actual statements, including zero balances with retained history. The financial projection retains its existing authority boundary.
 - Stabilized scoped list preference setters and unchanged-value updates after a supplier-filtered Returns route exposed a parent render loop. Shared table allocation remains unchanged.
 - Preserve queued Timesheet edits before Back/hash navigation; failed saves retain the sheet, text and Retry. Native reload/close protection applies while an edit is dirty or saving. Newly selected branches use their own local Today, without moving an open sheet on an ordinary save across midnight.
