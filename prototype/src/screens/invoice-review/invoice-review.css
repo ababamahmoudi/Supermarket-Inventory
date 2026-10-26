@@ -1295,9 +1295,5 @@
 }
 
 :root[data-theme="dark"] .receiving-review {
-  --receiving-check-fill: color-mix(
-    in srgb,
-    var(--pending-dot) 8%,
-    var(--surface)
-  );
+  --receiving-check-fill: var(--receiving-question-bg);
 }

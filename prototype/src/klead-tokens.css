@@ -125,6 +125,7 @@
   --pending: var(--klead-amber-text);
   --pending-dot: var(--klead-amber-dot);
   --pending-bg: var(--klead-amber-tint);
+  --receiving-question-bg: var(--pending-bg);
   --approved: var(--klead-green-text);
   --approved-dot: var(--klead-green-dot);
   --approved-bg: var(--klead-green-tint);
@@ -218,6 +219,11 @@
   --pending: var(--klead-amber-text);
   --pending-dot: var(--klead-amber-dot);
   --pending-bg: var(--klead-amber-tint);
+  --receiving-question-bg: color-mix(
+    in srgb,
+    var(--pending-dot) 8%,
+    var(--surface)
+  );
   --approved: var(--klead-green-text);
   --approved-dot: var(--klead-green-dot);
   --approved-bg: var(--klead-green-tint);

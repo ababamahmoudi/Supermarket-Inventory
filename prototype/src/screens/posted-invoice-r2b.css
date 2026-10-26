@@ -85,7 +85,7 @@
 }
 .posted-receiving .posted-invoice-lines > tbody > .invoice-line-summary > td {
   background: var(--color-clear);
-  border-radius: 0;
+  border-radius: var(--radius-none);
   border-block-end: 1px solid var(--divider);
   padding-block: 8px;
 }
@@ -117,7 +117,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
     border: 0;
     border-block-end: 1px solid var(--divider);
-    border-radius: 0;
+    border-radius: var(--radius-none);
     padding: 12px 0;
   }
   .posted-receiving
