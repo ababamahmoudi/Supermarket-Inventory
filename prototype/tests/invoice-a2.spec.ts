@@ -113,7 +113,15 @@ test("invoice lines start closed, confirm once and reopen without opening the ne
     await reopened.getByRole("button", { name: "Close", exact: true }).click();
   else await first.getByRole("cell").nth(2).click();
   await expect(first).toHaveAttribute("aria-expanded", "false");
-  await expect(rows.nth(4)).toContainText("New product");
+  const newProductEditor = await openInvoiceLine(page, 4);
+  await expect(newProductEditor.locator("#invoice-line-4-matching")).toHaveText(
+    "New product",
+  );
+  await newProductEditor
+    .getByRole("button", { name: "Close", exact: true })
+    .last()
+    .click();
+  await expect(rows.nth(4)).toHaveAttribute("aria-expanded", "false");
   await expect(
     rows.nth(2).getByRole("img", { name: "Not confirmed", exact: true }),
   ).toBeVisible();

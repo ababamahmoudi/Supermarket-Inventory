@@ -233,9 +233,34 @@ test("Received has one range control and supplier cards open scoped records", as
   await expect(range).not.toBeVisible();
   const supplierRoute = `/#suppliers?name=${encodeURIComponent("Fresh Valley Foods")}`;
   await page.goto(supplierRoute);
+  const beforeStatement = await stored(page);
+  const balance = page
+    .locator(".supplier-kpis")
+    .getByRole("button", { name: /^Balance/ });
+  await expect(balance).toContainText("$169.79");
+  await balance.click();
+  const supplier = beforeStatement.suppliers!.find(
+    (record) => record.name === "Fresh Valley Foods",
+  )!;
+  await expect(page).toHaveURL(
+    new RegExp(`#payables\\?supplier=${encodeURIComponent(supplier.id)}$`),
+  );
   await expect(
-    page.locator(".supplier-kpis").getByRole("button", { name: /^Balance/ }),
-  ).toHaveCount(0);
+    page.getByRole("heading", {
+      level: 1,
+      name: "Fresh Valley Foods",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("$169.79", { exact: true }).first(),
+  ).toBeVisible();
+  const afterStatement = await stored(page);
+  expect(afterStatement.ledger).toEqual(beforeStatement.ledger);
+  expect(afterStatement.invoices).toEqual(beforeStatement.invoices);
+  expect(afterStatement.invoice).toEqual(beforeStatement.invoice);
+  expect(afterStatement.approvals).toEqual(beforeStatement.approvals);
+  await page.goto(supplierRoute);
   await page
     .locator(".supplier-kpis")
     .getByRole("button", { name: /^Last delivery/ })
@@ -266,6 +291,24 @@ test("Received has one range control and supplier cards open scoped records", as
   await expect(page).toHaveURL(
     /#returns\?supplier=Fresh%20Valley%20Foods&tab=open/,
   );
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Returns", exact: true }),
+  ).toBeVisible();
+  const beforeNoStatement = await stored(page);
+  await page.goto(`/#suppliers?name=${encodeURIComponent("Corner Spice Co.")}`);
+  await expect(
+    page.locator(".supplier-kpis").getByRole("button", { name: /^Balance/ }),
+  ).toHaveCount(0);
+  const noStatement = page
+    .locator(".supplier-kpis .ui-summary-tile")
+    .filter({ hasText: "No statement yet" });
+  await expect(noStatement).toBeVisible();
+  await expect(noStatement.locator(".kpi-value")).toHaveText("$0.00");
+  const afterNavigation = await stored(page);
+  expect(afterNavigation.ledger).toEqual(beforeStatement.ledger);
+  expect(afterNavigation.invoices).toEqual(beforeNoStatement.invoices);
+  expect(afterNavigation.invoice).toEqual(beforeNoStatement.invoice);
+  expect(afterNavigation.approvals).toEqual(beforeStatement.approvals);
 });
 
 test("New invoice preserves an unsaved draft and its durable original instead of replacing them", async ({
