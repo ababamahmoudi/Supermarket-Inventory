@@ -34,14 +34,13 @@ function fixture(role: RoleId = "cashier") {
 }
 
 describe("R2c 7.3 guarded branch Lookup", () => {
-  function endedSale(weight = false) {
+  function endedSale(weight = false, now = new Date(Date.now() - 1000)) {
     const context = fixture("manager");
     const { state, actor, product } = context;
     if (weight) {
       product.sold_by = "weight";
       product.unit_size = "lb";
     }
-    const now = new Date(Date.now() - 1000);
     const result = savePriceChange(
       state,
       actor,
@@ -101,6 +100,29 @@ describe("R2c 7.3 guarded branch Lookup", () => {
     expect(sale.price_unit).toBe("kg");
     expect(sale.regular_price_snapshot).toBe("9.99");
     expect(facts().price).toBe("9.99");
+  });
+  it("withholds a sale basis when a genuine currency change has the exact review timestamp", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const now = new Date();
+      const { state, actor, sale, facts } = endedSale(false, now);
+      saveCompanySettings(
+        state,
+        { ...state.config.company, currency: "USD" },
+        actor,
+      );
+      const change = state.activity.find(
+        (row) => row.entity_type === "settings" && row.entity_id === "company",
+      )!;
+      expect(change.at).toBe(sale.created_at);
+      expect(change.before).toMatchObject({ currency: "CAD" });
+      expect(change.after).toMatchObject({ currency: "USD" });
+      const before = structuredClone(state);
+      expect(facts().price).toBeNull();
+      expect(state).toEqual(before);
+    } finally {
+      vi.useRealTimers();
+    }
   });
   it("returns the reviewed basis at clock expiry before a lifecycle write, through a fresh Cashier query", () => {
     vi.useFakeTimers({ toFake: ["Date"] });

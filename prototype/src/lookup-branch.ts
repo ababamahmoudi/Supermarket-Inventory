@@ -37,7 +37,7 @@ function currencyAtReview(
         row.company_id === company &&
         row.entity_type === "settings" &&
         row.entity_id === "company" &&
-        row.at > reviewedAt,
+        row.at >= reviewedAt,
     )
     .sort((a, b) => b.at.localeCompare(a.at))) {
     const before = change.before as { currency?: string } | null;
@@ -46,8 +46,11 @@ function currencyAtReview(
       typeof before?.currency === "string" &&
       typeof after?.currency === "string" &&
       before.currency !== after.currency
-    )
+    ) {
+      // Equal wall-clock timestamps do not prove which command ran first.
+      if (change.at === reviewedAt) return null;
       currency = before.currency;
+    }
   }
   return currency;
 }
