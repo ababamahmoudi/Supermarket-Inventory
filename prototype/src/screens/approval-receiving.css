@@ -37,3 +37,110 @@
     transition: none;
   }
 }
+
+/* R2c4.1: the dashboard's approval row, with its decision details. */
+:root .approval-detail-row {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(280px, 0.9fr);
+  align-items: center;
+  gap: 12px 20px;
+  padding: 20px;
+}
+.approval-row-heading {
+  min-inline-size: 0;
+}
+.approval-row-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+.approval-row-heading .product-name {
+  display: block;
+}
+.approval-row-heading a {
+  color: var(--link-text);
+}
+.approval-product-context {
+  margin-block: 4px 8px;
+  font-size: var(--font-size-caption);
+  overflow-wrap: anywhere;
+}
+.approval-row-badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+:root .approval-detail-row .approval-values {
+  grid-column: 2;
+  grid-row: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  max-inline-size: none;
+}
+:root .approval-detail-row .approval-value {
+  gap: 4px;
+  align-content: start;
+  min-inline-size: 0;
+}
+:root .approval-detail-row .approval-value > .price {
+  font-size: 20px;
+}
+.approval-proposed-price > small {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: var(--font-size-caption);
+}
+.approval-margin.is-below-minimum {
+  color: var(--pending);
+}
+.approval-margin > small {
+  font-size: var(--font-size-caption);
+}
+:root .approval-detail-row .approval-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--font-size-caption);
+}
+.approval-detail-row
+  > :not(.approval-row-heading, .approval-values, .approval-meta) {
+  grid-column: 1 / -1;
+}
+:root .approval-detail-row .approval-decision-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: end;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+:root .approval-detail-row .approval-decision-actions > .ui-button {
+  block-size: 44px;
+  min-block-size: 44px;
+}
+:root .approval-detail-row .approval-decision-actions > .button-danger {
+  background: var(--color-clear);
+  color: var(--danger);
+}
+@media (max-width: 759px) {
+  :root .approval-detail-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px;
+  }
+  :root .approval-detail-row .approval-values {
+    grid-column: 1;
+    grid-row: auto;
+    gap: 12px;
+  }
+  :root .approval-detail-row .approval-decision-actions > .ui-button {
+    padding-inline: 10px;
+  }
+}

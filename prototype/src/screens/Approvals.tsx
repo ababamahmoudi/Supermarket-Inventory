@@ -608,6 +608,22 @@ export function Approvals() {
           const details = rows.find((row) => row.approval.id === item.id)!;
           const { unitCost, margin, triggeredBy } = details;
           const invoiceNumber = details.invoiceNumber;
+          const category = state.config.pricing_categories.find(
+            (row) => row.key === details.category,
+          );
+          const threshold = item.threshold ?? category?.minimum_margin;
+          const belowMinimum =
+            margin !== null &&
+            threshold != null &&
+            new Decimal(margin).lt(threshold);
+          const priceChange =
+            approved && new Decimal(approved).gt(0)
+              ? new Decimal(item.proposed_price)
+                  .minus(approved)
+                  .div(approved)
+                  .times(100)
+                  .toFixed(1)
+              : null;
 
           const group = details.invoiceId
             ? groups.get(details.invoiceId)
@@ -655,10 +671,55 @@ export function Approvals() {
                     )}
                   </div>
                 )}
-                <Card className="approval-card" title={product.name_en}>
-                  <p className="muted approval-secondary-name">
-                    <bdi dir="rtl">{product.name_fa}</bdi>
-                  </p>
+                <Card
+                  className="approval-card approval-detail-row"
+                  data-approval-id={item.id}
+                  data-approval-status={item.status}
+                >
+                  <div className="approval-row-heading">
+                    <h2>
+                      <a
+                        href={`#product?code=${encodeURIComponent(product.code)}`}
+                      >
+                        <ProductName product={product} language={lang} />
+                      </a>
+                    </h2>
+                    <p className="muted approval-product-context">
+                      <bdi dir="ltr">{product.unit_size}</bdi>
+                      <span aria-hidden="true"> · </span>
+                      {category
+                        ? lang === "fa"
+                          ? category.label_fa || category.label
+                          : category.label
+                        : t("Not added", "اضافه نشده")}
+                      <span aria-hidden="true"> · </span>
+                      <bdi dir="auto">
+                        {details.supplierName || product.main_supplier}
+                      </bdi>
+                      <span aria-hidden="true"> · </span>
+                      <bdi dir="ltr">{product.code}</bdi>
+                    </p>
+                    <div className="approval-row-badges">
+                      <Badge
+                        tone={
+                          item.status === "pending"
+                            ? "pending"
+                            : item.status === "approved"
+                              ? "approved"
+                              : "neutral"
+                        }
+                      >
+                        {item.status === "pending"
+                          ? t("Pending", "در انتظار")
+                          : item.status === "approved"
+                            ? t("Approved", "تأییدشده")
+                            : item.status === "superseded"
+                              ? t("Superseded", "جایگزین‌شده")
+                              : t("Rejected", "ردشده")}
+                      </Badge>
+                      <Badge tone="info">{typeName(item)}</Badge>
+                    </div>
+                  </div>
                   {item.type === "barcode_conflict" && (
                     <div className="barcode-conflict-details">
                       <LtrText>{item.barcode}</LtrText>
@@ -683,61 +744,28 @@ export function Approvals() {
                         ))}
                     </div>
                   )}
-                  <div className="row">
-                    <Badge
-                      tone={
-                        item.status === "pending"
-                          ? "pending"
-                          : item.status === "approved"
-                            ? "approved"
-                            : "neutral"
-                      }
-                    >
-                      {item.status === "pending"
-                        ? t("Pending", "در انتظار")
-                        : item.status === "approved"
-                          ? t("Approved", "تأییدشده")
-                          : item.status === "superseded"
-                            ? t("Superseded", "جایگزین‌شده")
-                            : t("Rejected", "ردشده")}
-                    </Badge>
-                    <Badge tone="info">{typeName(item)}</Badge>
-                    <span>
-                      {branchName(item.branch)} · {t("Product Code", "کد کالا")}{" "}
-                      <bdi>{item.product_code}</bdi>
-                    </span>
-                  </div>
                   {item.type !== "barcode_conflict" && (
                     <div className="approval-values">
-                      <div className="approval-value">
-                        <span className="muted">
-                          {t("Old price", "قیمت قبلی")}
-                        </span>
-                        {approved ? (
-                          <strong className="price">
-                            <ProductPrice
-                              value={approved}
-                              product={product}
-                              config={state.config}
-                            />
-                            <ManualPricePill
-                              product={product}
-                              branch={item.branch}
-                            />
-                          </strong>
-                        ) : (
-                          <span className="muted approval-missing-price">
-                            {t(
-                              "No approved price yet",
-                              "هنوز قیمت تأییدشده ندارد",
-                            )}
+                      {canDecide && (
+                        <div className="approval-value">
+                          <span className="muted">
+                            {t("Unit cost", "هزینه واحد")}
                           </span>
-                        )}
-                      </div>
-                      <div className="approval-value">
-                        <span className="muted">
-                          {t("New price", "قیمت جدید")}
-                        </span>
+                          <strong>
+                            {unitCost !== null && unitCost !== undefined ? (
+                              <ProductCost
+                                value={unitCost}
+                                product={product}
+                                config={state.config}
+                              />
+                            ) : (
+                              t("Not added", "اضافه نشده")
+                            )}
+                          </strong>
+                        </div>
+                      )}
+                      <div className="approval-value approval-proposed-price">
+                        <span className="muted">{t("Price", "قیمت")}</span>
                         <strong className="price">
                           <ProductPrice
                             value={item.proposed_price}
@@ -745,69 +773,87 @@ export function Approvals() {
                             config={state.config}
                           />
                         </strong>
+                        <small className="muted">
+                          {item.type === "new_product" || !approved ? (
+                            t("first price", "قیمت نخست")
+                          ) : (
+                            <>
+                              <span>{t("was", "قبلی")}</span>{" "}
+                              <ProductPrice
+                                value={approved}
+                                product={product}
+                                config={state.config}
+                              />{" "}
+                              {priceChange !== null && (
+                                <bdi dir="ltr">
+                                  ({new Decimal(priceChange).gte(0) ? "+" : ""}
+                                  {priceChange}%)
+                                </bdi>
+                              )}{" "}
+                              <ManualPricePill
+                                product={product}
+                                branch={item.branch}
+                              />
+                            </>
+                          )}
+                        </small>
                       </div>
                       {canDecide && (
-                        <>
-                          <div className="approval-value">
-                            <span className="muted">
-                              {t("Unit cost", "هزینه واحد")}
-                            </span>
-                            <strong>
-                              {unitCost !== null && unitCost !== undefined ? (
-                                <ProductCost
-                                  value={unitCost}
-                                  product={product}
-                                  config={state.config}
-                                />
-                              ) : (
-                                <span className="muted">—</span>
-                              )}
-                            </strong>
-                          </div>
-                          <div className="approval-value">
-                            <span className="muted">
-                              {t("Margin", "حاشیه سود")}
-                            </span>
-                            <strong>
-                              <bdi dir="ltr">
-                                {margin !== null
-                                  ? `${new Decimal(margin).times(100).toFixed(2)}%`
-                                  : "—"}
-                              </bdi>
-                            </strong>
-                          </div>
-                        </>
+                        <div
+                          className={`approval-value approval-margin${belowMinimum ? " is-below-minimum" : ""}`}
+                        >
+                          <span className="muted">
+                            {t("Margin", "حاشیه سود")}
+                          </span>
+                          <strong>
+                            <bdi dir="ltr">
+                              {margin !== null
+                                ? `${new Decimal(margin).times(100).toFixed(2)}%`
+                                : t("Not added", "اضافه نشده")}
+                            </bdi>
+                          </strong>
+                          {belowMinimum && (
+                            <small>{t("Below minimum", "کمتر از حداقل")}</small>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}
                   <div className="approval-meta">
-                    <span>
-                      {t("Branch", "شعبه")}: {branchName(item.branch)}
-                    </span>
+                    <span>{branchName(item.branch)}</span>
+                    <span aria-hidden="true">·</span>
                     <span>
                       {t("Triggered by", "ایجادشده توسط")}:{" "}
                       {triggeredBy
                         ? demoUserLabel(triggeredBy, lang)
                         : t("Not recorded", "ثبت نشده")}
                     </span>
-                    {canDecide && item.threshold && (
-                      <span>
-                        {t("Minimum margin", "حداقل حاشیه سود")}:{" "}
-                        <bdi dir="ltr">
-                          {new Decimal(item.threshold).times(100).toFixed(2)}%
-                        </bdi>
-                      </span>
+                    {invoiceNumber && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <a
+                          href={`#invoices?id=${encodeURIComponent(details.invoiceId ?? "")}`}
+                        >
+                          <span>{t("Invoice", "فاکتور")}</span>{" "}
+                          <bdi dir="ltr">{invoiceNumber}</bdi>
+                        </a>
+                      </>
+                    )}
+                    {canDecide && threshold && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span>
+                          {t("Minimum margin", "حداقل حاشیه سود")}:{" "}
+                          <bdi dir="ltr">
+                            {new Decimal(threshold).times(100).toFixed(2)}%
+                          </bdi>
+                        </span>
+                      </>
                     )}
                   </div>
                   {canDecide && item.manual_override && (
                     <p>
                       {t("Reason", "دلیل")}: {item.reason}
-                    </p>
-                  )}
-                  {invoiceNumber && (
-                    <p className="muted">
-                      {t("Invoice", "فاکتور")}:{" "}
-                      <bdi dir="ltr">{invoiceNumber}</bdi>
                     </p>
                   )}
                   {canDecide &&
@@ -874,24 +920,35 @@ export function Approvals() {
                   {canDecide &&
                     item.status === "pending" &&
                     item.type !== "margin_review" && (
-                      <div className="actions">
-                        <Button
-                          onClick={() => {
-                            setScope("all");
-                            openPreview(item, "approve");
-                          }}
-                        >
-                          {item.type === "barcode_conflict"
-                            ? t("Approve", "تأیید")
-                            : item.type === "new_product"
-                              ? t("Approve product", "تأیید کالا")
-                              : t("Approve price", "تأیید قیمت")}
-                        </Button>
+                      <div className="actions approval-decision-actions">
+                        {item.type !== "barcode_conflict" && (
+                          <Button
+                            variant="secondary"
+                            onClick={() => openCorrection(item)}
+                          >
+                            {t("Edit and approve", "ویرایش و تأیید")}
+                          </Button>
+                        )}
                         <Button
                           variant="danger"
                           onClick={() => openPreview(item, "reject")}
                         >
                           {t("Reject", "رد کردن")}
+                        </Button>
+                        <Button
+                          aria-label={
+                            item.type === "new_product"
+                              ? t("Approve product", "تأیید کالا")
+                              : item.type === "barcode_conflict"
+                                ? t("Approve", "تأیید")
+                                : t("Approve price", "تأیید قیمت")
+                          }
+                          onClick={() => {
+                            setScope("all");
+                            void openPreview(item, "approve");
+                          }}
+                        >
+                          {t("Approve", "تأیید")}
                         </Button>
                       </div>
                     )}
@@ -906,16 +963,6 @@ export function Approvals() {
                       {t("Applies after the sale", "پس از حراج اعمال می‌شود")}
                     </Badge>
                   )}
-                  {canDecide &&
-                    item.status === "pending" &&
-                    item.type !== "barcode_conflict" && (
-                      <Button
-                        variant="secondary"
-                        onClick={() => openCorrection(item)}
-                      >
-                        {t("Change category", "تغییر دسته‌بندی")}
-                      </Button>
-                    )}
                   {canDecide &&
                     item.status === "rejected" &&
                     item.type !== "barcode_conflict" &&

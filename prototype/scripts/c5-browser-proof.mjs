@@ -738,6 +738,45 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             `R2c field height: ${tidy(element.getAttribute("aria-label") || element.id)}`,
           );
       }
+      const approvalDecisionButtons = new Set();
+      for (const group of document.querySelectorAll(
+        ".approval-detail-row > .approval-decision-actions",
+      )) {
+        if (!visible(group)) continue;
+        const card = group.parentElement;
+        const controls = [...group.querySelectorAll(":scope > button")].filter(
+          visible,
+        );
+        const hasEditor = controls.length === 3;
+        const valid =
+          card?.dataset.approvalId &&
+          card.dataset.approvalStatus === "pending" &&
+          card.querySelector(
+            ".approval-row-heading h2 a[href^='#product?code=']",
+          ) &&
+          card.querySelector(".approval-meta") &&
+          [2, 3].includes(controls.length) &&
+          (!hasEditor || controls[0].classList.contains("button-secondary")) &&
+          controls.at(-2).classList.contains("button-danger") &&
+          controls.at(-1).classList.contains("button-primary") &&
+          /^(Approve|تأیید)$/.test(tidy(controls.at(-1).textContent)) &&
+          /^(Reject|رد کردن)$/.test(tidy(controls.at(-2).textContent));
+        const rects = controls.map((control) =>
+          control.getBoundingClientRect(),
+        );
+        if (
+          !valid ||
+          getComputedStyle(group).display !== "flex" ||
+          Math.abs(parseFloat(getComputedStyle(group).columnGap) - 8) > 0.1 ||
+          rects.some((rect) => Math.abs(rect.top - rects[0].top) > 2)
+        ) {
+          failures.push(
+            "Approval decision row needs its exact ordered, aligned actions",
+          );
+          continue;
+        }
+        controls.forEach((control) => approvalDecisionButtons.add(control));
+      }
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
       )) {
@@ -947,19 +986,13 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           );
           const expectedHeight = labelAction
             ? 32
-            : r2cControl || dashboardAction
+            : r2cControl || dashboardAction || structuredFooter || approvalDecisionButtons.has(element)
               ? 44
-              : structuredFooter
-                ? 44
-                : element.closest(".c9-filter-toolbar")
-                  ? element.closest(".ui-segments")
-                    ? 32
-                    : 40
-                  : phone || fieldAlignedAdd
-                    ? 44
-                    : small
-                      ? 32
-                      : 40;
+              : element.closest(".c9-filter-toolbar")
+                ? element.closest(".ui-segments") ? 32 : 40
+                : phone || fieldAlignedAdd
+                  ? 44
+                  : small ? 32 : 40;
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {

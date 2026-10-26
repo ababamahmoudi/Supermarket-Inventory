@@ -66,7 +66,7 @@ it("groups invoice approvals, reviews every product and approves only checked ro
   const bulkButton = screen.getByRole("button", {
     name: "Approve all 2…",
   });
-  expect(screen.getAllByText("No approved price yet")).toHaveLength(2);
+  expect(screen.getAllByText("first price")).toHaveLength(2);
   fireEvent.click(bulkButton);
   const dialog = await screen.findByRole("dialog", {
     name: "Review invoice approvals",
