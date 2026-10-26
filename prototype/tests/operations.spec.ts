@@ -348,7 +348,7 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   ).toHaveCount(0);
 });
 
-test("dashboard shows four actionable KPIs and scoped lists, and operations render in Persian without page overflow", async ({
+test("dashboard shows five actionable KPIs and scoped lists, and operations render in Persian without page overflow", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -387,15 +387,17 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
   await expect(page.getByText("Approve price", { exact: true })).toBeVisible();
   await expect(page.getByText("Create offer", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Stop offer", { exact: true })).toHaveCount(0);
-  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(4);
+  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(5);
   await expect(page.locator(".kpi-label")).toHaveText([
     "Approvals waiting",
+    "Price updates to apply",
     "Open alerts",
     "Open shorts",
     "Expiring soon",
   ]);
+  await page.getByText("More operations", { exact: true }).click();
   for (const heading of [
-    "Approvals queue",
+    "Approvals waiting",
     "Alerts",
     "Recent invoices",
     "Returns",

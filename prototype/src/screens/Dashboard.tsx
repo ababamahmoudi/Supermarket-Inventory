@@ -3,27 +3,23 @@ import {
   branchSellsToCustomers,
   sellingBranches,
 } from "../settings";
+import { FitText } from "../FitText";
+import { SummaryTile } from "../SummaryTile";
 import { translateCount } from "../i18n";
-import { isValidElement, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Decimal from "decimal.js";
 import { formatMoney } from "../formatters";
 import { historyActionLabel } from "../history-copy";
 import {
   ArrowRight,
-  Bell,
-  CalendarClock,
-  ClipboardCheck,
-  PackageMinus,
+  CheckCircle2,
+  ChevronRight,
   MoreHorizontal,
 } from "lucide-react";
 import { useDemo } from "../store";
-import { PriceUpdatesDashboardCard } from "../price-update-presentation";
 import { useProtectedQuery } from "../use-protected-query";
 import { configuredRoleLabel } from "../role-config";
-import { companyDate } from "../invoice";
 import { approvalSnapshot, resolveApproval } from "../approvals";
-import { ManualPricePill } from "../manual-price-presentation";
-import { SaleRequestCards } from "./SalesApprovals";
 import { ApprovalReviewPanel } from "./ApprovalReviewPanel";
 import {
   demoUserLabel,
@@ -31,6 +27,8 @@ import {
   LtrText,
   Money,
   ProductName,
+  NotAdded,
+  categoryLabel,
   UnitText,
 } from "../presentation";
 import "./financial-polish.css";
@@ -44,60 +42,39 @@ import {
   DataTable,
   EmptyState,
   PageHeader,
+  Disclosure,
   Menu,
   MenuItem,
   TableRowLink,
 } from "../ui";
 import { companyTimestamp } from "../operations";
+import { companyDateTime, companyTimestampText } from "../company-time";
+import "./dashboard-r2c.css";
 import type { Alert, Approval, Branch, DemoInvoice } from "../types";
 
-function DashboardListRow({
+function DashboardHeading({
   title,
-  secondary,
-  pill,
+  count,
   action,
 }: {
-  title: ReactNode;
-  secondary: ReactNode;
-  pill: ReactNode;
-  action: ReactNode;
+  title: string;
+  count?: number;
+  action?: ReactNode;
 }) {
-  const href = isValidElement<{ href?: string }>(action)
-    ? action.props.href
-    : undefined;
   return (
-    <div
-      className={`dashboard-list-row${href ? " is-navigable" : ""}`}
-      tabIndex={href ? 0 : undefined}
-      onClick={(event) => {
-        if (
-          href &&
-          event.target instanceof Element &&
-          !event.target.closest(
-            "a,button,input,textarea,[role='checkbox'],[role='combobox']",
-          )
-        )
-          window.location.hash = href;
-      }}
-      onKeyDown={(event) => {
-        if (
-          href &&
-          event.target === event.currentTarget &&
-          ["Enter", " "].includes(event.key)
-        ) {
-          event.preventDefault();
-          window.location.hash = href;
-        }
-      }}
-    >
-      <div className="dashboard-list-copy">
-        <strong>{title}</strong>
-        <div className="muted">{secondary}</div>
+    <div className="dashboard-card-header">
+      <div className="dashboard-card-title">
+        <h2>{title}</h2>
+        {count !== undefined && (
+          <span className="dashboard-count">{count}</span>
+        )}
       </div>
-      <div className="dashboard-list-pill">{pill}</div>
-      <div className="dashboard-list-action">{action}</div>
+      {action}
     </div>
   );
+}
+function QuietEmpty({ children }: { children: ReactNode }) {
+  return <p className="dashboard-empty muted">{children}</p>;
 }
 
 export function Dashboard() {
@@ -152,6 +129,9 @@ export function Dashboard() {
   if (!result.data)
     return <EmptyState>{t("Loading", "در حال بارگذاری")}</EmptyState>;
   const {
+    approvalRows,
+    priceUpdates,
+    purchaseMonthTotal,
     today,
     recentInvoices,
     shortCount,
@@ -162,16 +142,9 @@ export function Dashboard() {
     purchases,
     arrivals,
     weeklyChanges,
-    approvalPrices,
   } = result.data;
 
   const branches = sellingBranches(state.config);
-  const approvals = state.approvals.filter(
-    (item) => item.status === "pending" && item.type !== "new_supplier",
-  );
-  const pendingSaleRequests = (state.sale_requests ?? []).filter(
-    (item) => item.status === "pending",
-  );
   const alertPriority: Record<Alert["type"], number> = {
     lower_price: 0,
     price_conflict: 1,
@@ -197,12 +170,11 @@ export function Dashboard() {
       (left, right) => alertPriority[left.type] - alertPriority[right.type],
     );
   const openReturns = state.returns.filter(
-    (item) => item.status !== "resolved" && item.status !== "cancelled",
-  );
-  const returnCredits = openReturns.filter(
     (item) =>
-      item.status === "claim_pending" ||
-      item.claims?.some((claim) => claim.status === "submitted"),
+      item.company_id === context.company_id &&
+      item.status !== "resolved" &&
+      item.status !== "cancelled" &&
+      (branch === "all" || item.branch === branch),
   );
   const productName = (code: string) => {
     const product = state.products.find(
@@ -265,14 +237,6 @@ export function Dashboard() {
       review: t("Needs review", "نیاز به بررسی"),
       posted: t("Posted", "ثبت‌شده"),
     })[status];
-  const noteText = (item: DashboardSummary["notes"][number]) =>
-    item.text ===
-    "Customer asked about the tea glass set price; please confirm."
-      ? t(
-          "Customer asked about the tea glass set price; please confirm.",
-          "مشتری درباره قیمت ست استکان پرسید؛ لطفاً تأیید کنید.",
-        )
-      : item.text;
   const initials = (name: string) =>
     name
       .trim()
@@ -281,17 +245,6 @@ export function Dashboard() {
       .map((part) => part[0])
       .join("")
       .toLocaleUpperCase();
-  const relativeTime = (at: string) => {
-    const elapsed = now - Date.parse(at);
-    if (!Number.isFinite(elapsed)) return companyTimestamp(state.config, at);
-    const minutes = Math.max(0, Math.floor(elapsed / 60_000));
-    if (minutes < 1) return t("Just now", "همین حالا");
-    if (minutes < 60) return t(`${minutes} min ago`, `${minutes} دقیقه پیش`);
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return t(`${hours} h ago`, `${hours} ساعت پیش`);
-    const days = Math.floor(hours / 24);
-    return t(`${days} d ago`, `${days} روز پیش`);
-  };
   const actionLabel = (action: string) =>
     ({
       "Approve product": t("Approve product", "تأیید محصول"),
@@ -467,66 +420,137 @@ export function Dashboard() {
     }
     setPreview(null);
   };
-  const priceChanges = approvals.filter(
-    (item) => item.type === "price_change",
+  const newProducts = approvalRows.filter(
+    (row) => row.kind === "new_product",
   ).length;
-  const newProducts = approvals.filter(
-    (item) => item.type === "new_product",
+  const priceChanges = approvalRows.filter(
+    (row) => row.kind === "price_change",
   ).length;
-  const lowerPrices = alerts.filter(
-    (item) => item.type === "lower_price",
+  const saleRequests = approvalRows.filter(
+    (row) => row.kind === "sale_request",
   ).length;
   const conflicts = alerts.filter(
-    (item) => item.type === "price_conflict",
+    (row) => row.type === "price_conflict",
   ).length;
+  const dateChecks = alerts.filter(
+    (row) => row.type === "date_reminder",
+  ).length;
+  const count = (value: number, en: string, plural: string, fa: string) =>
+    translateCount(en, plural, fa, fa, value, lang);
+  const approvalCount = approvalRows.length;
   const kpis = [
     {
       label: t("Approvals waiting", "تأییدهای در انتظار"),
-      value: approvals.length + pendingSaleRequests.length,
-      detail: `${translateCount("{{count}} price change", "{{count}} price changes", "{{count}} تغییر قیمت", "{{count}} تغییر قیمت", priceChanges, lang)} · ${translateCount("{{count}} new product", "{{count}} new products", "{{count}} محصول جدید", "{{count}} محصول جدید", newProducts, lang)}`,
+      value: approvalCount,
+      detail:
+        [
+          newProducts
+            ? count(
+                newProducts,
+                "{{count}} new product",
+                "{{count}} new products",
+                "{{count}} محصول جدید",
+              )
+            : "",
+          priceChanges
+            ? count(
+                priceChanges,
+                "{{count}} price change",
+                "{{count}} price changes",
+                "{{count}} تغییر قیمت",
+              )
+            : "",
+          saleRequests
+            ? count(
+                saleRequests,
+                "{{count}} sale request",
+                "{{count}} sale requests",
+                "{{count}} درخواست تخفیف",
+              )
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" · ") || t("You're all caught up", "همه کارها انجام شده"),
       page: "approvals",
-      icon: ClipboardCheck,
+      tone: "accent",
+    },
+    {
+      label: t("Price updates to apply", "به‌روزرسانی قیمت‌های قابل اجرا"),
+      value: priceUpdates.length,
+      detail: t("Shelf labels to change", "برچسب‌های قفسه برای تغییر"),
+      page: "price-updates",
+      tone: "accent",
     },
     {
       label: t("Open alerts", "هشدارهای باز"),
       value: alerts.length,
-      detail: `${translateCount("{{count}} lower price", "{{count}} lower prices", "{{count}} کاهش قیمت", "{{count}} کاهش قیمت", lowerPrices, lang)} · ${translateCount("{{count}} conflict", "{{count}} conflicts", "{{count}} اختلاف", "{{count}} اختلاف", conflicts, lang)}`,
+      detail: `${count(conflicts, "{{count}} conflict", "{{count}} conflicts", "{{count}} اختلاف")} · ${count(dateChecks, "{{count}} date check", "{{count}} date checks", "{{count}} بررسی تاریخ")}`,
       page: "alerts",
-      icon: Bell,
+      tone: "pending",
     },
     {
       label: t("Open shorts", "کسری‌های باز"),
       value: shortCount,
-      detail: t("Items waiting for delivery", "کالاهای در انتظار تحویل"),
+      detail: shortCount
+        ? t("Items waiting for delivery", "کالاهای در انتظار تحویل")
+        : t("Nothing waiting for delivery", "کالایی در انتظار تحویل نیست"),
       page: "invoices",
-      icon: PackageMinus,
+      tone: "approved",
     },
     {
       label: t("Expiring soon", "انقضای نزدیک"),
       value: expiryCount,
-      detail: t(
-        "Within each product's reminder window",
-        "در بازهٔ یادآوری هر محصول",
-      ),
+      detail: t("Within reminder window", "در بازهٔ یادآوری"),
       page: "expiry",
-      icon: CalendarClock,
+      tone: "pending",
     },
   ];
-
+  const link = (code: string) => (
+    <a
+      className="entity-link"
+      href={`#product?code=${encodeURIComponent(code)}`}
+    >
+      {productLabel(code)}
+    </a>
+  );
+  const viewAll = (route: string, label = t("View all", "مشاهده همه")) => (
+    <Button variant="plain" onClick={() => navigate(route)}>
+      {label}
+      <ArrowRight size={16} className="directional" aria-hidden="true" />
+    </Button>
+  );
+  const margin = (row: DashboardSummary["approvalRows"][number]) =>
+    row.margin === null ? (
+      <NotAdded />
+    ) : (
+      <LtrText className={row.belowMinimum ? "dashboard-warning" : ""}>
+        {new Decimal(row.margin).times(100).toFixed(0, Decimal.ROUND_HALF_UP)}%
+      </LtrText>
+    );
+  const longDate = new Intl.DateTimeFormat(
+    lang === "fa" ? "fa-IR-u-ca-gregory" : "en-CA",
+    { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" },
+  ).format(new Date(`${today}T12:00:00Z`));
+  const groupedActivity = new Map<string, typeof activity>();
+  for (const entry of activity.slice(0, 8)) {
+    const date = companyDateTime(state.config, entry.at).date;
+    groupedActivity.set(date, [...(groupedActivity.get(date) ?? []), entry]);
+  }
   return (
-    <>
+    <div className="r2c-dashboard">
       <PageHeader
         title={t(
           `${configuredRoleLabel(state.config.roles, "manager", "en")} dashboard`,
           `داشبورد ${configuredRoleLabel(state.config.roles, "manager", "fa")}`,
         )}
-        description={t(
-          "Your branch priorities, approvals, and recent activity.",
-          "اولویت‌های شعبه، تأییدها و فعالیت اخیر.",
-        )}
+        description={`${branchName(branch)} · ${longDate} · ${t("What needs you today", "امروز به چه چیزی نیاز دارید")}`}
         actions={
           <Button onClick={() => navigate("approvals")}>
-            {t("Review approvals", "بررسی تأییدها")}
+            {t(
+              `Review ${approvalCount} approvals`,
+              `بررسی ${approvalCount} تأیید`,
+            )}
+            <ArrowRight size={16} className="directional" aria-hidden="true" />
           </Button>
         }
       />
@@ -540,940 +564,874 @@ export function Dashboard() {
           {message}
         </div>
       )}
+      <div className="dashboard-kpis">
+        {kpis.map((item) => (
+          <SummaryTile
+            key={item.page}
+            className="dashboard-summary-tile"
+            label={item.label}
+            value={item.value}
+            detail={item.detail}
+            tone={item.tone as "accent" | "pending" | "approved"}
+            onClick={() => navigate(item.page)}
+          />
+        ))}
+      </div>
       <div className="dashboard-layout">
         <div className="dashboard-main">
-          <div className="dashboard-kpis">
-            {kpis.map((item, index) => (
-              <button
-                type="button"
-                key={item.page}
-                className={`kpi-card ${index % 2 === 0 ? "kpi-accent" : "kpi-charcoal"}`}
-                onClick={() => navigate(item.page)}
-                aria-label={`${item.label}: ${item.value}`}
-              >
-                <span className="kpi-label">{item.label}</span>
-                <span className="kpi-icon">
-                  <item.icon size={20} strokeWidth={1.5} aria-hidden="true" />
-                </span>
-                <strong className="kpi-value" dir="ltr">
-                  {item.value}
-                </strong>
-                <span className="kpi-detail" title={item.detail}>
-                  {item.detail}
-                </span>
-                <ArrowRight
-                  size={16}
-                  strokeWidth={1.5}
-                  className="directional kpi-arrow"
-                  aria-hidden="true"
-                />
-              </button>
-            ))}
-          </div>
-          <div className="dashboard-row">
-            <Card
-              title={t("Approvals queue", "صف تأییدها")}
-              className="dashboard-approvals"
-            >
-              {approvals.length === 0 && pendingSaleRequests.length === 0 ? (
-                <EmptyState>
-                  {t("No approvals waiting.", "تأییدی در انتظار نیست.")}
-                </EmptyState>
-              ) : (
-                <div className="dashboard-queue">
-                  <SaleRequestCards compact />
-                  {approvals.slice(0, 6).map((item) => {
-                    const product = state.products.find(
-                      (value) =>
-                        value.company_id === context.company_id &&
-                        value.code === item.product_code,
-                    );
-                    if (!product) return null;
-                    const approved =
-                      approvalPrices.find((row) => row.id === item.id)
-                        ?.regular_price ?? null;
-                    const inline =
-                      !item.manual_override &&
-                      (item.type === "new_product" ||
-                        item.type === "price_change");
-                    return (
-                      <div
-                        className={`dashboard-queue-row list-box${inline ? "" : " has-review-action"}`}
-                        key={item.id}
-                      >
-                        <div className="dashboard-queue-product">
-                          {productLabel(item.product_code)}
-                          <span className="muted">
-                            <bdi>{item.product_code}</bdi>
-                          </span>
-                        </div>
-                        <Badge
-                          tone={
-                            item.type === "margin_review" ||
-                            item.type === "barcode_conflict"
-                              ? "danger"
-                              : "info"
-                          }
+          <Card className="dashboard-approvals">
+            <DashboardHeading
+              title={t("Approvals waiting", "تأییدهای در انتظار")}
+              count={approvalCount}
+              action={viewAll("approvals")}
+            />
+            {approvalRows.length ? (
+              <>
+                <DataTable
+                  className="dashboard-approval-table"
+                  phoneList={{
+                    name: "product",
+                    value: "price",
+                    secondary: ["type", "actions"],
+                  }}
+                  columns={[
+                    {
+                      key: "product",
+                      required: true,
+                      width: 190,
+                      fixedWidth: true,
+                      minWidth: 190,
+                      priority: 1,
+                    },
+                    { key: "type", width: 140, minWidth: 140, priority: 4 },
+                    {
+                      key: "price",
+                      width: 145,
+                      minWidth: 115,
+                      align: "end",
+                      priority: 2,
+                    },
+                    {
+                      key: "margin",
+                      width: 65,
+                      minWidth: 60,
+                      align: "end",
+                      priority: 3,
+                    },
+                    {
+                      key: "actions",
+                      width: 140,
+                      minWidth: 132,
+                      actions: true,
+                      priority: 0,
+                    },
+                  ]}
+                >
+                  <thead>
+                    <tr>
+                      <th>{t("Product", "محصول")}</th>
+                      <th>{t("Type", "نوع")}</th>
+                      <th>{t("Price", "قیمت")}</th>
+                      <th>{t("Margin", "حاشیه سود")}</th>
+                      <th>{t("Action", "عملیات")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {approvalRows.slice(0, 6).map((row) => {
+                      const approval = state.approvals.find(
+                        (item) => item.id === row.id,
+                      );
+                      return (
+                        <tr
+                          className="dashboard-queue-row"
+                          key={row.id}
+                          data-approval-id={row.id}
                         >
-                          {approvalType(item)}
-                        </Badge>
-                        <span className="dashboard-price-change">
-                          <ManualPricePill
-                            product={product}
-                            branch={item.branch}
-                          />
-                          <span>
-                            {t("Old", "قبلی")}{" "}
-                            {approved !== null && approved !== undefined ? (
-                              <Money value={approved} />
-                            ) : (
-                              <span className="muted approval-missing-price">
-                                <span
-                                  title={t(
-                                    "No approved price yet",
-                                    "هنوز قیمت تأییدشده ندارد",
+                          <td>
+                            <div className="dashboard-queue-product">
+                              {link(row.productCode)}
+                              <span className="dashboard-compact-type muted">
+                                {row.kind === "sale_request"
+                                  ? t("Sale request", "درخواست تخفیف")
+                                  : approval
+                                    ? approvalType(approval)
+                                    : t("Review", "بررسی")}
+                              </span>
+                              <FitText
+                                className="dashboard-product-context muted"
+                                value={[
+                                  row.productCode,
+                                  row.category
+                                    ? categoryLabel(
+                                        state.config.pricing_categories.find(
+                                          (category) =>
+                                            category.key === row.category,
+                                        )?.label ?? row.category,
+                                        lang,
+                                      )
+                                    : "",
+                                  row.supplier,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              />
+                            </div>
+                          </td>
+                          <td>
+                            <Badge
+                              className={
+                                row.kind === "price_change"
+                                  ? "is-price-change"
+                                  : undefined
+                              }
+                              tone={
+                                row.kind === "sale_request"
+                                  ? "pending"
+                                  : row.kind === "new_product"
+                                    ? "info"
+                                    : "neutral"
+                              }
+                            >
+                              {row.kind === "sale_request"
+                                ? t("Sale request", "درخواست تخفیف")
+                                : approval
+                                  ? approvalType(approval)
+                                  : t("Review", "بررسی")}
+                            </Badge>
+                          </td>
+                          <td>
+                            <div className="dashboard-approval-price">
+                              <strong dir="ltr">
+                                {row.kind === "price_change" &&
+                                  row.oldPrice && (
+                                    <>
+                                      <Money value={row.oldPrice} />{" "}
+                                      <span aria-hidden="true">→</span>{" "}
+                                    </>
                                   )}
+                                <Money value={row.price} />
+                              </strong>
+                              <small className="muted">
+                                {row.kind === "new_product" || !row.oldPrice ? (
+                                  t("first price", "قیمت نخست")
+                                ) : row.kind === "price_change" &&
+                                  new Decimal(row.oldPrice).gt(0) ? (
+                                  <LtrText>
+                                    {new Decimal(row.price).gte(row.oldPrice)
+                                      ? "+"
+                                      : ""}
+                                    {new Decimal(row.price)
+                                      .minus(row.oldPrice)
+                                      .div(row.oldPrice)
+                                      .times(100)
+                                      .toFixed(0)}
+                                    %
+                                  </LtrText>
+                                ) : (
+                                  <>
+                                    {t("was", "قبلاً")}{" "}
+                                    <Money value={row.oldPrice} />
+                                  </>
+                                )}
+                              </small>
+                              <small className="dashboard-phone-margin">
+                                {margin(row)} {t("margin", "حاشیه سود")}
+                              </small>
+                            </div>
+                          </td>
+                          <td>{margin(row)}</td>
+                          <td>
+                            <div className="dashboard-inline-actions">
+                              {row.requiresReview || !approval ? (
+                                <Button
+                                  variant={
+                                    row.belowMinimum ? "tinted" : "secondary"
+                                  }
+                                  onClick={() =>
+                                    navigate(
+                                      `approvals?id=${encodeURIComponent(row.id)}`,
+                                    )
+                                  }
                                 >
-                                  —
-                                </span>
-                              </span>
-                            )}
-                          </span>
-                          <span>
-                            {t("New", "جدید")}{" "}
-                            {item.proposed_price?.trim() ? (
-                              <Money value={item.proposed_price} />
-                            ) : (
-                              <span
-                                className="muted"
-                                title={t("Pending", "در انتظار")}
-                              >
-                                —
-                              </span>
-                            )}
-                          </span>
-                        </span>
-                        <span className="dashboard-queue-branch muted">
-                          {branchName(item.branch)}
-                          {item.applies_after_sale && (
-                            <small className="dashboard-after-sale-note">
-                              {t(
-                                "Applies after the sale",
-                                "پس از تخفیف اعمال می‌شود",
+                                  {t("Review", "بررسی")}
+                                </Button>
+                              ) : (
+                                <Button
+                                  onClick={() =>
+                                    openPreview(approval, "approve")
+                                  }
+                                >
+                                  {t("Approve", "تأیید")}
+                                </Button>
                               )}
-                            </small>
-                          )}
-                        </span>
-                        <div className="dashboard-inline-actions">
-                          {inline ? (
-                            <>
-                              <Button
-                                size="sm"
-                                onClick={() => openPreview(item, "approve")}
-                              >
-                                {t("Approve", "تأیید")}
-                              </Button>
                               <Menu
                                 label={t("More", "بیشتر")}
                                 iconOnly
                                 icon={
                                   <MoreHorizontal
                                     size={20}
-                                    strokeWidth={1.5}
                                     aria-hidden="true"
                                   />
                                 }
                               >
                                 <MenuItem
-                                  className="is-destructive"
-                                  onClick={() => openPreview(item, "reject")}
+                                  onClick={() =>
+                                    navigate(
+                                      `approvals?id=${encodeURIComponent(row.id)}`,
+                                    )
+                                  }
                                 >
-                                  {t("Reject", "رد کردن")}
+                                  {t("View approval", "مشاهده تأیید")}
                                 </MenuItem>
+                                {approval && (
+                                  <MenuItem
+                                    className="is-destructive"
+                                    onClick={() =>
+                                      openPreview(approval, "reject")
+                                    }
+                                  >
+                                    {t("Reject", "رد کردن")}
+                                  </MenuItem>
+                                )}
                               </Menu>
-                            </>
-                          ) : (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => navigate("approvals")}
-                            >
-                              {t("Review", "بررسی")}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {approvals.length > 6 && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => navigate("approvals")}
-                    >
-                      {t("View all approvals", "مشاهده همه تأییدها")}
-                    </Button>
-                  )}
-                </div>
-              )}
-            </Card>
-            <Card title={t("Alerts", "هشدارها")} className="dashboard-alerts">
-              {alerts.length === 0 ? (
-                <EmptyState>
-                  {t("No pending alerts.", "هشداری در انتظار نیست.")}
-                </EmptyState>
-              ) : (
-                <div className="dashboard-alert-list">
-                  {alerts.slice(0, 5).map((item) => (
-                    <DashboardListRow
-                      key={item.id}
-                      title={
-                        item.product_code ? (
-                          <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                            <UnitText>
-                              {productName(item.product_code)}
-                            </UnitText>
-                          </bdi>
-                        ) : (
-                          t("Invoice", "فاکتور")
-                        )
-                      }
-                      secondary={
-                        <>
-                          {item.supplier && (
-                            <>
-                              <LtrText>{item.supplier}</LtrText> ·{" "}
-                            </>
-                          )}
-                          {branchName(item.branch)}
-                          {item.type.startsWith("sale_") && (
-                            <span className="dashboard-alert-cost">
-                              {alertType(item.type)}
-                            </span>
-                          )}
-                          {item.previous_cost && item.new_cost && (
-                            <span className="dashboard-alert-cost">
-                              {t("Old cost", "هزینه قبلی")}{" "}
-                              <Money value={item.previous_cost} /> ·{" "}
-                              {t("New cost", "هزینه جدید")}{" "}
-                              <Money value={item.new_cost} />
-                            </span>
-                          )}
-                        </>
-                      }
-                      pill={
-                        <Badge
-                          tone={
-                            item.type === "date_reminder"
-                              ? (
-                                  item.date
-                                    ? item.date < today
-                                    : (item.days_left ?? 0) < 0
-                                )
-                                ? "danger"
-                                : "pending"
-                              : item.type === "lower_price" ||
-                                  item.type === "other_supplier" ||
-                                  item.type.startsWith("sale_")
-                                ? "pending"
-                                : "danger"
-                          }
-                        >
-                          {item.type === "price_conflict"
-                            ? t("Conflict", "اختلاف")
-                            : item.type.startsWith("sale_")
-                              ? t("Pending", "در انتظار")
-                              : alertType(item.type)}
-                        </Badge>
-                      }
-                      action={
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() =>
-                            navigate(`alerts?id=${encodeURIComponent(item.id)}`)
-                          }
-                        >
-                          {t("Review", "بررسی")}
-                          <ArrowRight
-                            size={16}
-                            className="directional"
-                            aria-hidden="true"
-                          />
-                        </Button>
-                      }
-                    />
-                  ))}
-                  {alerts.length > 5 && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => navigate("alerts")}
-                    >
-                      {t("View all alerts", "مشاهده همه هشدارها")}
-                    </Button>
-                  )}
-                </div>
-              )}
-            </Card>
-          </div>
-          <div className="dashboard-row">
-            <Card
-              title={t("Recent invoices", "فاکتورهای اخیر")}
-              className="dashboard-invoices"
-            >
-              {recentInvoices.length === 0 ? (
-                <EmptyState
-                  action={
-                    <Button
-                      variant="secondary"
-                      onClick={() => navigate("invoices")}
-                    >
-                      {t("Receive an invoice", "دریافت فاکتور")}
-                    </Button>
-                  }
-                >
-                  {t(
-                    "No invoices. Receive an invoice to get started.",
-                    "فاکتوری نیست. برای شروع یک فاکتور دریافت کنید.",
-                  )}
-                </EmptyState>
-              ) : (
-                <DataTable
-                  phoneList={{
-                    name: "supplier",
-                    value: "status",
-                    secondary: ["invoice", "branch", "date"],
-                  }}
-                  columns={[
-                    {
-                      key: "invoice",
-                      width: 112,
-                      priority: 1,
-                      required: true,
-                      mobilePrimary: true,
-                      minWidth: 112,
-                    },
-                    { key: "supplier", width: 240, priority: 3, minWidth: 240 },
-                    { key: "branch", width: 112, priority: 5, minWidth: 112 },
-                    { key: "date", width: 128, priority: 4, minWidth: 128 },
-                    { key: "status", width: 112, priority: 2, minWidth: 112 },
-                    { key: "actions", actions: true, width: 60, priority: 0 },
-                  ]}
-                >
-                  <thead>
-                    <tr>
-                      <th>{t("Invoice", "فاکتور")}</th>
-                      <th>{t("Supplier", "تأمین‌کننده")}</th>
-                      <th>{t("Branch", "شعبه")}</th>
-                      <th>{t("Date", "تاریخ")}</th>
-                      <th>{t("Status", "وضعیت")}</th>
-                      <th>{t("Action", "عملیات")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentInvoices.map((invoice) => (
-                      <tr
-                        key={invoice.id}
-                        data-row-href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
-                      >
-                        <td>
-                          <LtrText className="dashboard-invoice-reference">
-                            {invoice.supplier_invoice_number || "—"}
-                          </LtrText>
-                        </td>
-                        <td>
-                          <LtrText>{invoice.supplier}</LtrText>
-                        </td>
-                        <td>{branchName(invoice.branch)}</td>
-                        <td>
-                          <DateText value={invoice.invoice_date} />
-                        </td>
-                        <td>
-                          <Badge
-                            tone={
-                              invoice.status === "posted"
-                                ? "approved"
-                                : invoice.status === "draft"
-                                  ? "neutral"
-                                  : "progress"
-                            }
-                          >
-                            {invoiceStatus(invoice.status)}
-                          </Badge>
-                        </td>
-                        <td>
-                          <TableRowLink
-                            href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
-                            aria-label={t("View", "مشاهده")}
-                            onClick={() =>
-                              navigate(
-                                `invoices?id=${encodeURIComponent(invoice.id)}`,
-                              )
-                            }
-                          />
-                        </td>
-                      </tr>
-                    ))}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </DataTable>
-              )}
-            </Card>
-            <Card className="dashboard-returns">
-              <div className="dashboard-card-header">
-                <h2>{t("Returns", "مرجوعی‌ها")}</h2>
-                <Button
-                  variant="plain"
-                  size="sm"
-                  onClick={() => navigate("returns")}
-                >
-                  {t("View all returns", "مشاهده همه مرجوعی‌ها")}
-                  <ArrowRight
-                    size={16}
-                    className="directional"
-                    aria-hidden="true"
-                  />
-                </Button>
-              </div>
-              {openReturns.length === 0 ? (
-                <EmptyState>
-                  {t("No open returns.", "مرجوعی بازی نیست.")}
-                </EmptyState>
-              ) : (
-                <div className="dashboard-return-list">
-                  {openReturns.slice(0, 5).map((item) => {
-                    const credit = returnCredits.some(
-                      (record) => record.id === item.id,
-                    );
-                    return (
-                      <DashboardListRow
-                        key={item.id}
-                        title={<LtrText>{item.supplier}</LtrText>}
-                        secondary={
-                          <>
-                            {branchName(item.branch)} ·{" "}
-                            {item.lines.map((line, index) => (
-                              <span key={`${line.product_code}:${index}`}>
-                                <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                                  <UnitText>
-                                    {productName(line.product_code)}
-                                  </UnitText>
-                                </bdi>
-                                {index < item.lines.length - 1 ? "، " : ""}
-                              </span>
-                            ))}
-                          </>
-                        }
-                        pill={
-                          <Badge
-                            tone={
-                              credit
-                                ? "pending"
-                                : item.status === "partially_resolved"
-                                  ? "progress"
-                                  : "info"
-                            }
-                          >
-                            {credit
-                              ? t("Waiting for credit", "در انتظار بستانکاری")
-                              : item.status === "partially_resolved"
-                                ? t("Partially resolved", "بخشی حل‌شده")
-                                : t("Open", "باز")}
-                          </Badge>
-                        }
-                        action={
-                          <TableRowLink
-                            href={`#return?id=${encodeURIComponent(item.id)}`}
-                            aria-label={t("View", "مشاهده")}
-                            onClick={() =>
-                              navigate(
-                                `return?id=${encodeURIComponent(item.id)}`,
-                              )
-                            }
-                          />
-                        }
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </Card>
-          </div>
-          <Card
-            title={t("Supplier balances", "مانده تأمین‌کنندگان")}
-            className="dashboard-balances"
-          >
-            {balances.length === 0 ? (
-              <EmptyState>
-                {t(
-                  "No supplier balances. Post an invoice to start the ledger.",
-                  "مانده تأمین‌کننده‌ای نیست. برای شروع دفتر، یک فاکتور ثبت کنید.",
-                )}
-              </EmptyState>
+                <p className="dashboard-table-caption muted">
+                  {t(
+                    `Showing ${Math.min(6, approvalCount)} of ${approvalCount} · New products show their first price. Price changes show old → new.`,
+                    `نمایش ${Math.min(6, approvalCount)} از ${approvalCount} · محصول جدید قیمت نخست را نشان می‌دهد. تغییر قیمت به صورت قبلی ← جدید است.`,
+                  )}
+                </p>
+              </>
             ) : (
+              <QuietEmpty>
+                {t("No approvals waiting.", "تأییدی در انتظار نیست.")}
+              </QuietEmpty>
+            )}
+          </Card>
+          <Card className="dashboard-invoices">
+            <DashboardHeading
+              title={t("Recent invoices", "فاکتورهای اخیر")}
+              action={viewAll("invoices", t("All invoices", "همه فاکتورها"))}
+            />
+            {recentInvoices.length ? (
               <DataTable
+                phoneList={{
+                  name: "invoice",
+                  value: "total",
+                  secondary: ["supplier", "date", "status", "branch"],
+                }}
                 columns={[
-                  {
-                    key: "supplier",
-                    width: "34%",
-                    required: true,
-                    mobilePrimary: true,
-                    priority: 1,
-                    minWidth: 240,
-                  },
-                  {
-                    key: "balance",
-                    width: "18%",
-                    align: "end",
-                    priority: 2,
-                    minWidth: 128,
-                  },
-                  {
-                    key: "open_invoices",
-                    width: "15%",
-                    align: "end",
-                    priority: 3,
-                    minWidth: 128,
-                  },
-                  {
-                    key: "overdue",
-                    width: "18%",
-                    align: "end",
-                    priority: 4,
-                    minWidth: 128,
-                  },
-                  { key: "actions", width: 60, actions: true, priority: 0 },
+                  { key: "invoice", required: true, minWidth: 90, priority: 1 },
+                  { key: "supplier", minWidth: 140, priority: 4 },
+                  { key: "branch", minWidth: 100, priority: 6 },
+                  { key: "date", minWidth: 105, priority: 5 },
+                  { key: "total", minWidth: 90, align: "end", priority: 2 },
+                  { key: "status", minWidth: 100, priority: 3 },
                 ]}
               >
                 <thead>
                   <tr>
+                    <th>{t("Invoice", "فاکتور")}</th>
                     <th>{t("Supplier", "تأمین‌کننده")}</th>
-                    <th className="numeric">{t("Balance", "مانده")}</th>
-                    <th className="numeric">
-                      {t("Open invoices", "فاکتورهای باز")}
-                    </th>
-                    <th className="numeric">{t("Overdue", "سررسید گذشته")}</th>
-                    <th>{t("Action", "عملیات")}</th>
+                    <th>{t("Branch", "شعبه")}</th>
+                    <th>{t("Date", "تاریخ")}</th>
+                    <th>{t("Total", "جمع")}</th>
+                    <th>{t("Status", "وضعیت")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {balances.map((item) => (
-                    <tr key={item.supplier} data-row-href="#payables">
+                  {recentInvoices.map((invoice) => (
+                    <tr
+                      key={invoice.id}
+                      data-row-href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                    >
                       <td>
-                        <LtrText>{item.supplier}</LtrText>
-                      </td>
-                      <td className="numeric">
-                        <Money value={item.balance} />
-                      </td>
-                      <td className="numeric">
-                        <bdi>{item.outstandingCount}</bdi>
-                      </td>
-                      <td className="numeric">
-                        <Money value={item.overdue} />
+                        <a
+                          className="entity-link dashboard-invoice-reference"
+                          href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                        >
+                          <LtrText>
+                            {invoice.supplier_invoice_number || invoice.id}
+                          </LtrText>
+                        </a>
                       </td>
                       <td>
-                        <TableRowLink
-                          href="#payables"
-                          aria-label={t("View", "مشاهده")}
-                          onClick={() => navigate("payables")}
-                        />
+                        <bdi>{invoice.supplier}</bdi>
+                      </td>
+                      <td>{branchName(invoice.branch)}</td>
+                      <td>
+                        <DateText value={invoice.invoice_date} />
+                      </td>
+                      <td>
+                        {invoice.total ? (
+                          <strong>
+                            <Money value={invoice.total} />
+                          </strong>
+                        ) : (
+                          <NotAdded />
+                        )}
+                      </td>
+                      <td>
+                        <Badge
+                          tone={
+                            invoice.status === "posted"
+                              ? "approved"
+                              : invoice.status === "review"
+                                ? "pending"
+                                : "info"
+                          }
+                        >
+                          {invoiceStatus(invoice.status)}
+                        </Badge>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </DataTable>
+            ) : (
+              <QuietEmpty>
+                {t(
+                  "No invoices. Receive an invoice to get started.",
+                  "فاکتوری نیست. برای شروع یک فاکتور دریافت کنید.",
+                )}
+              </QuietEmpty>
             )}
           </Card>
-          <div className="dashboard-row dashboard-row-halves">
-            <Card
-              title={t(
-                "Purchases by supplier, this month",
-                "خرید از تأمین‌کنندگان، این ماه",
-              )}
-              className="dashboard-purchases"
-            >
-              {purchases.suppliers.length === 0 ? (
-                <EmptyState>
-                  {t("No purchases this month.", "این ماه خریدی ثبت نشده است.")}
-                </EmptyState>
-              ) : (
-                <div className="purchase-bars" role="list">
-                  {purchases.suppliers.map((item) => {
+          <div className="dashboard-row dashboard-row-halves dashboard-purchase-pair">
+            <Card className="dashboard-purchases dashboard-supplier-purchases">
+              <DashboardHeading
+                title={t("Purchases by supplier", "خرید از تأمین‌کنندگان")}
+              />
+              <div className="dashboard-chart-context muted">
+                <span>
+                  {new Intl.DateTimeFormat(
+                    lang === "fa" ? "fa-IR-u-ca-gregory" : "en-CA",
+                    { month: "long", timeZone: "UTC" },
+                  ).format(new Date(`${today}T12:00:00Z`))}
+                </span>
+                <Money value={purchaseMonthTotal} />
+              </div>
+              {purchases.suppliers.length ? (
+                <ol className="purchase-bars">
+                  {purchases.suppliers.map((row, index) => {
                     const max = Decimal.max(
-                      ...purchases.suppliers.map((row) => row.amount),
                       1,
+                      ...purchases.suppliers.map((item) => item.amount),
                     );
-                    const width = Decimal.max(
-                      0,
-                      new Decimal(item.amount).div(max).times(100),
-                    ).toNumber();
                     return (
-                      <div
-                        className="purchase-bar-row"
-                        key={item.supplier}
-                        role="listitem"
-                      >
-                        <div className="row-between">
-                          <LtrText>{item.supplier}</LtrText>
-                          <Money value={item.amount} />
+                      <li className="purchase-bar-row" key={row.supplier}>
+                        <span className="purchase-rank muted">{index + 1}</span>
+                        <div>
+                          <div className="row-between">
+                            <bdi>{row.supplier}</bdi>
+                            <strong>
+                              <Money value={row.amount} />
+                            </strong>
+                          </div>
+                          <div
+                            className="purchase-bar-track"
+                            aria-hidden="true"
+                          >
+                            <span
+                              style={{
+                                inlineSize: `${Decimal.max(0, new Decimal(row.amount).div(max).times(100)).toNumber()}%`,
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="purchase-bar-track" aria-hidden="true">
-                          <span style={{ inlineSize: `${width}%` }} />
-                        </div>
-                      </div>
+                      </li>
                     );
                   })}
-                </div>
+                </ol>
+              ) : (
+                <QuietEmpty>
+                  {t("No purchases this month.", "این ماه خریدی ثبت نشده است.")}
+                </QuietEmpty>
               )}
-              <p className="chart-axis-label muted">
-                {t("Net purchases", "خرید خالص")} ·{" "}
-                <LtrText>{state.config.company.currency}</LtrText>
-              </p>
             </Card>
-            <Card
-              title={t("Purchases, last 8 weeks", "خرید، ۸ هفته گذشته")}
-              className="dashboard-purchases"
-            >
+            <Card className="dashboard-purchases dashboard-weekly-purchases">
+              <DashboardHeading
+                title={t("Purchases by week", "خرید در هر هفته")}
+              />
+              <p className="dashboard-chart-context muted">
+                {t("Last 8 weeks", "۸ هفته گذشته")}
+              </p>
               {purchases.weeks.every((week) => week.amount === "0.00") ? (
-                <EmptyState>
+                <QuietEmpty>
                   {t(
                     "No purchases in the last 8 weeks.",
                     "در ۸ هفته گذشته خریدی ثبت نشده است.",
                   )}
-                </EmptyState>
+                </QuietEmpty>
               ) : (
-                (() => {
-                  const max = Decimal.max(
-                    ...purchases.weeks.map((week) => week.amount),
-                    1,
-                  );
-                  const min = Decimal.min(
-                    ...purchases.weeks.map((week) => week.amount),
-                    0,
-                  );
-                  const range = max.minus(min);
-                  const points = purchases.weeks
-                    .map(
-                      (week, index) =>
-                        `${30 + index * 52},${146 - new Decimal(week.amount).minus(min).div(range).times(126).toNumber()}`,
-                    )
-                    .join(" ");
-                  return (
-                    <>
-                      <div className="purchase-line-chart">
-                        <svg
-                          viewBox="0 0 424 172"
-                          role="img"
-                          aria-label={t(
-                            "Net purchases by week",
-                            "خرید خالص در هر هفته",
-                          )}
-                        >
-                          <line
-                            x1="30"
-                            y1="146"
-                            x2="394"
-                            y2="146"
-                            className="chart-baseline"
-                          />
-                          <polygon
-                            points={`30,146 ${points} 394,146`}
-                            className="purchase-area"
-                          />
-                          <polyline points={points} className="purchase-line" />
-                          {purchases.weeks.map((week, index) => (
-                            <circle
-                              key={week.start}
-                              cx={30 + index * 52}
-                              cy={
-                                146 -
-                                new Decimal(week.amount)
-                                  .minus(min)
-                                  .div(range)
-                                  .times(126)
-                                  .toNumber()
-                              }
-                              r="3"
-                              className="purchase-point"
-                              tabIndex={0}
-                              aria-label={`${week.start} – ${week.end}: ${formatMoney(week.amount, { currency: state.config.company.currency })}`}
-                              onMouseEnter={() => setHoveredPurchaseWeek(index)}
-                              onMouseLeave={() => setHoveredPurchaseWeek(null)}
-                              onFocus={() => setHoveredPurchaseWeek(index)}
-                              onBlur={() => setHoveredPurchaseWeek(null)}
-                            />
-                          ))}
-                        </svg>
-                        {hoveredPurchaseWeek !== null && (
-                          <div
-                            className="purchase-chart-tooltip"
-                            role="tooltip"
+                <div
+                  className="purchase-week-chart"
+                  role="group"
+                  aria-label={t(
+                    "Net purchases by week",
+                    "خرید خالص در هر هفته",
+                  )}
+                >
+                  <div className="purchase-week-bars">
+                    {purchases.weeks.map((week, index) => {
+                      const max = Decimal.max(
+                        1,
+                        ...purchases.weeks.map((row) =>
+                          new Decimal(row.amount).abs(),
+                        ),
+                      );
+                      return (
+                        <div className="purchase-week-column" key={week.start}>
+                          <small
+                            className="muted"
+                            title={formatMoney(week.amount, {
+                              currency: state.config.company.currency,
+                            })}
                           >
-                            <DateText
-                              value={purchases.weeks[hoveredPurchaseWeek].start}
-                            />{" "}
-                            –{" "}
-                            <DateText
-                              value={purchases.weeks[hoveredPurchaseWeek].end}
-                            />
-                            <strong>
-                              <Money
-                                value={
-                                  purchases.weeks[hoveredPurchaseWeek].amount
-                                }
-                              />
-                            </strong>
-                          </div>
-                        )}
-                      </div>
-                      <div className="purchase-week-labels">
-                        {[0, 2, 4, 7].map((index) => (
-                          <DateText
-                            key={index}
-                            value={purchases.weeks[index].start}
+                            {new Decimal(week.amount).abs().gte(1000)
+                              ? `${formatMoney(new Decimal(week.amount).div(1000).toDecimalPlaces(1), { currency: state.config.company.currency, decimals: 2 }).replace(/(\.\d)0$/, "$1")}k`
+                              : formatMoney(
+                                  new Decimal(week.amount).toDecimalPlaces(0),
+                                  {
+                                    currency: state.config.company.currency,
+                                    decimals: 2,
+                                  },
+                                ).replace(/\.00$/, "")}
+                          </small>
+                          <span
+                            role="img"
+                            tabIndex={0}
+                            className={`purchase-point purchase-week-bar${index === 7 ? " is-current" : ""}${new Decimal(week.amount).lt(0) ? " is-negative" : ""}`}
+                            style={{
+                              blockSize: `${Math.max(2, new Decimal(week.amount).abs().div(max).times(120).toNumber())}px`,
+                            }}
+                            aria-label={`${week.start} – ${week.end}: ${formatMoney(week.amount, { currency: state.config.company.currency })}`}
+                            onMouseEnter={() => setHoveredPurchaseWeek(index)}
+                            onMouseLeave={() => setHoveredPurchaseWeek(null)}
+                            onFocus={() => setHoveredPurchaseWeek(index)}
+                            onBlur={() => setHoveredPurchaseWeek(null)}
                           />
-                        ))}
-                      </div>
-                    </>
-                  );
-                })()
+                          <time
+                            dateTime={week.start}
+                            className="date-text"
+                            title={week.start}
+                          >
+                            <FitText
+                              value={
+                                lang === "fa"
+                                  ? `${Number(week.start.slice(5, 7))}/${Number(week.start.slice(8))}`
+                                  : new Intl.DateTimeFormat("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      timeZone: "UTC",
+                                    })
+                                      .format(
+                                        new Date(`${week.start}T12:00:00Z`),
+                                      )
+                                      .replace(" ", "")
+                              }
+                            />
+                          </time>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {hoveredPurchaseWeek !== null && (
+                    <div className="purchase-chart-tooltip" role="tooltip">
+                      <DateText
+                        value={purchases.weeks[hoveredPurchaseWeek].start}
+                      />{" "}
+                      –{" "}
+                      <DateText
+                        value={purchases.weeks[hoveredPurchaseWeek].end}
+                      />
+                      <strong>
+                        <Money
+                          value={purchases.weeks[hoveredPurchaseWeek].amount}
+                        />
+                      </strong>
+                    </div>
+                  )}
+                </div>
               )}
-              <p className="chart-axis-label muted">
-                {t("Net purchases", "خرید خالص")} ·{" "}
-                <LtrText>{state.config.company.currency}</LtrText>
-              </p>
             </Card>
           </div>
-          <div className="dashboard-row dashboard-row-halves">
-            <Card title={t("Arrived this week", "دریافتی‌های این هفته")}>
-              {arrivals.length === 0 ? (
-                <EmptyState>
-                  {t(
-                    "No deliveries this week.",
-                    "این هفته تحویلی ثبت نشده است.",
+          <div className="dashboard-more-operations">
+            <Disclosure summary={t("More operations", "عملیات بیشتر")}>
+              <div className="dashboard-operation-cards">
+                <Card
+                  title={t("Returns", "مرجوعی‌ها")}
+                  className="dashboard-returns"
+                >
+                  {openReturns.length ? (
+                    openReturns.slice(0, 5).map((row) => (
+                      <div className="dashboard-list-row" key={row.id}>
+                        <div className="dashboard-list-copy">
+                          <a
+                            className="entity-link"
+                            href={`#return?id=${encodeURIComponent(row.id)}`}
+                          >
+                            <bdi>{row.supplier}</bdi>
+                          </a>
+                          <small className="muted">
+                            {branchName(row.branch)}
+                          </small>
+                        </div>
+                        <div className="dashboard-list-pill">
+                          <Badge tone="pending">{t("Open", "باز")}</Badge>
+                        </div>
+                        <div className="dashboard-list-action">
+                          <TableRowLink
+                            href={`#return?id=${encodeURIComponent(row.id)}`}
+                            aria-label={t("View", "مشاهده")}
+                          />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <QuietEmpty>
+                      {t("No open returns.", "مرجوعی بازی نیست.")}
+                    </QuietEmpty>
                   )}
-                </EmptyState>
-              ) : (
-                arrivals.slice(0, 6).map((item) => {
-                  const product = state.products.find(
-                    (row) =>
-                      row.company_id === context.company_id &&
-                      row.code === item.product_code,
-                  );
-                  return (
-                    <DashboardListRow
-                      key={item.id}
-                      title={
-                        product ? (
-                          <ProductName product={product} />
-                        ) : (
-                          <LtrText>{item.product_code}</LtrText>
-                        )
-                      }
-                      secondary={
-                        <>
-                          {branchName(item.branch)} ·{" "}
-                          <DateText value={item.date} /> ·{" "}
-                          <LtrText className="dashboard-invoice-reference">
-                            {item.invoice_number}
-                          </LtrText>
-                        </>
-                      }
-                      pill={
+                  {viewAll(
+                    "returns",
+                    t("View all returns", "مشاهده همه مرجوعی‌ها"),
+                  )}
+                </Card>
+                <Card title={t("Arrived this week", "دریافتی‌های این هفته")}>
+                  {arrivals.length ? (
+                    arrivals.slice(0, 6).map((row) => (
+                      <div className="dashboard-list-row" key={row.id}>
+                        <div className="dashboard-list-copy">
+                          {link(row.product_code)}
+                          <small className="muted">
+                            {branchName(row.branch)} ·{" "}
+                            <DateText value={row.date} /> ·{" "}
+                            <LtrText>{row.invoice_number}</LtrText>
+                          </small>
+                        </div>
                         <Badge tone="info">
-                          {translateCount(
+                          {count(
+                            row.units,
                             "{{count}} unit",
                             "{{count}} units",
                             "{{count}} واحد",
-                            "{{count}} واحد",
-                            item.units,
-                            lang,
                           )}
                         </Badge>
-                      }
-                      action={
                         <TableRowLink
-                          href={`#received?product=${encodeURIComponent(item.product_code)}`}
+                          href={`#received?product=${encodeURIComponent(row.product_code)}`}
                           aria-label={t("View", "مشاهده")}
-                          onClick={() =>
-                            navigate(
-                              `received?product=${encodeURIComponent(item.product_code)}`,
-                            )
-                          }
                         />
-                      }
-                    />
-                  );
-                })
-              )}
-            </Card>
-            <Card
-              title={t("Price changes this week", "تغییر قیمت‌های این هفته")}
-            >
-              {weeklyChanges.length === 0 ? (
-                <EmptyState>
-                  {t(
-                    "No price changes this week.",
-                    "این هفته تغییری در قیمت ثبت نشده است.",
+                      </div>
+                    ))
+                  ) : (
+                    <QuietEmpty>
+                      {t(
+                        "No deliveries this week.",
+                        "این هفته تحویلی ثبت نشده است.",
+                      )}
+                    </QuietEmpty>
                   )}
-                </EmptyState>
-              ) : (
-                weeklyChanges.slice(0, 6).map((item) => {
-                  const product = state.products.find(
-                    (entry) =>
-                      entry.company_id === context.company_id &&
-                      entry.code === item.product_code,
-                  );
-                  const price = item.regular_price;
-                  return (
-                    <DashboardListRow
-                      key={item.id}
-                      title={
-                        <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                          <UnitText>{productName(item.product_code!)}</UnitText>
-                        </bdi>
-                      }
-                      secondary={
-                        <>
-                          {demoUserLabel(item.by, lang)} ·{" "}
-                          {branchName(item.branch)} ·{" "}
-                          <DateText
-                            value={companyDate(state.config, new Date(item.at))}
-                          />
-                          {price && (
-                            <>
-                              {" "}
-                              · <Money value={price} />
-                              {product && (
-                                <ManualPricePill
-                                  product={product}
-                                  branch={
-                                    item.branch === "all" ? branch : item.branch
-                                  }
-                                />
-                              )}
-                            </>
-                          )}
-                        </>
-                      }
-                      pill={
-                        <Badge tone="approved">
-                          {t("Approved", "تأییدشده")}
-                        </Badge>
-                      }
-                      action={
-                        <TableRowLink
-                          href={`#product?code=${item.product_code}`}
-                          aria-label={t("View", "مشاهده")}
-                          onClick={() =>
-                            navigate(`product?code=${item.product_code}`)
-                          }
-                        />
-                      }
-                    />
-                  );
-                })
-              )}
-            </Card>
+                </Card>
+                <Card
+                  title={t(
+                    "Price changes this week",
+                    "تغییر قیمت‌های این هفته",
+                  )}
+                >
+                  {weeklyChanges.length ? (
+                    weeklyChanges.slice(0, 6).map((row) => (
+                      <div className="dashboard-list-row" key={row.id}>
+                        <div className="dashboard-list-copy">
+                          {link(row.product_code!)}
+                          <small className="muted">
+                            {branchName(row.branch)} ·{" "}
+                            <DateText value={row.at} />
+                          </small>
+                        </div>
+                        {row.regular_price && (
+                          <Money value={row.regular_price} />
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <QuietEmpty>
+                      {t(
+                        "No price changes this week.",
+                        "این هفته تغییری در قیمت ثبت نشده است.",
+                      )}
+                    </QuietEmpty>
+                  )}
+                </Card>
+              </div>
+            </Disclosure>
           </div>
         </div>
         <aside
           className="dashboard-aside"
           aria-label={t("Notes and activity", "یادداشت‌ها و فعالیت")}
         >
-          <PriceUpdatesDashboardCard />
-          <Card
-            title={t(
-              `Notes for ${configuredRoleLabel(state.config.roles, "manager", "en")}`,
-              `یادداشت‌های ${configuredRoleLabel(state.config.roles, "manager", "fa")}`,
-            )}
-          >
-            {notes.length === 0 ? (
-              <EmptyState>
-                {t(
-                  `No open notes for the ${configuredRoleLabel(state.config.roles, "manager", "en")}.`,
-                  `یادداشت بازی برای ${configuredRoleLabel(state.config.roles, "manager", "fa")} نیست.`,
-                )}
-              </EmptyState>
-            ) : (
-              <div className="dashboard-note-list">
-                {notes.slice(0, 5).map((item) => (
-                  <DashboardListRow
-                    key={item.id}
-                    title={noteText(item)}
-                    secondary={
-                      <>
-                        {demoUserLabel(item.by, lang)} ·{" "}
-                        {branchName(item.branch)} ·{" "}
-                        <time
-                          dateTime={item.created_at}
-                          title={companyTimestamp(
-                            state.config,
-                            item.created_at,
-                          )}
-                        >
-                          {relativeTime(item.created_at)}
-                        </time>
-                      </>
-                    }
-                    pill={
-                      <Badge tone="info">
-                        {item.status === "open"
-                          ? t("Open", "باز")
-                          : t("Seen", "دیده‌شده")}
-                      </Badge>
-                    }
-                    action={
-                      <TableRowLink
-                        href="#notes"
-                        aria-label={t("View", "مشاهده")}
-                        onClick={() => navigate("notes")}
-                      />
-                    }
-                  />
+          <Card className="price-update-dashboard-card">
+            <DashboardHeading
+              title={t(
+                "Price updates to apply",
+                "به‌روزرسانی قیمت‌های قابل اجرا",
+              )}
+              count={priceUpdates.length}
+            />
+            {priceUpdates.length ? (
+              <div className="dashboard-task-list">
+                {priceUpdates.slice(0, 4).map((task) => (
+                  <a
+                    className="dashboard-task-row"
+                    href={`#price-update?id=${encodeURIComponent(task.id)}`}
+                    key={task.id}
+                  >
+                    <span>
+                      <strong>
+                        <UnitText>{productName(task.productCode)}</UnitText>
+                      </strong>
+                      <small className="muted">
+                        {branchName(task.branch)} ·{" "}
+                        {task.oldPrice
+                          ? t("approved", "تأییدشده")
+                          : t("new product", "محصول جدید")}
+                      </small>
+                    </span>
+                    <span className="dashboard-task-price">
+                      <strong>
+                        {task.price ? (
+                          <Money value={task.price} />
+                        ) : (
+                          <NotAdded />
+                        )}
+                        {task.unit !== "each" && (
+                          <LtrText>/{task.unit}</LtrText>
+                        )}
+                      </strong>
+                      <small className="muted">
+                        {task.oldPrice ? (
+                          <>
+                            {t("was", "قبلاً")} <Money value={task.oldPrice} />
+                          </>
+                        ) : (
+                          t("first price", "قیمت نخست")
+                        )}
+                      </small>
+                    </span>
+                  </a>
                 ))}
               </div>
+            ) : (
+              <QuietEmpty>
+                {t(
+                  "No pending price updates.",
+                  "به‌روزرسانی قیمت در انتظار وجود ندارد.",
+                )}
+              </QuietEmpty>
+            )}
+            <Button
+              variant="tinted"
+              className="dashboard-open-tasks"
+              onClick={() => navigate("price-updates")}
+            >
+              {t("Open price updates", "باز کردن به‌روزرسانی قیمت‌ها")}
+            </Button>
+          </Card>
+          <Card className="dashboard-alerts">
+            <DashboardHeading
+              title={t("Alerts", "هشدارها")}
+              count={alerts.length}
+              action={viewAll("alerts")}
+            />
+            {alerts.length ? (
+              <div className="dashboard-alert-list">
+                {alerts.slice(0, 5).map((item) => (
+                  <a
+                    className="dashboard-alert-row"
+                    href={`#alerts?id=${encodeURIComponent(item.id)}`}
+                    key={item.id}
+                  >
+                    <span
+                      className={`dashboard-status-dot tone-${item.type === "price_conflict" ? "danger" : "pending"}`}
+                      aria-hidden="true"
+                    />
+                    <span>
+                      <strong>
+                        {item.product_code ? (
+                          <UnitText>{productName(item.product_code)}</UnitText>
+                        ) : (
+                          t("Invoice", "فاکتور")
+                        )}
+                      </strong>
+                      <small className="muted">
+                        {alertType(item.type)} · {branchName(item.branch)}
+                      </small>
+                    </span>
+                    <ChevronRight
+                      size={18}
+                      className="directional"
+                      aria-hidden="true"
+                    />
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <QuietEmpty>
+                {t("No pending alerts.", "هشداری در انتظار نیست.")}
+              </QuietEmpty>
             )}
           </Card>
-          <Card title={t("Activity", "فعالیت")} id="recent-activity">
-            {activity.length === 0 ? (
-              <EmptyState>
+          <Card className="dashboard-notes">
+            <DashboardHeading
+              title={t(
+                `Notes for ${configuredRoleLabel(state.config.roles, "manager", "en")}`,
+                `یادداشت‌های ${configuredRoleLabel(state.config.roles, "manager", "fa")}`,
+              )}
+              action={viewAll("notes", t("Notes", "یادداشت‌ها"))}
+            />
+            {notes.length ? (
+              notes.slice(0, 5).map((note) => (
+                <div className="dashboard-list-row" key={note.id}>
+                  <div className="dashboard-list-copy">
+                    <strong>{note.text}</strong>
+                    <small className="muted">
+                      {demoUserLabel(note.by, lang)} · {branchName(note.branch)}{" "}
+                      ·{" "}
+                      <LtrText>
+                        {companyTimestampText(state.config, note.created_at)}
+                      </LtrText>
+                    </small>
+                  </div>
+                  <TableRowLink
+                    href="#notes"
+                    aria-label={t("View", "مشاهده")}
+                  />
+                </div>
+              ))
+            ) : (
+              <p className="dashboard-empty muted">
+                <CheckCircle2 size={16} aria-hidden="true" />
+                {t(
+                  "No open notes. You're all caught up.",
+                  "یادداشت بازی نیست. همه کارها انجام شده است.",
+                )}
+              </p>
+            )}
+          </Card>
+          <Card className="dashboard-balances">
+            <DashboardHeading
+              title={t("Supplier balances", "مانده تأمین‌کنندگان")}
+              action={viewAll("payables", t("Payables", "حساب‌های پرداختنی"))}
+            />
+            {balances.length ? (
+              balances.map((row) => (
+                <div className="dashboard-balance-row" key={row.supplier}>
+                  <a
+                    className="entity-link"
+                    href={`#payables?supplier=${encodeURIComponent(row.supplierId ?? row.supplier)}`}
+                  >
+                    <bdi>{row.supplier}</bdi>
+                  </a>
+                  <div>
+                    <strong>
+                      <Money value={row.balance} />
+                    </strong>
+                    <small
+                      className={
+                        new Decimal(row.overdue).gt(0)
+                          ? "dashboard-overdue"
+                          : "muted"
+                      }
+                    >
+                      {new Decimal(row.overdue).gt(0) ? (
+                        <>
+                          <Money value={row.overdue} />{" "}
+                          {t("overdue", "سررسید گذشته")}
+                        </>
+                      ) : row.nextDueDate ? (
+                        <>
+                          {t("Due", "سررسید")}{" "}
+                          <DateText value={row.nextDueDate} />
+                        </>
+                      ) : (
+                        t("No overdue invoices", "فاکتور سررسیدگذشته‌ای نیست")
+                      )}
+                    </small>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <QuietEmpty>
+                {t(
+                  "No supplier balances. Post an invoice to start the ledger.",
+                  "مانده تأمین‌کننده‌ای نیست. برای شروع دفتر، یک فاکتور ثبت کنید.",
+                )}
+              </QuietEmpty>
+            )}
+          </Card>
+          <Card className="dashboard-activity" id="recent-activity">
+            <DashboardHeading title={t("Activity", "فعالیت")} />
+            {groupedActivity.size ? (
+              [...groupedActivity].map(([day, entries]) => (
+                <div className="dashboard-activity-day" key={day}>
+                  <h3 className="muted">
+                    {day === today ? (
+                      t("Today", "امروز")
+                    ) : (
+                      <DateText value={day} />
+                    )}
+                  </h3>
+                  <ol className="dashboard-activity-list">
+                    {entries.map((item) => (
+                      <li className="dashboard-activity-item" key={item.id}>
+                        <span className="initials-avatar" aria-hidden="true">
+                          {initials(item.by)}
+                        </span>
+                        <div>
+                          <strong>
+                            {actionLabel(item.action)}
+                            {item.product_code && (
+                              <>
+                                {" "}
+                                ·{" "}
+                                <UnitText>
+                                  {productName(item.product_code)}
+                                </UnitText>
+                              </>
+                            )}
+                          </strong>
+                          <small className="muted">
+                            {demoUserLabel(item.by, lang)} ·{" "}
+                            {branchName(item.branch)} ·{" "}
+                            <time
+                              dateTime={item.at}
+                              title={companyTimestamp(state.config, item.at)}
+                            >
+                              <LtrText>
+                                {companyDateTime(state.config, item.at).time}
+                              </LtrText>
+                            </time>
+                          </small>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ))
+            ) : (
+              <QuietEmpty>
                 {t(
                   "No recent activity. Your actions appear here.",
                   "فعالیت اخیری نیست. کارهای شما اینجا ظاهر می‌شوند.",
                 )}
-              </EmptyState>
-            ) : (
-              <ol className="dashboard-activity-list">
-                {activity.slice(0, 8).map((item) => (
-                  <li className="dashboard-activity-item" key={item.id}>
-                    <span className="initials-avatar" aria-hidden="true">
-                      {initials(item.by)}
-                    </span>
-                    <div>
-                      <strong>{actionLabel(item.action)}</strong>
-                      {item.product_code && (
-                        <span>
-                          <bdi dir={lang === "fa" ? "rtl" : "ltr"}>
-                            <UnitText>
-                              {productName(item.product_code)}
-                            </UnitText>
-                          </bdi>
-                        </span>
-                      )}
-                      <span className="muted">
-                        {demoUserLabel(item.by, lang)} ·{" "}
-                        {branchName(item.branch)}
-                      </span>
-                      <time
-                        className="muted"
-                        dateTime={item.at}
-                        title={companyTimestamp(state.config, item.at)}
-                      >
-                        {relativeTime(item.at)}
-                      </time>
-                    </div>
-                  </li>
-                ))}
-              </ol>
+              </QuietEmpty>
             )}
           </Card>
         </aside>
@@ -1520,7 +1478,7 @@ export function Dashboard() {
           />
         </ConfirmDialog>
       )}
-    </>
+    </div>
   );
 }
 

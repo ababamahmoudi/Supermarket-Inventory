@@ -104,9 +104,9 @@ for (const language of ["en", "fa"] as const) {
         );
         const primary = document.querySelector(".page-header .button-primary")!;
         const summaries = Array.from(
-          document.querySelectorAll(".dashboard-kpis .kpi-accent"),
+          document.querySelectorAll(".dashboard-kpis .ui-summary-tile"),
         );
-        const filled = [primary, ...summaries].map((element) => {
+        const filled = [primary].map((element) => {
           const text = element.querySelector(".kpi-value") ?? element;
           const style = getComputedStyle(element),
             foreground = getComputedStyle(text).color;
@@ -120,7 +120,19 @@ for (const language of ["en", "fa"] as const) {
             ),
           };
         });
-        return { bars, filled, summaryCount: summaries.length };
+        const tiles = summaries.map((element) => ({
+          fill: getComputedStyle(element).backgroundColor,
+          contrast: ratio(
+            blend(
+              parse(
+                getComputedStyle(element.querySelector(".kpi-value")!).color,
+              ),
+              surface(element),
+            ),
+            surface(element),
+          ),
+        }));
+        return { bars, filled, tiles, summaryCount: summaries.length };
       });
       reports.push({ theme, language, ...proof });
       expect(proof.bars.length).toBeGreaterThanOrEqual(3);
@@ -133,7 +145,11 @@ for (const language of ["en", "fa"] as const) {
           bar.supplier ?? "Supplier bar contrast",
         ).toBeGreaterThanOrEqual(3);
       }
-      expect(proof.summaryCount).toBe(2);
+      expect(proof.summaryCount).toBe(5);
+      for (const tile of proof.tiles) {
+        expect(tile.fill).toBe(proof.tiles[0].fill);
+        expect(tile.contrast).toBeGreaterThanOrEqual(4.5);
+      }
       for (const control of proof.filled) {
         expect(control.fill).toBe("rgb(43, 89, 195)");
         expect(control.text).toBe("rgb(255, 255, 255)");

@@ -41,7 +41,7 @@ Owner specification: C6/C7, 2026-10-11. This document replaces the previous desi
 1. No visible native browser controls. Use shared styled Select/Combobox, file dropzone, checkbox, radio, switch, date picker and number controls; hidden native inputs can support accessible interaction, but browser file-input copy never appears.
 2. All screen colours, radii and shadows come from **one standalone Klead tokens CSS file**, with light/dark custom properties. No literals in component/feature CSS or inline styles. Printed documents are the exception. Keep reusable tokens separate from company settings; company branding can override the accent.
 3. Cards are borderless with the soft shadow below. Remove C5 resting borders/glows from buttons and fields. Only specified hairlines remain. Focus gets the ring.
-4. One page title/secondary line and one Primary per area. At most four KPI cards. Preserve approved Dashboard/Approvals behavior and the exact Dashboard layout below.
+4. One page title/secondary line and one Primary per area. Dashboard follows its current approved five-tile composition below; other areas retain their existing KPI limits. Preserve approved Dashboard/Approvals behavior.
 5. Use available width with 28 px desktop/16 px phone padding. Short numeric fields and intrinsic text actions do not stretch edge to edge. Dialogs are bounded; tables, invoice comparison and New order use content width.
 6. Sidebar never scrolls at 1080p; short windows may collapse groups while keeping every destination/account reachable. Below 1280 px collapse to icons with hover/focus labels. Below 760 px use mobile navigation and table cards.
 7. Never break inside a word or overlap text/controls. Prices, dates, codes, unit fragments, short statuses and action labels stay whole. Long prose wraps at spaces. No sideways page/table scroll: hide lower-priority columns, expose permitted values in Columns/expanded details, then cards below 760 px.
@@ -148,15 +148,16 @@ Groups remain Daily (Lookup, Invoices, Received, Returns, Labels, Date tracking,
 
 ## Key layouts
 
-**Owner/Manager dashboard: preserve exact order and grid.**
+**Owner/Manager dashboard (R2c, 2026-10-26): approved reference composition.**
 
-1. Four KPIs: **Approvals waiting · Open alerts · Open shorts · Expiring soon**. The two coloured variants are now **solid blue and solid ink**, replacing gradients.
-2. A 12-column row: **Approvals queue** (8 columns) / **Alerts** (4), equal-height cards. Approval rows preserve product/names/code, change type, Old → New, location and Approve/Reject; narrow actions move below and never overlap. Alerts use title, secondary line, status and end action.
-3. Equal-height **Recent invoices** (8) / **Returns** (4), retaining the View all returns header link.
-4. **Supplier balances**, top five by balance, Owner/Manager-only.
-5. Equal-height **Purchases by supplier, this month** / **Purchases, last 8 weeks**, 6 columns each.
-6. Equal-height **Arrived this week** / **Price changes this week**, 6 each. Actual Received and approved/manual changes; no stock or sales estimate, no additional KPI.
-7. Notes for managers and Activity in the right panel. Scope all content to company/allowed location and stack responsively.
+Use the three [approved dashboard PNGs](design-reference/r2c-dashboard/README.md), retaining the app shell and actual permitted records. This replaces the previous four colored KPIs, equal-height card rows and weekly line chart.
+
+1. Five equal surface KPI tiles: **Approvals waiting · Price updates to apply · Open alerts · Open shorts · Expiring soon**. Each has label, big number, one-line breakdown and a small accent/amber/green dot; zero numbers are muted. The entire tile opens its destination. On phones use two columns, retaining the fifth value on the next row.
+2. Desktop content has a 2:1 left/right split. Cards align at the top and size to their content; never stretch a short card. One 17px/800 card-title style, count pills and quiet one-line empty states apply throughout.
+3. Left: **Approvals waiting** (six rows: linked product/code/category/supplier, type, price, protected margin, Approve/More or Review); **Recent invoices** (linked invoice, supplier, date, total, status); ranked **Purchases by supplier** for this month with the Decimal month total; **Purchases by week**, eight Monday–Sunday calendar weeks with this week highlighted.
+4. New products show their first price; no empty old-price comparison. Price changes show actual old → new and percentage. Below-minimum sale requests show an amber margin and Review; their decisions retain the protected Approvals flow.
+5. Right: **Price updates to apply**, **Alerts**, **Notes for Manager**, **Supplier balances**, **Activity** grouped by local day with 24-hour times. Price updates show their current target and first-price/previous-price context. Overdue balances are red.
+6. Phone order: header and full-width primary, two-column KPIs, Approvals, Price updates, Alerts, Recent invoices, Supplier balances, Purchases, then Notes and Activity. Existing Returns, Arrived this week and Price changes this week are retained under **More operations**, never replaced by stock estimates.
 
 Worker home retains My drafts, Needs review, Offers to confirm and Expiring soon, then Today's suppliers and open returns and My notes. Purchase charts derive posted non-voided purchases net of shorts, linked credits and corrections, Decimal until rendering, configured-zone periods and honest empty states. Never invent sales.
 

@@ -420,6 +420,66 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           ].filter(visible);
           checkPhoneActionGrid(group, controls, 2, "receiving progress", group);
         }
+      // R2c's approved dashboard explicitly uses 44px actions and two
+      // full-width calls to action. Require the complete composition first.
+      const dashboardRoots = new Set(
+        [...document.querySelectorAll(".r2c-dashboard")].filter((root) => {
+          const tiles = [
+            ...root.querySelectorAll(
+              ":scope > .dashboard-kpis > button.ui-summary-tile",
+            ),
+          ];
+          return (
+            tiles.length === 5 &&
+            tiles.every(
+              (tile) =>
+                tile.querySelector(":scope > .kpi-label") &&
+                tile.querySelector(":scope > .kpi-value") &&
+                tile.querySelector(":scope > .kpi-detail") &&
+                tile.querySelector(":scope > .summary-tile-dot"),
+            ) &&
+            root.querySelector(":scope > .page-header h1") &&
+            (root.querySelector(
+              ":scope > .dashboard-layout > .dashboard-main > .dashboard-approvals .dashboard-approval-table",
+            ) ||
+              root.querySelector(
+                ":scope > .dashboard-layout > .dashboard-main > .dashboard-approvals .dashboard-empty",
+              )) &&
+            root.querySelector(
+              ":scope > .dashboard-layout > .dashboard-main > .dashboard-invoices",
+            ) &&
+            root.querySelector(
+              ":scope > .dashboard-layout > .dashboard-aside > .price-update-dashboard-card",
+            ) &&
+            root.querySelector(
+              ":scope > .dashboard-layout > .dashboard-aside > .dashboard-alerts",
+            ) &&
+            root.querySelector(
+              ":scope > .dashboard-layout > .dashboard-aside > .dashboard-balances",
+            )
+          );
+        }),
+      );
+      const dashboardWideActions = new Set();
+      for (const root of dashboardRoots)
+        for (const control of root.querySelectorAll(
+          ".price-update-dashboard-card > button.dashboard-open-tasks, :scope > .page-header > .actions > button",
+        )) {
+          if (
+            !visible(control) ||
+            (!phone && !control.matches(".dashboard-open-tasks"))
+          )
+            continue;
+          const container = control.matches(".dashboard-open-tasks")
+            ? control.parentElement
+            : control.closest(".actions");
+          const expected = contentBounds(container).width;
+          if (Math.abs(control.getBoundingClientRect().width - expected) > 2)
+            failures.push(
+              "Dashboard primary action must fill its approved slot",
+            );
+          else dashboardWideActions.add(control);
+        }
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
       )) {
@@ -610,9 +670,12 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             structuredFooter &&
             variantClass === "secondary" &&
             !element.disabled;
+          const dashboardAction = dashboardRoots.has(
+            element.closest(".r2c-dashboard"),
+          );
           const expectedHeight = labelAction
             ? 32
-            : structuredFooter
+            : structuredFooter || dashboardAction
               ? 44
               : element.closest(".c9-filter-toolbar")
                 ? element.closest(".ui-segments")
@@ -690,6 +753,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             );
           if (
             !phoneReceivingWidths.has(element) &&
+            !dashboardWideActions.has(element) &&
             rect.width > Math.max(40, intrinsicWidth) + 5
           )
             failures.push(
@@ -723,7 +787,16 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const chargesContentRow = row.matches(
             ".invoice-other-charges tr.phone-list-row",
           );
-          const contentRow = importContentRow || chargesContentRow;
+          const dashboardApprovalRow =
+            dashboardRoots.has(row.closest(".r2c-dashboard")) &&
+            row.matches(".dashboard-approval-table tr[data-approval-id]") &&
+            row.querySelector(".phone-list-name a.entity-link") &&
+            row.querySelector(
+              ".phone-list-secondary .dashboard-inline-actions button.ui-button",
+            ) &&
+            row.querySelector(".phone-list-secondary .ui-badge");
+          const contentRow =
+            importContentRow || chargesContentRow || dashboardApprovalRow;
           if (contentRow) {
             const selection = row.querySelectorAll(
               ":scope > .phone-list-selection [role='checkbox']",

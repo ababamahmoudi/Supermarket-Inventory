@@ -1,3 +1,7 @@
+## R2c Manager dashboard (2026-10-26)
+
+The owner-approved [three PNG references](design-reference/r2c-dashboard/README.md) replace the prior dashboard composition. Keep the app shell; display current protected data in five equal surface KPI tiles above a 2:1 content grid. Left: six approvals with linked names, type/price/margin/actions; recent invoices with totals; ranked monthly supplier purchases and eight calendar-week bars. Right: price updates, alerts, manager notes, supplier balances and activity grouped by day. Cards size to content, headings are 17px/800 with count pills, and empty states are one line. New products show first price; below-minimum sale requests open Review. Phone cards follow Approvals → Price updates → Alerts → Recent invoices → Balances → Purchases, then Notes and Activity. All five KPI values remain in two columns; More operations retains Returns, Arrivals and weekly price changes. EN/FA, both themes and 24-hour local timestamps apply.
+
 # Screens and navigation
 
 ## R2c 0.13 — All locations Lookup (2026-10-26)

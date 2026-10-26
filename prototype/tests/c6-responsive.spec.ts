@@ -136,6 +136,15 @@ for (const language of ["en", "fa"] as const)
                 }),
               ),
               aside: rect(document.querySelector(".dashboard-aside")!),
+              main: rect(document.querySelector(".dashboard-main")!),
+              contentCards: [
+                ...document.querySelectorAll(".dashboard-layout .card"),
+              ]
+                .filter((element) => element.getBoundingClientRect().height > 0)
+                .map((element) => ({
+                  alignSelf: getComputedStyle(element).alignSelf,
+                  ...rect(element),
+                })),
             };
           });
           await writeFile(
@@ -144,23 +153,25 @@ for (const language of ["en", "fa"] as const)
           );
           expect(actual.topbar.height).toBe(60);
           expect(actual.accounts).toBe(1);
-          expect(actual.kpis).toHaveLength(4);
+          expect(actual.kpis).toHaveLength(5);
           expect(
             new Set(actual.kpis.map((card) => Math.round(card.y))).size,
-          ).toBe(width < 760 ? 2 : 1);
+          ).toBe(width < 760 ? 3 : 1);
           for (const row of actual.rows) {
             expect(row.cards).toHaveLength(2);
             const [first, second] = row.cards;
-            if (width < 760) {
+            if (width <= 1100) {
               expect(first.width).toBeCloseTo(second.width, 0);
               expect(second.y).toBeGreaterThanOrEqual(first.bottom + 15);
             } else {
               expect(first.y).toBeCloseTo(second.y, 0);
-              expect(first.height).toBeCloseTo(second.height, 0);
+              // R2c approved cards size to content, rather than stretching.
+              expect(first.height).toBeGreaterThan(0);
+              expect(second.height).toBeGreaterThan(0);
               const gap =
                 Math.max(first.x, second.x) -
                 Math.min(first.right, second.right);
-              expect(gap).toBeCloseTo(24, 0);
+              expect(gap).toBeCloseTo(20, 0);
               // Grid track spans include their internal gutters: adding the
               // shared gutter proves the actual 8+4 or 6+6 allocation.
               expect((first.width + gap) / (second.width + gap)).toBeCloseTo(
@@ -169,7 +180,11 @@ for (const language of ["en", "fa"] as const)
               );
             }
           }
-          if (width >= 1440) expect(actual.aside.width).toBe(280);
+          if (width >= 1440)
+            expect(actual.main.width / actual.aside.width).toBeCloseTo(2, 1);
+          expect(
+            actual.contentCards.every((card) => card.alignSelf === "start"),
+          ).toBe(true);
         }
       }
       await page.goto("/#product?code=0006");

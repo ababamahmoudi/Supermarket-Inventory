@@ -880,3 +880,77 @@
   > .ui-button.button-destructive:not(:disabled):is(:hover, :active) {
   background: var(--danger);
 }
+
+/* R2c shared KPI surface; static financial values have no fake interaction. */
+:root .ui-summary-tile {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 10px;
+  min-block-size: 120px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 16px;
+  background: var(--surface);
+  color: var(--text);
+  border: 0;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  text-align: start;
+}
+:root button.ui-summary-tile {
+  cursor: pointer;
+}
+:root div.ui-summary-tile {
+  cursor: default;
+}
+:root .ui-summary-tile .kpi-label {
+  min-block-size: 36px;
+  padding-inline-end: 12px;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-muted);
+}
+:root .ui-summary-tile .kpi-value {
+  margin: 0;
+  font-size: var(--font-size-large-title);
+  line-height: var(--line-height-large-title);
+  color: var(--text);
+}
+:root .ui-summary-tile.is-zero .kpi-value {
+  color: var(--text-muted);
+}
+:root .ui-summary-tile .kpi-detail {
+  min-inline-size: 0;
+  padding-inline-end: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+:root .ui-summary-tile .summary-tile-dot {
+  position: absolute;
+  inset-inline-end: 16px;
+  inset-block-start: 20px;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--radius-round);
+  background: var(--accent);
+}
+:root .ui-summary-tile .summary-tile-dot.tone-pending {
+  background: var(--pending-dot);
+}
+:root .ui-summary-tile .summary-tile-dot.tone-approved {
+  background: var(--approved-dot);
+}
+:root .ui-summary-tile .summary-tile-dot.tone-danger {
+  background: var(--danger-dot);
+}
+:root .ui-summary-tile .kpi-arrow {
+  position: absolute;
+  inset-inline-end: 12px;
+  inset-block-end: 16px;
+  color: var(--text-muted);
+}

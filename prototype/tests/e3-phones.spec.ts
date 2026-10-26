@@ -184,6 +184,11 @@ for (const width of [390, 430])
         });
       }
       await page.goto("/#dashboard");
+      await page
+        .getByText(language === "fa" ? "عملیات بیشتر" : "More operations", {
+          exact: true,
+        })
+        .click();
       const returns = page.locator(".dashboard-returns .dashboard-list-row");
       if (await returns.count()) {
         await expect(

@@ -391,9 +391,10 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
     (await page.locator(".signin-card").boundingBox())!.width,
   ).toBeLessThanOrEqual(420);
   await signIn(page, "Manager");
-  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(4);
+  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(5);
   await expect(page.locator(".kpi-label")).toHaveText([
     "Approvals waiting",
+    "Price updates to apply",
     "Open alerts",
     "Open shorts",
     "Expiring soon",
@@ -501,8 +502,9 @@ test("dashboard approvals and notes have actions that change the actual records 
   page,
 }) => {
   await signIn(page, "Manager");
+  await page.getByText("More operations", { exact: true }).click();
   for (const heading of [
-    "Approvals queue",
+    "Approvals waiting",
     "Alerts",
     "Recent invoices",
     "Returns",

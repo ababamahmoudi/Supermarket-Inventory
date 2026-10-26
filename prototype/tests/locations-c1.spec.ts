@@ -155,18 +155,21 @@ test("the dashboard replaces stock projections with actual arrivals for the sele
   );
   await page.reload();
   expect(receiptFixture.id).toBeTruthy();
+  await page.getByText("More operations", { exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Arrived this week", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Low stock", exact: true }),
   ).toHaveCount(0);
-  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(4);
+  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(5);
   await setBranch(page, "Warehouse");
+  await page.getByText("More operations", { exact: true }).click();
   await expect(
     page.getByText("No deliveries this week.", { exact: true }),
   ).toBeVisible();
   await setBranch(page, "North York");
+  await page.getByText("More operations", { exact: true }).click();
   await expect(
     page.getByText("No deliveries this week.", { exact: true }),
   ).toHaveCount(0);

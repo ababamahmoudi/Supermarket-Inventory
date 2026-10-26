@@ -358,21 +358,22 @@ test("R2 invoice names and four-decimal cost values fit on one line", async ({
   }
 });
 
-test("Part 1 purchase charts show week dates and hover/focus amounts with equal-height desktop cards", async ({
+test("Part 1 purchase charts show calendar weeks, hover/focus amounts and content-height desktop cards", async ({
   page,
 }, testInfo) => {
   await signIn(page, "Supervisor");
   await page.goto("/#dashboard");
   const chart = page.locator(".dashboard-purchases").filter({
     has: page.getByRole("heading", {
-      name: "Purchases, last 8 weeks",
+      name: "Purchases by week",
       exact: true,
     }),
   });
   await expect(chart.locator(".purchase-week-totals")).toHaveCount(0);
-  await expect(chart.locator(".purchase-week-labels")).toContainText(
-    /\d{4}-\d{2}-\d{2}/,
-  );
+  await expect(chart.locator(".purchase-week-column time")).toHaveCount(8);
+  await expect(
+    chart.locator(".purchase-week-column time").last(),
+  ).toHaveAttribute("datetime", /\d{4}-\d{2}-\d{2}/);
   const point = chart.locator(".purchase-point").last();
   await point.focus();
   await expect(chart.getByRole("tooltip")).toContainText("$");
@@ -387,13 +388,18 @@ test("Part 1 purchase charts show week dates and hover/focus amounts with equal-
   await point.hover();
   await expect(chart.getByRole("tooltip")).toBeVisible();
   if (testInfo.project.name === "desktop") {
-    const heights = await page
+    const cards = await page
       .locator(".dashboard-purchases")
       .evaluateAll((cards) =>
-        cards.map((card) => card.getBoundingClientRect().height),
+        cards.map((card) => ({
+          height: card.getBoundingClientRect().height,
+          alignSelf: getComputedStyle(card).alignSelf,
+        })),
       );
-    expect(heights).toHaveLength(2);
-    expect(Math.abs(heights[0] - heights[1])).toBeLessThanOrEqual(2);
+    expect(cards).toHaveLength(2);
+    expect(
+      cards.every((card) => card.height > 0 && card.alignSelf === "start"),
+    ).toBe(true);
   }
 });
 

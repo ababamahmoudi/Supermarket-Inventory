@@ -1,3 +1,9 @@
+## 2026-10-26 — R2c Group 1 Manager dashboard
+
+- Replaced four colored KPI tiles and stretched cards with the approved five surface tiles, top-aligned 2:1 composition and phone card order; retained existing operational lists under More operations.
+- Added canonical approval/sale margins, first-price/old→new context, invoice totals, target price-task summaries, monthly supplier total/ranking, calendar-week bars and local-day 24-hour activity.
+- Retained the three approved fictional PNG references and updated the active requirements/design/screens contracts. Test execution is recorded in the R2c dashboard review guide.
+
 # Project changelog
 
 ## R2c Group 0 — Receiving follow-ups (2026-10-26)

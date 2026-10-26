@@ -1,0 +1,677 @@
+/* R2c: approved Manager dashboard. Shared tables/fields retain their foundation. */
+:root .r2c-dashboard {
+  display: grid;
+  gap: 20px;
+}
+:root .r2c-dashboard > .page-header {
+  margin: 0;
+}
+:root .r2c-dashboard .dashboard-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+:root .r2c-dashboard .dashboard-summary-tile {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 10px;
+  min-block-size: 120px;
+  padding: 16px;
+  background: var(--surface);
+  color: var(--text);
+  border: 0;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  text-align: start;
+}
+:root .r2c-dashboard .kpi-label {
+  min-block-size: 36px;
+  padding-inline-end: 12px;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+:root .r2c-dashboard .kpi-value {
+  margin: 0;
+  font-size: var(--font-size-large-title);
+  line-height: var(--line-height-large-title);
+}
+:root .r2c-dashboard .is-zero .kpi-value {
+  color: var(--text-muted);
+}
+:root .r2c-dashboard .kpi-detail {
+  padding-inline-end: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
+  min-inline-size: 0;
+}
+:root .r2c-dashboard .kpi-arrow {
+  position: absolute;
+  inset-inline-end: 12px;
+  inset-block-end: 16px;
+  color: var(--text-muted);
+}
+:root .r2c-dashboard .dashboard-status-dot {
+  display: inline-block;
+  inline-size: 8px;
+  block-size: 8px;
+  flex: 0 0 8px;
+  border-radius: var(--radius-round);
+  background: var(--accent);
+}
+:root .r2c-dashboard .dashboard-summary-tile > .dashboard-status-dot {
+  position: absolute;
+  inset-inline-end: 16px;
+  inset-block-start: 20px;
+}
+:root .r2c-dashboard .tone-pending {
+  background: var(--pending-dot);
+}
+:root .r2c-dashboard .tone-approved {
+  background: var(--approved-dot);
+}
+:root .r2c-dashboard .tone-danger {
+  background: var(--danger-dot);
+}
+:root .r2c-dashboard .dashboard-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+:root .r2c-dashboard .dashboard-main,
+:root .r2c-dashboard .dashboard-aside {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  min-inline-size: 0;
+  inline-size: auto;
+}
+:root .r2c-dashboard .card {
+  min-inline-size: 0;
+  padding: 20px;
+  align-self: start;
+  block-size: auto;
+}
+:root .r2c-dashboard .dashboard-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-block-end: 10px;
+}
+:root .r2c-dashboard .dashboard-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+}
+:root .r2c-dashboard .dashboard-card-header h2,
+:root .r2c-dashboard .dashboard-operation-cards h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 800;
+}
+:root .r2c-dashboard .dashboard-card-header > .button {
+  flex-shrink: 0;
+  padding-inline: 0;
+}
+:root .r2c-dashboard .dashboard-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 22px;
+  block-size: 22px;
+  padding-inline: 6px;
+  background: var(--accent-soft);
+  color: var(--accent-tint-text);
+  border-radius: var(--radius-round);
+  font-size: var(--font-size-caption);
+  font-weight: 800;
+}
+:root .r2c-dashboard .dashboard-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-body);
+}
+:root .r2c-dashboard .dashboard-empty svg {
+  color: var(--approved);
+  flex-shrink: 0;
+}
+:root .r2c-dashboard .button,
+:root .r2c-dashboard .menu-trigger {
+  min-block-size: 44px;
+}
+:root .r2c-dashboard .dashboard-queue-row {
+  display: table-row;
+}
+:root .r2c-dashboard .dashboard-queue-product {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+:root .r2c-dashboard .dashboard-queue-product .product-name {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+:root .r2c-dashboard .dashboard-queue-product .product-name strong,
+:root .r2c-dashboard .dashboard-queue-product .product-name small {
+  display: block;
+  min-inline-size: 0;
+}
+:root .r2c-dashboard .dashboard-queue-product .product-name small {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+:root .r2c-dashboard .dashboard-product-context {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-inline-size: 100%;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+:root .r2c-dashboard .dashboard-approval-price {
+  display: grid;
+  gap: 4px;
+  text-align: end;
+  white-space: nowrap;
+}
+:root .r2c-dashboard .dashboard-approval-price > strong {
+  font-size: var(--font-size-body);
+}
+:root .r2c-dashboard .dashboard-approval-price > small {
+  font-size: var(--font-size-caption);
+}
+:root .r2c-dashboard .dashboard-phone-margin {
+  display: none;
+}
+:root .r2c-dashboard .dashboard-inline-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+:root .r2c-dashboard .dashboard-inline-actions > .button {
+  min-inline-size: 0;
+  padding-inline: 12px;
+  font-size: var(--font-size-caption);
+}
+:root .r2c-dashboard .dashboard-inline-actions .menu-trigger {
+  min-inline-size: 36px;
+  padding: 0;
+}
+:root .r2c-dashboard .dashboard-warning {
+  color: var(--pending);
+  font-weight: 800;
+}
+:root .r2c-dashboard .dashboard-table-caption {
+  margin: 10px 0 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+:root .r2c-dashboard .entity-link,
+:root .r2c-dashboard .entity-link .product-name {
+  color: var(--link-text);
+}
+:root .r2c-dashboard .dashboard-row.dashboard-purchase-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 20px;
+}
+:root .r2c-dashboard .dashboard-purchase-pair > .card {
+  grid-column: auto;
+  display: block;
+}
+:root .r2c-dashboard .dashboard-chart-context {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 18px;
+  font-size: var(--font-size-caption);
+}
+:root .r2c-dashboard .purchase-bars {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+:root .r2c-dashboard .purchase-bar-row {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+}
+:root .r2c-dashboard .purchase-rank {
+  font-size: var(--font-size-caption);
+}
+:root .r2c-dashboard .purchase-bar-row .row-between {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--font-size-caption);
+}
+:root .r2c-dashboard .purchase-bar-row .row-between > bdi {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root .r2c-dashboard .purchase-bar-row .row-between > strong {
+  flex-shrink: 0;
+}
+:root .r2c-dashboard .purchase-bar-track {
+  block-size: 6px;
+  margin-block-start: 6px;
+  background: var(--neutral-fill);
+}
+:root .r2c-dashboard .purchase-week-chart {
+  position: relative;
+  direction: ltr;
+}
+:root .r2c-dashboard .purchase-week-bars {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 4px;
+  align-items: end;
+  padding-block-start: 12px;
+}
+:root .r2c-dashboard .purchase-week-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-inline-size: 0;
+}
+:root .r2c-dashboard .purchase-week-column > small {
+  max-inline-size: 100%;
+  font-size: 0.625rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:root .r2c-dashboard .purchase-week-column > .date-text {
+  display: block;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.625rem;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+:root .r2c-dashboard .purchase-week-bar {
+  display: block;
+  inline-size: 100%;
+  min-block-size: 2px;
+  border: 0;
+  border-radius: var(--radius-keycap) var(--radius-keycap) 0 0;
+  background: var(--accent-soft);
+  cursor: help;
+  padding: 0;
+}
+:root .r2c-dashboard .purchase-week-bar.is-current {
+  background: var(--accent-fill);
+}
+:root .r2c-dashboard .purchase-chart-tooltip {
+  z-index: 2;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-menu);
+  white-space: nowrap;
+}
+:root .r2c-dashboard .dashboard-task-row,
+:root .r2c-dashboard .dashboard-balance-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding-block: 12px;
+  border-block-end: 1px solid var(--row-divider);
+  color: var(--text);
+  text-decoration: none;
+}
+:root .r2c-dashboard .dashboard-task-row:first-child {
+  padding-block-start: 0;
+}
+:root .r2c-dashboard .dashboard-task-row > span,
+:root .r2c-dashboard .dashboard-balance-row > div {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+:root .r2c-dashboard .dashboard-task-row strong,
+:root .r2c-dashboard .dashboard-balance-row {
+  font-size: var(--font-size-body);
+}
+:root .r2c-dashboard .dashboard-task-row small,
+:root .r2c-dashboard .dashboard-balance-row small {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+:root .r2c-dashboard .dashboard-task-price,
+:root .r2c-dashboard .dashboard-balance-row > div {
+  text-align: end;
+}
+:root .r2c-dashboard .dashboard-task-price > strong,
+:root .r2c-dashboard .dashboard-balance-row > div > strong {
+  white-space: nowrap;
+}
+:root .r2c-dashboard .dashboard-open-tasks {
+  inline-size: 100%;
+  margin-block-start: 12px;
+  white-space: normal;
+}
+:root .r2c-dashboard .dashboard-alert-row {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 12px;
+  padding-block: 12px;
+  border-block-end: 1px solid var(--row-divider);
+  color: var(--text);
+  text-decoration: none;
+}
+:root .r2c-dashboard .dashboard-alert-row:last-child,
+:root .r2c-dashboard .dashboard-balance-row:last-child {
+  border-block-end: 0;
+  padding-block-end: 0;
+}
+:root .r2c-dashboard .dashboard-alert-row > span:nth-child(2) {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+:root .r2c-dashboard .dashboard-alert-row strong {
+  font-size: var(--font-size-body);
+}
+:root .r2c-dashboard .dashboard-alert-row small {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+:root .r2c-dashboard .dashboard-overdue {
+  color: var(--danger);
+}
+:root .r2c-dashboard .dashboard-activity-day > h3 {
+  margin: 14px 0 12px;
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+}
+:root .r2c-dashboard .dashboard-activity-list {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+:root .r2c-dashboard .dashboard-activity-item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  margin: 0;
+}
+:root .r2c-dashboard .initials-avatar {
+  inline-size: 28px;
+  block-size: 28px;
+  font-size: 0.625rem;
+  background: var(--neutral-fill);
+  color: var(--text-muted);
+}
+:root .r2c-dashboard .dashboard-activity-item > div {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+:root .r2c-dashboard .dashboard-activity-item strong {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+:root .r2c-dashboard .dashboard-activity-item small {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+:root .r2c-dashboard .dashboard-operation-cards {
+  display: grid;
+  gap: 16px;
+  padding-block-start: 16px;
+}
+:root .r2c-dashboard .dashboard-list-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: none;
+}
+:root .r2c-dashboard .dashboard-list-copy,
+:root .r2c-dashboard .dashboard-list-pill,
+:root .r2c-dashboard .dashboard-list-action {
+  grid-area: auto;
+}
+@media (max-width: 1100px) and (min-width: 760px) {
+  :root .r2c-dashboard .dashboard-layout {
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    gap: 16px;
+  }
+  :root .r2c-dashboard .dashboard-row.dashboard-purchase-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 759px) {
+  :root .r2c-dashboard {
+    gap: 16px;
+  }
+  :root .r2c-dashboard > .page-header {
+    display: grid;
+    gap: 12px;
+  }
+  :root .r2c-dashboard > .page-header > .actions,
+  :root .r2c-dashboard > .page-header > .actions > .button {
+    inline-size: 100%;
+  }
+  :root .r2c-dashboard .dashboard-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  :root .r2c-dashboard .dashboard-summary-tile {
+    min-block-size: 130px;
+  }
+  :root .r2c-dashboard .kpi-label {
+    min-block-size: 32px;
+  }
+  :root .r2c-dashboard .dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  :root .r2c-dashboard .dashboard-main,
+  :root .r2c-dashboard .dashboard-aside {
+    display: contents;
+  }
+  :root .r2c-dashboard .dashboard-layout .card,
+  :root .r2c-dashboard .dashboard-layout .dashboard-row,
+  :root .r2c-dashboard .dashboard-more-operations {
+    inline-size: 100%;
+  }
+  :root .r2c-dashboard .dashboard-approvals {
+    order: 1;
+  }
+  :root .r2c-dashboard .price-update-dashboard-card {
+    order: 2;
+  }
+  :root .r2c-dashboard .dashboard-alerts {
+    order: 3;
+  }
+  :root .r2c-dashboard .dashboard-invoices {
+    order: 4;
+  }
+  :root .r2c-dashboard .dashboard-balances {
+    order: 5;
+  }
+  :root .r2c-dashboard .dashboard-purchase-pair {
+    order: 6;
+  }
+  :root .r2c-dashboard .dashboard-notes {
+    order: 7;
+  }
+  :root .r2c-dashboard .dashboard-activity {
+    order: 8;
+  }
+  :root .r2c-dashboard .dashboard-more-operations {
+    order: 9;
+  }
+  :root .r2c-dashboard .dashboard-row.dashboard-purchase-pair {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  :root .r2c-dashboard .dashboard-card-header {
+    gap: 4px;
+  }
+  :root .r2c-dashboard .dashboard-approval-table .phone-list-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "name value" "secondary secondary";
+  }
+  :root .r2c-dashboard .dashboard-approval-table .phone-list-chevron {
+    display: none;
+  }
+  :root .r2c-dashboard .dashboard-approval-table .phone-list-secondary {
+    justify-content: space-between;
+    align-items: center;
+  }
+  :root
+    .r2c-dashboard
+    .dashboard-approval-table
+    .phone-list-secondary
+    > span:last-child {
+    margin-inline-start: auto;
+  }
+  :root .r2c-dashboard .dashboard-approval-table .dashboard-phone-margin {
+    display: block;
+    color: var(--text-muted);
+  }
+  :root .r2c-dashboard .dashboard-queue-product .product-name strong {
+    font-size: var(--font-size-body);
+  }
+  :root .r2c-dashboard .dashboard-queue-product .product-name small {
+    font-size: var(--font-size-caption);
+  }
+  :root .r2c-dashboard .dashboard-invoices .phone-list-row {
+    grid-template-columns: minmax(0, 1fr) auto 28px;
+  }
+}
+:root .r2c-dashboard .ui-button.button[data-control-kind],
+:root
+  .r2c-dashboard
+  .dashboard-inline-actions
+  .ui-button.button[data-control-kind],
+:root
+  .r2c-dashboard
+  .dashboard-card-header
+  .ui-button.button[data-control-kind],
+:root .r2c-dashboard .menu-trigger {
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: none;
+}
+:root .r2c-dashboard .purchase-week-bar.is-negative {
+  background: var(--danger);
+}
+:root .r2c-dashboard .dashboard-row.dashboard-purchase-pair > .card:first-child,
+:root .r2c-dashboard .dashboard-row.dashboard-purchase-pair > .card:last-child {
+  grid-column: auto;
+}
+:root .r2c-dashboard .dashboard-compact-type {
+  display: none;
+}
+@media (min-width: 760px) and (max-width: 1100px) {
+  :root .r2c-dashboard .dashboard-compact-type {
+    display: block;
+    font-size: var(--font-size-caption);
+  }
+  :root .r2c-dashboard .dashboard-phone-margin {
+    display: block;
+  }
+}
+@media (max-width: 759px) {
+  :root
+    .r2c-dashboard
+    .ui-data-table.is-responsive.is-mobile.is-phone-list
+    .phone-list-name
+    a.entity-link {
+    color: var(--link-text);
+  }
+}
+:root
+  .r2c-dashboard
+  .price-update-dashboard-card
+  > .ui-button.dashboard-open-tasks {
+  inline-size: 100%;
+}
+:root .r2c-dashboard .dashboard-inline-actions .ui-button.button {
+  border: 0;
+  box-shadow: var(--shadow-none);
+}
+:root .r2c-dashboard .dashboard-approval-table .ui-badge {
+  padding: 4px 8px;
+  border-radius: var(--radius-round);
+  background: var(--accent-soft);
+  color: var(--accent-tint-text);
+}
+:root .r2c-dashboard .dashboard-approval-table .ui-badge.pending {
+  background: var(--pending-bg);
+  color: var(--pending);
+}
+:root .r2c-dashboard .dashboard-approval-table .ui-badge.is-price-change {
+  background: var(--neutral-fill);
+  color: var(--text);
+}
+:root .r2c-dashboard .dashboard-approval-table .ui-badge .ui-status-dot {
+  display: none;
+}
+:root .r2c-dashboard .dashboard-invoices .ui-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-round);
+  background: var(--info-bg);
+}
+:root .r2c-dashboard .dashboard-invoices .ui-badge.approved {
+  background: var(--approved-bg);
+}
+:root .r2c-dashboard .dashboard-invoices .ui-badge.pending {
+  background: var(--pending-bg);
+}
+:root .r2c-dashboard .purchase-week-column > time > span {
+  display: block;
+}
+:root .r2c-dashboard .dashboard-notes .ltr-fragment {
+  white-space: nowrap;
+}
+@media (min-width: 760px) and (max-width: 950px) {
+  :root .r2c-dashboard .dashboard-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root .r2c-dashboard .dashboard-aside {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  :root .r2c-dashboard .kpi-label {
+    min-block-size: 48px;
+  }
+}
+
+:root .r2c-dashboard .purchase-week-column > time {
+  inline-size: 100%;
+  text-align: center;
+}
+:root .r2c-dashboard .dashboard-inline-actions .ui-button.button:focus-visible {
+  box-shadow: var(--shadow-focus);
+}

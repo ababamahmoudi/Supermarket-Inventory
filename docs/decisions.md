@@ -461,3 +461,7 @@ Imported historical readings use a recognizable handwritten delivery date/time i
 ### 2026-10-25 — Reuse protected invoice state and correction flows
 
 **Context:** posted visibility, JSON entry and corrections must agree with receiving. **Decision:** share authorized workspace/saved selectors, retained Original viewing and receiving layout; add JSON entry without a reset. Received-date correction appends metadata; financial correction stays local until a reasoned canonical preview and confirmed append-only delta. Use shared 32px label actions and scoped surface-fill forms, keeping ordinary controls and the existing 2px/25-line stability budgets. **Why:** improve the workflow while retaining authority, source, money and physical evidence.
+
+## R2c Group 1 — Manager dashboard composition (2026-10-26)
+
+Context: the owner approved three replacement dashboard PNGs. Decision: retain the existing shell and canonical protected queries while replacing the old four colored/equal-height composition with five surface tiles and content-height 2:1 cards. Use Monday–Sunday calendar purchase weeks, exact retained invoice totals and current protected approval/sale margins. Phone keeps all five tile values in two columns; the fifth starts the next row. Notes/Activity remain below the primary phone sequence, and prior receiving/return/price-change lists remain under More operations. Why: match the approved hierarchy while keeping every existing operational destination and financial/permission rule.
