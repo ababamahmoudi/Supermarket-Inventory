@@ -238,7 +238,7 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
   );
 });
 
-test("Payables filters supplier totals and keeps selected report in the same branch", async ({
+test("Payables filters supplier totals and keeps its own statement in the same branch", async ({
   page,
 }) => {
   await signIn(page, "supervisor");
@@ -260,11 +260,18 @@ test("Payables filters supplier totals and keeps selected report in the same bra
   await expect(report.locator(".payables-summary-grid")).toContainText(
     "$169.79",
   );
+  // R2c opens a dedicated statement; its concrete location remains changeable.
   await chooseOption(
     page,
-    filters.getByLabel("Payables branch", { exact: true }),
+    page
+      .locator(".payables-toolbar")
+      .getByLabel("Statement location", { exact: true }),
     "Richmond Hill",
   );
+  await expect(report.locator(".payables-summary-grid")).toContainText("$0.00");
+  await page
+    .getByRole("button", { name: "All suppliers", exact: true })
+    .click();
   const selectedSupplier = overview.locator("tbody tr").filter({
     has: page.getByRole("link", { name: "Fresh Valley Foods", exact: true }),
   });
@@ -275,7 +282,6 @@ test("Payables filters supplier totals and keeps selected report in the same bra
   await expect(await responsiveColumn(selectedSupplier, "Balance")).toHaveText(
     "$0.00",
   );
-  await expect(report.locator(".payables-summary-grid")).toContainText("$0.00");
   await filters
     .getByRole("checkbox", { name: "With balance", exact: true })
     .check();
@@ -315,6 +321,9 @@ test("Payables filters supplier totals and keeps selected report in the same bra
         has: page.getByText("Overdue", { exact: true }),
       }),
     ).toContainText("$210.00");
+    await page
+      .getByRole("button", { name: "All suppliers", exact: true })
+      .click();
   } else {
     await expect(grain).toContainText("$210.00");
   }
