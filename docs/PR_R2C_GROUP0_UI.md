@@ -17,3 +17,9 @@ Test: open a posted invoice from Invoices → Posted and choose Done; repeat fro
 Confirm line immediately updates the filter counts and progress presentation while the normal protected save runs. In Needs attention the row fades out in 120 ms (immediate with reduced motion) and keyboard focus moves to the next attention row. A failed canonical validation or save restores the row, count, editor and retry error; no optimistic state writes business records or bypasses the posting guard. An ordinary Close still retains its previous scroll position.
 
 Test: select Needs attention, open a valid fictional line and Confirm line. Check the counts update at once and the next row receives focus. Automated delayed-save and failure regressions: LinesTable.r2c.test.tsx, with existing LineEditor canonical validation/fast-typing regressions retained.
+
+## 0.4 Vertically centered line values
+
+Review, posted and shared correction-table cells vertically center the status/line number and numerical values. A two-line quantity remains one centered block, with the unit conversion beneath its primary quantity.
+
+Test: inspect a fictional case line beside a single-line unit quantity in review, posted and correction, in both themes. The icon, number, costs and totals center on the row; the two quantity lines center together.
