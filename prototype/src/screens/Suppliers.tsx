@@ -5,6 +5,7 @@ import Decimal from "decimal.js";
 import { ArrowLeft } from "lucide-react";
 import { useDemo } from "../store";
 import { branchLabel as configuredBranchLabel } from "../settings";
+import { supplierMatchesFilters } from "../supplier-list";
 import { supplierMatches, deactivateSupplier } from "../supplier-editor";
 import { SupplierEditor } from "./SupplierEditor";
 import SupplierItems from "./SupplierItems";
@@ -308,21 +309,7 @@ export default function Suppliers() {
     return supplier[key] ?? "";
   };
   const rows = overview
-    .filter((supplier) =>
-      supplier.name.toLowerCase().includes(query.toLowerCase().trim()),
-    )
-    .filter((supplier) =>
-      filters.every((filter) =>
-        filter === "overdue"
-          ? !!supplier.financial &&
-            new Decimal(supplier.financial.overdue).gt(0)
-          : filter === "returns"
-            ? supplier.open_returns > 0
-            : filter === "shorts"
-              ? supplier.open_shorts > 0
-              : supplier.profile_missing.length > 0,
-      ),
-    )
+    .filter((supplier) => supplierMatchesFilters(supplier, query, filters))
     .sort((a, b) => {
       const left = compareValue(a, sort.key);
       const right = compareValue(b, sort.key);
@@ -340,6 +327,14 @@ export default function Suppliers() {
             : String(left).localeCompare(String(right));
       return sort.descending ? -result : result;
     });
+  const hasFilters = Boolean(
+    query.trim() || filters.length > 0 || locationFilterChanged,
+  );
+  const clearSupplierFilters = () => {
+    setQuery("");
+    setFilters([]);
+    void resetLocation({ "suppliers.search": "", "suppliers.filters": [] });
+  };
   const sortHeader = (key: SortKey, en: string, fa: string) => (
     <button
       className="supplier-sort"
@@ -386,15 +381,22 @@ export default function Suppliers() {
             aria-label={t("Supplier filters", "فیلتر تأمین‌کنندگان")}
             count={
               <span className="filter-toolbar-end">
-                <span>
-                  {translateCount(
-                    "{{count}} supplier",
-                    "{{count}} suppliers",
-                    "{{count}} تأمین‌کننده",
-                    "{{count}} تأمین‌کننده",
-                    rows.length,
-                    lang,
-                  )}
+                <span aria-live="polite">
+                  {supplierRead.pending
+                    ? t("Loading suppliers…", "در حال بارگذاری تأمین‌کنندگان…")
+                    : supplierRead.error
+                      ? t(
+                          "Suppliers unavailable",
+                          "تأمین‌کنندگان در دسترس نیستند",
+                        )
+                      : translateCount(
+                          "{{count}} supplier",
+                          "{{count}} suppliers",
+                          "{{count}} تأمین‌کننده",
+                          "{{count}} تأمین‌کننده",
+                          rows.length,
+                          lang,
+                        )}
                 </span>
                 {tableColumns.chooser}
               </span>
@@ -447,19 +449,8 @@ export default function Suppliers() {
                 {t(en, fa)}
               </FilterChip>
             ))}
-            {(query || filters.length > 0 || locationFilterChanged) && (
-              <Button
-                variant="plain"
-                size="sm"
-                onClick={() => {
-                  setQuery("");
-                  setFilters([]);
-                  void resetLocation({
-                    "suppliers.search": "",
-                    "suppliers.filters": [],
-                  });
-                }}
-              >
+            {hasFilters && rows.length > 0 && (
+              <Button variant="plain" size="sm" onClick={clearSupplierFilters}>
                 {t("Clear filters", "پاک کردن فیلترها")}
               </Button>
             )}
@@ -614,19 +605,42 @@ export default function Suppliers() {
               ))}
             </tbody>
           </DataTable>
-          {rows.length === 0 && !supplierRead.pending && (
-            <EmptyState>
-              {overview.length === 0
-                ? t(
-                    "No suppliers yet; import an invoice or add a supplier to get started.",
-                    "هنوز تأمین‌کننده‌ای وجود ندارد؛ برای شروع یک فاکتور وارد کنید یا تأمین‌کننده‌ای اضافه کنید.",
-                  )
-                : t(
-                    "No suppliers match these filters.",
-                    "هیچ تأمین‌کننده‌ای با این فیلترها پیدا نشد.",
-                  )}
-            </EmptyState>
+          {Boolean(supplierRead.error) && (
+            <div className="banner warning supplier-read-error" role="alert">
+              <span>
+                {t(
+                  "Couldn't load suppliers. Try again.",
+                  "تأمین‌کنندگان بارگذاری نشدند. دوباره تلاش کنید.",
+                )}
+              </span>
+              <Button variant="secondary" onClick={supplierRead.reload}>
+                {t("Try again", "تلاش دوباره")}
+              </Button>
+            </div>
           )}
+          {rows.length === 0 &&
+            !supplierRead.pending &&
+            !supplierRead.error && (
+              <EmptyState
+                action={
+                  hasFilters ? (
+                    <Button variant="plain" onClick={clearSupplierFilters}>
+                      {t("Clear filters", "پاک کردن فیلترها")}
+                    </Button>
+                  ) : undefined
+                }
+              >
+                {overview.length === 0 && !hasFilters
+                  ? t(
+                      "No suppliers yet; import an invoice or add a supplier to get started.",
+                      "هنوز تأمین‌کننده‌ای وجود ندارد؛ برای شروع یک فاکتور وارد کنید یا تأمین‌کننده‌ای اضافه کنید.",
+                    )
+                  : t(
+                      "No suppliers match these filters.",
+                      "هیچ تأمین‌کننده‌ای با این فیلترها پیدا نشد.",
+                    )}
+              </EmptyState>
+            )}
         </Card>
       </>
     );
