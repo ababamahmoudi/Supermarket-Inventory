@@ -287,7 +287,13 @@ for (const language of ["en", "fa"] as const) {
     });
     await approveAll.click();
     const approvalDialog = page.getByRole("dialog");
-    await expect(approvalDialog.getByRole("checkbox")).toHaveCount(25);
+    await expect(approvalDialog.getByRole("checkbox")).toHaveCount(26);
+    await expect(
+      approvalDialog.getByRole("checkbox", {
+        name: word(language, "Select all products", "انتخاب همهٔ کالاها"),
+        exact: true,
+      }),
+    ).toBeChecked();
     // Unticking affects the preview and the committed approval selection.
     await approvalDialog.getByRole("checkbox").last().uncheck();
     await approvalDialog.getByRole("checkbox").last().check();

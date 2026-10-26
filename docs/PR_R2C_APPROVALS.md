@@ -15,3 +15,20 @@ The category recalculates through the existing Decimal engine; typing a differen
 Test: Approvals → Pending → Edit and approve. Edit names/size/category/tax/barcode/supplier code, Cancel, reopen and verify nothing saved. Repeat, choose Save and approve, then inspect Product, History and Approvals → Approved. Try a duplicate barcode or below-margin price: the form stays open, explains the fix and leaves canonical records untouched. Return to the list at the same scroll position.
 
 Automated: approval-product-editor.r2c.test.ts (26 domain/security/atomicity cases), approvals.r2c-ui.test.tsx (ordered rows, full shared-editor cancel and atomic save).
+
+## 4.3 Invoice approval review dialog
+
+The invoice batch review uses the standard icon/title/description/footer, with Cancel then a counted primary action. Its compact table shows select-all, Product, Category, Unit cost, Price and Margin. Below-minimum rows use a light amber tint and explicit label. Individual-review-only requests remain disabled and explained. Select-all acts only on eligible rows. Phone rows retain every value and checkbox directly, with no unexplained chevrons or hidden-column actions.
+
+Saving keeps the dialog open while the current snapshot/authority/selected batch is validated; errors stay in the dialog and publish no subset. The same canonical batch command, approval scope and scroll-position protection remain.
+
+Test: open an invoice group’s Approve all… button, toggle select-all, deselect one product, inspect costs/prices/margins and the primary count, then approve. Only selected eligible products change; Cancel changes none. A stale batch stays open with a refresh message.
+
+## Validation
+
+- Production TypeScript/Vite build and targeted ESLint/Prettier checks pass.
+- 76 focused domain, financial read model, audit, shared product editor, date tracking and approval UI cases pass. The new edit/approval domain has 26 cases covering current authority, stale snapshots, all-or-nothing failure, manual/margin choices, supplier associations, audit attribution and unchanged invoice/ledger/stock evidence.
+- The fictional browser proof exercises 1440/1000/390px, light/dark, English/Persian (12 variants; 36 captures). It checks full editor Cancel and Save scroll positions within 2px, no canonical writes on Cancel, real atomic product edit/approval, category price recalculation, selected-only batch decisions, source/financial/physical evidence retention, row paints, no overflow and 44px action targets. Narrow C5 exceptions include 32px and invalid-composition negative controls.
+- Existing approval browser flows remain in the verification set. The canonical receiving/approval integration keeps its original 2700px layout and 2px scroll bounds; only the checkbox count gains the requested select-all control.
+
+The new browser export contains only independently invented products, supplier, invoice and a newly drawn original page. Uploaded business screenshots and recordings are not committed.

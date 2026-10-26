@@ -747,7 +747,9 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         const controls = [...group.querySelectorAll(":scope > button")].filter(
           visible,
         );
-        const hasEditor = controls.length === 3;
+        const expectedCount =
+          card?.dataset.approvalType === "barcode_conflict" ? 2 : 3;
+        const hasEditor = expectedCount === 3;
         const valid =
           card?.dataset.approvalId &&
           card.dataset.approvalStatus === "pending" &&
@@ -755,7 +757,13 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             ".approval-row-heading h2 a[href^='#product?code=']",
           ) &&
           card.querySelector(".approval-meta") &&
-          [2, 3].includes(controls.length) &&
+          [
+            "new_product",
+            "price_change",
+            "tax_profile",
+            "barcode_conflict",
+          ].includes(card.dataset.approvalType) &&
+          controls.length === expectedCount &&
           (!hasEditor || controls[0].classList.contains("button-secondary")) &&
           controls.at(-2).classList.contains("button-danger") &&
           controls.at(-1).classList.contains("button-primary") &&
@@ -776,6 +784,34 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           continue;
         }
         controls.forEach((control) => approvalDecisionButtons.add(control));
+      }
+      const approvalEditorFooters = new Set();
+      for (const footer of document.querySelectorAll(
+        ".approval-product-editor .product-editor-actions",
+      )) {
+        if (!visible(footer)) continue;
+        const dialog = footer.closest("dialog"),
+          form = footer.closest("form");
+        const controls = [...footer.querySelectorAll(":scope > button")].filter(
+          visible,
+        );
+        const valid =
+          dialog?.classList.contains("ui-form-surface") &&
+          form?.querySelector(".approval-product-decision") &&
+          form.querySelector("input[id$='-name_en']") &&
+          form.querySelector("input[id$='-price']") &&
+          form.querySelector("input[id$='-supplier-code']") &&
+          controls.length === 2 &&
+          controls[0].classList.contains("button-neutral") &&
+          controls[1].classList.contains("button-primary") &&
+          /^(Save and approve|ذخیره و تأیید)$/.test(
+            tidy(controls[1].textContent),
+          );
+        if (!valid)
+          failures.push(
+            "Approval product editor needs its exact staged form and footer",
+          );
+        else controls.forEach((control) => approvalEditorFooters.add(control));
       }
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
@@ -986,7 +1022,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           );
           const expectedHeight = labelAction
             ? 32
-            : r2cControl || dashboardAction || structuredFooter || approvalDecisionButtons.has(element)
+            : r2cControl || dashboardAction || structuredFooter || approvalDecisionButtons.has(element) || approvalEditorFooters.has(element)
               ? 44
               : element.closest(".c9-filter-toolbar")
                 ? element.closest(".ui-segments") ? 32 : 40

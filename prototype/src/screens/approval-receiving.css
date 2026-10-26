@@ -39,7 +39,7 @@
 }
 
 /* R2c4.1: the dashboard's approval row, with its decision details. */
-:root .approval-detail-row {
+:root .ui-card.approval-card.approval-detail-row {
   display: grid;
   grid-template-columns: minmax(240px, 1fr) minmax(280px, 0.9fr);
   align-items: center;
@@ -121,16 +121,19 @@
   gap: 8px;
   margin: 0;
 }
-:root .approval-detail-row .approval-decision-actions > .ui-button {
+:root .approval-detail-row .approval-decision-actions > .ui-button.button {
   block-size: 44px;
   min-block-size: 44px;
 }
-:root .approval-detail-row .approval-decision-actions > .button-danger {
+:root
+  .approval-detail-row
+  .approval-decision-actions
+  > .ui-button.button.button-danger {
   background: var(--color-clear);
   color: var(--danger);
 }
 @media (max-width: 759px) {
-  :root .approval-detail-row {
+  :root .ui-card.approval-card.approval-detail-row {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
     padding: 16px;
@@ -140,7 +143,7 @@
     grid-row: auto;
     gap: 12px;
   }
-  :root .approval-detail-row .approval-decision-actions > .ui-button {
+  :root .approval-detail-row .approval-decision-actions > .ui-button.button {
     padding-inline: 10px;
   }
 }
@@ -157,4 +160,185 @@
 }
 .approval-margin-actions {
   gap: 8px;
+}
+
+:root .ui-dialog.ui-dialog-structured.invoice-approval-dialog {
+  inline-size: min(1000px, calc(100vw - 32px));
+  max-inline-size: min(1000px, calc(100vw - 32px));
+}
+.invoice-approval-table-wrap {
+  min-inline-size: 0;
+}
+.invoice-approval-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.batch-select-column {
+  inline-size: 48px;
+}
+.batch-category-column {
+  inline-size: 150px;
+}
+.batch-money-column {
+  inline-size: 104px;
+}
+.batch-margin-column {
+  inline-size: 124px;
+}
+.invoice-approval-table th,
+.invoice-approval-table td {
+  padding: 10px 8px;
+  vertical-align: middle;
+  border-block-end: 1px solid var(--divider);
+}
+.invoice-approval-table th {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  text-align: start;
+  font-weight: 600;
+}
+.invoice-approval-table th.numeric {
+  text-align: end;
+}
+.invoice-approval-table tbody tr:last-child > td {
+  border-block-end: 0;
+}
+.invoice-approval-table .batch-below-minimum {
+  background: color-mix(in srgb, var(--pending-dot) 8%, var(--surface));
+}
+.invoice-approval-table .batch-below-minimum .batch-margin {
+  color: var(--pending);
+}
+.invoice-approval-table small {
+  display: block;
+  margin-block-start: 4px;
+  font-size: var(--font-size-caption);
+}
+.batch-select-all-caption {
+  display: none;
+}
+.invoice-approval-table .batch-product {
+  overflow-wrap: anywhere;
+}
+.invoice-approval-table .batch-product .product-name {
+  display: grid;
+}
+@media (max-width: 759px) {
+  :root .ui-dialog.ui-dialog-structured.invoice-approval-dialog {
+    inline-size: 100vw;
+    max-inline-size: 100vw;
+    block-size: 100dvh;
+    max-block-size: 100dvh;
+    border-radius: 0;
+  }
+  .invoice-approval-table,
+  .invoice-approval-table > thead,
+  .invoice-approval-table > tbody {
+    display: block;
+  }
+  .invoice-approval-table > colgroup,
+  .invoice-approval-table th:not(:first-child) {
+    display: none;
+  }
+  .invoice-approval-table > thead > tr {
+    display: block;
+  }
+  .invoice-approval-table > thead th {
+    display: block;
+    padding: 0 0 8px;
+    border: 0;
+  }
+  .batch-select-all-caption {
+    display: inline;
+  }
+  .invoice-approval-table > tbody > tr {
+    display: grid;
+    grid-template-columns: 28px repeat(3, minmax(0, 1fr));
+    gap: 8px 10px;
+    padding: 12px;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-control);
+    margin-block-end: 12px;
+  }
+  .invoice-approval-table > tbody > tr > td {
+    display: block;
+    min-inline-size: 0;
+    padding: 0;
+    border: 0;
+  }
+  .invoice-approval-table .batch-select {
+    grid-column: 1;
+    grid-row: 1 / 4;
+  }
+  .invoice-approval-table .batch-product {
+    grid-column: 2 / -1;
+    grid-row: 1;
+  }
+  .invoice-approval-table .batch-category {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+  }
+  .invoice-approval-table .batch-cost {
+    grid-column: 2;
+  }
+  .invoice-approval-table .batch-price {
+    grid-column: 3;
+  }
+  .invoice-approval-table .batch-margin {
+    grid-column: 4;
+  }
+  .invoice-approval-table :is(.batch-cost, .batch-price, .batch-margin) {
+    text-align: start;
+  }
+  .invoice-approval-table [data-label]::before {
+    display: block;
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    margin-block-end: 4px;
+  }
+}
+
+:root .approval-detail-row .approval-values[data-financial="false"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:root .approval-detail-row .approval-row-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+:root .approval-detail-row .approval-row-heading a .product-name > strong {
+  color: var(--link-text);
+}
+
+:root .approval-detail-row .approval-row-heading a .product-name > strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+:root .approval-detail-row .approval-margin.is-below-minimum > small {
+  color: var(--pending);
+}
+:root .invoice-approval-dialog .invoice-approval-table > tbody > tr > td {
+  background: var(--color-clear);
+}
+:root .invoice-approval-dialog .invoice-approval-table > tbody > tr {
+  background: var(--surface);
+}
+:root
+  .invoice-approval-dialog
+  .invoice-approval-table
+  > tbody
+  > tr.batch-below-minimum {
+  background: color-mix(in srgb, var(--pending-dot) 8%, var(--surface));
+}
+:root
+  .ui-dialog.approval-product-editor
+  .product-editor-actions
+  > .ui-button.button {
+  block-size: 44px;
+  min-block-size: 44px;
 }

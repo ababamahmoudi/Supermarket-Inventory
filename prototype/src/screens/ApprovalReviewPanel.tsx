@@ -117,23 +117,36 @@ export function ApprovalReviewPanel({
         </div>
         <div className="approval-review-facts">
           <div className="approval-review-price-pair">
+            {actualApproval.type !== "new_product" && (
+              <>
+                {" "}
+                <span>
+                  <small>{t("Old price", "قیمت قبلی")}</small>
+                  <strong>
+                    {oldPrice ? (
+                      <ProductPrice
+                        value={oldPrice}
+                        product={product}
+                        config={state.config}
+                      />
+                    ) : (
+                      t("No approved price yet", "هنوز قیمت تأییدشده ندارد")
+                    )}
+                  </strong>
+                </span>
+                <ArrowRight
+                  className="directional"
+                  size={18}
+                  aria-hidden="true"
+                />
+              </>
+            )}
             <span>
-              <small>{t("Old price", "قیمت قبلی")}</small>
-              <strong>
-                {oldPrice ? (
-                  <ProductPrice
-                    value={oldPrice}
-                    product={product}
-                    config={state.config}
-                  />
-                ) : (
-                  t("No approved price yet", "هنوز قیمت تأییدشده ندارد")
-                )}
-              </strong>
-            </span>
-            <ArrowRight className="directional" size={18} aria-hidden="true" />
-            <span>
-              <small>{t("New price", "قیمت جدید")}</small>
+              <small>
+                {actualApproval.type === "new_product"
+                  ? t("First price", "قیمت نخست")
+                  : t("New price", "قیمت جدید")}
+              </small>
               <strong>
                 <ProductPrice
                   value={proposedPrice}

@@ -1,5 +1,6 @@
 import { approvalProductEditRead } from "../approval-product-editor";
 import { ProductEditor } from "./Catalog";
+import { InvoiceApprovalDialog } from "./InvoiceApprovalDialog";
 import { saleRequestTab } from "../sale-request-status";
 import { approvalBoard, approvalCategoryPreview } from "../approval-board";
 import { useProtectedQuery } from "../use-protected-query";
@@ -23,7 +24,12 @@ import {
 } from "../approvals";
 import { regularPrice } from "../catalog";
 import { ManualPricePill } from "../manual-price-presentation";
-import { demoUserLabel, LtrText, ProductName } from "../presentation";
+import {
+  categoryLabel,
+  demoUserLabel,
+  LtrText,
+  ProductName,
+} from "../presentation";
 import { ProductCost, ProductPrice } from "../weight-price-presentation";
 import "./financial-polish.css";
 import { useDemo } from "../store";
@@ -41,7 +47,6 @@ import {
   PageHeader,
   Tabs,
   NumberField,
-  DataTable,
   Select,
   Dialog,
 } from "../ui";
@@ -90,6 +95,8 @@ export function Approvals() {
     snapshots: Record<string, string>;
     title: string;
   } | null>(null);
+  const [bulkPending, setBulkPending] = useState(false);
+  const [bulkError, setBulkError] = useState("");
   const [savingCorrection, setSavingCorrection] = useState(false);
   const [productEdit, setProductEdit] = useState<
     | (ReturnType<typeof approvalProductEditRead> & {
@@ -291,6 +298,7 @@ export function Approvals() {
     );
   };
   const openBulk = async (group: typeof rows) => {
+    setBulkError("");
     try {
       const snapshots = await query(
         "approvals.decide",
@@ -327,8 +335,16 @@ export function Approvals() {
     }
   };
   const confirmBulk = async () => {
-    if (!bulk || bulk.accessKey !== accessKey) return;
+    if (
+      !bulk ||
+      bulk.accessKey !== accessKey ||
+      bulkPending ||
+      !bulk.selected.length
+    )
+      return;
     const scroll = preserveViewport();
+    setBulkPending(true);
+    setBulkError("");
     try {
       await command(
         "approvals.decide",
@@ -349,13 +365,14 @@ export function Approvals() {
       finishRemoval(bulk.selected, scroll);
       setBulk(null);
     } catch {
-      setBulk(null);
-      setMessage(
+      setBulkError(
         t(
           "This proposal changed. Open the approval again before confirming.",
           "این پیشنهاد تغییر کرد. پیش از تأیید، آن را دوباره باز کنید.",
         ),
       );
+    } finally {
+      setBulkPending(false);
     }
   };
   const openProductEdit = async (item: Approval) => {
@@ -714,9 +731,16 @@ export function Approvals() {
                   className="approval-card approval-detail-row"
                   data-approval-id={item.id}
                   data-approval-status={item.status}
+                  data-approval-type={item.type}
                 >
                   <div className="approval-row-heading">
-                    <h2>
+                    <h2
+                      aria-label={
+                        lang === "fa"
+                          ? product.name_fa || product.name_en
+                          : product.name_en
+                      }
+                    >
                       <a
                         href={`#product?code=${encodeURIComponent(product.code)}`}
                       >
@@ -724,11 +748,16 @@ export function Approvals() {
                       </a>
                     </h2>
                     <p className="muted approval-product-context">
-                      <bdi dir="ltr">{product.unit_size}</bdi>
-                      <span aria-hidden="true"> · </span>
+                      {product.unit_size && (
+                        <>
+                          <bdi dir="ltr">{product.unit_size}</bdi>
+                          <span aria-hidden="true"> · </span>
+                        </>
+                      )}
                       {category
                         ? lang === "fa"
-                          ? category.label_fa || category.label
+                          ? category.label_fa ||
+                            categoryLabel(category.label, lang)
                           : category.label
                         : t("Not added", "اضافه نشده")}
                       <span aria-hidden="true"> · </span>
@@ -784,7 +813,7 @@ export function Approvals() {
                     </div>
                   )}
                   {item.type !== "barcode_conflict" && (
-                    <div className="approval-values">
+                    <div className="approval-values" data-financial={canDecide}>
                       {canDecide && (
                         <div className="approval-value">
                           <span className="muted">
@@ -1046,124 +1075,47 @@ export function Approvals() {
         />
       )}
       {canDecide && bulk?.accessKey === accessKey && (
-        <ConfirmDialog
-          open
-          title={t("Review invoice approvals", "بررسی تأییدهای فاکتور")}
-          description={bulk.title}
-          confirmLabel={t(
-            `Approve ${bulk.selected.length} products`,
-            `تأیید ${bulk.selected.length} کالا`,
-          )}
-          confirmDisabled={!bulk.selected.length || !branches.length}
-          onConfirm={confirmBulk}
-          onOpenChange={(open) => {
-            if (!open) setBulk(null);
-          }}
-        >
-          <DataTable
-            columns={[
-              { key: "select" },
-              { key: "product" },
-              { key: "category" },
-              { key: "cost", align: "end" },
-              { key: "price", align: "end" },
-              { key: "margin", align: "end" },
-            ]}
-            phoneList={{
-              name: "product",
-              value: "price",
-              secondary: ["select", "category", "cost", "margin"],
-            }}
-          >
-            <thead>
-              <tr>
-                <th>{t("Include", "انتخاب")}</th>
-                <th>{t("Product", "کالا")}</th>
-                <th>{t("Pricing category", "دسته‌بندی قیمت")}</th>
-                <th>{t("Unit cost", "هزینه واحد")}</th>
-                <th>{t("New price", "قیمت جدید")}</th>
-                <th>{t("Margin", "حاشیه سود")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {board
-                .filter((row) => bulk.ids.includes(row.approval.id))
-                .map((row) => {
-                  const product = state.products.find(
-                    (value) =>
-                      value.company_id === company &&
-                      value.code === row.approval.product_code,
-                  );
-                  if (!product) return null;
-                  const category = state.config.pricing_categories.find(
-                    (value) => value.key === row.category,
-                  );
-                  return (
-                    <tr key={row.approval.id}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          aria-label={`${t("Include", "انتخاب")} ${product.name_en}`}
-                          checked={bulk.selected.includes(row.approval.id)}
-                          disabled={requiresIndividualApprovalReview(
-                            row.approval,
-                          )}
-                          onChange={(event) =>
-                            setBulk({
-                              ...bulk,
-                              selected: event.target.checked
-                                ? [...bulk.selected, row.approval.id]
-                                : bulk.selected.filter(
-                                    (id) => id !== row.approval.id,
-                                  ),
-                            })
-                          }
-                        />
-                        {requiresIndividualApprovalReview(row.approval) && (
-                          <small>
-                            {t("Review individually", "جداگانه بررسی شود")}
-                          </small>
-                        )}
-                      </td>
-                      <td>
-                        <bdi dir="ltr">{product.name_en}</bdi>
-                      </td>
-                      <td>
-                        {category
-                          ? lang === "fa"
-                            ? category.label_fa
-                            : category.label
-                          : row.category}
-                      </td>
-                      <td>
-                        {row.unitCost && (
-                          <ProductCost
-                            value={row.unitCost}
-                            product={product}
-                            config={state.config}
-                          />
-                        )}
-                      </td>
-                      <td>
-                        <ProductPrice
-                          value={row.approval.proposed_price}
-                          product={product}
-                          config={state.config}
-                        />
-                      </td>
-                      <td>
-                        <bdi dir="ltr">
-                          {row.margin !== null
-                            ? `${new Decimal(row.margin).times(100).toFixed(2)}%`
-                            : t("Not added", "اضافه نشده")}
-                        </bdi>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </DataTable>
-        </ConfirmDialog>
+        <InvoiceApprovalDialog
+          title={bulk.title}
+          selected={bulk.selected}
+          busy={bulkPending}
+          error={bulkError}
+          onClose={() => setBulk(null)}
+          onConfirm={() => void confirmBulk()}
+          onSelect={(selected) => setBulk({ ...bulk, selected })}
+          rows={board
+            .filter((row) => bulk.ids.includes(row.approval.id))
+            .flatMap((row) => {
+              const product = state.products.find(
+                (value) =>
+                  value.company_id === company &&
+                  value.code === row.approval.product_code,
+              );
+              if (!product) return [];
+              const category = state.config.pricing_categories.find(
+                (value) => value.key === row.category,
+              );
+              return [
+                {
+                  id: row.approval.id,
+                  product,
+                  category: category
+                    ? lang === "fa"
+                      ? category.label_fa || categoryLabel(category.label, lang)
+                      : category.label
+                    : t("Not added", "اضافه نشده"),
+                  cost: row.unitCost,
+                  price: row.approval.proposed_price,
+                  margin: row.margin,
+                  belowMinimum:
+                    row.margin !== null &&
+                    row.minimumMargin !== null &&
+                    new Decimal(row.margin).lt(row.minimumMargin),
+                  individual: requiresIndividualApprovalReview(row.approval),
+                },
+              ];
+            })}
+        />
       )}
       {canDecide && correction?.accessKey === accessKey && (
         <Dialog

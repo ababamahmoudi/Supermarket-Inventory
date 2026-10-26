@@ -71,10 +71,35 @@ it("groups invoice approvals, reviews every product and approves only checked ro
   const dialog = await screen.findByRole("dialog", {
     name: "Review invoice approvals",
   });
-  expect(within(dialog).getByText(state.products[0].name_en)).toBeVisible();
-  expect(within(dialog).getByText(state.products[1].name_en)).toBeVisible();
+  const selectAll = within(dialog).getByRole("checkbox", {
+    name: "Select all products",
+  });
+  expect(selectAll).toBeChecked();
+  fireEvent.click(selectAll);
   expect(
-    within(dialog).getByRole("columnheader", { name: "Pricing category" }),
+    within(dialog).getByRole("button", { name: "Approve 0 products" }),
+  ).toBeDisabled();
+  fireEvent.click(selectAll);
+  expect(
+    within(dialog).getByRole("button", { name: "Approve 2 products" }),
+  ).toBeEnabled();
+  for (const label of ["Unit cost", "Price", "Margin"])
+    expect(
+      within(dialog).getByRole("columnheader", { name: label }),
+    ).toBeVisible();
+  expect(
+    dialog.querySelectorAll(".table-row-link,.table-details-toggle"),
+  ).toHaveLength(0);
+  for (const product of state.products.slice(0, 2)) {
+    const row = within(dialog)
+      .getByRole("checkbox", { name: `Include ${product.name_en}` })
+      .closest("tr")!;
+    expect(row.querySelector(".batch-product")).toHaveTextContent(
+      product.name_en,
+    );
+  }
+  expect(
+    within(dialog).getByRole("columnheader", { name: "Category" }),
   ).toBeVisible();
   fireEvent.click(
     within(dialog).getByRole("checkbox", {
@@ -96,7 +121,7 @@ it("groups invoice approvals, reviews every product and approves only checked ro
     characterData: true,
   });
   fireEvent.click(
-    within(dialog).getByRole("button", { name: "Approve 1 products" }),
+    within(dialog).getByRole("button", { name: "Approve 1 product" }),
   );
   await waitFor(async () =>
     expect(
@@ -249,7 +274,7 @@ it("leaves requests needing an individual price choice or reason unchecked while
   }
   expect(within(dialog).getAllByText("Review individually")).toHaveLength(3);
   fireEvent.click(
-    within(dialog).getByRole("button", { name: "Approve 1 products" }),
+    within(dialog).getByRole("button", { name: "Approve 1 product" }),
   );
   await waitFor(async () =>
     expect(
