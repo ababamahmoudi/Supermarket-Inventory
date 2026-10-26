@@ -168,7 +168,9 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         ".ui-menu-content",
         ".notebook-tabs",
       ].join(",");
+      const invoiceSourceTiles = new Set();
       const kindOf = (element) => {
+        if (invoiceSourceTiles.has(element)) return "source-tile";
         // Category choices are actual pressed-state chips; their menu trigger
         // belongs to the same pill group. Keep them measured, with their own
         // fully-round shape rule, rather than treating them as ordinary actions.
@@ -225,6 +227,175 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           parseFloat(style.borderRightWidth || "0");
         return { left, right, width: right - left };
       };
+      // Only the complete four-source invoice dialog earns a tile contract.
+      // A copied class elsewhere remains an ordinary, measured action.
+      for (const dialog of document.querySelectorAll(
+        "dialog.invoice-entry-choice-dialog",
+      )) {
+        if (!visible(dialog)) continue;
+        const fa = document.documentElement.lang.startsWith("fa");
+        const choices = fa
+          ? [
+              ["عکس (خوانش هوش مصنوعی)", "عکس", "camera"],
+              ["PDF (خوانش هوش مصنوعی)", "PDF", "file-text"],
+              ["ورود دستی", "ورود دستی", "pen-line"],
+              ["فایل JSON", "فایل JSON", "file-json"],
+            ]
+          : [
+              ["Photo (AI reading)", "Photo", "camera"],
+              ["PDF (AI reading)", "PDF", "file-text"],
+              ["Manual entry", "Manual entry", "pen-line"],
+              ["JSON file", "JSON file", "file-json"],
+            ];
+        const grid = dialog.querySelector(
+          ":scope > .ui-dialog-body > .invoice-entry-choice-grid",
+        );
+        const controls = [...(grid?.children ?? [])];
+        const footer = [
+          ...dialog.querySelectorAll(":scope > .ui-dialog-footer > button"),
+        ];
+        const valid =
+          dialog.matches("dialog[open].ui-dialog.ui-dialog-structured") &&
+          tidy(dialog.querySelector(".ui-dialog-header h2")?.textContent) ===
+            (fa ? "فاکتور جدید" : "New invoice") &&
+          dialog.querySelector(".ui-dialog-header .ui-dialog-icon svg") &&
+          tidy(
+            dialog.querySelector(".ui-dialog-header .dialog-description")
+              ?.textContent,
+          ) ===
+            (fa
+              ? "روش افزودن فاکتور را انتخاب کنید."
+              : "Choose how to add the invoice.") &&
+          controls.length === 4 &&
+          controls.every((tile, index) => {
+            const [label, title, icon] = choices[index];
+            return (
+              tile.matches(
+                "button.ui-button.button.button-neutral.invoice-entry-choice-tile",
+              ) &&
+              visible(tile) &&
+              tile.children.length === 3 &&
+              [...tile.children].every(visible) &&
+              tile.querySelector(
+                `:scope > svg.lucide-${icon}[aria-hidden='true']`,
+              ) &&
+              tidy(tile.getAttribute("aria-label")) === label &&
+              tidy(tile.querySelector(":scope > strong")?.textContent) ===
+                title &&
+              Boolean(tidy(tile.querySelector(":scope > span")?.textContent))
+            );
+          }) &&
+          footer.length === 1 &&
+          footer[0].classList.contains("button-neutral") &&
+          tidy(footer[0].textContent) === (fa ? "انصراف" : "Cancel");
+        if (!valid) {
+          failures.push(
+            "Invoice source tiles need the exact four-choice dialog composition",
+          );
+          continue;
+        }
+        const gridStyle = getComputedStyle(grid);
+        const columns = phone ? 1 : 2;
+        const gap = parseFloat(gridStyle.columnGap);
+        const bounds = contentBounds(grid);
+        const requiredWidth = (bounds.width - gap * (columns - 1)) / columns;
+        if (
+          gridStyle.display !== "grid" ||
+          gridStyle.gridTemplateColumns.split(/\s+/).length !== columns ||
+          Math.abs(gap - 12) > 0.5 ||
+          Math.abs(parseFloat(gridStyle.rowGap) - 12) > 0.5
+        )
+          failures.push(
+            "Invoice source tiles need their equal two-column or phone one-column grid",
+          );
+        const textHeight = (element) => {
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          const tops = [];
+          for (const rect of range.getClientRects())
+            if (
+              rect.width > 0 &&
+              !tops.some((top) => Math.abs(top - rect.top) < 1)
+            )
+              tops.push(rect.top);
+          return tops.length * parseFloat(getComputedStyle(element).lineHeight);
+        };
+        const minimum = phone ? 104 : 116;
+        const requiredHeight = Math.max(
+          minimum,
+          ...controls.map((tile) => {
+            const style = getComputedStyle(tile);
+            return (
+              textHeight(tile.querySelector(":scope > strong")) +
+              textHeight(tile.querySelector(":scope > span")) +
+              parseFloat(style.rowGap) +
+              parseFloat(style.paddingTop) +
+              parseFloat(style.paddingBottom) +
+              parseFloat(style.borderTopWidth) +
+              parseFloat(style.borderBottomWidth)
+            );
+          }),
+        );
+        for (const [index, tile] of controls.entries()) {
+          invoiceSourceTiles.add(tile);
+          const style = getComputedStyle(tile);
+          const rect = tile.getBoundingClientRect();
+          const label = tidy(tile.getAttribute("aria-label"));
+          if (
+            Math.abs(rect.width - requiredWidth) > 1 ||
+            Math.abs(
+              rect.left -
+                (bounds.left +
+                  (gridStyle.direction === "rtl"
+                    ? columns - 1 - (index % columns)
+                    : index % columns) *
+                    (requiredWidth + gap)),
+            ) > 1 ||
+            Math.abs(
+              rect.top -
+                (grid.getBoundingClientRect().top +
+                  Math.floor(index / columns) *
+                    (requiredHeight + parseFloat(gridStyle.rowGap))),
+            ) > 2 ||
+            rect.left < bounds.left - 1 ||
+            rect.right > bounds.right + 1 ||
+            tile.scrollWidth > tile.clientWidth + 1
+          )
+            failures.push(`Invoice source tile width or containment: ${label}`);
+          if (
+            Math.abs(parseFloat(style.minHeight) - minimum) > 1 ||
+            Math.abs(rect.height - requiredHeight) > 2 ||
+            tile.scrollHeight > tile.clientHeight + 1
+          )
+            failures.push(`Invoice source tile height: ${label}`);
+          if (
+            [
+              style.borderTopLeftRadius,
+              style.borderTopRightRadius,
+              style.borderBottomRightRadius,
+              style.borderBottomLeftRadius,
+            ].some((radius) => radius !== "12px")
+          )
+            failures.push(`Invoice source tile radius: ${label}`);
+          if (
+            ["Top", "Right", "Bottom", "Left"].some(
+              (side) =>
+                Math.abs(parseFloat(style[`border${side}Width`]) - 1) > 0.01 ||
+                style[`border${side}Style`] !== "solid",
+            )
+          )
+            failures.push(`Invoice source tile border: ${label}`);
+          for (const text of tile.querySelectorAll(
+            ":scope > strong, :scope > span",
+          )) {
+            const contrast = textContrastOf(text);
+            if (!Number.isFinite(contrast) || contrast < 4.5)
+              failures.push(`Invoice source tile text contrast: ${label}`);
+          }
+          if (style.boxShadow !== "none" && !tile.matches(":focus-visible"))
+            failures.push(`Invoice source tile resting shadow: ${label}`);
+        }
+      }
       const checkPhoneActionGrid = (
         group,
         controls,
@@ -490,6 +661,13 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           element.getAttribute("aria-label") || element.textContent,
         );
         const kind = kindOf(element);
+        if (
+          element.matches(".invoice-entry-choice-tile") &&
+          !invoiceSourceTiles.has(element)
+        )
+          failures.push(
+            `Invoice source tile outside the validated four-choice composition: ${label}`,
+          );
         const choiceTextContrast =
           kind === "choice" ? textContrastOf(element) : null;
         const variantClass = [
