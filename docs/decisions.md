@@ -1,5 +1,17 @@
 # Decisions
 
+## R2c Groups 2–6 — Public choices, atomic review and personal event grouping (2026-10-26)
+
+**Shared choices:** derive explicit public search metadata and semantic placeholders; keep genuine empty-valued All/None choices. Bounded popovers and one full-record control fix presentation without expanding domain data or changing quantity/price/authority. Record-details opt-in applies only to the requested overview families.
+
+**Supplier/Payables:** retain the authoritative company directory and distinguish read failure from empty business data. Incomplete profiles derive from fields, and a dedicated stable supplier-ID statement route preserves list position and existing financial permissions. Contacts/actions/KPIs use the same foundation surfaces, with no false click target on a static balance.
+
+**Approvals:** reuse the full ProductEditor with a staged protected snapshot. Validate and perform genuine product/date/supplier/decision operations on one candidate; commit all fields and one attributed audit together. Cancel/failure saves none. Retain source cost/money/original/physical evidence, barcode/manual/margin rules and old supplier-code associations. This compound edit is nonreversible in generic History; standard decisions keep their existing Undo. Batch presentation gains select-all and complete money/margin columns while selected-only atomic guards remain.
+
+**Offers:** improve hierarchy/search/form alignment while keeping bundle quantity/price from the current approved-price mapping. Display those terms read-only; arbitrary pricing is not inferred from a design request. Savings use Decimal and existing offer evidence.
+
+**Notifications:** group only a genuine same-source decision/product/effective event across currently permitted branches; never infer identity from product/time alone. Use internal equality tokens and exact legacy record identity. Read/clear is personal; soft dismissal retains event keys and source records, and handled sources are removed by current source checks. Reconstruct related routes canonically under fresh authority and invalidate stale UI navigation intent. These remain local repository operations; production HTTP/push/email and recipient-routing behavior do not change.
+
 ## R2d — Separate branch staff and audited local hours (2026-10-26)
 
 **Context:** the paper sheet records employees who often have no app login, and Cashier must enter branch hours while Floor Worker must see none.

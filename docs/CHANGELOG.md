@@ -1,3 +1,12 @@
+## 2026-10-26 — R2c Groups 2–6
+
+- G2 (2.1–2.4): shared public bilingual picker search/highlights/keyboard support, explicit non-option placeholders, visible-viewport popover bounds and one record-details control for Suppliers/Payables/Offers/Returns. Genuine None/All choices and shelf scan/refocus remain.
+- G3 (3.1–3.3): truthful supplier pending/error/filtered/company-empty states, actual incomplete-profile filtering, padded single-header contacts/surface KPIs and stable supplier-ID top-level Payables statements with 2px Back/list restoration. A failed protected read no longer becomes a false empty company. The fictional lifecycle retained suppliers; the exact private screenshot state was not reproduced from private data.
+- G4 (4.1–4.3): compact decision rows, protected full shared ProductEditor with atomic metadata/date/supplier/approval commit and one retained audit, plus structured selected-only invoice review with select-all/cost/price/margin and amber checks. Cancel/failure preserves canonical data and original/ledger/physical evidence.
+- G5 (5.1–5.2): clearer product/offer/regular-saving hierarchy and aligned searchable Create offer with visible configured read-only quantity/total. Existing pricing, confirmation/dismissal/stop/idempotency/location/Undo behavior remains.
+- G6: bounded personal inbox with sticky controls, boxed read/unread groups, 24-hour dates, recipient-only soft Clear all, handled-source filtering and fresh canonical related navigation. Same source decisions group eligible stores; different decisions and legacy identities remain distinct. Public grouping tokens exclude raw legacy routing/recipient payloads.
+- Fictional domain/component/browser proofs cover current authority/privacy/atomicity, real search/record/statement/offer/notification operations, layout matrices and strict C5 corruption controls. G4's production matrix covers 12 width/language/theme variants with 36 captures and ≤2px editor save/cancel checks. See the per-group review guides for executed evidence; final combined CI belongs to the integrated head. No private business fixtures, production HTTP/deployment/push or physical-device/printer proof is claimed.
+
 ## 2026-10-26 — R2d timesheets (A1–A3, B1–B4, C)
 
 - Added fresh-authority company/location/module guards for Owner, Manager, Branch Supervisor and Cashier, with Floor Worker denied across route, projections, commands, History and export. Settings configure bilingual departments and module availability without changing other role/financial grants.
