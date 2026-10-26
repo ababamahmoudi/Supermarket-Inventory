@@ -56,7 +56,7 @@ Confirm/Close return to the same row without opening another line; receiving act
 
 ## Settings → Data and imported invoice review
 
-Owner/Manager Data provides **Import invoice readings** (Choose file…) and **Start with an empty store** (Remove fictional data…). Empty store, import preview and import complete share an icon/title/short-description/close header, body and end-aligned secondary/primary footer. Empty store shows Keeps and Removes lists, an empty DELETE/حذف field and a red destructive button disabled until it matches. Configuration, people, locations, pricing rules and templates remain.
+Owner/Manager Data provides **Import invoice readings** (Choose file…) and **Start with an empty store** (Remove fictional data…). Keep one **History** destination below the Data tools. When change attribution is present, retain the actual person/date without repeating the History link. Empty store, import preview and import complete share an icon/title/short-description/close header, body and end-aligned secondary/primary footer. Empty store shows Keeps and Removes lists, an empty DELETE/حذف field and a red destructive button disabled until it matches. Configuration, people, locations, pricing rules and templates remain.
 
 Only these structured-dialog footers use the reference's 44px intrinsic actions, a bordered surface-fill secondary and a filled danger-red destructive button. Other dialogs/buttons retain the general foundation contract.
 

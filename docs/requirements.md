@@ -901,3 +901,7 @@ Lookup filters use configured active pricing categories with product counts, ind
 ## R2c 7.3 — Branch Lookup default (2026-10-26)
 
 A concrete location initially lists products delivered, stocked or explicitly priced there; no stock quantity is displayed. A typed name/code/barcode search adds products present at another permitted location in an **At other locations** group. The current location shows only its own approved effective price. Without one, show **Not approved here yet** plus approved selling prices at other permitted locations; after an actual current-location decision, remove those comparisons. A bare company default is not a branch approval: require an explicit branch override, matching accepted approval, manual decision/provenance, active approved sale or genuine retained all-store decision. All-store accepted prices still apply to selling stores; Warehouses never inherit customer prices. This protected query returns only product code, presence booleans and public selling prices, never stock quantities, source invoice identities, costs, margins or staff attribution. All locations remains the unchanged 0.13 company catalog/comparison view. This is the owner prompt’s recommended default pending Ali’s confirmation, recorded in open questions.
+
+## R2c 7.4 — Settings Data History (2026-10-26)
+
+Settings → Data has exactly one History link. Retain the actual Changed by/date attribution when available; it must not add a second identical destination. Other settings groups retain their existing attribution links.

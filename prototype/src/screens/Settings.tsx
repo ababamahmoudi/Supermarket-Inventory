@@ -1435,8 +1435,13 @@ function SettingsContent() {
           {changed && (
             <p className="settings-changed-line">
               {t("Changed by", "تغییر توسط")} {changed.by} {t("on", "در")}{" "}
-              <DateText value={changed.at} /> ·{" "}
-              <a href="#history">{t("History", "تاریخچه")}</a>
+              <DateText value={changed.at} />
+              {selected !== "data" && (
+                <>
+                  {" · "}
+                  <a href="#history">{t("History", "تاریخچه")}</a>
+                </>
+              )}
             </p>
           )}
         </section>
