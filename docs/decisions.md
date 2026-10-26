@@ -1,5 +1,11 @@
 # Decisions
 
+## R2c receiving defaults — 2026-10-26
+
+Ali requires 24-hour times throughout the app. Ambiguous handwritten delivery hours 1–6 prefer afternoon within configurable 06:00–20:00 delivery hours and always offer the retained alternate; store opening hours never infer delivery time. North York is configured Open 24 hours. Explicit am/pm and 13–23 remain literal.
+
+Imported unknown packs use one plus a question, approximate case conversion accepts a 0.01-unit distance from a whole unit, and unit cost derives from printed line total divided by actual units with exact retained money evidence. All-missing totals derive only from complete item/charge amounts. Calculated/defaulted metadata stays quiet; actual reading checks, handwriting and unresolved facts stay amber. These owner-requested defaults supersede the earlier exact-only conversion and all-imported-Received-amber rules. All-locations Lookup reads separate authorized branch facts; branch writes choose their destination at action time.
+
 ## R1 — Local invoice readings before live AI (2026-10-21)
 
 Context: Ali needs real-data testing before the October 30 pitch using readings already produced by his invoice-reader kit, without paying for another AI run.

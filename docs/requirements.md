@@ -1,5 +1,15 @@
 # Requirements (current owner workflow, C9 — 2026-10-19)
 
+## R2c Group 0 — Current receiving follow-ups (2026-10-26)
+
+Blocked posting looks unavailable while retaining exact, no-write missing-field help. Posted documents have Done returning to their entry route or the Posted tab. Confirmation updates attention/confirmed counts immediately with a short reduced-motion-aware fade, next-row focus and save-failure rollback. All receiving/correction values center vertically; review fills have continuous rounded corners, while posted rows have no green fill or status column. Human labels replace internal reading keys. Optional absence actions stay inline; buffered addresses grow through four lines without shifting following fields. New invoice uses four equal descriptive icon tiles.
+
+All app times use a 24-hour clock. Unqualified handwritten hours 1–6 use afternoon only within configured `invoices.delivery_window` (default 06:00–20:00), remain amber and retain a one-click alternate. Explicit am/pm or 13–23 is used as written; location opening hours are independent configuration.
+
+Common carton/box/measured pack patterns are parsed; an unknown imported pack becomes one plus an amber question, never zero. Case quantity × pack within 0.01 of a whole unit uses that whole number; other fractions stay unresolved. Imported unit cost is printed line total divided by units, four decimals, retaining an exact line-money basis to preserve paper cents. Names drop pack/date suffixes into retained printed evidence and ALL-CAPS names become Title Case. A pack-only name and name-like supplier code swap automatically with an amber Undo.
+
+Amber represents explicit reading checks or genuinely unresolved/uncertain evidence. Computed due dates/totals, configured currency, generated codes and invoice-date Received keep quiet provenance; handwriting remains amber. With no printed totals, complete line amounts plus signed other charges derive subtotal, tax zero and total. Missing component amounts remain unresolved. See the Group 0 guides for detailed test paths.
+
 ## R2c 0.13 — Aggregate Lookup (2026-10-26)
 
 All locations and All my locations keep every non-archived company catalog product searchable. The result list omits branch-only prices, delivery dates and open dates. The selected product shows separate public rows for each permitted location: approved effective price, last delivery and open dates. Never select a first location implicitly. A branch write asks for its concrete permitted location when that action starts; a customer charge remains explicitly tied to one Store. Current company and assignment checks apply to every query, and public hints exclude costs, source invoice identities, quantities and staff.

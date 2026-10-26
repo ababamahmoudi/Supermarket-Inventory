@@ -1,5 +1,9 @@
 # Project changelog
 
+## R2c Group 0 — Receiving follow-ups (2026-10-26)
+
+Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted Done, optimistic line confirmation/rollback, centered rounded/plain rows, human evidence labels and growing addresses, 24-hour handwriting choices, expanded packs and exact line-cost basis, cleaner names/undo, quieter provenance, line-derived totals, four invoice-entry tiles, aggregate Lookup and lighter dark check rows. Fictional tests and review guides are included; executed final CI and full combined verification are recorded after the remaining R2c/R2d groups.
+
 ## 2026-10-25 — R2b import, review and posted invoices
 
 - **1.1–1.10:** historical delivery-date provenance, configured currency, compatible total arithmetic, recognized/inferred terms, clean names/packs/codes, optional supplier contacts/title-case suggestion, exact case/weight handling, attributed absence acknowledgment and rename-safe supplier matching. Retain unresolved questions and original evidence.

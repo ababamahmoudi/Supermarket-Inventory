@@ -1,5 +1,9 @@
 # Data model
 
+## R2c import normalization metadata (2026-10-26)
+
+Imported delivery inference retains `imported_received_alternative` for an unqualified handwritten morning/afternoon choice. Display and input use 24-hour company-local time; stored instants remain UTC. Quiet `calculated_fields` and `calculated_from_lines` provenance are separate from genuine reading checks and checker receipts. Normalization retains exact printed descriptions, code/name swap evidence and source pack/money basis; computed four-place unit costs never replace original paper totals. Unknown imported pack defaults to one plus a review check. The typed preview exposes only supported check evidence, not internal charge-calculation objects.
+
 ## R2b import provenance and corrections (2026-10-25)
 
 Header, line and other-charge `checked_fields` maps store canonical field names with `{ checked_by_user_id, checked_at }`. Editing acknowledges matching aliases; whole-line confirmation acknowledges the line's remaining checks. Not on the invoice keeps the value empty, saves that receipt and records `absent_on_invoice: true` in History. Absence is not a fabricated field value or extra receipt property.
