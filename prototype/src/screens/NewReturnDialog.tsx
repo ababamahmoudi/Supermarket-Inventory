@@ -76,8 +76,8 @@ function errorCopy(code: string, t: Translate): string {
       "آخرین رسیدها متفاوت‌اند. پیش از ایجاد مرجوعی از مدیر بخواهید رسید را بررسی کند.",
     ],
     source_currency: [
-      "This receipt uses another currency. Ask a manager to review it before creating this return.",
-      "این رسید از ارز دیگری استفاده می‌کند. پیش از ایجاد مرجوعی از مدیر بخواهید آن را بررسی کند.",
+      "This receipt's currency needs a manager's review before this return can be created.",
+      "پیش از ایجاد این مرجوعی، ارز رسید باید توسط مدیر بررسی شود.",
     ],
     changed: [
       "The receipt or your access changed. Refresh the choices and try again.",

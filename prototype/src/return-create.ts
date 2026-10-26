@@ -114,7 +114,7 @@ export function createReturn(
     branch_id: input.branch,
     supplier: source.supplier.name,
     supplier_id: source.supplier.id,
-    currency: source.currency,
+    currency: source.currency!,
     status: "open",
     original_units_recovered: 0,
     created_at: at,

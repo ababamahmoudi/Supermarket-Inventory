@@ -24,6 +24,12 @@ import {
 } from "./operations";
 import { awaitingPickupReturnCredits } from "./return-credit-preview";
 import { saveCompanySettings } from "./settings";
+import {
+  createInvoice,
+  addManualLine,
+  postInvoice,
+  invoiceBlockers,
+} from "./invoice";
 import type { AuthenticatedActor, RoleId } from "./authority-types";
 import type { ReturnCreationPhoto } from "./return-create-files";
 
@@ -272,10 +278,20 @@ describe("R2c 7.1 canonical new return", () => {
     state.invoices![0].import_currency = "USD";
     expect(
       returnCreateChoices(state, actor, "Branch 1").products[0],
-    ).toMatchObject({ issue: "source_currency", currency: "USD" });
+    ).toMatchObject({ issue: "source_currency" });
     let before = JSON.stringify(state);
     expect(() => createReturn(state, actor, input)).toThrow("source_currency");
     expect(JSON.stringify(state)).toBe(before);
+    // Conflicting explicit USD and retained CAD ledger evidence has no usable denomination.
+    const conflicting = returnCreateChoices(state, actor, "Branch 1")
+      .products[0];
+    expect(conflicting.currency).toBeUndefined();
+    expect(conflicting.unit_cost).toBeUndefined();
+    state.ledger[0].currency = "USD";
+    expect(
+      returnCreateChoices(state, actor, "Branch 1").products[0],
+    ).toMatchObject({ issue: "source_currency", currency: "USD" });
+    state.ledger[0].currency = "CAD";
     state.invoices![0].import_currency = state.config.company.currency;
     state.invoices![0].lines[0].unit_cost_before_tax = "";
     expect(
@@ -291,6 +307,112 @@ describe("R2c 7.1 canonical new return", () => {
     ).toBe("source_ambiguous");
     before = JSON.stringify(state);
     expect(() => createReturn(state, actor, input)).toThrow("source_ambiguous");
+    expect(JSON.stringify(state)).toBe(before);
+  });
+  it("uses the genuine manual invoice posting currency after company settings change, without guessing", () => {
+    const { state, actor } = setup();
+    state.invoice = createInvoice(state, actor, "Branch 1", true);
+    Object.assign(state.invoice, {
+      supplier: "Cloudbay Wholesale",
+      supplier_confirmed: true,
+      supplier_invoice_number: "FICTIONAL-MANUAL-CAD",
+      file_name: "fictional-original.png",
+      file_data: "data:image/png;base64,ZmFrZQ==",
+    });
+    addManualLine(state, actor, "0003");
+    Object.assign(state.invoice.lines[0], {
+      review_confirmed: true,
+      date_confirmed: true,
+      date_value: "2026-12-30",
+    });
+    expect(invoiceBlockers(state, actor)).toEqual([]);
+    expect(postInvoice(state, actor)).toBe(true);
+    expect(state.invoice.import_currency).toBeUndefined();
+    expect(
+      state.ledger.find(
+        (entry) =>
+          entry.invoice_id === state.invoice.id && entry.type === "invoice",
+      )?.currency,
+    ).toBe("CAD");
+    const original = returnCreateChoices(state, actor, "Branch 1").products[0];
+    expect(original).toMatchObject({ currency: "CAD", unit_cost: "7.1250" });
+    expect(original.issue).toBeUndefined();
+    saveCompanySettings(
+      state,
+      { ...state.config.company, currency: "USD" },
+      actor,
+    );
+    const source = returnCreateChoices(state, actor, "Branch 1").products[0];
+    expect(source).toMatchObject({ issue: "source_currency", currency: "CAD" });
+    const input: CreateReturnInput = {
+      request_id: "manual-posting-currency",
+      branch: "Branch 1",
+      supplier_id: source.supplier_id,
+      product_code: source.product_code,
+      source_fingerprint: source.source_fingerprint,
+      quantity: "1",
+      quantity_unit: "units",
+      reason: "wrong_item",
+      note: "Fictional manual receipt",
+      photos: [],
+    };
+    const before = JSON.stringify(state);
+    expect(() => createReturn(state, actor, input)).toThrow("source_currency");
+    expect(JSON.stringify(state)).toBe(before);
+    saveCompanySettings(
+      state,
+      { ...state.config.company, currency: "CAD" },
+      actor,
+    );
+    const id = createReturn(state, actor, input);
+    recordPickup(state, actor, id, {
+      quantities: { "0003": 1 },
+      representative: "Fictional Audit Driver",
+      slip: "MANUAL-CAD-PICKUP",
+    });
+    expect(state.returns.find((record) => record.id === id)).toMatchObject({
+      currency: "CAD",
+      pickup_memos: [{ currency: "CAD", expected_credit: "7.13" }],
+    });
+  });
+  it("blocks missing and conflicting retained currency evidence for manual receipts without writes", () => {
+    const { state, actor, input } = setup();
+    delete state.invoices![0].import_currency;
+    state.ledger = [];
+    let source = returnCreateChoices(state, actor, "Branch 1").products[0];
+    expect(source.issue).toBe("source_currency");
+    expect(source.currency).toBeUndefined();
+    let before = JSON.stringify(state);
+    expect(() =>
+      createReturn(state, actor, {
+        ...input,
+        source_fingerprint: source.source_fingerprint,
+      }),
+    ).toThrow("source_currency");
+    expect(JSON.stringify(state)).toBe(before);
+    const invoice = state.invoices![0];
+    state.ledger = ["CAD", "USD"].map((currency) => ({
+      id: `conflicting-${currency}`,
+      company_id: actor.company_id,
+      branch: "Branch 1",
+      supplier: invoice.supplier,
+      invoice_id: invoice.id,
+      type: "invoice",
+      date: "2026-10-21",
+      reference: "FICTIONAL-CURRENCY-CONFLICT",
+      amount: "142.50",
+      currency,
+    }));
+    source = returnCreateChoices(state, actor, "Branch 1").products[0];
+    expect(source.issue).toBe("source_currency");
+    expect(source.currency).toBeUndefined();
+    before = JSON.stringify(state);
+    expect(() =>
+      createReturn(state, actor, {
+        ...input,
+        source_fingerprint: source.source_fingerprint,
+      }),
+    ).toThrow("source_currency");
     expect(JSON.stringify(state)).toBe(before);
   });
   it("appears in supplier/Payables immediately without deduction; genuine pickup moves it once to pending credit", () => {

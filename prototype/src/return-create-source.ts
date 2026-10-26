@@ -7,7 +7,7 @@ import { effectiveInvoiceVersion } from "./invoice-version";
 import { effectiveInvoiceLocation } from "./received";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { businessFingerprint } from "./business-fingerprint";
-import type { DemoState, Product, SupplierRecord } from "./types";
+import type { DemoInvoice, DemoState, Product, SupplierRecord } from "./types";
 
 export class ReturnCreateError extends Error {
   constructor(
@@ -99,7 +99,7 @@ interface ReceiptSource {
   line_index: number;
   received_at: string;
   cost: string | null;
-  currency: string;
+  currency: string | null;
   fingerprint: string;
   quantity_unit: "units" | "lb";
 }
@@ -112,6 +112,38 @@ function validCost(value: unknown): string | null {
   } catch {
     return null;
   }
+}
+/** Historical receipt value needs historical currency evidence, never today's setting. */
+function receiptCurrency(
+  state: DemoState,
+  original: DemoInvoice,
+  effective: DemoInvoice,
+) {
+  const postings = state.ledger
+    .filter(
+      (entry) =>
+        entry.company_id === original.company_id &&
+        entry.invoice_id === original.id &&
+        entry.type === "invoice",
+    )
+    .map((entry) => ({ id: entry.id, currency: entry.currency }))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const imports = [original.import_currency, effective.import_currency].filter(
+    (value) => value !== undefined,
+  );
+  const values = [...imports, ...postings.map((entry) => entry.currency)];
+  const currencies = new Set(values);
+  return {
+    currency:
+      values.length > 0 &&
+      values.every(
+        (value) => typeof value === "string" && /^[A-Z]{3}$/.test(value),
+      ) &&
+      currencies.size === 1
+        ? values[0]!
+        : null,
+    witness: { imports, postings },
+  };
 }
 function receiptSources(
   state: DemoState,
@@ -129,6 +161,7 @@ function receiptSources(
     )
     .flatMap((original) => {
       const invoice = effectiveInvoiceVersion(state, original);
+      const currency = receiptCurrency(state, original, invoice);
       const supplier = suppliers.find((item) =>
         supplierMatches(item, invoice.supplier),
       );
@@ -182,7 +215,7 @@ function receiptSources(
             line_index: index,
             received_at,
             cost,
-            currency: invoice.import_currency ?? state.config.company.currency,
+            currency: currency.currency,
             quantity_unit,
             fingerprint: businessFingerprint({
               branch,
@@ -203,8 +236,8 @@ function receiptSources(
               line_index: index,
               line,
               received_at,
-              currency:
-                invoice.import_currency ?? state.config.company.currency,
+              currency: currency.currency,
+              currency_evidence: currency.witness,
             }),
           },
         ];
@@ -294,7 +327,7 @@ export function returnCreateChoices(
         last_received_at: source.received_at,
         source_fingerprint: source.fingerprint,
         ...(issue ? { issue } : {}),
-        ...(showCost && source.cost !== null
+        ...(showCost && source.cost !== null && source.currency
           ? { unit_cost: source.cost, currency: source.currency }
           : {}),
       }))
