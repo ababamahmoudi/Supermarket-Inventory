@@ -1,6 +1,7 @@
 import { useSettingsConfiguration } from "../settings-configuration";
 import { SettingsConfigurationGate } from "../SettingsConfigurationGate";
 import People from "./People";
+import TimesheetSettings from "./TimesheetSettings";
 import NotificationSettings from "./NotificationSettings";
 import RegisteredComputers from "./RegisteredComputers";
 import InvoiceReadingsImport from "./InvoiceReadingsImport";
@@ -61,6 +62,7 @@ type Group =
   | "receiving"
   | "returns"
   | "notifications"
+  | "timesheets"
   | "modules"
   | "data";
 type Translate = (en: string, fa: string) => string;
@@ -161,6 +163,14 @@ const groups: {
         "Same-supplier lower-price questions",
         "پرسش‌های کاهش قیمت همان تأمین‌کننده",
       ],
+    ],
+  },
+  {
+    key: "timesheets",
+    label: ["Timesheets", "کارکرد"],
+    description: [
+      "Department names and the order on daily staff sheets.",
+      "نام و ترتیب بخش‌ها در برگه روزانه کارکنان.",
     ],
   },
   {
@@ -1205,6 +1215,7 @@ const moduleLabels: [keyof CompanyConfig["modules"], string, string][] = [
   ["invoices", "Invoices", "فاکتورها"],
   ["suppliers", "Suppliers", "تأمین‌کنندگان"],
   ["returns", "Returns", "مرجوعی‌ها"],
+  ["timesheets", "Timesheets", "کارکرد"],
   ["labels", "Labels", "برچسب‌ها"],
   ["date_tracking", "Date tracking", "پیگیری تاریخ"],
   ["notes", "Notes", "یادداشت‌ها"],
@@ -1395,6 +1406,8 @@ function SettingsContent() {
             </>
           ) : selected === "offers" ? (
             <OfferSettings key={JSON.stringify(configuration.promotions)} />
+          ) : selected === "timesheets" ? (
+            <TimesheetSettings />
           ) : selected === "returns" ? (
             <>
               <ReturnsSettings />

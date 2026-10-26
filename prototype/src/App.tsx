@@ -34,6 +34,7 @@ import {
   ClipboardCheck,
   Search,
   Settings,
+  CalendarClock,
   Sun,
   Store,
   ShoppingCart,
@@ -51,6 +52,7 @@ import { StoredFileImage } from "./stored-file";
 import HistoryScreen from "./screens/History";
 import "./shell-catalog-polish.css";
 import PricingSettings from "./screens/Settings";
+import Timesheets from "./screens/Timesheets";
 import { Lookup, Products, ProductPage } from "./screens/Catalog";
 import Invoices from "./screens/Invoices";
 import Approvals from "./screens/Approvals";
@@ -132,6 +134,14 @@ export const pages: {
     icon: Truck,
     group: "Daily",
     capabilities: ["received.read"],
+  },
+  {
+    key: "timesheets",
+    en: "Timesheets",
+    fa: "کارکرد",
+    icon: CalendarClock,
+    group: "Daily",
+    capabilities: ["timesheets.read"],
   },
   {
     key: "returns",
@@ -770,6 +780,7 @@ const screenRegistry: Record<string, ReactNode> = {
   suppliers: <Suppliers />,
   history: <HistoryScreen />,
   lookup: <Lookup />,
+  timesheets: <Timesheets />,
   products: <Products />,
   product: <ProductPage />,
   invoices: <Invoices />,
@@ -966,6 +977,7 @@ export default function App() {
       moduleEnabled(state.config, page.key) &&
       (role !== "cashier" ||
         page.key === "lookup" ||
+        page.key === "timesheets" ||
         page.key === "expiry" ||
         // Only current protected custom-notebook DTOs establish this route.
         // The Cashier never receives built-in Notes or a general Notes grant.
