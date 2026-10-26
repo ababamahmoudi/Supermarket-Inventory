@@ -307,10 +307,20 @@ for (const language of ["en", "fa"] as const) {
           title: element.getAttribute("title"),
           style: element.getAttribute("style"),
         };
+        // The compact name is now a growing flex item beside the check count.
+        // Constrain its actual flex basis so this still creates real ellipsis.
+        (element as HTMLElement).style.flex = "0 0 16px";
         (element as HTMLElement).style.inlineSize = "16px";
         return original;
       });
       try {
+        const narrowed = await name.evaluate((element) => ({
+          width: element.getBoundingClientRect().width,
+          clientWidth: element.clientWidth,
+          scrollWidth: element.scrollWidth,
+        }));
+        expect(Math.abs(narrowed.width - 16)).toBeLessThanOrEqual(1);
+        expect(narrowed.scrollWidth).toBeGreaterThan(narrowed.clientWidth + 1);
         const ellipsis = await inspectC8Layout(
           page,
           "receiving:full-title-ellipsis",
