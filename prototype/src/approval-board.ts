@@ -111,6 +111,15 @@ export function approvalBoard(state: DemoState, actor: AuthenticatedActor) {
       approval: { ...approval, branch },
       unitCost: cost,
       margin,
+      minimumMargin: financial
+        ? (actual.threshold ??
+          state.config.pricing_categories.find(
+            (category) =>
+              category.key ===
+              (actual.pricing_category ?? product?.pricing_category),
+          )?.minimum_margin ??
+          null)
+        : null,
       triggeredBy:
         actual.triggered_by ??
         (financial

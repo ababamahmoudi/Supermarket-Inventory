@@ -1,3 +1,5 @@
+import { approvalProductEditRead } from "../approval-product-editor";
+import { ProductEditor } from "./Catalog";
 import { saleRequestTab } from "../sale-request-status";
 import { approvalBoard, approvalCategoryPreview } from "../approval-board";
 import { useProtectedQuery } from "../use-protected-query";
@@ -89,6 +91,16 @@ export function Approvals() {
     title: string;
   } | null>(null);
   const [savingCorrection, setSavingCorrection] = useState(false);
+  const [productEdit, setProductEdit] = useState<
+    | (ReturnType<typeof approvalProductEditRead> & {
+        id: string;
+        accessKey: string;
+        manualReview: boolean;
+        scroll: { x: number; y: number };
+      })
+    | null
+  >(null);
+
   const [correction, setCorrection] = useState<{
     accessKey: string;
     item: Approval;
@@ -342,6 +354,33 @@ export function Approvals() {
         t(
           "This proposal changed. Open the approval again before confirming.",
           "این پیشنهاد تغییر کرد. پیش از تأیید، آن را دوباره باز کنید.",
+        ),
+      );
+    }
+  };
+  const openProductEdit = async (item: Approval) => {
+    const scroll = preserveViewport();
+    try {
+      const data = await query(
+        "approvals.decide",
+        domainScope(state, item),
+        (canonical, currentActor) =>
+          approvalProductEditRead(canonical, currentActor, item.id),
+      );
+      setProductEdit({
+        ...data,
+        id: item.id,
+        accessKey,
+        scroll,
+        manualReview: Boolean(
+          item.manual_price_review || item.source_manual_request,
+        ),
+      });
+    } catch {
+      setMessage(
+        t(
+          "This request changed. Open it again and check the product and price.",
+          "این درخواست تغییر کرد. دوباره باز کنید و کالا و قیمت را بررسی کنید.",
         ),
       );
     }
@@ -611,7 +650,7 @@ export function Approvals() {
           const category = state.config.pricing_categories.find(
             (row) => row.key === details.category,
           );
-          const threshold = item.threshold ?? category?.minimum_margin;
+          const threshold = details.minimumMargin;
           const belowMinimum =
             margin !== null &&
             threshold != null &&
@@ -904,7 +943,13 @@ export function Approvals() {
                             />
                           </Field>
                         </div>
-                        <div className="actions">
+                        <div className="actions approval-margin-actions">
+                          <Button
+                            variant="secondary"
+                            onClick={() => void openProductEdit(item)}
+                          >
+                            {t("Edit and approve", "ویرایش و تأیید")}
+                          </Button>
                           <Button onClick={() => marginAction(item, "keep")}>
                             {t("Keep approved price", "حفظ قیمت تأییدشده")}
                           </Button>
@@ -924,7 +969,7 @@ export function Approvals() {
                         {item.type !== "barcode_conflict" && (
                           <Button
                             variant="secondary"
-                            onClick={() => openCorrection(item)}
+                            onClick={() => void openProductEdit(item)}
                           >
                             {t("Edit and approve", "ویرایش و تأیید")}
                           </Button>
@@ -985,6 +1030,21 @@ export function Approvals() {
           );
         })}
       </div>
+      {canDecide && productEdit?.accessKey === accessKey && (
+        <ProductEditor
+          key={`${productEdit.id}:${accessKey}`}
+          product={productEdit.existingProduct}
+          approval={{
+            ...productEdit,
+            onSaved: () => finishRemoval([productEdit.id], productEdit.scroll),
+          }}
+          onClose={() => {
+            const scroll = productEdit.scroll;
+            setProductEdit(null);
+            requestAnimationFrame(() => window.scrollTo(scroll.x, scroll.y));
+          }}
+        />
+      )}
       {canDecide && bulk?.accessKey === accessKey && (
         <ConfirmDialog
           open

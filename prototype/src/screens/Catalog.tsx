@@ -1,4 +1,9 @@
 import "../c3-tables.css";
+import {
+  editAndApproveProduct,
+  approvalProductEditRead,
+  ApprovalProductEditError,
+} from "../approval-product-editor";
 import { translateCount } from "../i18n";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import Decimal from "decimal.js";
@@ -14,6 +19,7 @@ import {
 } from "../catalog";
 import { useDemo } from "../store";
 import { LookupLocations } from "../LookupLocations";
+import { SupplierItemError } from "../supplier-items";
 import { useListState, useRouteParam } from "../navigation";
 import { permittedLocationIdsView } from "../notes-dates-read";
 import {
@@ -277,8 +283,14 @@ export function ProductEditor({
   onClose,
   invoiceQuickAdd = false,
   onCreated,
+  approval,
 }: {
   product?: Product;
+  approval?: ReturnType<typeof approvalProductEditRead> & {
+    id: string;
+    manualReview?: boolean;
+    onSaved?(): void;
+  };
   onClose: () => void;
   invoiceQuickAdd?: boolean;
   onCreated?: (product: Product) => void;
@@ -316,7 +328,17 @@ export function ProductEditor({
     manual_price_scopes: [],
     manual_price_comparisons: {},
   };
-  const [cost, setCost] = useState("");
+  const [cost, setCost] = useState(approval?.unitCost ?? "");
+  const [supplierItemCode, setSupplierItemCode] = useState(
+    approval?.supplierItemCode ?? "",
+  );
+  const [taxable, setTaxable] = useState(approval?.taxable ?? product.taxable);
+  const [approvalReason, setApprovalReason] = useState("");
+  const [approvalError, setApprovalError] = useState("");
+  const [approvalSaving, setApprovalSaving] = useState(false);
+  const [approvalManualChoice, setApprovalManualChoice] = useState<
+    "rule" | "keep"
+  >("rule");
   const [costUnit, setCostUnit] = useState<WeightUnit>("lb");
   const formId = useId();
   const dateLocation = invoiceQuickAdd
@@ -382,10 +404,13 @@ export function ProductEditor({
   const [priceDialogOpen, setPriceDialogOpen] = useState(false);
   const clearIssue = (id: string) =>
     setIssues((current) => current.filter((issue) => issue.fieldId !== id));
-  const [manualPrice, setManualPrice] = useState(false);
+  const [manualPrice, setManualPrice] = useState(
+    Boolean(approval && approval.proposedPrice !== approval.calculatedPrice),
+  );
   const [similarConfirmed, setSimilarConfirmed] = useState(false);
   const [marginConfirmed, setMarginConfirmed] = useState(false);
-  const startingPrice = effectivePrice(state, product, branch) ?? "";
+  const startingPrice =
+    approval?.proposedPrice ?? effectivePrice(state, product, branch) ?? "";
   const [values, setValues] = useState<ProductEdits>({
     name_en: product.name_en,
     name_fa: product.name_fa,
@@ -393,7 +418,7 @@ export function ProductEditor({
     description_fa: product.description_fa ?? "",
     unit_size: product.unit_size,
     ai_category: product.ai_category,
-    pricing_category: product.pricing_category,
+    pricing_category: approval?.pricingCategory ?? product.pricing_category,
     barcode: product.barcode,
     main_supplier: product.main_supplier,
     date_tracking: product.date_tracking,
@@ -443,7 +468,8 @@ export function ProductEditor({
     weightProduct && startingPrice
       ? weightPriceDisplay(startingPrice, state.config).main.amount
       : startingPrice;
-  const priceChanged = isNew && sellingPrice !== startingDisplayPrice;
+  const priceChanged =
+    (isNew || Boolean(approval)) && sellingPrice !== startingDisplayPrice;
   const categories = [
     ...new Set(
       state.products
@@ -476,7 +502,7 @@ export function ProductEditor({
   );
   const calculatedPrice = pricePreview.data?.displayCalculatedPrice ?? "";
   const effectiveSellingPrice =
-    isNew && !manualPrice ? calculatedPrice : sellingPrice;
+    (isNew || approval) && !manualPrice ? calculatedPrice : sellingPrice;
   let canonicalSellingPrice = effectiveSellingPrice;
   try {
     if (weightProduct && effectiveSellingPrice)
@@ -488,7 +514,27 @@ export function ProductEditor({
   } catch {
     /* Save validates this draft field. */
   }
-  const belowMinimum = isNew && pricePreview.data?.belowMinimum === true;
+  let approvalBelowCost = false;
+  try {
+    approvalBelowCost = Boolean(
+      approval && new Decimal(canonicalSellingPrice).lt(approval.unitCost),
+    );
+  } catch {
+    /* Save validates the typed price. */
+  }
+  const belowMinimum =
+    ((isNew || Boolean(approval)) &&
+      pricePreview.data?.belowMinimum === true) ||
+    approvalBelowCost;
+  const approvalReasonRequired = Boolean(
+    approval &&
+    (belowMinimum ||
+      approval.approvalType === "margin_review" ||
+      (manualPrice &&
+        canonicalSellingPrice !== approval.proposedPrice &&
+        canonicalSellingPrice !== calculatedPrice)),
+  );
+
   const similar = isNew ? similarProductNames(state, values.name_en) : [];
   if (!actor || !mayEdit) return null;
   return (
@@ -499,9 +545,11 @@ export function ProductEditor({
           if (!open) onClose();
         }}
         title={
-          isNew
-            ? t("Add product", "افزودن محصول")
-            : t("Edit product", "ویرایش محصول")
+          approval
+            ? t("Edit and approve", "ویرایش و تأیید")
+            : isNew
+              ? t("Add product", "افزودن محصول")
+              : t("Edit product", "ویرایش محصول")
         }
         description={
           <span className="product-editor-caption">
@@ -517,9 +565,11 @@ export function ProductEditor({
           </span>
         }
         className={
-          isNew
-            ? "product-editor-dialog manual-entry-dialog"
-            : "product-editor-dialog"
+          approval
+            ? "product-editor-dialog approval-product-editor ui-form-surface"
+            : isNew
+              ? "product-editor-dialog manual-entry-dialog"
+              : "product-editor-dialog"
         }
       >
         <form
@@ -549,7 +599,7 @@ export function ProductEditor({
             if (isNew && !/^\d+(\.\d{1,4})?$/.test(cost))
               addIssue("cost", editorError("cost", t));
             if (
-              (isNew || priceChanged) &&
+              (isNew || approval || priceChanged) &&
               (!/^\d+(\.\d{1,2})?$/.test(canonicalSellingPrice) ||
                 new Decimal(canonicalSellingPrice || 0).lte(0))
             )
@@ -667,6 +717,22 @@ export function ProductEditor({
                   t,
                 ),
               );
+            if (approval && approvalReasonRequired && !approvalReason.trim())
+              addIssue(
+                "approval-reason",
+                t(
+                  "Add a reason for this approval.",
+                  "برای این تأیید دلیل وارد کنید.",
+                ),
+              );
+            if (approval && belowMinimum && !marginConfirmed)
+              addIssue(
+                "margin",
+                t(
+                  "Confirm the price below the minimum margin.",
+                  "قیمت زیر حداقل حاشیه سود را تأیید کنید.",
+                ),
+              );
             if (missing.length) {
               setIssues(missing);
               requestAnimationFrame(() =>
@@ -677,6 +743,100 @@ export function ProductEditor({
             setIssues([]);
             const writeScope = { ...editorScope, mutation: true };
             try {
+              if (approval) {
+                if (approvalSaving) return;
+                setApprovalSaving(true);
+                setApprovalError("");
+                try {
+                  await command(
+                    "approvals.decide",
+                    {
+                      company_id: product.company_id,
+                      kind: "company_shared",
+                      entity_id: approval.id,
+                      mutation: true,
+                    },
+                    (draft, freshActor) =>
+                      editAndApproveProduct(
+                        draft,
+                        freshActor,
+                        approval.id,
+                        {
+                          ...values,
+                          dates: datesToSave,
+                          date_reminder_days: Number(reminderDays),
+                          date_tracking_stop: stopChoice || undefined,
+                          taxable,
+                          supplier_item_code: supplierItemCode,
+                          selling_price: canonicalSellingPrice,
+                          reason: approvalReason,
+                          minimum_margin_confirmed: marginConfirmed,
+                          manual_price_choice: approvalManualChoice,
+                        },
+                        approval.expectedSnapshot,
+                        values.scope,
+                        targetBranch === "all" ? approval.branch : targetBranch,
+                      ),
+                  );
+                  approval.onSaved?.();
+                  onClose();
+                } catch (cause) {
+                  if (cause instanceof DateTrackingError) {
+                    setApprovalError(dateTrackingErrorMessage(cause, t));
+                  } else if (cause instanceof ProductEditError) {
+                    setApprovalError(editorError(cause.code, t));
+                  } else if (cause instanceof SupplierItemError) {
+                    setApprovalError(
+                      t(
+                        "Check the supplier and supplier code. This code may already belong to a supplier item.",
+                        "تأمین‌کننده و کد آن را بررسی کنید. شاید این کد به کالای دیگری از تأمین‌کننده تعلق دارد.",
+                      ),
+                    );
+                  } else if (cause instanceof ApprovalProductEditError) {
+                    const key = cause.code as string;
+                    setApprovalError(
+                      key === "reason"
+                        ? t(
+                            "Add a reason for this approval.",
+                            "برای این تأیید دلیل وارد کنید.",
+                          )
+                        : key === "margin"
+                          ? t(
+                              "Confirm the price below the minimum margin.",
+                              "قیمت زیر حداقل حاشیه سود را تأیید کنید.",
+                            )
+                          : key === "taxable"
+                            ? t(
+                                "Choose a taxable setting supported by the company tax profiles.",
+                                "وضعیت مالیاتی سازگار با تنظیمات مالیات شرکت را انتخاب کنید.",
+                              )
+                            : key === "supplier_item_code"
+                              ? t(
+                                  "Check the supplier code.",
+                                  "کد تأمین‌کننده را بررسی کنید.",
+                                )
+                              : key === "manual_price_choice"
+                                ? t(
+                                    "Choose the current approved price or the new calculated price for this manual-price review.",
+                                    "برای این بررسی قیمت دستی، قیمت تأییدشدهٔ فعلی یا قیمت محاسبه‌شدهٔ جدید را انتخاب کنید.",
+                                  )
+                                : t(
+                                    "This request changed. Open it again and check the product and price.",
+                                    "این درخواست تغییر کرد. دوباره باز کنید و کالا و قیمت را بررسی کنید.",
+                                  ),
+                    );
+                  } else
+                    setApprovalError(
+                      t(
+                        "This request changed. Open it again and check the product and price.",
+                        "این درخواست تغییر کرد. دوباره باز کنید و کالا و قیمت را بررسی کنید.",
+                      ),
+                    );
+                } finally {
+                  setApprovalSaving(false);
+                }
+                return;
+              }
               if (isNew) {
                 const created = await command(
                   editorCapability,
@@ -857,7 +1017,14 @@ export function ProductEditor({
                   <Select
                     id={`${formId}-pricing_category`}
                     value={values.pricing_category}
-                    onChange={(value) => patch("pricing_category", value)}
+                    onChange={(value) => {
+                      patch("pricing_category", value);
+                      if (approval) {
+                        setManualPrice(false);
+                        setMarginConfirmed(false);
+                        setApprovalError("");
+                      }
+                    }}
                     options={activePricingCategories(state.config).map(
                       (item) => ({
                         value: item.key,
@@ -924,7 +1091,7 @@ export function ProductEditor({
                   }
                   className="short-field"
                 >
-                  {isNew ? (
+                  {isNew || approval ? (
                     <input
                       id={`${formId}-price`}
                       dir="ltr"
@@ -976,26 +1143,28 @@ export function ProductEditor({
                     onChange={(event) => patch("unit_size", event.target.value)}
                   />
                 </Field>
-                <Field label={t("Sold by", "روش فروش")}>
-                  <Select
-                    value={values.sold_by ?? "each"}
-                    onChange={(value) => {
-                      patch("sold_by", value as "each" | "weight");
-                      setSellingPrice(
-                        value === "weight" && startingPrice
-                          ? weightPriceDisplay(startingPrice, state.config).main
-                              .amount
-                          : startingPrice,
-                      );
-                      setManualPrice(false);
-                      setMarginConfirmed(false);
-                    }}
-                    options={[
-                      { value: "each", label: t("Each", "عدد") },
-                      { value: "weight", label: t("Weight", "وزن") },
-                    ]}
-                  />
-                </Field>
+                {!approval && (
+                  <Field label={t("Sold by", "روش فروش")}>
+                    <Select
+                      value={values.sold_by ?? "each"}
+                      onChange={(value) => {
+                        patch("sold_by", value as "each" | "weight");
+                        setSellingPrice(
+                          value === "weight" && startingPrice
+                            ? weightPriceDisplay(startingPrice, state.config)
+                                .main.amount
+                            : startingPrice,
+                        );
+                        setManualPrice(false);
+                        setMarginConfirmed(false);
+                      }}
+                      options={[
+                        { value: "each", label: t("Each", "عدد") },
+                        { value: "weight", label: t("Weight", "وزن") },
+                      ]}
+                    />
+                  </Field>
+                )}
                 <Field
                   label={t("Category (optional)", "دسته (اختیاری)")}
                   error={
@@ -1047,6 +1216,37 @@ export function ProductEditor({
                     onChange={(event) => patch("barcode", event.target.value)}
                   />
                 </Field>
+                {approval && (
+                  <>
+                    <Field
+                      label={t(
+                        "Supplier code (optional)",
+                        "کد تأمین‌کننده (اختیاری)",
+                      )}
+                    >
+                      <input
+                        id={`${formId}-supplier-code`}
+                        dir="ltr"
+                        value={supplierItemCode}
+                        onChange={(event) => {
+                          setSupplierItemCode(event.target.value);
+                          setApprovalError("");
+                        }}
+                      />
+                    </Field>
+                    <Field label={t("Taxable", "مشمول مالیات")}>
+                      <Select
+                        id={`${formId}-taxable`}
+                        value={taxable ? "yes" : "no"}
+                        options={[
+                          { value: "yes", label: t("Yes", "بله") },
+                          { value: "no", label: t("No", "خیر") },
+                        ]}
+                        onChange={(value) => setTaxable(value === "yes")}
+                      />
+                    </Field>
+                  </>
+                )}
                 <Field
                   label={t(
                     "Description (English) (optional)",
@@ -1123,7 +1323,7 @@ export function ProductEditor({
               issues={issues}
               onFieldChange={clearIssue}
             />
-            {isNew && belowMinimum && mayOverridePrice && (
+            {(isNew || approval) && belowMinimum && mayOverridePrice && (
               <div className="banner info" id={`${formId}-margin`}>
                 <p>
                   {t(
@@ -1145,6 +1345,104 @@ export function ProductEditor({
                   )}
                 </Checkbox>
               </div>
+            )}
+            {approval && (
+              <section className="product-editor-section approval-product-decision">
+                <h3 className="product-editor-section-title">
+                  {t("Approval", "تأیید")}
+                </h3>
+                {approval.manualReview && (
+                  <Field label={t("Regular price decision", "تصمیم قیمت عادی")}>
+                    <Select
+                      value={approvalManualChoice}
+                      options={[
+                        {
+                          value: "rule",
+                          label: t(
+                            "Use the new calculated price",
+                            "استفاده از قیمت محاسبه‌شدهٔ جدید",
+                          ),
+                        },
+                        {
+                          value: "keep",
+                          label: t(
+                            "Keep the current approved price",
+                            "حفظ قیمت تأییدشدهٔ فعلی",
+                          ),
+                        },
+                      ]}
+                      onChange={(value) => {
+                        setApprovalManualChoice(value as "rule" | "keep");
+                        if (value === "keep") {
+                          const kept =
+                            approval.manualPriceReview?.keptPrice ??
+                            regularPrice(state, product, approval.branch) ??
+                            "";
+                          setSellingPrice(
+                            weightProduct && kept
+                              ? weightPriceDisplay(kept, state.config).main
+                                  .amount
+                              : kept,
+                          );
+                          setManualPrice(true);
+                          patch("scope", "branch");
+                          setTargetBranch(approval.branch);
+                        } else setManualPrice(false);
+                        setApprovalError("");
+                      }}
+                    />
+                  </Field>
+                )}
+                <Field label={t("Approval scope", "محدودهٔ تأیید")}>
+                  <Select
+                    value={values.scope}
+                    onChange={(value) =>
+                      patch("scope", value as "all" | "branch")
+                    }
+                    options={[
+                      {
+                        value: "all",
+                        label: t("All selling locations", "همهٔ مکان‌های فروش"),
+                      },
+                      {
+                        value: "branch",
+                        label: t("Receiving location only", "فقط مکان دریافت"),
+                      },
+                    ]}
+                  />
+                </Field>
+                <p className="muted">
+                  {t("Unit cost", "هزینه واحد")}:{" "}
+                  <ProductCost
+                    value={approval.unitCost}
+                    product={product}
+                    config={state.config}
+                  />
+                </p>
+                <Field
+                  label={
+                    approvalReasonRequired
+                      ? t("Reason (required)", "دلیل (الزامی)")
+                      : t("Reason (optional)", "دلیل (اختیاری)")
+                  }
+                >
+                  <textarea
+                    id={`${formId}-approval-reason`}
+                    rows={2}
+                    value={approvalReason}
+                    onChange={(event) => {
+                      setApprovalReason(event.target.value);
+                      clearIssue(`${formId}-approval-reason`);
+                      setApprovalError("");
+                    }}
+                  />
+                </Field>
+                {approvalError && (
+                  <p className="form-error" role="alert">
+                    {approvalError}
+                  </p>
+                )}
+              </section>
             )}
             {!!similar.length && (
               <div
@@ -1189,7 +1487,7 @@ export function ProductEditor({
                 </Checkbox>
               </div>
             )}
-            {!isNew && priceChanged && (
+            {!isNew && !approval && priceChanged && (
               <div className="stack product-editor-price-scope">
                 <Field label={t("Approval scope", "محدودهٔ تأیید")}>
                   <Select
@@ -1308,11 +1606,17 @@ export function ProductEditor({
             </Button>
             <Button
               type="submit"
-              disabled={!editorBoot.ready || (isNew && !pricePreview.ready)}
+              disabled={
+                !editorBoot.ready ||
+                ((isNew || Boolean(approval)) && !pricePreview.ready) ||
+                approvalSaving
+              }
             >
-              {isNew
-                ? t("Add product", "افزودن محصول")
-                : t("Save product", "ذخیرهٔ محصول")}
+              {approval
+                ? t("Save and approve", "ذخیره و تأیید")
+                : isNew
+                  ? t("Add product", "افزودن محصول")
+                  : t("Save product", "ذخیرهٔ محصول")}
             </Button>
           </DialogActions>
         </form>

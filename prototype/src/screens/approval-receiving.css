@@ -144,3 +144,17 @@
     padding-inline: 10px;
   }
 }
+
+.approval-product-editor .product-editor-caption {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.approval-product-decision {
+  display: grid;
+  gap: 16px;
+}
+.approval-margin-actions {
+  gap: 8px;
+}
