@@ -1,5 +1,17 @@
 # Open questions (build with the default; make each one configurable)
 
+## R2d timesheet defaults recorded (2026-10-26)
+
+These are the requested build defaults, with no new blocking question:
+
+- Staff are a branch staff list with an optional app-login link. A staff member need not sign in; linking does not grant access.
+- Owner, Manager, Branch Supervisor and Cashier may edit past days within current permitted branches; every meaningful change is retained in History. Floor Worker has no timesheet read/edit/export/audit access.
+- Weekly Monday–Sunday view and payroll CSV are included. CSV decimal hours have four places. Wages, deductions and payment execution are outside this work.
+- On shift now follows the literal In-without-Out rule, including unclosed prior days and excluding future clock-ins. Prior missing Out remains amber; do not invent a clock-out or choose a first branch for aggregate selection.
+- Equal In/Out means zero, earlier Out means the next day, and a shift over 16 hours is an amber check. These rules use local wall-clock endpoints rather than payroll/DST elapsed-time adjustments.
+- Existing stores gain empty timesheet arrays after exact verified backup. Fresh/Reset alone loads fictional practice sheets; Empty store stays empty after reload. Departments and the module switch are configurable, preserving explicit Off/custom settings.
+- CSV and browser print are real local outputs. Physical A4/Letter printing, cross-device synchronization, a deployed server and payroll-provider integration remain outside the executed prototype proof.
+
 When Ali answers one, update the requirement it affects, record the date here, and remove the question.
 
 | #   | Question                                                                               | Default to build with                                                                                           |

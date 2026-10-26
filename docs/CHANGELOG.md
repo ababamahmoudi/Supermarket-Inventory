@@ -1,3 +1,11 @@
+## 2026-10-26 — R2d timesheets (A1–A3, B1–B4, C)
+
+- Added fresh-authority company/location/module guards for Owner, Manager, Branch Supervisor and Cashier, with Floor Worker denied across route, projections, commands, History and export. Settings configure bilingual departments and module availability without changing other role/financial grants.
+- Added archived branch staff with optional safe app-person links, retained daily shifts/Notes and attributed before/after audit. Normalized 24-hour input, integer-minute overnight/split-shift totals and explicit missing-Out/long-shift checks support editable past days.
+- Added buffered responsive daily sheets, staff management/History, Monday–Sunday totals, actual guarded payroll CSV, bilingual A4/Letter paper print and the scoped On shift now dashboard tile. Aggregate selection asks for a branch; prior unclosed shifts remain counted without inferred clock-outs.
+- Existing-store initialization verifies an exact private backup and current revision, preserves data/custom settings and adds empty arrays. Only fresh demo/explicit Reset loads eight invented staff and three days/24 shifts; Empty store remains empty after reload.
+- Domain verification covers role/company/branch/module denial, stale actors/versions, parsing/totals/audit, real repository transactions and exact backup/concurrent migration/restore. Browser proofs exercise Cashier fast typing/reload, Floor Worker denial, week/CSV reconciliation, print media/PDF and dashboard count/module controls on desktop/phone. See [domain guide](PR_R2D_DOMAIN.md) and [UI guide](PR_R2D_REVIEW.md); final combined CI is recorded after integration. Physical printing and cross-device/server/payroll-provider behavior are not claimed.
+
 ## 2026-10-26 — R2c Group 1 Manager dashboard
 
 - Replaced four colored KPI tiles and stretched cards with the approved five surface tiles, top-aligned 2:1 composition and phone card order; retained existing operational lists under More operations.

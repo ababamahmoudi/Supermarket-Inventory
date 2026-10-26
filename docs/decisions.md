@@ -1,5 +1,15 @@
 # Decisions
 
+## R2d — Separate branch staff and audited local hours (2026-10-26)
+
+**Context:** the paper sheet records employees who often have no app login, and Cashier must enter branch hours while Floor Worker must see none.
+
+**Decision:** keep a separate branch staff list with optional safe app-person link; grant current scoped timesheet read/edit only to Owner, Manager, Branch Supervisor and Cashier. Module Off denies operational access to every role. Protect raw projections, History, print and CSV independently, without broadening Cashier financial authority. Aggregate selection always asks for a branch. Staff/row removal retains evidence, and the same four roles may edit past days with attributed before/after audit.
+
+Compute hours from normalized 24-hour wall-clock endpoints and integer minutes: earlier Out is overnight, equal endpoints zero, missing Out allowed/flagged after its day, >16 hours amber. These warnings do not fabricate an Out or prevent genuine entry. On shift now includes unique prior unclosed staff whose clock-in is not future. Departments/captions/order are configuration; historical captions survive removal. Include Monday–Sunday payroll views and four-decimal safe CSV, plus the bilingual paper print with Made with Klead.
+
+**Migration/defaults:** verify an exact private backup before additive existing-store initialization and reject/retry a concurrent revision. Existing stores receive empty arrays; preserve explicit Off/custom configuration. Only fresh demo/explicit Reset loads independent fictional sheets. Empty store keeps markers so reload stays empty. The existing browser repository is the actual enforcement boundary; a deployed server, shared-device data, wages and payment execution remain future work. These authorized defaults require no new approval gate.
+
 ## R2c receiving defaults — 2026-10-26
 
 Ali requires 24-hour times throughout the app. Ambiguous handwritten delivery hours 1–6 prefer afternoon within configurable 06:00–20:00 delivery hours and always offer the retained alternate; store opening hours never infer delivery time. North York is configured Open 24 hours. Explicit am/pm and 13–23 remain literal.
