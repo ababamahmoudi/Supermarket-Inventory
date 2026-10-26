@@ -18,7 +18,7 @@
   }
   .payables-supplier-link > a:first-child,
   .payables-reference-link {
-    color: var(--text);
+    color: var(--accent);
     font-weight: var(--font-weight-body);
     text-decoration: none;
   }
@@ -63,5 +63,23 @@
     :root .payables-ledger-table tbody tr td.payables-ledger-reference {
       grid-column: 1 / -1;
     }
+  }
+}
+
+.payables-back {
+  margin-block-end: 12px;
+}
+
+@media print {
+  body:has(.payables-report)
+    .main-content
+    > .r2c-screen[data-r2c-screen="payables"] {
+    display: contents !important;
+  }
+  body:has(.payables-report)
+    .main-content
+    > .r2c-screen[data-r2c-screen="payables"]
+    > :not(.payables-report) {
+    display: none;
   }
 }

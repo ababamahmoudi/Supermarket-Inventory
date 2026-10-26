@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 import Decimal from "decimal.js";
+import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import {
   chooseOption,
@@ -269,4 +270,118 @@ for (const language of ["en", "fa"] as const)
     const after = await card.boundingBox();
     expect(Math.abs(after!.x - before!.x)).toBeLessThanOrEqual(2);
     expect(Math.abs(after!.y - before!.y)).toBeLessThanOrEqual(2);
+  });
+
+test("payables statements open at the top and Back restores the exact filtered-list scroll", async ({
+  page,
+}) => {
+  await signIn(page, "Owner");
+  await runCanonicalBusinessFixture(
+    page,
+    (draft) => {
+      const template = draft.suppliers![0];
+      draft.suppliers = Array.from({ length: 36 }, (_, index) => ({
+        ...template,
+        id: `fictional-route-supplier-${index}`,
+        name: `Fictional Route Supplier ${String(index).padStart(2, "0")}`,
+      }));
+      draft.ledger = [];
+      draft.products = [];
+      draft.invoices = [];
+      draft.invoice.status = "empty";
+      draft.invoice.lines = [];
+      draft.returns = [];
+    },
+    null,
+  );
+  await page.reload();
+  await page.goto("/#payables");
+  await expect(page.locator(".payables-overview-table tbody tr")).toHaveCount(
+    36,
+  );
+  const target = page
+    .locator(".payables-overview-table")
+    .getByRole("link", { name: "Fictional Route Supplier 24", exact: true });
+  await target.scrollIntoViewIfNeeded();
+  const saved = await page.evaluate(() => window.scrollY);
+  expect(saved).toBeGreaterThan(100);
+  await target.click();
+  await expect(page).toHaveURL(
+    /#payables\?supplier=fictional-route-supplier-24$/,
+  );
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Fictional Route Supplier 24",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.locator(".payables-overview")).toHaveCount(0);
+  await expect(page.locator("#payables-supplier")).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await page.goBack();
+  await expect(page.locator(".payables-overview-table tbody tr")).toHaveCount(
+    36,
+  );
+  await expect
+    .poll(async () =>
+      Math.abs((await page.evaluate(() => window.scrollY)) - saved),
+    )
+    .toBeLessThanOrEqual(2);
+  await target.click();
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Fictional Route Supplier 24",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "All suppliers", exact: true })
+    .click();
+  await expect(page.locator(".payables-overview-table tbody tr")).toHaveCount(
+    36,
+  );
+  await expect
+    .poll(async () =>
+      Math.abs((await page.evaluate(() => window.scrollY)) - saved),
+    )
+    .toBeLessThanOrEqual(2);
+});
+
+for (const language of ["en", "fa"] as const)
+  test(`supplier statement route reloads without a duplicate picker in ${language}`, async ({
+    page,
+  }) => {
+    await signIn(page, "Manager");
+    await setLanguage(page, language);
+    const state = await readCanonicalBusinessEvidence(page);
+    const supplier = state.suppliers!.find(
+      (supplier) => supplier.name === "Fresh Valley Foods",
+    )!;
+    await page.goto(`/#payables?supplier=${encodeURIComponent(supplier.id)}`);
+    await expect(
+      page.getByRole("heading", { level: 1, name: supplier.name, exact: true }),
+    ).toBeVisible();
+    await expect(page.locator("#payables-supplier")).toHaveCount(0);
+    await expect(page.locator(".payables-overview")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", {
+        name: language === "en" ? "All suppliers" : "همهٔ تأمین‌کنندگان",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { level: 1, name: supplier.name, exact: true }),
+    ).toBeVisible();
+    const after = await readCanonicalBusinessEvidence(page);
+    expect(after.ledger).toEqual(state.ledger);
+    await signIn(page, "Floor Worker");
+    await page.goto(`/#payables?supplier=${encodeURIComponent(supplier.id)}`);
+    await expect(
+      page.locator(
+        ".payables-toolbar,.payables-overview,.payables-ledger-table",
+      ),
+    ).toHaveCount(0);
   });

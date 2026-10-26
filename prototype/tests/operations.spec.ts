@@ -566,7 +566,11 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
   ).toContainText("Enter a valid amount with no more than two decimal places");
   expect(await stored(page)).toEqual(beforeAmount);
   await expect(
-    page.getByRole("heading", { name: "Payables", exact: true, level: 1 }),
+    page.getByRole("heading", {
+      name: "Fresh Valley Foods",
+      exact: true,
+      level: 1,
+    }),
   ).toBeVisible();
   await expect(
     page.getByLabel("Signed amount (credits are negative)", { exact: true }),
