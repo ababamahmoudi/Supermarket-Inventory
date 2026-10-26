@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -9,6 +10,7 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
+  Download,
   History,
   Plus,
   Trash2,
@@ -25,9 +27,11 @@ import {
   archiveTimesheetStaff,
   configuredTimesheetDepartments,
   editTimesheetStaff,
+  exportTimesheetCsv,
   listTimesheetPeople,
   patchTimesheetRow,
   readTimesheetDayView,
+  readTimesheetWeekView,
   removeTimesheetRow,
   saveTimesheetNotes,
   timesheetClock,
@@ -53,6 +57,7 @@ import { TimesheetSavedField } from "./timesheet-autosave";
 import { TimesheetSaveContext } from "./timesheet-save-context";
 import "./timesheets-r2d.css";
 import type { Activity, Language } from "../types";
+import TimesheetWeek from "./TimesheetWeek";
 
 type Translate = (en: string, fa: string) => string;
 const timesheetErrorText = (t: Translate) =>
@@ -707,15 +712,32 @@ export default function Timesheets() {
   );
 }
 function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
-  const { state, actor, command, branch, t, lang } = useDemo();
+  const { state, actor, command, query, branch, t, lang } = useDemo();
   const [chosenBranch, setChosenBranch] = useState(""),
     [date, setDate] = useState(() =>
       requestedDate(timesheetClock(state.config, initialBranch).date),
     );
+  const [view, setView] = useState<"day" | "week">(() =>
+    new URLSearchParams(window.location.hash.split("?")[1]).get("view") ===
+    "week"
+      ? "week"
+      : "day",
+  );
   const location = branch === "all" ? chosenBranch : branch;
   const [manage, setManage] = useState(false),
     [history, setHistory] = useState(false),
     [error, setError] = useState("");
+  const intent = `${actor!.company_id}:${actor!.user_id}:${actor!.session_id}:${actor!.authority_epoch}:${location}:${date}:${view}`;
+  const currentIntent = useRef(intent);
+  useLayoutEffect(() => {
+    currentIntent.current = intent;
+  }, [intent]);
+  useEffect(
+    () => () => {
+      currentIntent.current = "";
+    },
+    [],
+  );
   const saves = useRef(new Map<string, () => Promise<boolean>>());
   const register = useCallback((id: string, flush: () => Promise<boolean>) => {
     saves.current.set(id, flush);
@@ -728,7 +750,7 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
     (
       await Promise.all([...saves.current.values()].map((save) => save()))
     ).every(Boolean);
-  const changeDate = async (next: string) => {
+  const changeDate = async (next: string, nextView = view) => {
     if (!validTrackedDate(next)) return;
     if (!(await flush())) {
       setError(
@@ -740,7 +762,71 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
       return;
     }
     setDate(next);
-    window.history.replaceState(null, "", `#timesheets?date=${next}`);
+    setView(nextView);
+    window.history.replaceState(
+      null,
+      "",
+      `#timesheets?date=${next}&view=${nextView}`,
+    );
+  };
+  const changeView = async (next: "day" | "week") => {
+    if (!(await flush())) {
+      setError(
+        t(
+          "Check the entries that could not be saved.",
+          "ورودی‌هایی را که ذخیره نشدند بررسی کنید.",
+        ),
+      );
+      return;
+    }
+    setView(next);
+    window.history.replaceState(
+      null,
+      "",
+      `#timesheets?date=${date}&view=${next}`,
+    );
+  };
+  const exportCsv = async () => {
+    if (!(await flush())) {
+      setError(
+        t(
+          "Check the entries that could not be saved.",
+          "ورودی‌هایی را که ذخیره نشدند بررسی کنید.",
+        ),
+      );
+      return;
+    }
+    const expected = currentIntent.current;
+    try {
+      const result = await query(
+        "timesheets.read",
+        timesheetScope(actor!.company_id, location),
+        (canonical, current) =>
+          exportTimesheetCsv(canonical, current, {
+            branch: location,
+            date,
+            view,
+          }),
+      );
+      if (currentIntent.current !== expected) return;
+      const href = URL.createObjectURL(
+        new Blob([result.text], { type: "text/csv;charset=utf-8" }),
+      );
+      const link = document.createElement("a");
+      link.href = href;
+      link.download = result.filename;
+      link.click();
+      URL.revokeObjectURL(href);
+      setError("");
+    } catch {
+      if (currentIntent.current === expected)
+        setError(
+          t(
+            "The export could not be prepared. Check your access and try again.",
+            "فایل خروجی آماده نشد. مجوزها را بررسی و دوباره تلاش کنید.",
+          ),
+        );
+    }
   };
   const allowed = state.config.branches
     .map((item, index) => ({ id: branchId(item, index), item }))
@@ -750,8 +836,16 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
     );
   useEffect(() => {
     const sync = () => {
-      if (window.location.hash.startsWith("#timesheets"))
+      if (window.location.hash.startsWith("#timesheets")) {
         setDate(requestedDate(timesheetClock(state.config, location).date));
+        setView(
+          new URLSearchParams(window.location.hash.split("?")[1]).get(
+            "view",
+          ) === "week"
+            ? "week"
+            : "day",
+        );
+      }
     };
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
@@ -788,6 +882,8 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
       </div>
     );
   const data = readTimesheetDayView(state, location, date);
+  const week =
+    view === "week" ? readTimesheetWeekView(state, location, date) : null;
   const added = (id: string) => {
     requestAnimationFrame(() => {
       document
@@ -817,7 +913,11 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
             <Button
               variant="neutral"
               aria-label={t("Previous day", "روز قبل")}
-              onClick={() => void changeDate(timesheetDateAfter(date, -1))}
+              onClick={() =>
+                void changeDate(
+                  timesheetDateAfter(date, view === "week" ? -7 : -1),
+                )
+              }
             >
               <ArrowLeft size={18} />
             </Button>
@@ -829,7 +929,11 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
             <Button
               variant="neutral"
               aria-label={t("Next day", "روز بعد")}
-              onClick={() => void changeDate(timesheetDateAfter(date, 1))}
+              onClick={() =>
+                void changeDate(
+                  timesheetDateAfter(date, view === "week" ? 7 : 1),
+                )
+              }
             >
               <ArrowRight size={18} />
             </Button>
@@ -842,8 +946,23 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
               {t("Today", "امروز")}
             </Button>
           </div>
+          <div className="timesheet-view-actions">
+            <Button variant="neutral" onClick={() => void exportCsv()}>
+              <Download size={18} />
+              {t("Export CSV", "خروجی CSV")}
+            </Button>
+            <Button
+              variant="neutral"
+              onClick={() => void changeView(view === "day" ? "week" : "day")}
+            >
+              {view === "day"
+                ? t("Week view", "نمای هفتگی")
+                : t("Day view", "نمای روزانه")}
+            </Button>
+          </div>
           <span className="timesheet-day-total">
-            {data.people_count} {t("people", "نفر")} ·{" "}
+            {data.people_count}{" "}
+            {t(data.people_count === 1 ? "person" : "people", "نفر")} ·{" "}
             {timesheetMinutesText(data.minutes, lang)}
           </span>
         </div>
@@ -869,118 +988,137 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
             {error}
           </p>
         )}
-        <div className="timesheet-departments" key={`${location}:${date}`}>
-          {data.departments.map((department) => (
-            <Card className="timesheet-department" key={department.key}>
-              <header className="timesheet-department-heading">
-                <div>
-                  <h2>{department.name_en}</h2>
-                  <span lang="fa" dir="rtl">
-                    {department.name_fa}
-                  </span>
-                </div>
-                <small className="muted">
-                  {department.people_count} {t("people", "نفر")} ·{" "}
-                  {timesheetMinutesText(department.minutes, lang)}
-                </small>
-              </header>
-              <div
-                className="timesheet-table"
-                role="table"
-                aria-label={`${department.name_en} ${t("timesheet", "کارکرد")}`}
-              >
-                <div className="timesheet-table-head" role="row">
-                  {[
-                    t("Name", "نام"),
-                    t("In", "ورود"),
-                    t("Out", "خروج"),
-                    t("Hours", "ساعت"),
-                  ].map((label) => (
-                    <span role="columnheader" key={label}>
-                      {label}
-                    </span>
-                  ))}
-                </div>
-                {department.rows.map((row) => (
-                  <TimesheetRow row={row} location={location} key={row.id} />
-                ))}
-              </div>
-              {!department.retained && (
-                <AddTimesheetPerson
-                  department={department}
-                  date={date}
-                  location={location}
-                  staff={data.staff}
-                  onAdded={added}
-                />
-              )}
-              {department.retained && (
-                <p className="muted">
-                  {t(
-                    "Past department · existing shifts are retained.",
-                    "بخش پیشین · شیفت‌های موجود حفظ شده‌اند.",
+        {week ? (
+          <TimesheetWeek
+            data={week}
+            openDay={(next) => {
+              void changeDate(next, "day");
+            }}
+          />
+        ) : (
+          <>
+            <div className="timesheet-departments" key={`${location}:${date}`}>
+              {data.departments.map((department) => (
+                <Card className="timesheet-department" key={department.key}>
+                  <header className="timesheet-department-heading">
+                    <div>
+                      <h2>{department.name_en}</h2>
+                      <span lang="fa" dir="rtl">
+                        {department.name_fa}
+                      </span>
+                    </div>
+                    <small className="muted">
+                      {department.people_count}{" "}
+                      {t(
+                        department.people_count === 1 ? "person" : "people",
+                        "نفر",
+                      )}{" "}
+                      · {timesheetMinutesText(department.minutes, lang)}
+                    </small>
+                  </header>
+                  <div
+                    className="timesheet-table"
+                    role="table"
+                    aria-label={`${department.name_en} ${t("timesheet", "کارکرد")}`}
+                  >
+                    <div className="timesheet-table-head" role="row">
+                      {[
+                        t("Name", "نام"),
+                        t("In", "ورود"),
+                        t("Out", "خروج"),
+                        t("Hours", "ساعت"),
+                      ].map((label) => (
+                        <span role="columnheader" key={label}>
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                    {department.rows.map((row) => (
+                      <TimesheetRow
+                        row={row}
+                        location={location}
+                        key={row.id}
+                      />
+                    ))}
+                  </div>
+                  {!department.retained && (
+                    <AddTimesheetPerson
+                      department={department}
+                      date={date}
+                      location={location}
+                      staff={data.staff}
+                      onAdded={added}
+                    />
                   )}
-                </p>
+                  {department.retained && (
+                    <p className="muted">
+                      {t(
+                        "Past department · existing shifts are retained.",
+                        "بخش پیشین · شیفت‌های موجود حفظ شده‌اند.",
+                      )}
+                    </p>
+                  )}
+                </Card>
+              ))}
+            </div>
+            <Card className="timesheet-notes" title={t("Notes", "توضیحات")}>
+              <TimesheetSavedField
+                key={`${location}:${date}`}
+                id="timesheet-day-notes"
+                value={data.day?.notes ?? ""}
+                label={t("Notes for this day", "توضیحات این روز")}
+                multiline
+                save={(value) =>
+                  command(
+                    "timesheets.edit",
+                    timesheetScope(actor!.company_id, location, true),
+                    (draft, current) => {
+                      saveTimesheetNotes(draft, current, {
+                        branch: location,
+                        date,
+                        notes: value,
+                      });
+                    },
+                  )
+                }
+              />
+            </Card>
+            <Card className="timesheet-history">
+              <Button
+                variant="plain"
+                onClick={() => setHistory((value) => !value)}
+                aria-expanded={history}
+              >
+                <History size={18} />
+                {t("History", "تاریخچه")}
+              </Button>
+              {history && (
+                <div className="timesheet-history-list">
+                  {data.history.map((event) => (
+                    <div key={event.id}>
+                      <strong>{historyActionLabel(event.action, lang)}</strong>
+                      <small className="muted">
+                        {event.by} ·{" "}
+                        <bdi dir="ltr">
+                          {companyTimestampText(state.config, event.at)}
+                        </bdi>
+                      </small>
+                      {historyChanges(event, lang)}
+                    </div>
+                  ))}
+                  {!data.history.length && (
+                    <p className="muted">
+                      {t(
+                        "No changes on this day yet.",
+                        "هنوز تغییری در این روز ثبت نشده است.",
+                      )}
+                    </p>
+                  )}
+                </div>
               )}
             </Card>
-          ))}
-        </div>
-        <Card className="timesheet-notes" title={t("Notes", "توضیحات")}>
-          <TimesheetSavedField
-            key={`${location}:${date}`}
-            id="timesheet-day-notes"
-            value={data.day?.notes ?? ""}
-            label={t("Notes for this day", "توضیحات این روز")}
-            multiline
-            save={(value) =>
-              command(
-                "timesheets.edit",
-                timesheetScope(actor!.company_id, location, true),
-                (draft, current) => {
-                  saveTimesheetNotes(draft, current, {
-                    branch: location,
-                    date,
-                    notes: value,
-                  });
-                },
-              )
-            }
-          />
-        </Card>
-        <Card className="timesheet-history">
-          <Button
-            variant="plain"
-            onClick={() => setHistory((value) => !value)}
-            aria-expanded={history}
-          >
-            <History size={18} />
-            {t("History", "تاریخچه")}
-          </Button>
-          {history && (
-            <div className="timesheet-history-list">
-              {data.history.map((event) => (
-                <div key={event.id}>
-                  <strong>{historyActionLabel(event.action, lang)}</strong>
-                  <small className="muted">
-                    {event.by} ·{" "}
-                    <bdi dir="ltr">
-                      {companyTimestampText(state.config, event.at)}
-                    </bdi>
-                  </small>
-                  {historyChanges(event, lang)}
-                </div>
-              ))}
-              {!data.history.length && (
-                <p className="muted">
-                  {t(
-                    "No changes on this day yet.",
-                    "هنوز تغییری در این روز ثبت نشده است.",
-                  )}
-                </p>
-              )}
-            </div>
-          )}
-        </Card>
+          </>
+        )}
         {manage && (
           <ManageStaff
             location={location}

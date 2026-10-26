@@ -272,12 +272,98 @@
 .timesheet-settings-feedback[role="alert"] {
   color: var(--danger);
 }
+.timesheet-view-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.timesheet-week {
+  min-width: 0;
+}
+.timesheet-week-table th,
+.timesheet-week-table td {
+  padding-inline: 6px;
+  text-align: center;
+}
+.timesheet-week-table th:first-child,
+.timesheet-week-table td:first-child {
+  text-align: start;
+}
+.timesheet-week-table small {
+  display: block;
+  margin-block-start: 4px;
+}
+.timesheet-week-cell {
+  border: 0;
+  border-radius: var(--radius-control);
+  min-width: 44px;
+  min-height: 44px;
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.timesheet-week-cell:hover,
+.timesheet-week-cell:focus-visible {
+  background: var(--accent-soft);
+}
+.timesheet-week-subtotal {
+  background: var(--surface-soft);
+  font-weight: 600;
+}
+.timesheet-week-table tfoot {
+  font-weight: 800;
+}
+.timesheet-week-phone {
+  display: none;
+}
 @media (max-width: 1199px) {
   .timesheet-departments {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 759px) {
+  .timesheet-week-wide {
+    display: none;
+  }
+  .timesheet-week-phone {
+    display: grid;
+    gap: 20px;
+  }
+  .timesheet-week-person {
+    border-block-end: 1px solid var(--row-divider);
+    padding-block: 12px 20px;
+  }
+  .timesheet-week-person header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-block-end: 16px;
+  }
+  .timesheet-week-person header small {
+    display: block;
+    margin-block-start: 4px;
+  }
+  .timesheet-week-days {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .timesheet-week-days .timesheet-week-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px;
+    background: var(--surface-soft);
+  }
+  .timesheet-week-summary p {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
   .timesheet-departments {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;

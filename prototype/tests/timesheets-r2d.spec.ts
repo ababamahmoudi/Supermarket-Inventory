@@ -8,11 +8,9 @@ test("cashier adds two people and buffered times and notes survive fast typing a
   await page.goto("/");
   await signIn(page, "Cashier");
   await visitPage(page, "Timesheets");
-  const bakery = page
-    .locator(".timesheet-department")
-    .filter({
-      has: page.getByRole("heading", { name: "Bakery", exact: true }),
-    });
+  const bakery = page.locator(".timesheet-department").filter({
+    has: page.getByRole("heading", { name: "Bakery", exact: true }),
+  });
   for (const name of ["Juniper Avery", "Robin Vale"]) {
     await bakery
       .getByRole("button", { name: "Add person", exact: true })
@@ -110,4 +108,68 @@ test("floor worker cannot see or open Timesheets and aggregate viewing asks for 
     }),
   ).toBeVisible();
   await expect(page.locator(".timesheet-row")).toHaveCount(0);
+});
+
+test("week totals match actual day shifts and payroll CSV opens the same days", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/");
+  await signIn(page, "Cashier");
+  await visitPage(page, "Timesheets");
+  const date = await page
+    .locator(".timesheets-page")
+    .getAttribute("data-timesheet-date");
+  const instant = new Date(`${date}T12:00:00Z`);
+  instant.setUTCDate(instant.getUTCDate() - ((instant.getUTCDay() + 6) % 7));
+  const monday = instant.toISOString().slice(0, 10);
+  instant.setUTCDate(instant.getUTCDate() + 6);
+  const sunday = instant.toISOString().slice(0, 10);
+  const state = await readCanonicalBusinessEvidence(page);
+  const rows = (state.timesheet_rows ?? []).filter(
+    (row) =>
+      row.company_id === state.config.company.seed_key &&
+      row.branch === "Branch 1" &&
+      !row.removed_at &&
+      row.date >= monday &&
+      row.date <= sunday,
+  );
+  const total = rows.reduce((sum, row) => {
+    if (!row.in_time || !row.out_time) return sum;
+    const minutes = (value: string) =>
+      Number(value.slice(0, 2)) * 60 + Number(value.slice(3));
+    return sum + ((minutes(row.out_time) - minutes(row.in_time) + 1440) % 1440);
+  }, 0);
+  await page.getByRole("button", { name: "Week view", exact: true }).click();
+  const scope = page.locator(
+    testInfo.project.name === "phone"
+      ? ".timesheet-week-phone"
+      : ".timesheet-week-wide",
+  );
+  await expect(scope.locator("[data-week-total-minutes]")).toHaveAttribute(
+    "data-week-total-minutes",
+    String(total),
+  );
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export CSV", exact: true }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toContain("week");
+  const stream = await download.createReadStream();
+  let csv = "";
+  for await (const chunk of stream!) csv += chunk.toString();
+  expect(csv.replace(/^\uFEFF/, "").split("\r\n")[0]).toBe(
+    '"staff","department","date","in","out","hours"',
+  );
+  expect(csv).toContain(date!);
+  const activePerson = rows.find((row) => row.in_time && row.out_time)!;
+  const cell = scope.getByRole("button", {
+    name: new RegExp(`${activePerson.name_en} · ${activePerson.date}`),
+  });
+  await cell.click();
+  await expect(page.locator(".timesheets-page")).toHaveAttribute(
+    "data-timesheet-date",
+    activePerson.date,
+  );
+  await expect(page.locator(".timesheet-departments")).toBeVisible();
+  await page.reload();
+  await expect(page.locator(".timesheet-departments")).toBeVisible();
 });

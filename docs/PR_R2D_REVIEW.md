@@ -17,3 +17,11 @@ Use `feat/prototype-r2-receiving` and PR #29. Changes stay unmerged. From `proto
 The default is a branch staff list with an optional app-login link. Past days remain editable by the four permitted roles, and every meaningful change is audited. Actual browser storage and domain commands enforce company/location access; this prototype does not add a production backend or cross-device shared storage.
 
 Validation is recorded only after execution. B1's initial browser proof covers actual Cashier sign-in, two new staff entries, fast time/Notes typing, canonical persistence/reload and Floor Worker denial on desktop and phone. Later sections record week/export/print/dashboard verification when implemented.
+
+## B2: week view and payroll CSV
+
+1. At one branch, open Timesheets → **Week view**. Expect Monday through Sunday, staff sorted by department/name, staff totals, department totals and the week total. Phone cards keep every day reachable without sideways page scrolling.
+2. Click a person's day cell. That exact daily sheet opens; reload keeps the chosen day view. Date arrows move one week while in Week view.
+3. Choose **Export CSV** in either view. The file contains staff, department, date, In, Out and decimal hours for that branch/day or branch/week. Export rechecks current authority and waits for valid pending edits; changing person or location while it loads cancels the old export.
+
+Executed B2 browser proof: actual daily canonical shifts reconcile with the displayed weekly total; a real downloaded CSV has the exact payroll header and selected dates; a week cell opens the same day and survives reload. Desktop and phone passed.
