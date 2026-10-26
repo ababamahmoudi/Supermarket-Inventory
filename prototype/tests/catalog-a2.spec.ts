@@ -96,13 +96,12 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
   // Keep the subject in Lookup's supported route across protected location
   // refreshes, so this price-scope check always compares the same product.
   await page.goto("/#lookup?search=0009");
-  // Aggregate Lookup requires an actual selling store before prices/actions.
-  await chooseOption(
-    page,
-    page.locator(".lookup-page").getByLabel("Location", { exact: true }),
-    "Branch 1",
-    "North York",
+  // Aggregate Lookup now lists the company catalog without a local gate.
+  // Select a concrete store in the shell for this price-scope/audit proof.
+  await expect(page.locator(".lookup-results-list")).toContainText(
+    "Potato Chips",
   );
+  await setBranch(page, "Branch 1");
   const activityBefore = new Set(
     (await readCanonicalBusinessEvidence(page)).activity.map(
       (entry) => entry.id,
