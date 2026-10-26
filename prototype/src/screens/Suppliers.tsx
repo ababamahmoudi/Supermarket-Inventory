@@ -236,9 +236,10 @@ export default function Suppliers() {
           {
             key: "overdue",
             priority: 8,
-            minWidth: 100,
+            // Keep the full sortable caption inside the shared cell padding.
+            minWidth: 128,
             label: t("Overdue", "سررسید گذشته"),
-            width: 120,
+            width: 128,
             align: "end" as const,
           },
           {
