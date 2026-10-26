@@ -465,6 +465,7 @@ export default function Suppliers() {
             )}
           </FilterToolbar>
           <DataTable
+            recordDetails
             className={
               supervisor ? "suppliers-table supervisor" : "suppliers-table"
             }

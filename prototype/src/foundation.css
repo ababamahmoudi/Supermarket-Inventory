@@ -987,6 +987,7 @@
   flex: 0 0 auto;
 }
 .ui-select-popover > .ui-option-list {
+  align-content: start;
   flex: 1 1 auto;
   min-block-size: 0;
   overflow: auto;
@@ -1000,4 +1001,29 @@
   max-block-size: none;
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
+}
+
+/* Record rows keep one disclosure and blue linked names in phone lists too. */
+:root
+  .ui-data-table.has-record-details.is-responsive.is-mobile.is-phone-list
+  td.phone-list-name
+  a {
+  color: var(--link-text);
+}
+.has-record-details .offer-row-actions {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.has-record-details .offer-stop-action {
+  min-block-size: 44px;
+}
+.has-record-details .returns-next-action {
+  font-size: var(--font-size-caption);
+}
+:root .ui-data-table.has-record-details .table-identity > a:first-child,
+:root
+  .ui-data-table.has-record-details
+  .payables-supplier-link
+  > a:first-child {
+  color: var(--link-text);
 }

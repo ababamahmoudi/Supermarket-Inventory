@@ -324,7 +324,15 @@ export function DateQuickAdd({
               createPortal(
                 <div
                   ref={searchPopupRef}
-                  style={searchPosition}
+                  style={{
+                    ...searchPosition,
+                    maxHeight: Math.min(
+                      320,
+                      typeof searchPosition.maxHeight === "number"
+                        ? searchPosition.maxHeight
+                        : 320,
+                    ),
+                  }}
                   id={suggestionsId}
                   role="listbox"
                   aria-label={t("Product results", "نتایج محصولات")}

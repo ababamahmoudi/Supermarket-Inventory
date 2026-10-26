@@ -685,6 +685,7 @@ function PayablesContent({
           )}
         </FilterToolbar>
         <DataTable
+          recordDetails
           className="payables-overview-table"
           phoneList={{
             name: "supplier",

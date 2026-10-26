@@ -76,10 +76,9 @@ async function stopOffer(page: Page, code: string) {
   );
   await expect(row).toHaveCount(1);
   await expect(
-    row.getByRole("button", { name: "Stop offer", exact: true }),
+    row.getByRole("button", { name: "More", exact: true }),
   ).toHaveCount(0);
-  await row.getByRole("button", { name: "More", exact: true }).click();
-  await page.getByRole("menuitem", { name: /Stop offer/ }).click();
+  await row.getByRole("button", { name: "Stop offer", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Stop offer", exact: true })
     .getByRole("button", { name: "Stop offer", exact: true })

@@ -5,7 +5,7 @@ import {
 } from "../settings";
 import { translateCount } from "../i18n";
 import { useState } from "react";
-import { ChevronRight, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import {
   activateOffer,
   businessDate,
@@ -70,7 +70,7 @@ import {
   Tabs,
   Menu,
   MenuItem,
-  IconButton,
+  TableRowAction,
 } from "../ui";
 
 export function Offers() {
@@ -738,6 +738,7 @@ export function Offers() {
               </EmptyState>
             ) : (
               <DataTable
+                recordDetails
                 className={`current-offers-table${tab === "past" ? " past-offers-table" : ""}`}
                 phoneList={{
                   name: "product",
@@ -821,6 +822,15 @@ export function Offers() {
                         item.company_id === company &&
                         item.code === first.product_code,
                     );
+                    const secondaryOffers =
+                      tab === "offers" && mayManageMultiBuy
+                        ? group.filter((offer) =>
+                            can(
+                              "offers.multibuy_manage",
+                              offerWriteScope(offer),
+                            ),
+                          )
+                        : [];
                     return (
                       <tr
                         key={tab === "past" ? first.id : first.product_code}
@@ -854,7 +864,12 @@ export function Offers() {
                       >
                         <td>
                           {product ? (
-                            <ProductName product={product} language={lang} />
+                            <a
+                              className="entity-link"
+                              href={`#product?code=${encodeURIComponent(product.code)}`}
+                            >
+                              <ProductName product={product} language={lang} />
+                            </a>
                           ) : (
                             <LtrText>{first.product_code}</LtrText>
                           )}
@@ -998,7 +1013,7 @@ export function Offers() {
                         </td>
                         <td>
                           <div className="actions offer-row-actions">
-                            {tab === "offers" && mayManageMultiBuy ? (
+                            {secondaryOffers.length > 1 ? (
                               <Menu
                                 iconOnly
                                 showChevron={false}
@@ -1011,7 +1026,7 @@ export function Offers() {
                                   />
                                 }
                               >
-                                {group.map((offer) => (
+                                {secondaryOffers.map((offer) => (
                                   <MenuItem
                                     key={offer.id}
                                     disabled={
@@ -1027,25 +1042,20 @@ export function Offers() {
                                   </MenuItem>
                                 ))}
                               </Menu>
-                            ) : (
-                              <span
-                                className="offer-more-slot"
-                                aria-hidden="true"
-                              />
-                            )}
-                            <IconButton
-                              variant="ghost"
-                              className="table-row-link offer-record-action"
+                            ) : secondaryOffers.length === 1 ? (
+                              <Button
+                                variant="plain"
+                                className="offer-stop-action"
+                                onClick={() => setStopId(secondaryOffers[0].id)}
+                              >
+                                {t("Stop offer", "توقف پیشنهاد")}
+                              </Button>
+                            ) : null}
+                            <TableRowAction
+                              className="offer-record-action"
                               aria-label={t("Open offer", "باز کردن پیشنهاد")}
                               onClick={() => setOpenedOffer(group)}
-                            >
-                              <ChevronRight
-                                className="directional"
-                                size={20}
-                                strokeWidth={1.5}
-                                aria-hidden="true"
-                              />
-                            </IconButton>
+                            />
                           </div>
                         </td>
                       </tr>
@@ -1363,6 +1373,28 @@ export function Offers() {
               <section className="offer-record" key={offer.id}>
                 {product && <ProductName product={product} language={lang} />}
                 <dl>
+                  <div>
+                    <dt>{t("Status", "وضعیت")}</dt>
+                    <dd>
+                      {offer.status === "stopped"
+                        ? t("Stopped", "متوقف‌شده")
+                        : isPastOffer(offer, state.config.company.timezone)
+                          ? t("Expired", "منقضی‌شده")
+                          : offerPausedStores(
+                                state,
+                                offer,
+                                branch,
+                                historyContext?.allowed_branches ?? [],
+                              ).length
+                            ? salesText(t, "paused")
+                            : isOfferScheduledNow(
+                                  offer,
+                                  state.config.company.timezone,
+                                )
+                              ? t("Active", "فعال")
+                              : t("Scheduled", "زمان‌بندی‌شده")}
+                    </dd>
+                  </div>
                   <div>
                     <dt>{t("Product Code", "کد کالا")}</dt>
                     <dd>

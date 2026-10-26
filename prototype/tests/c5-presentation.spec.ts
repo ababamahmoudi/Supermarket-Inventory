@@ -803,9 +803,11 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
   );
   expect(repeated.offers).toEqual(before.offers);
   expect(repeated.activity).toEqual(before.activity);
-  await existing.getByRole("button", { name: "More", exact: true }).click();
-  const stopExisting = page.getByRole("menuitem", {
-    name: "Stop offer · All branches",
+  await expect(
+    existing.getByRole("button", { name: "More", exact: true }),
+  ).toHaveCount(0);
+  const stopExisting = existing.getByRole("button", {
+    name: "Stop offer",
     exact: true,
   });
   await expect(stopExisting).toBeVisible();
@@ -819,19 +821,12 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
     '.past-offers-table tr[data-product-code="0003"]',
   );
   await expect(pastRow).toHaveCount(1);
-  let retainedStatus = await pastRow.innerText();
-  const details = button(pastRow, "Show details");
-  if (await details.count()) {
-    const detailsId = await details.getAttribute("aria-controls");
-    expect(detailsId).toBeTruthy();
-    await details.click();
-    const omitted = page.locator(`[id="${detailsId}"]`);
-    await expect(omitted).toBeVisible();
-    expect(await omitted.locator("dl > div > dd").count()).toBeGreaterThan(0);
-    // C8 keeps Status in the phone row; only genuinely omitted values expand.
-    retainedStatus += ` ${await omitted.innerText()}`;
-  }
-  expect(retainedStatus).toContain("Stopped");
+  await expect(button(pastRow, "Show details")).toHaveCount(0);
+  await button(pastRow, "Open offer").click();
+  const record = page.getByRole("dialog", { name: "Offer", exact: true });
+  await expect(record).toContainText("Stopped");
+  await expect(record.locator("dl > div > dd")).not.toHaveCount(0);
+  await button(record, "Close").click();
   const toast = page
     .getByTestId("undo-toast")
     .filter({ hasText: "Stop offer" });

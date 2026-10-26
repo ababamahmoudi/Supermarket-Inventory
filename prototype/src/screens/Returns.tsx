@@ -526,6 +526,7 @@ function ReturnsContent() {
               )}
             </FilterToolbar>
             <DataTable
+              recordDetails
               className="returns-overview-table"
               phoneList={{
                 name: "supplier",
@@ -592,7 +593,9 @@ function ReturnsContent() {
                         </a>
                       </td>
                       <td>
-                        <LtrText>{record.supplier}</LtrText>
+                        <a className="entity-link" href={detailHref(record)}>
+                          <LtrText>{record.supplier}</LtrText>
+                        </a>
                       </td>
                       <td className="branch-label">
                         {configuredBranchLabel(
@@ -615,12 +618,12 @@ function ReturnsContent() {
                       <td>{returnStatus(record)}</td>
                       <td className="action-cell">
                         <div className="actions table-actions">
-                          {record.status !== "cancelled" &&
-                            record.status !== "resolved" && (
-                              <Button asChild variant="neutral" size="sm">
-                                <a href={detailHref(record)}>{action}</a>
-                              </Button>
-                            )}
+                          <span
+                            data-action-fact
+                            className="muted returns-next-action"
+                          >
+                            {action}
+                          </span>
                           <TableRowLink
                             href={detailHref(record)}
                             aria-label={`${t("View", "مشاهده")} ${t("Return", "مرجوعی")} #${returnNumber(record)}`}

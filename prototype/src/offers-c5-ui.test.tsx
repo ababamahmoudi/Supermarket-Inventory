@@ -66,10 +66,12 @@ it("retranslates retained offer feedback after switching language without changi
   );
   await screen.findByRole("button", { name: "Create offer" });
   const offerRow = document.querySelector('tr[data-product-code="0003"]')!;
+  expect(
+    within(offerRow as HTMLElement).queryByRole("button", { name: "More" }),
+  ).not.toBeInTheDocument();
   fireEvent.click(
-    within(offerRow as HTMLElement).getByRole("button", { name: "More" }),
+    within(offerRow as HTMLElement).getByRole("button", { name: "Stop offer" }),
   );
-  fireEvent.click(screen.getByRole("menuitem", { name: /^Stop offer/ }));
   fireEvent.click(
     within(screen.getByRole("dialog", { name: "Stop offer" })).getByRole(
       "button",

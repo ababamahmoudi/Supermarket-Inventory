@@ -121,6 +121,7 @@ export function allocateTableColumns(
   availableWidth: number,
   mobile: boolean,
   measuredMinimums: readonly number[] = [],
+  reserveDetails = true,
 ): { visible: number[]; collapsed: number[]; minimums: number[] } {
   const minimums = columns.map(
     (column, index) =>
@@ -146,7 +147,7 @@ export function allocateTableColumns(
     );
   } else if (availableWidth > 0) {
     // A modest first-cell reserve holds the details disclosure without squeezing words.
-    const budget = Math.max(0, availableWidth - 36);
+    const budget = Math.max(0, availableWidth - (reserveDetails ? 36 : 0));
     const candidates = [...visible]
       .filter(
         (index) =>

@@ -182,6 +182,31 @@ export function TableRowLink({
     </a>
   );
 }
+/** The single record-details control for rows that open a local dialog. */
+export function TableRowAction({
+  className,
+  children,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & { "aria-label": string }) {
+  return (
+    <Button
+      {...props}
+      variant="ghost"
+      className={cn("ui-icon-button table-row-link", className)}
+      data-control-kind="disclosure"
+    >
+      {children ?? (
+        <ChevronRight
+          className="directional"
+          size={20}
+          strokeWidth={1.5}
+          aria-hidden="true"
+        />
+      )}
+    </Button>
+  );
+}
+
 type BadgeTone =
   "pending" | "approved" | "danger" | "info" | "neutral" | "progress";
 function statusTone(children: ReactNode): BadgeTone | undefined {
@@ -457,6 +482,7 @@ export function DataTable({
   expandedRowKeys,
   onExpandedRowKeysChange,
   phoneList,
+  recordDetails = false,
   horizontalScroll = false,
   density = "default",
   ...props
@@ -467,6 +493,8 @@ export function DataTable({
   density?: "default" | "compact";
   expandedRowKeys?: string[];
   onExpandedRowKeysChange?: (keys: string[]) => void;
+  /** A canonical detail page/dialog exposes omitted facts; omit a second row disclosure. */
+  recordDetails?: boolean;
   phoneList?: {
     name: string;
     value: string;
@@ -574,6 +602,7 @@ export function DataTable({
         resolvedColumns.map((column, index) =>
           column.actions ? (actionWidths[column.key ?? String(index)] ?? 0) : 0,
         ),
+        !recordDetails,
       )
     : {
         visible: resolvedColumns.flatMap((column, index) =>
@@ -588,6 +617,7 @@ export function DataTable({
     .filter((index) => resolvedColumns[index].actions)
     .at(-1);
   const separateDetailsColumn =
+    !recordDetails &&
     layoutResponsive &&
     !(mobile && phoneList) &&
     layout.collapsed.length > 0 &&
@@ -694,16 +724,25 @@ export function DataTable({
               control.getBoundingClientRect().width > 0,
           );
           if (!controls.length) continue;
+          const facts = Array.from(
+            group.querySelectorAll<HTMLElement>("[data-action-fact]"),
+          ).filter(
+            (fact) =>
+              fact.closest("td") === cell &&
+              fact.getBoundingClientRect().width > 0,
+          );
           const gap = parseFloat(getComputedStyle(group).columnGap || "0") || 0;
-          const controlsWidth = controls.reduce(
+          const controlsWidth = [...controls, ...facts].reduce(
             (total, control) => total + control.getBoundingClientRect().width,
             0,
           );
           width = Math.max(
             width,
-            controlsWidth + gap * (controls.length - 1) + padding,
+            controlsWidth +
+              gap * (controls.length + facts.length - 1) +
+              padding,
           );
-          for (const control of controls) measured.add(control);
+          for (const control of [...controls, ...facts]) measured.add(control);
         }
         next[columnId(column)] = Math.ceil(width);
       });
@@ -756,6 +795,7 @@ export function DataTable({
             (cell.props.colSpan ?? 1) > 1,
         );
         const canExpand =
+          !recordDetails &&
           layoutResponsive &&
           !(mobile && phoneList) &&
           bodyRow &&
@@ -791,7 +831,7 @@ export function DataTable({
               ? nodes.map(withoutRowLinks)
               : !isValidElement<{ children?: ReactNode }>(nodes)
                 ? nodes
-                : nodes.type === TableRowLink
+                : nodes.type === TableRowLink || nodes.type === TableRowAction
                   ? null
                   : nodes.props.children === undefined
                     ? nodes
@@ -813,7 +853,8 @@ export function DataTable({
                 !isValidElement<{ children?: ReactNode; href?: string }>(child)
               )
                 continue;
-              if (child.type === TableRowLink) return child;
+              if (child.type === TableRowLink || child.type === TableRowAction)
+                return child;
               const found = findLink(child.props.children);
               if (found) return found;
             }
@@ -1049,6 +1090,7 @@ export function DataTable({
         printing && "is-printing",
         mobile && phoneList && "is-phone-list",
         phoneList?.selection && "has-phone-selection",
+        recordDetails && "has-record-details",
         className,
       )}
       tabIndex={0}
@@ -1873,7 +1915,15 @@ export function Select({
           <div
             ref={popupRef}
             className="ui-popover ui-select-popover"
-            style={popupPosition}
+            style={{
+              ...popupPosition,
+              maxHeight: Math.min(
+                320,
+                typeof popupPosition.maxHeight === "number"
+                  ? popupPosition.maxHeight
+                  : 320,
+              ),
+            }}
             onKeyDown={keydown}
           >
             {canSearch && (

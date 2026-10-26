@@ -108,18 +108,26 @@ it("keeps genuine product navigation and existing offer actions available in com
   ]) {
     expect(offerRow).toHaveClass("phone-list-row");
     const productLink = offerRow.querySelector<HTMLAnchorElement>(
-      ".phone-list-chevron a.table-row-link",
+      ".phone-list-name a.entity-link",
     );
     expect(productLink).toHaveAttribute(
       "href",
       `#product?code=${offerRow.dataset.productCode}`,
     );
+    expect(offerRow.querySelectorAll(".table-row-link")).toHaveLength(1);
     expect(
-      offerRow.querySelectorAll(".phone-list-chevron .table-row-link"),
-    ).toHaveLength(1);
+      within(offerRow)
+        .getByRole("button", { name: "Open offer" })
+        .closest("td"),
+    ).toHaveClass("phone-list-chevron");
+    expect(
+      within(offerRow).queryByRole("button", { name: "Show details" }),
+    ).not.toBeInTheDocument();
   }
-  await user.click(within(regular).getByRole("button", { name: "More" }));
-  await user.click(screen.getByRole("menuitem", { name: /^Stop offer/ }));
+  expect(
+    within(regular).queryByRole("button", { name: "More" }),
+  ).not.toBeInTheDocument();
+  await user.click(within(regular).getByRole("button", { name: "Stop offer" }));
   await user.click(
     within(screen.getByRole("dialog", { name: "Stop offer" })).getByRole(
       "button",
@@ -138,10 +146,18 @@ it("keeps genuine product navigation and existing offer actions available in com
       name: "Close",
     }),
   );
+  await user.click(within(saleRow).getByRole("button", { name: "Open offer" }));
+  expect(screen.getByRole("dialog", { name: "Offer" })).toHaveTextContent(
+    "16.99",
+  );
+  expect(window.location.hash).toBe("#offers");
   await user.click(
-    saleRow.querySelector<HTMLAnchorElement>(
-      ".phone-list-chevron a.table-row-link",
-    )!,
+    within(screen.getByRole("dialog", { name: "Offer" })).getByRole("button", {
+      name: "Close",
+    }),
+  );
+  await user.click(
+    saleRow.querySelector<HTMLAnchorElement>(".phone-list-name a.entity-link")!,
   );
   await waitFor(() => expect(window.location.hash).toBe("#product?code=0012"));
   expect(JSON.stringify(await fixture.readCanonical())).toBe(before);
@@ -319,7 +335,11 @@ it("opens a sale record by clicking the product row, and filters requests indepe
     '.product-name [lang="en"]',
   );
   expect(productName).toHaveTextContent(/^Stainless Steel Pot 24 cm$/);
-  await user.click(productName as HTMLElement);
+  expect(productName!.closest("a")).toHaveAttribute(
+    "href",
+    "#product?code=0012",
+  );
+  await user.click(row("0012", "sale"));
   const dialog = screen.getByRole("dialog", { name: "Offer" });
   expect(dialog).toHaveTextContent("Created by");
   expect(dialog).toHaveTextContent("16.99");

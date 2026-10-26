@@ -108,9 +108,8 @@ test("Offers combines name/code/label search, category, supplier, type and statu
   await expect(filters.locator(".filter-count")).toHaveText("1 offer");
   await current
     .locator('tbody tr[data-product-code="0003"]')
-    .getByRole("button", { name: "More", exact: true })
+    .getByRole("button", { name: "Stop offer", exact: true })
     .click();
-  await page.getByRole("menuitem", { name: /^Stop offer ·/ }).click();
   await page
     .getByRole("dialog", { name: "Stop offer", exact: true })
     .getByRole("button", { name: "Stop offer", exact: true })
