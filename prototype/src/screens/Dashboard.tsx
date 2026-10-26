@@ -97,6 +97,14 @@ export function Dashboard() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [now, setNow] = useState(Date.now);
+  const [wideDashboard, setWideDashboard] = useState(
+    () => window.innerWidth >= 1440,
+  );
+  useEffect(() => {
+    const resize = () => setWideDashboard(window.innerWidth >= 1440);
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(timer);
@@ -598,14 +606,15 @@ export function Dashboard() {
                     {
                       key: "product",
                       required: true,
-                      width: 190,
+                      width: wideDashboard ? 190 : 150,
                       fixedWidth: true,
-                      minWidth: 190,
+                      minWidth: wideDashboard ? 190 : 150,
                       priority: 1,
                     },
                     { key: "type", width: 140, minWidth: 140, priority: 4 },
                     {
                       key: "price",
+                      required: true,
                       width: 145,
                       minWidth: 115,
                       align: "end",
@@ -870,9 +879,20 @@ export function Dashboard() {
                       </td>
                       <td>
                         {invoice.total ? (
-                          <strong>
-                            <Money value={invoice.total} />
-                          </strong>
+                          <span className="dashboard-invoice-amount">
+                            <strong>
+                              <Money
+                                value={invoice.total}
+                                currency={invoice.currency}
+                              />
+                            </strong>
+                            {invoice.currency !==
+                              state.config.company.currency && (
+                              <small className="muted">
+                                <LtrText>{invoice.currency}</LtrText>
+                              </small>
+                            )}
+                          </span>
                         ) : (
                           <NotAdded />
                         )}

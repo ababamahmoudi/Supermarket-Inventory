@@ -238,6 +238,7 @@ export function dashboardSummary(
       supplier_invoice_number: invoice.supplier_invoice_number,
       invoice_date: invoice.invoice_date,
       total: invoice.purchase_cost_allowed ? invoice.final_total : undefined,
+      currency: invoice.import_currency || state.config.company.currency,
     }));
   const canonicalInvoices = [...(state.invoices ?? [])];
   const currentIndex = canonicalInvoices.findIndex(

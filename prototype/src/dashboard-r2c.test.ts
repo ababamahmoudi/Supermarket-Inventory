@@ -90,6 +90,22 @@ describe("R2c Group1 canonical dashboard", () => {
         .map((row) => row.amount),
     );
   });
+  it("retains foreign invoice currency and exact amounts without converting them", () => {
+    const state = initialState();
+    const invoice = state.invoices!.find((row) => row.status === "posted")!;
+    invoice.import_currency = "USD";
+    invoice.final_total = "123.45";
+    invoice.posted_at = now.toISOString();
+    const before = JSON.stringify(invoice);
+    const row = dashboardSummary(
+      state,
+      manager(state),
+      now,
+    ).recentInvoices.find((row) => row.id === invoice.id)!;
+    expect(row).toMatchObject({ currency: "USD", total: "123.45" });
+    expect(state.config.company.currency).toBe("CAD");
+    expect(JSON.stringify(invoice)).toBe(before);
+  });
   it("scopes recent invoices to their effective selected location, including All locations", () => {
     const state = initialState();
     const local = dashboardSummary(state, manager(state, "Branch 1"), now);

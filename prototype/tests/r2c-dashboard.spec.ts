@@ -106,6 +106,25 @@ for (const width of [1440, 1000, 390])
             .allTextContents();
           expect(labels.every((label) => /[0-9]/.test(label))).toBe(true);
           expect(new Set(labels).size).toBe(8);
+          const types = await dashboard
+            .locator(".dashboard-approval-table tbody .ui-badge")
+            .evaluateAll((badges) =>
+              badges.map((badge) => ({
+                background: getComputedStyle(badge).backgroundColor,
+                radius: getComputedStyle(badge).borderRadius,
+                dot: getComputedStyle(badge.querySelector(".ui-status-dot")!)
+                  .display,
+              })),
+            );
+          expect(types.length).toBeGreaterThan(0);
+          expect(
+            types.every(
+              (type) =>
+                type.background !== "rgba(0, 0, 0, 0)" &&
+                type.radius === "999px" &&
+                type.dot === "none",
+            ),
+          ).toBe(true);
         }
         if (width >= 760) {
           expect(new Set(proof.kpis.map((kpi) => Math.round(kpi.y))).size).toBe(

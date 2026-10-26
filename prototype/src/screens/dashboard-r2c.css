@@ -318,7 +318,7 @@
   inline-size: 100%;
   min-block-size: 2px;
   border: 0;
-  border-radius: var(--radius-keycap) var(--radius-keycap) 0 0;
+  border-radius: var(--radius-chart-bar);
   background: var(--accent-soft);
   cursor: help;
   padding: 0;
@@ -622,21 +622,28 @@
   border: 0;
   box-shadow: var(--shadow-none);
 }
-:root .r2c-dashboard .dashboard-approval-table .ui-badge {
+:root .r2c-dashboard .dashboard-approval-table.ui-data-table .ui-badge {
   padding: 4px 8px;
   border-radius: var(--radius-round);
   background: var(--accent-soft);
   color: var(--accent-tint-text);
 }
-:root .r2c-dashboard .dashboard-approval-table .ui-badge.pending {
+:root .r2c-dashboard .dashboard-approval-table.ui-data-table .ui-badge.pending {
   background: var(--pending-bg);
   color: var(--pending);
 }
-:root .r2c-dashboard .dashboard-approval-table .ui-badge.is-price-change {
+:root
+  .r2c-dashboard
+  .dashboard-approval-table.ui-data-table
+  .ui-badge.is-price-change {
   background: var(--neutral-fill);
   color: var(--text);
 }
-:root .r2c-dashboard .dashboard-approval-table .ui-badge .ui-status-dot {
+:root
+  .r2c-dashboard
+  .dashboard-approval-table.ui-data-table
+  .ui-badge
+  .ui-status-dot {
   display: none;
 }
 :root .r2c-dashboard .dashboard-invoices .ui-badge {
@@ -674,4 +681,50 @@
 }
 :root .r2c-dashboard .dashboard-inline-actions .ui-button.button:focus-visible {
   box-shadow: var(--shadow-focus);
+}
+
+:root .r2c-dashboard .dashboard-invoice-amount {
+  display: grid;
+  gap: 4px;
+  text-align: end;
+}
+:root .r2c-dashboard .dashboard-invoice-amount > small {
+  font-size: var(--font-size-caption);
+}
+/* The approved Type chips are quiet pills, scoped to this composed table. */
+:root
+  .r2c-dashboard
+  .dashboard-approval-table.ui-data-table
+  .ui-badge.badge.info,
+:root
+  .r2c-dashboard
+  .dashboard-approval-table.ui-data-table
+  .ui-badge.badge.neutral {
+  background: var(--accent-soft);
+  color: var(--accent-tint-text);
+  border-radius: var(--radius-round);
+  padding: 4px 8px;
+}
+:root
+  .r2c-dashboard
+  .dashboard-approval-table.ui-data-table
+  .ui-badge.badge.pending {
+  background: var(--pending-bg);
+  color: var(--pending);
+  border-radius: var(--radius-round);
+  padding: 4px 8px;
+}
+:root
+  .r2c-dashboard
+  .dashboard-approval-table.ui-data-table
+  .ui-badge.badge.is-price-change {
+  background: var(--neutral-fill);
+  color: var(--text);
+}
+:root
+  .r2c-dashboard
+  .dashboard-approval-table.ui-data-table
+  .ui-badge.badge
+  > .ui-status-dot {
+  display: none;
 }
