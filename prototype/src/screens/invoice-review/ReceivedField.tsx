@@ -67,13 +67,15 @@ export function ReceivedField({
             : undefined
       }
       label={t("Received", "دریافت")}
-      hint={
-        source === "invoice_date"
-          ? t(
+      labelAdornment={
+        source === "invoice_date" ? (
+          <small className="receiving-received-provenance muted">
+            {t(
               "Received date from the invoice date",
               "تاریخ دریافت از تاریخ فاکتور",
-            )
-          : undefined
+            )}
+          </small>
+        ) : undefined
       }
     >
       <div className="receiving-received-content">

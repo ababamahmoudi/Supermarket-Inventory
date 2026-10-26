@@ -1318,3 +1318,10 @@
   line-height: var(--line-height-caption);
   font-weight: 500;
 }
+
+.receiving-received-provenance {
+  min-inline-size: 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  font-weight: 400;
+}
