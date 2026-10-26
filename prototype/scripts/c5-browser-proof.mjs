@@ -1023,6 +1023,112 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           failures.push(
             `Invalid notification header action composition: ${tidy(control.textContent)}`,
           );
+      // Only the actual new-return page action and complete creation dialog use 44px.
+      // Ordinary Returns controls retain their existing contract.
+      const newReturnControls = new Set();
+      const returnRoute = window.location.hash.split("?")[0];
+      const faReturn = document.documentElement.lang.startsWith("fa");
+      for (const header of document.querySelectorAll(
+        "main#main-content > .page-header",
+      )) {
+        const overview = header.nextElementSibling;
+        if (
+          returnRoute !== "#returns" ||
+          !overview?.matches(".returns-overview")
+        )
+          continue;
+        const actions = [
+          ...header.querySelectorAll(":scope > .actions > button"),
+        ];
+        const valid =
+          tidy(header.querySelector("h1")?.textContent) ===
+            (faReturn ? "مرجوعی‌ها" : "Returns") &&
+          overview.querySelector(".returns-toolbar") &&
+          overview.querySelector(".returns-overview-table") &&
+          actions.length === 1 &&
+          actions[0].matches(".ui-button.button.button-primary") &&
+          tidy(actions[0].textContent) ===
+            (faReturn ? "مرجوعی جدید" : "New return");
+        if (valid) newReturnControls.add(actions[0]);
+        else if (actions.length)
+          failures.push("Invalid New return page action composition");
+      }
+      for (const dialog of document.querySelectorAll(".new-return-dialog")) {
+        if (!visible(dialog)) continue;
+        const body = dialog.querySelector(":scope > .ui-dialog-body");
+        const grid = body?.querySelector(":scope > .new-return-grid");
+        const photos = body?.querySelector(
+          ":scope > section.new-return-photos#new-return-photos",
+        );
+        const footer = [
+          ...dialog.querySelectorAll(":scope > .ui-dialog-footer > button"),
+        ];
+        const fields = [
+          "location",
+          "supplier",
+          "product",
+          "quantity",
+          "reason",
+          "note",
+        ];
+        const valid =
+          ["#returns", "#return"].includes(returnRoute) &&
+          dialog.matches("dialog[open].ui-dialog.ui-dialog-structured") &&
+          tidy(
+            dialog.querySelector(":scope > .ui-dialog-header h2")?.textContent,
+          ) === (faReturn ? "مرجوعی جدید" : "New return") &&
+          dialog.querySelector(
+            ":scope > .ui-dialog-header .ui-dialog-icon svg.lucide-rotate-ccw",
+          ) &&
+          Boolean(
+            tidy(
+              dialog.querySelector(
+                ":scope > .ui-dialog-header .dialog-description",
+              )?.textContent,
+            ),
+          ) &&
+          grid?.querySelectorAll(":scope > .field").length === 7 &&
+          fields.every((field) =>
+            grid?.querySelector(`#new-return-${field}`),
+          ) &&
+          grid?.querySelector(":scope > .new-return-receipt") &&
+          photos?.querySelector(":scope > .new-return-photo-heading strong") &&
+          photos?.querySelectorAll(
+            ":scope > .new-return-photo-actions > button",
+          ).length === 2 &&
+          photos?.querySelector('input[type="file"][multiple]') &&
+          photos?.querySelector('input[type="file"][capture="environment"]') &&
+          footer.length === 2 &&
+          footer[0].matches(".button-neutral") &&
+          footer[1].matches(".button-primary") &&
+          tidy(footer[0].textContent) === (faReturn ? "انصراف" : "Cancel") &&
+          tidy(footer[1].textContent) ===
+            (faReturn ? "ایجاد مرجوعی" : "Create return");
+        if (!valid) {
+          failures.push("Invalid New return dialog composition");
+          continue;
+        }
+        for (const control of dialog.querySelectorAll(
+          "button.ui-button.button:not(.ui-icon-button)",
+        )) {
+          if (
+            control.getAttribute("role") !== "combobox" &&
+            !control.closest(".ui-select-popup")
+          )
+            newReturnControls.add(control);
+        }
+        for (const control of grid.querySelectorAll(
+          'input:not([type="file"]),[role="combobox"]',
+        )) {
+          if (
+            visible(control) &&
+            Math.abs(control.getBoundingClientRect().height - 44) > 1
+          )
+            failures.push(
+              `New return field height: ${control.id || tidy(control.getAttribute("aria-label"))}`,
+            );
+        }
+      }
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
       )) {
@@ -1046,6 +1152,11 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         if (r2cControl && Math.abs(rect.height - 44) > 1)
           failures.push(
             `R2c control height: ${label} (${round(rect.height)}px)`,
+          );
+        const newReturnControl = newReturnControls.has(element);
+        if (newReturnControl && Math.abs(rect.height - 44) > 1)
+          failures.push(
+            `New return control height: ${label} (${round(rect.height)}px)`,
           );
         const choiceTextContrast =
           kind === "choice" ? textContrastOf(element) : null;
@@ -1232,22 +1343,11 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           );
           const expectedHeight = labelAction
             ? 32
-            : r2cControl ||
-                dashboardAction ||
-                structuredFooter ||
-                approvalDecisionButtons.has(element) ||
-                approvalEditorFooters.has(element) ||
-                notificationHeaderActions.has(element)
+            : newReturnControl || r2cControl || dashboardAction || structuredFooter || approvalDecisionButtons.has(element) || approvalEditorFooters.has(element) || notificationHeaderActions.has(element)
               ? 44
               : element.closest(".c9-filter-toolbar")
-                ? element.closest(".ui-segments")
-                  ? 32
-                  : 40
-                : phone || fieldAlignedAdd
-                  ? 44
-                  : small
-                    ? 32
-                    : 40;
+                ? element.closest(".ui-segments") ? 32 : 40
+                : phone || fieldAlignedAdd ? 44 : small ? 32 : 40;
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {

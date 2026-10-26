@@ -111,5 +111,5 @@
   gap: 16px;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
