@@ -6,11 +6,13 @@ import { allowedLocationIds, can, requireCapability } from "./permissions";
 import { lookupLastReceipt } from "./receipt-lots";
 import { activeSaleAt } from "./sales";
 import { branchSellsToCustomers } from "./settings";
+import { effectiveApprovalLocation } from "./received";
 import type { DemoState, Product } from "./types";
 
 export interface LookupBranchProduct {
   code: string;
   present: boolean;
+  at_other_locations: boolean;
   price: string | null;
   other_prices: { location: string; price: string }[];
 }
@@ -44,7 +46,7 @@ function approvedHere(state: DemoState, product: Product, location: string) {
         ["new_product", "price_change"].includes(row.type) &&
         (row.scope === "all" ||
           row.branch === "all" ||
-          row.branch === location) &&
+          effectiveApprovalLocation(state, row) === location) &&
         equalPrice(row.proposed_price, price),
     )
   )
@@ -57,19 +59,29 @@ function approvedHere(state: DemoState, product: Product, location: string) {
       .map((row) => row.reversed_activity_id)
       .filter(Boolean),
   );
-  return state.activity.some(
-    (row) =>
+  return state.activity.some((row) => {
+    const added =
+      row.after && typeof row.after === "object"
+        ? (row.after as Partial<Product>)
+        : null;
+    return (
       row.company_id === product.company_id &&
       row.product_code === product.code &&
       row.branch === "all" &&
       !reversed.has(row.id) &&
-      [
+      ([
         "Apply price to all branches",
         "Approve price",
         "Approve product",
         "Set regular price",
-      ].includes(row.action),
-  );
+      ].includes(row.action) ||
+        (row.action === "Add product" &&
+          added?.company_id === product.company_id &&
+          added.code === product.code &&
+          added.status === "active" &&
+          equalPrice(added.selling_price, price)))
+    );
+  });
 }
 
 /** Public branch membership and selling prices; never return receipt or approval identities. */
@@ -96,27 +108,34 @@ export function lookupBranchCatalog(
       });
       const own =
         prices.find((row) => row.location === current.branch)?.price ?? null;
-      const scope = {
-        company_id: current.company_id,
-        kind: "location_record" as const,
-        location_ids: [current.branch],
+      const presentAt = (location: string) => {
+        if (
+          prices.some((row) => row.location === location) ||
+          product.last_received_relative_days?.[location] !== undefined ||
+          (state.stock[`${location}:${product.code}`] ?? 0) > 0
+        )
+          return true;
+        const scoped = actorAtLocation(state, current, location);
+        const scope = {
+          company_id: current.company_id,
+          kind: "location_record" as const,
+          location_ids: [location],
+        };
+        return (
+          can(state, scoped, "lookup.receipt_hint", scope).allowed &&
+          !!lookupLastReceipt(state, scoped, product.code)
+        );
       };
-      const receipt = can(state, current, "lookup.receipt_hint", scope).allowed
-        ? lookupLastReceipt(
-            state,
-            actorAtLocation(state, current, current.branch),
-            product.code,
-          )
-        : null;
       return {
         code: product.code,
-        present:
-          !!own ||
-          !!receipt ||
-          product.last_received_relative_days?.[current.branch] !== undefined ||
-          (state.stock[`${current.branch}:${product.code}`] ?? 0) > 0,
+        present: presentAt(current.branch),
+        at_other_locations: locations.some(
+          (location) => location !== current.branch && presentAt(location),
+        ),
         price: own,
-        other_prices: prices.filter((row) => row.location !== current.branch),
+        other_prices: own
+          ? []
+          : prices.filter((row) => row.location !== current.branch),
       };
     });
 }

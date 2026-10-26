@@ -43,6 +43,57 @@
   inline-size: 280px;
   max-inline-size: 100%;
 }
+:root
+  .lookup-page
+  .lookup-hero
+  .lookup-filterbar
+  .lookup-pricing-filters
+  .ui-button.filter-chip {
+  border-radius: var(--radius-round);
+}
+.lookup-result-group {
+  display: grid;
+  min-inline-size: 0;
+}
+.lookup-result-name .lookup-fitted-name {
+  display: block;
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+.lookup-page .lookup-other-heading {
+  padding: 16px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-body);
+  font-weight: var(--font-weight-caption);
+}
+.lookup-other-prices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+.lookup-result-price .lookup-other-prices {
+  justify-content: flex-end;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+:root
+  .lookup-page
+  .lookup-results-list
+  .lookup-result-row.has-other-prices:nth-child(n) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 260px);
+}
+@media (max-width: 760px) {
+  :root
+    .lookup-page
+    .lookup-results-list
+    .lookup-result-row.has-other-prices:nth-child(n) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 132px);
+  }
+}
 .lookup-page .lookup-filterbar .lookup-category {
   max-inline-size: min(340px, 100%);
   inline-size: max-content;

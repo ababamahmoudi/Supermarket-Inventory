@@ -1,5 +1,6 @@
 import { configuredPersonExpectation } from "./configured-person-expectations";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { runCanonicalBusinessFixture } from "./business-fixture";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
 
@@ -150,6 +151,20 @@ test("Change price changes this store only, and validation stays inside the open
   page,
 }) => {
   await signIn(page, "Supervisor");
+  // This scope proof starts with an actual approved price at the other store;
+  // R2c 7.3 no longer calls a bare company default that store's approval.
+  await runCanonicalBusinessFixture(
+    page,
+    (state) => {
+      const product = state.products.find((row) => row.code === "0009")!;
+      product.branch_prices = {
+        ...product.branch_prices,
+        "Branch 2": product.selling_price,
+      };
+    },
+    undefined,
+  );
+  await page.reload();
   await setBranch(page, "Branch 1");
   await page.goto("/#lookup?search=0009");
   await expect(
@@ -215,6 +230,18 @@ test("Floor Worker and Cashier never see product Edit, including direct product 
 test("Lookup columns mirror in Persian, with selected row distinct from offer dot and terms", async ({
   page,
 }) => {
+  await signIn(page, "Manager");
+  await runCanonicalBusinessFixture(
+    page,
+    (state) => {
+      const product = state.products.find((row) => row.code === "0009")!;
+      product.branch_prices = {
+        ...product.branch_prices,
+        "Branch 1": product.selling_price,
+      };
+    },
+    undefined,
+  );
   await signIn(page, "Cashier");
   await page
     .getByRole("main")

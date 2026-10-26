@@ -1,12 +1,14 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 /** A single visible line, with the complete value retained in its native tooltip. */
 export function FitText({
   value,
   className,
+  render,
 }: {
   value: string;
   className?: string;
+  render?: (visible: string) => ReactNode;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [visible, setVisible] = useState(value);
@@ -58,7 +60,7 @@ export function FitText({
   }, [value]);
   return (
     <span ref={ref} className={className} title={value}>
-      {visible}
+      {render ? render(visible) : visible}
     </span>
   );
 }

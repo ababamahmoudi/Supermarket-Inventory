@@ -491,3 +491,7 @@ Context: the owner approved three replacement dashboard PNGs. Decision: retain t
 ## R2c 7.2 — Configured Lookup categories (2026-10-26)
 
 Context: imported products may have no AI category. Decision: configured active pricing categories and counts are the stable category filter; optional AI categories remain an independent refinement. Combined filters use the existing per-person/company/location session preferences. Not approved here uses a protected public selling-price query rather than interpreting a company default as a branch decision. Why: imports stay discoverable and pricing evidence stays behind the query boundary.
+
+## R2c 7.3 — Explicit branch approval evidence (2026-10-26)
+
+Context: the general catalog helper falls back to the company default, which cannot establish a concrete store’s approval. Decision: add a protected branch Lookup projection that derives membership from retained deliveries/stock/approved prices and approval from explicit existing decision evidence; return public prices and presence only. Show assigned-store comparisons only when this store has no approved price. Keep the aggregate 0.13 query unchanged. Why: staff can discover a shared product without mistaking another store’s/default price for permission to charge it here. The requested product default remains explicit in open questions.

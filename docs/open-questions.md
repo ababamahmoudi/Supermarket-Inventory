@@ -160,3 +160,9 @@ These are transparent implementation boundaries, not a new request for owner act
 ### R2b defaults already specified
 
 No additional question blocks the numbered work. Missing currency follows company configuration. Missing compatible totals use the documented arithmetic, including total-only → subtotal equal to total and tax zero; unresolved amounts remain questions. Missing terms use the latest strictly earlier same-supplier recognized invoice, with lexical invoice-number/ID tie-break; no history stays blank and flagged. Monthly means first of the next calendar month. Fractional cases convert only to exact positive whole units; nested/conflicting packs remain unresolved. Contacts use the first unambiguous singular value and preserve curated details. Ordinary optional blanks are quiet; explicitly flagged empties require a genuine acknowledgment. The imported Received policy above remains the one requested default for Ali to confirm.
+
+## R2c 7.3 — Branch Lookup scope (2026-10-26; Ali to confirm)
+
+**Question:** should a concrete branch’s initial Lookup list contain only products delivered, stocked or priced there, adding other permitted branches’ products only after a typed search?
+
+**Default implemented from the R2c prompt:** yes. Show this branch’s own approved effective price. With none, show **Not approved here yet** and other permitted branches’ approved prices. Once this branch approves a price, show only its price. A company default without an accepted branch/all-store decision is not proof of this branch’s approval. All locations continues to list the whole company catalog with explicit public per-location facts (0.13). Existing stock data establishes presence only; no inventory count or depletion estimate is displayed. No new permission grant or other-store cost/invoice/lot disclosure is introduced. Await Ali’s product confirmation; implementation and tests use this stated default.
