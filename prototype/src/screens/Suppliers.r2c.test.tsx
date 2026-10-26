@@ -107,3 +107,46 @@ it("uses the filters empty message even for an empty company with remembered sea
   fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
   expect(screen.getByText(/No suppliers yet/)).toBeVisible();
 });
+
+it("shows one supplier heading/edit action, seven contact fields and a single completion link", async () => {
+  const { state, actor } = context.value as {
+    state: ReturnType<typeof initialState>;
+    actor: ReturnType<typeof authenticatedTestActor>;
+  };
+  const { supplierPage } = await import("../suppliers");
+  const overview = suppliersOverview(state, actor);
+  const current = overview.find(
+    (supplier) => supplier.name === "Corner Spice Co.",
+  )!;
+  queryResult.data = {
+    overview,
+    current,
+    detail: supplierPage(state, actor, current.name),
+    itemCount: 0,
+  };
+  window.location.hash = `#suppliers?name=${encodeURIComponent(current.name)}`;
+  render(<Suppliers />);
+  expect(
+    screen.getByRole("heading", { level: 1, name: current.name }),
+  ).toBeVisible();
+  expect(document.querySelectorAll(".supplier-contact-grid dt")).toHaveLength(
+    7,
+  );
+  expect(screen.getAllByRole("button", { name: /^Edit$/ })).toHaveLength(1);
+  expect(
+    screen.queryByRole("button", { name: "Edit supplier" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getAllByRole("link", { name: "Complete profile" }),
+  ).toHaveLength(1);
+  expect(
+    document.querySelectorAll(".supplier-kpis .ui-summary-tile"),
+  ).toHaveLength(4);
+  expect(
+    document.querySelectorAll(".supplier-kpis .summary-tile-dot"),
+  ).toHaveLength(4);
+  expect(
+    document.querySelector(".supplier-kpis .ui-summary-tile")?.tagName,
+  ).toBe("DIV");
+  expect(document.querySelectorAll(".supplier-header-name")).toHaveLength(0);
+});

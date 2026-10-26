@@ -19,7 +19,7 @@
   :root .suppliers-table .table-identity > a:first-child,
   :root .supplier-tab-card .table-identity > a:first-child {
     min-inline-size: 0;
-    color: var(--text);
+    color: var(--accent);
     font-weight: var(--font-weight-caption);
     text-decoration: none;
   }
@@ -170,4 +170,79 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+/* R2c contact information is one padded card; its title and action never repeat the supplier name. */
+.supplier-detail-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+:root .supplier-detail-title > .badge {
+  font-size: var(--font-size-caption);
+}
+:root .supplier-contact-card {
+  padding: 24px;
+}
+.supplier-contact-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block-end: 24px;
+}
+.supplier-contact-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+.supplier-contact-heading a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  color: var(--accent);
+  font-weight: 600;
+}
+:root .supplier-contact-card .supplier-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 32px;
+  max-inline-size: none;
+}
+:root .supplier-contact-grid > div {
+  min-inline-size: 0;
+}
+:root .supplier-contact-grid dd {
+  overflow-wrap: anywhere;
+}
+.supplier-contact-source {
+  margin-block: 20px 0;
+}
+:root .supplier-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+:root .supplier-kpis .kpi-card:first-child .kpi-value {
+  font-size: var(--font-size-title);
+  line-height: var(--line-height-title);
+}
+@media (max-width: 1000px) {
+  :root .supplier-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  :root .supplier-contact-card {
+    padding: 20px;
+  }
+  :root .supplier-contact-card .supplier-contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+}
+
+.supplier-detail-title h1 {
+  margin: 0;
 }

@@ -24,6 +24,7 @@ import {
   LtrText,
   LtrValue,
   Money,
+  NotAdded,
   ProductName,
 } from "../presentation";
 import {
@@ -37,7 +38,6 @@ import {
   EmptyState,
   FilterToolbar,
   FilterChip,
-  KpiCard,
   PageHeader,
   Select,
   Tabs,
@@ -45,6 +45,7 @@ import {
   useTableColumns,
   useListFilterOrigin,
 } from "../ui";
+import { SummaryTile } from "../SummaryTile";
 import { useProtectedQuery } from "../use-protected-query";
 import "./suppliers-a2.css";
 import { companyDate, dateAfter } from "../invoice";
@@ -286,14 +287,6 @@ export default function Suppliers() {
       : supplier.profile_missing.length
         ? t("Profile incomplete", "مشخصات ناقص")
         : t("Active", "فعال");
-  const profileLabels = {
-    phone: t("Phone", "تلفن"),
-    email: t("Email", "ایمیل"),
-    sales_rep_name: t("Sales representative", "نماینده فروش"),
-    sales_rep_phone: t("Sales rep phone", "تلفن نماینده فروش"),
-    payment_terms: t("Payment terms", "شرایط پرداخت"),
-    address: t("Address", "نشانی"),
-  };
   const invoiceStatus = (value: string) =>
     value === "posted" ? t("Posted", "ثبت‌شده") : t("Draft", "پیش‌نویس");
   const compareValue = (supplier: SupplierOverviewRow, key: SortKey) => {
@@ -686,29 +679,46 @@ export default function Suppliers() {
         <ArrowLeft size={16} />
         {t("Back to Suppliers", "بازگشت به تأمین‌کنندگان")}
       </Button>
-      <PageHeader
-        title={<LtrText>{current.name}</LtrText>}
-        description={t("Supplier details", "اطلاعات تأمین‌کننده")}
-        actions={
-          canManage && current.id ? (
-            <div className="actions">
-              <Button variant="neutral" onClick={() => setEditor("edit")}>
-                {t("Edit", "ویرایش")}
-              </Button>
-              {current.active !== false && (
-                <Menu label={t("More", "بیشتر")}>
-                  <MenuItem
-                    className="supplier-destructive-action"
-                    onClick={() => setConfirmDeactivate(true)}
-                  >
-                    {t("Deactivate", "غیرفعال کردن")}
-                  </MenuItem>
-                </Menu>
-              )}
-            </div>
-          ) : undefined
-        }
-      />
+      <header className="page-header supplier-detail-header">
+        <div>
+          <div className="supplier-detail-title">
+            <h1>
+              <LtrText>{current.name}</LtrText>
+            </h1>
+            <Badge
+              tone={
+                current.active === false
+                  ? "neutral"
+                  : current.profile_missing.length
+                    ? "pending"
+                    : "approved"
+              }
+            >
+              {supplierStatus(current)}
+            </Badge>
+          </div>
+          <p className="muted">
+            {t("Supplier details", "اطلاعات تأمین‌کننده")}
+          </p>
+        </div>
+        {canManage && current.id && (
+          <div className="actions">
+            <Button variant="neutral" onClick={() => setEditor("edit")}>
+              {t("Edit", "ویرایش")}
+            </Button>
+            {current.active !== false && (
+              <Menu label={t("More", "بیشتر")}>
+                <MenuItem
+                  className="supplier-destructive-action"
+                  onClick={() => setConfirmDeactivate(true)}
+                >
+                  {t("Deactivate", "غیرفعال کردن")}
+                </MenuItem>
+              </Menu>
+            )}
+          </div>
+        )}
+      </header>
       {editor === "edit" && (
         <SupplierEditor
           supplier={state.suppliers?.find(
@@ -736,103 +746,59 @@ export default function Suppliers() {
           setConfirmDeactivate(false);
         }}
       />
-      <Card className="supplier-header-card">
-        <div className="supplier-header-line">
-          <LtrText className="supplier-header-name">{current.name}</LtrText>
-          <Badge
-            tone={
-              current.active === false
-                ? "neutral"
-                : current.profile_missing.length
-                  ? "pending"
-                  : "approved"
-            }
-          >
-            {supplierStatus(current)}
-          </Badge>
+      <Card className="supplier-header-card supplier-contact-card">
+        <div className="supplier-contact-heading">
+          <h2>{t("Contact details", "اطلاعات تماس")}</h2>
+          {current.profile_missing.length > 0 && canManage && (
+            <a
+              href={`#suppliers?name=${encodeURIComponent(current.name)}&edit=1`}
+              onClick={(event) => {
+                event.preventDefault();
+                setEditor("edit");
+              }}
+            >
+              {t("Complete profile", "تکمیل مشخصات")}
+            </a>
+          )}
         </div>
-        {current.profile_missing.length > 0 && (
-          <div className="banner warning list-box" role="status">
-            <strong>{t("Complete profile", "تکمیل مشخصات")}</strong>
-            <p>
-              {t("Missing details", "اطلاعات واردنشده")}:{" "}
-              {current.profile_missing
-                .map((field) => profileLabels[field])
-                .join(lang === "fa" ? "، " : ", ")}
-            </p>
-            {canManage && (
-              <Button variant="secondary" onClick={() => setEditor("edit")}>
-                {t("Edit supplier", "ویرایش تأمین‌کننده")}
-              </Button>
-            )}
-          </div>
-        )}
-        {current.source_invoice_number && (
-          <small className="muted">
-            {t("Added from invoice", "افزوده‌شده از فاکتور")}{" "}
-            <LtrValue value={current.source_invoice_number} />{" "}
-            {t("(imported reading)", "(خوانش واردشده)")}
-          </small>
-        )}
         <dl className="supplier-contact-grid">
-          <div>
-            <dt>{t("Phone", "تلفن")}</dt>
-            <dd>
-              <LtrValue value={current.phone} />
-            </dd>
-          </div>
-          {current.address && (
-            <div>
-              <dt>{t("Address", "نشانی")}</dt>
+          {(
+            [
+              ["phone", t("Phone", "تلفن")],
+              ["email", t("Email", "ایمیل")],
+              ["website", t("Website", "وب‌سایت")],
+              ["address", t("Address", "نشانی")],
+              ["sales_rep_name", t("Sales representative", "نماینده فروش")],
+              ["sales_rep_phone", t("Sales rep phone", "تلفن نماینده فروش")],
+              ["payment_terms", t("Payment terms", "شرایط پرداخت")],
+            ] as const
+          ).map(([field, label]) => (
+            <div key={field}>
+              <dt>{label}</dt>
               <dd>
-                <bdi dir="auto">{current.address}</bdi>
+                {current[field]?.trim() ? (
+                  <LtrValue value={current[field]} />
+                ) : (
+                  <NotAdded />
+                )}
               </dd>
             </div>
-          )}
-          {current.notes && (
-            <div>
-              <dt>{t("Notes", "یادداشت‌ها")}</dt>
-              <dd>
-                <bdi dir="auto">{current.notes}</bdi>
-              </dd>
-            </div>
-          )}
-          <div>
-            <dt>{t("Email", "ایمیل")}</dt>
-            <dd>
-              <LtrValue value={current.email} />
-            </dd>
-          </div>
-          {current.website && (
-            <div>
-              <dt>{t("Website", "وب‌سایت")}</dt>
-              <dd>
-                <LtrValue value={current.website} />
-              </dd>
-            </div>
-          )}
-          <div>
-            <dt>{t("Sales representative", "نماینده فروش")}</dt>
-            <dd>
-              <LtrValue value={current.sales_rep_name} />
-            </dd>
-          </div>
-          <div>
-            <dt>{t("Sales rep phone", "تلفن نماینده فروش")}</dt>
-            <dd>
-              <LtrValue value={current.sales_rep_phone} />
-            </dd>
-          </div>
-          <div>
-            <dt>{t("Payment terms", "شرایط پرداخت")}</dt>
-            <dd>
-              <LtrValue value={current.payment_terms} />
-            </dd>
-          </div>
+          ))}
         </dl>
+        {current.source_invoice_number && (
+          <p className="supplier-contact-source muted">
+            {t("Added from invoice", "افزوده‌شده از فاکتور")}{" "}
+            <LtrValue value={current.source_invoice_number} />
+          </p>
+        )}
+        {current.notes && (
+          <p className="supplier-contact-source">
+            <bdi dir="auto">{current.notes}</bdi>
+          </p>
+        )}
       </Card>
       <div className="stats-grid supplier-kpis">
-        <KpiCard
+        <SummaryTile
           label={t("Last delivery", "آخرین تحویل")}
           onClick={
             latestInvoice
@@ -849,9 +815,14 @@ export default function Suppliers() {
               t("No deliveries yet", "هنوز تحویلی ثبت نشده")
             )
           }
-          tone="accent"
+          detail={
+            latestInvoice
+              ? t("Open latest invoice", "باز کردن آخرین فاکتور")
+              : t("No deliveries yet", "هنوز تحویلی ثبت نشده")
+          }
+          tone={latestInvoice ? "approved" : "accent"}
         />
-        <KpiCard
+        <SummaryTile
           label={t("Deliveries this month", "تحویل‌های این ماه")}
           onClick={() =>
             navigate(
@@ -859,9 +830,10 @@ export default function Suppliers() {
             )
           }
           value={current.deliveries_this_month}
-          tone="charcoal"
+          detail={t("Posted invoices this month", "فاکتورهای ثبت‌شدهٔ این ماه")}
+          tone={current.deliveries_this_month ? "accent" : "approved"}
         />
-        <KpiCard
+        <SummaryTile
           label={t("Open returns", "مرجوعی‌های باز")}
           onClick={() =>
             navigate(
@@ -869,9 +841,10 @@ export default function Suppliers() {
             )
           }
           value={current.open_returns}
-          tone="accent"
+          detail={t("Waiting for resolution", "در انتظار رسیدگی")}
+          tone={current.open_returns ? "pending" : "approved"}
         />
-        <KpiCard
+        <SummaryTile
           label={
             supervisor
               ? t("Balance", "مانده")
@@ -882,7 +855,28 @@ export default function Suppliers() {
               ? money(current.financial.balance)
               : current.open_shorts
           }
-          tone="charcoal"
+          detail={
+            supervisor
+              ? t("Open supplier statement", "باز کردن صورت‌حساب تأمین‌کننده")
+              : t("Items waiting for delivery", "کالاهای در انتظار تحویل")
+          }
+          onClick={
+            supervisor && current.financial
+              ? () =>
+                  navigate(
+                    `payables?supplier=${encodeURIComponent(current.id ?? current.name)}`,
+                  )
+              : () => setTab("shorts")
+          }
+          tone={
+            supervisor &&
+            current.financial &&
+            new Decimal(current.financial.overdue).gt(0)
+              ? "danger"
+              : current.open_shorts
+                ? "pending"
+                : "approved"
+          }
         />
       </div>
       <div className="supplier-tabs">

@@ -7,6 +7,7 @@ import {
   openInvoiceDetails,
   openInvoiceLine,
   setBranch,
+  setLanguage,
   signIn,
 } from "./helpers";
 import { removeReceivingDemo } from "./r2-receiving-helpers";
@@ -193,3 +194,79 @@ test("remembered incomplete profiles survive a real three-branch import, post, c
   expect(after.suppliers!.map((supplier) => supplier.name)).toEqual(names);
   expect(errors).toEqual([]);
 });
+
+for (const language of ["en", "fa"] as const)
+  test(`supplier details use one padded contact card and dashboard tiles in ${language}`, async ({
+    page,
+  }) => {
+    await signIn(page, "Manager");
+    await setLanguage(page, language);
+    await page.goto("/#suppliers?name=Corner%20Spice%20Co.");
+    const card = page.locator(".supplier-contact-card");
+    await expect(card).toBeVisible();
+    await expect(card.locator("dt")).toHaveCount(7);
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "Corner Spice Co.",
+        exact: true,
+      }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("button", {
+        name: language === "en" ? "Edit" : "ویرایش",
+        exact: true,
+      }),
+    ).toHaveCount(1);
+    await expect(
+      card.getByRole("link", {
+        name: language === "en" ? "Complete profile" : "تکمیل مشخصات",
+        exact: true,
+      }),
+    ).toHaveCount(1);
+    const geometry = await card.evaluate((element) => ({
+      padding: parseFloat(getComputedStyle(element).paddingInlineStart),
+      columns: getComputedStyle(
+        element.querySelector(".supplier-contact-grid")!,
+      ).gridTemplateColumns.split(" ").length,
+      overflow: document.documentElement.scrollWidth - innerWidth,
+    }));
+    expect(geometry.padding).toBeGreaterThanOrEqual(20);
+    expect(geometry.columns).toBe(
+      (page.viewportSize()?.width ?? 1440) > 600 ? 2 : 1,
+    );
+    expect(geometry.overflow).toBeLessThanOrEqual(1);
+    await expect(page.locator(".supplier-kpis .ui-summary-tile")).toHaveCount(
+      4,
+    );
+    await expect(page.locator(".supplier-kpis .summary-tile-dot")).toHaveCount(
+      4,
+    );
+    expect(
+      await page
+        .locator(".supplier-kpis .ui-summary-tile")
+        .first()
+        .evaluate((element) => element.tagName),
+    ).toBe("DIV");
+    const before = await card.boundingBox();
+    await card
+      .getByRole("link", {
+        name: language === "en" ? "Complete profile" : "تکمیل مشخصات",
+        exact: true,
+      })
+      .click();
+    const editor = page.getByRole("dialog", {
+      name: language === "en" ? "Edit supplier" : "ویرایش تأمین‌کننده",
+      exact: true,
+    });
+    await expect(editor).toBeVisible();
+    await editor
+      .getByRole("button", {
+        name: language === "en" ? "Cancel" : "انصراف",
+        exact: true,
+      })
+      .click();
+    const after = await card.boundingBox();
+    expect(Math.abs(after!.x - before!.x)).toBeLessThanOrEqual(2);
+    expect(Math.abs(after!.y - before!.y)).toBeLessThanOrEqual(2);
+  });
