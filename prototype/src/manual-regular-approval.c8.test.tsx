@@ -125,18 +125,28 @@ async function prepare() {
   );
   await renderedUiReady(() =>
     Boolean(
-      screen.queryByText("Stainless Steel Pot 24 cm", { selector: "h2" }),
+      screen.queryByRole("heading", {
+        level: 2,
+        name: "Stainless Steel Pot 24 cm",
+      }),
     ),
   );
-  const title = await screen.findByText("Stainless Steel Pot 24 cm", {
-    selector: "h2",
+  // ProductName renders names/units inside the linked heading. Follow that
+  // actual approval row, then open its protected decision preview.
+  const title = screen.getByRole("heading", {
+    level: 2,
+    name: "Stainless Steel Pot 24 cm",
   });
-  const card = title.closest(".approval-card")!;
-  fireEvent.click(
-    within(card as HTMLElement).getByRole("button", { name: "Approve price" }),
-  );
-  await screen.findByRole("combobox", { name: "Selling price" });
-  return screen.getByRole("dialog", { name: "Review approval" });
+  const card = title.closest<HTMLElement>(".approval-detail-row")!;
+  expect(card).toHaveAttribute("data-approval-id", approval.id);
+  fireEvent.click(within(card).getByRole("button", { name: "Approve price" }));
+  const dialog = await screen.findByRole("dialog", {
+    name: "Review approval",
+  });
+  await within(dialog).findByRole("combobox", {
+    name: "Selling price",
+  });
+  return dialog;
 }
 
 it("offers calculated price by default despite receiver Keep, and applies it only after the manager confirms", async () => {
