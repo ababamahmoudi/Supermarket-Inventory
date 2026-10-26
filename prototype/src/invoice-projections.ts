@@ -165,6 +165,7 @@ const invoiceKeys = [
   "import_currency",
   "import_currency_inferred",
   "calculated_fields",
+  "calculated_from_lines",
   "order_reference",
   "invoice_date_relative_days",
   "payment_terms",

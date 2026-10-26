@@ -407,6 +407,7 @@ export type DemoInvoice = Omit<
     }[];
     low_confidence_fields?: string[];
     calculated_fields?: string[];
+    calculated_from_lines?: boolean;
     import_currency_inferred?: boolean;
     checked_fields?: InvoiceCheckReceipts;
     reading_record?: {

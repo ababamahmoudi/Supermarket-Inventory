@@ -377,6 +377,9 @@ export function fillCalculatedInvoiceTotals(invoice: {
   final_total: string;
   low_confidence_fields?: string[];
   calculated_fields?: string[];
+  calculated_from_lines?: boolean;
+  lines?: { line_total?: string }[];
+  other_charges?: { amount: string }[];
 }): void {
   const legacyCalculated = (invoice.low_confidence_fields ?? [])
     .filter((field) => field.startsWith("calculated:"))
@@ -401,6 +404,34 @@ export function fillCalculatedInvoiceTotals(invoice: {
       ...new Set([...(invoice.calculated_fields ?? []), field]),
     ];
   };
+  if (
+    !invoice.subtotal.trim() &&
+    !invoice.tax.trim() &&
+    !invoice.final_total.trim() &&
+    invoice.lines?.length
+  ) {
+    const itemAmounts = invoice.lines.map(
+      (line) => line.line_total?.trim() ?? "",
+    );
+    const chargeAmounts = (invoice.other_charges ?? []).map((charge) =>
+      charge.amount.trim(),
+    );
+    if (
+      itemAmounts.every(valid) &&
+      chargeAmounts.every((amount) => /^-?\d+(?:\.\d{1,2})?$/.test(amount))
+    ) {
+      const subtotal = [...itemAmounts, ...chargeAmounts].reduce(
+        (sum, amount) => sum.plus(amount),
+        new Decimal(0),
+      );
+      if (subtotal.gte(0)) {
+        fill("subtotal", subtotal);
+        fill("tax", new Decimal(0));
+        fill("final_total", subtotal);
+        invoice.calculated_from_lines = true;
+      }
+    }
+  }
   if (
     !invoice.subtotal.trim() &&
     !invoice.tax.trim() &&

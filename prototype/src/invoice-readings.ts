@@ -768,23 +768,37 @@ export function actionableReadingChecks(
   if (due && printedDue && due !== printedDue)
     header.low_confidence_fields.push("due_date");
   header.low_confidence_fields = [...new Set(header.low_confidence_fields)];
-  fillCalculatedInvoiceTotals(header);
-  return {
+  const lines = (value.lines ?? []).map((line, index) =>
+    !line.line_type || line.line_type === "item"
+      ? mapReadingLine(
+          state,
+          matchReadingSupplier(state, value),
+          line,
+          index,
+          checks.lines[index],
+        )
+      : {
+          low_confidence_fields: chargeCheckFields(line, checks.lines[index]),
+        },
+  );
+  const totals = {
     ...header,
-    lines: (value.lines ?? []).map((line, index) =>
-      !line.line_type || line.line_type === "item"
-        ? mapReadingLine(
-            state,
-            matchReadingSupplier(state, value),
-            line,
-            index,
-            checks.lines[index],
-          )
-        : {
-            low_confidence_fields: chargeCheckFields(line, checks.lines[index]),
-          },
-    ),
+    calculated_from_lines: false,
+    lines: lines.filter((line): line is InvoiceLine => "line_total" in line),
+    other_charges: (value.lines ?? [])
+      .filter((line) => line.line_type && line.line_type !== "item")
+      .map((line) => {
+        const value = decimal(line.line_total, 2);
+        return {
+          amount:
+            value && ["discount", "credit"].includes(text(line.line_type))
+              ? new Decimal(value).abs().negated().toFixed(2)
+              : value,
+        };
+      }),
   };
+  fillCalculatedInvoiceTotals(totals);
+  return { ...totals, lines };
 }
 
 export function previewInvoiceReadings(
@@ -1666,6 +1680,8 @@ export function importInvoiceReadings(
         });
       }
     }
+    fillCalculatedInvoiceTotals(invoice);
+    invoice.payable_after_open_shorts = invoice.final_total;
     invoice.original_pages = structuredClone(pages);
     invoice.file_name = pages[0].file_name;
     invoice.file_type = pages[0].file_type;

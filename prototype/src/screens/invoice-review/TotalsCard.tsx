@@ -135,8 +135,12 @@ export function TotalsCard({
                       {calculated && (
                         <small className="muted">
                           {t(
-                            "Calculated · not on the paper",
-                            "محاسبه‌شده · روی کاغذ نیست",
+                            key === "subtotal" && invoice.calculated_from_lines
+                              ? "Calculated from the lines"
+                              : "Calculated · not on the paper",
+                            key === "subtotal" && invoice.calculated_from_lines
+                              ? "محاسبه‌شده از ردیف‌ها"
+                              : "محاسبه‌شده · روی کاغذ نیست",
                           )}
                         </small>
                       )}
@@ -152,8 +156,12 @@ export function TotalsCard({
                       calculated ? (
                         <small className="muted">
                           {t(
-                            "Calculated · not on the paper",
-                            "محاسبه‌شده · روی کاغذ نیست",
+                            key === "subtotal" && invoice.calculated_from_lines
+                              ? "Calculated from the lines"
+                              : "Calculated · not on the paper",
+                            key === "subtotal" && invoice.calculated_from_lines
+                              ? "محاسبه‌شده از ردیف‌ها"
+                              : "محاسبه‌شده · روی کاغذ نیست",
                           )}
                         </small>
                       ) : undefined

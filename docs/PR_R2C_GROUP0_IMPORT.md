@@ -23,3 +23,9 @@ To test: a fictional `CEDAR JAM (12x640 gr)` becomes Cedar Jam with pack 12 × 6
 Derived totals, default company currency, name-filled codes, computed due dates and invoice-date Received keep muted provenance rather than invented amber questions. Handwriting, explicitly reading-flagged values (including empty optional evidence), unresolved values and genuine matching/pack ambiguities remain checks. Legacy calculated fields migrate to quiet provenance without fabricating who checked them. The line status icon is a plain !; its count is in metadata text. Internal branch hints are used only to suggest location and never create an unresolvable field check or substitute for an address.
 
 The independent twelve-line Cedar Path fixture has one explicit barcode check, under one highlighted check per line. It is intentionally a typical import, while the earlier R2b fixture continues to test many deliberately flagged and unresolved edge cases.
+
+## 0.11 Totals from complete lines
+
+When all paper totals are absent, complete item totals plus signed other charges/credits derive subtotal; tax defaults to 0.00 and total follows subtotal, with quiet Calculated from the lines provenance. Any unresolved line/charge amount keeps the totals unresolved. Supplied paper totals and differences are preserved. Import preview, imported draft and reopened receiving use the same Decimal helper.
+
+To test: an invented invoice with lines 13.17 and 2.49, fee 1.25 and credit 0.34, and no totals shows subtotal/total 16.57 and tax 0.00. An unread amount keeps named missing totals instead.
