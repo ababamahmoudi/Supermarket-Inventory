@@ -1,5 +1,6 @@
 import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
 import { expect, test } from "@playwright/test";
 import { chooseOption, setBranch, signIn, visitPage } from "./helpers";
 
@@ -162,7 +163,7 @@ test("the dashboard replaces stock projections with actual arrivals for the sele
   await expect(
     page.getByRole("heading", { name: "Low stock", exact: true }),
   ).toHaveCount(0);
-  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(5);
+  await assertDashboardOperationalAndShiftTiles(page);
   await setBranch(page, "Warehouse");
   await page.getByText("More operations", { exact: true }).click();
   await expect(

@@ -58,6 +58,7 @@ export type C5Inspection = {
     classes: string;
     returnStatus: string | null;
     outcome: string | null;
+    presentation: "dot" | "pill";
   }[];
   failures: string[];
 };

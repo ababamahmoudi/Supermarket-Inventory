@@ -1,5 +1,6 @@
 import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
@@ -352,7 +353,7 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   ).toHaveCount(0);
 });
 
-test("dashboard shows five actionable KPIs and scoped lists, and operations render in Persian without page overflow", async ({
+test("dashboard shows five operational KPIs and authorized on-shift staff, and operations render in Persian without page overflow", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -391,14 +392,7 @@ test("dashboard shows five actionable KPIs and scoped lists, and operations rend
   await expect(page.getByText("Approve price", { exact: true })).toBeVisible();
   await expect(page.getByText("Create offer", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Stop offer", { exact: true })).toHaveCount(0);
-  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(5);
-  await expect(page.locator(".kpi-label")).toHaveText([
-    "Approvals waiting",
-    "Price updates to apply",
-    "Open alerts",
-    "Open shorts",
-    "Expiring soon",
-  ]);
+  await assertDashboardOperationalAndShiftTiles(page);
   await page.getByText("More operations", { exact: true }).click();
   for (const heading of [
     "Approvals waiting",

@@ -192,6 +192,14 @@
 :root .r2c-dashboard .dashboard-approval-price > small {
   font-size: var(--font-size-caption);
 }
+/* The full Persian Margin caption wraps within its real numeric column. */
+:root
+  .r2c-dashboard
+  .dashboard-approval-table
+  thead
+  th[data-column-key="margin"] {
+  white-space: normal;
+}
 :root .r2c-dashboard .dashboard-phone-margin {
   display: none;
 }

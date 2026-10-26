@@ -185,6 +185,143 @@ for (const width of [1440, 1000, 390])
       });
     }
 
+for (const language of ["en", "fa"] as const)
+  for (const theme of ["light", "dark"] as const)
+    test(`R2c Dashboard Type chips are scoped to the actual column ${language} ${theme}`, async ({
+      page,
+    }, info) => {
+      const { inspect } = await import("../scripts/c5-browser-proof.mjs");
+      await page.setViewportSize({ width: 1440, height: 1080 });
+      await signIn(page, "Manager");
+      await setBranch(page, "North York");
+      await setLanguage(page, language);
+      await page.evaluate((value) => {
+        document.documentElement.dataset.theme = value;
+        localStorage.setItem("arzon-theme", value);
+      }, theme);
+      await page.goto("/#dashboard");
+      const table = page.locator(".dashboard-approval-table");
+      const header = table.locator('thead th[data-column-key="type"]');
+      const badges = table.locator(
+        'tbody .dashboard-queue-row > td[data-column-key="type"] > .ui-badge',
+      );
+      await expect(header).toBeVisible();
+      expect(await badges.count()).toBeGreaterThan(0);
+      const labels = await badges.allTextContents();
+      const clean = await inspect(
+        page,
+        "dashboard-type",
+        `${language}-${theme}`,
+        "manager",
+      );
+      expect(clean.failures).toEqual([]);
+      const typeStatuses = clean.statuses.filter((status) =>
+        labels.includes(status.label),
+      );
+      expect(typeStatuses).toHaveLength(labels.length);
+      expect(
+        typeStatuses.every((status) => status.presentation === "pill"),
+      ).toBe(true);
+      const reports = [clean];
+
+      const originalHeader = await header.textContent();
+      try {
+        await header.evaluate((element) => {
+          element.textContent = "Status";
+        });
+        const wrongColumn = await inspect(
+          page,
+          "dashboard-status-column-negative",
+          `${language}-${theme}`,
+          "manager",
+        );
+        expect(
+          wrongColumn.failures.some((failure) =>
+            failure.startsWith("Desktop table status has no visible dot:"),
+          ),
+        ).toBe(true);
+        expect(
+          wrongColumn.failures.some((failure) =>
+            failure.startsWith("Desktop table status retains a pill fill:"),
+          ),
+        ).toBe(true);
+        reports.push(wrongColumn);
+      } finally {
+        await header.evaluate((element, text) => {
+          element.textContent = text;
+        }, originalHeader);
+      }
+
+      try {
+        await badges.first().evaluate((badge) => {
+          const clone = badge.cloneNode(true) as HTMLElement;
+          clone.dataset.typePillNegative = "price";
+          badge
+            .closest("tr")!
+            .querySelector('td[data-column-key="price"]')!
+            .append(clone);
+        });
+        const wrongCell = await inspect(
+          page,
+          "dashboard-price-cell-negative",
+          `${language}-${theme}`,
+          "manager",
+        );
+        expect(
+          wrongCell.failures.some((failure) =>
+            failure.startsWith("Desktop table status has no visible dot:"),
+          ),
+        ).toBe(true);
+        reports.push(wrongCell);
+      } finally {
+        await page
+          .locator('[data-type-pill-negative="price"]')
+          .evaluate((element) => element.remove());
+      }
+
+      try {
+        await badges.first().evaluate((badge) => {
+          const fake = document.createElement("section");
+          fake.className = "r2c-dashboard";
+          fake.dataset.typePillNegative = "composition";
+          fake.innerHTML =
+            '<div class="ui-data-table dashboard-approval-table"><table><thead><tr><th data-column-key="type">Type</th></tr></thead><tbody><tr class="dashboard-queue-row"><td data-column-key="type" data-column-label="Type"></td></tr></tbody></table></div>';
+          fake.querySelector("td")!.append(badge.cloneNode(true));
+          document.querySelector("main")!.append(fake);
+        });
+        const copiedClasses = await inspect(
+          page,
+          "dashboard-copied-type-negative",
+          `${language}-${theme}`,
+          "manager",
+        );
+        expect(
+          copiedClasses.failures.some((failure) =>
+            failure.startsWith("Desktop table status retains a pill fill:"),
+          ),
+        ).toBe(true);
+        reports.push(copiedClasses);
+      } finally {
+        await page
+          .locator('[data-type-pill-negative="composition"]')
+          .evaluate((element) => element.remove());
+      }
+      const restored = await inspect(
+        page,
+        "dashboard-type-restored",
+        `${language}-${theme}`,
+        "manager",
+      );
+      expect(restored.failures).toEqual([]);
+      await info.attach(
+        "Dashboard Type column positive and negative controls",
+        {
+          body: JSON.stringify({ reports, restored }, null, 2),
+          contentType: "application/json",
+        },
+      );
+    });
+
 test("R2c dashboard shared-control proof has effective negative controls", async ({
   page,
 }, info) => {

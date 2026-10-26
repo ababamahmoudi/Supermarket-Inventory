@@ -1750,8 +1750,32 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         .filter(visible)
         .map((element) => {
           const style = getComputedStyle(element);
+          // The approved Dashboard Type chips describe the approval kind,
+          // not its status. Require the real column and composed screen;
+          // copied classes or a badge placed in another cell retain the
+          // ordinary desktop Status dot/fill contract.
+          const typeCell = element.closest('td[data-column-key="type"]');
+          const typeTable = typeCell?.closest(".dashboard-approval-table");
+          const dashboardType = Boolean(
+            typeCell?.parentElement?.matches(".dashboard-queue-row") &&
+            typeTable &&
+            dashboardRoots.has(typeTable.closest(".r2c-dashboard")) &&
+            ["Type", "نوع"].includes(
+              tidy(
+                typeTable.querySelector(
+                  ':scope > table > thead > tr > th[data-column-key="type"]',
+                )?.textContent,
+              ),
+            ) &&
+            typeCell.dataset.columnLabel ===
+              tidy(
+                typeTable.querySelector(
+                  ':scope > table > thead > tr > th[data-column-key="type"]',
+                )?.textContent,
+              ),
+          );
           const tableStatus = Boolean(
-            element.closest(".ui-data-table:not(.is-mobile)"),
+            element.closest(".ui-data-table:not(.is-mobile)") && !dashboardType,
           );
           const sharedStatus =
             element.classList.contains("ui-badge") &&
