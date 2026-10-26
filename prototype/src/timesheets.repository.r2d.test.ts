@@ -20,6 +20,10 @@ import type { DemoState } from "./types";
 
 async function fixture() {
   const state = initialState();
+  // Domain isolation: the separate demo fixture tests verify the seeded papers.
+  state.timesheet_staff = [];
+  state.timesheet_days = [];
+  state.timesheet_rows = [];
   const repository = new BrowserAuthorityRepository(new IDBFactory());
   await initializeAuthority(repository, {
     state,

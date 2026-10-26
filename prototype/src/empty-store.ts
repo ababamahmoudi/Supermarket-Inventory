@@ -19,6 +19,7 @@ export function removeFictionalData(
   state.timesheet_days = retained(state.timesheet_days);
   state.timesheet_rows = retained(state.timesheet_rows);
   state.prototype_r2d_timesheet_schema = 1;
+  state.prototype_r2d_timesheet_demo = 1;
   state.products = retained(state.products);
   state.suppliers = retained(state.suppliers);
   state.supplier_items = retained(state.supplier_items);

@@ -1,3 +1,4 @@
+import { hydrateTimesheetDemo } from "./timesheet-demo";
 import { initializeTimesheetState } from "./timesheet-state";
 import { configSeed, demoSeed } from "./config";
 import retainedConfig from "./compat/configuration.json";
@@ -227,7 +228,7 @@ export function initialState(): DemoState {
   );
   hydrateC6State(state);
   hydrateSalesDemo(state);
-  return initializeTimesheetState(state);
+  return hydrateTimesheetDemo(initializeTimesheetState(state));
 }
 
 function readLegacyState(): { state: DemoState; invalidHistoryRaw?: string } {

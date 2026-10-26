@@ -734,6 +734,7 @@ export interface HistoryRecoveryMarker {
 export interface DemoState {
   version: 1;
   prototype_r2d_timesheet_schema?: 1;
+  prototype_r2d_timesheet_demo?: 1;
   timesheet_staff?: TimesheetStaff[];
   timesheet_days?: TimesheetDay[];
   timesheet_rows?: TimesheetRow[];

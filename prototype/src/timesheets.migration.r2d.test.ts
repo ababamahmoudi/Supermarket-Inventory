@@ -20,6 +20,7 @@ import type { DemoState } from "./types";
 function oldState() {
   const state = initialState();
   delete state.prototype_r2d_timesheet_schema;
+  delete state.prototype_r2d_timesheet_demo;
   delete state.config.timesheets;
   Reflect.deleteProperty(state.config.modules, "timesheets");
   delete state.timesheet_staff;
