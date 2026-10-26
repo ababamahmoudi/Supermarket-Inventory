@@ -78,6 +78,7 @@ import SecondSignInStep from "./AuthSteps.e1";
 import LocationDashboard from "./screens/LocationDashboard";
 import PriceUpdates from "./screens/PriceUpdates";
 import { useNavigationRestoration } from "./navigation";
+import { deferTimesheetNavigation } from "./screens/timesheet-save-context";
 import type { Branch } from "./types";
 import {
   Button,
@@ -873,7 +874,8 @@ export default function App() {
     return () => media.removeEventListener("change", resize);
   }, []);
   useEffect(() => {
-    const onHash = () => {
+    const onHash = (event: HashChangeEvent) => {
+      if (deferTimesheetNavigation(event)) return;
       setHash(window.location.hash.slice(1));
       setMenuOpen(false);
       setExpandedGroup(null);

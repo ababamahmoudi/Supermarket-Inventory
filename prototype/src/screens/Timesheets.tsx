@@ -59,7 +59,12 @@ import {
   Select,
 } from "../ui";
 import { TimesheetSavedField } from "./timesheet-autosave";
-import { TimesheetSaveContext } from "./timesheet-save-context";
+import {
+  TimesheetSaveContext,
+  requireTimesheetSaveActor,
+  registerTimesheetNavigationGuard,
+  deferTimesheetNavigation,
+} from "./timesheet-save-context";
 import "./timesheets-r2d.css";
 import type { Activity, Language } from "../types";
 import TimesheetWeek from "./TimesheetWeek";
@@ -377,6 +382,7 @@ function TimesheetRow({
       "timesheets.edit",
       timesheetScope(actor!.company_id, location, true, row.id),
       (draft, current) => {
+        requireTimesheetSaveActor(actor!, current);
         patchTimesheetRow(draft, current, row.id, { [field]: value });
       },
     );
@@ -812,10 +818,60 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
     };
   }, []);
   const registry = useMemo(() => ({ register }), [register]);
-  const flush = async () =>
-    (
-      await Promise.all([...saves.current.values()].map((save) => save()))
-    ).every(Boolean);
+  const flush = useCallback(
+    async () =>
+      (
+        await Promise.all([...saves.current.values()].map((save) => save()))
+      ).every(Boolean),
+    [],
+  );
+  const acceptedHash = useRef(window.location.hash);
+  useLayoutEffect(() => {
+    if (window.location.hash.startsWith("#timesheets"))
+      acceptedHash.current = window.location.hash;
+  }, [intent]);
+  useEffect(() => {
+    let active = true,
+      replaying = false,
+      latestNavigation = 0;
+    const guard = (event: HashChangeEvent) => {
+      if (replaying || window.location.hash === acceptedHash.current)
+        return false;
+      const destination = window.location.hash,
+        ownNavigation = ++latestNavigation;
+      ++navigationVersion.current;
+      // Browser Back and script/hash navigation need not blur a focused field.
+      // Keep its error and typed value mounted until the real save is accepted.
+      event.stopImmediatePropagation();
+      void flush().then((saved) => {
+        if (
+          !active ||
+          ownNavigation !== latestNavigation ||
+          window.location.hash !== destination
+        )
+          return;
+        if (!saved) {
+          // Restore the displayed sheet while retaining Back's destination for
+          // a later retry, rather than replacing that earlier history entry.
+          window.history.pushState(null, "", acceptedHash.current);
+          return;
+        }
+        acceptedHash.current = destination;
+        replaying = true;
+        try {
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
+        } finally {
+          replaying = false;
+        }
+      });
+      return true;
+    };
+    const unregister = registerTimesheetNavigationGuard(guard);
+    return () => {
+      active = false;
+      unregister();
+    };
+  }, [flush]);
   const changeDate = async (next: string, nextView = view) => {
     if (!validTrackedDate(next)) return;
     const expected = intent,
@@ -991,8 +1047,12 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
       clockLocation.current = location;
       sync();
     }
-    window.addEventListener("hashchange", sync);
-    return () => window.removeEventListener("hashchange", sync);
+    const onHash = (event: HashChangeEvent) => {
+      if (deferTimesheetNavigation(event)) return;
+      sync();
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
   }, [state.config, location]);
   if (!location || !allowed.some((item) => item.id === location))
     return (
@@ -1228,6 +1288,7 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
                     "timesheets.edit",
                     timesheetScope(actor!.company_id, location, true),
                     (draft, current) => {
+                      requireTimesheetSaveActor(actor!, current);
                       saveTimesheetNotes(draft, current, {
                         branch: location,
                         date,

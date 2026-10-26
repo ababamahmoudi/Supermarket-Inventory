@@ -532,3 +532,230 @@ test("configured departments can change while historical shifts survive and modu
   await expect(page.locator(".timesheet-departments")).toHaveCount(0);
   await expect(page.locator(".timesheet-print-output")).toHaveCount(0);
 });
+
+/** Hold only the autosave scheduler; actual inputs, navigation and IDB commands stay real. */
+async function holdTimesheetDebounce(page: Page) {
+  await page.evaluate(() => {
+    const original = window.setTimeout.bind(window);
+    window.setTimeout = ((
+      handler: TimerHandler,
+      timeout?: number,
+      ...args: unknown[]
+    ) =>
+      original(
+        handler,
+        timeout === 350 ? 60_000 : timeout,
+        ...args,
+      )) as typeof window.setTimeout;
+  });
+}
+
+for (const role of ["Manager", "Cashier"] as const) {
+  test(`${role} focused queued edit survives hash navigation before debounce without blur`, async ({
+    page,
+  }) => {
+    await independentTimesheetRows(page, role);
+    await visitPage(page, "Timesheets");
+    const input = page.getByRole("textbox", {
+      name: "In time for Emery Vale",
+      exact: true,
+    });
+    await holdTimesheetDebounce(page);
+    await input.fill("730");
+    await expect(input).toBeFocused();
+    const before = await readCanonicalBusinessEvidence(page);
+    expect(
+      before.timesheet_rows?.find((row) => row.name_en === "Emery Vale")
+        ?.in_time,
+    ).toBe("06:00");
+    await page.evaluate(() => {
+      window.location.hash = "#lookup";
+    });
+    await expect(page).toHaveURL(/#lookup$/);
+    await expect(page.locator(".timesheet-departments")).toHaveCount(0);
+    await expect
+      .poll(
+        async () =>
+          (await readCanonicalBusinessEvidence(page)).timesheet_rows?.find(
+            (row) => row.name_en === "Emery Vale",
+          )?.in_time,
+      )
+      .toBe("07:30");
+    const saved = await readCanonicalBusinessEvidence(page);
+    expect(
+      saved.activity.find((event) => event.action === "Edit timesheet row"),
+    ).toMatchObject({
+      actor_user_id:
+        role === "Manager" ? "demo-person-manager" : "demo-person-cashier",
+    });
+    await page.reload();
+    await visitPage(page, "Timesheets");
+    await expect(
+      page.getByRole("textbox", {
+        name: "In time for Emery Vale",
+        exact: true,
+      }),
+    ).toHaveValue("07:30");
+  });
+}
+
+test("failed queued Browser Back retains text and Retry, then preserves the actual Back destination", async ({
+  page,
+}) => {
+  await independentTimesheetRows(page, "Manager");
+  await page.goto("/#lookup");
+  await visitPage(page, "Timesheets");
+  const sheetUrl = page.url();
+  const input = page.getByRole("textbox", {
+    name: "In time for Emery Vale",
+    exact: true,
+  });
+  await holdTimesheetDebounce(page);
+  await page.evaluate(() => {
+    const original = IDBObjectStore.prototype.put;
+    let fail = true;
+    IDBObjectStore.prototype.put = function (value, key) {
+      const state = value?.state;
+      if (
+        fail &&
+        this.name === "business" &&
+        state?.timesheet_rows?.some(
+          (row: { name_en: string; in_time: string }) =>
+            row.name_en === "Emery Vale" && row.in_time === "07:30",
+        )
+      ) {
+        fail = false;
+        throw new DOMException("Fictional storage full", "QuotaExceededError");
+      }
+      return key === undefined
+        ? original.call(this, value)
+        : original.call(this, value, key);
+    };
+  });
+  await input.fill("730");
+  await expect(input).toBeFocused();
+  const before = await readCanonicalBusinessEvidence(page);
+  await page.goBack();
+  await expect(page).toHaveURL(sheetUrl);
+  await expect(input).toHaveValue("730");
+  await expect(input).toHaveAttribute("aria-invalid", "true");
+  expect((await readCanonicalBusinessEvidence(page)).timesheet_rows).toEqual(
+    before.timesheet_rows,
+  );
+  await input
+    .locator("..")
+    .getByRole("button", { name: /Try again/ })
+    .click();
+  await expect
+    .poll(
+      async () =>
+        (await readCanonicalBusinessEvidence(page)).timesheet_rows?.find(
+          (row) => row.name_en === "Emery Vale",
+        )?.in_time,
+    )
+    .toBe("07:30");
+  await page.goBack();
+  await expect(page).toHaveURL(/#lookup$/);
+  await expect(page.locator(".timesheet-departments")).toHaveCount(0);
+  await page.reload();
+  await visitPage(page, "Timesheets");
+  await expect(
+    page.getByRole("textbox", { name: "In time for Emery Vale", exact: true }),
+  ).toHaveValue("07:30");
+});
+
+test("native reload protects a queued edit and stops prompting after its actual save", async ({
+  page,
+}) => {
+  await independentTimesheetRows(page, "Cashier");
+  await visitPage(page, "Timesheets");
+  const input = page.getByRole("textbox", {
+    name: "In time for Emery Vale",
+    exact: true,
+  });
+  await holdTimesheetDebounce(page);
+  await input.fill("730");
+  const prompt = page.waitForEvent("dialog");
+  const reload = page
+    .evaluate(() => window.location.reload())
+    .catch(() => null);
+  const dialog = await prompt;
+  expect(dialog.type()).toBe("beforeunload");
+  await dialog.dismiss();
+  await reload;
+  await expect(input).toHaveValue("730");
+  await input.blur();
+  await expect
+    .poll(
+      async () =>
+        (await readCanonicalBusinessEvidence(page)).timesheet_rows?.find(
+          (row) => row.name_en === "Emery Vale",
+        )?.in_time,
+    )
+    .toBe("07:30");
+  await expect(input.locator("..").locator(".timesheet-save-state")).toHaveText(
+    "Saved",
+  );
+  let unexpected = false;
+  page.once("dialog", async (dialog) => {
+    unexpected = true;
+    await dialog.dismiss();
+  });
+  await page.reload();
+  expect(unexpected).toBe(false);
+  await expect(
+    page.getByRole("textbox", { name: "In time for Emery Vale", exact: true }),
+  ).toHaveValue("07:30");
+});
+
+test("an initial Timesheets invalid edit retains its day when a date hash requests another sheet", async ({
+  page,
+}) => {
+  await independentTimesheetRows(page, "Cashier");
+  await page.goto("/#timesheets");
+  const input = page.getByRole("textbox", {
+    name: "In time for Emery Vale",
+    exact: true,
+  });
+  await expect(input).toHaveValue("06:00");
+  const before = await readCanonicalBusinessEvidence(page);
+  const date = before.timesheet_rows!.find(
+    (row) => row.name_en === "Emery Vale",
+  )!.date;
+  const prior = new Date(`${date}T12:00:00Z`);
+  prior.setUTCDate(prior.getUTCDate() - 1);
+  const destination = `#timesheets?date=${prior.toISOString().slice(0, 10)}&view=week`;
+  const originalUrl = page.url();
+  await holdTimesheetDebounce(page);
+  await page.evaluate(() => window.scrollTo(0, 120));
+  await input.fill("999");
+  const scrollBefore = await page.evaluate(() => window.scrollY);
+  expect(scrollBefore).toBeGreaterThan(0);
+  await page.evaluate((hash) => {
+    window.location.hash = hash;
+  }, destination);
+  await expect(page).toHaveURL(originalUrl);
+  await expect(input).toBeVisible();
+  await expect(input).toHaveValue("999");
+  await expect(input).toHaveAttribute("aria-invalid", "true");
+  await expect(page.locator(".timesheets-page")).toHaveAttribute(
+    "data-timesheet-date",
+    date,
+  );
+  expect((await readCanonicalBusinessEvidence(page)).timesheet_rows).toEqual(
+    before.timesheet_rows,
+  );
+  expect(
+    Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore),
+  ).toBeLessThanOrEqual(2);
+  await input.fill("730");
+  await input.blur();
+  await expect
+    .poll(
+      async () =>
+        (await readCanonicalBusinessEvidence(page)).timesheet_rows?.find(
+          (row) => row.name_en === "Emery Vale",
+        )?.in_time,
+    )
+    .toBe("07:30");
+});

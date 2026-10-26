@@ -36,6 +36,7 @@ export function TimesheetSavedField({
   const version = useRef(0),
     timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callback = useRef(save),
+    editingCallback = useRef(save),
     queue = useRef(Promise.resolve(true));
   const lastCommitted = useRef(value),
     alive = useRef(true);
@@ -64,12 +65,13 @@ export function TimesheetSavedField({
     const input = raw.current;
     const normalized = time ? parseTimesheetTime(input) : input;
     if (normalized === null) {
-      setError(
-        t(
-          "Enter a 24-hour time, such as 07:30 or 1915.",
-          "زمان ۲۴ ساعته مانند 07:30 یا 1915 وارد کنید.",
-        ),
-      );
+      if (alive.current)
+        setError(
+          t(
+            "Enter a 24-hour time, such as 07:30 or 1915.",
+            "زمان ۲۴ ساعته مانند 07:30 یا 1915 وارد کنید.",
+          ),
+        );
       return false;
     }
     const ownVersion = version.current;
@@ -79,33 +81,40 @@ export function TimesheetSavedField({
     )
       return pendingEntry.current.promise;
     if (normalized === lastCommitted.current && !pendingEntry.current) {
+      // A completed failure is no longer pending when the saved value is restored.
+      queue.current = Promise.resolve(true);
       dirty.current = false;
       releaseWork.current?.();
       releaseWork.current = null;
-      if (!focused.current) {
-        raw.current = normalized;
-        setText(normalized);
+      if (alive.current) {
+        if (!focused.current) {
+          raw.current = normalized;
+          setText(normalized);
+        }
+        setError("");
       }
-      setError("");
       return queue.current;
     }
+    // Capture the edit's callback before any queued predecessor can settle.
+    const commit = editingCallback.current;
     const operation = queue.current
       .catch(() => false)
       .then(async () => {
-        if (!alive.current) return false;
-        setSaving(true);
+        if (alive.current) setSaving(true);
         try {
-          await callback.current(normalized);
+          await commit(normalized);
           lastCommitted.current = normalized;
-          if (alive.current && ownVersion === version.current) {
+          if (ownVersion === version.current) {
             dirty.current = false;
             releaseWork.current?.();
             releaseWork.current = null;
-            setError("");
-            setSaved(true);
-            if (!focused.current) {
-              raw.current = normalized;
-              setText(normalized);
+            if (alive.current) {
+              setError("");
+              setSaved(true);
+              if (!focused.current) {
+                raw.current = normalized;
+                setText(normalized);
+              }
             }
           }
           return true;
@@ -133,17 +142,32 @@ export function TimesheetSavedField({
     return operation;
   }, [time, t]);
   useEffect(() => registry?.register(id, flush), [registry, id, flush]);
+  const teardownFlush = useRef(flush);
+  useEffect(() => {
+    teardownFlush.current = flush;
+  }, [flush]);
   useEffect(() => {
     alive.current = true;
+    const protectUnload = (event: BeforeUnloadEvent) => {
+      if (!dirty.current && !pendingEntry.current) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", protectUnload);
     return () => {
       alive.current = false;
-      if (timer.current) clearTimeout(timer.current);
-      releaseWork.current?.();
-      releaseWork.current = null;
+      // DOM removal need not blur a focused input. Drain its valid edit without
+      // touching the retired UI, and keep reload protection through the queue.
+      void Promise.all([teardownFlush.current(), queue.current]).finally(() => {
+        window.removeEventListener("beforeunload", protectUnload);
+        releaseWork.current?.();
+        releaseWork.current = null;
+      });
     };
   }, []);
   const change = (next: string) => {
     raw.current = next;
+    editingCallback.current = callback.current;
     dirty.current = true;
     releaseWork.current ??= beginAppWork();
     version.current += 1;

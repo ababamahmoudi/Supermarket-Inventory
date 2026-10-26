@@ -7,6 +7,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useDemo } from "./store";
+import { deferTimesheetNavigation } from "./screens/timesheet-save-context";
 
 const prefix = "supermarket-navigation-v1";
 const fallback = new Map<string, string>();
@@ -184,7 +185,8 @@ export function useNavigationRestoration() {
         window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       }
     };
-    const onRoute = () => {
+    const onRoute = (event: HashChangeEvent) => {
+      if (deferTimesheetNavigation(event)) return;
       save();
       rememberInvoiceReturnRoute(
         company,
