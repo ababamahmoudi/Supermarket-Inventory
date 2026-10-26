@@ -699,6 +699,13 @@
 :root .r2c-dashboard .dashboard-invoice-amount > small {
   font-size: var(--font-size-caption);
 }
+:root .r2c-dashboard .dashboard-invoices .dashboard-invoice-reference,
+:root .r2c-dashboard .dashboard-invoice-reference-text {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  white-space: nowrap;
+}
 /* The approved Type chips are quiet pills, scoped to this composed table. */
 :root
   .r2c-dashboard

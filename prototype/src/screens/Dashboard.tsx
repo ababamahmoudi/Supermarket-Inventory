@@ -842,6 +842,7 @@ export function Dashboard() {
             />
             {recentInvoices.length ? (
               <DataTable
+                recordDetails
                 phoneList={{
                   name: "invoice",
                   value: "total",
@@ -854,6 +855,7 @@ export function Dashboard() {
                   { key: "date", minWidth: 105, priority: 5 },
                   { key: "total", minWidth: 90, align: "end", priority: 2 },
                   { key: "status", minWidth: 100, priority: 3 },
+                  { key: "actions", width: 56, minWidth: 56, actions: true },
                 ]}
               >
                 <thead>
@@ -864,6 +866,11 @@ export function Dashboard() {
                     <th>{t("Date", "تاریخ")}</th>
                     <th>{t("Total", "جمع")}</th>
                     <th>{t("Status", "وضعیت")}</th>
+                    <th>
+                      <span className="sr-only">
+                        {t("Open invoice", "باز کردن فاکتور")}
+                      </span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -876,10 +883,16 @@ export function Dashboard() {
                         <a
                           className="entity-link dashboard-invoice-reference"
                           href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                          aria-label={`${t("Invoice", "فاکتور")} ${invoice.supplier_invoice_number || invoice.id}`}
+                          title={invoice.supplier_invoice_number || invoice.id}
                         >
-                          <LtrText>
-                            {invoice.supplier_invoice_number || invoice.id}
-                          </LtrText>
+                          <FitText
+                            className="dashboard-invoice-reference-text"
+                            value={
+                              invoice.supplier_invoice_number || invoice.id
+                            }
+                            render={(visible) => <LtrText>{visible}</LtrText>}
+                          />
                         </a>
                       </td>
                       <td>
@@ -921,6 +934,12 @@ export function Dashboard() {
                         >
                           {invoiceStatus(invoice.status)}
                         </Badge>
+                      </td>
+                      <td>
+                        <TableRowLink
+                          href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                          aria-label={`${t("Open invoice", "باز کردن فاکتور")} ${invoice.supplier_invoice_number || invoice.id}`}
+                        />
                       </td>
                     </tr>
                   ))}
