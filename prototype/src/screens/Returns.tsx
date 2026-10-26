@@ -1,3 +1,6 @@
+import { returnReasonLabel } from "../return-reason-copy";
+import { returnReasons, type ReturnReason } from "../return-create";
+import { NewReturnDialog } from "./NewReturnDialog";
 import { useProtectedQuery } from "../use-protected-query";
 import { configuredRoleLabel } from "../role-config";
 import type { AuthenticatedActor } from "../authority-types";
@@ -143,6 +146,16 @@ function ReturnsContent() {
   const branches = configuredBranches(state.config).filter((id) =>
     currentActor.allowed_branches.includes(id),
   );
+  const canStartReturn = branches.some(
+    (location) =>
+      (branch === "all" || location === branch) &&
+      can("returns.create", {
+        company_id: currentActor.company_id,
+        kind: "location_record",
+        location_ids: [location],
+        mutation: true,
+      }),
+  );
   const [hash, setHash] = useState(() => window.location.hash);
   const detailId = hash.startsWith("#return?")
     ? new URLSearchParams(hash.split("?")[1]).get("id")
@@ -180,6 +193,7 @@ function ReturnsContent() {
   );
   const [search, setSearch] = useListState("returns.search", "");
   const [policyOpen, setPolicyOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [panel, setPanel] = useState<
     "pickup" | "correct" | "resolve" | "cancel"
@@ -405,10 +419,39 @@ function ReturnsContent() {
     );
   return (
     <>
+      {creating && (
+        <NewReturnDialog
+          key={JSON.stringify([
+            currentActor.company_id,
+            currentActor.session_id,
+            currentActor.person_version,
+            authorityGeneration,
+            currentActor.selection,
+          ])}
+          onClose={() => setCreating(false)}
+          onCreated={(id) => {
+            const target = `#return?id=${encodeURIComponent(id)}`;
+            setCreating(false);
+            if (window.location.hash !== hash) return;
+            // The committed business revision can reinstall the hash listener
+            // before the browser dispatches hashchange. Adopt this accepted
+            // route immediately so the new detail never remains on the list.
+            setHash(target);
+            window.location.hash = target;
+          }}
+        />
+      )}
       {!detailId ? (
         <>
           <PageHeader
             title={t("Returns", "مرجوعی‌ها")}
+            actions={
+              canStartReturn ? (
+                <Button onClick={() => setCreating(true)}>
+                  {t("New return", "مرجوعی جدید")}
+                </Button>
+              ) : undefined
+            }
             description={t(
               "Supplier returns and credits",
               "مرجوعی و بستانکاری تأمین‌کنندگان",
@@ -553,16 +596,25 @@ function ReturnsContent() {
               <tbody>
                 {overviewReturns.map((record) => {
                   const action =
-                    record.status === "open"
-                      ? t("Record pickup", "ثبت جمع‌آوری")
-                      : record.status === "cancellation_review"
-                        ? t("Review cancellation", "بررسی لغو")
-                        : record.status === "claim_pending"
-                          ? t("Review claim", "بررسی ادعا")
-                          : record.status === "cancelled" ||
-                              record.status === "resolved"
-                            ? t("View", "مشاهده")
-                            : t("Record resolution", "ثبت حل‌وفصل");
+                    !can(
+                      "returns.pickup_record",
+                      domainScope(state, record, true),
+                    ) &&
+                    !can(
+                      "returns.operational_resolve",
+                      domainScope(state, record, true),
+                    )
+                      ? t("View", "مشاهده")
+                      : record.status === "open"
+                        ? t("Record pickup", "ثبت جمع‌آوری")
+                        : record.status === "cancellation_review"
+                          ? t("Review cancellation", "بررسی لغو")
+                          : record.status === "claim_pending"
+                            ? t("Review claim", "بررسی ادعا")
+                            : record.status === "cancelled" ||
+                                record.status === "resolved"
+                              ? t("View", "مشاهده")
+                              : t("Record resolution", "ثبت حل‌وفصل");
                   return (
                     <tr
                       key={record.id}
@@ -956,7 +1008,13 @@ function ReturnsContent() {
                       record.lines.some(
                         (line) =>
                           record.line_progress[line.product_code].available > 0,
-                      )) && (
+                      )) &&
+                    can(
+                      record.status === "open"
+                        ? "returns.pickup_record"
+                        : "returns.operational_resolve",
+                      domainScope(state, record, true),
+                    ) && (
                       <Button
                         disabled={
                           !can(
@@ -1163,7 +1221,14 @@ function ReturnsContent() {
                             ? t("Leaking", "نشتی")
                             : line.reason === "Torn bag"
                               ? t("Torn bag", "کیسه پاره")
-                              : line.reason}
+                              : returnReasons.includes(
+                                    line.reason as ReturnReason,
+                                  )
+                                ? returnReasonLabel(
+                                    line.reason as ReturnReason,
+                                    t,
+                                  )
+                                : line.reason}
                           {line.location && (
                             <div className="muted">
                               {line.location === "Walk-in cooler"
@@ -1206,7 +1271,19 @@ function ReturnsContent() {
                 </p>
               )}
               {record.status !== "cancelled" &&
-                record.status !== "cancellation_review" && (
+                record.status !== "cancellation_review" &&
+                (can(
+                  "returns.pickup_record",
+                  domainScope(state, record, true),
+                ) ||
+                  can(
+                    "returns.operational_resolve",
+                    domainScope(state, record, true),
+                  ) ||
+                  can("returns.pickup_correct", {
+                    ...domainScope(state, record, true),
+                    location_policy: "retained_correction",
+                  })) && (
                   <div className="return-secondary-actions">
                     {record.status !== "open" &&
                       record.status !== "resolved" &&
@@ -1603,25 +1680,32 @@ function ReturnsContent() {
                   (record.evidence ?? []).map((event) => (
                     <div className="history-row" key={event.id}>
                       <strong>
-                        {event.kind === "pickup_correction"
-                          ? t("Corrected pickup", "جمع‌آوری اصلاح‌شده")
-                          : event.kind === "outstanding"
-                            ? t("Still outstanding", "هنوز باقی‌مانده")
-                            : event.kind === "pickup"
-                              ? t("Recorded pickup", "جمع‌آوری ثبت‌شده")
-                              : event.kind === "replacement"
-                                ? t(
-                                    "Received replacement",
-                                    "جایگزین دریافت‌شده",
-                                  )
-                                : event.kind === "original_recovery"
-                                  ? t(
-                                      "Received safe original goods",
-                                      "اصل کالای سالم دریافت شد",
-                                    )
-                                  : event.kind.startsWith("cancellation")
-                                    ? t("Cancellation review", "بررسی لغو")
-                                    : t("Resolution claim", "ادعای حل‌وفصل")}
+                        {event.kind === "created"
+                          ? t("Created return", "مرجوعی ایجاد شد")
+                          : event.kind === "creation_photo"
+                            ? t("Return photo", "عکس مرجوعی")
+                            : event.kind === "pickup_correction"
+                              ? t("Corrected pickup", "جمع‌آوری اصلاح‌شده")
+                              : event.kind === "outstanding"
+                                ? t("Still outstanding", "هنوز باقی‌مانده")
+                                : event.kind === "pickup"
+                                  ? t("Recorded pickup", "جمع‌آوری ثبت‌شده")
+                                  : event.kind === "replacement"
+                                    ? t(
+                                        "Received replacement",
+                                        "جایگزین دریافت‌شده",
+                                      )
+                                    : event.kind === "original_recovery"
+                                      ? t(
+                                          "Received safe original goods",
+                                          "اصل کالای سالم دریافت شد",
+                                        )
+                                      : event.kind.startsWith("cancellation")
+                                        ? t("Cancellation review", "بررسی لغو")
+                                        : t(
+                                            "Resolution claim",
+                                            "ادعای حل‌وفصل",
+                                          )}
                       </strong>
                       <p>
                         <LtrText>

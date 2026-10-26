@@ -1,3 +1,5 @@
+import { returnReasons, type ReturnReason } from "../return-create";
+import { returnReasonLabel } from "../return-reason-copy";
 import { domainScope } from "../domain-authority";
 import { reverseActivity } from "../history";
 import { useEffect, useState } from "react";
@@ -340,6 +342,8 @@ export default function History() {
           ? patch.field
           : String(patch.path.at(-1))
         : undefined;
+      if (field === "reason" && returnReasons.includes(raw as ReturnReason))
+        return returnReasonLabel(raw as ReturnReason, t);
       if (field === "supplier_invoice_number" || field === "invoice_number")
         return <LtrText className="history-invoice-reference">{raw}</LtrText>;
       if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return <DateText value={raw} />;

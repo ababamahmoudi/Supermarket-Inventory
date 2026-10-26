@@ -70,8 +70,13 @@
       "key": "cashier",
       "label": "Cashier",
       "label_fa": "صندوق‌دار",
-      "summary": "Assigned-store product and price lookup",
-      "capabilities": ["timesheets.read", "timesheets.edit"]
+      "summary": "Assigned-store product lookup, dates, timesheets and supplier returns",
+      "capabilities": [
+        "timesheets.read",
+        "timesheets.edit",
+        "returns.read",
+        "returns.create"
+      ]
     }
   ],
   "pricing_categories": [

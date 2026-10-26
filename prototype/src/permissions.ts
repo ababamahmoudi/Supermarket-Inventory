@@ -112,6 +112,8 @@ const cashier = new Set<Capability>([
   ...common,
   "timesheets.read",
   "timesheets.edit",
+  "returns.read",
+  "returns.create",
   "history.undo_own",
   "dates.add",
 ]);
@@ -156,8 +158,10 @@ function roleHasCapability(
 ): boolean {
   if (!knownCapabilities.has(capability)) return false;
   if (
-    capability.startsWith("timesheets.") &&
-    (state.config.modules?.timesheets === false || role === "floor_worker")
+    (capability.startsWith("timesheets.") &&
+      (state.config.modules?.timesheets === false || role === "floor_worker")) ||
+    ((capability === "returns.read" || capability === "returns.create") &&
+      state.config.modules?.returns === false)
   )
     return false;
   if (isCompanyRole(role)) return true;

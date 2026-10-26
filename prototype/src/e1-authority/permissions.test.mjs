@@ -170,11 +170,26 @@ test("Floor Worker E2 completion opt-in never grants cash-register confirmation"
   assert.equal(allowed(f, "price_updates.complete"), true);
   assert.equal(allowed(f, "price_updates.register_confirm"), false);
 });
-test("Cashier reads assigned stores only and cannot read receiving/money/mutations", () => {
+test("Cashier reads and creates returns at assigned stores without receiving, money or settlement grants", () => {
   const f = fixture("cashier", ["ny", "rh"]);
   assert.equal(allowed(f, "lookup.read", scope(["rh"])), true);
   assert.equal(allowed(f, "lookup.read", scope(["nm"])), false);
   assert.equal(allowed(f, "lookup.read", scope(["wh"])), false);
+  for (const cap of ["returns.read", "returns.create"]) {
+    assert.equal(allowed(f, cap, scope(["ny"])), true, cap);
+    assert.equal(allowed(f, cap, scope(["nm"])), false, cap);
+    assert.equal(allowed(f, cap, scope(["wh"])), false, cap);
+  }
+  for (const cap of [
+    "returns.pickup_record",
+    "returns.pickup_correct",
+    "returns.operational_resolve",
+    "returns.credit_post",
+    "returns.amount_read",
+    "suppliers.read",
+    "supplier_items.cost_read",
+  ])
+    assert.equal(allowed(f, cap), false, cap);
   for (const cap of [
     "invoices.read",
     "received.read",

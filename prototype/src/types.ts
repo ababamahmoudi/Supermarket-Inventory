@@ -555,6 +555,12 @@ export interface LabelWaitlistItem extends ScopedRecord {
     | "price_update";
 }
 export interface ReturnLine {
+  source_receipt?: {
+    invoice_id: string;
+    line_index: number;
+    received_at: string;
+    source_fingerprint: string;
+  };
   quantity_unit?: "units" | "lb";
   unit_cost?: string;
   product_code: string;
@@ -573,6 +579,11 @@ export interface ReturnLine {
   outstanding_note?: string;
 }
 export interface ReturnRecord extends ScopedRecord {
+  supplier_id?: string;
+  created_by_user_id?: string;
+  created_by_role_snapshot?: Role;
+  creation_request_id?: string;
+  creation_fingerprint?: string;
   id: string;
   supplier: string;
   lines: ReturnLine[];

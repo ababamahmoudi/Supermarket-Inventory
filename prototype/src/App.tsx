@@ -980,6 +980,7 @@ export default function App() {
         page.key === "lookup" ||
         page.key === "timesheets" ||
         page.key === "expiry" ||
+        page.key === "returns" ||
         // Only current protected custom-notebook DTOs establish this route.
         // The Cashier never receives built-in Notes or a general Notes grant.
         (page.key === "notes" && Boolean(state.notebooks?.length))) &&

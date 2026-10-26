@@ -1088,6 +1088,34 @@ function PayablesContent({
                 {error}
               </div>
             )}
+          {summary.awaiting_pickup_returns.length > 0 && (
+            <Card
+              title={t("Waiting for pickup", "در انتظار جمع‌آوری")}
+              className="awaiting-return-credits"
+            >
+              <p className="muted">
+                {t(
+                  "Expected credit · Not deducted yet",
+                  "اعتبار مورد انتظار · هنوز کسر نشده است",
+                )}{" "}
+                · <Money value={summary.awaiting_pickup_credit} />
+              </p>
+              <div className="awaiting-return-list">
+                {summary.awaiting_pickup_returns.map((claim) => (
+                  <div className="awaiting-return-row" key={claim.return_id}>
+                    <a
+                      className="entity-link"
+                      href={`#return?id=${encodeURIComponent(claim.return_id)}`}
+                    >
+                      {t("View return", "نمایش مرجوعی")} ·{" "}
+                      <DateText value={claim.created_at} />
+                    </a>
+                    <Money value={claim.amount} />
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
           {summary.pending_returns.length > 0 && (
             <Card
               title={t("Pending credit", "اعتبار در انتظار")}

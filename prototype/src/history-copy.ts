@@ -28,6 +28,7 @@ const actions: Record<string, [string, string]> = {
   "Edit timesheet row": ["Edit timesheet row", "ویرایش ردیف کارکرد"],
   "Remove timesheet row": ["Remove timesheet row", "برداشتن ردیف کارکرد"],
   "Edit timesheet notes": ["Edit timesheet notes", "ویرایش یادداشت کارکرد"],
+  "Created return": ["Created return", "ایجاد مرجوعی"],
   "Change approval category": [
     "Change approval category",
     "تغییر دسته‌بندی درخواست تأیید",
@@ -247,6 +248,8 @@ const fields: Record<string, [string, string]> = {
   department_name_fa: ["Department (Persian)", "بخش (فارسی)"],
   usual_department_key: ["Usual department", "بخش معمول"],
   departments: ["Departments", "بخش‌ها"],
+  photo_count: ["Photos", "عکس‌ها"],
+  quantity_unit: ["Unit", "واحد"],
   sale_price: ["Sale price", "قیمت تخفیف"],
   requested_price: ["Sale price", "قیمت تخفیف"],
   regular_price: ["Regular price", "قیمت عادی"],
