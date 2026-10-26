@@ -1,7 +1,98 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { runCanonicalBusinessFixture } from "./business-fixture";
 import { setBranch, signIn, visitPage } from "./helpers";
 import { chooseOption } from "./helpers";
+
+async function independentTimesheetRows(
+  page: Page,
+  role: "Cashier" | "Manager",
+) {
+  await page.goto("/");
+  await signIn(page, "Manager");
+  await setBranch(page, "North York");
+  await runCanonicalBusinessFixture(
+    page,
+    (draft) => {
+      // B precedes C's optional demo papers. Install explicit fictional setup
+      // with the genuine signed-in Manager and canonical fixture transaction.
+      draft.timesheet_staff = [];
+      draft.timesheet_days = [];
+      draft.timesheet_rows = [];
+      draft.config.modules.timesheets = true;
+      const departments = draft.config.timesheets?.departments;
+      const bakery = departments?.find((item) => item.name_en === "Bakery");
+      const cash = departments?.find((item) => item.name_en === "Cash");
+      if (!bakery || !cash)
+        throw new Error("The configured Bakery and Cash departments are required.");
+      const branch = "Branch 1";
+      const location = draft.config.branches.find((item) => item.id === branch);
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: location?.timezone || draft.config.company.timezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).formatToParts(now);
+      const part = (key: string) =>
+        parts.find((item) => item.type === key)!.value;
+      const date = `${part("year")}-${part("month")}-${part("day")}`;
+      const company_id = draft.config.company.seed_key;
+      const stamp = {
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+        created_by_user_id: "demo-person-manager",
+        updated_by_user_id: "demo-person-manager",
+        version: 1,
+      };
+      const day = {
+        id: "r2d-b-test-day",
+        company_id,
+        branch,
+        branch_id: branch,
+        date,
+        notes: "Independent fictional browser-test sheet.",
+        ...stamp,
+      };
+      draft.timesheet_days.push(day);
+      for (const [name, key, department, inTime, outTime] of [
+        ["Emery Vale", "emery", bakery, "06:00", "14:00"],
+        ["Rowan Pine", "rowan", cash, "07:00", "15:00"],
+      ] as const) {
+        const staff = {
+          id: `r2d-b-test-staff-${key}`,
+          company_id,
+          branch,
+          branch_id: branch,
+          name_en: name,
+          usual_department_key: department.key,
+          status: "active" as const,
+          ...stamp,
+        };
+        draft.timesheet_staff.push(staff);
+        draft.timesheet_rows.push({
+          id: `r2d-b-test-row-${key}`,
+          company_id,
+          branch,
+          branch_id: branch,
+          day_id: day.id,
+          date,
+          department_key: department.key,
+          department_name_en: department.name_en,
+          department_name_fa: department.name_fa,
+          staff_id: staff.id,
+          name_en: staff.name_en,
+          in_time: inTime,
+          out_time: outTime,
+          ...stamp,
+        });
+      }
+    },
+    undefined,
+  );
+  await page.reload();
+  if (role !== "Manager") await signIn(page, role);
+}
 
 test("cashier adds two people and buffered times and notes survive fast typing and reload", async ({
   page,
@@ -114,8 +205,7 @@ test("floor worker cannot see or open Timesheets and aggregate viewing asks for 
 test("week totals match actual day shifts and payroll CSV opens the same days", async ({
   page,
 }, testInfo) => {
-  await page.goto("/");
-  await signIn(page, "Cashier");
+  await independentTimesheetRows(page, "Cashier");
   await visitPage(page, "Timesheets");
   const date = await page
     .locator(".timesheets-page")
@@ -252,8 +342,7 @@ test("Print prepares the protected bilingual paper with all eight sections and N
 test("invalid partial times retain typing and do not move the next person's fields", async ({
   page,
 }) => {
-  await page.goto("/");
-  await signIn(page, "Cashier");
+  await independentTimesheetRows(page, "Cashier");
   await visitPage(page, "Timesheets");
   const bakery = page.locator(".timesheet-department").filter({
     has: page.getByRole("heading", { name: "Bakery", exact: true }),
@@ -308,8 +397,7 @@ test("invalid partial times retain typing and do not move the next person's fiel
 test("staff can be edited, linked, archived and restored without removing past shifts", async ({
   page,
 }) => {
-  await page.goto("/");
-  await signIn(page, "Cashier");
+  await independentTimesheetRows(page, "Cashier");
   await visitPage(page, "Timesheets");
   await page.getByRole("button", { name: "Manage staff", exact: true }).click();
   const dialog = page.getByRole("dialog", {
@@ -380,9 +468,7 @@ test("staff can be edited, linked, archived and restored without removing past s
 test("configured departments can change while historical shifts survive and module Off closes the route", async ({
   page,
 }) => {
-  await page.goto("/");
-  await signIn(page, "Manager");
-  await setBranch(page, "North York");
+  await independentTimesheetRows(page, "Manager");
   const before = await readCanonicalBusinessEvidence(page);
   await page.goto("/#settings?group=timesheets");
   await expect(page.locator(".timesheet-settings")).toBeVisible();
