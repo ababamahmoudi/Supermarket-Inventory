@@ -59,6 +59,7 @@ export function LineEditor({
   onClose,
   anchor,
   attemptedPost,
+  onConfirmationStart,
 }: {
   invoice: ReviewProps["invoice"];
   workspace: ReviewProps["workspace"];
@@ -67,6 +68,7 @@ export function LineEditor({
   onQuantity: ReviewProps["onQuantity"];
   onClose(): void;
   anchor(): void;
+  onConfirmationStart?(): (success: boolean) => void;
 } & LineCommands) {
   const { state, t, money, lang } = useDemo();
   const line = invoice.lines[index];
@@ -240,68 +242,94 @@ export function LineEditor({
   const confirm = async () => {
     anchor();
     setAttempted(true);
-    await saveName();
-    if (correction) {
-      if (
-        !validInvoiceLineQuantity(line) ||
-        !validInvoiceLineReceived(line) ||
-        !validCaseCost ||
-        !/^\d+(?:\.\d{1,4})?$/.test(line.unit_cost_before_tax) ||
-        (line.date_tracking && !line.date_value)
-      ) {
-        setFailure(
-          t(
-            "Check the quantity, cost and required date before confirming.",
-            "پیش از تأیید، تعداد، هزینه و تاریخ لازم را بررسی کنید.",
-          ),
-        );
+    const canConfirmLocally =
+      !correction &&
+      Boolean(
+        line.product_code !== "NEW" ||
+        (english.trim() && line.pricing_category),
+      ) &&
+      validInvoiceLineQuantity(line) &&
+      validInvoiceLineReceived(line) &&
+      validCaseCost &&
+      Boolean(workspace.lineDetails[index]?.costValid) &&
+      (!line.date_tracking || actualDate(line.date_value));
+    const settle = canConfirmLocally ? onConfirmationStart?.() : undefined;
+    try {
+      await saveName();
+      if (correction) {
+        if (
+          !validInvoiceLineQuantity(line) ||
+          !validInvoiceLineReceived(line) ||
+          !validCaseCost ||
+          !/^\d+(?:\.\d{1,4})?$/.test(line.unit_cost_before_tax) ||
+          (line.date_tracking && !line.date_value)
+        ) {
+          setFailure(
+            t(
+              "Check the quantity, cost and required date before confirming.",
+              "پیش از تأیید، تعداد، هزینه و تاریخ لازم را بررسی کنید.",
+            ),
+          );
+          return;
+        }
+        onClose();
         return;
       }
-      onClose();
-      return;
-    }
-    let error = "";
-    let field = "";
-    const result = await reviewUpdate((draft, actor) => {
-      try {
-        confirmInvoiceLineChecks(draft, actor, index, true);
-        return true;
-      } catch (cause) {
-        error = cause instanceof Error ? cause.message : String(cause);
-        if (cause instanceof InvoiceLineConfirmationError) field = cause.field;
-        return false;
+      let error = "";
+      let field = "";
+      const result = await reviewUpdate((draft, actor) => {
+        try {
+          confirmInvoiceLineChecks(draft, actor, index, true);
+          return true;
+        } catch (cause) {
+          error = cause instanceof Error ? cause.message : String(cause);
+          if (cause instanceof InvoiceLineConfirmationError)
+            field = cause.field;
+          return false;
+        }
+      });
+      settle?.(Boolean(result));
+      if (result) {
+        if (!settle) onClose();
+      } else {
+        setFailedField(field);
+        if (field) {
+          const suffix: Record<string, string> = {
+            new_name_en: "name-en",
+            pricing_category: "category",
+            quantity_entered: "invoiced",
+            qty_received_at_posting: "delivered",
+            unit_cost_before_tax: "cost",
+            case_cost_before_tax: "case-cost",
+            units_per_case: "pack",
+            date_value: "date",
+          };
+          document
+            .getElementById(id(suffix[field] ?? field))
+            ?.focus({ preventScroll: true });
+        }
+        setFailure(
+          field
+            ? t(
+                "Check the marked field before confirming.",
+                "پیش از تأیید، فیلد مشخص‌شده را بررسی کنید.",
+              )
+            : error ||
+                t(
+                  "Check the fields before confirming.",
+                  "پیش از تأیید فیلدها را بررسی کنید.",
+                ),
+        );
       }
-    });
-    if (result) {
-      onClose();
-    } else {
-      setFailedField(field);
-      if (field) {
-        const suffix: Record<string, string> = {
-          new_name_en: "name-en",
-          pricing_category: "category",
-          quantity_entered: "invoiced",
-          qty_received_at_posting: "delivered",
-          unit_cost_before_tax: "cost",
-          case_cost_before_tax: "case-cost",
-          units_per_case: "pack",
-          date_value: "date",
-        };
-        document
-          .getElementById(id(suffix[field] ?? field))
-          ?.focus({ preventScroll: true });
-      }
+    } catch (cause) {
+      settle?.(false);
       setFailure(
-        field
-          ? t(
-              "Check the marked field before confirming.",
-              "پیش از تأیید، فیلد مشخص‌شده را بررسی کنید.",
-            )
-          : error ||
-              t(
-                "Check the fields before confirming.",
-                "پیش از تأیید فیلدها را بررسی کنید.",
-              ),
+        cause instanceof Error
+          ? cause.message
+          : t(
+              "The line could not be saved. Try confirming again.",
+              "ردیف ذخیره نشد. دوباره تأیید کنید.",
+            ),
       );
     }
   };

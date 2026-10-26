@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import Decimal from "decimal.js";
 import { useDemo } from "../../store";
@@ -26,6 +26,8 @@ export function LinesTable({
   anchor,
   attemptedPost,
   attentionNavigationKey,
+  optimisticConfirmed = new Set<string>(),
+  onOptimisticConfirmation,
 }: {
   invoice: ReviewProps["invoice"];
   workspace: ReviewProps["workspace"];
@@ -33,10 +35,31 @@ export function LinesTable({
   attemptedPost: boolean;
   openLine: number | null;
   attentionNavigationKey?: number;
+  optimisticConfirmed?: ReadonlySet<string>;
+  onOptimisticConfirmation?(id: string, confirmed: boolean): void;
   onOpen(index: number | null): void;
   anchor(element?: HTMLElement): void;
 } & LineCommands) {
   const { state, t, tCount, lang } = useDemo();
+  const [leaving, setLeaving] = useState<ReadonlySet<string>>(new Set());
+  const [failedConfirmations, setFailedConfirmations] = useState<
+    ReadonlySet<string>
+  >(new Set());
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  useEffect(
+    () => () => {
+      for (const timer of timers.current) clearTimeout(timer);
+    },
+    [],
+  );
+  const isConfirmed = (
+    line: ReviewProps["invoice"]["lines"][number],
+    index: number,
+  ) =>
+    Boolean(
+      line.review_confirmed ||
+      optimisticConfirmed.has(invoiceLineId(line, index)),
+    );
   const [filter, setFilter] = useState<LineFilter>("all");
   const [pinnedLine, setPinnedLine] = useState<{
     id: string;
@@ -46,15 +69,17 @@ export function LinesTable({
     pinnedLine?.navigationKey === attentionNavigationKey
       ? pinnedLine?.id
       : null;
-  const confirmed = invoice.lines.filter(
-    (line) => line.review_confirmed,
+  const confirmed = invoice.lines.filter((line, index) =>
+    isConfirmed(line, index),
   ).length;
   const attention = invoice.lines.filter(
-    (line) => !line.review_confirmed || line.low_confidence_fields?.length,
+    (line, index) =>
+      !isConfirmed(line, index) ||
+      (!optimisticConfirmed.has(invoiceLineId(line, index)) &&
+        line.low_confidence_fields?.length),
   ).length;
   const open = (index: number | null) => {
-    // A closing row keeps its place until the next deliberate navigation, even
-    // when confirmation means it no longer matches the current filter.
+    // An ordinary Close retains position. Confirmation explicitly releases this pin.
     if (index === null && openLine !== null && filter !== "all")
       setPinnedLine({
         id: invoiceLineId(invoice.lines[openLine], openLine),
@@ -153,21 +178,23 @@ export function LinesTable({
               (x) =>
                 x.key === (line.pricing_category ?? product?.pricing_category),
             );
-            const count = correction
-              ? 0
-              : visibleInvoiceCheckFields(line).length;
+            const count =
+              correction || optimisticConfirmed.has(invoiceLineId(line, index))
+                ? 0
+                : visibleInvoiceCheckFields(line).length;
             const confirmedLine = correction
               ? !correction.changed.has(index)
-              : line.review_confirmed;
+              : isConfirmed(line, index);
             const lineId = invoiceLineId(line, index);
             const rowId = `invoice-line-row-${index}`;
             const expanded = openLine === index;
             const needsAttention = !confirmedLine || count > 0;
             if (
+              !leaving.has(lineId) &&
               !expanded &&
               visiblePin !== lineId &&
               ((filter === "attention" && !needsAttention) ||
-                (filter === "confirmed" && !line.review_confirmed))
+                (filter === "confirmed" && !confirmedLine))
             )
               return null;
             const status = confirmedLine
@@ -277,6 +304,7 @@ export function LinesTable({
                 key={lineId}
                 className="invoice-line"
                 data-expanded={expanded}
+                data-leaving={leaving.has(lineId) || undefined}
               >
                 <tr
                   className={`invoice-line-summary receiving-row-${status}${expanded ? " is-expanded" : ""}`}
@@ -430,6 +458,18 @@ export function LinesTable({
                     />
                   </td>
                 </tr>
+                {failedConfirmations.has(lineId) && (
+                  <tr className="receiving-confirmation-error">
+                    <td colSpan={5}>
+                      <p className="form-error" role="alert">
+                        {t(
+                          "The line could not be saved. It still needs attention. Try confirming again.",
+                          "ردیف ذخیره نشد و هنوز نیازمند بررسی است. دوباره تأیید کنید.",
+                        )}
+                      </p>
+                    </td>
+                  </tr>
+                )}
                 {expanded && (
                   <tr className="table-expanded-row receiving-editor-row invoice-line-detail">
                     <td colSpan={5}>
@@ -443,6 +483,95 @@ export function LinesTable({
                           : { update: update!, editLine: editLine! })}
                         onQuantity={onQuantity}
                         onClose={() => open(null)}
+                        onConfirmationStart={
+                          !correction && onOptimisticConfirmation
+                            ? () => {
+                                onOptimisticConfirmation(lineId, true);
+                                setFailedConfirmations(
+                                  (current) =>
+                                    new Set(
+                                      [...current].filter(
+                                        (id) => id !== lineId,
+                                      ),
+                                    ),
+                                );
+                                setPinnedLine(null);
+                                const nextIndex = invoice.lines.findIndex(
+                                  (candidate, candidateIndex) =>
+                                    candidateIndex > index &&
+                                    !isConfirmed(candidate, candidateIndex),
+                                );
+                                const previousIndex = invoice.lines.findIndex(
+                                  (candidate, candidateIndex) =>
+                                    candidateIndex !== index &&
+                                    !isConfirmed(candidate, candidateIndex),
+                                );
+                                const focusIndex =
+                                  nextIndex >= 0 ? nextIndex : previousIndex;
+                                if (filter === "attention")
+                                  setLeaving(
+                                    (current) => new Set([...current, lineId]),
+                                  );
+                                const timer = setTimeout(
+                                  () => {
+                                    timers.current.delete(timer);
+                                    setLeaving(
+                                      (current) =>
+                                        new Set(
+                                          [...current].filter(
+                                            (id) => id !== lineId,
+                                          ),
+                                        ),
+                                    );
+                                    onOpen(null);
+                                    requestAnimationFrame(() => {
+                                      const target =
+                                        focusIndex >= 0
+                                          ? document.getElementById(
+                                              `invoice-line-row-${focusIndex}`,
+                                            )
+                                          : document.querySelector<HTMLElement>(
+                                              ".receiving-lines-heading button[aria-pressed]",
+                                            );
+                                      target?.focus({ preventScroll: true });
+                                    });
+                                  },
+                                  typeof window.matchMedia === "function" &&
+                                    window.matchMedia(
+                                      "(prefers-reduced-motion: reduce)",
+                                    ).matches
+                                    ? 0
+                                    : 120,
+                                );
+                                timers.current.add(timer);
+                                return (success) => {
+                                  if (success) return;
+                                  clearTimeout(timer);
+                                  timers.current.delete(timer);
+                                  setLeaving(
+                                    (current) =>
+                                      new Set(
+                                        [...current].filter(
+                                          (id) => id !== lineId,
+                                        ),
+                                      ),
+                                  );
+                                  onOptimisticConfirmation(lineId, false);
+                                  setFailedConfirmations(
+                                    (current) => new Set([...current, lineId]),
+                                  );
+                                  onOpen(index);
+                                  requestAnimationFrame(() =>
+                                    document
+                                      .getElementById(
+                                        `invoice-line-${index}-confirm`,
+                                      )
+                                      ?.focus({ preventScroll: true }),
+                                  );
+                                };
+                              }
+                            : undefined
+                        }
                         anchor={() => {
                           const row = document.getElementById(rowId);
                           if (row) anchor(row);

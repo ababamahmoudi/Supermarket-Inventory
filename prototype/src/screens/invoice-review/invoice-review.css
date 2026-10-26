@@ -1235,3 +1235,18 @@
   color: var(--text-muted);
   font-size: var(--font-size-caption);
 }
+
+/* Confirmation removes an attention row without waiting for its durable save. */
+.receiving-lines tbody[data-leaving="true"] {
+  animation: receiving-line-confirmed 120ms ease-out both;
+}
+@keyframes receiving-line-confirmed {
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .receiving-lines tbody[data-leaving="true"] {
+    animation: none;
+  }
+}

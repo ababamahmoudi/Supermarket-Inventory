@@ -23,6 +23,7 @@ import {
 import { missingGroups } from "./missing-groups";
 import { OriginalViewer } from "./OriginalViewer";
 import { acknowledgeInvoiceOtherChargeCheck } from "../../invoice-checks";
+import { invoiceLineId } from "../../invoice-line-links";
 import { useInvoiceLineHighlight } from "./useInvoiceLineHighlight";
 import { useReviewScrollAnchor } from "./useReviewScrollAnchor";
 import type { ReviewProps } from "./types";
@@ -38,6 +39,33 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
     extras,
   } = props;
   const { state, t } = useDemo();
+  const [optimisticConfirmed, setOptimisticConfirmed] = useState<
+    ReadonlySet<string>
+  >(new Set());
+  const [confirmationLines, setConfirmationLines] = useState(invoice.lines);
+  if (confirmationLines !== invoice.lines) {
+    setConfirmationLines(invoice.lines);
+    const retained = new Set(
+      [...optimisticConfirmed].filter((id) =>
+        invoice.lines.some(
+          (line, index) =>
+            invoiceLineId(line, index) === id && !line.review_confirmed,
+        ),
+      ),
+    );
+    if (retained.size !== optimisticConfirmed.size)
+      setOptimisticConfirmed(retained);
+  }
+  const displayedInvoice = optimisticConfirmed.size
+    ? {
+        ...invoice,
+        lines: invoice.lines.map((line, index) =>
+          optimisticConfirmed.has(invoiceLineId(line, index))
+            ? { ...line, review_confirmed: true, low_confidence_fields: [] }
+            : line,
+        ),
+      }
+    : invoice;
   const [openLine, setOpenLine] = useState<number | null>(null);
   const [addProduct, setAddProduct] = useState("");
   const [hidden, setHidden] = useState(false);
@@ -168,7 +196,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
         onAttemptPost={props.onAttemptPost}
       />
       <ProgressStrip
-        invoice={invoice}
+        invoice={displayedInvoice}
         onNext={next}
         postDisabled={workspace.blockers.includes("permission")}
         missing={missing}
@@ -209,6 +237,15 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
             anchor={anchor}
             attemptedPost={props.attemptedPost}
             attentionNavigationKey={attentionNavigationKey}
+            optimisticConfirmed={optimisticConfirmed}
+            onOptimisticConfirmation={(id, confirmed) =>
+              setOptimisticConfirmed((current) => {
+                const next = new Set(current);
+                if (confirmed) next.add(id);
+                else next.delete(id);
+                return next;
+              })
+            }
           />
           <InvoiceOtherCharges
             invoice={invoice}
