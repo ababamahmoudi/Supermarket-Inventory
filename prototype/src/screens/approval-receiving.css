@@ -205,7 +205,7 @@
   border-block-end: 0;
 }
 .invoice-approval-table .batch-below-minimum {
-  background: color-mix(in srgb, var(--pending-dot) 8%, var(--surface));
+  background: var(--warning-row-bg);
 }
 .invoice-approval-table .batch-below-minimum .batch-margin {
   color: var(--pending);
@@ -230,7 +230,7 @@
     max-inline-size: 100vw;
     block-size: 100dvh;
     max-block-size: 100dvh;
-    border-radius: 0;
+    border-radius: var(--radius-none);
   }
   .invoice-approval-table,
   .invoice-approval-table > thead,
@@ -333,7 +333,7 @@
   .invoice-approval-table
   > tbody
   > tr.batch-below-minimum {
-  background: color-mix(in srgb, var(--pending-dot) 8%, var(--surface));
+  background: var(--warning-row-bg);
 }
 :root
   .ui-dialog.approval-product-editor

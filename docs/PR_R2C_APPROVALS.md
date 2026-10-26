@@ -32,3 +32,5 @@ Test: open an invoice group’s Approve all… button, toggle select-all, desele
 - Existing approval browser flows remain in the verification set. The canonical receiving/approval integration keeps its original 2700px layout and 2px scroll bounds; only the checkbox count gains the requested select-all control.
 
 The new browser export contains only independently invented products, supplier, invoice and a newly drawn original page. Uploaded business screenshots and recordings are not committed.
+
+Integrated token checks preserve the exact eight-percent warning-row paint through `--warning-row-bg` and the full-screen phone dialog's square corners through `--radius-none`. The combined C5 inspector retains strict dashboard, source-tile and supplier/Payables composition checks alongside approval actions and editor footers; no general height or shape check is removed.

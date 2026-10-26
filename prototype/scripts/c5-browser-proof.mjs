@@ -1022,13 +1022,21 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           );
           const expectedHeight = labelAction
             ? 32
-            : r2cControl || dashboardAction || structuredFooter || approvalDecisionButtons.has(element) || approvalEditorFooters.has(element)
+            : r2cControl ||
+                dashboardAction ||
+                structuredFooter ||
+                approvalDecisionButtons.has(element) ||
+                approvalEditorFooters.has(element)
               ? 44
               : element.closest(".c9-filter-toolbar")
-                ? element.closest(".ui-segments") ? 32 : 40
+                ? element.closest(".ui-segments")
+                  ? 32
+                  : 40
                 : phone || fieldAlignedAdd
                   ? 44
-                  : small ? 32 : 40;
+                  : small
+                    ? 32
+                    : 40;
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {
