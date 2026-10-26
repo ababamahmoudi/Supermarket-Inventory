@@ -626,5 +626,40 @@ describe("R2c 7.1 canonical new return", () => {
     expect(
       state.returns.find((record) => record.id === id)?.lines[0],
     ).toMatchObject({ qty: 1.125, quantity_unit: "lb", unit_cost: "7.1250" });
+    recordPickup(state, actor, id, {
+      quantities: { "0003": 1.125 },
+      representative: "Fictional Weight Driver",
+      slip: "WEIGHT-PICKUP-THREE-DECIMALS",
+    });
+    expect(state.returns.find((record) => record.id === id)).toMatchObject({
+      status: "picked_up",
+      lines: [{ picked_up: 1.125 }],
+      pickup_memos: [
+        {
+          currency: "CAD",
+          expected_credit: "8.02",
+          lines: [{ quantity: 1.125 }],
+        },
+      ],
+    });
+  });
+  it("rejects four-decimal lb quantities before any canonical write", () => {
+    const { state, actor, input } = setup();
+    state.invoices![0].lines[0].sold_by = "weight";
+    state.products.find((product) => product.code === "0003")!.sold_by =
+      "weight";
+    const source = returnCreateChoices(state, actor, "Branch 1").products[0];
+    const before = JSON.stringify(state);
+    for (const quantity of ["1.1234", "0.0001", "2.9999"]) {
+      expect(() =>
+        createReturn(state, actor, {
+          ...input,
+          source_fingerprint: source.source_fingerprint,
+          quantity_unit: "lb",
+          quantity,
+        }),
+      ).toThrow("quantity");
+      expect(JSON.stringify(state)).toBe(before);
+    }
   });
 });

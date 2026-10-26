@@ -61,6 +61,8 @@ export function createReturn(
     !quantity.isFinite() ||
     quantity.lte(0) ||
     (input.quantity_unit === "units" && !quantity.isInteger()) ||
+    (input.quantity_unit === "lb" &&
+      !quantity.eq(quantity.toDecimalPlaces(3))) ||
     quantity.gt(Number.MAX_SAFE_INTEGER)
   )
     throw new ReturnCreateError("quantity");

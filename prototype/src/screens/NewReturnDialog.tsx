@@ -46,8 +46,8 @@ function errorCopy(code: string, t: Translate): string {
       "یک محصول دریافت‌شده از این تأمین‌کننده انتخاب کنید.",
     ],
     quantity: [
-      "Enter a positive quantity; items must be whole units.",
-      "مقدار مثبت وارد کنید؛ تعداد کالا باید واحد کامل باشد.",
+      "Enter a positive quantity: whole units, or lb with up to three decimal places.",
+      "مقدار مثبت وارد کنید: واحد کامل یا پوند با حداکثر سه رقم اعشار.",
     ],
     unit: [
       "Use the received product's unit.",
@@ -517,7 +517,7 @@ export function NewReturnDialog({
             keepTyping
             disabled={busy}
             min="0"
-            step={product?.quantity_unit === "lb" ? "0.0001" : "1"}
+            step={product?.quantity_unit === "lb" ? "0.001" : "1"}
             value={quantity}
             onChange={(value) => {
               setQuantity(value);
