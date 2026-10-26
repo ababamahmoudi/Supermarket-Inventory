@@ -874,15 +874,19 @@ export default function Suppliers() {
           }
           detail={
             supervisor
-              ? t("Open supplier statement", "باز کردن صورت‌حساب تأمین‌کننده")
+              ? current.financial?.has_statement
+                ? t("Open supplier statement", "باز کردن صورت‌حساب تأمین‌کننده")
+                : t("No statement yet", "هنوز صورت‌حسابی ثبت نشده")
               : t("Items waiting for delivery", "کالاهای در انتظار تحویل")
           }
           onClick={
-            supervisor && current.financial
-              ? () =>
-                  navigate(
-                    `payables?supplier=${encodeURIComponent(current.id ?? current.name)}`,
-                  )
+            supervisor
+              ? current.financial?.has_statement
+                ? () =>
+                    navigate(
+                      `payables?supplier=${encodeURIComponent(current.id ?? current.name)}`,
+                    )
+                : undefined
               : () => setTab("shorts")
           }
           tone={

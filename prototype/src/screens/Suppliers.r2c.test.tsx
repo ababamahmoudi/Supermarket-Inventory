@@ -2,7 +2,10 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { initialState } from "../e1-bootstrap";
 import { authenticatedTestActor } from "../authority-test-fixture";
+import { actorAtLocation } from "../authority";
 import { suppliersOverview } from "../suppliers";
+import { postPayment } from "../operations";
+import { supplierBalanceSummary } from "../supplier-balances";
 import { navigationKey, saveNavigationValue } from "../navigation";
 import Suppliers from "./Suppliers";
 
@@ -149,4 +152,54 @@ it("shows one supplier heading/edit action, seven contact fields and a single co
     document.querySelector(".supplier-kpis .ui-summary-tile")?.tagName,
   ).toBe("DIV");
   expect(document.querySelectorAll(".supplier-header-name")).toHaveLength(0);
+  expect(
+    screen.queryByRole("button", { name: /^Balance:/ }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText("No statement yet")).toBeVisible();
+});
+
+it("keeps a fully paid supplier's actual statement available", async () => {
+  const { state, actor, navigate } = context.value as {
+    state: ReturnType<typeof initialState>;
+    actor: ReturnType<typeof authenticatedTestActor>;
+    navigate: ReturnType<typeof vi.fn>;
+  };
+  const { supplierPage } = await import("../suppliers");
+  const outstanding = supplierBalanceSummary(
+    state,
+    actor,
+    "Sunrise Beverages",
+  ).invoices.find((invoice) => invoice.amount === "96.40")!;
+  postPayment(state, actorAtLocation(state, actor, "Branch 1"), {
+    supplier: "Sunrise Beverages",
+    amount: "96.40",
+    date: state.demo_fixture_anchor_date!,
+    cheque: "FICTIONAL-PAID-STATEMENT",
+    receipt: "FICTIONAL-STATEMENT-RECEIPT",
+    allocations: [{ invoice_id: outstanding.invoice_id, amount: "96.40" }],
+  });
+  const overview = suppliersOverview(state, actor);
+  const current = overview.find(
+    (supplier) => supplier.name === "Sunrise Beverages",
+  )!;
+  queryResult.data = {
+    overview,
+    current,
+    detail: supplierPage(state, actor, current.name),
+    itemCount: 0,
+  };
+  window.location.hash = `#suppliers?name=${encodeURIComponent(current.name)}`;
+  const before = JSON.stringify(state);
+  render(<Suppliers />);
+  expect(current.financial).toMatchObject({
+    balance: "0.00",
+    has_statement: true,
+  });
+  const balance = screen.getByRole("button", { name: /^Balance:/ });
+  expect(balance).toHaveTextContent("$0.00");
+  fireEvent.click(balance);
+  expect(navigate).toHaveBeenCalledWith(
+    `payables?supplier=${encodeURIComponent(current.id!)}`,
+  );
+  expect(JSON.stringify(state)).toBe(before);
 });

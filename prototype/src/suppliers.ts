@@ -27,6 +27,7 @@ import type {
 } from "./types";
 
 export interface SupplierMoney {
+  has_statement: boolean;
   balance: string;
   confirmed_balance: string;
   pending_credit: string;
@@ -295,6 +296,13 @@ export function suppliersOverview(
                 name,
               );
               return {
+                has_statement: Boolean(
+                  summary.rows.length ||
+                  summary.invoices.length ||
+                  summary.pending_returns.length ||
+                  summary.awaiting_pickup_returns.length ||
+                  summary.snapshot_date,
+                ),
                 balance: summary.balance,
                 confirmed_balance: summary.confirmed_balance,
                 pending_credit: summary.pending_credit,
