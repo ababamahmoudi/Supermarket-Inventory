@@ -78,7 +78,9 @@ export function LinesTable({
       (!optimisticConfirmed.has(invoiceLineId(line, index)) &&
         line.low_confidence_fields?.length),
   ).length;
+  const confirmationFocusGeneration = useRef(0);
   const open = (index: number | null) => {
+    confirmationFocusGeneration.current++;
     // An ordinary Close retains position. Confirmation explicitly releases this pin.
     if (index === null && openLine !== null && filter !== "all")
       setPinnedLine({
@@ -499,6 +501,8 @@ export function LinesTable({
                         onConfirmationStart={
                           !correction && onOptimisticConfirmation
                             ? () => {
+                                const focusGeneration =
+                                  ++confirmationFocusGeneration.current;
                                 onOptimisticConfirmation(lineId, true);
                                 setFailedConfirmations(
                                   (current) =>
@@ -536,6 +540,11 @@ export function LinesTable({
                                           ),
                                         ),
                                     );
+                                    if (
+                                      confirmationFocusGeneration.current !==
+                                      focusGeneration
+                                    )
+                                      return;
                                     onOpen(null);
                                     requestAnimationFrame(() => {
                                       const target =

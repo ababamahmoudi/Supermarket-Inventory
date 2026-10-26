@@ -148,3 +148,21 @@ it("restores a failed row, its attention count and an actionable error after it 
   );
   expect(screen.getByRole("button", { name: "Confirm line" })).toBeVisible();
 });
+
+it("does not steal focus or close a different line opened during the confirmation fade", async () => {
+  vi.useFakeTimers();
+  render(<Harness />);
+  fireEvent.click(screen.getByTestId("invoice-line-row-0"));
+  fireEvent.click(screen.getByRole("button", { name: "Confirm line" }));
+  fireEvent.click(screen.getByTestId("invoice-line-row-1"));
+  const next = screen.getByRole("button", { name: "Confirm line" });
+  next.focus();
+  await act(async () => {
+    vi.advanceTimersByTime(180);
+  });
+  expect(screen.getByTestId("invoice-line-row-1")).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  expect(next).toHaveFocus();
+});
