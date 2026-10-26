@@ -379,6 +379,11 @@ export function LinesTable({
                       <span className="receiving-product-name" title={name}>
                         <LtrValue value={name} />
                       </span>
+                      {count > 0 && (
+                        <small className="receiving-check-summary receiving-line-check-count">
+                          {t(`${count} to check`, `${count} برای بررسی`)}
+                        </small>
+                      )}
                     </a>
                     <small className="receiving-product-meta">
                       {line.pack_size && (
@@ -404,16 +409,6 @@ export function LinesTable({
                           ? categoryLabel(category.label, lang)
                           : t("Choose a category", "انتخاب دسته")}
                       </span>
-                      {count > 0 && (
-                        <span className="receiving-check-summary">
-                          {t(`· ${count} to check`, `· ${count} برای بررسی`)}
-                        </span>
-                      )}
-                      {!product && (
-                        <span className="receiving-new-product">
-                          {t("New product", "کالای جدید")}
-                        </span>
-                      )}
                     </small>
                     <span className="receiving-phone-quantity">
                       {quantity} ·{" "}
