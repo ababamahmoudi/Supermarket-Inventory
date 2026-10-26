@@ -649,6 +649,11 @@
 .receiving-post-control {
   position: relative;
 }
+.receiving-post-control > button[aria-disabled="true"] {
+  background: var(--neutral-fill);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
 .receiving-post-control > .reading-check-tooltip {
   pointer-events: none;
   position: absolute;

@@ -39,6 +39,8 @@ it("keeps the exact single Tax reason and explains an incomplete Post without po
   );
   const button = screen.getByRole("button", { name: "Post invoice" });
   expect(button).toBeEnabled();
+  expect(button).toHaveAttribute("aria-disabled", "true");
+  expect(button).toHaveClass("button-neutral");
   await user.tab();
   expect(button).toHaveFocus();
   expect(screen.getByRole("tooltip").textContent).toBe(tax);
@@ -156,6 +158,9 @@ it("posts only the complete, permitted invoice", async () => {
       onAttemptPost={onAttemptPost}
     />,
   );
+  const button = screen.getByRole("button", { name: "Post invoice" });
+  expect(button).toHaveAttribute("aria-disabled", "false");
+  expect(button).toHaveClass("button-primary");
   await user.tab();
   expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   await user.keyboard("{Enter}");

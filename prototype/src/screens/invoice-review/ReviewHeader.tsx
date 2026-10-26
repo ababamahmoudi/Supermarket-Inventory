@@ -176,6 +176,8 @@ export function PostInvoiceControl({
     >
       <Button
         disabled={disabled}
+        aria-disabled={Boolean(disabled || missing)}
+        variant={disabled || missing ? "neutral" : "primary"}
         aria-describedby={shown ? tooltipId : undefined}
         onClick={() => {
           if (missing) {
