@@ -971,6 +971,7 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
       ({ id, item }) =>
         actor!.allowed_branches.includes(id) && item.active !== false,
     );
+  const clockLocation = useRef<string | null>(null);
   useEffect(() => {
     const sync = () => {
       if (window.location.hash.startsWith("#timesheets")) {
@@ -984,6 +985,12 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
         );
       }
     };
+    // An implicit day follows a newly selected branch's clock. Ordinary config
+    // publications must not move an already open working paper at midnight.
+    if (clockLocation.current !== location) {
+      clockLocation.current = location;
+      sync();
+    }
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
   }, [state.config, location]);
