@@ -171,9 +171,10 @@ export default function Suppliers() {
     {
       key: "status",
       priority: 2,
-      minWidth: 120,
+      // Reserve the full profile label, badge inset and shared cell padding.
+      minWidth: 160,
       label: t("Status", "وضعیت"),
-      width: 136,
+      width: 160,
     },
     {
       key: "last_delivery",
