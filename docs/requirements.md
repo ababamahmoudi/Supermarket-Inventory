@@ -1,5 +1,9 @@
 # Requirements (current owner workflow, C9 — 2026-10-19)
 
+## R2c 0.13 — Aggregate Lookup (2026-10-26)
+
+All locations and All my locations keep every non-archived company catalog product searchable. The result list omits branch-only prices, delivery dates and open dates. The selected product shows separate public rows for each permitted location: approved effective price, last delivery and open dates. Never select a first location implicitly. A branch write asks for its concrete permitted location when that action starts; a customer charge remains explicitly tied to one Store. Current company and assignment checks apply to every query, and public hints exclude costs, source invoice identities, quantities and staff.
+
 ## R2b import and posted receiving (2026-10-25)
 
 Historical JSON imports use clear handwritten delivery date/time in company time, otherwise invoice-date local noon; date-only handwriting uses noon and an omitted year uses the invoice year. Ambiguous/competing/expiry/phone dates are not guessed, and missing valid dates remain blocked. Manual/live entry keeps now. Mark imported Received with its source; initial stock receipt time follows it while import/post audit time remains actual. This migration default remains for Ali to confirm.

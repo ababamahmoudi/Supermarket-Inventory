@@ -94,7 +94,7 @@ it("retains the genuine Cashier's exact public product-code link through Lookup 
   expect(document.querySelector(".lookup-detail")).toBeVisible();
   noPrivateProduct();
 });
-it("retains an aggregate Cashier's explicit Store requirement before displaying the public product's customer charge", async () => {
+it("shows an aggregate Cashier every permitted product with separate public Store facts", async () => {
   await signIn();
   await act(async () => {
     await current().setLocation({ kind: "all_my_locations" });
@@ -105,12 +105,15 @@ it("retains an aggregate Cashier's explicit Store requirement before displaying 
   expect(
     await screen.findByRole("heading", { name: "Cashier lookup" }),
   ).toBeVisible();
+  const locations = await screen.findByRole("region", { name: "By location" });
+  await within(locations).findByText("North York", { exact: true });
   expect(
-    within(screen.getByRole("main")).getByRole("combobox", {
-      name: "Location",
-    }),
-  ).toHaveTextContent("Choose location");
-  expect(document.querySelector(".lookup-detail")).toBeNull();
+    within(locations).queryByText("Warehouse", { exact: true }),
+  ).toBeNull();
+  expect(document.querySelector(".lookup-detail")).toBeVisible();
+  expect(document.querySelectorAll(".lookup-result-row")).toHaveLength(1);
+  expect(document.querySelector(".lookup-result-price")).toBeNull();
+  noPrivateProduct();
   await act(async () => {
     await current().setLocation({ kind: "location", location_id: "Branch 1" });
   });

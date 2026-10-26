@@ -1,5 +1,9 @@
 # Screens and navigation
 
+## R2c 0.13 — All locations Lookup (2026-10-26)
+
+Lookup shows the catalog immediately with an aggregate selection. Select a result to see By location, with one row per permitted branch and its approved price, last delivery and open dates. Aggregate search results omit branch-only facts. Add date and Change price use their own concrete-location choice; browsing never forces a location choice or silently chooses a Store. See [the test guide](PR_R2C_LOOKUP.md).
+
 ## R2b invoices end to end (2026-10-25)
 
 Use the [fictional R2b guide](PR_R2B_REVIEW.md) for every item and staged import/rename check. Ordinary blank optional evidence stays quiet; explicit AI-flagged empty fields keep their question and a shared 32px Not on the invoice label action. More details auto-opens only for nonempty hidden evidence. Edited receiving/correction forms opt in to shared surface-fill fields; Bill to/Ship to are buffered two-line textareas. Preserve 44px controls, compact status counts, 25-line/2700px review and 2px stability.

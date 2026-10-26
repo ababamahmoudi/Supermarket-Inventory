@@ -1,0 +1,34 @@
+.lookup-location-facts {
+  display: grid;
+  gap: 12px;
+}
+.lookup-result-name strong {
+  color: var(--link-text);
+}
+.lookup-location-facts ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.lookup-location-facts li {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 16px;
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-control);
+  padding: 16px;
+}
+.lookup-location-facts li > :last-child {
+  grid-column: 1 / -1;
+}
+@media (max-width: 759px) {
+  .lookup-location-facts li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .lookup-location-facts li > :nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
