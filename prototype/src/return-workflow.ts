@@ -215,6 +215,18 @@ export function updateReturnSettings(
   });
 }
 
+/** A receipt-cost snapshot must never be relabelled after company settings change. */
+export function requireReturnSourceCurrency(
+  state: DemoState,
+  record: ReturnRecord,
+) {
+  if (
+    record.creation_request_id &&
+    (!record.currency || record.currency !== state.config.company.currency)
+  )
+    throw new OperationError("return_currency");
+}
+
 /** Prepare all snapshots before the caller changes a pickup or its evidence. */
 export function createReturnMemo(
   state: DemoState,
@@ -241,6 +253,7 @@ export function createReturnMemo(
     evidenceActor.session_id !== context.session_id
   )
     throw new OperationError("scope");
+  requireReturnSourceCurrency(state, record);
   const sameSupplier = supplierRecords(state).find(
     (supplier) =>
       supplier.company_id === context.company_id &&
@@ -304,7 +317,9 @@ export function createReturnMemo(
     created_by_role_snapshot: context.role,
     representative: input.representative.trim(),
     signed_evidence_reference: input.slip.trim(),
-    currency: state.config.company.currency,
+    currency: record.creation_request_id
+      ? record.currency!
+      : state.config.company.currency,
     deduct_expected_credit:
       returnSettings(state).deduct_expected_credit_at_pickup,
     lines,

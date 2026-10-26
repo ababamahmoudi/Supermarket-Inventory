@@ -180,3 +180,54 @@ for (const role of [
     expect(errors).toEqual([]);
   });
 }
+
+test("R2c7.1 currency settings preserve the source denomination in Payables", async ({
+  page,
+}) => {
+  await installReturnCreationFixture(page);
+  await setBranch(page, "Branch 1");
+  const dialog = await fillReturnCreation(page);
+  await dialog.locator("#new-return-reason").click();
+  await page.getByRole("option", { name: "Wrong item", exact: true }).click();
+  await dialog
+    .getByRole("button", { name: "Create return", exact: true })
+    .click();
+  await expect(page).toHaveURL(/#return\?id=/);
+  await expect(
+    page.getByRole("heading", { name: "Return #1", exact: true }),
+  ).toBeVisible();
+  const created = await readCanonicalBusinessEvidence(page);
+  expect(created.returns[0].currency).toBe("CAD");
+  await page.goto("/#settings?group=company");
+  await page.locator("#company-currency").fill("USD");
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  await expect
+    .poll(
+      async () =>
+        (await readCanonicalBusinessEvidence(page)).config.company.currency,
+    )
+    .toBe("USD");
+  await page.goto("/#payables");
+  await page
+    .getByRole("link", { name: "Cloudbay Wholesale", exact: true })
+    .first()
+    .click();
+  const card = page.locator(".awaiting-return-credits");
+  await expect(card).toContainText("Not deducted yet");
+  await expect(card).toContainText("$0.00 USD");
+  await expect(card.locator(".awaiting-return-row")).toContainText(
+    "$14.25 CAD",
+  );
+  await expect(card.locator(".awaiting-return-row")).not.toContainText("USD");
+  await expect(card).toContainText(
+    "Manager review required before pickup or credit",
+  );
+  const saved = await readCanonicalBusinessEvidence(page);
+  expect(saved.returns).toEqual(created.returns);
+  expect(saved.ledger).toEqual(created.ledger);
+  expect(saved.stock).toEqual(created.stock);
+  await page.screenshot({
+    path: test.info().outputPath("new-return-source-currency-review.png"),
+    fullPage: true,
+  });
+});

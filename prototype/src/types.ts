@@ -579,6 +579,8 @@ export interface ReturnLine {
   outstanding_note?: string;
 }
 export interface ReturnRecord extends ScopedRecord {
+  /** Immutable source-cost currency for returns created from posted receipts. */
+  currency?: string;
   supplier_id?: string;
   created_by_user_id?: string;
   created_by_role_snapshot?: Role;

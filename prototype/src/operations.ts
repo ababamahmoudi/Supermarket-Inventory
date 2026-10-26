@@ -37,6 +37,7 @@ import {
 import { projectExpiryLocation } from "./received";
 import {
   createReturnMemo,
+  requireReturnSourceCurrency,
   syncReturnCreditAlertsForReturn,
 } from "./return-workflow";
 import type {
@@ -462,6 +463,7 @@ export function recordPickup(
   }
   const record = getReturn(state, context, returnId);
   operationGuard(state, context, "returns.pickup_record", record, true);
+  requireReturnSourceCurrency(state, record);
   const photoReference = input.photo
     ? returnPhotoReference(
         state,
@@ -1008,6 +1010,8 @@ export function submitFinancialClaim(
     record.status === "resolved"
   )
     fail("closed");
+  if (input.type !== "no_compensation")
+    requireReturnSourceCurrency(state, record);
   if (input.type === "no_compensation") {
     operationGuard(state, context, "returns.credit_post", record, true);
     if (!input.reason?.trim()) fail("reason");
@@ -1090,6 +1094,8 @@ export function postReturnClaim(
   });
   const claim = record.claims?.find((item) => item.id === claimId);
   if (!claim) fail("claim");
+  if (claim.type !== "no_compensation")
+    requireReturnSourceCurrency(state, record);
   if (claim.status === "posted") return;
   if (
     record.status === "cancelled" ||
@@ -2073,6 +2079,10 @@ export function operationError(
     return_changed: [
       "This return or its payable changed. Review it again before posting.",
       "این مرجوعی یا پرداختنی آن تغییر کرده است. پیش از ثبت دوباره بررسی کنید.",
+    ],
+    return_currency: [
+      "This return retains another currency. Ask a manager to review the company currency before recording pickup or credit; no currency conversion is applied.",
+      "ارز اصلی این مرجوعی متفاوت است. پیش از ثبت جمع‌آوری یا اعتبار، از مدیر بخواهید ارز شرکت را بررسی کند؛ هیچ تبدیل ارزی انجام نمی‌شود.",
     ],
     return_cost: [
       "Review the original purchase cost for this return before recording pickup.",

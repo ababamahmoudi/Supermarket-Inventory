@@ -194,6 +194,7 @@ export function supplierBalanceSummary(
     pending_returns: pendingReturns,
     awaiting_pickup_returns: awaitingPickup,
     awaiting_pickup_credit: awaitingPickup
+      .filter((claim) => claim.currency === state.config.company.currency)
       .reduce((sum, claim) => sum.plus(claim.amount), new Decimal(0))
       .toFixed(2),
     overdue: actualOverdue.plus(snapshotOverdue).toFixed(2),

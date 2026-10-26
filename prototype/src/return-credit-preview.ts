@@ -14,6 +14,7 @@ export interface AwaitingPickupReturnCredit {
   created_at: string;
   amount: string;
   currency: string;
+  currency_mismatch: boolean;
   deducted: false;
 }
 /** Informational only: no pickup, pending-credit deduction or ledger posting is inferred. */
@@ -30,6 +31,7 @@ export function awaitingPickupReturnCredits(
       (record) =>
         record.company_id === actor.company_id &&
         record.creation_request_id &&
+        record.currency &&
         locations.has(record.branch) &&
         returnUiStatus(record) === "waiting_for_pickup" &&
         record.created_at &&
@@ -44,7 +46,8 @@ export function awaitingPickupReturnCredits(
       supplier: record.supplier,
       branch: record.branch,
       created_at: record.created_at!,
-      currency: state.config.company.currency,
+      currency: record.currency!,
+      currency_mismatch: record.currency !== state.config.company.currency,
       deducted: false as const,
       amount: record.lines
         .reduce(

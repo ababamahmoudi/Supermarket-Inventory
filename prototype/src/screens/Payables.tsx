@@ -1098,7 +1098,12 @@ function PayablesContent({
                   "Expected credit · Not deducted yet",
                   "اعتبار مورد انتظار · هنوز کسر نشده است",
                 )}{" "}
-                · <Money value={summary.awaiting_pickup_credit} />
+                ·{" "}
+                <Money
+                  value={summary.awaiting_pickup_credit}
+                  currency={state.config.company.currency}
+                />{" "}
+                <LtrText>{state.config.company.currency}</LtrText>
               </p>
               <div className="awaiting-return-list">
                 {summary.awaiting_pickup_returns.map((claim) => (
@@ -1110,7 +1115,18 @@ function PayablesContent({
                       {t("View return", "نمایش مرجوعی")} ·{" "}
                       <DateText value={claim.created_at} />
                     </a>
-                    <Money value={claim.amount} />
+                    <div>
+                      <Money value={claim.amount} currency={claim.currency} />{" "}
+                      <LtrText>{claim.currency}</LtrText>
+                      {claim.currency_mismatch && (
+                        <p className="muted">
+                          {t(
+                            "Currency changed · Manager review required before pickup or credit",
+                            "ارز تغییر کرده است · پیش از جمع‌آوری یا اعتبار، بررسی مدیر لازم است",
+                          )}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { returnCreateFixture } from "./return-create-test-fixture";
 import { authenticatedTestActor } from "./authority-test-fixture";
-import { authoritySnapshot, bindAuthoritySnapshot } from "./authority";
+import {
+  authoritySnapshot,
+  bindAuthoritySnapshot,
+  cloneWithAuthority,
+} from "./authority";
 import {
   createReturn,
   returnCreateChoices,
@@ -11,7 +15,15 @@ import { returnView } from "./return-projections";
 import { returnUiStatus } from "./return-workflow";
 import { supplierPage } from "./suppliers";
 import { supplierBalanceSummary } from "./supplier-balances";
-import { recordPickup } from "./operations";
+import {
+  recordPickup,
+  correctReturnPickup,
+  submitFinancialClaim,
+  postReturnClaim,
+  type OperationalReturn,
+} from "./operations";
+import { awaitingPickupReturnCredits } from "./return-credit-preview";
+import { saveCompanySettings } from "./settings";
 import type { AuthenticatedActor, RoleId } from "./authority-types";
 import type { ReturnCreationPhoto } from "./return-create-files";
 
@@ -64,6 +76,7 @@ describe("R2c 7.1 canonical new return", () => {
         company_id: actor.company_id,
         branch: "Branch 1",
         supplier: "Cloudbay Wholesale",
+        currency: "CAD",
         status: "open",
         created_by_user_id: actor.user_id,
         created_by: actor.actor,
@@ -97,7 +110,7 @@ describe("R2c 7.1 canonical new return", () => {
       });
       if (role !== "owner" && role !== "manager")
         expect(JSON.stringify(read)).not.toMatch(
-          /7\.1250|unit_cost|source_receipt|fictional-return-source|creation_request_id|creation_fingerprint/,
+          /7\.1250|unit_cost|source_receipt|fictional-return-source|creation_request_id|creation_fingerprint|currency/,
         );
     },
   );
@@ -310,6 +323,158 @@ describe("R2c 7.1 canonical new return", () => {
     expect(picked.pending_credit).toBe("14.25");
     expect(picked.balance).toBe("128.25");
     expect(state.ledger).toHaveLength(1);
+  });
+  it("uses the immutable creation receipt despite unrelated later purchases with ambiguous costs", () => {
+    const { state, actor, input } = setup();
+    const id = createReturn(state, actor, input);
+    for (const [invoiceId, cost] of [
+      ["future-one", "8.0000"],
+      ["future-two", "9.0000"],
+    ]) {
+      const next = structuredClone(state.invoices![0]);
+      next.id = invoiceId;
+      next.posted_at = "2026-10-25T15:01:00Z";
+      next.received_at = "2026-10-25T15:00:00Z";
+      next.lines[0].unit_cost_before_tax = cost;
+      state.invoices!.push(next);
+    }
+    expect(
+      returnCreateChoices(state, actor, "Branch 1").products[0].issue,
+    ).toBe("source_ambiguous");
+    const legacy = cloneWithAuthority(state);
+    delete legacy.returns.find((record) => record.id === id)!
+      .creation_request_id;
+    const legacyBefore = JSON.stringify(legacy);
+    expect(() =>
+      recordPickup(legacy, actor, id, {
+        quantities: { "0003": 2 },
+        representative: "Fictional Audit Driver",
+        slip: "LEGACY-AMBIGUITY-CHECK",
+      }),
+    ).toThrow("return_cost");
+    expect(JSON.stringify(legacy)).toBe(legacyBefore);
+    recordPickup(state, actor, id, {
+      quantities: { "0003": 2 },
+      representative: "Fictional Audit Driver",
+      slip: "FROZEN-RECEIPT-PICKUP",
+    });
+    expect(
+      state.returns.find((record) => record.id === id)?.pickup_memos?.[0],
+    ).toMatchObject({
+      currency: "CAD",
+      expected_credit: "14.25",
+      lines: [{ unit_cost: "7.1250" }],
+    });
+  });
+  it("retains source currency after a real company settings change and rejects pickup without any write", () => {
+    const { state, actor, input } = setup();
+    const id = createReturn(state, actor, input);
+    expect(awaitingPickupReturnCredits(state, actor)).toMatchObject([
+      {
+        return_id: id,
+        amount: "14.25",
+        currency: "CAD",
+        currency_mismatch: false,
+      },
+    ]);
+    saveCompanySettings(
+      state,
+      { ...state.config.company, currency: "USD" },
+      actor,
+    );
+    const before = JSON.stringify(state);
+    expect(awaitingPickupReturnCredits(state, actor)).toMatchObject([
+      {
+        return_id: id,
+        amount: "14.25",
+        currency: "CAD",
+        currency_mismatch: true,
+      },
+    ]);
+    const summary = supplierBalanceSummary(state, actor, "Cloudbay Wholesale");
+    expect(summary.awaiting_pickup_credit).toBe("0.00");
+    expect(summary.pending_credit).toBe("0.00");
+    expect(summary.balance).toBe("0.00");
+    expect(() =>
+      recordPickup(state, actor, id, {
+        quantities: { "0003": 2 },
+        representative: "Fictional Audit Driver",
+        slip: "CURRENCY-PICKUP-1",
+      }),
+    ).toThrow("return_currency");
+    expect(JSON.stringify(state)).toBe(before);
+    // No guessed FX: restoring the actual currency makes the original CAD snapshot usable again.
+    saveCompanySettings(
+      state,
+      { ...state.config.company, currency: "CAD" },
+      actor,
+    );
+    recordPickup(state, actor, id, {
+      quantities: { "0003": 2 },
+      representative: "Fictional Audit Driver",
+      slip: "CURRENCY-PICKUP-1",
+    });
+    expect(
+      state.returns.find((record) => record.id === id)?.pickup_memos?.[0],
+    ).toMatchObject({ currency: "CAD", expected_credit: "14.25" });
+  });
+  it("rejects correction, new financial claims and posting retained claims after currency changes, atomically", () => {
+    const { state, actor, input } = setup();
+    const id = createReturn(state, actor, input);
+    recordPickup(state, actor, id, {
+      quantities: { "0003": 2 },
+      representative: "Fictional Audit Driver",
+      slip: "CURRENCY-PICKUP-2",
+    });
+    submitFinancialClaim(state, actor, id, {
+      type: "cash_or_other",
+      covers: { "0003": 2 },
+      document: "FICTIONAL-CAD-REFUND",
+      amount: "14.25",
+    });
+    const record = state.returns.find((record) => record.id === id)!;
+    const claimId = (record as OperationalReturn).claims![0].id;
+    const memoId = record.pickup_memos![0].id;
+    saveCompanySettings(
+      state,
+      { ...state.config.company, currency: "USD" },
+      actor,
+    );
+    const before = JSON.stringify(state);
+    for (const attempt of [
+      () =>
+        correctReturnPickup(state, actor, id, {
+          memo_id: memoId,
+          quantities: { "0003": 2 },
+          reason: "Fictional correction review",
+        }),
+      () =>
+        submitFinancialClaim(state, actor, id, {
+          type: "cash_or_other",
+          covers: { "0003": 2 },
+          document: "FICTIONAL-USD-REFUND",
+          amount: "14.25",
+        }),
+      () => postReturnClaim(state, actor, id, claimId, "14.25"),
+    ]) {
+      expect(attempt).toThrow("return_currency");
+      expect(JSON.stringify(state)).toBe(before);
+    }
+    expect(
+      supplierBalanceSummary(state, actor, "Cloudbay Wholesale").pending_credit,
+    ).toBe("0.00");
+    expect(record.pickup_memos![0].currency).toBe("CAD");
+    saveCompanySettings(
+      state,
+      { ...state.config.company, currency: "CAD" },
+      actor,
+    );
+    postReturnClaim(state, actor, id, claimId, "14.25");
+    expect(state.ledger.at(-1)).toMatchObject({
+      type: "credit",
+      amount: "-14.25",
+      currency: "CAD",
+    });
   });
   it("allows explicit aggregate location choice and weight quantities with a canonical lb unit", () => {
     const { state, actor } = setup();

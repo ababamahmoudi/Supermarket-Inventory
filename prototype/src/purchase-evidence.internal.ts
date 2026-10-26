@@ -358,7 +358,14 @@ export function pickupLineValuations(
         (!record.linked_invoice || item.invoice_id === record.linked_invoice),
     );
     const purchase = purchases[0];
+    const stored = line.unit_cost;
+    // New returns retain the exact receipt snapshot; later unrelated purchases
+    // cannot substitute their price or invalidate that already selected cost.
+    const frozenReceipt = Boolean(
+      record.creation_request_id && line.source_receipt && stored !== undefined,
+    );
     if (
+      !frozenReceipt &&
       purchases
         .filter((item) => item.posted_at === purchase?.posted_at)
         .some(
@@ -367,7 +374,6 @@ export function pickupLineValuations(
         )
     )
       throw new Error("return_cost");
-    const stored = (line as typeof line & { unit_cost?: string }).unit_cost;
     const source =
       stored ??
       purchase?.unit_cost_before_tax ??
