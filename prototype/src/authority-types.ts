@@ -76,6 +76,7 @@ export type Capability =
   | "lookup.read"
   | "catalog.read"
   | "catalog.edit"
+  | "catalog.package_edit"
   | "catalog.create_active"
   | "catalog.cost_read"
   | "catalog.tracking_preference_edit"

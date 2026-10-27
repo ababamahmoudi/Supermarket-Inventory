@@ -6,6 +6,7 @@ export const ALL_CAPABILITIES = [
   "timesheets.edit",
   "catalog.read",
   "catalog.edit",
+  "catalog.package_edit",
   "catalog.create_active",
   "catalog.cost_read",
   "catalog.tracking_preference_edit",

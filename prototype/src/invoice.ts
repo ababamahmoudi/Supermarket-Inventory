@@ -1330,7 +1330,11 @@ export function postInvoice(
       };
       line.calculated_selling_price = rulePrice;
       line.current_selling_price = prior;
-      if (!line.short_dated && acceptedInvoiceUnits(line) > 0) {
+      if (
+        !product.package_of_product_id &&
+        !line.short_dated &&
+        acceptedInvoiceUnits(line) > 0
+      ) {
         product.price_provenance ??= {};
         const previousProvenance = product.price_provenance[invoice.branch];
         product.price_provenance[invoice.branch] = {
@@ -1341,6 +1345,7 @@ export function postInvoice(
         };
       }
       if (
+        !product.package_of_product_id &&
         !line.short_dated &&
         acceptedInvoiceUnits(line) > 0 &&
         (!manual || costChanged) &&
@@ -1429,7 +1434,11 @@ export function postInvoice(
         invoice_id: invoice.id,
         line_index: lineIndex,
       });
-      if (!line.short_dated && acceptedInvoiceUnits(line) > 0) {
+      if (
+        !product.package_of_product_id &&
+        !line.short_dated &&
+        acceptedInvoiceUnits(line) > 0
+      ) {
         saleCostInputs.set(product.code, {
           invoice_id: invoice.id,
           product_code: product.code,
@@ -2060,7 +2069,8 @@ function recordLaterRegularReceipt(
       item.type === "short_resolved_received" &&
       item.qty > 0,
   );
-  if (!product || !receipt || line.short_dated) return;
+  if (!product || !receipt || line.short_dated || product.package_of_product_id)
+    return;
   const now = new Date(receipt.at);
   const calculation = invoiceLineCalculation(
     line,

@@ -409,6 +409,8 @@ export function applyApprovedPrice(
 ): void {
   actor = freshActor(state, actor);
   const product = currentProduct(state, productCode);
+  if (product.package_of_product_id)
+    throw new Error("Package prices follow the parent product");
   requireCapability(state, actor, "pricing.regular_manage", {
     ...domainScope(state, product, true),
     location_ids: scope === "all" ? sellingBranches(state.config) : [branch],
@@ -554,6 +556,8 @@ export function resolveApproval(
   if (approval.type === "new_supplier")
     throw new Error("Review this supplier with supplier confirmation");
   const product = currentProduct(state, approval.product_code);
+  if (product.package_of_product_id && decision === "approve")
+    throw new Error("Package prices follow the parent product");
   const proposedCategory = approval.pricing_category
     ? state.config.pricing_categories.find(
         (category) => category.key === approval.pricing_category,
@@ -765,6 +769,8 @@ export function changeApprovalCategory(
     domainScope(state, { ...approval, branch: origin }, true),
   );
   const product = currentProduct(state, approval.product_code);
+  if (product.package_of_product_id)
+    throw new Error("Package prices follow the parent product");
   const category = state.config.pricing_categories.find(
     (item) => item.key === categoryKey,
   );
@@ -1027,6 +1033,8 @@ export function proposeManualOverride(
   );
   const origin = effectiveApprovalLocation(state, review);
   const product = currentProduct(state, review.product_code);
+  if (product.package_of_product_id)
+    throw new Error("Package prices follow the parent product");
   const amount = priceAmount(price);
   if (!reason.trim()) throw new Error("Add a reason for the manual override");
   const approval: Approval = {
@@ -1408,6 +1416,8 @@ export function proposeRegularPrice(
 ): Approval {
   actor = freshActor(state, actor);
   const product = currentProduct(state, productCode);
+  if (product.package_of_product_id)
+    throw new Error("Package prices follow the parent product");
   requireCapability(state, actor, "pricing.propose_manual", {
     ...domainScope(state, { ...product, branch }, true),
   });

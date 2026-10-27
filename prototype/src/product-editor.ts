@@ -112,6 +112,17 @@ export function saveProductEdits(
   context = checkContext(state, context);
   const product = ownProduct(state, context.company_id, code);
   if (
+    product.sold_by === "weight" &&
+    edits.sold_by === "each" &&
+    state.products.some(
+      (item) =>
+        item.company_id === product.company_id &&
+        item.package_of_product_id === product.code &&
+        item.status !== "archived",
+    )
+  )
+    fail("unit_size");
+  if (
     product.package_of_product_id &&
     (edits.pricing_category !== product.pricing_category ||
       edits.main_supplier !== product.main_supplier ||

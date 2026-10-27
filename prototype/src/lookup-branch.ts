@@ -103,9 +103,33 @@ function reviewedSaleBasis(
 }
 
 /** A company default alone is not evidence that a store approved this product. */
-function approvedHere(state: DemoState, product: Product, location: string) {
+export function hasApprovedPriceAtLocation(
+  state: DemoState,
+  product: Product,
+  location: string,
+  now = new Date(),
+): boolean {
+  if (
+    product.company_id !== state.config.company.seed_key ||
+    product.status === "archived"
+  )
+    return false;
+  if (product.package_of_product_id) {
+    const parent = state.products.find(
+      (item) =>
+        item.company_id === product.company_id &&
+        item.code === product.package_of_product_id,
+    );
+    if (
+      !parent ||
+      parent.package_of_product_id ||
+      parent.sold_by !== "weight" ||
+      !hasApprovedPriceAtLocation(state, parent, location, now)
+    )
+      return false;
+  }
   if (!branchSellsToCustomers(state.config, location)) return false;
-  if (activeSaleAt(state, product, location)) return true;
+  if (activeSaleAt(state, product, location, now)) return true;
   if (product.branch_prices?.[location]) return true;
   const price = product.selling_price;
   if (!price) return false;
@@ -180,7 +204,7 @@ export function lookupBranchCatalog(
     )
     .map((product) => {
       const prices = locations.flatMap((location) => {
-        if (!approvedHere(state, product, location)) return [];
+        if (!hasApprovedPriceAtLocation(state, product, location)) return [];
         const price = effectivePrice(state, product, location);
         return price ? [{ location, price }] : [];
       });

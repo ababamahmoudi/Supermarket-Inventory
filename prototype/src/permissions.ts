@@ -84,6 +84,7 @@ const branchSupervisor = new Set<Capability>([
   "timesheets.read",
   "timesheets.edit",
   "dashboard.location",
+  "catalog.package_edit",
   "invoices.enter_manual",
   "supplier_items.cost_read",
   "orders.read",

@@ -5,6 +5,7 @@ import { requireCapability } from "./permissions";
 import { requireSystemReconciliation } from "./authority-repository";
 import { actorAudit } from "./domain-authority";
 import { effectivePrice, pendingPrice } from "./catalog";
+import { hasApprovedPriceAtLocation } from "./lookup-branch";
 import { branchId, branchSellsToCustomers } from "./settings";
 import { nextProductCode } from "./manual-product";
 import { createId } from "./ids";
@@ -54,7 +55,7 @@ function weightParent(state: DemoState, code: string) {
 }
 function editor(state: DemoState, actor: AuthenticatedActor) {
   const current = freshActor(state, actor);
-  requireCapability(state, current, "catalog.edit", {
+  requireCapability(state, current, "catalog.package_edit", {
     company_id: state.config.company.seed_key,
     kind: "company_shared",
     mutation: true,
@@ -314,7 +315,7 @@ function reconcilePackages(
       parent.package_of_product_id ||
       parent.status === "archived"
     )
-      continue;
+      throw new WeightPackageError("parent");
     if (!product.package_size || !product.package_size_unit)
       throw new WeightPackageError("package");
     const sizeLb = packageSizeInLb(
@@ -324,7 +325,9 @@ function reconcilePackages(
     );
     const pending: Record<string, string> = {};
     const updates = branches.map((branch) => {
-      const parentPrice = effectivePrice(state, parent, branch, now);
+      const parentPrice = hasApprovedPriceAtLocation(state, parent, branch, now)
+        ? effectivePrice(state, parent, branch, now)
+        : null;
       const proposed = pendingPrice(state, parent, branch);
       if (proposed)
         pending[branch] = calculatePackagePrice(

@@ -980,6 +980,7 @@ export function correctPostedInvoice(
           product.company_id === context.company_id &&
           product.code === change.product_code,
       )!;
+      if (product.package_of_product_id) continue;
       const contributorIds = new Set<string>([id]);
       for (const approval of correctionPendingApprovals(
         state,
