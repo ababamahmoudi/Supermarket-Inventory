@@ -1381,12 +1381,12 @@
   --control-row-height: 44px;
   --control-row-segment-height: 36px;
   align-items: center;
-  gap: 12px;
   min-inline-size: 0;
 }
 .ui-control-row {
   display: flex;
   flex-wrap: wrap;
+  gap: var(--control-row-gap, 12px);
 }
 .ui-control-row-grid {
   display: grid;
