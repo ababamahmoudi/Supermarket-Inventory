@@ -484,3 +484,7 @@ Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted
 ### R2e B7 — reading-name cleanup
 
 - Cleaned supplier promotion markers, unmatched brackets and leading/trailing pack text for new proposals, preserving printed evidence and existing catalog names; added fictional pattern regressions.
+
+### R2e B8 — readable new supplier names
+
+- Normalize entirely capitalized new supplier names without changing existing records or digit words; preserve the printed name in reading evidence and add creation/existing-record regressions.

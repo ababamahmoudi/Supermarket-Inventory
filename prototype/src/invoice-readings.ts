@@ -17,6 +17,7 @@ import { extractSupplierContactText } from "./invoice-reading-supplier-contacts"
 import {
   splitInvoiceProductDescription,
   suggestInvoiceEnglishName,
+  suggestInvoiceSupplierName,
 } from "./invoice-reading-products";
 export { suggestInvoiceEnglishName } from "./invoice-reading-products";
 import {
@@ -1540,7 +1541,7 @@ export function importInvoiceReadings(
         state,
         actor,
         {
-          name: text(value.supplier_name),
+          name: suggestInvoiceSupplierName(text(value.supplier_name)),
           address: contacts.address,
           phone: contacts.phone,
           email: contacts.email,
@@ -1720,6 +1721,7 @@ export function importInvoiceReadings(
       reading_cost_usd: entry.reading_cost_usd,
       exported_at: input.exported.exported_at,
       ai_source: entry.ai_source,
+      supplier_name_as_printed: text(value.supplier_name),
     };
     state.invoices.push(invoice);
     summary.imported.push(invoice.id);

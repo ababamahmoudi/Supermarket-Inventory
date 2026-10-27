@@ -928,3 +928,7 @@ Weight cases expose explicit case count, case mass/unit, delivered cases, case c
 ### R2e B7 — reading-name cleanup
 
 New reading proposals remove supplier Promotion/Promo markers into a quiet “Supplier promotion” note, remove unmatched bracket punctuation, and move leading counted-box and trailing measured-bag/case text into pack evidence. Printed descriptions remain unchanged, and existing product names are never renamed automatically.
+
+### R2e B8 — supplier names from capitalized readings
+
+Only newly created suppliers whose printed name is entirely capitalized receive a readable title-case name. Legal suffixes use Inc./Ltd./Co./Corp.; digit-containing words retain their printed spelling. Existing supplier names are never renamed automatically. `reading_record.supplier_name_as_printed` and the original invoice image retain the printed form.

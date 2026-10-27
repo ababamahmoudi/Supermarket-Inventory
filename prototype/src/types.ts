@@ -445,6 +445,7 @@ export type DemoInvoice = Omit<
       reading_cost_usd: string;
       exported_at: string;
       ai_source: string;
+      supplier_name_as_printed?: string;
     };
     import_currency?: string;
     import_warnings?: string[];

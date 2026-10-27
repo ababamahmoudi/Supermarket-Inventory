@@ -514,13 +514,13 @@ describe("R2b 1.6 supplier code fallback", () => {
 });
 
 describe("R2b 1.7 supplier contacts and readable names", () => {
-  it("extracts contacts into editable supplier fields without changing printed evidence or legal names", async () => {
+  it("extracts contacts, normalizes new names and retains printed and curated evidence", async () => {
     const { state, actor, exported } = await importFictional();
     const supplier = state.suppliers!.find(
-      (item) => item.name === "BLUEFINCH PANTRY INC.",
+      (item) => item.name === "Bluefinch Pantry Inc.",
     )!;
     expect(supplier).toMatchObject({
-      name: "BLUEFINCH PANTRY INC.",
+      name: "Bluefinch Pantry Inc.",
       address: "12 Fictional Lane, Exampletown",
       phone: "+1 (416) 555-0142",
       email: "billing@bluefinch.example",
@@ -533,23 +533,27 @@ describe("R2b 1.7 supplier contacts and readable names", () => {
       projectSuppliers(state, actor).find((item) => item.id === supplier.id)
         ?.website,
     ).toBe("https://bluefinch.example");
-    expect(supplierNameCaseSuggestion(supplier.name)).toBe(
+    expect(supplierNameCaseSuggestion(supplier.name)).toBeUndefined();
+    expect(supplierNameCaseSuggestion("BLUEFINCH PANTRY INC.")).toBe(
       "Bluefinch Pantry Inc.",
+    );
+    expect(state.invoices![0].reading_record?.supplier_name_as_printed).toBe(
+      "BLUEFINCH PANTRY INC.",
     );
     const renamed = saveSupplier(
       state,
       actor,
       {
         ...supplier,
-        name: supplierNameCaseSuggestion(supplier.name)!,
+        name: "BlueFinch Pantry Inc.",
         address: supplier.address ?? "",
         notes: supplier.notes ?? "",
         similar_name_confirmed: true,
       },
       { id: supplier.id },
     );
-    expect(renamed.previous_names).toContain("BLUEFINCH PANTRY INC.");
-    expect(state.invoices![0].supplier).toBe("BLUEFINCH PANTRY INC.");
+    expect(renamed.previous_names).toContain("Bluefinch Pantry Inc.");
+    expect(state.invoices![0].supplier).toBe("Bluefinch Pantry Inc.");
     expect(supplierNameCaseSuggestion("BlueFinch Pantry Inc.")).toBeUndefined();
   });
   it("fills only missing contacts and keeps an established supplier's curated address and phone", async () => {

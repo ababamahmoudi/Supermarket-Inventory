@@ -320,3 +320,30 @@ export function splitInvoiceProductDescription({
       : {}),
   };
 }
+
+/** Only an entirely-capital printed supplier name gets a new readable suggestion. */
+export function suggestInvoiceSupplierName(printed: string): string {
+  const source = printed.trim();
+  if (!/\p{Lu}/u.test(source) || /\p{Ll}/u.test(source)) return source;
+  const suffixes: Record<string, string> = {
+    inc: "Inc.",
+    ltd: "Ltd.",
+    co: "Co.",
+    corp: "Corp.",
+  };
+  return source
+    .split(/(\s+)/)
+    .map((word) => {
+      if (/\d/u.test(word)) return word;
+      const suffix = /^(inc|ltd|co|corp)\.?(,?)$/i.exec(word);
+      if (suffix) return suffixes[suffix[1].toLowerCase()] + suffix[2];
+      return word
+        .toLocaleLowerCase()
+        .replace(
+          /(^|[-/'(])([a-z])/g,
+          (_match, separator: string, letter: string) =>
+            separator + letter.toUpperCase(),
+        );
+    })
+    .join("");
+}

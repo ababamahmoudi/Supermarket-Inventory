@@ -418,7 +418,7 @@ async function checkNamesAndSupplier(page: Page, language: ReceivingLanguage) {
   await closeLine(editor, language);
   await page
     .locator(".receiving-meta")
-    .getByRole("link", { name: "BLUEFINCH PANTRY INC.", exact: true })
+    .getByRole("link", { name: "Bluefinch Pantry Inc.", exact: true })
     .click();
   await expect(page.locator(".supplier-contact-grid")).toContainText(
     "+1 (416) 555-0142",
@@ -441,21 +441,20 @@ async function checkNamesAndSupplier(page: Page, language: ReceivingLanguage) {
     exact: true,
   });
   await expect(dialog.locator("#supplier-name")).toHaveValue(
-    "BLUEFINCH PANTRY INC.",
+    "Bluefinch Pantry Inc.",
   );
-  await dialog
-    .getByRole("button", {
+  // R2e B8 normalizes only new suppliers automatically; existing names stay editable.
+  await expect(
+    dialog.getByRole("button", {
       name: word(
         language,
         "Use Bluefinch Pantry Inc.",
         "استفاده از Bluefinch Pantry Inc.",
       ),
       exact: true,
-    })
-    .click();
-  await expect(dialog.locator("#supplier-name")).toHaveValue(
-    "Bluefinch Pantry Inc.",
-  );
+    }),
+  ).toHaveCount(0);
+  await dialog.locator("#supplier-name").fill("BlueFinch Pantry Inc.");
   await dialog
     .getByRole("button", {
       name: word(language, "Save supplier", "ذخیرهٔ تأمین‌کننده"),
@@ -467,10 +466,10 @@ async function checkNamesAndSupplier(page: Page, language: ReceivingLanguage) {
     .poll(
       async () =>
         (await readCanonicalBusinessEvidence(page)).suppliers?.find(
-          (entry) => entry.name === "Bluefinch Pantry Inc.",
+          (entry) => entry.name === "BlueFinch Pantry Inc.",
         )?.previous_names,
     )
-    .toContain("BLUEFINCH PANTRY INC.");
+    .toContain("Bluefinch Pantry Inc.");
 }
 
 async function checkTerms(page: Page, language: ReceivingLanguage) {
@@ -699,7 +698,7 @@ for (const language of ["en", "fa"] as const) {
         expect(invoiceFrom(baseline, "OFG-0820").due_date).toBe("2026-09-19");
         expect(
           baseline.suppliers?.find(
-            (entry) => entry.name === "BLUEFINCH PANTRY INC.",
+            (entry) => entry.name === "Bluefinch Pantry Inc.",
           ),
         ).toMatchObject({
           address: "12 Fictional Lane, Exampletown",
