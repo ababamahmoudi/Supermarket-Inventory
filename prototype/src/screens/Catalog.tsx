@@ -113,6 +113,8 @@ import { invoiceLineHref } from "../invoice-line-links";
 import "./manual-entry.css";
 import "./c5-catalog-offers.css";
 import "../catalog-c7.css";
+import "../lookup-r2f.css";
+import { LookupPackages } from "../LookupPackages";
 import { ChangePriceDialog } from "../ChangePriceDialog";
 import { PriceChangedPill } from "../price-update-presentation";
 import {
@@ -154,6 +156,7 @@ import {
   Card,
   Checkbox,
   FilterChip,
+  Disclosure,
   DataTable,
   EmptyState,
   Field,
@@ -2746,7 +2749,12 @@ function ProductPrice({ product }: { product: Product }) {
 }
 
 function ProductDates({ product }: { product: Product }) {
-  return <ProductDatesSection product={product} />;
+  return (
+    <ProductDatesSection
+      product={product}
+      hideEmptyDates={product.sold_by === "weight"}
+    />
+  );
 }
 
 function ProductDetail({ product }: { product: Product }) {
@@ -3375,10 +3383,14 @@ function LookupProductDetail({
   product,
   facts,
   signals,
+  packageFacts,
+  onOpenPackage,
 }: {
   product: Product;
   facts?: LookupBranchProduct;
   signals?: LookupProductSignals;
+  packageFacts: ReadonlyMap<string, LookupBranchProduct>;
+  onOpenPackage: (code: string) => void;
 }) {
   const { state, branch, t, lang } = useDemo();
   const approved = branch === "all" ? null : (facts?.price ?? null);
@@ -3393,7 +3405,9 @@ function LookupProductDetail({
     (item) => item.key === product.tax_profile,
   );
   return (
-    <Card className="lookup-detail">
+    <Card
+      className={`lookup-detail${product.sold_by === "weight" ? " is-weight-lookup" : ""}`}
+    >
       <div className="lookup-detail-header">
         <div>
           <h2 lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>
@@ -3419,7 +3433,11 @@ function LookupProductDetail({
               {t(state.config.terminology.product_code, "کد محصول")}{" "}
               <LtrText>{product.code}</LtrText>
             </span>
-            <UnitSize value={product.unit_size} />
+            {product.sold_by === "weight" ? (
+              <span>{t("Sold by weight", "فروش وزنی")}</span>
+            ) : (
+              <UnitSize value={product.unit_size} />
+            )}
           </p>
           {branch !== "all" && firstAdded && (
             <p className="helper">
@@ -3428,7 +3446,7 @@ function LookupProductDetail({
             </p>
           )}
         </div>
-        <ProductHeaderActions product={product} />
+        <ProductHeaderActions product={product} lookup />
       </div>
       {branch === "all" ? (
         <LookupLocations product={product} />
@@ -3438,7 +3456,18 @@ function LookupProductDetail({
             <div className="lookup-approved-price">
               {approved ? (
                 <strong className="price" dir="ltr">
-                  <SalePrice product={product} comparison={false} />
+                  <SalePrice
+                    product={product}
+                    comparison={false}
+                    secondaryNote={
+                      product.sold_by === "weight"
+                        ? t("Before tax", "پیش از مالیات") +
+                          (profile?.taxable
+                            ? ` · ${t(state.config.tax.label_text_en, state.config.tax.label_text_fa)}`
+                            : "")
+                        : undefined
+                    }
+                  />
                 </strong>
               ) : (
                 <p className="muted lookup-missing-price">
@@ -3461,19 +3490,22 @@ function LookupProductDetail({
                     <OfferLabel label={offer.label} language={lang} />
                   </Badge>
                 )}
-                <p className="helper">
-                  {t("Before tax", "پیش از مالیات")}
-                  {profile?.taxable && (
-                    <>
-                      {" "}
-                      ·{" "}
-                      {t(
-                        state.config.tax.label_text_en,
-                        state.config.tax.label_text_fa,
-                      )}
-                    </>
-                  )}
-                </p>
+                {(product.sold_by !== "weight" ||
+                  state.config.weighed_items?.show_second_unit === false) && (
+                  <p className="helper">
+                    {t("Before tax", "پیش از مالیات")}
+                    {profile?.taxable && (
+                      <>
+                        {" "}
+                        ·{" "}
+                        {t(
+                          state.config.tax.label_text_en,
+                          state.config.tax.label_text_fa,
+                        )}
+                      </>
+                    )}
+                  </p>
+                )}
                 {approved && !sale && <ManualPricePill product={product} />}
               </div>
             </div>
@@ -3533,6 +3565,13 @@ function LookupProductDetail({
           ))}
           <PriceChangedPill product={product} />
           <PendingSalePill product={product} />
+          {product.sold_by === "weight" && !product.package_of_product_id && (
+            <LookupPackages
+              product={product}
+              facts={packageFacts}
+              onOpen={onOpenPackage}
+            />
+          )}
           <ProductDates product={product} />
           {pending && (
             <p className="helper" role="status">
@@ -3569,7 +3608,12 @@ function searchFromLookupHash() {
 }
 
 export function Lookup() {
-  const { state, branch, t, lang } = useDemo();
+  const { state, branch, actor, t, lang } = useDemo();
+  const packageScope = `${state.config.company.seed_key}:${actor?.user_id}:${actor?.session_id}:${branch}`;
+  const [openedPackage, setOpenedPackage] = useState<{
+    code: string;
+    scope: string;
+  } | null>(null);
   const [search, setSearch] = useState(searchFromLookupHash);
   const [filters, setFilters] = useListState<LookupFilters>(
     "lookup.filters",
@@ -3636,7 +3680,15 @@ export function Lookup() {
           return facts?.present || (search.trim() && facts?.at_other_locations);
         });
   const selected =
-    results.find((product) => product.code === selectedCode) ?? results[0];
+    (openedPackage?.scope === packageScope
+      ? products.find(
+          (product) =>
+            product.code === openedPackage.code &&
+            product.package_of_product_id,
+        )
+      : undefined) ??
+    results.find((product) => product.code === selectedCode) ??
+    results[0];
   const active =
     results.find((product) => product.code === activeCode) ?? selected;
   const categories = [
@@ -3655,6 +3707,7 @@ export function Lookup() {
       if (window.location.hash.slice(1).split("?")[0] !== "lookup") return;
       setSearch(searchFromLookupHash());
       setSelectedCode("");
+      setOpenedPackage(null);
       setActiveCode("");
       searchRef.current?.focus();
     };
@@ -3663,6 +3716,7 @@ export function Lookup() {
   }, []);
 
   const selectProduct = (product: Product) => {
+    setOpenedPackage(null);
     setSelectedCode(product.code);
     setActiveCode(product.code);
     searchRef.current?.focus();
@@ -3688,6 +3742,7 @@ export function Lookup() {
     setSearch("");
     setFilters(emptyLookupFilters);
     setSelectedCode("");
+    setOpenedPackage(null);
     setActiveCode("");
     searchRef.current?.focus();
   };
@@ -3724,6 +3779,7 @@ export function Lookup() {
             onChange={(event) => {
               setSearch(event.target.value);
               setSelectedCode("");
+              setOpenedPackage(null);
               setActiveCode("");
             }}
             onKeyDown={handleSearchKey}
@@ -3759,6 +3815,7 @@ export function Lookup() {
                   pricingCategory: value,
                 }));
                 setSelectedCode("");
+                setOpenedPackage(null);
                 setActiveCode("");
               }}
               options={[
@@ -3789,6 +3846,7 @@ export function Lookup() {
                 onChange={(value) => {
                   setFilters((current) => ({ ...current, [key]: value }));
                   setSelectedCode("");
+                  setOpenedPackage(null);
                   setActiveCode("");
                 }}
               >
@@ -3800,6 +3858,7 @@ export function Lookup() {
               onChange={(value) => {
                 setFilters((current) => ({ ...current, taxable: value }));
                 setSelectedCode("");
+                setOpenedPackage(null);
                 setActiveCode("");
               }}
             >
@@ -3810,68 +3869,70 @@ export function Lookup() {
               onChange={(value) => {
                 setFilters((current) => ({ ...current, unapproved: value }));
                 setSelectedCode("");
+                setOpenedPackage(null);
                 setActiveCode("");
               }}
             >
               {t("Not approved here yet", "هنوز در این مکان تأیید نشده")}
             </FilterChip>
           </div>
-          <div
-            className="lookup-category-chips"
-            role="group"
-            aria-label={t("AI category", "دستهٔ هوش مصنوعی")}
+          <Disclosure
+            className="lookup-more-filters"
+            summary={
+              category
+                ? `${t("More filters", "فیلترهای بیشتر")} · ${categoryLabel(category, lang)}`
+                : t("More filters", "فیلترهای بیشتر")
+            }
           >
-            {["", ...categories.slice(0, 3)].map((value) => (
-              <Button
-                key={value}
-                variant="neutral"
-                className={`filter-chip${category === value ? " is-selected" : ""}`}
-                aria-pressed={category === value}
-                onClick={() => {
-                  setCategory(value);
-                  setSelectedCode("");
-                  setActiveCode("");
-                }}
-              >
-                {value ? categoryLabel(value, lang) : t("All", "همه")}
-              </Button>
-            ))}
-            {categories.length > 3 && (
-              <Menu
-                label={
-                  categories.slice(3).includes(category)
-                    ? categoryLabel(category, lang)
-                    : t("More", "بیشتر")
-                }
-                aria-label={t("More categories", "دسته‌های بیشتر")}
-                className={`lookup-category-more${categories.slice(3).includes(category) ? " is-selected" : ""}`}
-              >
-                {categories.slice(3).map((value) => (
-                  <MenuItem
-                    key={value}
-                    onClick={() => {
-                      setCategory(value);
-                      setSelectedCode("");
-                      setActiveCode("");
-                    }}
-                  >
-                    {categoryLabel(value, lang)}
-                  </MenuItem>
-                ))}
-              </Menu>
-            )}
-          </div>
-          <span className="filter-count muted">
-            {translateCount(
-              "{{count}} product",
-              "{{count}} products",
-              "{{count}} محصول",
-              "{{count}} محصول",
-              results.length,
-              lang,
-            )}
-          </span>
-          <p id={searchHintId} className="helper lookup-keyboard-hint">
+            <div
+              className="lookup-category-chips ui-control-row"
+              role="group"
+              aria-label={t("AI category", "دستهٔ هوش مصنوعی")}
+            >
+              {["", ...categories.slice(0, 3)].map((value) => (
+                <Button
+                  key={value}
+                  variant="neutral"
+                  className={`filter-chip${category === value ? " is-selected" : ""}`}
+                  aria-pressed={category === value}
+                  onClick={() => {
+                    setCategory(value);
+                    setSelectedCode("");
+                    setOpenedPackage(null);
+                    setActiveCode("");
+                  }}
+                >
+                  {value ? categoryLabel(value, lang) : t("All", "همه")}
+                </Button>
+              ))}
+              {categories.length > 3 && (
+                <Menu
+                  label={
+                    categories.slice(3).includes(category)
+                      ? categoryLabel(category, lang)
+                      : t("More", "بیشتر")
+                  }
+                  aria-label={t("More categories", "دسته‌های بیشتر")}
+                  className={`lookup-category-more${categories.slice(3).includes(category) ? " is-selected" : ""}`}
+                >
+                  {categories.slice(3).map((value) => (
+                    <MenuItem
+                      key={value}
+                      onClick={() => {
+                        setCategory(value);
+                        setSelectedCode("");
+                        setOpenedPackage(null);
+                        setActiveCode("");
+                      }}
+                    >
+                      {categoryLabel(value, lang)}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              )}
+            </div>
+          </Disclosure>
+          <p id={searchHintId} className="sr-only lookup-keyboard-hint">
             {t(
               "Use ↑ ↓ and Enter to select a product.",
               "برای انتخاب محصول از ↑ ↓ و Enter استفاده کنید.",
@@ -3936,11 +3997,35 @@ export function Lookup() {
             product={selected}
             facts={factsByCode.get(selected.code)}
             signals={signalsByCode.get(selected.code)}
+            packageFacts={factsByCode}
+            onOpenPackage={(code) => {
+              if (
+                products.some(
+                  (product) =>
+                    product.code === code &&
+                    product.package_of_product_id === selected.code,
+                )
+              ) {
+                setOpenedPackage({ code, scope: packageScope });
+                setSelectedCode(code);
+                setActiveCode(code);
+              }
+            }}
           />
-          <Card
-            title={t("Search results", "نتایج جست‌وجو")}
-            className="lookup-results-card"
-          >
+          <Card className="lookup-results-card">
+            <div className="card-heading lookup-results-heading">
+              <h2>{t("Search results", "نتایج جست‌وجو")}</h2>
+              <span className="filter-count muted">
+                {translateCount(
+                  "{{count}} product",
+                  "{{count}} products",
+                  "{{count}} محصول",
+                  "{{count}} محصول",
+                  results.length,
+                  lang,
+                )}
+              </span>
+            </div>
             <div
               id={resultsId}
               className="lookup-results-list"
@@ -4069,6 +4154,22 @@ export function Lookup() {
                                     product={product}
                                     facts={factsByCode.get(product.code)}
                                   />
+                                </span>
+                              )}
+                              {product.sold_by === "weight" && (
+                                <span className="lookup-size-count muted">
+                                  {translateCount(
+                                    "{{count}} size",
+                                    "{{count}} sizes",
+                                    "{{count}} اندازه",
+                                    "{{count}} اندازه",
+                                    products.filter(
+                                      (child) =>
+                                        child.package_of_product_id ===
+                                        product.code,
+                                    ).length,
+                                    lang,
+                                  )}
                                 </span>
                               )}
                               <span className="lookup-result-pills actions">

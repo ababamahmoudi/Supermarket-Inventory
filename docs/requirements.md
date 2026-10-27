@@ -953,6 +953,7 @@ The store remains the app identity. Public `branding.maker` config supplies the 
 
 An explicit null/disabled/blank-name maker removes maker text, images and support and uses existing company tab/install icons. Another maker's identity and files work through configuration. Old stores without the optional branding block read current configured presentation defaults without rewriting business records or requiring a data migration.
 
+
 ## R2f D1 — Current daily timesheet presentation
 
 The approved R2f day-sheet references replace the prior daily composition. The header carries branch/day, distinct people, displayed hours and current on-shift count, with History and Manage staff at the end. Date/arrows/Today and Day/Week/Print/CSV form aligned 44px control rows. Department cards use independently sized masonry columns (three at 1440px, two at 1000px, one at 390px), one-language names and compact Name / In / Out / Hours / shift menu rows. Time fields are 60px wide and 44px high; blank focused fields offer an explicit current branch-local Now choice, without inventing a time. Remove remains confirmed and audited. Notes closes the daily sheet with bounded auto-growing text and truthful save feedback. History opens the same authorized day history from its header action.
@@ -962,3 +963,8 @@ A current-day, valid nonfuture In with no Out displays elapsed integer minutes i
 ## R2f D2 — Branch staff window
 
 Manage staff uses the approved 880px dialog, with aligned44px Search / Active–Archived counts / Add person controls. Each actual branch staff member has an initials avatar, current-language name and available other-language name, configured usual department, real allowed app-login username or No app login, and Edit / Archive–Restore in the contextual menu. Add person opens an inline New person form above the retained list; English name and department are required, Persian name and app login optional. Phone controls each fill their own row; department and login sit under the name. The footer states Changes save as you go and provides Done. All writes use the original actor and protected commands; archival preserves past shifts and History. A changed staff version rejects a stale staged edit or status action rather than overwriting newer evidence.
+
+### R2f D4: weight Lookup and package navigation
+
+The public weight parent presentation keeps configured main/secondary units, actual approved charge, tax and offer facts. The protected package read supplies real active children, size/code/count and approved/pending location prices. Selecting a package displays its normal product result with no mutation or implicit location choice. Keep person/company/location search preferences and all six combinable quick filters; retain the prior AI-category capability inside a shared disclosure.
+

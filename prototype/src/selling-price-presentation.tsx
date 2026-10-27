@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 import { LtrText, Money } from "./presentation";
 import type { PriceSnapshot } from "./price-updates";
 import "./selling-price.css";
@@ -15,6 +15,7 @@ export function SellingPriceValue({
   regular,
   currency,
   comparison = true,
+  secondaryNote,
   className,
   ...props
 }: HTMLAttributes<HTMLSpanElement> & {
@@ -22,6 +23,7 @@ export function SellingPriceValue({
   regular?: SellingPriceDisplay | null;
   currency?: string;
   comparison?: boolean;
+  secondaryNote?: ReactNode;
 }) {
   const discounted = comparison && isDiscountPrice(current, regular);
   const line = (
@@ -40,7 +42,9 @@ export function SellingPriceValue({
       )}
       <strong className="selling-price-current">
         <Money value={amount.amount} currency={currency} decimals={2} />
-        {amount.unit !== "each" && `/${amount.unit}`}
+        {amount.unit !== "each" && (
+          <span className="selling-price-unit">/{amount.unit}</span>
+        )}
       </strong>
     </LtrText>
   );
@@ -61,6 +65,12 @@ export function SellingPriceValue({
       {current.secondary && (
         <span className="selling-price-secondary weight-price-secondary">
           {line(current.secondary, regular?.secondary)}
+          {secondaryNote && (
+            <span className="selling-price-secondary-note">
+              {" "}
+              · {secondaryNote}
+            </span>
+          )}
         </span>
       )}
     </span>

@@ -517,6 +517,7 @@ Added original approved logo/icon files, optional public maker/support config, t
 - R2f R0.1: add the shared peer-control row/grid contract, centred margin-free segmented tracks, matching icon/control heights and universal 44 px quick filters.
 - R2f R0.2: align first/last table content and full-width row rules with card titles and filters, preserving the 24 px inner-column gap.
 - R2f R0.3: add the shared three-track number group and approved reusable approval/weight-Lookup typography tokens so labels, values and notes align consistently.
+
 - R2f R0.4: share a 44 px composed card header and equal-height paired-card layout, retaining approved independent-height Timesheet masonry cards.
 - R2f R0.5: add a shared plain column-value treatment so semantic colour does not shift dates/numbers away from their heading edge.
 - R2f R0.6: share icon/title/subtitle centring so round add/package icons align with both text lines.
@@ -531,3 +532,6 @@ Added original approved logo/icon files, optional public maker/support config, t
 - R2f R0.2: add the approved shared medium table density (48 px body/32 px headings) for location comparisons, retaining default/compact/phone behavior and shared logical column edges.
 
 - R2f D2: match the approved880px Manage staff window with actual Active/Archived counts, boxed bilingual-name/avatar/department/login rows,44px peer controls and narrow contextual menus; add the inline New person form above the retained list and the three full-width phone toolbar rows. Preserve guarded staff writes and soft history, reject stale staged edits, and keep asynchronous archive failures visible in the confirmation.
+
+- R2f D4: real weight Lookup/package composition, protected child navigation, shared pricing-unit/tax presentation and preserved quick/category filters.
+

@@ -113,6 +113,7 @@ for (const width of widths)
       ).toBeGreaterThan(0);
       await measure(page, "c7-lookup", language, width, info);
       await search.clear();
+      await lookup.locator(".lookup-more-filters > summary").click();
       const chips = lookup.locator(".lookup-category-chips");
       await expect(chips.getByRole("combobox")).toHaveCount(0);
       await expect(

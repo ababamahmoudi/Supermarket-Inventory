@@ -20,9 +20,11 @@ import { Badge } from "./ui";
 export function ProductDatesSection({
   product,
   showReceived = true,
+  hideEmptyDates = false,
 }: {
   product: ProductReadDTO;
   showReceived?: boolean;
+  hideEmptyDates?: boolean;
 }) {
   const {
     state,
@@ -149,14 +151,14 @@ export function ProductDatesSection({
             );
           })}
         </ul>
-      ) : (
+      ) : !hideEmptyDates ? (
         <p className="muted product-no-dates">
           {t(
             "No open dates in this location.",
             "در این مکان تاریخ بازی وجود ندارد.",
           )}
         </p>
-      )}
+      ) : null}
       {readsReceipt && (
         <div className="product-quiet-row product-last-delivery-row">
           <span className="product-quiet-icon">

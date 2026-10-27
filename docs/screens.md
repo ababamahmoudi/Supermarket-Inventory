@@ -449,6 +449,7 @@ Lookup combines remembered On offer, Expiring soon, Arrived today and Price chan
 
 Sign-in/lock retain the store logo and form, with a quiet Powered by maker line under the form. Settings → About is the final settings item: configured store app name, package version, Made by maker/logo and nonempty configured support. Theme changes select the supplied full white logo in dark mode. The browser title uses Store · Maker in the current UI language; favicon/install icons use configured maker assets. All maker surfaces disappear when maker attribution is disabled; the app name/version and company icons remain. Staff document footers are configured, including both timesheet day/week outputs; customer-facing labels retain their store-only design.
 
+
 ## R2f D1 — Approved Timesheets day sheet
 
 Use the R2f Timesheets PNG/source references. Header actions are History then Manage staff; the subtitle holds real day totals. The toolbar places previous/date/next/Today at start and Day/Week tabs, Print and CSV at end. Standard page controls are 44px high; the supplied blank arrow buttons are 48px wide, and the date field is 168px where it fits. Masonry department cards fill 3/2/1 columns at 1440/1000/390 with compact baseline title/count headings and no empty table in an empty department. Rows have one name, centred 60px In/Out fields, end-aligned compact hours and a narrow 44px-high shift menu containing confirmed Remove. Empty time focus offers a bounded shared Now popover; typing 730 and Persian/Arabic digits keeps the established normalization. On shift shows blue elapsed time/so far; overnight shows +1 day; past missing Out remains amber. Notes is last; no redundant History card remains below it.
@@ -456,3 +457,8 @@ Use the R2f Timesheets PNG/source references. Header actions are History then Ma
 ## R2f D2 — Approved Manage staff window
 
 Timesheets → Manage staff opens Staff · configured branch in an880px rounded dialog (phone leaves16px on each side). Search fills the desktop toolbar before Active/Archived counts and Add person; all peers are44px high. Boxed staff rows align Name / Usual department / App login under their captions, with initials, secondary-language name, real login or No app login and a36px-square standalone menu. New person appears above the same list, using two field columns on desktop and one on phone, with Cancel/Add person. The phone toolbar has three full-width rows; department/login appear below the name. Edit remains a separate guarded form; Archive is confirmed, Restore soft-restores, and historical shifts remain available. Footer: Changes save as you go · Done.
+
+### R2f D4 — weight Lookup
+
+Weight Lookup uses the shared 36 px amount/18 px unit typography, secondary conversion/tax line and protected public package boxes. Package taps show the genuine ordinary child result without clearing remembered filters. Actual approved location prices and separate pending amounts govern charging; aggregate selection never picks a store implicitly. All six 44 px quick filters remain; AI categories move into an initially closed shared More filters disclosure with remembered active summary. Phone actions sit below metadata, as in the approved PNG. See `PR_R2F_LOOKUP_RETURNS.md` for click paths and deliberate data/capability differences.
+

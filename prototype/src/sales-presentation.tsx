@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 import { useDemo } from "./store";
 import {
   effectiveOffer,
@@ -28,12 +28,14 @@ export function SalePrice({
   stacked = false,
   comparison = true,
   className,
+  secondaryNote,
   ...props
 }: HTMLAttributes<HTMLSpanElement> & {
   product: ProductReadDTO;
   branch?: Branch;
   stacked?: boolean;
   comparison?: boolean;
+  secondaryNote?: ReactNode;
 }) {
   const { state, branch } = useDemo();
   const location = lookupBranch(selected ?? branch);
@@ -50,6 +52,7 @@ export function SalePrice({
         config={state.config}
         stacked={stacked}
         className={className}
+        secondaryNote={secondaryNote}
         {...props}
       />
     ) : (
@@ -70,6 +73,7 @@ export function SalePrice({
         .filter(Boolean)
         .join(" ")}
       current={current}
+      secondaryNote={secondaryNote}
       regular={
         regular && advertisedSale
           ? product.sold_by === "weight"

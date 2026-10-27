@@ -383,6 +383,7 @@ R2f R0.2 supersedes S1's 16 px outer table inset: first/last column content and 
 
 R2f R0.3 number groups use the shared label/value/note three-row grid, with values baseline-aligned across different font sizes. NumberStat contributes contents to those shared tracks, with optional explicit column placement for arrows/dividers. Approved typography tokens hold 17 px approval values / 26 px primary price, and 36 px weight-Lookup price / 18 px unit/package values. Reuse existing weights and colours; ordinary Lookup keeps its existing typography.
 
+
 R2f R0.4 composed CardHeader / `.ui-card-header` reserves a 44 px heading row, with or without actions. Use `.ui-card-row` for equal-height neighbouring cards. Approved Timesheets masonry departments are independent-height cards with the reference's compact baseline-aligned title/count header; the screenshot takes precedence over applying the paired-card contract to that masonry layout.
 
 R2f R0.5 data-column values use plain text with existing semantic colour when needed, rather than padded pills. Shared ColumnValue provides token-based pending/danger/muted text without changing the text edge; genuine status badges retain their existing role.
@@ -403,4 +404,9 @@ Use the approved880px structured dialog with16px body gaps. Directory header/row
 Match `design-reference/r2f/weight-product-*` and its approved source: an 860px bounded dialog, Names, 44px Each/By weight segment with helper, Pricing category plus cost/unit row, accent-tint real price/rule card, fixed-size package table and live New size row, then category/supplier. The card uses canonical lb prominently and kg beneath as in the approved D3 reference; ordinary catalog display settings elsewhere remain configurable. Package columns use plain end-aligned codes/barcodes/prices and In-store below generated barcodes. Phones expose size/price/actions above barcode; actual codes remain available in the normal package destination. Details not present in the illustration remain in the existing More details section, including guarded dates and descriptions.
 
 Only successful outer Save assigns codes/barcodes. Pending prices and pending archive rows are explicit. Keep the active input/action anchored during typing, cost-unit switches, How sold changes, package additions and archive staging; reuse the receiving scroll-anchor and reserve the dialog/content frame to avoid centering or scroll-clamp movement. The strict shared R0 alignment audit has no D3 exception.
+
+
+### R2f D4 — weight Lookup composition
+
+Use the central weight-Lookup 36 px amount and 18 px unit tokens; secondary unit/tax context uses body text. Package boxes use field tint, shared menu radius, a 36 px package icon and genuine size/code/end price; two desktop columns become one on phone. Lookup product header peers consume the shared 44 px control-row contract. The approved phone places those actions after the bilingual title/metadata.
 
