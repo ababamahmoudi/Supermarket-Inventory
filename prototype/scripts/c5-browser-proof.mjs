@@ -1352,6 +1352,14 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               toolbar.lastElementChild?.matches(".filter-toolbar-trailing")) &&
             element.closest("dialog") === toolbar.closest("dialog"),
           );
+          const modalFooterFeedback = Boolean(
+            element.matches(
+              "dialog[open] .ui-dialog-actions > .dialog-action-feedback-host > .dialog-action-feedback[role='status'] > .dialog-action-status > button.dialog-action-undo",
+            ) &&
+            ["Undo", "واگرد"].includes(tidy(element.textContent)) &&
+            element.parentElement?.querySelectorAll(":scope > button")
+              .length === 1,
+          );
           const expectedHeight = labelAction
             ? 32
             : newReturnControl ||
@@ -1360,7 +1368,8 @@ export async function inspect(page, screen, variant, role = "supervisor") {
                 structuredFooter ||
                 approvalDecisionButtons.has(element) ||
                 approvalEditorFooters.has(element) ||
-                notificationHeaderActions.has(element)
+                notificationHeaderActions.has(element) ||
+                modalFooterFeedback
               ? 44
               : genuineFilterToolbar
                 ? element.closest(".ui-segments")

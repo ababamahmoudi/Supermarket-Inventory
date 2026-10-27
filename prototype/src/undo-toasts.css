@@ -90,6 +90,9 @@
   color: var(--link-text);
   background: var(--color-clear);
   padding-inline: 0;
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: 44px;
 }
 .dialog-action-status .undo-toast-error {
   flex-basis: 100%;
