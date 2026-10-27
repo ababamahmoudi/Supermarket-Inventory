@@ -1241,3 +1241,29 @@
     padding-block-start: 12px;
   }
 }
+
+/* R2e B2 — one reversible boolean chip, including outside list toolbars. */
+:root .filter-chip.ui-button.button {
+  gap: 6px;
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--divider);
+  white-space: nowrap;
+}
+:root .filter-chip.ui-button.button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-tint-text);
+  border-color: var(--accent-soft);
+}
+.filter-chip-check {
+  display: inline-flex;
+  flex: 0 0 14px;
+  inline-size: 14px;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+.filter-chip[aria-pressed="true"] .filter-chip-check {
+  opacity: 1;
+}

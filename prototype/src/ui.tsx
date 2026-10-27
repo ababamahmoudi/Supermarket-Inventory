@@ -1395,6 +1395,9 @@ export function FilterChip({
         if (!event.defaultPrevented) onChange(!checked);
       }}
     >
+      <span className="filter-chip-check" aria-hidden="true">
+        <Check size={14} strokeWidth={2} />
+      </span>
       {children}
     </Button>
   );

@@ -359,3 +359,5 @@ These rules replace any earlier per-PR wording that conflicts with them. The cod
 ## R2e B1 — Numeric header captions (current)
 
 Numeric table captions and values share their logical end edge; text columns share the start edge. A sortable heading contributes no extra inline padding, and its indicator precedes an end-aligned caption so sorting preserves the caption edge. Use 12 px inner cell padding for the 24 px intercolumn gap, common header baselines and vertically centred single-line row cells. Receiving quantities/costs/totals and invoice batch review follow the same rule. The batch review header has an opaque surface, a hairline divider and ordinary first-row top padding.
+
+R2e B2 quick filters use one reversible `FilterChip`, with `aria-pressed`, an accent selected state and a small check whose width is reserved while unselected. Space, Enter and another click toggle the same boolean. Received date presets can likewise be cleared by choosing the selected preset again. The shared selected treatment applies both inside and outside filter toolbars.

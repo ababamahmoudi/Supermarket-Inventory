@@ -475,3 +475,4 @@ Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted
 - Added explicit measured-case invoice entry, quantity/cost unit conversion without changing paper cents, importer case-mass evidence and protected paper-total reconciliation.
 - Added fictional `r2e-weight-cases.json`, unit boundary/partial/mismatch/posting regressions and EN/FA desktop/phone import-to-approval browser proof. See `PR_R2E_A_REVIEW.md`.
 - R2e B1: align sortable numeric captions with values, preserve shared column gaps and centred rows, and give invoice batch review an opaque sticky header. Actual glyph-edge browser proof covers the operational table families and real posted/approved invoice flows.
+- R2e B2: shared reversible quick-filter chips now show a reserved check and the same selected accent treatment everywhere; Received date presets also toggle off.

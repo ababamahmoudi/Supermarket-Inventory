@@ -48,10 +48,18 @@ describe("C9 shared list controls", () => {
       name: "On sale",
       pressed: false,
     });
+    const check = chip.querySelector(".filter-chip-check");
+    expect(check).toHaveAttribute("aria-hidden", "true");
+    expect(check?.querySelector("svg")).toBeInTheDocument();
     chip.focus();
     await userEvent.keyboard(" ");
     expect(chip).toHaveAttribute("aria-pressed", "true");
     await userEvent.keyboard("{Enter}");
     expect(chip).toHaveAttribute("aria-pressed", "false");
+    await userEvent.click(chip);
+    expect(chip).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(chip);
+    expect(chip).toHaveAttribute("aria-pressed", "false");
+    expect(chip.querySelector(".filter-chip-check")).toBe(check);
   });
 });
