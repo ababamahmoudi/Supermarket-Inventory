@@ -201,6 +201,8 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
     quantity_unit: "units",
     qty_invoiced: 12,
   });
+  const exactLineAmount = (await fixture.readCanonical()).invoice.lines[0]
+    .line_total;
   fireEvent.click(screen.getByRole("combobox", { name: "Unit" }));
   fireEvent.click(await screen.findByRole("option", { name: "Cases" }));
   await waitFor(async () =>
@@ -231,7 +233,7 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
       (await fixture.readCanonical()).invoice.lines[0].units_per_case,
     ).toBe(0),
   );
-  expect(screen.getByLabelText("Cases invoiced")).toHaveValue("12");
+  expect(screen.getByLabelText("Cases invoiced")).toHaveValue("1");
   expect(
     within(document.querySelector(".receiving-header")!).getByRole("button", {
       name: "Post invoice",
@@ -257,10 +259,10 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
   await waitFor(() =>
     expect(screen.getByLabelText("Units per case")).toHaveValue("12"),
   );
-  expect(screen.getByLabelText("Cases invoiced")).toHaveValue("12");
+  expect(screen.getByLabelText("Cases invoiced")).toHaveValue("1");
   await waitFor(async () =>
     expect((await fixture.readCanonical()).invoice.lines[0].qty_invoiced).toBe(
-      144,
+      12,
     ),
   );
   fireEvent.click(screen.getByRole("combobox", { name: "Unit" }));
@@ -273,6 +275,8 @@ it("keeps linked invoice review rendered during blank cost and pack edits, prese
     expect((await fixture.readCanonical()).invoice.lines[0]).toMatchObject({
       quantity_unit: "units",
       qty_invoiced: 12,
+      unit_cost_before_tax: "0.9800",
+      line_total: exactLineAmount,
     }),
   );
   await renderedUiReady(() =>

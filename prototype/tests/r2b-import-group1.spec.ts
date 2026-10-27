@@ -592,7 +592,24 @@ async function checkWeights(page: Page, language: ReceivingLanguage) {
         total: line.line_total,
       };
     })
-    .toEqual({ quantity: "1", cost: "40.0000", total: "40.00" });
+    .toEqual({ quantity: "", cost: "", total: "40.00" });
+  // R2e A2: a case count and case price cannot become kg without actual case mass.
+  await expect(editor.locator("#invoice-line-0-case-weight")).toHaveValue("");
+  await expect(
+    editor.getByText(
+      word(language, "Enter the weight per case", "وزن هر کارتن را وارد کنید"),
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await editor.locator("#invoice-line-0-case-weight").fill("10");
+  await page.keyboard.press("Tab");
+  await expect(editor.locator("#invoice-line-0-invoiced")).toHaveValue("10");
+  await expect(editor.locator("#invoice-line-0-cost")).toHaveValue("4.0000");
+  await expect
+    .poll(
+      async () => (await currentInvoice(page, "BFP-0810")).lines[0].line_total,
+    )
+    .toBe("40.00");
   const quantity = editor.locator("#invoice-line-0-invoiced");
   await quantity.fill("");
   await expectReceivingStable(page, quantity, async () => {

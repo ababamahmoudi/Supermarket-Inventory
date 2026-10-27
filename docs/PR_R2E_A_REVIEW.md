@@ -22,3 +22,5 @@
 ## Defaults and limits
 
 The configured kg-to-lb factor applies as before. A unit change is a representation change, not a new paper amount. Unknown mass is never inferred from a count. A fixed measured pack can establish mass, including one-weight packs such as `2 kg` or `500 g`; nested or conflicting measurements remain unresolved. The browser prototype keeps protected, browser-local records and simulated AI/authentication. No production service or physical printer check is claimed.
+
+The older order-review regression now proves **12 Units → 1 Case of 12 → 12 Units** with the exact retained line amount, while keeping the invalid-pack, missing-cost and order-review checks. The earlier import regression now requires explicit case mass before kg entry instead of asserting the former count/cost reinterpretation bug.
