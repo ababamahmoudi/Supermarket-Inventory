@@ -23,6 +23,9 @@ import {
 import { invoiceRecords } from "./invoice-records";
 
 type InvoiceLineMoney =
+  | "paper_line_total"
+  | "paper_total_acknowledgement"
+  | "weight_case_cost_basis"
   | "imported_unit_cost_basis"
   | "unit_cost_before_tax"
   | "case_cost_before_tax"
@@ -137,9 +140,14 @@ const lineKeys = [
   "case_weight",
   "case_weight_unit",
   "canonical_lb_quantity",
+  "weight_case_quantity",
+  "weight_case_received_quantity",
   "order_new_item_match",
 ] as const satisfies readonly (keyof InvoiceLine)[];
 const lineMoneyKeys = [
+  "paper_line_total",
+  "paper_total_acknowledgement",
+  "weight_case_cost_basis",
   "imported_unit_cost_basis",
   "unit_cost_before_tax",
   "case_cost_before_tax",

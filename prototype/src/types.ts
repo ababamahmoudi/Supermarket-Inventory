@@ -389,6 +389,21 @@ export type InvoiceLine = Omit<
   case_weight?: string;
   case_weight_unit?: "kg" | "lb";
   canonical_lb_quantity?: string;
+  /** Original case cost and measured pack retain exact paper cents after unit changes. */
+  weight_case_cost_basis?: {
+    case_cost: string;
+    weight: string;
+    unit: "kg" | "lb";
+  };
+  weight_case_quantity?: string;
+  weight_case_received_quantity?: string;
+  paper_line_total?: string;
+  paper_total_acknowledgement?: {
+    paper: string;
+    calculated: string;
+    checked_by_user_id: string;
+    checked_at: string;
+  };
   order_new_item_match?: InvoiceNewItemMatch;
 };
 export type DemoInvoice = Omit<
