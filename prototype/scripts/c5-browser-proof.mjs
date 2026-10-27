@@ -1367,6 +1367,14 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const dashboardAction = dashboardRoots.has(
             element.closest(".r2c-dashboard"),
           );
+          const sharedFilterChip = Boolean(
+            element.matches(
+              "button.filter-chip[data-ui-component='filter-chip'][aria-pressed]",
+            ) &&
+            element.querySelector(
+              ":scope > .filter-chip-check[aria-hidden='true'] > svg.lucide-check",
+            ),
+          );
           const toolbar = element.closest(
             ".filter-toolbar.c9-filter-toolbar[data-ui-component='filter-toolbar']",
           );
@@ -1395,7 +1403,8 @@ export async function inspect(page, screen, variant, role = "supervisor") {
                 approvalDecisionButtons.has(element) ||
                 approvalEditorFooters.has(element) ||
                 notificationHeaderActions.has(element) ||
-                modalFooterFeedback
+                modalFooterFeedback ||
+                sharedFilterChip
               ? 44
               : genuineFilterToolbar
                 ? element.closest(".ui-segments")

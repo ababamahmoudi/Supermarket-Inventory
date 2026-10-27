@@ -1527,6 +1527,7 @@ export function FilterChip({
       {...props}
       variant="neutral"
       className={cn("filter-chip", className)}
+      data-ui-component="filter-chip"
       aria-pressed={checked}
       onClick={(event) => {
         props.onClick?.(event);

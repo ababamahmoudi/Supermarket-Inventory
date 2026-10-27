@@ -1425,7 +1425,7 @@
   margin-block: 0;
   padding-block: 0;
 }
-:root .filter-chip.ui-button.button {
+:root .filter-chip.ui-button.button:has(> .filter-chip-check) {
   block-size: 44px;
   min-block-size: 44px;
   max-block-size: 44px;
