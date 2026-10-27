@@ -514,3 +514,4 @@ Added original approved logo/icon files, optional public maker/support config, t
 - R2f R0.5: add a shared plain column-value treatment so semantic colour does not shift dates/numbers away from their heading edge.
 - R2f R0.6: share icon/title/subtitle centring so round add/package icons align with both text lines.
 - R2f R0.1 follow-up: shared popovers accept an actual compact body height/gap so a one-option Now menu stays below when it fits; shared growing notes accept the approved minimum height without overriding their six-line cap.
+- R2f R0.7: port the approved rendered alignment audit with strict logical glyph/control edges, explicit semantic exceptions, number/icon/card probes and LTR/RTL shifted-geometry negative controls.

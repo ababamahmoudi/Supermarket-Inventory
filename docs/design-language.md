@@ -387,3 +387,5 @@ R2f R0.4 composed CardHeader / `.ui-card-header` reserves a 44 px heading row, w
 R2f R0.5 data-column values use plain text with existing semantic colour when needed, rather than padded pills. Shared ColumnValue provides token-based pending/danger/muted text without changing the text edge; genuine status badges retain their existing role.
 
 R2f R0.6 icons beside title/subtitle copy centre on the complete two-line block using shared IconText / `.ui-icon-text`, with a nonshrinking icon and a two-line copy grid. Reuse the caller's approved icon size and semantic treatment.
+
+R2f R0.7 keeps the approved alignment scan's strict limits: peer centres and column glyph edges within 1.5 px, heights within 2 px, with logical start/end in RTL. Use only the scene-specific semantic exception registry, each with its reason and use count; no whole-screen/table/numeric-column waiver. Number baselines, full two-line icon centres, paired-card title/height tracks and plain values are also measured. Tests must prove shifted-geometry negative controls fail and restoration passes.
