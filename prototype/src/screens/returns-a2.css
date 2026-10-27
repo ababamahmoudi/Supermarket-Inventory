@@ -79,7 +79,7 @@
 .return-detail-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 20px;
 }
 .return-detail .return-detail-header h1 {

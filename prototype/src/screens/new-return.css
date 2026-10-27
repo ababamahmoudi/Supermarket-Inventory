@@ -37,7 +37,7 @@
   margin: 0;
 }
 .new-return-grid textarea {
-  resize: vertical;
+  resize: none;
   min-height: 76px;
   padding: 12px 14px;
 }
@@ -137,4 +137,21 @@
     padding-block-end: max(16px, env(safe-area-inset-bottom));
     margin-block-start: auto;
   }
+}
+
+.new-return-quantity-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+:root .new-return-quantity-row .ui-select {
+  inline-size: 100%;
+}
+
+.new-return-normalized {
+  grid-column: 1 / -1;
+  margin-block: -8px 0;
+  font-size: 13px;
 }

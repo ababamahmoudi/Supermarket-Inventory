@@ -1233,7 +1233,15 @@ function ReturnsContent() {
                             <div className="muted">
                               {line.location === "Walk-in cooler"
                                 ? t("Walk-in cooler", "سردخانه")
-                                : line.location}
+                                : configuredBranches(state.config).includes(
+                                      line.location,
+                                    )
+                                  ? configuredBranchLabel(
+                                      state.config,
+                                      line.location,
+                                      lang,
+                                    )
+                                  : line.location}
                             </div>
                           )}
                         </td>

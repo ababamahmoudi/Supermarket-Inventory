@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, ImagePlus, Plus, RotateCcw, X } from "lucide-react";
-import Decimal from "decimal.js";
 import { useDemo } from "../store";
 import {
   Button,
@@ -17,6 +16,8 @@ import { formatMoney } from "../formatters";
 import { createId } from "../ids";
 import {
   createReturn,
+  normalizeReturnQuantity,
+  type ReturnQuantityUnit,
   returnCreateChoices,
   returnCreateScope,
   returnReasons,
@@ -46,12 +47,12 @@ function errorCopy(code: string, t: Translate): string {
       "یک محصول دریافت‌شده از این تأمین‌کننده انتخاب کنید.",
     ],
     quantity: [
-      "Enter a positive quantity: whole units, or lb with up to three decimal places.",
-      "مقدار مثبت وارد کنید: واحد کامل یا پوند با حداکثر سه رقم اعشار.",
+      "Enter a positive quantity: whole units or cases, or weight with up to three decimal places.",
+      "مقدار مثبت وارد کنید: واحد یا کارتن کامل، یا وزن با حداکثر سه رقم اعشار.",
     ],
     unit: [
-      "Use the received product's unit.",
-      "واحد محصول دریافت‌شده را به کار ببرید.",
+      "Choose one of the received product's units.",
+      "یکی از واحدهای محصول دریافت‌شده را انتخاب کنید.",
     ],
     reason: ["Choose a return reason.", "دلیل مرجوعی را انتخاب کنید."],
     note: ["Add a note for Other.", "برای سایر، یادداشت بنویسید."],
@@ -124,6 +125,7 @@ export function NewReturnDialog({
   const [chosenProduct, setChosenProduct] =
     useState<ReturnCreateProductChoice | null>(null);
   const [quantity, setQuantity] = useState("");
+  const [quantityUnit, setQuantityUnit] = useState<ReturnQuantityUnit>("units");
   const [reason, setReason] = useState<ReturnReason | "">("");
   const [note, setNote] = useState("");
   const [requestId] = useState(() => createId("new-return"));
@@ -293,13 +295,13 @@ export function NewReturnDialog({
     else if (sourceChanged) add("product", errorCopy("changed", t));
     else if (product.issue) add("product", errorCopy(product.issue, t));
     try {
-      if (
-        !/^\d+(?:\.\d{1,4})?$/.test(quantity) ||
-        new Decimal(quantity).lte(0) ||
-        (product?.quantity_unit === "units" &&
-          !new Decimal(quantity).isInteger())
-      )
-        add("quantity", errorCopy("quantity", t));
+      if (!product) throw new Error("product");
+      normalizeReturnQuantity(
+        quantity,
+        quantityUnit,
+        product.quantity_unit,
+        product.unit_multipliers,
+      );
     } catch {
       add("quantity", errorCopy("quantity", t));
     }
@@ -319,7 +321,7 @@ export function NewReturnDialog({
           createReturn(canonical, current, {
             ...source,
             quantity,
-            quantity_unit: product.quantity_unit,
+            quantity_unit: quantityUnit,
             reason,
             note,
             photos: photos.map((photo) => photo.handle),
@@ -335,6 +337,19 @@ export function NewReturnDialog({
   };
   const fieldError = (id: string) =>
     issues.find((item) => item.id === id)?.message;
+  let normalizedQuantity = "";
+  if (product && quantity && quantityUnit !== product.quantity_unit) {
+    try {
+      normalizedQuantity = normalizeReturnQuantity(
+        quantity,
+        quantityUnit,
+        product.quantity_unit,
+        product.unit_multipliers,
+      ).toString();
+    } catch {
+      /* The normal field validation explains incomplete input on save. */
+    }
+  }
   return (
     <Dialog
       open
@@ -451,13 +466,14 @@ export function NewReturnDialog({
             onChange={(value) => {
               clearPhotos();
               setProductCode(value);
-              setChosenProduct(
+              const chosen =
                 choices?.products.find(
                   (item) =>
                     item.supplier_id === supplier &&
                     item.product_code === value,
-                ) ?? null,
-              );
+                ) ?? null;
+              setChosenProduct(chosen);
+              setQuantityUnit(chosen?.received_unit ?? "units");
               clearIssue("product");
             }}
           />
@@ -511,28 +527,58 @@ export function NewReturnDialog({
             </span>
           )}
         </div>
-        <Field label={t("Quantity", "مقدار")} error={fieldError("quantity")}>
-          <NumberField
-            id="new-return-quantity"
-            keepTyping
-            disabled={busy}
-            min="0"
-            step={product?.quantity_unit === "lb" ? "0.001" : "1"}
-            value={quantity}
-            onChange={(value) => {
-              setQuantity(value);
-              clearIssue("quantity");
-            }}
-          />
-        </Field>
-        <Field label={t("Unit", "واحد")}>
-          <input
-            className="ui-input"
-            readOnly
-            value={product?.quantity_unit === "lb" ? "lb" : t("Units", "واحد")}
-            aria-label={t("Unit", "واحد")}
-          />
-        </Field>
+        <div className="new-return-quantity-row">
+          <Field label={t("Quantity", "مقدار")} error={fieldError("quantity")}>
+            <NumberField
+              id="new-return-quantity"
+              keepTyping
+              disabled={busy}
+              min="0"
+              step={
+                quantityUnit === "lb" || quantityUnit === "kg" ? "0.001" : "1"
+              }
+              value={quantity}
+              onChange={(value) => {
+                setQuantity(value);
+                clearIssue("quantity");
+              }}
+            />
+          </Field>
+          <Field label={t("Unit", "واحد")}>
+            <Select
+              id="new-return-unit"
+              disabled={busy || !product}
+              value={quantityUnit}
+              aria-label={t("Unit", "واحد")}
+              options={(
+                Object.keys(
+                  product?.unit_multipliers ?? { units: "1" },
+                ) as ReturnQuantityUnit[]
+              ).map((unit) => ({
+                value: unit,
+                label:
+                  unit === "units"
+                    ? t("Units", "واحد")
+                    : unit === "cases"
+                      ? t("Cases", "کارتن")
+                      : unit,
+              }))}
+              onChange={(value) => {
+                setQuantityUnit(value as ReturnQuantityUnit);
+                clearIssue("quantity");
+              }}
+            />
+          </Field>
+        </div>
+        {normalizedQuantity && product && (
+          <p className="new-return-normalized muted">
+            {t("Recorded as", "ثبت به صورت")}{" "}
+            <bdi dir="ltr">
+              {normalizedQuantity}{" "}
+              {product.quantity_unit === "lb" ? "lb" : t("units", "واحد")}
+            </bdi>
+          </p>
+        )}
         <Field label={t("Reason", "دلیل")} error={fieldError("reason")}>
           <Select
             id="new-return-reason"

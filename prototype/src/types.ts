@@ -579,6 +579,8 @@ export interface ReturnLine {
     source_fingerprint: string;
   };
   quantity_unit?: "units" | "lb";
+  entered_quantity?: string;
+  entered_quantity_unit?: "units" | "cases" | "lb" | "kg";
   unit_cost?: string;
   product_code: string;
   qty: number;

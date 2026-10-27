@@ -9,6 +9,7 @@ import {
   resolveReturnCreateSource,
   ReturnCreateError,
   type ReturnCreateSourceInput,
+  type ReturnQuantityUnit,
 } from "./return-create-source";
 import {
   returnCreationPhotoReferences,
@@ -23,7 +24,12 @@ export type {
   ReturnCreateChoices,
   ReturnCreateProductChoice,
   ReturnCreateSourceInput,
+  ReturnQuantityUnit,
 } from "./return-create-source";
+const ReturnQuantity = Decimal.clone({
+  precision: 80,
+  rounding: Decimal.ROUND_HALF_UP,
+});
 export const returnReasons = [
   "damaged",
   "expired",
@@ -34,10 +40,47 @@ export const returnReasons = [
 export type ReturnReason = (typeof returnReasons)[number];
 export interface CreateReturnInput extends ReturnCreateSourceInput {
   quantity: string;
-  quantity_unit: "units" | "lb";
+  quantity_unit: ReturnQuantityUnit;
   reason: ReturnReason;
   note: string;
   photos: readonly ReturnCreationPhoto[];
+}
+/** Preserve the entered unit as evidence; pickup uses canonical units/lb at its existing precision. */
+export function normalizeReturnQuantity(
+  value: string,
+  enteredUnit: ReturnQuantityUnit,
+  canonicalUnit: "units" | "lb",
+  multipliers: Partial<Record<ReturnQuantityUnit, string>>,
+): Decimal {
+  if (!["units", "cases", "lb", "kg"].includes(enteredUnit))
+    throw new ReturnCreateError("unit");
+  const multiplier = multipliers[enteredUnit];
+  if (!multiplier) throw new ReturnCreateError("unit");
+  if (typeof value !== "string" || !/^\d+(?:\.\d{1,4})?$/.test(value))
+    throw new ReturnCreateError("quantity");
+  const entered = new ReturnQuantity(value);
+  if (
+    entered.lte(0) ||
+    ((enteredUnit === "units" || enteredUnit === "cases") &&
+      !entered.isInteger()) ||
+    ((enteredUnit === "lb" || enteredUnit === "kg") &&
+      !entered.eq(entered.toDecimalPlaces(3)))
+  )
+    throw new ReturnCreateError("quantity");
+  const exact = entered.times(multiplier);
+  const quantity =
+    canonicalUnit === "lb"
+      ? exact.toDecimalPlaces(3, Decimal.ROUND_HALF_UP)
+      : exact;
+  if (
+    !quantity.isFinite() ||
+    quantity.lte(0) ||
+    (canonicalUnit === "units" && !quantity.isInteger()) ||
+    quantity.gt(Number.MAX_SAFE_INTEGER) ||
+    !new Decimal(quantity.toNumber()).eq(quantity)
+  )
+    throw new ReturnCreateError("quantity");
+  return quantity;
 }
 /** One current-authority transaction; no stock, price, pickup or legal credit effect. */
 export function createReturn(
@@ -49,25 +92,12 @@ export function createReturn(
   const actual = resolveReturnCreateSource(state, actor, input);
   actor = actual.actor;
   const source = actual.source;
-  if (input.quantity_unit !== source.quantity_unit)
-    throw new ReturnCreateError("unit");
-  if (
-    typeof input.quantity !== "string" ||
-    !/^\d+(?:\.\d{1,4})?$/.test(input.quantity)
-  )
-    throw new ReturnCreateError("quantity");
-  const quantity = new Decimal(input.quantity);
-  if (
-    !quantity.isFinite() ||
-    quantity.lte(0) ||
-    (input.quantity_unit === "units" && !quantity.isInteger()) ||
-    (input.quantity_unit === "lb" &&
-      !quantity.eq(quantity.toDecimalPlaces(3))) ||
-    quantity.gt(Number.MAX_SAFE_INTEGER)
-  )
-    throw new ReturnCreateError("quantity");
-  if (!new Decimal(quantity.toNumber()).eq(quantity))
-    throw new ReturnCreateError("quantity");
+  const quantity = normalizeReturnQuantity(
+    input.quantity,
+    input.quantity_unit,
+    source.quantity_unit,
+    source.unit_multipliers,
+  );
   if (!returnReasons.includes(input.reason))
     throw new ReturnCreateError("reason");
   if (typeof input.note !== "string" || input.note.length > 5000)
@@ -130,6 +160,8 @@ export function createReturn(
         product_code: source.product.code,
         qty: quantity.toNumber(),
         quantity_unit: source.quantity_unit,
+        entered_quantity: input.quantity,
+        entered_quantity_unit: input.quantity_unit,
         unit_cost: source.cost!,
         reason: input.reason,
         location: input.branch,
@@ -184,6 +216,8 @@ export function createReturn(
       product_code: source.product.code,
       qty: quantity.toNumber(),
       quantity_unit: source.quantity_unit,
+      entered_quantity: input.quantity,
+      entered_quantity_unit: input.quantity_unit,
       reason: input.reason,
       note: input.note.trim(),
       photo_count: references.length,

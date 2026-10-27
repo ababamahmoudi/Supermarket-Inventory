@@ -1,3 +1,4 @@
+import { weightQuantityPerLb, weightConversionFactor } from "./weighed";
 import Decimal from "decimal.js";
 import { freshActor } from "./authority";
 import type { AuthenticatedActor } from "./authority-types";
@@ -8,6 +9,11 @@ import { effectiveInvoiceLocation } from "./received";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { businessFingerprint } from "./business-fingerprint";
 import type { DemoInvoice, DemoState, Product, SupplierRecord } from "./types";
+
+const ReturnQuantity = Decimal.clone({
+  precision: 80,
+  rounding: Decimal.ROUND_HALF_UP,
+});
 
 export class ReturnCreateError extends Error {
   constructor(
@@ -40,6 +46,7 @@ export interface ReturnCreateSourceInput {
   product_code: string;
   source_fingerprint: string;
 }
+export type ReturnQuantityUnit = "units" | "cases" | "lb" | "kg";
 export interface ReturnCreateProductChoice {
   product_code: string;
   supplier_id: string;
@@ -48,6 +55,8 @@ export interface ReturnCreateProductChoice {
   unit_size: string;
   barcode: string;
   quantity_unit: "units" | "lb";
+  received_unit: ReturnQuantityUnit;
+  unit_multipliers: Partial<Record<ReturnQuantityUnit, string>>;
   last_received_at: string;
   source_fingerprint: string;
   issue?: "source_cost" | "source_ambiguous" | "source_currency";
@@ -102,6 +111,8 @@ interface ReceiptSource {
   currency: string | null;
   fingerprint: string;
   quantity_unit: "units" | "lb";
+  received_unit: ReturnQuantityUnit;
+  unit_multipliers: Partial<Record<ReturnQuantityUnit, string>>;
 }
 function validCost(value: unknown): string | null {
   try {
@@ -207,6 +218,42 @@ function receiptSources(
         if (!Number.isFinite(Date.parse(received_at))) return [];
         const cost = validCost(line.unit_cost_before_tax);
         const quantity_unit = line.sold_by === "weight" ? "lb" : "units";
+        const unit_multipliers: Partial<Record<ReturnQuantityUnit, string>> =
+          quantity_unit === "lb"
+            ? { lb: "1", kg: weightConversionFactor(state.config) }
+            : { units: "1" };
+        const pack =
+          Number.isSafeInteger(line.units_per_case) &&
+          (line.units_per_case ?? 0) > 0
+            ? line.units_per_case!
+            : null;
+        if (quantity_unit === "units" && pack)
+          unit_multipliers.cases = String(pack);
+        if (
+          quantity_unit === "lb" &&
+          line.case_weight &&
+          line.case_weight_unit
+        ) {
+          try {
+            const weight = new ReturnQuantity(
+              weightQuantityPerLb(
+                line.case_weight,
+                line.case_weight_unit,
+                state.config,
+              ),
+            );
+            if (weight.gt(0)) {
+              unit_multipliers.cases = weight.toString();
+              if (pack) unit_multipliers.units = weight.div(pack).toString();
+            }
+          } catch {
+            /* Unusable retained pack evidence never creates a unit choice. */
+          }
+        }
+        const printedUnit = line.quantity_unit ?? quantity_unit;
+        const received_unit: ReturnQuantityUnit = unit_multipliers[printedUnit]
+          ? printedUnit
+          : quantity_unit;
         return [
           {
             supplier,
@@ -217,6 +264,8 @@ function receiptSources(
             cost,
             currency: currency.currency,
             quantity_unit,
+            received_unit,
+            unit_multipliers,
             fingerprint: businessFingerprint({
               branch,
               supplier: {
@@ -235,6 +284,8 @@ function receiptSources(
               invoice_id: original.id,
               line_index: index,
               line,
+              received_unit,
+              unit_multipliers,
               received_at,
               currency: currency.currency,
               currency_evidence: currency.witness,
@@ -265,7 +316,8 @@ function latestSources(
     );
     const costSet = new Set(
       latest.map(
-        (record) => `${record.quantity_unit}:${record.currency}:${record.cost}`,
+        (record) =>
+          `${record.quantity_unit}:${record.currency}:${record.cost}:${JSON.stringify(record.unit_multipliers)}`,
       ),
     );
     const source = records[0];
@@ -324,6 +376,8 @@ export function returnCreateChoices(
         unit_size: source.product.unit_size,
         barcode: source.product.barcode,
         quantity_unit: source.quantity_unit,
+        received_unit: source.received_unit,
+        unit_multipliers: source.unit_multipliers,
         last_received_at: source.received_at,
         source_fingerprint: source.fingerprint,
         ...(issue ? { issue } : {}),
