@@ -252,6 +252,8 @@ describe("C8 scoped independent sale pricing", () => {
   it("retains exact entered weighed cents and derives secondary without a lb rounding roundtrip", async () => {
     const weighed = state.products.find((entry) => entry.code === "0016")!;
     weighed.selling_price = "20.99";
+    // This case supplies its own shared regular basis, independent of fresh demo branch approvals.
+    weighed.branch_prices = {};
     weighed.last_cost_before_tax = "1.0000";
     state.config.weighed_items!.main_display_unit = "kg";
     const sale = begin({
