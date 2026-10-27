@@ -917,6 +917,33 @@ function reminders(state: DemoState, now: Date) {
   }
 }
 /** Clock transitions require a repository-minted live witness; callers cannot fabricate a System actor. */
+/** The installed sales-clock job commits parent lifecycle and package effects together. */
+export function captureSalesClockPackageChanges(
+  state: DemoState,
+  attribution: SystemAttribution,
+  now = new Date(attribution.applied_at),
+) {
+  requireSystemReconciliation(state, attribution, "sales_clock");
+  if (
+    !state.products.some(
+      (product) =>
+        product.company_id === state.config.company.seed_key &&
+        product.package_of_product_id &&
+        product.status !== "archived",
+    )
+  )
+    return;
+  if (!state.prototype_e2_schema) initializePriceUpdates(state, now);
+  syncWeightPackagesAtClock(state, attribution, now, "sales_clock");
+  reconcileChanges(
+    state,
+    state.price_update_baseline ?? snapshots(state, now),
+    now,
+    null,
+    null,
+  );
+  syncGeneralNotifications(state, now);
+}
 export function evaluatePriceUpdates(
   state: DemoState,
   attribution: SystemAttribution,

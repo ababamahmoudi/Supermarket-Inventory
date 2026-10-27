@@ -1,3 +1,7 @@
+import { companyLocalToUtc } from "./company-time";
+import { browserShellOptions } from "./browser-shell-options";
+import type { ReadModelProjectors } from "./e1-read-model";
+import { saleStoreDate, saleDateAfter } from "./sales";
 import { projectHistoryEntry, selectHistory } from "./history";
 import { signedOutReadView } from "./e1-read-model";
 import { describe, expect, it } from "vitest";
@@ -884,5 +888,138 @@ describe("R2e package cost audit privacy", () => {
           item.action === "Package cost recalculated",
       ),
     ).toHaveLength(2);
+  });
+});
+
+describe("R2e package effects share the installed sales-clock write", () => {
+  it("scheduled start and expiry commit the parent event, child prices/tasks/labels/audit atomically", async () => {
+    const { repository, service, identity, parentCode, snapshot, company } =
+      await repositoryFixture();
+    try {
+      const added = await service.add(identity, {
+        parent_code: parentCode,
+        expected_parent_snapshot: snapshot,
+        size: "250",
+        unit: "g",
+      });
+      const now = new Date();
+      const loaded = (await repository.loadBusiness<DemoState>(company)).state;
+      const today = saleStoreDate(loaded.config, "Branch 1", now);
+      const startsOn = saleDateAfter(today, 1);
+      const lastDay = saleDateAfter(today, 2);
+      await repository.runBusinessCommand<DemoState, void>(
+        identity,
+        (state, actor) => {
+          const before = cloneWithAuthority(state);
+          savePriceChange(
+            state,
+            actor,
+            {
+              product_code: parentCode,
+              mode: "sale",
+              scope: "current",
+              branches: ["Branch 1"],
+              price: "7.99",
+              price_unit: "lb",
+              starts_on: startsOn,
+              last_day: lastDay,
+              accept_below_margin: true,
+              below_cost_reason: "Fictional scheduled bulk sale",
+              add_labels: false,
+            },
+            now,
+          );
+          capturePriceUpdateChanges(before, state, actor, now);
+        },
+      );
+      const job = browserShellOptions(
+        {} as ReadModelProjectors,
+      ).systemJobs.find((item) => item.source === "sales_clock")!;
+      const startClock = new Date(
+        companyLocalToUtc(loaded.config, startsOn, "12:00"),
+      );
+      await repository.runSystemReconciliation<DemoState, void>(
+        company,
+        "sales_clock",
+        job.apply,
+        startClock,
+      );
+      const started = (await repository.loadBusiness<DemoState>(company)).state;
+      expect(
+        started.sale_events?.some(
+          (item) => item.product_code === parentCode && item.kind === "started",
+        ),
+      ).toBe(true);
+      expect(
+        started.products.find((item) => item.code === added.product_code)
+          ?.branch_prices?.["Branch 1"],
+      ).toBe("4.99");
+      expect(
+        started.price_update_tasks?.find(
+          (item) =>
+            item.product_code === added.product_code &&
+            item.branch === "Branch 1",
+        )?.new_price.price,
+      ).toBe("4.99");
+      expect(
+        started.label_waitlist?.filter(
+          (item) =>
+            item.product_code === added.product_code &&
+            item.branch === "Branch 1",
+        ),
+      ).toHaveLength(1);
+      const endClock = new Date(
+        companyLocalToUtc(loaded.config, saleDateAfter(lastDay, 1), "12:00"),
+      );
+      await repository.runSystemReconciliation<DemoState, void>(
+        company,
+        "sales_clock",
+        job.apply,
+        endClock,
+      );
+      const ended = (await repository.loadBusiness<DemoState>(company)).state;
+      expect(
+        ended.sale_events?.some(
+          (item) => item.product_code === parentCode && item.kind === "ended",
+        ),
+      ).toBe(true);
+      expect(
+        ended.products.find((item) => item.code === added.product_code)
+          ?.branch_prices?.["Branch 1"],
+      ).toBe("5.49");
+      expect(
+        ended.price_update_tasks?.find(
+          (item) =>
+            item.product_code === added.product_code &&
+            item.branch === "Branch 1",
+        )?.new_price.price,
+      ).toBe("5.49");
+      const stable = JSON.stringify({
+        child: ended.products.find((item) => item.code === added.product_code),
+        tasks: ended.price_update_tasks,
+        labels: ended.label_waitlist,
+        audit: ended.activity,
+      });
+      await repository.runSystemReconciliation<DemoState, void>(
+        company,
+        "sales_clock",
+        job.apply,
+        endClock,
+      );
+      const repeated = (await repository.loadBusiness<DemoState>(company))
+        .state;
+      expect(
+        JSON.stringify({
+          child: repeated.products.find(
+            (item) => item.code === added.product_code,
+          ),
+          tasks: repeated.price_update_tasks,
+          labels: repeated.label_waitlist,
+          audit: repeated.activity,
+        }),
+      ).toBe(stable);
+    } finally {
+      repository.dispose();
+    }
   });
 });

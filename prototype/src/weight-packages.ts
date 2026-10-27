@@ -465,7 +465,8 @@ export function syncWeightPackagesAtClock(
   state: DemoState,
   attribution: SystemAttribution,
   now = new Date(attribution.applied_at),
+  source: "price_updates" | "sales_clock" = "price_updates",
 ) {
-  requireSystemReconciliation(state, attribution, "price_updates");
+  requireSystemReconciliation(state, attribution, source);
   reconcilePackages(state, null, now);
 }
