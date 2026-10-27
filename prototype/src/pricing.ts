@@ -123,24 +123,27 @@ export function validatePricingConfig(config: PricingConfig): void {
   }
 }
 
-/** One configuration-driven engine for live previews and invoice calculations. */
-export function calculatePrice(
-  costInput: string,
+/** Apply a category's normal rounding to an already calculated selling amount. */
+export function roundCategoryPrice(
+  rawInput: string,
   categoryKey: string,
   config: PricingConfig = seedConfig,
   options: { skip_band_rounding?: boolean } = {},
-): PricingResult {
-  const cost = decimal(costInput, "invalid_cost");
-  const fractionalDigits = costInput.trim().split(".")[1]?.length ?? 0;
-  if (cost.lt("0") || fractionalDigits > 4)
-    throw new PricingValidationError("invalid_cost");
+): Pick<
+  PricingResult,
+  | "selling_price"
+  | "raw_price"
+  | "rounded_raw"
+  | "after_band_rounding"
+  | "special_correction_applied"
+> {
   validatePricingConfig(config);
   const category = config.pricing_categories.find(
     (entry) => entry.key === categoryKey,
   );
   if (!category) throw new PricingValidationError("unknown_category");
-
-  const raw = cost.div(decimal(category.cost_divisor, "invalid_divisor"));
+  const raw = decimal(rawInput, "invalid_cost");
+  if (raw.lt(0)) throw new PricingValidationError("invalid_cost");
   const roundedRaw = raw.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
   let price: Decimal;
   let afterBands: Decimal | null = null;
@@ -180,6 +183,40 @@ export function calculatePrice(
     }
   }
 
+  return {
+    selling_price: price.toFixed(2),
+    raw_price: raw.toString(),
+    rounded_raw: roundedRaw.toFixed(2),
+    after_band_rounding: afterBands?.toFixed(2) ?? null,
+    special_correction_applied: correctionApplied,
+  };
+}
+
+/** One configuration-driven engine for live previews and invoice calculations. */
+export function calculatePrice(
+  costInput: string,
+  categoryKey: string,
+  config: PricingConfig = seedConfig,
+  options: { skip_band_rounding?: boolean } = {},
+): PricingResult {
+  const cost = decimal(costInput, "invalid_cost");
+  const fractionalDigits = costInput.trim().split(".")[1]?.length ?? 0;
+  if (cost.lt("0") || fractionalDigits > 4)
+    throw new PricingValidationError("invalid_cost");
+  validatePricingConfig(config);
+  const category = config.pricing_categories.find(
+    (entry) => entry.key === categoryKey,
+  );
+  if (!category) throw new PricingValidationError("unknown_category");
+
+  const rounded = roundCategoryPrice(
+    cost.div(decimal(category.cost_divisor, "invalid_divisor")).toString(),
+    categoryKey,
+    config,
+    options,
+  );
+  const price = new Money(rounded.selling_price);
+
   const margin = price.isZero() ? null : price.minus(cost).div(price);
   // Cross multiplication avoids formatting or recurring-ratio precision affecting review.
   const belowMinimum =
@@ -187,11 +224,7 @@ export function calculatePrice(
     (category.minimum_margin !== null &&
       price.minus(cost).lt(price.times(category.minimum_margin)));
   return {
-    selling_price: price.toFixed(2),
-    raw_price: raw.toString(),
-    rounded_raw: roundedRaw.toFixed(2),
-    after_band_rounding: afterBands?.toFixed(2) ?? null,
-    special_correction_applied: correctionApplied,
+    ...rounded,
     margin: margin?.toString() ?? null,
     below_minimum_margin: belowMinimum,
   };
