@@ -108,3 +108,20 @@
     }
   }
 }
+
+@media screen {
+  .company-logo-control .settings-logo-preview {
+    margin-block-start: 0;
+  }
+  .company-logo-control {
+    gap: 16px;
+  }
+  @media (min-width: 760px) {
+    .settings-layout {
+      grid-template-columns: max-content minmax(0, 1fr);
+    }
+    .settings-group-menu button {
+      white-space: nowrap;
+    }
+  }
+}

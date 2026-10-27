@@ -30,7 +30,7 @@ test("Settings presents the exact 13 authorized groups and unfinished groups can
     "Taxes",
     "Receiving",
     "Timesheets",
-    "Returns/date tracking/labels",
+    "Returns, dates and labels",
     "Notifications",
     "Modules",
     "Data",

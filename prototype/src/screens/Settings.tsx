@@ -175,7 +175,7 @@ const groups: {
   },
   {
     key: "returns",
-    label: ["Returns/date tracking/labels", "مرجوعی/پیگیری تاریخ/برچسب"],
+    label: ["Returns, dates and labels", "مرجوعی، تاریخ و برچسب‌ها"],
     description: [
       "Pending return credits, reminders, label waitlist preferences and A4 templates.",
       "اعتبار مرجوعی در انتظار، یادآوری‌ها، فهرست انتظار برچسب و قالب‌های A4.",

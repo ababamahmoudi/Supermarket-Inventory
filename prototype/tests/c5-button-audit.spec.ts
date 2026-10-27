@@ -156,7 +156,7 @@ test("C5 button contract covers working Settings groups and their dialogs", asyn
       "Offers",
       "Taxes",
       "Receiving",
-      "Returns/date tracking/labels",
+      "Returns, dates and labels",
       "Notifications",
       "Modules",
       "Data",
