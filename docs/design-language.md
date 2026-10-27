@@ -355,3 +355,7 @@ These rules replace any earlier per-PR wording that conflicts with them. The cod
 11. **Never a blank screen.** Loading keeps the app frame visible; never show an empty page between pages.
 12. **Colors only from tokens.** New colors go into `klead-tokens.css` for both light and dark; `klead-tokens.test.ts` fails otherwise.
 13. **One list for alerts.** All alerts sit in one list of `list-box` rows (product, one-line summary, category label). Details open on click; short facts stay on the row.
+
+## R2e B1 — Numeric header captions (current)
+
+Numeric table captions and values share their logical end edge; text columns share the start edge. A sortable heading contributes no extra inline padding, and its indicator precedes an end-aligned caption so sorting preserves the caption edge. Use 12 px inner cell padding for the 24 px intercolumn gap, common header baselines and vertically centred single-line row cells. Receiving quantities/costs/totals and invoice batch review follow the same rule. The batch review header has an opaque surface, a hairline divider and ordinary first-row top padding.

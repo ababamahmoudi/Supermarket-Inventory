@@ -767,6 +767,35 @@ export function DataTable({
       observer?.disconnect();
     };
   });
+  // Sort indicators are separate from the caption: numeric captions end on
+  // the same edge as their values even after sorting or switching direction.
+  const headerContent = (content: ReactNode, align: "start" | "end") =>
+    Children.map(content, (child) => {
+      if (
+        !isValidElement<{ children?: ReactNode }>(child) ||
+        (child.type !== Button && child.type !== "button")
+      )
+        return child;
+      const parts = Children.toArray(child.props.children);
+      const indicator = parts.filter(
+        (part) => typeof part === "string" && /^\s*[↑↓]\s*$/.test(part),
+      );
+      const caption = parts.filter((part) => !indicator.includes(part));
+      const mark = indicator.length ? (
+        <span className="table-sort-indicator" aria-hidden="true">
+          {indicator}
+        </span>
+      ) : null;
+      return cloneElement(child, {
+        children: (
+          <>
+            {align === "end" && mark}
+            <span className="table-header-label">{caption}</span>
+            {align !== "end" && mark}
+          </>
+        ),
+      });
+    });
   const decorate = (nodes: ReactNode, path = "table"): ReactNode =>
     Children.map(nodes, (node, nodeIndex) => {
       if (
@@ -994,6 +1023,14 @@ export function DataTable({
                       ? "end"
                       : (column.align ?? "start"),
                   },
+                  ...(cell.type === "th"
+                    ? {
+                        children: headerContent(
+                          content,
+                          column.align === "end" ? "end" : "start",
+                        ),
+                      }
+                    : {}),
                   ...(endActions
                     ? {
                         children:

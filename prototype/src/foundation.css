@@ -1181,3 +1181,61 @@
 .personal-notifications-error {
   color: var(--danger);
 }
+
+/* R2e B1 — header captions and values use one shared content edge. */
+@media (min-width: 761px) {
+  :root .ui-data-table:not(.is-phone-list) tr > :is(th, td) {
+    padding-inline: var(--table-cell-padding);
+    vertical-align: middle;
+  }
+  :root .ui-data-table:not(.is-phone-list) thead th {
+    vertical-align: bottom;
+  }
+  :root .ui-data-table th > :is(button, .ui-button.button) {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    gap: 4px;
+    margin: 0;
+    padding-inline: 0;
+    border-inline: 0;
+    text-align: start;
+    white-space: nowrap;
+  }
+  :root .ui-data-table th.numeric > :is(button, .ui-button.button) {
+    justify-content: flex-end;
+    text-align: end;
+  }
+  :root .ui-data-table .table-header-label {
+    min-inline-size: 0;
+  }
+  :root .ui-data-table .table-sort-indicator {
+    flex: 0 0 auto;
+  }
+  :root :is(.receiving-table, .invoice-approval-table) :is(th, td) {
+    padding-inline: var(--table-cell-padding);
+    vertical-align: middle;
+  }
+  :root :is(.receiving-table, .invoice-approval-table) :is(th, td).numeric,
+  :root .receiving-table thead th:nth-child(3),
+  :root .receiving-table .receiving-quantity-cell {
+    text-align: end;
+  }
+  :root .receiving-table .receiving-quantity-cell > * {
+    align-items: flex-end;
+  }
+  :root .invoice-approval-table thead th {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    background: var(--surface);
+    border-block-end: 1px solid var(--divider);
+    vertical-align: bottom;
+  }
+  :root .invoice-approval-table tbody > tr:first-child > td {
+    padding-block-start: 12px;
+  }
+}
