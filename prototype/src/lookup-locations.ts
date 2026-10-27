@@ -1,15 +1,23 @@
+import { hasApprovedPriceAtLocation } from "./lookup-branch";
+import { branchSellsToCustomers } from "./settings";
+import { activeSaleAt } from "./sales";
 import { actorAtLocation, freshActor } from "./authority";
 import type { AuthenticatedActor } from "./authority-types";
-import { effectivePrice } from "./catalog";
+import { effectiveOffer, effectivePrice } from "./catalog";
 import { allowedLocationIds, can, requireCapability } from "./permissions";
 import { lookupLastReceipt } from "./receipt-lots";
 import { effectiveExpiryLocation } from "./received";
-import { validTrackedDate } from "./date-tracking";
+import { validTrackedDate, dateIsDueSoon } from "./date-tracking";
 import type { DemoState } from "./types";
 
 export interface LookupLocationRow {
   location: string;
   price: string | null;
+  sells_here: boolean;
+  offer_label: string | null;
+  on_sale: boolean;
+  sale_last_day: string | null;
+  next_expiry: { date: string; soon: boolean } | null;
   delivered?: string;
   dates: { date: string; type: "expiry" | "best_before" }[];
 }
@@ -19,6 +27,7 @@ export function lookupLocationRows(
   state: DemoState,
   actor: AuthenticatedActor,
   productCode: string,
+  now = new Date(),
 ): LookupLocationRow[] {
   const current = freshActor(state, actor);
   requireCapability(state, current, "lookup.read");
@@ -52,9 +61,43 @@ export function lookupLocationRows(
           .map((row) => ({ date: row.date, type: row.date_type ?? "expiry" }))
           .sort((a, b) => a.date.localeCompare(b.date))
       : [];
+    const approved = hasApprovedPriceAtLocation(state, product, location, now);
+    const selling = branchSellsToCustomers(state.config, location);
+    const price =
+      selling && approved
+        ? effectivePrice(state, product, location, now)
+        : null;
+    const sale = price ? activeSaleAt(state, product, location, now) : null;
+    const nextExpiry = state.expiry
+      .filter(
+        (row) =>
+          row.company_id === current.company_id &&
+          row.product_code === productCode &&
+          row.status === "active" &&
+          (row.date_type ?? "expiry") === "expiry" &&
+          validTrackedDate(row.date) &&
+          effectiveExpiryLocation(state, row) === location,
+      )
+      .sort((a, b) => a.date.localeCompare(b.date))[0];
     return {
       location,
-      price: effectivePrice(state, product, location),
+      price,
+      sells_here:
+        selling &&
+        Boolean(
+          approved ||
+          delivered ||
+          product.last_received_relative_days?.[location] !== undefined ||
+          (state.stock[`${location}:${product.code}`] ?? 0) > 0,
+        ),
+      offer_label: price
+        ? (effectiveOffer(state, product, location, now)?.label ?? null)
+        : null,
+      on_sale: Boolean(sale),
+      sale_last_day: sale?.last_day ?? null,
+      next_expiry: nextExpiry
+        ? { date: nextExpiry.date, soon: dateIsDueSoon(state, nextExpiry, now) }
+        : null,
       ...(delivered ? { delivered } : {}),
       dates,
     };

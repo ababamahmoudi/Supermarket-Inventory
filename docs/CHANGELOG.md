@@ -535,3 +535,7 @@ Added original approved logo/icon files, optional public maker/support config, t
 
 - R2f D4: real weight Lookup/package composition, protected child navigation, shared pricing-unit/tax presentation and preserved quick/category filters.
 
+
+
+- R2f D5: genuine approved location comparison, amber differences/plain expiry, and compact two-line phone facts with protected public reads.
+

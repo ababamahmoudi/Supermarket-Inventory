@@ -566,6 +566,11 @@ export function DataTable({
     value: string;
     secondary: string[];
     selection?: string;
+    /** Compose phone facts only from declared, authorized cells and the genuine record link. */
+    render?: (slots: {
+      cell: (key: string) => ReactNode;
+      recordLink: ReactNode;
+    }) => ReactNode;
   };
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -955,7 +960,12 @@ export function DataTable({
             }
             return null;
           };
-          const routeLink = findLink(rowCells);
+          const routeLink = findLink(
+            rowCells.filter(
+              (_, index) =>
+                resolvedColumns[index] && !resolvedColumns[index].hidden,
+            ),
+          );
           return cloneElement(navigation, {
             className: cn(node.props.className, "phone-list-row"),
             tabIndex: href ? 0 : undefined,
@@ -983,7 +993,19 @@ export function DataTable({
                 window.location.hash = href;
               }
             },
-            children: (
+            children: phoneList.render ? (
+              phoneList.render({
+                cell: permittedCell,
+                recordLink:
+                  routeLink ??
+                  (href ? (
+                    <TableRowLink
+                      href={href}
+                      aria-label={translate("Open", "باز کردن")}
+                    />
+                  ) : null),
+              })
+            ) : (
               <>
                 {phoneList.selection && (
                   <td className="phone-list-selection">

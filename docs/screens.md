@@ -462,3 +462,9 @@ Timesheets → Manage staff opens Staff · configured branch in an880px rounded 
 
 Weight Lookup uses the shared 36 px amount/18 px unit typography, secondary conversion/tax line and protected public package boxes. Package taps show the genuine ordinary child result without clearing remembered filters. Actual approved location prices and separate pending amounts govern charging; aggregate selection never picks a store implicitly. All six 44 px quick filters remain; AI categories move into an initially closed shared More filters disclosure with remembered active summary. Phone actions sit below metadata, as in the approved PNG. See `PR_R2F_LOOKUP_RETURNS.md` for click paths and deliberate data/capability differences.
 
+
+
+### R2f D5 — Lookup by location
+
+The compact comparison has Location, genuinely approved Price, real Offer, Last delivered and plaintext Next expiry. Warehouse is Not sold here; a missing approval stays unknown. Genuine minority differences are amber with an actual-location title; ties do not select a preferred branch. Phone follows the approved PNG's name/price and offer/date lines, intentionally omitting expiry. All public facts retain actor/company/location scope.
+

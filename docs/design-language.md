@@ -410,3 +410,10 @@ Only successful outer Save assigns codes/barcodes. Pending prices and pending ar
 
 Use the central weight-Lookup 36 px amount and 18 px unit tokens; secondary unit/tax context uses body text. Package boxes use field tint, shared menu radius, a 36 px package icon and genuine size/code/end price; two desktop columns become one on phone. Lookup product header peers consume the shared 44 px control-row contract. The approved phone places those actions after the bilingual title/metadata.
 
+
+
+
+### R2f D5 — compact location facts
+
+By-location expiry stays plaintext using the shared column-value alignment, amber only when actually due soon. Different approved location prices use amber text/dot. Phone comparisons have exactly two logical lines without duplicated captions.
+

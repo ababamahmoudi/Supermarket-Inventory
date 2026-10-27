@@ -968,3 +968,9 @@ Manage staff uses the approved 880px dialog, with aligned44px Search / Active–
 
 The public weight parent presentation keeps configured main/secondary units, actual approved charge, tax and offer facts. The protected package read supplies real active children, size/code/count and approved/pending location prices. Selecting a package displays its normal product result with no mutation or implicit location choice. Keep person/company/location search preferences and all six combinable quick filters; retain the prior AI-category capability inside a shared disclosure.
 
+
+
+### R2f D5: public location comparison
+
+Lookup By location uses an actual approved selling-price basis for each parent/child/Store. Warehouse cannot charge. Plain active expiry reminders and retained delivery/offer facts are scoped public data; distinct genuine prices receive amber treatment without implicitly choosing a branch. The approved phone comparison omits expiry and keeps two lines per location.
+

@@ -38,6 +38,11 @@ describe("R2c 0.13 protected All locations Lookup", () => {
       expect(Object.keys(row).sort()).toEqual(
         [
           "dates",
+          "sells_here",
+          "offer_label",
+          "on_sale",
+          "sale_last_day",
+          "next_expiry",
           ...(row.delivered ? ["delivered"] : []),
           "location",
           "price",
@@ -102,4 +107,33 @@ describe("R2c 0.13 protected All locations Lookup", () => {
     const actor = authenticatedTestFixture(state, "manager").actor;
     expect(() => lookupLocationRows(state, { ...actor }, "0009")).toThrow();
   });
+});
+
+it("D5 aggregate facts never turn an unapproved company default or a warehouse into a charging price", () => {
+  const state = migrateE1BusinessState(initialState());
+  const actor = authenticatedTestFixture(state, "manager", {
+    selection: { kind: "all_locations" },
+  }).actor;
+  const product = state.products.find((row) => row.code === "0009")!;
+  product.branch_prices = {};
+  product.manual_prices = {};
+  product.price_provenance = {};
+  state.approvals = state.approvals.filter(
+    (row) => row.product_code !== product.code,
+  );
+  state.activity = state.activity.filter(
+    (row) => row.product_code !== product.code,
+  );
+  const rows = lookupLocationRows(state, actor, product.code);
+  expect(rows.every((row) => row.price === null)).toBe(true);
+  expect(rows.find((row) => row.location === "Warehouse")).toMatchObject({
+    price: null,
+    sells_here: false,
+  });
+  product.branch_prices = { "Branch 1": "4.49" };
+  expect(
+    lookupLocationRows(state, actor, product.code).find(
+      (row) => row.location === "Branch 1",
+    )?.price,
+  ).toBe("4.49");
 });
