@@ -2292,7 +2292,7 @@ export function AutoTextarea({
     node.style.height = `${Math.min(maximum, Math.max(minimum, node.scrollHeight + border))}px`;
     node.style.overflowY =
       node.scrollHeight + border > maximum + 1 ? "auto" : "hidden";
-  }, [rows, maxRows]);
+  }, [maxRows]);
   const attach = useCallback(
     (node: HTMLTextAreaElement | null) => {
       element.current = node;
