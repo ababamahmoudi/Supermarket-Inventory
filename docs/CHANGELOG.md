@@ -480,3 +480,7 @@ Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted
 - R2e B4: replace dark in-dialog Undo toasts with quiet footer status/Undo, preserving the guarded action and remaining display time until page feedback can resume after closing.
 - R2e B5: reserve list counts/Columns on the first desktop filter row and unify filter controls to 44 px; retained centre/overflow tests now also prove first-row placement.
 - R2e B6: shared note/description fields automatically grow from two to six lines, then scroll with no resize grip; keep buffered typing and receiving's four-line address layout.
+
+### R2e B7 — reading-name cleanup
+
+- Cleaned supplier promotion markers, unmatched brackets and leading/trailing pack text for new proposals, preserving printed evidence and existing catalog names; added fictional pattern regressions.

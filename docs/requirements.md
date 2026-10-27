@@ -924,3 +924,7 @@ The prototype implements these fresh guards in its private canonical IndexedDB c
 ### R2e A — measured invoice cases
 
 Weight cases expose explicit case count, case mass/unit, delivered cases, case cost and calculated read-only per-weight cost. Unit switches preserve original paper cents and do not reinterpret a case price as a per-lb/kg price. Explicit single measured packs and composite measured packs establish case mass; unknown mass remains an amber entry requirement. Every imported paper line total is retained separately, with differences greater than one cent blocking confirmation and posting until a cost fix or separate actor/time-recorded “Paper total is wrong” decision. See [review steps and fictional import](PR_R2E_A_REVIEW.md).
+
+### R2e B7 — reading-name cleanup
+
+New reading proposals remove supplier Promotion/Promo markers into a quiet “Supplier promotion” note, remove unmatched bracket punctuation, and move leading counted-box and trailing measured-bag/case text into pack evidence. Printed descriptions remain unchanged, and existing product names are never renamed automatically.

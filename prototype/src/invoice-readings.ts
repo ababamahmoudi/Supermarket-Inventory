@@ -1231,6 +1231,7 @@ export function mapReadingLine(
     sold_by: unit === "kg" || unit === "lb" ? "weight" : "each",
     lot_number: text(source.lot_number),
     handwritten_note: text(source.handwritten_note),
+    ...(split.supplier_promotion ? { reading_supplier_promotion: true } : {}),
     expiry_as_printed: text(source.expiry_as_printed),
     import_line_index: index,
     date_tracking: trackingChoiceForProduct(product) === "yes",

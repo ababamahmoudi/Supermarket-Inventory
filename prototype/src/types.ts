@@ -369,6 +369,7 @@ export type InvoiceLine = Omit<
   supplier_item_id?: string;
   supplier_item_code?: string;
   supplier_item_code_inferred?: boolean;
+  reading_supplier_promotion?: boolean;
   reading_product_match?: InvoiceReadingProductMatch;
   quantity_unit?: "cases" | "units" | "kg" | "lb";
   quantity_entered?: string | number;

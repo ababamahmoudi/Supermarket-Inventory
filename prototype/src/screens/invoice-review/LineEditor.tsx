@@ -584,6 +584,11 @@ export function LineEditor({
                       }}
                     />
                   </Field>
+                  {line.reading_supplier_promotion && (
+                    <p className="receiving-editor-check-note">
+                      {t("Supplier promotion", "تخفیف تأمین‌کننده")}
+                    </p>
+                  )}
                   {!correction && line.new_name_suggestion && (
                     <div className="receiving-name-suggestion">
                       <span>

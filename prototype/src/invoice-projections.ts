@@ -125,6 +125,7 @@ const lineKeys = [
   "supplier_item_id",
   "supplier_item_code",
   "supplier_item_code_inferred",
+  "reading_supplier_promotion",
   "quantity_unit",
   "quantity_entered",
   "order_item_id",

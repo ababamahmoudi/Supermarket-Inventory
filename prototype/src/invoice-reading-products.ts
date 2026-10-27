@@ -12,6 +12,7 @@ export interface InvoiceProductDescriptionSplit {
   units_per_case?: number;
   uncertain: boolean;
   suggested_name?: string;
+  supplier_promotion?: boolean;
 }
 
 /** Supplier pack sizes stay recognizable while ALL CAPS words become readable names. */
@@ -153,6 +154,22 @@ function removeSupplierCode(description: string, code: string) {
   return { name, uncertain: name !== description };
 }
 
+/** Preserve balanced descriptive brackets and remove only unmatched punctuation. */
+function removeUnbalancedBrackets(value: string): string {
+  const pairs: Record<string, string> = { ")": "(", "]": "[", "}": "{" };
+  const stack: { char: string; index: number }[] = [];
+  const remove = new Set<number>();
+  [...value].forEach((char, index) => {
+    if (["(", "[", "{"].includes(char)) stack.push({ char, index });
+    else if (pairs[char]) {
+      if (stack.at(-1)?.char === pairs[char]) stack.pop();
+      else remove.add(index);
+    }
+  });
+  stack.forEach((item) => remove.add(item.index));
+  return [...value].filter((_char, index) => !remove.has(index)).join("");
+}
+
 /** Separate editable suggestions without changing the caller's printed evidence. */
 export function splitInvoiceProductDescription({
   description,
@@ -162,9 +179,15 @@ export function splitInvoiceProductDescription({
   unit,
 }: InvoiceProductDescriptionInput): InvoiceProductDescriptionSplit {
   const code = supplierCode?.trim() ?? "";
-  const withoutCode = removeSupplierCode(description.trim(), code);
+  const promotionPattern = /\(?\s*\bpromo(?:tion)?\b\s*\)?/gi;
+  const supplierPromotion = promotionPattern.test(description);
+  promotionPattern.lastIndex = 0;
+  const withoutCode = removeSupplierCode(
+    description.trim().replace(promotionPattern, " "),
+    code,
+  );
   const singleCase = new RegExp(
-    `\\b(${amount})\\s*(${sizeUnit})\\s*\\/\\s*(?:case|box|carton)\\s*$`,
+    `\\b(${amount})\\s*(${sizeUnit})\\s*\\/\\s*(?:case|box|carton|bag)\\s*$`,
     "i",
   ).exec(withoutCode.name);
   let name = withoutCode.name.replace(/\s*\/\s*(?:case|box|ctn)\s*$/i, "");
@@ -172,6 +195,15 @@ export function splitInvoiceProductDescription({
   let extractedPack = "";
   let inferredCount: number | undefined;
   let uncertain = withoutCode.uncertain;
+  const leadingCount =
+    /^(?:box|case|carton|pack|ctn)\s+(?:of\s+)?(\d+)\s*(?:(?:pcs?|pieces?|units?)\b|[x×*](?!\s*\d))\s*/i.exec(
+      name,
+    );
+  if (leadingCount) {
+    inferredCount = positiveCount(leadingCount[1]);
+    extractedPack = `${leadingCount[1]} units`;
+    name = name.slice(leadingCount[0].length);
+  }
   const measured = measuredPack.exec(name);
   if (measured) {
     extractedPack = `${measured[1]} × ${measured[2]} ${canonicalSizeUnit(measured[3])}`;
@@ -223,11 +255,7 @@ export function splitInvoiceProductDescription({
       return " ";
     },
   );
-  name = cleanSeparators(
-    name
-      .replace(/\s*\/\s*(?:case|box|ctn)\s*$/i, "")
-      .replace(/^[()\s]+|[()\s]+$/g, ""),
-  );
+  name = cleanSeparators(name.replace(/\s*\/\s*(?:case|box|ctn)\s*$/i, ""));
   const explicitPack = packSize?.trim() ?? "";
   const nestedPack = nestedDescription || nestedMeasuredPack.test(explicitPack);
   uncertain ||= nestedPack;
@@ -276,11 +304,14 @@ export function splitInvoiceProductDescription({
       ? `${explicitMeasured[1]} × ${explicitMeasured[2]} ${canonicalSizeUnit(explicitMeasured[3])}`
       : normalizePack(explicitPack)
     : extractedPack;
-  const normalizedName = suggestInvoiceEnglishName(name);
+  const normalizedName = suggestInvoiceEnglishName(
+    cleanSeparators(removeUnbalancedBrackets(name)),
+  );
   uncertain ||= !normalizedName || packPrefix.test(normalizedName);
   const nameLikeCode = /^[\p{L}][\p{L}\s]*$/u.test(code);
   return {
     name: normalizedName,
+    ...(supplierPromotion ? { supplier_promotion: true } : {}),
     pack_size: formattedPack,
     ...(count === undefined ? {} : { units_per_case: count }),
     uncertain,
