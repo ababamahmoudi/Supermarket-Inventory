@@ -383,7 +383,11 @@
     "conversion_factor": "2.20462",
     "main_display_unit": "lb",
     "show_second_unit": true,
-    "use_rounding_bands": true
+    "use_rounding_bands": true,
+    "package_container_fee": "0.49",
+    "package_container_cost": "0.00",
+    "package_barcode_prefix": "20",
+    "ounces_per_lb": "16"
   },
   "returns": {
     "deduct_expected_credit_at_pickup": true,

@@ -1,3 +1,4 @@
+import { migratePackageState } from "./package-state";
 import { migrateTimesheetState } from "./timesheet-state";
 import {
   migratePriceUpdates,
@@ -46,6 +47,7 @@ export function browserShellOptions(projectors: ReadModelProjectors) {
       await migratePriceUpdates(...args);
       await migrateSalePriceInvariants(...args);
       await migrateTimesheetState(...args);
+      await migratePackageState(...args);
     },
     historyRecovery: {
       status: historyRecoveryStatus,

@@ -42,6 +42,13 @@ export type ProductReadDTO = Pick<
   | "price_approved_relative_days"
   | "first_added_branch"
   | "offer"
+  | "package_of_product_id"
+  | "package_size"
+  | "package_size_unit"
+  | "package_size_lb"
+  | "package_barcode_generated"
+  | "package_version"
+  | "package_pending_prices"
 > & {
   /** Public selling-price provenance; never expose the canonical marker. */
   manual_price_scopes: readonly string[];
@@ -118,6 +125,13 @@ export function projectProductReadDTO(
         ? product.first_added_branch
         : undefined,
     offer: product.offer,
+    package_of_product_id: product.package_of_product_id,
+    package_size: product.package_size,
+    package_size_unit: product.package_size_unit,
+    package_size_lb: product.package_size_lb,
+    package_barcode_generated: product.package_barcode_generated,
+    package_version: product.package_version,
+    package_pending_prices: byLocation(product.package_pending_prices),
     manual_price_scopes: ["all", ...locations].filter(
       (location) => manualPrice(state, product, location) !== null,
     ),

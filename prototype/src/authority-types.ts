@@ -331,7 +331,8 @@ export type SystemReconciliationSource =
   | "date_reminders"
   | "return_credit_reminders"
   | "price_updates"
-  | "timesheets_migration";
+  | "timesheets_migration"
+  | "packages_migration";
 /** Requires an active repository-minted witness bound to this exact canonical draft. */
 export declare function requireSystemReconciliation(
   state: BusinessState,

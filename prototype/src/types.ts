@@ -115,6 +115,10 @@ export type CompanyConfig = Omit<
     main_display_unit: "lb" | "kg";
     show_second_unit: boolean;
     use_rounding_bands: boolean;
+    package_container_fee?: string;
+    package_container_cost?: string;
+    package_barcode_prefix?: string;
+    ounces_per_lb?: string;
   };
   returns?: {
     deduct_expected_credit_at_pickup: boolean;
@@ -162,6 +166,14 @@ export type Product = Omit<
   date_reminder_days?: number;
   first_added_branch?: Branch;
   sold_by?: "each" | "weight";
+  /** Stable parent Product Code within company_id; product codes are never reused. */
+  package_of_product_id?: string;
+  package_size?: string;
+  package_size_unit?: "g" | "kg" | "lb" | "oz";
+  package_size_lb?: string;
+  package_barcode_generated?: boolean;
+  package_version?: number;
+  package_pending_prices?: Record<Branch, string>;
   price_provenance?: Record<Branch, PriceProvenance>;
   manual_prices?: Record<
     Branch,
@@ -765,6 +777,7 @@ export interface HistoryRecoveryMarker {
 }
 export interface DemoState {
   version: 1;
+  prototype_r2e_package_schema?: 1;
   prototype_r2d_timesheet_schema?: 1;
   prototype_r2d_timesheet_demo?: 1;
   timesheet_staff?: TimesheetStaff[];

@@ -451,3 +451,9 @@ Invoice lines retain `case_weight`/`case_weight_unit`, equivalent `weight_case_q
 ### R2e C8 — Return input units
 
 Return lines retain canonical `quantity_unit` (`units` or `lb`), canonical quantity and frozen canonical receipt unit cost. Optional `entered_quantity` and `entered_quantity_unit` (`units`, `cases`, `lb`, `kg`) preserve the person's original input. Permitted conversion choices come only from the selected retained receipt: positive units-per-case or case weight and the configured kg/lb factor. The opaque source fingerprint binds the retained conversion basis; stale choices fail. Public creation choices expose only the allowed unit multipliers, never invoice identity/cost when that role cannot read them. No stock-count model or inferred return cap is introduced.
+
+## R2e D1: fixed-size weight packages
+
+A package is a normal company-scoped Product. `package_of_product_id` retains the parent's stable Product Code (the canonical product identity in this model; codes are never reused), with `package_size`, `package_size_unit` (`g`, `kg`, `lb`, `oz`), exact Decimal `package_size_lb`, generated/manual barcode provenance, and optimistic `package_version`. Each child receives its own code from the retained company high-water sequence. It sells by Each and inherits pricing category, tax profile/taxable flag and supplier identity. Archive retains the product and its code. Branch pending derived prices live in `package_pending_prices`; public catalog projection filters them to authorized locations and omits financial evidence as before.
+
+The additive `prototype_r2e_package_schema` migration verifies an exact restorable private backup before adding only missing weighed-item settings. It never adds demo packages or rewrites existing products, names, barcodes, approved prices or custom settings.
