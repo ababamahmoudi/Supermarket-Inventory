@@ -201,3 +201,40 @@ for (const scene of ["D1", "D7"] as const) {
     ).toBe(false);
   });
 }
+
+for (const direction of ["ltr", "rtl"] as const)
+  test(`R0.7 Dashboard decision groups measure actual control edges and reject a shifted group (${direction})`, async ({
+    page,
+  }) => {
+    await page.setContent(
+      `<html dir="${direction}"><style>*{box-sizing:border-box}table{width:600px;table-layout:fixed}th,td{padding:12px;text-align:start}td[data-column-key=actions]{text-align:end}.dashboard-inline-actions{display:flex;justify-content:flex-end;gap:8px;width:160px}button{width:84px;height:44px;border:0}button.more{width:44px}</style><main class="r2c-dashboard"><div class="dashboard-approval-table"><table><thead><tr><th>Product</th><th></th></tr></thead><tbody>${["Approve", "Review"].map((label, i) => `<tr><td>Fictional product ${i + 1}</td><td data-column-key="actions"><div class="dashboard-inline-actions"><button>${label}</button><button class="more" aria-label="More"><svg aria-hidden="true" width="16" height="16"><circle cx="8" cy="8" r="2"/></svg></button></div></td></tr>`).join("")}</tbody></table></div></main></html>`,
+    );
+    const plain = await auditR2fAlignment(page, {
+      scene: "D7",
+      exceptionIds: [],
+    });
+    expect(plain.failures.some((value) => value.startsWith("col "))).toBe(true);
+    const clean = await auditR2fAlignment(page, { scene: "D7" });
+    expect(clean.failures).toEqual([]);
+    expect(
+      clean.allowed.some((item) => item.id === "D7-decision-control-group"),
+    ).toBe(true);
+    await page
+      .locator(".dashboard-inline-actions")
+      .first()
+      .evaluate(
+        (el) => ((el as HTMLElement).style.transform = "translateX(4px)"),
+      );
+    expect(
+      (await auditR2fAlignment(page, { scene: "D7" })).failures.some((value) =>
+        value.startsWith("col "),
+      ),
+    ).toBe(true);
+    await page
+      .locator(".dashboard-inline-actions")
+      .first()
+      .evaluate((el) => (el as HTMLElement).removeAttribute("style"));
+    expect((await auditR2fAlignment(page, { scene: "D7" })).failures).toEqual(
+      [],
+    );
+  });

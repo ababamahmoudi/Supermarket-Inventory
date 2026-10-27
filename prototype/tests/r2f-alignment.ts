@@ -32,6 +32,15 @@ export const r2fAlignmentExceptions = [
       "The approved Dashboard Type value is a contextual chip. Compare its complete visible value edge; all numeric/text captions retain actual glyph probes.",
   },
   {
+    id: "D7-decision-control-group",
+    scene: "D7",
+    kind: "composite-control-column",
+    selector:
+      ".r2c-dashboard .dashboard-approval-table td[data-column-key='actions'] > .dashboard-inline-actions",
+    reason:
+      "The approved decision column has a blank heading and uniformly sized controls with centred Approve/Review captions. Compare the real control-group edge; peer button centres/heights and all money/text columns remain strict.",
+  },
+  {
     id: "D7-status-dot",
     scene: "D7",
     kind: "composite-column-value",
@@ -344,7 +353,11 @@ export async function auditR2fAlignment(
               align: "center" as const,
             };
           }
-          if (entry.kind !== "composite-column-value") continue;
+          if (
+            entry.kind !== "composite-column-value" &&
+            entry.kind !== "composite-control-column"
+          )
+            continue;
           const composite = cell.matches(entry.selector)
             ? cell
             : cell.querySelector<HTMLElement>(entry.selector);
