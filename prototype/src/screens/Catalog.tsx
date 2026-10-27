@@ -1212,7 +1212,7 @@ export function ProductEditor({
                   />
                 </Field>
                 <Field
-                  label={t("Barcode", "بارکد")}
+                  label={t("Barcode (optional)", "بارکد (اختیاری)")}
                   error={
                     error === "barcode_conflict"
                       ? editorError(error, t)
@@ -1257,36 +1257,38 @@ export function ProductEditor({
                     </Field>
                   </>
                 )}
-                <Field
-                  label={t(
-                    "Description (English) (optional)",
-                    "توضیحات (انگلیسی) (اختیاری)",
-                  )}
-                >
-                  <textarea
-                    dir="ltr"
-                    value={values.description_en}
-                    onChange={(event) =>
-                      patch("description_en", event.target.value)
-                    }
-                    rows={2}
-                  />
-                </Field>
-                <Field
-                  label={t(
-                    "Description (Persian) (optional)",
-                    "توضیحات (فارسی) (اختیاری)",
-                  )}
-                >
-                  <textarea
-                    dir="rtl"
-                    value={values.description_fa}
-                    onChange={(event) =>
-                      patch("description_fa", event.target.value)
-                    }
-                    rows={2}
-                  />
-                </Field>
+                <div className="product-editor-description-row">
+                  <Field
+                    label={t(
+                      "Description (English) (optional)",
+                      "توضیحات (انگلیسی) (اختیاری)",
+                    )}
+                  >
+                    <textarea
+                      dir="ltr"
+                      value={values.description_en}
+                      onChange={(event) =>
+                        patch("description_en", event.target.value)
+                      }
+                      rows={2}
+                    />
+                  </Field>
+                  <Field
+                    label={t(
+                      "Description (Persian) (optional)",
+                      "توضیحات (فارسی) (اختیاری)",
+                    )}
+                  >
+                    <textarea
+                      dir="rtl"
+                      value={values.description_fa}
+                      onChange={(event) =>
+                        patch("description_fa", event.target.value)
+                      }
+                      rows={2}
+                    />
+                  </Field>
+                </div>
               </div>
             </section>
             {values.date_tracking && dateLocation === "all" && (

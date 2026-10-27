@@ -162,7 +162,9 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
     (canonicalState) =>
       JSON.parse(JSON.stringify(canonicalState)!).products[0].barcode,
   );
-  await dialog.getByLabel("Barcode", { exact: true }).fill(conflictingBarcode);
+  await dialog
+    .getByLabel("Barcode (optional)", { exact: true })
+    .fill(conflictingBarcode);
   await expect(
     dialog.getByText("Starting stock count (optional)", { exact: true }),
   ).toHaveCount(0);
@@ -173,7 +175,7 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
   await expect(
     dialog
       .locator(".field")
-      .filter({ has: page.getByLabel("Barcode", { exact: true }) })
+      .filter({ has: page.getByLabel("Barcode (optional)", { exact: true }) })
       .getByRole("alert"),
   ).toHaveText(
     "This barcode belongs to another product. Use a different barcode.",
@@ -181,7 +183,9 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
   await expect(
     dialog.getByRole("alert", { name: "What's missing", exact: true }),
   ).toContainText("This barcode belongs to another product.");
-  await dialog.getByLabel("Barcode", { exact: true }).fill("DEMO-ORCHARD-NEW");
+  await dialog
+    .getByLabel("Barcode (optional)", { exact: true })
+    .fill("DEMO-ORCHARD-NEW");
   await dialog
     .getByRole("button", { name: "Add product", exact: true })
     .click();

@@ -202,3 +202,17 @@
 .manual-price-comparison {
   white-space: nowrap;
 }
+
+/* Paired descriptions occupy their own full row even when details above differ. */
+.product-editor-description-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  min-inline-size: 0;
+}
+@media (max-width: 480px) {
+  .product-editor-description-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

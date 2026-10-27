@@ -318,7 +318,9 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
     exact: true,
   });
   await editor.getByLabel("English name", { exact: true }).fill("Edited chips");
-  await editor.getByLabel("Barcode", { exact: true }).fill(owner.barcode);
+  await editor
+    .getByLabel("Barcode (optional)", { exact: true })
+    .fill(owner.barcode);
   // Resolve tracking first so this failure proves the barcode business guard.
   await stopTrackingKeepDates(page, editor);
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -345,7 +347,9 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
     conflicting_product_code: owner.code,
     triggered_by: configuredPersonExpectation("manager").name_en,
   });
-  await editor.getByLabel("Barcode", { exact: true }).fill("new-chips-barcode");
+  await editor
+    .getByLabel("Barcode (optional)", { exact: true })
+    .fill("new-chips-barcode");
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();
