@@ -1,5 +1,11 @@
 .timesheets-page {
-  min-width: 0;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.timesheets-page .page-header {
+  margin: 0;
 }
 :root .timesheets-page .ui-button.button:not(.ui-icon-button),
 :root .timesheet-settings .ui-button.button:not(.ui-icon-button),
@@ -11,183 +17,268 @@
 }
 .timesheet-toolbar,
 .timesheet-date-controls,
-.timesheet-department-heading,
-.timesheet-staff-toolbar,
-.timesheet-managed-person {
+.timesheet-view-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 .timesheet-toolbar {
   justify-content: space-between;
   flex-wrap: wrap;
-  margin-block: 20px 24px;
+  gap: 12px;
 }
-.timesheet-date-controls {
-  flex-wrap: nowrap;
+.timesheet-toolbar .timesheet-date-controls,
+.timesheet-toolbar .timesheet-view-actions {
+  --control-row-gap: 8px;
+  display: flex;
   gap: 8px;
+  flex-wrap: nowrap;
 }
 :root .timesheets-page .timesheet-date-controls > .ui-date {
-  inline-size: 156px;
-  min-inline-size: 156px;
-  flex: 0 0 156px;
+  inline-size: 168px;
+  min-inline-size: 168px;
+  flex: 0 0 168px;
   gap: 8px;
 }
 .timesheet-date-controls > .ui-date > bdi {
   white-space: nowrap;
 }
-.timesheet-day-total {
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
+
 .timesheet-inline-branch,
 .timesheet-choose-branch .field {
-  max-width: 320px;
-  margin-block-end: 24px;
+  max-inline-size: 320px;
+  margin: 0;
 }
 .timesheet-departments {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: 20px;
+  display: block;
+  column-count: 3;
+  column-gap: 20px;
+}
+.timesheet-departments > .timesheet-department {
+  break-inside: avoid;
+  margin: 0 0 20px;
+  inline-size: 100%;
+  display: inline-flex;
 }
 .timesheet-department {
-  min-width: 0;
-  padding: 20px;
+  min-inline-size: 0;
+  padding: 20px 20px 12px;
+  flex-direction: column;
+  gap: 4px;
 }
 .timesheet-department-heading {
-  display: block;
-  margin-block-end: 20px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block-end: 8px;
 }
 .timesheet-department-heading h2 {
   margin: 0;
-  font-size: 17px;
-  font-weight: 800;
-}
-.timesheet-department-heading span {
-  display: block;
-  margin-block-start: 4px;
-  color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--font-size-title);
 }
 .timesheet-department-heading small {
-  display: block;
-  margin-block-start: 8px;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+.timesheet-table {
+  display: flex;
+  flex-direction: column;
 }
 .timesheet-table-head,
 .timesheet-row {
   display: grid;
-  grid-template-columns: minmax(64px, 1fr) 66px 66px 64px;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 60px 60px 48px 28px;
+  align-items: center;
+  column-gap: 8px;
+  min-block-size: 56px;
+  border-block-end: 1px solid var(--row-divider);
 }
 .timesheet-table-head {
+  min-block-size: 32px;
   color: var(--text-muted);
-  font-size: 12px;
-  margin-block-end: 12px;
+  font-size: var(--font-size-caption);
+  font-weight: 600;
 }
-.timesheet-row {
-  align-items: start;
-  padding-block: 16px;
-  border-block-start: 1px solid var(--row-divider);
+.timesheet-table-head > :nth-child(2),
+.timesheet-table-head > :nth-child(3) {
+  text-align: center;
+}
+.timesheet-table-head > :nth-child(4) {
+  text-align: end;
 }
 .timesheet-row > * {
-  min-width: 0;
+  min-inline-size: 0;
 }
 .timesheet-person strong {
   display: block;
-  font-size: 13px;
-  line-height: 20px;
-  overflow-wrap: anywhere;
-}
-.timesheet-person > .ui-button {
-  margin-block-start: 8px;
-  padding-inline: 8px;
-  gap: 4px;
-  color: var(--danger);
-}
-.timesheet-remove-copy {
-  display: none;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .timesheet-mobile-label {
   display: none;
 }
-.timesheet-saved-field input {
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  padding-inline: 8px;
-  font-variant-numeric: tabular-nums;
+.timesheet-saved-field {
+  position: relative;
 }
-.timesheet-saved-field.is-time input {
-  font-size: 13px;
+.timesheet-saved-field.is-time input.ui-input {
+  inline-size: 60px;
+  min-inline-size: 0;
+  block-size: 44px;
+  min-block-size: 44px;
+  padding: 0;
+  font-size: 15px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--radius-small);
 }
-.timesheet-now {
-  width: 100%;
-  min-height: 44px;
-  margin-block-start: 8px;
-  padding-inline: 8px;
-  border: 0;
-  cursor: pointer;
+.timesheet-saved-field.is-time input::placeholder {
+  color: var(--text-muted);
+}
+.timesheet-saved-field.is-time input:focus {
+  background: var(--surface);
+  box-shadow: var(--shadow-focus);
 }
 .timesheet-save-state {
-  display: block;
-  height: 44px;
-  margin-block-start: 4px;
-  font-size: 12px;
-  line-height: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-block-size: 20px;
+  margin-block-start: 8px;
+  font-size: var(--font-size-caption);
+  line-height: 20px;
 }
-.timesheet-save-state.form-error {
-  font-size: 12px;
+.timesheet-saved-field.is-time .timesheet-save-state:not(.form-error) {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  min-block-size: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.timesheet-saved-field.is-time .timesheet-save-state.form-error {
+  position: absolute;
+  inset-block-start: calc(100% + 2px);
+  inset-inline-end: 0;
+  inline-size: 150px;
+  z-index: 5;
+  margin: 0;
+  padding: 6px;
+  background: var(--surface);
+  border-radius: var(--radius-menu);
+  box-shadow: var(--shadow-menu);
 }
 .timesheet-retry {
   margin: 0;
-  padding-inline: 4px;
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  font-size: 12px;
+  padding-inline: 8px;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 44px;
+  font-size: var(--font-size-caption);
+}
+.timesheet-now-popover {
+  padding: 6px;
+}
+.timesheet-now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  inline-size: 100%;
+  block-size: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-small);
+  background: var(--accent-soft);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.timesheet-now:focus-visible {
+  outline: 1px solid var(--accent);
+  box-shadow: var(--shadow-focus);
+}
+.timesheet-now bdi {
+  margin-inline-start: auto;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 .timesheet-hours {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 12px;
-  padding-block-start: 10px;
+  align-items: flex-end;
+  text-align: end;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 .timesheet-hours strong {
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  line-height: 20px;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  white-space: nowrap;
 }
-.timesheet-hours .ui-badge {
-  white-space: normal;
+.timesheet-hours small {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 12px;
+  color: var(--text-muted);
 }
-.timesheet-warning {
+.timesheet-hours.is-live,
+.timesheet-hours.is-live small {
+  color: var(--accent);
+}
+.timesheet-hours .timesheet-warning,
+.timesheet-hours:not(.is-live) > small {
   color: var(--pending);
-  line-height: 18px;
+}
+:root
+  .timesheets-page
+  .timesheet-row-actions
+  .ui-menu-trigger.timesheet-row-menu {
+  inline-size: 28px;
+  min-inline-size: 28px;
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: 44px;
+  padding: 0;
+  color: var(--text-muted);
+}
+.timesheet-row > .form-error {
+  grid-column: 1 / -1;
+  margin: 0;
 }
 .timesheet-add-person {
-  margin-block-start: 8px;
+  padding-block-start: 6px;
+}
+:root .timesheet-department .timesheet-add-person > .ui-button.button {
+  padding-inline: 0;
+  min-inline-size: 0;
+  justify-content: flex-start;
+  margin-inline-start: 0;
 }
 .timesheet-staff-search {
   margin-block-start: 12px;
 }
 .timesheet-staff-options {
-  max-height: 280px;
+  max-block-size: 280px;
   overflow: auto;
   margin-block-start: 8px;
 }
 .timesheet-staff-options > button {
   display: flex;
-  width: 100%;
+  inline-size: 100%;
   justify-content: space-between;
   align-items: center;
   text-align: start;
   gap: 8px;
-  min-height: 44px;
+  min-block-size: 44px;
   padding: 10px 12px;
   background: var(--surface);
   color: var(--text);
@@ -200,19 +291,28 @@
   background: var(--accent-soft);
   color: var(--accent);
 }
-.timesheet-notes,
-.timesheet-history {
-  margin-block-start: 24px;
+.timesheet-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+.timesheet-notes h2 {
+  margin: 0;
+  font-size: var(--font-size-title);
 }
 .timesheet-notes textarea {
-  width: 100%;
-  min-block-size: 112px;
+  inline-size: 100%;
+  min-block-size: 72px;
   padding: 12px;
+  line-height: 1.5;
+}
+.timesheet-history {
+  inline-size: min(720px, calc(100vw - 32px));
 }
 .timesheet-history-list {
   display: grid;
   gap: 12px;
-  margin-block-start: 16px;
 }
 .timesheet-history-list > div {
   padding: 12px 0;
@@ -225,6 +325,41 @@
 .timesheet-history-list p {
   margin-block: 8px 0;
 }
+@media (max-width: 1180px) {
+  .timesheet-departments {
+    column-count: 2;
+  }
+}
+@media (max-width: 640px) {
+  .timesheet-departments {
+    column-count: 1;
+  }
+  .timesheet-department {
+    padding: 16px 16px 8px;
+  }
+  .timesheet-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .timesheet-toolbar .timesheet-date-controls {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px auto;
+  }
+  :root .timesheets-page .timesheet-date-controls > .ui-date {
+    inline-size: min(168px, 100%);
+    min-inline-size: 0;
+    flex: initial;
+  }
+  .timesheet-toolbar .timesheet-view-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .timesheet-view-actions > .ui-segments {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+}
+
 .timesheet-staff-toolbar {
   align-items: end;
   flex-wrap: wrap;
@@ -285,11 +420,6 @@
 .timesheet-settings-feedback[role="alert"] {
   color: var(--danger);
 }
-.timesheet-view-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 .timesheet-week {
   min-width: 0;
 }
@@ -330,11 +460,7 @@
 .timesheet-week-phone {
   display: none;
 }
-@media (max-width: 1199px) {
-  .timesheet-departments {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
+
 @media (max-width: 759px) {
   .timesheet-week-wide {
     display: none;
@@ -377,49 +503,6 @@
     justify-content: space-between;
     gap: 12px;
   }
-  .timesheet-departments {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-  .timesheet-department {
-    padding: 16px;
-  }
-  .timesheet-table-head {
-    display: none;
-  }
-  .timesheet-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-  }
-  .timesheet-person {
-    grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .timesheet-person > .ui-button {
-    margin: 0;
-  }
-  .timesheet-remove-copy {
-    display: inline;
-  }
-  .timesheet-mobile-label {
-    display: block;
-    color: var(--text-muted);
-    font-size: 12px;
-    margin-block-end: 8px;
-  }
-  .timesheet-hours {
-    padding-block-start: 0;
-    gap: 8px;
-  }
-  .timesheet-hours .timesheet-mobile-label {
-    margin-block-end: 0;
-  }
-  .timesheet-saved-field.is-time input {
-    font-size: 16px;
-  }
   .timesheet-staff-editor .form-grid,
   .timesheet-settings-department {
     grid-template-columns: minmax(0, 1fr);
@@ -436,24 +519,4 @@
   .timesheet-settings-department .actions {
     justify-content: flex-end;
   }
-  :root .timesheets-page .timesheet-date-controls > .ui-date {
-    inline-size: 140px;
-    min-inline-size: 140px;
-    flex-basis: 140px;
-  }
-}
-
-.timesheet-department-heading span[lang="fa"] {
-  text-align: match-parent;
-}
-
-.timesheet-hours strong,
-.timesheet-department-heading small,
-.timesheet-day-total {
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-.timesheet-hours strong {
-  direction: ltr;
-  unicode-bidi: isolate;
 }

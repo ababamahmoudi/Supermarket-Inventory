@@ -128,7 +128,7 @@ test("cashier adds two people and buffered times and notes survive fast typing a
     await expect(start).toHaveValue("07:30");
     const after = await start.boundingBox();
     expect(Math.abs(after!.y - box!.y)).toBeLessThanOrEqual(2);
-    await expect(row).toContainText("11 h 45 m");
+    await expect(row).toContainText("11:45");
   }
   const notes = page.getByRole("textbox", {
     name: "Notes for this day",
@@ -232,7 +232,7 @@ test("week totals match actual day shifts and payroll CSV opens the same days", 
       Number(value.slice(0, 2)) * 60 + Number(value.slice(3));
     return sum + ((minutes(row.out_time) - minutes(row.in_time) + 1440) % 1440);
   }, 0);
-  await page.getByRole("button", { name: "Week view", exact: true }).click();
+  await page.getByRole("tab", { name: "Week", exact: true }).click();
   const scope = page.locator(
     testInfo.project.name === "phone"
       ? ".timesheet-week-phone"
@@ -305,7 +305,12 @@ test("Print prepares the protected bilingual paper with all eight sections and N
     await expect(title).toContainText(persian);
   }
   await expect(paper.locator(".timesheet-paper-notes")).toContainText("Notes");
-  await expect(paper.locator("footer")).toHaveText("Made with Klead");
+  await expect(paper.locator('footer [lang="en"]')).toHaveText(
+    "Made with Klead",
+  );
+  await expect(paper.locator('footer [lang="fa"]')).toHaveText(
+    "ساخته‌شده با Klead",
+  );
   await expect(page.locator("#root")).toBeHidden();
   const columns = await paper
     .locator(".timesheet-paper-grid")
@@ -320,7 +325,7 @@ test("Print prepares the protected bilingual paper with all eight sections and N
   await page.emulateMedia({ media: "screen" });
   await page.evaluate(() => window.dispatchEvent(new Event("afterprint")));
   await expect(paper).toHaveCount(0);
-  await page.getByRole("button", { name: "Week view", exact: true }).click();
+  await page.getByRole("tab", { name: "Week", exact: true }).click();
   await page.evaluate(
     () => delete document.documentElement.dataset.timesheetPrinted,
   );
@@ -371,7 +376,7 @@ test("invalid partial times retain typing and do not move the next person's fiel
   await expect(input).toHaveValue("999");
   const after = await next.boundingBox();
   expect(Math.abs(before!.y - after!.y)).toBeLessThanOrEqual(2);
-  await page.getByRole("button", { name: "Week view", exact: true }).click();
+  await page.getByRole("tab", { name: "Week", exact: true }).click();
   await expect(
     page.getByText("Check the entries that could not be saved.", {
       exact: true,

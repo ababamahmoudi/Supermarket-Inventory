@@ -206,3 +206,9 @@ A package's independent approved sale follows the ordinary C8 conflict workflow 
 - Staff print language is unchanged: English-only supplier documents stay English, bilingual internal/timesheet documents retain both languages. Physical printer and native app installation checks remain hardware review.
 
 Maker file ownership is explicit in `maker.asset_identity` (default Klead). Replacing only `maker.name` suppresses inherited logos/icons rather than displaying another maker's lettering; supply replacement files with the matching asset identity, or a complete new maker block.
+
+## R2f D1 display defaults — 2026-10-27
+
+- “So far” is presentation-only elapsed time for the currently selected branch's today, from a valid In no later than its actual clock and no Out. Department/day captions include that elapsed display; stored duration, weekly totals and payroll CSV continue to count only completed shifts. No Out is inferred. Past missing-Out shifts stay amber/zero, and future clock-ins have no elapsed claim. The dashboard's existing prior-unclosed count is unchanged.
+- The header on-shift count deduplicates current-day people. The display refreshes at minute boundaries and when a tab becomes visible; it never changes the chosen day, saved records or actor evidence.
+- Screenshot-specific masonry cards keep compact baseline headings and independent heights. Narrow day-row menus are28px wide but44px high, as the source; ordinary operational cards retain the shared R0 header contract.

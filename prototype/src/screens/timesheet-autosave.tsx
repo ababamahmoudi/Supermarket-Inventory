@@ -1,5 +1,7 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { BufferedInput, BufferedTextarea, Button } from "../ui";
+import { createPortal } from "react-dom";
+import { Clock, Check } from "lucide-react";
+import { BufferedInput, BufferedTextarea, Button, usePopover } from "../ui";
 import { useDemo } from "../store";
 import { parseTimesheetTime } from "../timesheets";
 import { beginAppWork } from "../app-work";
@@ -15,6 +17,7 @@ export function TimesheetSavedField({
   label,
   now,
   multiline = false,
+  minHeight,
 }: {
   id: string;
   value: string;
@@ -23,13 +26,24 @@ export function TimesheetSavedField({
   label: string;
   now?: () => string;
   multiline?: boolean;
+  minHeight?: number;
 }) {
   const { t } = useDemo();
   const registry = useContext(TimesheetSaveContext);
+  const {
+    open: suggestionOpen,
+    show: showSuggestion,
+    close: closeSuggestion,
+    position: suggestionPosition,
+    portalTarget: suggestionPortalTarget,
+    triggerRef: suggestionTriggerRef,
+    popupRef: suggestionPopupRef,
+  } = usePopover<HTMLInputElement>(150, { minimumHeight: 56, gap: 6 });
+  const nowOption = useRef<HTMLButtonElement>(null);
   const [text, setText] = useState(value);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(multiline);
   const raw = useRef(value),
     dirty = useRef(false),
     focused = useRef(false);
@@ -196,40 +210,86 @@ export function TimesheetSavedField({
     "aria-describedby": `${id}-status`,
     onFocus: () => {
       focused.current = true;
+      if (time && now && !raw.current.trim()) showSuggestion();
     },
     onBlur: blur,
     onChange: (
       event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    ) => change(event.target.value),
+    ) => {
+      change(event.target.value);
+      if (time && event.target.value.trim()) closeSuggestion();
+      else if (time && now) showSuggestion();
+    },
   };
   return (
     <div className={`timesheet-saved-field${time ? " is-time" : ""}`}>
       {multiline ? (
-        <BufferedTextarea {...common} className="ui-input" rows={3} />
+        <BufferedTextarea
+          {...common}
+          className="ui-input"
+          rows={2}
+          minHeight={minHeight}
+        />
       ) : (
         <BufferedInput
           {...common}
+          ref={suggestionTriggerRef}
           className="ui-input"
           type="text"
           inputMode={time ? "numeric" : undefined}
           dir={time ? "ltr" : undefined}
           autoComplete="off"
-          placeholder={time ? "HH:mm" : undefined}
+          placeholder={time ? "--:--" : undefined}
+          aria-haspopup={time && now ? "listbox" : undefined}
+          aria-expanded={
+            time && now ? suggestionOpen && !text.trim() : undefined
+          }
+          aria-controls={time && now ? `${id}-now` : undefined}
+          onKeyDown={(event) => {
+            if (
+              event.key === "ArrowDown" &&
+              suggestionOpen &&
+              !raw.current.trim()
+            ) {
+              event.preventDefault();
+              nowOption.current?.focus();
+            }
+          }}
         />
       )}
-      {now && (
-        <Button
-          variant="neutral"
-          className="timesheet-now"
-          onClick={() => {
-            change(now());
-            focused.current = false;
-            void flush();
-          }}
-        >
-          {t("Now", "اکنون")}
-        </Button>
-      )}
+      {now &&
+        suggestionOpen &&
+        !text.trim() &&
+        createPortal(
+          <div
+            ref={suggestionPopupRef}
+            id={`${id}-now`}
+            role="listbox"
+            aria-label={t("Suggested time", "زمان پیشنهادی")}
+            className="ui-popover timesheet-now-popover"
+            style={suggestionPosition}
+          >
+            <button
+              ref={nowOption}
+              type="button"
+              role="option"
+              aria-selected="false"
+              className="ui-option timesheet-now"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                change(now());
+                focused.current = false;
+                closeSuggestion(true);
+                void flush();
+              }}
+            >
+              <Clock size={16} aria-hidden="true" />
+              <span>{t("Now", "اکنون")}</span>
+              <bdi dir="ltr">{now()}</bdi>
+            </button>
+          </div>,
+          suggestionPortalTarget ?? document.body,
+        )}
       <span
         id={`${id}-status`}
         className={`timesheet-save-state${error ? " form-error" : " muted"}`}
@@ -248,7 +308,10 @@ export function TimesheetSavedField({
         ) : saving ? (
           t("Saving…", "در حال ذخیره…")
         ) : saved ? (
-          t("Saved", "ذخیره شد")
+          <>
+            {multiline && <Check size={16} aria-hidden="true" />}
+            {t("Saved", "ذخیره شد")}
+          </>
         ) : (
           ""
         )}

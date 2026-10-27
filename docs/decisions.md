@@ -533,3 +533,7 @@ Use the stable company Product Code as the parent reference; add package records
 ## R2e E — Separate store and maker presentation (2026-10-27)
 
 Context: the store app needs secondary maker attribution while remaining reusable for other stores/makers. Decision: public optional top-level maker config, shared theme-aware original-asset component and one staff-print attribution component; retained stores read defaults without a write. Why: preserve store palette/business evidence and existing print language while making replacement/omission a configuration choice. Native install metadata is built from configuration; live title/favicon follows the authorized public config.
+
+## R2f D1 — Separate elapsed display from completed payroll
+
+Context: the approved day sheet shows current elapsed hours, while R2d correctly keeps a missing-Out shift at zero completed hours. Decision: a pure daily display helper adds current-day elapsed minutes to presentation only; canonical week/CSV/print durations and blank Out evidence remain unchanged. Why: match the live staff view without inventing a payroll clock-out. Reuse the established save registry and original-actor/navigation bridge rather than replacing their workflow during the redesign.

@@ -92,7 +92,7 @@ afterEach(() => {
   release = undefined;
 });
 
-it.each(["Previous day", "Week view"])(
+it.each(["Previous day", "Week"])(
   "a late %s continuation cannot reopen Timesheets after leaving during an actual save",
   async (action) => {
     fixture = await independentTimesheetFixture();
@@ -141,7 +141,9 @@ it.each(["Previous day", "Week view"])(
     fireEvent.change(input, { target: { value: "730" } });
     fireEvent.blur(input);
     await waitFor(() => expect(held).toBe(true));
-    fireEvent.click(screen.getByRole("button", { name: action }));
+    fireEvent.click(
+      screen.getByRole(action === "Week" ? "tab" : "button", { name: action }),
+    );
     await act(async () => {
       window.location.hash = "#suppliers";
       window.dispatchEvent(new HashChangeEvent("hashchange"));
