@@ -39,7 +39,7 @@ import {
   saveTimesheetNotes,
   timesheetClock,
   timesheetDateAfter,
-  timesheetMinutesText,
+  timesheetCompactHours,
   timesheetScope,
   type TimesheetDepartmentRead,
   type TimesheetRowRead,
@@ -425,7 +425,7 @@ function TimesheetRow({
       ))}
       <div className="timesheet-hours" role="cell">
         <span className="timesheet-mobile-label">{t("Hours", "ساعت")}</span>
-        <strong>{timesheetMinutesText(row.minutes, lang)}</strong>
+        <strong>{timesheetCompactHours(row.minutes)}</strong>
         {row.overnight && <small>{t("+1 day", "+۱ روز")}</small>}
         {row.on_shift && !row.warning && (
           <Badge tone="info">{t("On shift", "در حال کار")}</Badge>
@@ -1123,7 +1123,11 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
                 )
               }
             >
-              <ArrowLeft size={18} />
+              {lang === "fa" ? (
+                <ArrowRight size={18} />
+              ) : (
+                <ArrowLeft size={18} />
+              )}
             </Button>
             <DateField
               value={date}
@@ -1139,7 +1143,11 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
                 )
               }
             >
-              <ArrowRight size={18} />
+              {lang === "fa" ? (
+                <ArrowLeft size={18} />
+              ) : (
+                <ArrowRight size={18} />
+              )}
             </Button>
             <Button
               variant="neutral"
@@ -1171,7 +1179,7 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
           <span className="timesheet-day-total">
             {data.people_count}{" "}
             {t(data.people_count === 1 ? "person" : "people", "نفر")} ·{" "}
-            {timesheetMinutesText(data.minutes, lang)}
+            {timesheetCompactHours(data.minutes)}
           </span>
         </div>
         {branch === "all" && (
@@ -1219,8 +1227,11 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
                 <Card className="timesheet-department" key={department.key}>
                   <header className="timesheet-department-heading">
                     <div>
-                      <h2>{department.name_en}</h2>
-                      <span lang="fa">{department.name_fa}</span>
+                      <h2>
+                        {lang === "fa"
+                          ? department.name_fa || department.name_en
+                          : department.name_en}
+                      </h2>
                     </div>
                     <small className="muted">
                       {department.people_count}{" "}
@@ -1228,13 +1239,13 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
                         department.people_count === 1 ? "person" : "people",
                         "نفر",
                       )}{" "}
-                      · {timesheetMinutesText(department.minutes, lang)}
+                      · {timesheetCompactHours(department.minutes)}
                     </small>
                   </header>
                   <div
                     className="timesheet-table"
                     role="table"
-                    aria-label={`${department.name_en} ${t("timesheet", "کارکرد")}`}
+                    aria-label={`${lang === "fa" ? department.name_fa || department.name_en : department.name_en} ${t("timesheet", "کارکرد")}`}
                   >
                     <div className="timesheet-table-head" role="row">
                       {[

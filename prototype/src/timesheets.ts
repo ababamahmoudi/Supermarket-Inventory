@@ -90,6 +90,11 @@ export function timesheetMinutesText(minutes: number, lang: Language): string {
     ? `${Math.floor(value / 60)} ساعت و ${String(value % 60).padStart(2, "0")} دقیقه`
     : `${Math.floor(value / 60)} h ${String(value % 60).padStart(2, "0")} m`;
 }
+/** Compact, direction-stable operational hours; bilingual wording remains on paper. */
+export function timesheetCompactHours(minutes: number): string {
+  const value = Number.isFinite(minutes) ? Math.max(0, Math.round(minutes)) : 0;
+  return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, "0")}`;
+}
 export function timesheetClock(
   config: Pick<CompanyConfig, "company" | "branches">,
   branch: string,

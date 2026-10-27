@@ -446,3 +446,14 @@
 .timesheet-department-heading span[lang="fa"] {
   text-align: match-parent;
 }
+
+.timesheet-hours strong,
+.timesheet-department-heading small,
+.timesheet-day-total {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.timesheet-hours strong {
+  direction: ltr;
+  unicode-bidi: isolate;
+}

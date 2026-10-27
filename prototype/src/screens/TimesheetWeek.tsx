@@ -1,6 +1,6 @@
 import { useDemo } from "../store";
 import { Button, Card, DataTable } from "../ui";
-import { timesheetMinutesText, type TimesheetWeekRead } from "../timesheets";
+import { timesheetCompactHours, type TimesheetWeekRead } from "../timesheets";
 
 function hours(minutes: number) {
   return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
@@ -72,7 +72,7 @@ export default function TimesheetWeek({
                     <Button
                       variant="plain"
                       className="timesheet-week-cell"
-                      aria-label={`${name(person)} · ${day.date} · ${timesheetMinutesText(day.minutes, lang)}`}
+                      aria-label={`${name(person)} · ${day.date} · ${timesheetCompactHours(day.minutes)}`}
                       onClick={() => openDay(day.date)}
                     >
                       <bdi dir="ltr">{hours(day.minutes)}</bdi>
@@ -132,7 +132,7 @@ export default function TimesheetWeek({
                     : person.department_name_en}
                 </small>
               </div>
-              <strong>{timesheetMinutesText(person.minutes, lang)}</strong>
+              <strong>{timesheetCompactHours(person.minutes)}</strong>
             </header>
             <div className="timesheet-week-days">
               {person.days.map((day) => (
@@ -141,7 +141,7 @@ export default function TimesheetWeek({
                   key={day.date}
                   className="timesheet-week-cell"
                   onClick={() => openDay(day.date)}
-                  aria-label={`${name(person)} · ${day.date} · ${timesheetMinutesText(day.minutes, lang)}`}
+                  aria-label={`${name(person)} · ${day.date} · ${timesheetCompactHours(day.minutes)}`}
                 >
                   <span>
                     {weekday(day.date)} <bdi dir="ltr">{day.date.slice(5)}</bdi>
@@ -158,13 +158,13 @@ export default function TimesheetWeek({
           {data.departments.map((department) => (
             <p key={department.key}>
               <span>{name(department)}</span>
-              <strong>{timesheetMinutesText(department.minutes, lang)}</strong>
+              <strong>{timesheetCompactHours(department.minutes)}</strong>
             </p>
           ))}
           <p>
             <strong>{t("Week total", "جمع هفته")}</strong>
             <strong data-week-total-minutes={data.minutes}>
-              {timesheetMinutesText(data.minutes, lang)}
+              {timesheetCompactHours(data.minutes)}
             </strong>
           </p>
         </div>
