@@ -363,3 +363,5 @@ Numeric table captions and values share their logical end edge; text columns sha
 R2e B2 quick filters use one reversible `FilterChip`, with `aria-pressed`, an accent selected state and a small check whose width is reserved while unselected. Space, Enter and another click toggle the same boolean. Received date presets can likewise be cleared by choosing the selected preset again. The shared selected treatment applies both inside and outside filter toolbars.
 
 R2e B3 shared switches keep a neutral track and a hairline border while Off, with the existing white thumb; On keeps the accent fill. The border replaces one pixel of padding rather than increasing the track's outside size or changing thumb travel.
+
+R2e B4 modal action feedback is a short secondary-text footer status with Undo; dark toasts are page-level only. Defer the page toast and pause its remaining Undo display budget while a modal is open. Closing the modal resumes that same remaining budget at the page's bottom-end corner. Never portal a dark toast into a dialog body or footer.

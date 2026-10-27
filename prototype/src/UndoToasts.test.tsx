@@ -57,7 +57,9 @@ function Harness() {
       <button onClick={() => setModal(true)}>Open dialog</button>
       {modal && (
         <dialog open aria-label="Another action">
-          <button onClick={() => setModal(false)}>Close dialog</button>
+          <div className="ui-dialog-actions">
+            <button onClick={() => setModal(false)}>Close dialog</button>
+          </div>
         </dialog>
       )}
       <output data-testid="date-status">{state.expiry[0]?.status}</output>
@@ -138,7 +140,8 @@ async function waitForUndo(
     const state = await fixture.readCanonical();
     if (
       state.expiry[0].status === "active" &&
-      !screen.queryByTestId("undo-toast")
+      !screen.queryByTestId("undo-toast") &&
+      !screen.queryByTestId("dialog-action-status")
     ) {
       await act(async () => {
         await new Promise<void>((resolve) => realSetImmediate(resolve));
@@ -168,19 +171,48 @@ describe("Undo toast integration", () => {
     act(() => vi.advanceTimersByTime(1));
     expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
   });
-  it("stays above modal content and resumes a relocated toast's timer when its old focus disappears", async () => {
+  it("uses a quiet modal-footer status, defers the page toast and preserves its remaining Undo time", async () => {
     await renderHarness();
     await changeDate();
     act(() => vi.advanceTimersByTime(1000));
     fireEvent.focus(screen.getByRole("button", { name: /^Undo$/ }));
     await act(async () => fireEvent.click(screen.getByText("Open dialog")));
-    expect(screen.getByTestId("undo-toast").closest("dialog")).toBe(
-      screen.getByRole("dialog"),
-    );
-    await act(async () => fireEvent.click(screen.getByText("Close dialog")));
-    expect(screen.getByTestId("undo-toast").closest("dialog")).toBeNull();
-    act(() => vi.advanceTimersByTime(7000));
     expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId("dialog-action-status").closest(".ui-dialog-actions"),
+    ).toContainElement(screen.getByText("Close dialog"));
+    expect(screen.getByTestId("dialog-action-status")).not.toHaveClass(
+      "undo-toast",
+    );
+    act(() => vi.advanceTimersByTime(30000));
+    expect(screen.getByTestId("dialog-action-status")).toBeVisible();
+    await act(async () => fireEvent.click(screen.getByText("Close dialog")));
+    expect(
+      screen.queryByTestId("dialog-action-status"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("undo-toast").closest("dialog")).toBeNull();
+    expect(
+      screen.getByTestId("undo-toast").closest(".undo-toast-stack")
+        ?.parentElement,
+    ).toBe(document.body);
+    act(() => vi.advanceTimersByTime(6999));
+    expect(screen.getByTestId("undo-toast")).toBeVisible();
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
+  });
+  it("keeps the genuine guarded Undo available in the modal footer", async () => {
+    const fixture = await renderHarness();
+    await changeDate();
+    await act(async () => fireEvent.click(screen.getByText("Open dialog")));
+    expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: /^Undo$/ })),
+    );
+    await waitForUndo(fixture);
+    expect(screen.getByTestId("date-status")).toHaveTextContent("active");
+    expect(
+      screen.queryByTestId("dialog-action-status"),
+    ).not.toBeInTheDocument();
   });
   it("a new eligible action replaces the paused message", async () => {
     await renderHarness();

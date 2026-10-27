@@ -7,32 +7,52 @@ import type { UndoToast } from "./undo-queue";
 import { Button, IconButton } from "./ui";
 import "./undo-toasts.css";
 
-function UndoToastItem({ toast }: { toast: UndoToast }) {
+function UndoToastItem({
+  toast,
+  inline = false,
+}: {
+  toast: UndoToast;
+  inline?: boolean;
+}) {
   const { state, lang, t, undoActivity, pauseUndo, dismissUndo } = useDemo();
   const [error, setError] = useState("");
-  useEffect(() => () => pauseUndo(toast.id, false), [toast.id, pauseUndo]);
+  useEffect(
+    () => (inline ? undefined : () => pauseUndo(toast.id, false)),
+    [toast.id, pauseUndo, inline],
+  );
   return (
     <div
-      className="undo-toast"
-      data-testid="undo-toast"
-      onMouseEnter={() => pauseUndo(toast.id, true)}
+      className={inline ? "dialog-action-status" : "undo-toast"}
+      data-testid={inline ? "dialog-action-status" : "undo-toast"}
+      onMouseEnter={() => {
+        if (!inline) pauseUndo(toast.id, true);
+      }}
       onMouseLeave={(event) => {
-        if (!event.currentTarget.contains(document.activeElement))
+        if (!inline && !event.currentTarget.contains(document.activeElement))
           pauseUndo(toast.id, false);
       }}
-      onFocus={() => pauseUndo(toast.id, true)}
+      onFocus={() => {
+        if (!inline) pauseUndo(toast.id, true);
+      }}
       onBlur={(event) => {
         if (
+          !inline &&
           !event.currentTarget.contains(event.relatedTarget) &&
           !event.currentTarget.matches(":hover")
         )
           pauseUndo(toast.id, false);
       }}
     >
-      <span>{historyActionLabel(toast.action, lang)}</span>
+      <span>
+        {inline && toast.action === "Approve product"
+          ? t("1 product approved", "۱ کالا تأیید شد")
+          : inline && toast.action === "Approve price"
+            ? t("1 price approved", "۱ قیمت تأیید شد")
+            : historyActionLabel(toast.action, lang)}
+      </span>
       <Button
         variant="plain"
-        className="undo-toast-link"
+        className={inline ? "dialog-action-undo" : "undo-toast-link"}
         onClick={() => {
           try {
             void undoActivity(toast.id).catch((caught: unknown) => {
@@ -45,12 +65,14 @@ function UndoToastItem({ toast }: { toast: UndoToast }) {
       >
         {t("Undo", "واگرد")}
       </Button>
-      <IconButton
-        aria-label={t("Dismiss Undo message", "بستن پیام واگرد")}
-        onClick={() => dismissUndo(toast.id)}
-      >
-        <X size={18} aria-hidden="true" />
-      </IconButton>
+      {!inline && (
+        <IconButton
+          aria-label={t("Dismiss Undo message", "بستن پیام واگرد")}
+          onClick={() => dismissUndo(toast.id)}
+        >
+          <X size={18} aria-hidden="true" />
+        </IconButton>
+      )}
       {error && (
         <span className="undo-toast-error" role="alert">
           {error}
@@ -61,19 +83,47 @@ function UndoToastItem({ toast }: { toast: UndoToast }) {
 }
 
 export default function UndoToasts() {
-  const { undoToasts, user, locked, mustChangePassword, t } = useDemo();
+  const { undoToasts, user, locked, mustChangePassword, t, pauseUndo } =
+    useDemo();
   const stackRef = useRef<HTMLElement>(null);
-  const [host, setHost] = useState<HTMLElement>(() => document.body);
+  const [destination, setDestination] = useState<{
+    host: HTMLElement;
+    modal: boolean;
+  }>(() => ({ host: document.body, modal: false }));
+  const { host, modal } = destination;
   useEffect(() => {
     const chooseHost = () => {
       const dialogs =
         document.querySelectorAll<HTMLDialogElement>("dialog[open]");
       const dialog = dialogs.item(dialogs.length - 1);
-      setHost(
-        dialog?.querySelector<HTMLElement>(".ui-dialog-actions") ??
-          dialog ??
-          document.querySelector<HTMLElement>("[data-undo-toast-host]") ??
-          document.body,
+      let host = document.body;
+      if (dialog) {
+        let footer = dialog.querySelector<HTMLElement>(
+          ".ui-dialog-actions, .dialog-actions, .c3-dialog-actions, .product-editor-actions",
+        );
+        // Legacy dialogs reserve their feedback track when opened, before any
+        // action finishes. Shared DialogActions renders this same host itself.
+        if (!footer) {
+          footer = document.createElement("div");
+          footer.className = "ui-dialog-actions dialog-feedback-only";
+          dialog.append(footer);
+        }
+        let feedback = footer.querySelector<HTMLElement>(
+          "[data-dialog-feedback-host]",
+        );
+        if (!feedback) {
+          feedback = document.createElement("div");
+          feedback.className = "dialog-action-feedback-host";
+          feedback.dataset.dialogFeedbackHost = "";
+          footer.prepend(feedback);
+        }
+        host = feedback;
+      }
+      const modal = Boolean(dialog);
+      setDestination((previous) =>
+        previous.host === host && previous.modal === modal
+          ? previous
+          : { host, modal },
       );
     };
     chooseHost();
@@ -138,7 +188,27 @@ export default function UndoToasts() {
   const own = undoToasts.filter(
     (item) => !item.actor_username || item.actor_username === user?.username,
   );
+  const visibleId = !locked && !mustChangePassword && own[0]?.id;
+  // Keep the existing Undo available until the modal closes. Inline status is
+  // separate from the page toast, so neither can cover the modal's content.
+  useEffect(() => {
+    if (!modal || !visibleId) return;
+    pauseUndo(visibleId, true);
+    return () => pauseUndo(visibleId, false);
+  }, [modal, visibleId, pauseUndo]);
   if (!user || locked || mustChangePassword || !own.length) return null;
+  if (modal)
+    return createPortal(
+      <div
+        className="dialog-action-feedback"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <UndoToastItem key={own[0].id} toast={own[0]} inline />
+      </div>,
+      host,
+    );
   return createPortal(
     <aside
       ref={stackRef}

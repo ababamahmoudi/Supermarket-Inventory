@@ -3086,7 +3086,12 @@ export function DialogActions({
   className,
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("ui-dialog-actions", className)} {...props} />;
+  return (
+    <div className={cn("ui-dialog-actions", className)} {...props}>
+      <div className="dialog-action-feedback-host" data-dialog-feedback-host />
+      {props.children}
+    </div>
+  );
 }
 
 export function SummaryTile({

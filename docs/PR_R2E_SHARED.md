@@ -15,3 +15,7 @@ Products, Labels, Suppliers and Lookup use the same shared `FilterChip`: click, 
 ## B3 — Visible Off switches
 
 An Off switch keeps a neutral segmented-track fill, a hairline border and a white thumb. On keeps the existing accent fill. The existing 44 × 26 px track and thumb travel remain unchanged in English/Persian and both themes. Open Edit product → Date tracking or a Settings switch and toggle it twice; the whole track stays visible while Off.
+
+## B4 — Modal feedback
+
+While any modal is open, recent-action feedback is a quiet status in its footer, beside the actions, with the genuine Undo. No dark toast enters a dialog or covers its rows. The page toast stays deferred until the last modal closes, then appears at the page's bottom-end corner above any sticky page action bar. Its remaining eight-second budget pauses during the modal, preserving the actual Undo opportunity rather than expiring while hidden. It remains personal to the actor and uses the existing protected Undo command.
