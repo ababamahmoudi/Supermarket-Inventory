@@ -498,3 +498,8 @@ Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted
 - R2e B1 follow-up: real sorted Product Code exposed a 6 px caption overflow; keep its full caption width and reserve 128 px in shared column defaults. Price updates now retains the required 24 px wide-column gap without overflowing its container. Existing C6 glyph checks and shifted-caption negative controls remain strict.
 
 - R2e D1–D6: fixed-size weight packages as ordinary company-scoped products; validated fixed-size EAN-13/standard manufacturer GTINs; Decimal formula and shared category rounding; protected derived-price/task/label/audit propagation; narrow Supervisor package authority, privacy and orphan guards; verified additive backup/restore migration; fictional fixture and canonical repository tests. Package screens follow in R2f.
+
+
+### R2e A2 — existing weight-product basis
+
+- R2e A2 follow-up: blocked an existing Weight product's Each/Units line mismatch at Confirm, Post and posted correction; added actual posting/approval and correction-denial proof while preserving the explicit new Each-item flow.

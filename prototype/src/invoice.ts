@@ -1073,6 +1073,8 @@ export function invoiceBlockers(
         item.company_id === invoice.company_id,
     );
     if (line.company_id !== invoice.company_id) blockers.push("company");
+    if (product?.sold_by === "weight" && line.sold_by !== "weight")
+      blockers.push("quantity");
     if (
       line.product_code === "NEW" &&
       line.barcode &&

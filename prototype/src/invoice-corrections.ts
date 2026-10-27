@@ -360,6 +360,11 @@ export function invoiceContentCorrectionPreview(
         line.supplier_item_code_inferred = undefined;
         line.order_new_item_match = undefined;
       }
+      if (product.sold_by === "weight" && line.sold_by !== "weight")
+        throw new InvoiceCorrectionError(
+          "quantity",
+          `Product on line ${index + 1} is sold by weight. Retain a weight quantity and cost basis.`,
+        );
       if (
         !/^\d+(?:\.\d{1,4})?$/.test(
           line.sold_by === "weight"

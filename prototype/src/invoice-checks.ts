@@ -360,6 +360,19 @@ export function confirmInvoiceLineChecks(
   const line = state.invoice.lines[lineIndex];
   if (!line || state.invoice.status === "posted")
     throw new Error("Choose a draft invoice line.");
+  if (
+    line.sold_by !== "weight" &&
+    state.products.some(
+      (product) =>
+        product.company_id === state.invoice.company_id &&
+        product.code === line.product_code &&
+        product.sold_by === "weight",
+    )
+  )
+    throw new InvoiceLineConfirmationError(
+      "quantity_unit",
+      "This product is sold by weight. Choose Weight (lb) or Weight (kg).",
+    );
   if (line.product_code === "NEW" && !line.new_name_en?.trim())
     throw new InvoiceLineConfirmationError(
       "new_name_en",

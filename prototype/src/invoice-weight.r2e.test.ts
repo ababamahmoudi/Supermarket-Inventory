@@ -1,3 +1,4 @@
+import { invoiceContentCorrectionPreview } from "./invoice-corrections";
 import { projectHistoryEntry } from "./history";
 import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
@@ -309,6 +310,92 @@ describe("R2e A measured weight cases preserve money", () => {
     expect(projectHistoryEntry(state, actor, entry).after).not.toHaveProperty(
       "paper_total_acknowledgement",
     );
+  });
+  it("rejects Units as an implicit reclassification of an existing weight product, including a bypassed confirmation", () => {
+    const { state, line } = example();
+    const actor = authenticatedTestActor(state, "manager");
+    const product = state.products.find((row) => row.code === "0002")!;
+    product.sold_by = "weight";
+    product.date_tracking = false;
+    line.product_code = product.code;
+    line.pricing_category = "grocery";
+    state.invoice = createInvoice(state, actor, "Branch 1", true);
+    Object.assign(state.invoice, {
+      supplier: "Fresh Valley Foods",
+      supplier_confirmed: true,
+      supplier_invoice_number: "ALDER-WEIGHT-EXISTING",
+      file_name: "fictional-original.png",
+      file_type: "image/png",
+      file_data: "data:image/png;base64,c291cmNl",
+    });
+    state.invoice.lines = [line];
+    selectInvoiceLineUnit(line, "lb", state.config);
+    selectInvoiceLineUnit(line, "units", state.config);
+    recalculateInvoice(state.invoice, state.config);
+    expect(line.line_total).toBe("100.00");
+    expect(product.sold_by).toBe("weight");
+    expect(() => confirmInvoiceLineChecks(state, actor, 0)).toThrow(
+      /sold by weight/,
+    );
+    line.review_confirmed = true;
+    const beforeApprovals = structuredClone(state.approvals);
+    expect(() => postInvoice(state, actor)).toThrow(/quantity/);
+    expect(state.approvals).toEqual(beforeApprovals);
+    selectInvoiceLineUnit(line, "lb", state.config);
+    recalculateInvoice(state.invoice, state.config);
+    confirmInvoiceLineChecks(state, actor, 0);
+    expect(invoiceBlockers(state, actor)).toEqual([]);
+    expect(postInvoice(state, actor)).toBe(true);
+    expect(product.sold_by).toBe("weight");
+    expect(product.last_cost_before_tax).toBe("2.5000");
+    expect(
+      state.approvals.find(
+        (row) =>
+          row.product_code === product.code &&
+          row.source_invoice_id === state.invoice.id,
+      ),
+    ).toMatchObject({ unit_cost: "2.5000", proposed_price: "3.99" });
+    const corrected = structuredClone(state.invoice.lines);
+    selectInvoiceLineUnit(corrected[0], "units", state.config);
+    expect(() =>
+      invoiceContentCorrectionPreview(state, actor, state.invoice.id, {
+        lines: corrected,
+        reason: "Fictional representation review",
+      }),
+    ).toThrow(/sold by weight/);
+  });
+  it("keeps an unmatched new item's explicit Units choice as an Each product with a per-unit price", () => {
+    const { state, line } = example();
+    const actor = authenticatedTestActor(state, "manager");
+    state.invoice = createInvoice(state, actor, "Branch 1", true);
+    Object.assign(state.invoice, {
+      supplier: "Fresh Valley Foods",
+      supplier_confirmed: true,
+      supplier_invoice_number: "ALDER-EACH-NEW",
+      file_name: "fictional-original.png",
+      file_type: "image/png",
+      file_data: "data:image/png;base64,c291cmNl",
+    });
+    state.invoice.lines = [line];
+    line.pricing_category = "grocery";
+    selectInvoiceLineUnit(line, "lb", state.config);
+    selectInvoiceLineUnit(line, "units", state.config);
+    recalculateInvoice(state.invoice, state.config);
+    expect(line).toMatchObject({
+      sold_by: "each",
+      quantity_unit: "units",
+      qty_invoiced: 4,
+      unit_cost_before_tax: "25.0000",
+      line_total: "100.00",
+    });
+    confirmInvoiceLineChecks(state, actor, 0);
+    expect(postInvoice(state, actor)).toBe(true);
+    expect(
+      state.products.find((row) => row.code === line.product_code),
+    ).toMatchObject({ sold_by: "each", last_cost_before_tax: "25.0000" });
+    expect(
+      state.approvals.find((row) => row.product_code === line.product_code),
+    ).toMatchObject({ unit_cost: "25.0000", proposed_price: "38.49" });
   });
   it("posts the converted line and creates the real first-price approval from the canonical per-lb cost", () => {
     const { state, line } = example();

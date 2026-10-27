@@ -254,6 +254,7 @@ export function LineEditor({
         line.product_code !== "NEW" ||
         (english.trim() && line.pricing_category),
       ) &&
+      !(product?.sold_by === "weight" && line.sold_by !== "weight") &&
       validInvoiceLineQuantity(line) &&
       validInvoiceLineReceived(line) &&
       validCaseCost &&
@@ -264,6 +265,7 @@ export function LineEditor({
       await saveName();
       if (correction) {
         if (
+          (product?.sold_by === "weight" && line.sold_by !== "weight") ||
           !validInvoiceLineQuantity(line) ||
           !validInvoiceLineReceived(line) ||
           !validCaseCost ||
@@ -304,6 +306,7 @@ export function LineEditor({
             new_name_en: "name-en",
             pricing_category: "category",
             quantity_entered: "invoiced",
+            quantity_unit: "unit",
             qty_received_at_posting: "delivered",
             unit_cost_before_tax: "cost",
             case_cost_before_tax: "case-cost",
@@ -739,7 +742,18 @@ export function LineEditor({
               <div
                 className={`receiving-quantity-grid${line.quantity_unit === "cases" ? " is-cases" : ""}`}
               >
-                <Field readingField="quantity_unit" label={t("Unit", "واحد")}>
+                <Field
+                  readingField="quantity_unit"
+                  label={t("Unit", "واحد")}
+                  error={
+                    product?.sold_by === "weight" && line.sold_by !== "weight"
+                      ? t(
+                          "This product is sold by weight. Choose Weight (lb) or Weight (kg).",
+                          "این کالا وزنی فروخته می‌شود. وزن (پوند) یا وزن (کیلوگرم) را انتخاب کنید.",
+                        )
+                      : undefined
+                  }
+                >
                   <Select
                     id={id("unit")}
                     value={
