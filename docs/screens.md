@@ -416,3 +416,7 @@ Approve all (N) opens a fresh protected read of only pending rows, excluding the
 ## R2e C6 — Labels select-all column
 
 Labels → Products selects all eligible filtered products from its table-header checkbox. The phone list retains this checkbox in its own table header. The old standalone Select all filtered row is removed. A quiet all-filtered selection count with Clear remains above the table while all eligible matches are selected, including results below the current viewport; the existing waitlist selection bar is unchanged.
+
+## R2e C7 — Alerts header control
+
+The All alerts card contains its Show resolved switch on the title row. The card and switch remain available when no pending alerts remain, so a person can still reveal resolved and intentional history. Alert decisions and the underlying retained records are unchanged.

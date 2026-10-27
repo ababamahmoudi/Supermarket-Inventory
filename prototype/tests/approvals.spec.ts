@@ -109,8 +109,8 @@ test("intentional tea conflicts stay quiet, and applying a selected price clears
     page.getByRole("button", { name: "Mark as intentional", exact: true }),
   ).toHaveCount(0);
   await page
-    .getByRole("checkbox", {
-      name: "Show resolved and intentional alerts",
+    .getByRole("switch", {
+      name: "Show resolved",
       exact: true,
     })
     .check();

@@ -6,6 +6,7 @@ import { applyApprovedPrice } from "../approvals";
 import { authenticatedProviderFixture } from "../authority-provider-test-fixture";
 import { createAuthenticationService } from "../authentication-service";
 import i18n from "../i18n";
+import { LANGUAGE_KEY } from "../auth-preferences.e1";
 import { DemoProvider, initialState, useDemo } from "../store";
 import type { DemoState } from "../types";
 import Alerts from "./Alerts";
@@ -119,3 +120,47 @@ it("announces a stale price comparison at its alert and clears it when a fresh p
   await screen.findByRole("dialog", { name: "Apply price to all branches" });
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
+
+it.each(["en", "fa"] as const)(
+  "keeps Show resolved in the card when no pending alerts remain in %s",
+  async (language) => {
+    await i18n.changeLanguage(language);
+    localStorage.setItem(LANGUAGE_KEY, language);
+    const state = initialState();
+    const resolved = state.alerts.find(
+      (item) => item.type === "price_conflict",
+    )!;
+    state.alerts = [{ ...resolved, status: "resolved" }];
+    state.expiry = [];
+    state.sales = [];
+    state.sale_requests = [];
+    const fixture = await authenticatedProviderFixture({
+      state,
+      role: "manager",
+    });
+    fixtures.push(fixture);
+    render(
+      <DemoProvider options={fixture.options}>
+        <Alerts />
+      </DemoProvider>,
+    );
+    const title = await screen.findByRole(
+      "heading",
+      {
+        name: language === "fa" ? "همه هشدارها" : "All alerts",
+      },
+      { timeout: 10000 },
+    );
+    const card = title.closest("section")!;
+    const toggle = within(card).getByRole("switch", {
+      name: language === "fa" ? "نمایش حل‌شده‌ها" : "Show resolved",
+    });
+    expect(toggle).not.toBeChecked();
+    expect(card.querySelector(`[data-alert-id="${resolved.id}"]`)).toBeNull();
+    await userEvent.setup().click(toggle);
+    expect(toggle).toBeChecked();
+    expect(
+      card.querySelector(`[data-alert-id="${resolved.id}"]`),
+    ).not.toBeNull();
+  },
+);
