@@ -451,9 +451,9 @@ export function PostedInvoice({
               <thead>
                 <tr>
                   <th>{t("Product", "کالا")}</th>
-                  <th>{t("Quantity", "تعداد")}</th>
-                  <th>{t("Unit cost", "هزینه واحد")}</th>
-                  <th>{t("Line total", "جمع ردیف")}</th>
+                  <th className="numeric">{t("Quantity", "تعداد")}</th>
+                  <th className="numeric">{t("Unit cost", "هزینه واحد")}</th>
+                  <th className="numeric">{t("Line total", "جمع ردیف")}</th>
                   {hasTrackedDates && (
                     <th>{t("Tracked date", "تاریخ پیگیری‌شده")}</th>
                   )}

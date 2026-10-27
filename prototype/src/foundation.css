@@ -1215,7 +1215,9 @@
   :root .ui-data-table .table-sort-indicator {
     flex: 0 0 auto;
   }
-  :root :is(.receiving-table, .invoice-approval-table) :is(th, td) {
+  :root .receiving-table > thead > tr > th,
+  :root .receiving-table > tbody > tr.invoice-line-summary > td,
+  :root .invoice-approval-table :is(th, td) {
     padding-inline: var(--table-cell-padding);
     vertical-align: middle;
   }
