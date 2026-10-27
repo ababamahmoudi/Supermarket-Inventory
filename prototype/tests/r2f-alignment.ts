@@ -154,6 +154,7 @@ export async function auditR2fAlignment(
           failures: ["No rendered main or open dialog to audit"],
           controls: 0,
           pairs: 0,
+          separateOverlayPairs: 0,
           columns: 0,
           cells: 0,
           numberGroups: 0,
@@ -178,8 +179,11 @@ export async function auditR2fAlignment(
         const root = document.querySelector(selector);
         if (!root || !visible(root))
           failures.push(`Expected visible portal: ${portal}`);
-        else if (!scopes.some((scope) => scope.contains(root)))
-          scopes.push(root);
+        else if (
+          !["absolute", "fixed"].includes(getComputedStyle(root).position)
+        )
+          failures.push(`Expected an actual overlay plane: ${portal}`);
+        else if (!scopes.includes(root)) scopes.push(root);
       }
       const all = (selector: string) => [
         ...new Set(
@@ -202,10 +206,14 @@ export async function auditR2fAlignment(
             element.matches(".filter-search-pill"),
         )
         .filter((element) => !element.closest(".lookup-search-pill"));
-      let pairs = 0;
+      let pairs = 0,
+        separateOverlayPairs = 0;
       const rects = controls.map((element) => ({
         element,
         rect: element.getBoundingClientRect(),
+        plane:
+          [...scopes].reverse().find((scope) => scope.contains(element)) ??
+          primary,
       }));
       const independent = (a: Element, b: Element) => {
         for (const entry of exceptions) {
@@ -263,6 +271,12 @@ export async function auditR2fAlignment(
             Math.max(a.rect.left, b.rect.left) -
             Math.min(a.rect.right, b.rect.right);
           if (gap > 48 || gap < -2) continue;
+          // source/align.js audits one main/dialog render root. Registered
+          // portals add their own audit plane, not peers behind that overlay.
+          if (a.plane !== b.plane) {
+            separateOverlayPairs++;
+            continue;
+          }
           if (independent(a.element, b.element)) continue;
           if (a.rect.height < 28 || b.rect.height < 28) {
             const tiny = [a, b].filter((item) => item.rect.height < 28);
@@ -558,6 +572,7 @@ export async function auditR2fAlignment(
         failures: [...new Set(failures)],
         controls: controls.length,
         pairs,
+        separateOverlayPairs,
         columns,
         cells,
         numberGroups,

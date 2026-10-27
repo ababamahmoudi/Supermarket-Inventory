@@ -238,3 +238,32 @@ for (const direction of ["ltr", "rtl"] as const)
       [],
     );
   });
+
+test("R0.7 registered popup controls are measured within their render plane, with no peer waiver inside the popup", async ({
+  page,
+}) => {
+  await page.setContent(
+    `<style>*{box-sizing:border-box}main{height:600px}main button{position:absolute;top:400px;left:0;width:100px;height:44px}.request-search-results{position:absolute;top:402px;left:112px;width:224px;height:48px;display:flex;align-items:center;gap:12px}.request-search-results button{width:100px;height:40px;border:0}</style><main><button>Save as draft</button></main><div class="request-search-results" data-r2f-scene="D10" role="listbox"><button disabled>Added</button><button id="popup-action">Add</button></div>`,
+  );
+  const audit = () =>
+    auditR2fAlignment(page, { scene: "D10", portals: ["request-results"] });
+  const clean = await audit();
+  expect(clean.failures).toEqual([]);
+  expect(clean.separateOverlayPairs).toBeGreaterThan(0);
+  await page
+    .locator("#popup-action")
+    .evaluate((el) => ((el as HTMLElement).style.height = "44px"));
+  expect(
+    (await audit()).failures.some((value) => value.startsWith("row:")),
+  ).toBe(true);
+  await page
+    .locator("#popup-action")
+    .evaluate((el) => (el as HTMLElement).removeAttribute("style"));
+  expect((await audit()).failures).toEqual([]);
+  await page
+    .locator(".request-search-results")
+    .evaluate((el) => ((el as HTMLElement).style.position = "static"));
+  expect((await audit()).failures).toContain(
+    "Expected an actual overlay plane: request-results",
+  );
+});

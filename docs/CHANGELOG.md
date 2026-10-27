@@ -519,3 +519,4 @@ Added original approved logo/icon files, optional public maker/support config, t
 - R2f R0.7: measure the Dashboard's exact decision-control group edge rather than its differently sized centred captions; LTR/RTL negative controls reject a shifted group without exempting numeric columns or peer controls.
 
 - R2f D1: matched the approved compact masonry day sheet, header/toolbar, focused explicit Now choice, current-day so-far display, overnight/past-missing warnings, Notes and header History. Preserved completed payroll/CSV and all protected save/navigation/print behavior; added causal elapsed-versus-payroll and real rendered geometry proofs.
+- R2f R0.7: audit each registered actual popup as its own render plane; retain strict peer checks within it and reject static copied popup wrappers. Browser proof rejects an internal 40/44 px mismatch.
