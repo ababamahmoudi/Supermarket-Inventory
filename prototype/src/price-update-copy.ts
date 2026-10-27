@@ -9,6 +9,10 @@ export function priceUpdateReasonLabel(reason: string, language: Language) {
       "قیمت بسته به‌روز شد",
     ],
     "Approve product": ["New product approved", "کالای جدید تأیید شد"],
+    "Edit and approve product": [
+      "Product edits approved",
+      "ویرایش کالا تأیید شد",
+    ],
     "Approve price": ["Price change approved", "تغییر قیمت تأیید شد"],
     "Apply price to all branches": [
       "Price applied to all locations",

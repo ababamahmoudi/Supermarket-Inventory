@@ -49,6 +49,11 @@ it.each([
     "قیمت بسته به‌روز شد",
   ],
   ["Approve product", "New product approved", "کالای جدید تأیید شد"],
+  [
+    "Edit and approve product",
+    "Product edits approved",
+    "ویرایش کالا تأیید شد",
+  ],
   ["Approve price", "Price change approved", "تغییر قیمت تأیید شد"],
   ["Start sale", "Sale started", "حراج شروع شد"],
   ["End sale", "Sale ended", "حراج پایان یافت"],
