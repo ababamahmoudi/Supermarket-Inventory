@@ -34,7 +34,7 @@
   border-color: var(--color-clear);
   box-shadow: none;
 }
-:root .invoice-approval-dialog > .ui-dialog-footer {
+:root .ui-dialog.invoice-approval-dialog > .ui-dialog-footer {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
