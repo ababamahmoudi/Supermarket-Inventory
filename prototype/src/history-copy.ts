@@ -10,6 +10,17 @@ const actions: Record<string, [string, string]> = {
     "Invoice paper total acknowledged as wrong",
     "جمع اشتباه روی فاکتور تأیید شد",
   ],
+  "Add package size": ["Add package size", "افزودن اندازه بسته"],
+  "Edit package size": ["Edit package size", "ویرایش اندازه بسته"],
+  "Archive package size": ["Archive package size", "بایگانی اندازه بسته"],
+  "Package price recalculated": [
+    "Package price recalculated",
+    "قیمت بسته دوباره محاسبه شد",
+  ],
+  "Package cost recalculated": [
+    "Package cost recalculated",
+    "هزینه بسته دوباره محاسبه شد",
+  ],
   "Timesheet settings changed": [
     "Timesheet settings changed",
     "تنظیمات کارکرد تغییر کرد",

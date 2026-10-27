@@ -361,12 +361,37 @@ function reconcilePackages(
       main_supplier: parent.main_supplier,
       package_pending_prices: pending,
     });
+    const priorCost = product.last_cost_before_tax;
     product.last_cost_before_tax = calculatePackageCost(
       product.package_size,
       product.package_size_unit,
       parent.last_cost_before_tax,
       state.config,
     );
+    if (priorCost !== product.last_cost_before_tax)
+      state.activity.push({
+        id: createId("package-cost"),
+        company_id: company,
+        branch: "all",
+        product_code: product.code,
+        entity_type: "product",
+        entity_id: product.code,
+        action: "Package cost recalculated",
+        by: actor?.actor ?? "System",
+        ...(actor ? actorAudit(state, actor, now) : {}),
+        at: now.toISOString(),
+        reversible: false,
+        before: { unit_cost_before_tax: priorCost },
+        after: {
+          unit_cost_before_tax: product.last_cost_before_tax,
+          package_cost_basis: {
+            parent_product_code: parent.code,
+            size_lb: sizeLb,
+            parent_cost_per_lb: parent.last_cost_before_tax,
+            container_cost: packageSettings(state.config).container_cost,
+          },
+        },
+      });
     product.branch_prices ??= {};
     for (const { branch, result } of updates) {
       const prior = product.branch_prices[branch] ?? null;

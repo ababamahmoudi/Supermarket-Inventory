@@ -93,10 +93,7 @@ export function calculatePackagePrice(
   const settings = packageSettings(config);
   const parentPrice = amount(parentPricePerLb, "price");
   const parentCost = amount(parentCostPerLb, "cost");
-  if (
-    parentPrice.lte(0) ||
-    parentPrice.decimalPlaces() > 2
-  )
+  if (parentPrice.lte(0) || parentPrice.decimalPlaces() > 2)
     throw new PackageValidationError("price");
   if (parentCost.decimalPlaces() > 4) throw new PackageValidationError("cost");
   const raw = new PackageDecimal(size_lb)
