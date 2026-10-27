@@ -59,6 +59,15 @@ export const r2fAlignmentExceptions = [
       "Activity initials are a decorative icon in a fixed 32px column. Audit actual avatar-container centres instead of comparing differently wide initials; main copy and end time retain glyph probes.",
   },
   {
+    id: "D9-line-status-number",
+    scene: "D9",
+    kind: "composite-column-value",
+    selector:
+      ".receiving-table > tbody > .invoice-line-summary > .receiving-status-cell > .receiving-status-number",
+    reason:
+      "The approved # column labels the complete leading status-icon and row-number value. Compare that complete composite edge; Quantity, Unit cost and Line total retain actual glyph probes.",
+  },
+  {
     id: "D10-inline-note-action",
     scene: "D10",
     kind: "compact-text-control",
@@ -103,6 +112,20 @@ export async function auditR2fAlignment(
       const allow = (entry: (typeof exceptions)[number]) =>
         used.set(entry.id, (used.get(entry.id) ?? 0) + 1);
       const visible = (element: Element) => {
+        if (
+          typeof element.checkVisibility === "function" &&
+          !element.checkVisibility({
+            contentVisibilityAuto: true,
+            visibilityProperty: true,
+          })
+        )
+          return false;
+        const closed = element.closest("details:not([open])");
+        if (
+          closed &&
+          !closed.querySelector(":scope > summary")?.contains(element)
+        )
+          return false;
         const rect = element.getBoundingClientRect(),
           css = getComputedStyle(element);
         return (
@@ -185,7 +208,21 @@ export async function auditR2fAlignment(
           const x = a.closest(entry.selector),
             y = b.closest(entry.selector);
           if (!x || !y || x === y) continue;
+          const xr = x.getBoundingClientRect(),
+            yr = y.getBoundingClientRect();
+          // Separate DOM wrappers alone cannot excuse a real same-column or
+          // phone overlap. These must be distinct horizontal visual columns.
+          if (Math.min(xr.right, yr.right) - Math.max(xr.left, yr.left) > 1.5)
+            continue;
           if (entry.kind === "independent-dashboard-columns") {
+            const layout = x.closest(".dashboard-layout");
+            const style = layout && getComputedStyle(layout);
+            if (
+              !style ||
+              style.display !== "grid" ||
+              style.gridTemplateColumns.trim().split(/\s+/).length < 2
+            )
+              continue;
             if (
               x.closest(".dashboard-main,.dashboard-aside") ===
               y.closest(".dashboard-main,.dashboard-aside")

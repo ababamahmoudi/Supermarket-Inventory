@@ -515,3 +515,4 @@ Added original approved logo/icon files, optional public maker/support config, t
 - R2f R0.6: share icon/title/subtitle centring so round add/package icons align with both text lines.
 - R2f R0.1 follow-up: shared popovers accept an actual compact body height/gap so a one-option Now menu stays below when it fits; shared growing notes accept the approved minimum height without overriding their six-line cap.
 - R2f R0.7: port the approved rendered alignment audit with strict logical glyph/control edges, explicit semantic exceptions, number/icon/card probes and LTR/RTL shifted-geometry negative controls.
+- R2f R0.7 follow-up: require actual separate visual columns before the masonry/dashboard exception; prove phone/same-column overlaps fail. Exclude genuinely closed-disclosure controls using browser visibility, and retain an explicit whole status-icon/row-number probe for the Original invoice # column without exempting money/quantity glyphs.

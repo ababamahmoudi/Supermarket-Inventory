@@ -20,6 +20,7 @@ for (const direction of ["ltr", "rtl"] as const) {
       <span class="ui-icon-text"><span id="add-icon" data-icon-text-icon aria-hidden="true">+</span><span data-icon-text-copy><strong>Add a fictional item</strong><small>For goods outside this catalog</small></span></span>
       <div class="ui-card-row"><section class="card" id="first-card"><header class="ui-card-header" id="first-card-header"><h2>Purchases by supplier</h2></header></section><section class="card"><header class="ui-card-header"><h2>Purchases by week</h2></header></section></div>
       <span class="ui-column-value" id="expiry-value">Oct 30</span>
+      <details id="hidden-controls"><summary>More optional fields</summary><div class="peer-row"><button style="height:41px">Hidden short action</button><button>Hidden ordinary action</button></div></details>
       </main></body></html>`);
     const audit = () =>
       auditR2fAlignment(page, { scene: "D7", exceptionIds: [] });
@@ -32,6 +33,12 @@ for (const direction of ["ltr", "rtl"] as const) {
     expect(clean.cardHeaders).toBe(2);
     expect(clean.cardPairs).toBe(1);
     expect(clean.plainValues).toBe(1);
+    await page.locator("#hidden-controls summary").click();
+    expect(
+      (await audit()).failures.some((value) => value.startsWith("row:")),
+    ).toBe(true);
+    await page.locator("#hidden-controls summary").click();
+    expect((await audit()).failures).toEqual([]);
     await page
       .locator("#second")
       .evaluate(
@@ -140,5 +147,57 @@ for (const direction of ["ltr", "rtl"] as const) {
         exceptionIds: ["unregistered-page-bypass"],
       }),
     ).rejects.toThrow("Unregistered D7 alignment exception");
+  });
+}
+
+for (const scene of ["D1", "D7"] as const) {
+  test(`R0.7 ${scene} independent wrappers never excuse a phone or same-column overlap`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const department = scene === "D1";
+    await page.setContent(
+      `<style>*{box-sizing:border-box}main{position:relative;min-height:200px}button{width:44px;height:44px;border:0}.timesheet-department,.card{width:120px;height:80px}.timesheet-department{position:absolute}.dashboard-layout{display:grid;grid-template-columns:120px 120px;gap:20px}.dashboard-main,.dashboard-aside{position:relative}.first-button{margin-inline-start:76px}.second-card{top:2px}.dashboard-aside{top:2px}</style><main class="${department ? "timesheets-page" : "r2c-dashboard"}">${department ? '<section class="timesheet-department" data-department-key="bakery"><button class="first-button">A</button></section><section class="timesheet-department second-card" data-department-key="cash" style="left:140px"><button>B</button></section>' : '<div class="dashboard-layout"><div class="dashboard-main"><section class="card"><button class="first-button">A</button></section></div><div class="dashboard-aside"><section class="card"><button>B</button></section></div></div>'}</main>`,
+    );
+    const distinct = await auditR2fAlignment(page, { scene });
+    expect(distinct.failures).toEqual([]);
+    expect(
+      distinct.allowed.some(
+        (item) =>
+          item.id ===
+          (department
+            ? "D1-independent-departments"
+            : "D7-independent-columns"),
+      ),
+    ).toBe(true);
+    await page.setViewportSize({ width: 390, height: 844 });
+    if (department)
+      await page.locator(".second-card").evaluate((el) => {
+        (el as HTMLElement).style.left = "0px";
+        (el.querySelector("button") as HTMLElement).style.marginInlineStart =
+          "132px";
+      });
+    else
+      await page.locator(".dashboard-layout").evaluate((el) => {
+        (el as HTMLElement).style.display = "flex";
+        const aside = el.querySelector(".dashboard-aside") as HTMLElement;
+        aside.style.position = "absolute";
+        aside.style.left = "0px";
+        (aside.querySelector("button") as HTMLElement).style.marginInlineStart =
+          "132px";
+      });
+    const sameColumn = await auditR2fAlignment(page, { scene });
+    expect(sameColumn.failures.some((value) => value.startsWith("row:"))).toBe(
+      true,
+    );
+    expect(
+      sameColumn.allowed.some(
+        (item) =>
+          item.id ===
+          (department
+            ? "D1-independent-departments"
+            : "D7-independent-columns"),
+      ),
+    ).toBe(false);
   });
 }
