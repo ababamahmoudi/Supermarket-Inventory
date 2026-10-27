@@ -392,3 +392,7 @@ Returns has a primary **New return** action for all five roles at permitted acti
 Use shared surface-fill 44 px fields and one record-opening control. Buffered quantity/note typing preserves its DOM control and the 2 px stability budget. The phone form fills the viewport with scrollable body and reachable fixed title/footer. EN/FA, isolated LTR amounts/codes and both themes use existing tokens; no new typography or literal style palette. File/camera selection shows saved-photo feedback and removable temporary previews; successful creation opens the actual new **Waiting for pickup** detail, with genuine creator/time, translated reason and protected original photos that survive reload.
 
 Costs appear in source choices only with existing supplier-cost permission; Floor Worker/Cashier receive no private source/cost/amount fields. Cashier has no pickup/cancel/settlement actions. Supplier open returns update immediately. Owner/Manager Payables shows **Waiting for pickup · Expected credit · Not deducted yet**, an actual return link and explicit source ISO currency. A currency mismatch keeps the original amount, flags manager review and excludes that row from the current-currency total; do not relabel it. Pickup/settlement permissions and original evidence remain independent.
+
+## R2e C1 — Imported reading identity
+
+The invoice review header says “Read by AI · imported file” without model identifiers. Invoice details → More details → Reading retains the original model identifiers as reading evidence. Imported evidence is never relabelled as a live read.

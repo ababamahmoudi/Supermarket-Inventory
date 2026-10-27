@@ -218,7 +218,7 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
   await expect(
-    page.getByText(/AI reading, imported \(not live\)/).first(),
+    page.getByText(/Read by AI · imported file/).first(),
   ).toBeVisible();
   const phone = testInfo.project.name === "phone";
   if (phone)

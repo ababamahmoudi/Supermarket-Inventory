@@ -54,10 +54,9 @@ export function ReviewHeader({
           {invoice.reading_record && (
             <Badge tone="neutral" wrap>
               {t(
-                "AI reading, imported (not live)",
-                "خوانش هوش مصنوعی، واردشده (زنده نیست)",
-              )}{" "}
-              · <LtrValue value={invoice.reading_record.models.join(", ")} />
+                "Read by AI · imported file",
+                "خوانده‌شده با هوش مصنوعی · فایل واردشده",
+              )}
             </Badge>
           )}
         </div>

@@ -419,6 +419,23 @@ export function InvoiceDetailsCard({
                   </Field>
                 );
               })}
+              {invoice.reading_record && (
+                <div className="receiving-reading-evidence">
+                  <h3>{t("Reading", "خوانش")}</h3>
+                  <p className="muted">
+                    {t(
+                      "Read by AI · imported file",
+                      "خوانده‌شده با هوش مصنوعی · فایل واردشده",
+                    )}
+                  </p>
+                  <p>
+                    {t("Models", "مدل‌ها")}:{" "}
+                    <LtrValue
+                      value={invoice.reading_record.models.join(", ")}
+                    />
+                  </p>
+                </div>
+              )}
               <ReadingUnknownChecks
                 fields={fields}
                 known={[
