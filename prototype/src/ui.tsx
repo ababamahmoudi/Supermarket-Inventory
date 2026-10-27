@@ -149,6 +149,25 @@ export function Disclosure({
     </details>
   );
 }
+/** A composed card heading reserves the same row whether or not it has actions. */
+export function CardHeader({
+  title,
+  actions,
+  children,
+  className,
+  ...props
+}: Omit<HTMLAttributes<HTMLElement>, "title"> & {
+  title?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <header {...props} className={cn("ui-card-header", className)}>
+      {title ? <h2>{title}</h2> : children}
+      {actions && <div className="actions">{actions}</div>}
+    </header>
+  );
+}
+
 export function Card({
   title,
   children,

@@ -510,3 +510,4 @@ Added original approved logo/icon files, optional public maker/support config, t
 - R2f R0.1: add the shared peer-control row/grid contract, centred margin-free segmented tracks, matching icon/control heights and universal 44 px quick filters.
 - R2f R0.2: align first/last table content and full-width row rules with card titles and filters, preserving the 24 px inner-column gap.
 - R2f R0.3: add the shared three-track number group and approved reusable approval/weight-Lookup typography tokens so labels, values and notes align consistently.
+- R2f R0.4: share a 44 px composed card header and equal-height paired-card layout, retaining approved independent-height Timesheet masonry cards.

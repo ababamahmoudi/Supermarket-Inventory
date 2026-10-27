@@ -1498,3 +1498,35 @@
   padding-block-start: 2px;
   font-size: var(--font-size-caption);
 }
+
+/* R2f R0.4 — neighbouring card headers share a 44px track. */
+.ui-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-block-size: 44px;
+  min-inline-size: 0;
+}
+.ui-card-header > h2,
+.ui-card-header > .actions {
+  margin: 0;
+}
+.ui-card-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 20px;
+  min-inline-size: 0;
+}
+.ui-card-row > .ui-card {
+  align-self: stretch;
+  block-size: 100%;
+  min-inline-size: 0;
+}
+@media (max-width: 759px) {
+  .ui-card-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

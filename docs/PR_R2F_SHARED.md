@@ -11,3 +11,7 @@ Shared outer table padding is zero; the existing 12 px inner padding still separ
 ## R0.3 — Number baselines
 
 `NumberGroup` / `.ui-number-group` owns three shared tracks: label, value and note. `NumberStat` uses display contents so differently sized values align on the same parent-grid baseline; optional column placement supports the approved arrow/divider layout. A quiet empty note preserves the common note track. Approved reusable typography tokens capture the 17/26 px approval values and 36/18 px weight Lookup hierarchy; existing ordinary Lookup typography is unchanged.
+
+## R0.4 — Neighbouring cards
+
+`CardHeader` / `.ui-card-header` reserves at least 44 px whether actions exist or not. `.ui-card-row` stretches two neighbouring cards to the same height and becomes one column on a phone. These compose real paired cards rather than forcing masonry departments to the same height; the approved Timesheets design deliberately keeps independent department heights and its compact baseline-aligned heading.
