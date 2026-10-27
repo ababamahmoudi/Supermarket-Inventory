@@ -1,3 +1,5 @@
+import { invoicePackWeight } from "./invoice-case-weight";
+import { selectInvoiceWeightUnit } from "./invoice-weight";
 import Decimal from "decimal.js";
 import { freshActor } from "./authority";
 import { canInvoiceAuthority } from "./invoice-authority";
@@ -1175,6 +1177,7 @@ export function mapReadingLine(
     qty_received_at_posting: received ? new Decimal(received).toNumber() : 0,
     qty_later_received: 0,
     unit_cost_before_tax: cost,
+    paper_line_total: printedLineTotal || undefined,
     line_total:
       decimal(source.line_total, 2) ||
       (unit === "case" && caseCost && quantity
@@ -1286,7 +1289,17 @@ export function mapReadingLine(
     line.date_value = expiry;
     line.date_type = "expiry";
   }
-  if (line.sold_by === "weight") {
+  const measuredCase =
+    text(source.cost_basis).toLowerCase() === "case"
+      ? invoicePackWeight(text(source.pack_size) || printedDescription)
+      : undefined;
+  if (measuredCase) {
+    line.case_weight = measuredCase.weight;
+    line.case_weight_unit = measuredCase.unit;
+    if (product?.sold_by === "weight" && unit === "case")
+      selectInvoiceWeightUnit(line, measuredCase.unit, state.config);
+  }
+  if (line.sold_by === "weight" && (unit === "kg" || unit === "lb")) {
     line.source_quantity = quantity;
     line.source_quantity_unit = unit as "kg" | "lb";
     line.source_received_quantity = received;
