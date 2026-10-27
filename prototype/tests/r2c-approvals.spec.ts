@@ -338,14 +338,37 @@ for (const language of ["en", "fa"] as const) {
           exact: true,
         });
         await expect(selectAll).toBeChecked();
+        const confirm = batch.locator(".batch-approval-confirm");
+        const beforeSelection = await confirm.boundingBox();
         await selectAll.uncheck();
-        await expect(
-          batch.locator(".ui-dialog-footer > .button-primary"),
-        ).toBeDisabled();
+        await expect(confirm).toBeDisabled();
+        await expect(confirm).toHaveClass(/button-neutral/);
+        await expect(batch.locator(".batch-approval-status")).toContainText(
+          word(
+            language,
+            "Select at least one product to approve.",
+            "برای تأیید، دست‌کم یک کالا انتخاب کنید.",
+          ),
+        );
+        const emptySelection = await confirm.boundingBox();
+        expect(
+          Math.abs(emptySelection!.y - beforeSelection!.y),
+        ).toBeLessThanOrEqual(2);
+        expect(
+          Math.abs(
+            emptySelection!.x +
+              emptySelection!.width -
+              beforeSelection!.x -
+              beforeSelection!.width,
+          ),
+        ).toBeLessThanOrEqual(2);
         await selectAll.check();
-        await expect(
-          batch.locator(".ui-dialog-footer > .button-primary"),
-        ).toBeEnabled();
+        await expect(confirm).toBeEnabled();
+        await expect(confirm).toHaveClass(/button-primary/);
+        const selectedAgain = await confirm.boundingBox();
+        expect(
+          Math.abs(selectedAgain!.y - beforeSelection!.y),
+        ).toBeLessThanOrEqual(2);
         const geometry = await batch.evaluate((element) => {
           const rect = element.getBoundingClientRect();
           const body = element.querySelector(".invoice-approval-table-wrap")!;
