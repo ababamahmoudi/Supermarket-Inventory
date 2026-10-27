@@ -95,3 +95,28 @@ describe("R2c 2.3 bounded popover geometry", () => {
     expect((otherSide.top ?? 0) + otherSide.maxHeight).toBe(584);
   });
 });
+
+it("keeps a one-option Now popup below when its real 56px body fits, and still flips when it does not", () => {
+  const trigger = rect(30, 350, 100, 44);
+  const defaultMenu = boundedPopoverPosition(trigger, viewport, {
+    minWidth: 168,
+    rtl: false,
+  });
+  expect(defaultMenu.bottom).toBeDefined();
+  const now = boundedPopoverPosition(trigger, viewport, {
+    minWidth: 168,
+    rtl: false,
+    minimumHeight: 56,
+    gap: 6,
+  });
+  expect(now.top).toBe(400);
+  expect(now.maxHeight).toBe(184);
+  const clipped = boundedPopoverPosition(rect(30, 520, 100, 44), viewport, {
+    minWidth: 168,
+    rtl: true,
+    minimumHeight: 56,
+    gap: 6,
+  });
+  expect(clipped.bottom).toBeDefined();
+  expect(clipped.left).toBeGreaterThanOrEqual(12);
+});

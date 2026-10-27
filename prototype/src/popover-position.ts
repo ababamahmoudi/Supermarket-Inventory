@@ -27,8 +27,20 @@ export interface BoundedPopoverPosition {
 export function boundedPopoverPosition(
   trigger: PopoverRect,
   viewport: PopoverViewport,
-  options: { minWidth: number; rtl: boolean; obstruction?: PopoverRect },
+  options: {
+    minWidth: number;
+    rtl: boolean;
+    obstruction?: PopoverRect;
+    minimumHeight?: number;
+    gap?: number;
+  },
 ): BoundedPopoverPosition {
+  const gap =
+    Number.isFinite(options.gap) && options.gap! >= 0 ? options.gap! : 8;
+  const minimumHeight =
+    Number.isFinite(options.minimumHeight) && options.minimumHeight! > 0
+      ? options.minimumHeight!
+      : 240;
   const minLeft = viewport.left + Math.min(12, viewport.width / 2);
   const maxRight =
     viewport.left + viewport.width - Math.min(12, viewport.width / 2);
@@ -60,15 +72,15 @@ export function boundedPopoverPosition(
   );
   const belowTop = Math.max(
     topLimit,
-    Math.min(trigger.bottom + 8, bottomLimit),
+    Math.min(trigger.bottom + gap, bottomLimit),
   );
   const aboveBottom = Math.max(
     topLimit,
-    Math.min(trigger.top - 8, bottomLimit),
+    Math.min(trigger.top - gap, bottomLimit),
   );
   const below = Math.max(0, bottomLimit - belowTop);
   const above = Math.max(0, aboveBottom - topLimit);
-  const opensAbove = below < 240 && above > below;
+  const opensAbove = below < minimumHeight && above > below;
   return {
     position: "fixed" as const,
     left,

@@ -23,3 +23,5 @@ Shared `ColumnValue` / `.ui-column-value` keeps dates/numbers as plain text with
 ## R0.6 — Icons beside title/subtitle
 
 `IconText` / `.ui-icon-text` centres an icon on the whole title/subtitle block. The copy remains a two-line grid and the icon does not shrink. Existing approved icon size, colour and circle treatment remain the caller's ordinary tokens/composition; centring is shared.
+
+R0.1 compact controls may pass the actual popup body's minimum height/gap to shared `usePopover`; defaults remain 240/8 px for existing menus, while the one-option Timesheet Now popup uses 56/6 px and still flips/clamps when needed. Shared AutoTextarea/BufferedTextarea accepts an explicit minimum height for the approved 72 px Notes field, retaining the six-line cap and default two-line behaviour elsewhere.

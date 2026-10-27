@@ -1796,7 +1796,10 @@ export type SelectOption = {
 
 export function usePopover<T extends HTMLElement = HTMLButtonElement>(
   minWidth = 224,
+  options: { minimumHeight?: number; gap?: number } = {},
 ) {
+  const minimumHeight = options.minimumHeight ?? 240;
+  const gap = options.gap ?? 8;
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<CSSProperties>({});
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
@@ -1817,6 +1820,8 @@ export function usePopover<T extends HTMLElement = HTMLButtonElement>(
       },
       {
         minWidth,
+        minimumHeight,
+        gap,
         rtl: document.documentElement.dir === "rtl",
         obstruction: document
           .querySelector(".undo-toast-stack")
@@ -1831,7 +1836,7 @@ export function usePopover<T extends HTMLElement = HTMLButtonElement>(
         ? previous
         : next,
     );
-  }, [minWidth]);
+  }, [minWidth, minimumHeight, gap]);
   const close = (restoreFocus = false) => {
     setOpen(false);
     if (restoreFocus) triggerRef.current?.focus();
@@ -2392,12 +2397,14 @@ export function AutoTextarea({
   defaultValue,
   rows = 2,
   maxRows = 6,
+  minHeight = 0,
   className,
   onInput,
   ...props
 }: TextareaHTMLAttributes<HTMLTextAreaElement> & {
   ref?: Ref<HTMLTextAreaElement>;
   maxRows?: number;
+  minHeight?: number;
 }) {
   const element = useRef<HTMLTextAreaElement | null>(null);
   const fit = useCallback(() => {
@@ -2413,15 +2420,18 @@ export function AutoTextarea({
     const border =
       (parseFloat(computed.borderTopWidth) || 0) +
       (parseFloat(computed.borderBottomWidth) || 0);
-    const minimum = line * Math.min(2, maxRows) + padding + border;
     const maximum = line * maxRows + padding + border;
+    const minimum = Math.min(
+      maximum,
+      Math.max(line * Math.min(2, maxRows) + padding + border, minHeight),
+    );
     node.style.minBlockSize = `${minimum}px`;
     node.style.maxBlockSize = `${maximum}px`;
     node.style.height = "auto";
     node.style.height = `${Math.min(maximum, Math.max(minimum, node.scrollHeight + border))}px`;
     node.style.overflowY =
       node.scrollHeight + border > maximum + 1 ? "auto" : "hidden";
-  }, [maxRows]);
+  }, [maxRows, minHeight]);
   const attach = useCallback(
     (node: HTMLTextAreaElement | null) => {
       element.current = node;
@@ -2480,6 +2490,8 @@ export function BufferedTextarea({
 }: Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "value"> & {
   value: string | number | null | undefined;
   ref?: Ref<HTMLTextAreaElement>;
+  minHeight?: number;
+  maxRows?: number;
 }) {
   const buffer = useTypingBuffer(value);
   return (
