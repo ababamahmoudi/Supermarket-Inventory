@@ -11,6 +11,7 @@ import { nextProductCode } from "./manual-product";
 import { createId } from "./ids";
 import {
   calculatePackagePrice,
+  calculatePackageCost,
   packageSettings,
   packageSizeInLb,
   type PackageUnit,
@@ -18,6 +19,7 @@ import {
 import {
   inStorePackageBarcode,
   validatePackageBarcode,
+  packageBarcodeIdentity,
 } from "./package-barcodes";
 import type { DemoState, Product } from "./types";
 
@@ -93,7 +95,8 @@ function assertUniqueBarcode(
       (item) =>
         item.company_id === state.config.company.seed_key &&
         item.code !== exceptCode &&
-        item.barcode === barcode,
+        packageBarcodeIdentity(item.barcode) ===
+          packageBarcodeIdentity(barcode),
     )
   )
     throw new WeightPackageError("barcode_conflict");
@@ -358,8 +361,12 @@ function reconcilePackages(
       main_supplier: parent.main_supplier,
       package_pending_prices: pending,
     });
-    const available = updates.find((item) => item.result)?.result;
-    if (available) product.last_cost_before_tax = available.cost_before_tax;
+    product.last_cost_before_tax = calculatePackageCost(
+      product.package_size,
+      product.package_size_unit,
+      parent.last_cost_before_tax,
+      state.config,
+    );
     product.branch_prices ??= {};
     for (const { branch, result } of updates) {
       const prior = product.branch_prices[branch] ?? null;

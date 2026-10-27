@@ -68,6 +68,19 @@ export function packageSizeInLb(
     return value.div(packageSettings(config).ounces_per_lb).toString();
   throw new PackageValidationError("unit");
 }
+export function calculatePackageCost(
+  size: string,
+  unit: PackageUnit,
+  parentCostPerLb: string,
+  config: PackageConfig = configSeed,
+): string {
+  const parentCost = amount(parentCostPerLb, "cost");
+  if (parentCost.decimalPlaces() > 4) throw new PackageValidationError("cost");
+  return new PackageDecimal(packageSizeInLb(size, unit, config))
+    .times(parentCost)
+    .plus(packageSettings(config).container_cost)
+    .toFixed(4);
+}
 export function calculatePackagePrice(
   size: string,
   unit: PackageUnit,
@@ -82,18 +95,18 @@ export function calculatePackagePrice(
   const parentCost = amount(parentCostPerLb, "cost");
   if (
     parentPrice.lte(0) ||
-    parentPrice.decimalPlaces() > 2 ||
-    parentCost.decimalPlaces() > 4
+    parentPrice.decimalPlaces() > 2
   )
     throw new PackageValidationError("price");
+  if (parentCost.decimalPlaces() > 4) throw new PackageValidationError("cost");
   const raw = new PackageDecimal(size_lb)
     .times(parentPrice)
     .plus(settings.container_fee);
   // This is already a selling amount: do not divide by the category divisor again.
   const rounded = roundCategoryPrice(raw.toString(), category, config);
-  const cost = new PackageDecimal(size_lb)
-    .times(parentCost)
-    .plus(settings.container_cost);
+  const cost = new PackageDecimal(
+    calculatePackageCost(size, unit, parentCostPerLb, config),
+  );
   const price = new PackageDecimal(rounded.selling_price);
   return {
     ...rounded,

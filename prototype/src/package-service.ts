@@ -34,7 +34,12 @@ export function readWeightPackages(
     (product) =>
       product.company_id === actor.company_id && product.code === parentCode,
   );
-  if (!parent || parent.sold_by !== "weight" || parent.package_of_product_id)
+  if (
+    !parent ||
+    parent.sold_by !== "weight" ||
+    parent.package_of_product_id ||
+    parent.status === "archived"
+  )
     throw new WeightPackageError("parent");
   return state.products
     .filter(

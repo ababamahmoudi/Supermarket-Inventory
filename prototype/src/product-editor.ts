@@ -216,6 +216,8 @@ export function saveProductEdits(
     date_reminder_days: edits.date_reminder_days ?? product.date_reminder_days,
     sold_by: edits.sold_by ?? product.sold_by ?? "each",
   });
+  if (product.package_of_product_id)
+    product.package_version = (product.package_version ?? 0) + 1;
   applyProductDateDrafts(state, context, product, edits.dates, now);
   if (edits.date_tracking === false && edits.date_tracking_stop === "clear")
     stopProductDateTracking(state, context, code, "clear");

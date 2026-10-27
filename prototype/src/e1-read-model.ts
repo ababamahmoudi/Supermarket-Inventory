@@ -212,7 +212,9 @@ function operationalConfig(config: CompanyConfig): CompanyReadConfig {
     receiving: source.receiving,
     modules: source.modules,
     timesheets: source.timesheets,
-    weighed_items: source.weighed_items,
+    weighed_items: source.weighed_items
+      ? { ...source.weighed_items, package_container_cost: undefined }
+      : undefined,
     sales: source.sales,
     orders: source.orders,
     price_updates: source.price_updates,
