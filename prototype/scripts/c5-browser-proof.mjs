@@ -1341,6 +1341,17 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const dashboardAction = dashboardRoots.has(
             element.closest(".r2c-dashboard"),
           );
+          const toolbar = element.closest(
+            ".filter-toolbar.c9-filter-toolbar[data-ui-component='filter-toolbar']",
+          );
+          const genuineFilterToolbar = Boolean(
+            toolbar &&
+            toolbar.firstElementChild?.matches(".filter-toolbar-controls") &&
+            toolbar.children.length <= 2 &&
+            (toolbar.children.length === 1 ||
+              toolbar.lastElementChild?.matches(".filter-toolbar-trailing")) &&
+            element.closest("dialog") === toolbar.closest("dialog"),
+          );
           const expectedHeight = labelAction
             ? 32
             : newReturnControl ||
@@ -1351,10 +1362,10 @@ export async function inspect(page, screen, variant, role = "supervisor") {
                 approvalEditorFooters.has(element) ||
                 notificationHeaderActions.has(element)
               ? 44
-              : element.closest(".c9-filter-toolbar")
+              : genuineFilterToolbar
                 ? element.closest(".ui-segments")
-                  ? 32
-                  : 40
+                  ? 36
+                  : 44
                 : phone || fieldAlignedAdd
                   ? 44
                   : small

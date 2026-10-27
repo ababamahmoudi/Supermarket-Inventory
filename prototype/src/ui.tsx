@@ -1361,6 +1361,7 @@ export function FilterToolbar({
     <div
       className={cn("filter-toolbar c9-filter-toolbar", className)}
       {...props}
+      data-ui-component="filter-toolbar"
     >
       <div className="filter-toolbar-controls">
         {leading}

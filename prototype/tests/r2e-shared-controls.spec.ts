@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { signIn, setLanguage, openShellAction } from "./helpers";
+import { inspect } from "../scripts/c5-browser-proof.mjs";
 
 for (const [language, theme] of [
   ["en", "light"],
@@ -49,6 +50,16 @@ for (const [language, theme] of [
       await expect(chip).toHaveAttribute("aria-pressed", "true");
       await chip.click();
       await expect(chip).toHaveAttribute("aria-pressed", "false");
+      expect(
+        (
+          await inspect(
+            page,
+            `R2e ${route} shared filters`,
+            `${language}-${theme}`,
+            "manager",
+          )
+        ).failures,
+      ).toEqual([]);
     }
     await page.goto("/#received");
     const dateRange = page.getByRole("button", {
