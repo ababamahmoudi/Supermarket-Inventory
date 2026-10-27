@@ -1374,3 +1374,59 @@
 :root textarea.ui-auto-textarea {
   resize: none;
 }
+
+/* R2f R0.1 — peer controls, including tabs and icons, use one row contract. */
+.ui-control-row,
+.ui-control-row-grid {
+  --control-row-height: 44px;
+  --control-row-segment-height: 36px;
+  align-items: center;
+  gap: 12px;
+  min-inline-size: 0;
+}
+.ui-control-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+.ui-control-row-grid {
+  display: grid;
+}
+.ui-control-row.is-field-row,
+.ui-control-row-grid.is-field-row {
+  align-items: end;
+}
+.ui-control-row[data-ui-control-size="small"],
+.ui-control-row-grid[data-ui-control-size="small"] {
+  --control-row-height: 40px;
+  --control-row-segment-height: 32px;
+}
+:root
+  :is(.ui-control-row, .ui-control-row-grid)
+  > :is(.ui-button.button, .ui-select, .ui-date, .filter-search-pill, input) {
+  block-size: var(--control-row-height);
+  min-block-size: var(--control-row-height);
+  max-block-size: var(--control-row-height);
+  margin-block: 0;
+}
+:root :is(.ui-control-row, .ui-control-row-grid) .ui-segments.ui-tabs,
+:root :is(.ui-control-row, .ui-control-row-grid) > .ui-segments {
+  block-size: var(--control-row-height);
+  min-block-size: var(--control-row-height);
+  max-block-size: var(--control-row-height);
+  margin: 0;
+  place-self: center;
+  padding-block: 4px;
+  align-items: center;
+}
+:root :is(.ui-control-row, .ui-control-row-grid) .ui-segments > button {
+  block-size: var(--control-row-segment-height);
+  min-block-size: var(--control-row-segment-height);
+  max-block-size: var(--control-row-segment-height);
+  margin-block: 0;
+  padding-block: 0;
+}
+:root .filter-chip.ui-button.button {
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: 44px;
+}

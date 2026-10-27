@@ -1343,6 +1343,32 @@ export function useListFilterOrigin(list: string) {
   };
 }
 
+/** Peer controls share a height and centre; labelled field rows can bottom-align. */
+export function ControlRow({
+  children,
+  className,
+  size = "page",
+  align = "center",
+  ...props
+}: HTMLAttributes<HTMLDivElement> & {
+  size?: "page" | "small";
+  align?: "center" | "end";
+}) {
+  return (
+    <div
+      {...props}
+      className={cn(
+        "ui-control-row",
+        align === "end" && "is-field-row",
+        className,
+      )}
+      data-ui-control-size={size}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function FilterToolbar({
   children,
   search,

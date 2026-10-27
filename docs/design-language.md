@@ -373,3 +373,7 @@ R2e B6 notes/descriptions use the shared automatically growing textarea, startin
 ## R2e E — Maker identity
 
 Use the supplied unmodified Klead files under `prototype/public/brand/klead/`; never redraw or stretch lettering. Maker identity is secondary to the configured store. Auth footers use the supplied mark in light theme and white logo in dark theme; About uses the full theme-appropriate logo. Preserve aspect ratio with contained images and at least a key-ring's width of surrounding clear space (the shared maker logo wrapper reserves 12px). Existing text/spacing tokens style the attribution; maker assets retain their approved colors. Staff print attribution is small plain text and follows the document language. Shelf/promotion labels have none.
+
+## R2f R0.1 — Peer control rows (current)
+
+Use shared ControlRow / `.ui-control-row` for 44 px page peers, or its small 40 px variant for in-card action rows. Grid compositions use `.ui-control-row-grid`; labelled field/action pairs bottom-align with `.is-field-row`. Whole segmented tracks share the row height, have no bottom margin and centre themselves. Their inner buttons fit inside the track. Icon widths may follow the approved composition; heights match the adjacent field/action. Shared quick-filter chips are 44 px.
