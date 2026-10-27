@@ -36,8 +36,22 @@ export function InvoiceApprovalDialog({
 }) {
   const { state, lang, t, tCount } = useDemo();
   const eligible = rows.filter((row) => !row.individual).map((row) => row.id);
+  const selectedIds = selected.filter((id) => eligible.includes(id));
+  const blockedReason = busy
+    ? t("Saving approvals…", "در حال ذخیره تأییدها…")
+    : !selectedIds.length
+      ? eligible.length
+        ? t(
+            "Select at least one product to approve.",
+            "برای تأیید، دست‌کم یک کالا انتخاب کنید.",
+          )
+        : t(
+            "These products need individual review.",
+            "این کالاها به بررسی جداگانه نیاز دارند.",
+          )
+      : "";
   const allSelected =
-    eligible.length > 0 && eligible.every((id) => selected.includes(id));
+    eligible.length > 0 && eligible.every((id) => selectedIds.includes(id));
   return (
     <Dialog
       open
@@ -50,16 +64,33 @@ export function InvoiceApprovalDialog({
       className="invoice-approval-dialog ui-form-surface"
       footer={
         <>
-          <Button variant="neutral" disabled={busy} onClick={onClose}>
+          <Button
+            className="batch-approval-cancel"
+            variant="neutral"
+            disabled={busy}
+            onClick={onClose}
+          >
             {t("Cancel", "انصراف")}
           </Button>
-          <Button disabled={busy || !selected.length} onClick={onConfirm}>
+          <span
+            className="batch-approval-status muted"
+            role="status"
+            data-blocked={Boolean(blockedReason)}
+          >
+            {blockedReason || "\u00a0"}
+          </span>
+          <Button
+            className="batch-approval-confirm"
+            variant={busy || !selectedIds.length ? "neutral" : "primary"}
+            disabled={busy || !selectedIds.length}
+            onClick={onConfirm}
+          >
             {tCount(
               "Approve {{count}} product",
               "Approve {{count}} products",
               "تأیید {{count}} کالا",
               "تأیید {{count}} کالا",
-              selected.length,
+              selectedIds.length,
             )}
           </Button>
         </>
@@ -110,14 +141,14 @@ export function InvoiceApprovalDialog({
               >
                 <td className="batch-select">
                   <Checkbox
-                    checked={selected.includes(row.id)}
+                    checked={selectedIds.includes(row.id)}
                     disabled={busy || row.individual}
                     aria-label={`${t("Include", "انتخاب")} ${row.product.name_en}`}
                     onChange={(checked) =>
                       onSelect(
                         checked
-                          ? [...new Set([...selected, row.id])]
-                          : selected.filter((id) => id !== row.id),
+                          ? [...new Set([...selectedIds, row.id])]
+                          : selectedIds.filter((id) => id !== row.id),
                       )
                     }
                   />

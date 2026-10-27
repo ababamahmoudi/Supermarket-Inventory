@@ -283,7 +283,7 @@ for (const language of ["en", "fa"] as const) {
     await page.goto("/#approvals");
     const group = page.getByTestId(`invoice-approval-group-${imported.id}`);
     const approveAll = group.getByRole("button", {
-      name: /^(Approve all 25|تأیید همهٔ 25)/,
+      name: /^(Approve all \(25\)|تأیید همه \(25\))/,
     });
     await approveAll.click();
     const approvalDialog = page.getByRole("dialog");

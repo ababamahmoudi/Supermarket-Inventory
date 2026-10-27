@@ -30,6 +30,15 @@ afterEach(() => {
 });
 
 it("groups invoice approvals, reviews every product and approves only checked rows without an empty-list flash", async () => {
+  const schedule = window.setTimeout.bind(window);
+  vi.spyOn(window, "setTimeout").mockImplementation(
+    (handler, delay, ...args) =>
+      (delay === 180
+        ? schedule(() => {}, 0)
+        : schedule(handler, delay, ...args)) as unknown as ReturnType<
+        typeof globalThis.setTimeout
+      >,
+  );
   const state = initialState();
   state.sale_requests = [];
   state.invoice.id = "r2-ui-fictional-invoice";
@@ -61,10 +70,10 @@ it("groups invoice approvals, reviews every product and approves only checked ro
     </DemoProvider>,
   );
   await renderedUiReady(() =>
-    Boolean(screen.queryByRole("button", { name: "Approve all 2…" })),
+    Boolean(screen.queryByRole("button", { name: "Approve all (2)" })),
   );
   const bulkButton = screen.getByRole("button", {
-    name: "Approve all 2…",
+    name: "Approve all (2)",
   });
   expect(screen.getAllByText("first price")).toHaveLength(2);
   fireEvent.click(bulkButton);
@@ -131,9 +140,35 @@ it("groups invoice approvals, reviews every product and approves only checked ro
   await waitFor(() =>
     expect(screen.getByRole("tab", { name: "Pending 1" })).toBeVisible(),
   );
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  // Canonical publication precedes completion of the asynchronous command.
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+  );
+  expect(
+    document.querySelector(".approval-departure.is-leaving"),
+  ).not.toBeNull();
   expect(flashes).toEqual([]);
   observe.disconnect();
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Approve all (1)" }),
+  );
+  const remainingDialog = await screen.findByRole("dialog", {
+    name: "Review invoice approvals",
+  });
+  expect(within(remainingDialog).getAllByRole("row")).toHaveLength(2);
+  expect(
+    within(remainingDialog).getByRole("checkbox", {
+      name: `Include ${state.products[1].name_en}`,
+    }),
+  ).toBeChecked();
+  expect(
+    within(remainingDialog).queryByRole("checkbox", {
+      name: `Include ${state.products[0].name_en}`,
+    }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(remainingDialog).getByRole("button", { name: "Approve 1 product" }),
+  ).toHaveClass("button-primary");
   expect(
     screen.queryByText(
       "Approved price. Cashier lookup now shows the approved price.",
@@ -254,9 +289,9 @@ it("leaves requests needing an individual price choice or reason unchecked while
     </DemoProvider>,
   );
   await renderedUiReady(() =>
-    Boolean(screen.queryByRole("button", { name: "Approve all 4…" })),
+    Boolean(screen.queryByRole("button", { name: "Approve all (4)" })),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Approve all 4…" }));
+  fireEvent.click(screen.getByRole("button", { name: "Approve all (4)" }));
   const dialog = await screen.findByRole("dialog", {
     name: "Review invoice approvals",
   });

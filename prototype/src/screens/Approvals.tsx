@@ -37,6 +37,7 @@ import { ApprovalReviewPanel } from "./ApprovalReviewPanel";
 import { SaleRequestCards } from "./SalesApprovals";
 import type { Approval, Branch } from "../types";
 import "./approval-receiving.css";
+import "./approval-r2e.css";
 import {
   Badge,
   Button,
@@ -303,26 +304,37 @@ export function Approvals() {
       const snapshots = await query(
         "approvals.decide",
         domainScope(state),
-        (canonical, currentActor) =>
-          Object.fromEntries(
-            group.map((row) => [
-              row.approval.product_code,
-              approvalSnapshot(
-                canonical,
-                currentActor,
+        (canonical, currentActor) => {
+          const requested = new Set(group.map((row) => row.approval.id));
+          const pending = approvalBoard(canonical, currentActor).filter(
+            (row) =>
+              requested.has(row.approval.id) &&
+              row.approval.status === "pending",
+          );
+          if (!pending.length) throw new Error("No pending products remain");
+          return {
+            pending,
+            values: Object.fromEntries(
+              pending.map((row) => [
                 row.approval.product_code,
-              ),
-            ]),
-          ),
+                approvalSnapshot(
+                  canonical,
+                  currentActor,
+                  row.approval.product_code,
+                ),
+              ]),
+            ),
+          };
+        },
       );
       setBulk({
         accessKey,
-        ids: group.map((row) => row.approval.id),
-        selected: group
+        ids: snapshots.pending.map((row) => row.approval.id),
+        selected: snapshots.pending
           .filter((row) => !requiresIndividualApprovalReview(row.approval))
           .map((row) => row.approval.id),
-        snapshots,
-        title: `${t("Invoice", "فاکتور")} ${group[0].invoiceNumber} · ${group[0].supplierName ?? ""}`,
+        snapshots: snapshots.values,
+        title: `${t("Invoice", "فاکتور")} ${snapshots.pending[0].invoiceNumber} · ${snapshots.pending[0].supplierName ?? ""}`,
       });
       setMessage("");
     } catch {
@@ -682,7 +694,13 @@ export function Approvals() {
               : null;
 
           const group = details.invoiceId
-            ? groups.get(details.invoiceId)
+            ? groups
+                .get(details.invoiceId)
+                ?.filter((row) =>
+                  currentRows.some(
+                    (current) => current.approval.id === row.approval.id,
+                  ),
+                )
             : undefined;
           const groupStart =
             viewStatus === "pending" &&
@@ -720,8 +738,8 @@ export function Approvals() {
                         onClick={() => void openBulk(group)}
                       >
                         {t(
-                          `Approve all ${new Set(group.map((row) => row.approval.product_code)).size}…`,
-                          `تأیید همهٔ ${new Set(group.map((row) => row.approval.product_code)).size} کالا…`,
+                          `Approve all (${new Set(group.map((row) => row.approval.product_code)).size})`,
+                          `تأیید همه (${new Set(group.map((row) => row.approval.product_code)).size})`,
                         )}
                       </Button>
                     )}
@@ -1084,7 +1102,11 @@ export function Approvals() {
           onConfirm={() => void confirmBulk()}
           onSelect={(selected) => setBulk({ ...bulk, selected })}
           rows={board
-            .filter((row) => bulk.ids.includes(row.approval.id))
+            .filter(
+              (row) =>
+                bulk.ids.includes(row.approval.id) &&
+                row.approval.status === "pending",
+            )
             .flatMap((row) => {
               const product = state.products.find(
                 (value) =>

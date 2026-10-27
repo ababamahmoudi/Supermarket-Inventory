@@ -299,7 +299,7 @@ for (const language of ["en", "fa"] as const) {
           .toBeLessThanOrEqual(2);
         const group = page.getByTestId(`invoice-approval-group-${imported.id}`);
         await group
-          .getByRole("button", { name: /^(Approve all 3|تأیید همهٔ 3)/ })
+          .getByRole("button", { name: /^(Approve all \(3\)|تأیید همه \(3\))/ })
           .click();
         const batch = page.getByRole("dialog", {
           name: word(
@@ -470,7 +470,7 @@ for (const language of ["en", "fa"] as const) {
     expect(afterEdit.stock_movements).toEqual(before.stock_movements);
     await page
       .getByTestId(`invoice-approval-group-${imported.id}`)
-      .getByRole("button", { name: /^(Approve all 2|تأیید همهٔ 2)/ })
+      .getByRole("button", { name: /^(Approve all \(2\)|تأیید همه \(2\))/ })
       .click();
     const batch = page.getByRole("dialog", {
       name: word(language, "Review invoice approvals", "بررسی تأییدهای فاکتور"),

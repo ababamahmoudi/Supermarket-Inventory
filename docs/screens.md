@@ -408,3 +408,7 @@ Posted invoice Quantity, Unit cost and Line total explicitly share the numeric a
 ## R2e C4 — Price-update decision copy
 
 A task without a previous approved price shows New item and the new retained price; it has no missing-price arrow. The Why column describes completed decisions (New product approved, Price change approved, Sale started/ended) and retains the actual decision-maker attribution. Task snapshots and stored audit action identifiers remain unchanged.
+
+## R2e C5 — Current invoice approval selection
+
+Approve all (N) opens a fresh protected read of only pending rows, excluding the page’s retained departure-animation rows. The review footer intersects selection with current eligible rows, uses the primary action when enabled, and gives an explicit selecting/saving/individual-review explanation when unavailable. The checkbox column is 44 px, with plain checkbox controls and 12 px before product names; group actions never truncate. Existing snapshot, per-row exception and command guards remain authoritative.
