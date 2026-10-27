@@ -11,3 +11,7 @@ Browser proof measures actual text ranges at 1440 px in English and Persian, inc
 ## B2 — Reversible quick filters
 
 Products, Labels, Suppliers and Lookup use the same shared `FilterChip`: click, Space or Enter toggles `aria-pressed`; selected chips have accent tint/text and a check. The check's space is reserved in both states, preventing a selection from moving neighbouring controls. Received's Today/This week/This month date presets use the same selected chip and clicking the selected preset again clears the date range. Category choices remain single-choice controls.
+
+## B3 — Visible Off switches
+
+An Off switch keeps a neutral segmented-track fill, a hairline border and a white thumb. On keeps the existing accent fill. The existing 44 × 26 px track and thumb travel remain unchanged in English/Persian and both themes. Open Edit product → Date tracking or a Settings switch and toggle it twice; the whole track stays visible while Off.

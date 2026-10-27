@@ -1267,3 +1267,17 @@
 .filter-chip[aria-pressed="true"] .filter-chip-check {
   opacity: 1;
 }
+
+/* R2e B3 — an Off switch retains a visible neutral track and white thumb. */
+:root .ui-switch-track {
+  border: 1px solid var(--divider);
+  padding: 1px;
+  background: var(--segment-track);
+}
+:root .ui-switch-track > span {
+  background: var(--klead-white);
+}
+:root .ui-checked-control[aria-checked="true"] .ui-switch-track {
+  border-color: var(--accent-fill);
+  background: var(--accent-fill);
+}
