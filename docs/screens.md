@@ -404,3 +404,7 @@ Invoices has one New invoice action opening the existing Photo / PDF / Manual en
 ## R2e C3 — Posted invoice numeric columns
 
 Posted invoice Quantity, Unit cost and Line total explicitly share the numeric alignment contract with their column headers. The shared table alignment and spacing rules apply to settled posted evidence as well as the review table; quantities and monetary evidence retain their original values.
+
+## R2e C4 — Price-update decision copy
+
+A task without a previous approved price shows New item and the new retained price; it has no missing-price arrow. The Why column describes completed decisions (New product approved, Price change approved, Sale started/ended) and retains the actual decision-maker attribution. Task snapshots and stored audit action identifiers remain unchanged.
