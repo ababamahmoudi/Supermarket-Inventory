@@ -389,8 +389,16 @@ export function Field({
   className?: string;
 }) {
   const generated = useId();
-  const child = isValidElement(children)
-    ? (children as ReactElement<{
+  const fieldControl =
+    isValidElement(children) && children.type === "textarea" ? (
+      <AutoTextarea
+        {...(children.props as TextareaHTMLAttributes<HTMLTextAreaElement>)}
+      />
+    ) : (
+      children
+    );
+  const child = isValidElement(fieldControl)
+    ? (fieldControl as ReactElement<{
         id?: string;
         "aria-label"?: string;
         "aria-labelledby"?: string;
@@ -2248,6 +2256,91 @@ export function BufferedInput({
   );
 }
 
+/** Shared notes/descriptions grow to six lines, then scroll without a resize grip. */
+export function AutoTextarea({
+  ref,
+  value,
+  defaultValue,
+  rows = 2,
+  maxRows = 6,
+  className,
+  onInput,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  ref?: Ref<HTMLTextAreaElement>;
+  maxRows?: number;
+}) {
+  const element = useRef<HTMLTextAreaElement | null>(null);
+  const fit = useCallback(() => {
+    const node = element.current;
+    if (!node) return;
+    const computed = getComputedStyle(node);
+    const line =
+      parseFloat(computed.lineHeight) ||
+      (parseFloat(computed.fontSize) || 14) * 1.5;
+    const padding =
+      (parseFloat(computed.paddingTop) || 0) +
+      (parseFloat(computed.paddingBottom) || 0);
+    const border =
+      (parseFloat(computed.borderTopWidth) || 0) +
+      (parseFloat(computed.borderBottomWidth) || 0);
+    const minimum = line * Math.min(2, maxRows) + padding + border;
+    const maximum = line * maxRows + padding + border;
+    node.style.minBlockSize = `${minimum}px`;
+    node.style.maxBlockSize = `${maximum}px`;
+    node.style.height = "auto";
+    node.style.height = `${Math.min(maximum, Math.max(minimum, node.scrollHeight + border))}px`;
+    node.style.overflowY =
+      node.scrollHeight + border > maximum + 1 ? "auto" : "hidden";
+  }, [rows, maxRows]);
+  const attach = useCallback(
+    (node: HTMLTextAreaElement | null) => {
+      element.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
+  useLayoutEffect(() => {
+    fit();
+    let active = true;
+    void document.fonts?.ready.then(() => {
+      if (active) fit();
+    });
+    return () => {
+      active = false;
+    };
+  }, [value, defaultValue, fit]);
+  useLayoutEffect(() => {
+    const node = element.current;
+    if (!node || typeof ResizeObserver === "undefined") return;
+    let width = node.getBoundingClientRect().width;
+    const observer = new ResizeObserver(() => {
+      const next = node.getBoundingClientRect().width;
+      if (Math.abs(next - width) < 1) return;
+      width = next;
+      fit();
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [fit]);
+  return (
+    <textarea
+      {...props}
+      ref={attach}
+      className={cn("ui-auto-textarea", className)}
+      value={value}
+      defaultValue={defaultValue}
+      rows={rows}
+      data-autogrow-max-rows={maxRows}
+      onInput={(event) => {
+        fit();
+        onInput?.(event);
+      }}
+    />
+  );
+}
+
 /** A multiline saved value uses the same keystroke buffer as receiving inputs. */
 export function BufferedTextarea({
   value,
@@ -2261,7 +2354,7 @@ export function BufferedTextarea({
 }) {
   const buffer = useTypingBuffer(value);
   return (
-    <textarea
+    <AutoTextarea
       {...props}
       value={buffer.shown}
       onFocus={(event) => {

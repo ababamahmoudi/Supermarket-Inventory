@@ -23,3 +23,9 @@ While any modal is open, recent-action feedback is a quiet status in its footer,
 ## B5 — Filter counts and Columns
 
 The shared toolbar reserves the count and Columns on its first filter row at the logical end. Search, dropdowns and chips wrap within the remaining space instead of pushing the count into a separate desktop row. On a phone the end group can use its own row. Every page filter-row control, search frame and segmented track is 44 px high; segment buttons fit inside that track. This supersedes C9's former mixed 40/44/52 px sizes. Existing toolbar tests now demand exactly 44 px and retain the stricter one-pixel centre-line and no-overflow checks; they also check that desktop count/Columns stays on the first row.
+
+## B6 — Bounded growing notes
+
+Native textarea children of shared Field use shared `AutoTextarea`, and `BufferedTextarea` uses that same component while preserving its typing buffer and forwarded ref. Notes/descriptions begin at two lines, grow to six and scroll thereafter; no resize grip is shown. Width and font loading trigger a fresh measurement, including browsers without CSS field-sizing support. Receiving addresses keep their existing four-line fitting/reserved track. Generic native textareas also get the no-grip, two-to-six-line CSS fallback.
+
+Test path: Products → Add product → Description (English). Enter four lines, then twenty; the field grows to six and then scrolls. Clear back to one line; it shrinks to the two-line start. Repeat at phone width and in Persian. Existing buffered-address tests continue to prove that late saves cannot drop fast typing.

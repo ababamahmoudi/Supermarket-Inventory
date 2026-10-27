@@ -1361,3 +1361,15 @@
     justify-self: end;
   }
 }
+
+/* R2e B6 — ordinary notes/descriptions share a bounded automatic size. */
+:root textarea {
+  resize: none;
+  field-sizing: content;
+  min-block-size: calc(2lh + 24px);
+  max-block-size: calc(6lh + 24px);
+  overflow-y: auto;
+}
+:root textarea.ui-auto-textarea {
+  resize: none;
+}
