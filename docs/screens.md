@@ -412,3 +412,7 @@ A task without a previous approved price shows New item and the new retained pri
 ## R2e C5 — Current invoice approval selection
 
 Approve all (N) opens a fresh protected read of only pending rows, excluding the page’s retained departure-animation rows. The review footer intersects selection with current eligible rows, uses the primary action when enabled, and gives an explicit selecting/saving/individual-review explanation when unavailable. The checkbox column is 44 px, with plain checkbox controls and 12 px before product names; group actions never truncate. Existing snapshot, per-row exception and command guards remain authoritative.
+
+## R2e C6 — Labels select-all column
+
+Labels → Products selects all eligible filtered products from its table-header checkbox. The phone list retains this checkbox in its own table header. The old standalone Select all filtered row is removed. A quiet all-filtered selection count with Clear remains above the table while all eligible matches are selected, including results below the current viewport; the existing waitlist selection bar is unchanged.

@@ -1,0 +1,44 @@
+.labels-filtered-selection-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-end: 12px;
+  font-size: var(--font-size-caption);
+}
+@media (max-width: 759px) {
+  :root
+    .labels-products-card
+    .r2e-labels-products.is-mobile.is-phone-list
+    thead {
+    display: block;
+  }
+  :root
+    .labels-products-card
+    .r2e-labels-products.is-mobile.is-phone-list
+    thead
+    tr {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding-inline: 12px;
+  }
+  :root
+    .labels-products-card
+    .r2e-labels-products.is-mobile.is-phone-list
+    thead
+    th {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: var(--surface);
+  }
+  :root
+    .labels-products-card
+    .r2e-labels-products.is-mobile.is-phone-list
+    thead
+    th:nth-child(n + 3) {
+    display: none;
+  }
+}
