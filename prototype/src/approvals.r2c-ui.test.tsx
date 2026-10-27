@@ -66,7 +66,7 @@ it("presents first prices, margin warnings and one ordered action row without du
       `#product?code=${state.products[index].code}`,
     );
     expect(row.querySelectorAll(".approval-row-heading h2")).toHaveLength(1);
-    expect(within(row).getByText("Below minimum")).toBeVisible();
+    expect(within(row).getByText("Below 25% minimum")).toBeVisible();
     expect(row.querySelector(".approval-margin")).toHaveClass(
       "is-below-minimum",
     );
@@ -84,6 +84,34 @@ it("presents first prices, margin warnings and one ordered action row without du
     expect(actions[1]).toHaveClass("button-danger");
     expect(actions[2]).toHaveClass("button-primary");
   }
+  const first = rows[0];
+  const acknowledge = within(first).getByRole("checkbox", {
+    name: "Use this price anyway — it's below the minimum margin.",
+  });
+  expect(acknowledge).not.toBeChecked();
+  fireEvent.click(
+    within(first).getByRole("button", { name: "Approve product" }),
+  );
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(acknowledge).toHaveFocus();
+  fireEvent.click(acknowledge);
+  fireEvent.click(
+    within(first).getByRole("button", { name: "Approve product" }),
+  );
+  const preview = await screen.findByRole("dialog", {
+    name: "Review approval",
+  });
+  expect(
+    (await fixture.readCanonical()).approvals.every(
+      (item) => item.status === "pending",
+    ),
+  ).toBe(true);
+  fireEvent.click(within(preview).getByRole("button", { name: "Cancel" }));
+  expect(
+    (await fixture.readCanonical()).approvals.every(
+      (item) => item.status === "pending",
+    ),
+  ).toBe(true);
 });
 
 async function editableApproval() {

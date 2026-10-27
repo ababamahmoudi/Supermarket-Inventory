@@ -230,13 +230,30 @@ for (const language of ["en", "fa"] as const) {
               return { x: b.x, y: b.y, right: b.right, h: b.height };
             }),
           );
-          for (const box of bounds) {
-            expect(box.h).toBe(44);
-            expect(Math.abs(box.y - bounds[0].y)).toBeLessThanOrEqual(2);
-          }
-          const sorted = [...bounds].sort((a, b) => a.x - b.x);
+          for (const box of bounds) expect(box.h).toBe(width < 760 ? 44 : 40);
+          // R2f D6 explicitly uses a full-width Approve row above two half actions.
+          const sameRow = width < 760 ? bounds.slice(0, 2) : bounds;
+          for (const box of sameRow)
+            expect(Math.abs(box.y - sameRow[0].y)).toBeLessThanOrEqual(2);
+          const sorted = [...sameRow].sort((a, b) => a.x - b.x);
           for (let i = 1; i < sorted.length; i++)
             expect(sorted[i].x - sorted[i - 1].right).toBeGreaterThanOrEqual(7);
+          if (width < 760) {
+            const groupWidth = await actions
+              .first()
+              .locator("..")
+              .evaluate((element) => element.getBoundingClientRect().width);
+            expect(
+              Math.abs(bounds[2].right - bounds[2].x - groupWidth),
+            ).toBeLessThanOrEqual(1);
+            for (const box of bounds.slice(0, 2))
+              expect(
+                Math.abs(box.right - box.x - (groupWidth - 8) / 2),
+              ).toBeLessThanOrEqual(1);
+            expect(
+              bounds[0].y - bounds[2].y - bounds[2].h,
+            ).toBeGreaterThanOrEqual(7);
+          }
         }
         expect(
           await page.evaluate(

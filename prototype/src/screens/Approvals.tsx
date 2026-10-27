@@ -1,6 +1,7 @@
 import { approvalProductEditRead } from "../approval-product-editor";
 import { ProductEditor } from "./Catalog";
 import { InvoiceApprovalDialog } from "./InvoiceApprovalDialog";
+import { ApprovalNumbers } from "./ApprovalNumbers";
 import { saleRequestTab } from "../sale-request-status";
 import { approvalBoard, approvalCategoryPreview } from "../approval-board";
 import { useProtectedQuery } from "../use-protected-query";
@@ -50,6 +51,7 @@ import {
   NumberField,
   Select,
   Dialog,
+  Checkbox,
 } from "../ui";
 
 export function Approvals() {
@@ -137,6 +139,9 @@ export function Approvals() {
     "rule",
   );
   const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [marginAcknowledgments, setMarginAcknowledgments] = useState<
+    Record<string, string>
+  >({});
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [reasonErrors, setReasonErrors] = useState<Record<string, string>>({});
@@ -223,11 +228,36 @@ export function Approvals() {
         }[item.type];
   const branchName = (value: Branch) =>
     configuredBranchLabel(state.config, value, lang);
+  const needsMarginAcknowledgment = (row: (typeof board)[number]) =>
+    row.approval.type !== "margin_review" &&
+    row.approval.type !== "barcode_conflict" &&
+    row.margin !== null &&
+    row.minimumMargin !== null &&
+    new Decimal(row.margin).lt(row.minimumMargin);
+  const marginAcknowledgmentKey = (row: (typeof board)[number]) =>
+    JSON.stringify([
+      accessKey,
+      row.approval.id,
+      row.approval.proposed_price,
+      row.unitCost,
+      row.margin,
+      row.minimumMargin,
+    ]);
   const openPreview = async (
     item: Approval,
     decision: "approve" | "reject",
   ) => {
     if (!canDecide || !actor) return;
+    const shown = board.find((row) => row.approval.id === item.id);
+    if (
+      decision === "approve" &&
+      shown &&
+      needsMarginAcknowledgment(shown) &&
+      marginAcknowledgments[item.id] !== marginAcknowledgmentKey(shown)
+    ) {
+      document.getElementById(`approval-card-margin-${item.id}`)?.focus();
+      return;
+    }
     setMessage("");
     setRegularDecision("rule");
     const target = branchSellsToCustomers(state.config, item.branch)
@@ -239,9 +269,25 @@ export function Approvals() {
       const source = await query(
         "approvals.decide",
         domainScope(state, item),
-        (canonical, actualActor) => ({
-          snapshot: approvalSnapshot(canonical, actualActor, item.product_code),
-        }),
+        (canonical, actualActor) => {
+          const fresh = approvalBoard(canonical, actualActor).find(
+            (row) => row.approval.id === item.id,
+          );
+          if (
+            !fresh ||
+            (decision === "approve" &&
+              needsMarginAcknowledgment(fresh) &&
+              marginAcknowledgments[item.id] !== marginAcknowledgmentKey(fresh))
+          )
+            throw new Error("Margin review changed");
+          return {
+            snapshot: approvalSnapshot(
+              canonical,
+              actualActor,
+              item.product_code,
+            ),
+          };
+        },
       );
       setPreview({
         approval: item,
@@ -831,112 +877,104 @@ export function Approvals() {
                     </div>
                   )}
                   {item.type !== "barcode_conflict" && (
-                    <div className="approval-values" data-financial={canDecide}>
-                      {canDecide && (
-                        <div className="approval-value">
-                          <span className="muted">
-                            {t("Unit cost", "هزینه واحد")}
-                          </span>
-                          <strong>
-                            {unitCost !== null && unitCost !== undefined ? (
-                              <ProductCost
-                                value={unitCost}
-                                product={product}
-                                config={state.config}
-                              />
-                            ) : (
-                              t("Not added", "اضافه نشده")
-                            )}
-                          </strong>
-                        </div>
-                      )}
-                      <div className="approval-value approval-proposed-price">
-                        <span className="muted">{t("Price", "قیمت")}</span>
-                        <strong className="price">
-                          <ProductPrice
-                            value={item.proposed_price}
+                    <ApprovalNumbers
+                      financial={canDecide}
+                      leadingLabel={t("Unit cost", "هزینه واحد")}
+                      leading={
+                        unitCost !== null && unitCost !== undefined ? (
+                          <ProductCost
+                            value={unitCost}
                             product={product}
                             config={state.config}
                           />
-                        </strong>
-                        <small className="muted">
-                          {item.type === "new_product" || !approved ? (
-                            t("first price", "قیمت نخست")
-                          ) : (
-                            <>
-                              <span>{t("was", "قبلی")}</span>{" "}
-                              <ProductPrice
-                                value={approved}
-                                product={product}
-                                config={state.config}
-                              />{" "}
-                              {priceChange !== null && (
-                                <bdi dir="ltr">
-                                  ({new Decimal(priceChange).gte(0) ? "+" : ""}
-                                  {priceChange}%)
-                                </bdi>
-                              )}{" "}
-                              <ManualPricePill
-                                product={product}
-                                branch={item.branch}
-                              />
-                            </>
-                          )}
-                        </small>
-                      </div>
-                      {canDecide && (
-                        <div
-                          className={`approval-value approval-margin${belowMinimum ? " is-below-minimum" : ""}`}
-                        >
-                          <span className="muted">
-                            {t("Margin", "حاشیه سود")}
-                          </span>
-                          <strong>
-                            <bdi dir="ltr">
-                              {margin !== null
-                                ? `${new Decimal(margin).times(100).toFixed(2)}%`
-                                : t("Not added", "اضافه نشده")}
-                            </bdi>
-                          </strong>
-                          {belowMinimum && (
-                            <small>{t("Below minimum", "کمتر از حداقل")}</small>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="approval-meta">
-                    <span>{branchName(item.branch)}</span>
-                    <span aria-hidden="true">·</span>
-                    <span>
-                      {t("Triggered by", "ایجادشده توسط")}:{" "}
-                      {triggeredBy
-                        ? demoUserLabel(triggeredBy, lang)
-                        : t("Not recorded", "ثبت نشده")}
-                    </span>
-                    {invoiceNumber && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <a
-                          href={`#invoices?id=${encodeURIComponent(details.invoiceId ?? "")}`}
-                        >
-                          <span>{t("Invoice", "فاکتور")}</span>{" "}
-                          <bdi dir="ltr">{invoiceNumber}</bdi>
-                        </a>
-                      </>
-                    )}
-                    {canDecide && threshold && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <span>
-                          {t("Minimum margin", "حداقل حاشیه سود")}:{" "}
+                        ) : (
+                          t("Not added", "اضافه نشده")
+                        )
+                      }
+                      priceLabel={t("Price", "قیمت")}
+                      price={
+                        <ProductPrice
+                          value={item.proposed_price}
+                          product={product}
+                          config={state.config}
+                        />
+                      }
+                      priceNote={
+                        item.type === "new_product" || !approved ? (
+                          t("first price", "اولین قیمت")
+                        ) : (
+                          <>
+                            {t("was", "قبلاً")}{" "}
+                            <ProductPrice
+                              value={approved}
+                              product={product}
+                              config={state.config}
+                            />{" "}
+                            {priceChange !== null && (
+                              <bdi dir="ltr">
+                                ({new Decimal(priceChange).gte(0) ? "+" : ""}
+                                {new Decimal(priceChange).toFixed(0)}%)
+                              </bdi>
+                            )}{" "}
+                            <ManualPricePill
+                              product={product}
+                              branch={item.branch}
+                            />
+                          </>
+                        )
+                      }
+                      marginLabel={t("Margin", "حاشیه سود")}
+                      margin={
+                        margin !== null ? (
                           <bdi dir="ltr">
-                            {new Decimal(threshold).times(100).toFixed(2)}%
+                            {new Decimal(margin).times(100).toFixed(1)}%
                           </bdi>
-                        </span>
-                      </>
+                        ) : (
+                          t("Not added", "اضافه نشده")
+                        )
+                      }
+                      marginNote={
+                        threshold
+                          ? belowMinimum
+                            ? t(
+                                `Below ${new Decimal(threshold).times(100).toString()}% minimum`,
+                                `کمتر از حداقل ${new Decimal(threshold).times(100).toString()}٪`,
+                              )
+                            : t(
+                                `Min. ${new Decimal(threshold).times(100).toString()}%`,
+                                `حداقل ${new Decimal(threshold).times(100).toString()}٪`,
+                              )
+                          : undefined
+                      }
+                      warning={belowMinimum}
+                    />
+                  )}
+                  {canDecide &&
+                    item.status === "pending" &&
+                    needsMarginAcknowledgment(details) && (
+                      <div className="approval-margin-warning">
+                        <Checkbox
+                          id={`approval-card-margin-${item.id}`}
+                          checked={
+                            marginAcknowledgments[item.id] ===
+                            marginAcknowledgmentKey(details)
+                          }
+                          onChange={(checked) =>
+                            setMarginAcknowledgments((current) => ({
+                              ...current,
+                              [item.id]: checked
+                                ? marginAcknowledgmentKey(details)
+                                : "",
+                            }))
+                          }
+                        >
+                          {t(
+                            "Use this price anyway — it's below the minimum margin.",
+                            "با وجود حاشیه کمتر از حداقل، این قیمت را استفاده کن.",
+                          )}
+                        </Checkbox>
+                      </div>
                     )}
-                  </div>
                   {canDecide && item.manual_override && (
                     <p>
                       {t("Reason", "دلیل")}: {item.reason}
@@ -1009,41 +1047,64 @@ export function Approvals() {
                         </div>
                       </>
                     )}
-                  {canDecide &&
-                    item.status === "pending" &&
-                    item.type !== "margin_review" && (
-                      <div className="actions approval-decision-actions">
-                        {item.type !== "barcode_conflict" && (
-                          <Button
-                            variant="secondary"
-                            onClick={() => void openProductEdit(item)}
+                  <div className="approval-card-footer">
+                    <div className="approval-meta">
+                      <span>{branchName(item.branch)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>
+                        {t("Triggered by", "ایجادشده توسط")}:{" "}
+                        {triggeredBy
+                          ? demoUserLabel(triggeredBy, lang)
+                          : t("Not recorded", "ثبت نشده")}
+                      </span>
+                      {invoiceNumber && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <a
+                            href={`#invoices?id=${encodeURIComponent(details.invoiceId ?? "")}`}
                           >
-                            {t("Edit and approve", "ویرایش و تأیید")}
+                            <span>{t("Invoice", "فاکتور")}</span>{" "}
+                            <bdi dir="ltr">{invoiceNumber}</bdi>
+                          </a>
+                        </>
+                      )}
+                    </div>
+                    {canDecide &&
+                      item.status === "pending" &&
+                      item.type !== "margin_review" && (
+                        <div className="actions approval-decision-actions">
+                          {item.type !== "barcode_conflict" && (
+                            <Button
+                              variant="secondary"
+                              onClick={() => void openProductEdit(item)}
+                            >
+                              {t("Edit and approve", "ویرایش و تأیید")}
+                            </Button>
+                          )}
+                          <Button
+                            variant="danger"
+                            onClick={() => openPreview(item, "reject")}
+                          >
+                            {t("Reject", "رد کردن")}
                           </Button>
-                        )}
-                        <Button
-                          variant="danger"
-                          onClick={() => openPreview(item, "reject")}
-                        >
-                          {t("Reject", "رد کردن")}
-                        </Button>
-                        <Button
-                          aria-label={
-                            item.type === "new_product"
-                              ? t("Approve product", "تأیید کالا")
-                              : item.type === "barcode_conflict"
-                                ? t("Approve", "تأیید")
-                                : t("Approve price", "تأیید قیمت")
-                          }
-                          onClick={() => {
-                            setScope("all");
-                            void openPreview(item, "approve");
-                          }}
-                        >
-                          {t("Approve", "تأیید")}
-                        </Button>
-                      </div>
-                    )}
+                          <Button
+                            aria-label={
+                              item.type === "new_product"
+                                ? t("Approve product", "تأیید کالا")
+                                : item.type === "barcode_conflict"
+                                  ? t("Approve", "تأیید")
+                                  : t("Approve price", "تأیید قیمت")
+                            }
+                            onClick={() => {
+                              setScope("all");
+                              void openPreview(item, "approve");
+                            }}
+                          >
+                            {t("Approve", "تأیید")}
+                          </Button>
+                        </div>
+                      )}
+                  </div>
                   {canDecide && item.acknowledgment_reason && (
                     <p>
                       {t("Review reason", "دلیل بررسی")}:{" "}

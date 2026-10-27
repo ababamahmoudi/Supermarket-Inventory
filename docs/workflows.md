@@ -383,8 +383,14 @@ The installed sales-clock adapter also derives package prices and captures tasks
 
 Package price derivation retains the ordinary C8 Sale review workflow. If a new derived regular child price is at or below its own existing approved sale, the same protected write keeps that sale and creates one actual `sale_regular_not_above_sale` alert linked to the real child, parent, location and sale revision, with no invented invoice. Owner/Manager can Keep, Change or End through the existing decision command. Repeated derivation does not duplicate the alert or notification. A matching pending package alert or genuine authorized Keep decision survives the retained-sale startup check; unrelated invalid sale records still follow the existing repair. Automatic package offer maintenance reuses the configured normal offer reconciliation, stops stale old-price mappings, adds current suggestions and audits actual changed offers; it never activates a suggestion automatically.
 
+
 ## R2f D3 — weight Product add/edit
 
 Owner/Manager opens Products or Lookup → weight product → Edit. Names, How it's sold, actual cost and rule preview, staged Change price, Package sizes, category and supplier share one Save product. Optional descriptions/barcode/unit/date fields remain under More details. Existing date validation opens that section and focuses the real missing field. Cancel, close and inner Apply to draft never write business data. A stale source/config/package snapshot keeps the draft and asks the user to reopen; a pre-existing unrelated pending invoice-price review must be decided before changing cost rather than silently superseded.
 
 New size shows a live price for the selected location and allocates identities on Save. The package menu stages Edit or Archive with a reason; a pending archive keeps its row with Undo until Save. New parent plus all packages commit together. Archive active children before converting the parent to Each. Branch Supervisors use the separate Package sizes header action (shared by Product and Lookup); it has no cost fields or parent-metadata authority. Floor Workers and Cashiers retain their existing ordinary product actions and cannot call package writes.
+
+## R2f D6 — Approval card acknowledgment
+
+A below-minimum ordinary pending price/product card asks for the explicit amber acknowledgment before its normal approval preview. The UI binds it to the protected row’s actor/location, proposed price, current cost, margin and configured minimum; a fresh protected read rejects an acknowledgment for changed evidence. The normal confirmation and domain command still enforce the original snapshot, reasons, permissions and business rules. Sale requests retain their existing accept-below-margin input and reason checks. Specialized margin-review Keep/Override and full staged Edit and approve flows remain intact. This presentation change neither recalculates prices nor invents historical margins for decided sale requests.
+

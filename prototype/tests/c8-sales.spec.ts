@@ -428,7 +428,7 @@ for (const language of ["en", "fa"] as const) {
     const card = page.locator(`[data-sale-request-id="${request.id}"]`);
     await expect(card).toBeVisible();
     await expect(card).toContainText(
-      language === "en" ? "Margin at this price" : "حاشیه سود در این قیمت",
+      language === "en" ? "Margin" : "حاشیه سود",
     );
     await button(card, "Approve", "تأیید").click();
     await expect(
@@ -444,8 +444,8 @@ for (const language of ["en", "fa"] as const) {
     await card
       .getByRole("checkbox", {
         name: exact(
-          "Use this price anyway",
-          "با این حال از این قیمت استفاده شود",
+          "Use this price anyway — it's below the minimum margin.",
+          "با وجود حاشیه کمتر از حداقل، این قیمت را استفاده کن.",
         ),
       })
       .check();

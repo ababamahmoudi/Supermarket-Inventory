@@ -768,6 +768,98 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             `R2c field height: ${tidy(element.getAttribute("aria-label") || element.id)}`,
           );
       }
+      // R2f D6 keeps the previous direct-row contract below and adds its exact
+      // approved footer composition. Only a fully validated composition earns
+      // the 40px desktop / 44px phone controls and two-row phone action slots.
+      const r2fApprovalActions = new Set();
+      const r2fApprovalWidths = new Map();
+      for (const group of document.querySelectorAll(
+        ".approval-detail-row > .approval-card-footer > .approval-decision-actions, .approval-detail-row > .approval-card-footer > .sale-request-actions",
+      )) {
+        if (!visible(group)) continue;
+        const footer = group.parentElement;
+        const card = footer?.parentElement;
+        const controls = [...group.querySelectorAll(":scope > button")].filter(
+          visible,
+        );
+        const sale = Boolean(card?.dataset.saleRequestId);
+        const barcode = card?.dataset.approvalType === "barcode_conflict";
+        const expectedCount = barcode ? 2 : 3;
+        const validIdentity = sale
+          ? card?.classList.contains("sale-request-card") &&
+            card.querySelector(
+              ".approval-row-heading h3 a[href^='#product?code=']",
+            )
+          : card?.dataset.approvalId &&
+            card.dataset.approvalStatus === "pending" &&
+            [
+              "new_product",
+              "price_change",
+              "tax_profile",
+              "barcode_conflict",
+            ].includes(card.dataset.approvalType) &&
+            card.querySelector(
+              ".approval-row-heading h2 a[href^='#product?code=']",
+            );
+        const validNumbers =
+          barcode ||
+          card?.querySelector(
+            ".approval-numbers > .ui-number-stat.approval-number-price > .ui-number-value",
+          );
+        const valid =
+          validIdentity &&
+          validNumbers &&
+          footer.querySelector(":scope > .approval-meta") &&
+          controls.length === expectedCount &&
+          (barcode || controls[0].classList.contains("button-secondary")) &&
+          controls.at(-2).classList.contains("button-danger") &&
+          controls.at(-1).classList.contains("button-primary") &&
+          /^(Approve|تأیید)$/.test(tidy(controls.at(-1).textContent)) &&
+          /^(Reject|رد کردن)$/.test(tidy(controls.at(-2).textContent));
+        const boxes = controls.map((control) =>
+          control.getBoundingClientRect(),
+        );
+        const layout = getComputedStyle(group);
+        const expectedHeight = phone ? 44 : 40;
+        let geometry =
+          boxes.every((box) => Math.abs(box.height - expectedHeight) <= 1) &&
+          Math.abs(parseFloat(layout.columnGap) - 8) <= 0.1;
+        if (phone) {
+          const bounds = contentBounds(group);
+          const primary = boxes.at(-1);
+          const half = (bounds.width - 8) / 2;
+          geometry &&=
+            layout.display === "grid" &&
+            Math.abs(primary.width - bounds.width) <= 1 &&
+            primary.bottom <= boxes[0].top + 1 &&
+            boxes
+              .slice(0, -1)
+              .every((box) => Math.abs(box.width - half) <= 1) &&
+            (barcode || Math.abs(boxes[0].top - boxes[1].top) <= 1.5);
+          if (valid && geometry)
+            controls.forEach((control, index) =>
+              r2fApprovalWidths.set(
+                control,
+                index === controls.length - 1 ? bounds.width : half,
+              ),
+            );
+        } else
+          geometry &&=
+            layout.display === "flex" &&
+            boxes.every(
+              (box) =>
+                Math.abs(
+                  box.top + box.height / 2 - boxes[0].top - boxes[0].height / 2,
+                ) <= 1.5,
+            );
+        if (!valid || !geometry) {
+          failures.push(
+            "Approval decision row needs its exact ordered, aligned actions",
+          );
+          continue;
+        }
+        controls.forEach((control) => r2fApprovalActions.add(control));
+      }
       const approvalDecisionButtons = new Set();
       for (const group of document.querySelectorAll(
         ".approval-detail-row > .approval-decision-actions",
@@ -1396,25 +1488,30 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           );
           const expectedHeight = labelAction
             ? 32
-            : newReturnControl ||
-                r2cControl ||
-                dashboardAction ||
-                structuredFooter ||
-                approvalDecisionButtons.has(element) ||
-                approvalEditorFooters.has(element) ||
-                notificationHeaderActions.has(element) ||
-                modalFooterFeedback ||
-                sharedFilterChip
-              ? 44
-              : genuineFilterToolbar
-                ? element.closest(".ui-segments")
-                  ? 36
-                  : 44
-                : phone || fieldAlignedAdd
-                  ? 44
-                  : small
-                    ? 32
-                    : 40;
+            : r2fApprovalActions.has(element)
+              ? phone
+                ? 44
+                : 40
+              : newReturnControl ||
+                  r2cControl ||
+                  dashboardAction ||
+                  structuredFooter ||
+                  approvalDecisionButtons.has(element) ||
+                  approvalEditorFooters.has(element) ||
+                  notificationHeaderActions.has(element) ||
+                  modalFooterFeedback ||
+                   sharedFilterChip
+                ? 44
+                : genuineFilterToolbar
+                  ? element.closest(".ui-segments")
+                    ? 36
+                    : 44
+                  : phone || fieldAlignedAdd
+                    ? 44
+                    : small
+                      ? 32
+                      : 40;
+
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {
@@ -1482,6 +1579,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             );
           if (
             !phoneReceivingWidths.has(element) &&
+            !r2fApprovalWidths.has(element) &&
             !dashboardWideActions.has(element) &&
             rect.width > Math.max(40, intrinsicWidth) + 5
           )

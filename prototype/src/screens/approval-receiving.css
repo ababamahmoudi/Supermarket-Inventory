@@ -38,30 +38,45 @@
   }
 }
 
-/* R2c4.1: the dashboard's approval row, with its decision details. */
-:root .ui-card.approval-card.approval-detail-row {
+/* R2f D6: shared decision cards and the approved three-row number group. */
+:root .ui-card.approval-card.approval-detail-row,
+:root .ui-card.sale-request-card.approval-detail-row {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(280px, 0.9fr);
-  align-items: center;
-  gap: 12px 20px;
-  padding: 20px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px 32px;
+  padding: 20px 24px;
+  margin: 0;
+  border: 0;
 }
 .approval-row-heading {
   min-inline-size: 0;
 }
-.approval-row-heading h2 {
+:root .approval-detail-row .approval-row-heading h2,
+:root .approval-detail-row .approval-row-heading h3 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 800;
+  font-size: var(--font-size-approval-value, 1.0625rem);
+  line-height: 1.3;
 }
-.approval-row-heading .product-name {
-  display: block;
-}
-.approval-row-heading a {
+:root .approval-detail-row .approval-row-heading a,
+:root .approval-detail-row .approval-row-heading .product-name > strong {
   color: var(--link-text);
 }
+:root .approval-detail-row .approval-row-heading .product-name {
+  display: grid;
+  gap: 2px;
+}
+:root .approval-detail-row .approval-row-heading .product-name > strong {
+  font-size: var(--font-size-approval-value, 1.0625rem);
+  font-weight: 700;
+}
+:root .approval-detail-row .approval-row-heading .product-name > small {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-body);
+  color: var(--text-muted);
+}
 .approval-product-context {
-  margin-block: 4px 8px;
+  margin: 4px 0 0;
   font-size: var(--font-size-caption);
   overflow-wrap: anywhere;
 }
@@ -70,81 +85,236 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+  margin-block-start: 10px;
 }
-:root .approval-detail-row .approval-values {
-  grid-column: 2;
-  grid-row: 1;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin: 0;
-  max-inline-size: none;
-}
-:root .approval-detail-row .approval-value {
-  gap: 4px;
-  align-content: start;
+.approval-numbers {
+  display: grid;
+  grid-template-columns: 96px 20px 168px 1px 116px;
+  grid-template-rows: auto auto auto;
+  gap: 0 20px;
+  align-self: start;
+  padding: 14px 20px;
+  border-radius: var(--radius-menu);
+  background: var(--klead-field);
   min-inline-size: 0;
 }
-:root .approval-detail-row .approval-value > .price {
-  font-size: 20px;
+.approval-numbers > .ui-number-stat {
+  display: contents;
 }
-.approval-proposed-price > small {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px;
+.approval-number-leading > * {
+  grid-column: 1;
+}
+.approval-number-price > * {
+  grid-column: 3;
+}
+.approval-number-margin > * {
+  grid-column: 5;
+}
+.approval-numbers .ui-number-label {
+  grid-row: 1;
+  padding-block-end: 2px;
   font-size: var(--font-size-caption);
+  font-weight: 600;
+  white-space: nowrap;
 }
-.approval-margin.is-below-minimum {
+.approval-numbers .ui-number-value {
+  grid-row: 2;
+  align-self: baseline;
+  font-size: var(--font-size-approval-value, 1.0625rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: var(--line-height-approval-value, 1.2);
+}
+.approval-numbers .ui-number-note {
+  grid-row: 3;
+  padding-block-start: 2px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.approval-number-price > .ui-number-value {
+  font-size: var(--font-size-approval-price, 1.625rem);
+  font-weight: 800;
+}
+.approval-numbers .selling-price-current {
+  font-size: inherit;
+  font-weight: inherit;
+}
+.approval-numbers .ui-number-note .selling-price-value,
+.approval-numbers .ui-number-note .selling-price-current {
+  display: inline;
+  font-size: inherit;
+  font-weight: inherit;
+}
+.approval-number-arrow {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: center;
+  justify-self: center;
+  color: var(--text-muted);
+}
+.approval-number-divider {
+  grid-column: 4;
+  grid-row: 1 / 4;
+  background: var(--divider);
+}
+.approval-number-margin.is-warning > :is(.ui-number-value, .ui-number-note) {
   color: var(--pending);
 }
-.approval-margin > small {
-  font-size: var(--font-size-caption);
+.approval-numbers[data-financial="false"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.approval-numbers[data-financial="false"] > .approval-number-price > * {
+  grid-column: 1;
+}
+.approval-detail-row > :not(.approval-row-heading, .approval-numbers) {
+  grid-column: 1 / -1;
+}
+.approval-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--row-divider);
 }
 :root .approval-detail-row .approval-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
-  grid-column: 1 / -1;
+  gap: 4px;
+  min-inline-size: 0;
   margin: 0;
   font-size: var(--font-size-caption);
 }
-.approval-detail-row
-  > :not(.approval-row-heading, .approval-values, .approval-meta) {
-  grid-column: 1 / -1;
-}
-:root .approval-detail-row .approval-decision-actions {
+:root
+  .approval-detail-row
+  :is(.approval-decision-actions, .sale-request-actions) {
   display: flex;
   flex-wrap: nowrap;
   justify-content: end;
   align-items: center;
+  flex: 0 0 auto;
   gap: 8px;
   margin: 0;
 }
-:root .approval-detail-row .approval-decision-actions > .ui-button.button {
-  block-size: 44px;
-  min-block-size: 44px;
+:root
+  .approval-detail-row
+  :is(.approval-decision-actions, .sale-request-actions)
+  > .ui-button.button {
+  min-block-size: 40px;
+  block-size: 40px;
 }
 :root
   .approval-detail-row
-  .approval-decision-actions
-  > .ui-button.button.button-danger {
-  background: var(--color-clear);
+  :is(.approval-decision-actions, .sale-request-actions)
+  > .ui-button.button-danger {
   color: var(--danger);
+  background: var(--danger-bg);
+}
+.approval-detail-row .approval-margin-warning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-block-size: 44px;
+  padding: 12px 16px;
+  border-radius: var(--radius-small);
+  background: var(--pending-bg);
+  color: var(--pending);
+}
+.approval-margin-warning > .ui-checked-control {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  justify-content: start;
+  color: inherit;
+  background: var(--color-clear);
+  font-size: var(--font-size-body);
+}
+.approval-sale-list {
+  display: grid;
+  gap: 16px;
+}
+.approval-sale-list > h2 {
+  margin: 12px 0 0;
+  font-size: var(--font-size-title);
+}
+@media (max-width: 1120px) {
+  :root .ui-card.approval-card.approval-detail-row,
+  :root .ui-card.sale-request-card.approval-detail-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 @media (max-width: 759px) {
-  :root .ui-card.approval-card.approval-detail-row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
+  :root .ui-card.approval-card.approval-detail-row,
+  :root .ui-card.sale-request-card.approval-detail-row {
     padding: 16px;
+    gap: 16px;
   }
-  :root .approval-detail-row .approval-values {
+  .approval-numbers {
+    grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto auto;
+    gap: 0 16px;
+    padding: 12px 14px;
+  }
+  .approval-number-divider {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    block-size: 1px;
+    align-self: start;
+  }
+  .approval-number-margin > .ui-number-label {
     grid-column: 1;
-    grid-row: auto;
-    gap: 12px;
+    grid-row: 4;
+    padding-block-start: 12px;
   }
-  :root .approval-detail-row .approval-decision-actions > .ui-button.button {
-    padding-inline: 10px;
+  .approval-number-margin > .ui-number-value {
+    grid-column: 1;
+    grid-row: 5;
+  }
+  .approval-number-margin > .ui-number-note {
+    grid-column: 3;
+    grid-row: 5;
+    align-self: baseline;
+    white-space: normal;
+  }
+  .approval-numbers .ui-number-note {
+    white-space: normal;
+  }
+  .approval-numbers[data-financial="false"] {
+    grid-template-rows: auto auto auto;
+  }
+  .approval-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  :root
+    .approval-detail-row
+    :is(.approval-decision-actions, .sale-request-actions) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    inline-size: 100%;
+  }
+  :root
+    .approval-detail-row
+    :is(.approval-decision-actions, .sale-request-actions)
+    > .ui-button.button {
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    block-size: 44px;
+    padding-inline: 8px;
+  }
+  :root
+    .approval-detail-row
+    :is(.approval-decision-actions, .sale-request-actions)
+    > .ui-button.button-primary {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .approval-invoice-group {
+    align-items: start;
+    flex-direction: column;
   }
 }
 
@@ -302,26 +472,6 @@
   }
 }
 
-:root .approval-detail-row .approval-values[data-financial="false"] {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-:root .approval-detail-row .approval-row-heading h2 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-}
-:root .approval-detail-row .approval-row-heading a .product-name > strong {
-  color: var(--link-text);
-}
-
-:root .approval-detail-row .approval-row-heading a .product-name > strong {
-  font-size: 16px;
-  font-weight: 700;
-}
-:root .approval-detail-row .approval-margin.is-below-minimum > small {
-  color: var(--pending);
-}
 :root .invoice-approval-dialog .invoice-approval-table > tbody > tr > td {
   background: var(--color-clear);
 }
