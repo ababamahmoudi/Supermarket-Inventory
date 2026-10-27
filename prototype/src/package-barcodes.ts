@@ -14,12 +14,29 @@ export function ean13CheckDigit(twelveDigits: string): string {
   return String((10 - (sum % 10)) % 10);
 }
 
-/** Manufacturer and in-store fixed-size codes use the same EAN-13 validation. */
+function gtinCheckDigit(body: string): string {
+  const sum = [...body]
+    .reverse()
+    .reduce(
+      (total, digit, index) =>
+        total + Number(digit) * (index % 2 === 0 ? 3 : 1),
+      0,
+    );
+  return String((10 - (sum % 10)) % 10);
+}
+/** Compare GS1 retail identifiers consistently without changing their printed form. */
+export function packageBarcodeIdentity(barcode: string): string {
+  const value = barcode.trim();
+  return /^(?:\d{8}|\d{12}|\d{13}|\d{14})$/.test(value)
+    ? value.padStart(14, "0")
+    : value;
+}
+/** Manufacturer GTIN-8/UPC-A/GTIN-13/GTIN-14 retain their printed form. */
 export function validatePackageBarcode(barcode: string): string {
   const value = barcode.trim();
   if (
-    !/^\d{13}$/.test(value) ||
-    ean13CheckDigit(value.slice(0, 12)) !== value[12]
+    !/^(?:\d{8}|\d{12}|\d{13}|\d{14})$/.test(value) ||
+    gtinCheckDigit(value.slice(0, -1)) !== value.at(-1)
   )
     throw new PackageBarcodeError("barcode");
   return value;

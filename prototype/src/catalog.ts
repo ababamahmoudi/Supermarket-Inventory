@@ -1,3 +1,4 @@
+import { packageBarcodeIdentity } from "./package-barcodes";
 import Decimal from "decimal.js";
 import {
   isOfferSuppressed,
@@ -251,13 +252,14 @@ export function conflictingBarcodeProduct(
   barcode: string,
   excludingCode?: string,
 ) {
-  const normalized = normalizeSearch(barcode);
+  const normalized = packageBarcodeIdentity(normalizeSearch(barcode));
   return normalized
     ? products.find(
         (product) =>
           product.company_id === companyId &&
           product.code !== excludingCode &&
-          normalizeSearch(product.barcode) === normalized,
+          packageBarcodeIdentity(normalizeSearch(product.barcode)) ===
+            normalized,
       )
     : undefined;
 }
