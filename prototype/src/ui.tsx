@@ -1517,9 +1517,11 @@ export function FilterChip({
   onChange,
   children,
   className,
+  appearance = "surface",
   ...props
 }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange"> & {
   checked: boolean;
+  appearance?: "surface" | "neutral";
   onChange: (checked: boolean) => void;
 }) {
   return (
@@ -1528,6 +1530,7 @@ export function FilterChip({
       variant="neutral"
       className={cn("filter-chip", className)}
       data-ui-component="filter-chip"
+      data-chip-appearance={appearance}
       aria-pressed={checked}
       onClick={(event) => {
         props.onClick?.(event);

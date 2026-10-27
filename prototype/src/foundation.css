@@ -1583,3 +1583,10 @@
   min-inline-size: var(--control-row-height);
   max-inline-size: var(--control-row-height);
 }
+
+/* The approved Lookup row uses neutral idle chips; other lists retain surface. */
+:root
+  .filter-chip.ui-button.button[data-chip-appearance="neutral"][aria-pressed="false"] {
+  background: var(--neutral-fill);
+  border-color: var(--color-clear);
+}

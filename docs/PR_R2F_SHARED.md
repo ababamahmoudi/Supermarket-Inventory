@@ -41,3 +41,5 @@ The grid control-row utility decorates an existing screen grid and leaves its di
 The Dashboard decision column uses the approved real control-group edge, with its deliberately blank heading and centred Approve/Review captions. This is an exact semantic probe, not an ignored Actions column: a four-pixel group shift fails in both directions, while all peer button heights/centres and numeric columns remain strict.
 
 Registered fixed/absolute popups add separate audit render planes to the source's main/dialog scope. Controls behind an overlay are not its peers; controls within each actual popup still use the same strict 1.5/2 px limits. A negative control proves a 40/44 px mismatch inside the popup fails, while an actual background/footer cannot create a false cross-plane pair. A static element cannot claim the registered overlay-plane contract.
+
+The shared FilterChip offers a neutral idle appearance for the approved Lookup row while other lists retain the existing surface idle appearance. Both use the same reserved check, pressed-state accent, keyboard toggle, 44 px height and token palette; no screen overrides a shared chip style.
