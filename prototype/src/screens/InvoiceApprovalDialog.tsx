@@ -40,15 +40,20 @@ export function InvoiceApprovalDialog({
   const blockedReason = busy
     ? t("Saving approvals…", "در حال ذخیره تأییدها…")
     : !selectedIds.length
-      ? eligible.length
+      ? !rows.length
         ? t(
-            "Select at least one product to approve.",
-            "برای تأیید، دست‌کم یک کالا انتخاب کنید.",
+            "No pending products remain. Close this review.",
+            "کالایی در انتظار باقی نمانده است. این بررسی را ببندید.",
           )
-        : t(
-            "These products need individual review.",
-            "این کالاها به بررسی جداگانه نیاز دارند.",
-          )
+        : eligible.length
+          ? t(
+              "Select at least one product to approve.",
+              "برای تأیید، دست‌کم یک کالا انتخاب کنید.",
+            )
+          : t(
+              "These products need individual review.",
+              "این کالاها به بررسی جداگانه نیاز دارند.",
+            )
       : "";
   const allSelected =
     eligible.length > 0 && eligible.every((id) => selectedIds.includes(id));

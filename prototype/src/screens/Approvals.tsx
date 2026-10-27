@@ -717,7 +717,7 @@ export function Approvals() {
               }
             >
               <div>
-                {groupStart && group && (
+                {groupStart && group && group.length > 0 && (
                   <div
                     className="approval-invoice-group"
                     data-testid={`invoice-approval-group-${details.invoiceId}`}
