@@ -46,6 +46,8 @@ import {
   invoiceLineCalculation,
   invoiceLineAmount,
   refreshInvoiceWeight,
+  invoicePaperTotalMismatch,
+  invoiceSourceWeightQuantity,
 } from "./invoice-weight";
 import {
   validateWeightQuantity,
@@ -666,7 +668,7 @@ export function validInvoiceLineQuantity(line: InvoiceEditableLine): boolean {
         ? new Decimal(validateWeightQuantity(line.quantity_entered ?? ""))
             .times(validateWeightQuantity(line.case_weight ?? ""))
             .toString()
-        : validateWeightQuantity(line.source_quantity ?? "");
+        : invoiceSourceWeightQuantity(line);
     if (!new Decimal(source).eq(line.source_quantity ?? "0")) return false;
     const canonical = weightQuantityPerLb(
       source,
@@ -703,9 +705,7 @@ export function validInvoiceLineReceived(line: InvoiceEditableLine): boolean {
         line.source_quantity ?? "0",
       )
         ? line.source_received_quantity!
-        : validateWeightQuantity(line.source_received_quantity ?? "", {
-            allowZero: true,
-          });
+        : invoiceSourceWeightQuantity(line, true);
     return (
       new Decimal(
         weightQuantityPerLb(
@@ -1137,6 +1137,7 @@ export function invoiceBlockers(
         blockers.push("cost");
       }
     }
+    if (invoicePaperTotalMismatch(line)) blockers.push("cost");
     if (!line.review_confirmed) blockers.push("review");
     const category = state.config.pricing_categories.find(
       (item) =>

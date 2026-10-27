@@ -6,6 +6,10 @@ import { configSeed } from "./config";
 import { configuredRoleLabel } from "./role-config";
 
 const actions: Record<string, [string, string]> = {
+  "Invoice paper total acknowledged as wrong": [
+    "Invoice paper total acknowledged as wrong",
+    "جمع اشتباه روی فاکتور تأیید شد",
+  ],
   "Timesheet settings changed": [
     "Timesheet settings changed",
     "تنظیمات کارکرد تغییر کرد",
