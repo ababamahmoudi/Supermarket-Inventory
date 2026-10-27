@@ -32,7 +32,7 @@
   padding: 0;
   background: var(--color-clear);
   border-color: var(--color-clear);
-  box-shadow: none;
+  box-shadow: var(--shadow-none);
 }
 :root .ui-dialog.invoice-approval-dialog > .ui-dialog-footer {
   display: grid;
