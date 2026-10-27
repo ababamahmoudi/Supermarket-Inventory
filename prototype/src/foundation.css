@@ -1281,3 +1281,83 @@
   border-color: var(--accent-fill);
   background: var(--accent-fill);
 }
+
+/* R2e B5 — reserve the count/Columns at the filter row's end. */
+@media screen {
+  :root .filter-toolbar.c9-filter-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+  }
+  :root
+    .filter-toolbar.c9-filter-toolbar:not(:has(> .filter-toolbar-trailing)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .filter-toolbar-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    min-inline-size: 0;
+    gap: 12px;
+  }
+  :root .filter-toolbar.c9-filter-toolbar > .filter-toolbar-trailing {
+    align-self: start;
+    min-block-size: 44px;
+    margin: 0;
+    flex-wrap: nowrap;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .filter-search-pill {
+    flex: 0 1 280px;
+    inline-size: 280px;
+    min-inline-size: min(180px, 100%);
+    block-size: 44px;
+    min-block-size: 44px;
+  }
+  :root
+    .filter-toolbar.c9-filter-toolbar
+    :is(
+      .filter-search-pill input,
+      .filter-search-pill input.ui-input,
+      .ui-select,
+      .ui-button.button,
+      .ui-checked-control
+    ) {
+    block-size: 44px;
+    min-block-size: 44px;
+    max-block-size: 44px;
+    margin-block: 0;
+    padding-block: 0;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .ui-segments {
+    block-size: 44px;
+    min-block-size: 44px;
+    max-block-size: 44px;
+    padding-block: 4px;
+    margin: 0;
+    place-self: center;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .ui-segments > button {
+    block-size: 36px;
+    min-block-size: 36px;
+    max-block-size: 36px;
+  }
+  :root .filter-toolbar.c9-filter-toolbar .filter-toolbar-controls > .field {
+    flex: 0 1 auto;
+    inline-size: auto;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  :root .ui-card .filter-toolbar .filter-toolbar-controls > .ui-select {
+    background: var(--field-fill);
+    border-color: var(--field-border);
+  }
+}
+@media screen and (max-width: 760px) {
+  :root .filter-toolbar.c9-filter-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root .filter-toolbar.c9-filter-toolbar > .filter-toolbar-trailing {
+    justify-self: end;
+  }
+}

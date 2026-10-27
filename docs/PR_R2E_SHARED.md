@@ -19,3 +19,7 @@ An Off switch keeps a neutral segmented-track fill, a hairline border and a whit
 ## B4 — Modal feedback
 
 While any modal is open, recent-action feedback is a quiet status in its footer, beside the actions, with the genuine Undo. No dark toast enters a dialog or covers its rows. The page toast stays deferred until the last modal closes, then appears at the page's bottom-end corner above any sticky page action bar. Its remaining eight-second budget pauses during the modal, preserving the actual Undo opportunity rather than expiring while hidden. It remains personal to the actor and uses the existing protected Undo command.
+
+## B5 — Filter counts and Columns
+
+The shared toolbar reserves the count and Columns on its first filter row at the logical end. Search, dropdowns and chips wrap within the remaining space instead of pushing the count into a separate desktop row. On a phone the end group can use its own row. Every page filter-row control, search frame and segmented track is 44 px high; segment buttons fit inside that track. This supersedes C9's former mixed 40/44/52 px sizes. Existing toolbar tests now demand exactly 44 px and retain the stricter one-pixel centre-line and no-overflow checks; they also check that desktop count/Columns stays on the first row.

@@ -1354,16 +1354,18 @@ export function FilterToolbar({
       className={cn("filter-toolbar c9-filter-toolbar", className)}
       {...props}
     >
-      {leading}
-      {isValidElement(search) && search.type === "input" ? (
-        <div className="filter-search-pill">
-          <Search size={18} strokeWidth={1.5} aria-hidden="true" />
-          {search}
-        </div>
-      ) : (
-        search
-      )}
-      {children}
+      <div className="filter-toolbar-controls">
+        {leading}
+        {isValidElement(search) && search.type === "input" ? (
+          <div className="filter-search-pill">
+            <Search size={18} strokeWidth={1.5} aria-hidden="true" />
+            {search}
+          </div>
+        ) : (
+          search
+        )}
+        {children}
+      </div>
       {(count !== undefined || actions !== undefined) && (
         <div className="filter-toolbar-end filter-toolbar-trailing">
           {count !== undefined && <span className="filter-count">{count}</span>}

@@ -59,7 +59,7 @@ async function checkToolbar(toolbar: Locator, route: string) {
       card: { left: card.left, right: card.right },
       controls,
       trailing: trailing
-        ? { left: trailing.left, right: trailing.right }
+        ? { left: trailing.left, right: trailing.right, top: trailing.top }
         : null,
       direction: getComputedStyle(element).direction,
       gap: getComputedStyle(element).gap,
@@ -93,14 +93,8 @@ async function checkToolbar(toolbar: Locator, route: string) {
       `${route}: the actual R2c screen owns its control size`,
     ).toHaveCount(1);
   for (const control of geometry.controls) {
-    // The search wrapper keeps C9's 40px frame; R2c ordinary inputs/buttons
-    // grow to 44px inside it. A segmented track reserves its 8px inner inset.
-    const expectedHeight =
-      r2cScreen && control.kind === "segment-track"
-        ? 52
-        : r2cScreen && control.kind === "ordinary"
-          ? 44
-          : 40;
+    // R2e's quality contract gives the complete row one 44px centre line.
+    const expectedHeight = 44;
     expect(control.height, `${route}: ${control.name}`).toBeCloseTo(
       expectedHeight,
       0,
@@ -116,10 +110,7 @@ async function checkToolbar(toolbar: Locator, route: string) {
     else rows.push([control]);
   }
   for (const input of geometry.searchInputs)
-    expect(input.height, `${route}: ${input.name}`).toBeCloseTo(
-      r2cScreen ? 44 : 40,
-      0,
-    );
+    expect(input.height, `${route}: ${input.name}`).toBeCloseTo(44, 0);
   for (const row of rows) {
     expect(
       Math.max(...row.map((item) => item.center)) -
@@ -128,6 +119,14 @@ async function checkToolbar(toolbar: Locator, route: string) {
     ).toBeLessThanOrEqual(1);
   }
   expect(geometry.trailing, `${route}: count/actions end group`).not.toBeNull();
+  if (geometry.trailing && (await toolbar.page().viewportSize())!.width > 760)
+    expect(
+      Math.abs(
+        geometry.trailing.top -
+          Math.min(...geometry.controls.map((control) => control.top)),
+      ),
+      `${route}: count and Columns remain on the first filter row`,
+    ).toBeLessThanOrEqual(1);
   if (geometry.trailing)
     expect(
       geometry.direction === "rtl"
