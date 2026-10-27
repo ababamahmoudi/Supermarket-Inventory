@@ -377,3 +377,5 @@ Use the supplied unmodified Klead files under `prototype/public/brand/klead/`; n
 ## R2f R0.1 — Peer control rows (current)
 
 Use shared ControlRow / `.ui-control-row` for 44 px page peers, or its small 40 px variant for in-card action rows. Grid compositions use `.ui-control-row-grid`; labelled field/action pairs bottom-align with `.is-field-row`. Whole segmented tracks share the row height, have no bottom margin and centre themselves. Their inner buttons fit inside the track. Icon widths may follow the approved composition; heights match the adjacent field/action. Shared quick-filter chips are 44 px.
+
+R2f R0.2 supersedes S1's 16 px outer table inset: first/last column content and row dividers now meet the card's content edges. Keep the existing 12 px inner-cell spacing, shared numeric logical end alignment and zero inline padding on sortable captions. Dedicated receiving/posted/batch tables use those same outer edges.

@@ -13,7 +13,7 @@
   --link-text: var(--accent-tint-text);
   --list-box-border: var(--klead-hairline);
   --empty-value: var(--text-muted);
-  --table-edge-padding: 16px;
+  --table-edge-padding: 0px;
   --table-cell-padding: 12px;
 }
 
@@ -1429,4 +1429,34 @@
   block-size: 44px;
   min-block-size: 44px;
   max-block-size: 44px;
+}
+
+/* R2f R0.2 — tables and row rules meet their card's content edges. */
+@media screen and (min-width: 761px) {
+  :root .ui-data-table tbody tr:not(.table-expanded-row):nth-child(n),
+  :root
+    .ui-data-table.table-wrap.is-responsive
+    > table
+    > tbody
+    > tr:not(.table-expanded-row):nth-child(n) {
+    background-size: 100% 1px;
+  }
+  :root .receiving-table > thead > tr > th:first-child,
+  :root .receiving-table > tbody > tr.invoice-line-summary > td:first-child,
+  :root
+    .invoice-approval-table
+    > :is(thead, tbody)
+    > tr
+    > :is(th, td):first-child {
+    padding-inline-start: var(--table-edge-padding);
+  }
+  :root .receiving-table > thead > tr > th:last-child,
+  :root .receiving-table > tbody > tr.invoice-line-summary > td:last-child,
+  :root
+    .invoice-approval-table
+    > :is(thead, tbody)
+    > tr
+    > :is(th, td):last-child {
+    padding-inline-end: var(--table-edge-padding);
+  }
 }
