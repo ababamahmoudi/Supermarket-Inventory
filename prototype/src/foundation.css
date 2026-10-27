@@ -1576,3 +1576,13 @@
 .ui-icon-text-copy > :is(strong, small) {
   margin: 0;
 }
+
+/* A row icon uses the same square target as its peer field/action. Explicit
+   compact icon widths are reserved for the approved Timesheet menu composition. */
+:root
+  :is(.ui-control-row, .ui-control-row-grid)
+  > .ui-button.button.ui-icon-button:not([data-control-width="compact"]) {
+  inline-size: var(--control-row-height);
+  min-inline-size: var(--control-row-height);
+  max-inline-size: var(--control-row-height);
+}

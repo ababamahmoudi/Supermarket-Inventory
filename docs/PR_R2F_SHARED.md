@@ -25,3 +25,11 @@ Shared `ColumnValue` / `.ui-column-value` keeps dates/numbers as plain text with
 `IconText` / `.ui-icon-text` centres an icon on the whole title/subtitle block. The copy remains a two-line grid and the icon does not shrink. Existing approved icon size, colour and circle treatment remain the caller's ordinary tokens/composition; centring is shared.
 
 R0.1 compact controls may pass the actual popup body's minimum height/gap to shared `usePopover`; defaults remain 240/8 px for existing menus, while the one-option Timesheet Now popup uses 56/6 px and still flips/clamps when needed. Shared AutoTextarea/BufferedTextarea accepts an explicit minimum height for the approved 72 px Notes field, retaining the six-line cap and default two-line behaviour elsewhere.
+
+## R0.7 — Rendered alignment proof
+
+`tests/r2f-alignment.ts` ports the approved `align.js` peer-pair and table/grid grouping algorithm. It keeps the 48 px adjacency and half-height-overlap checks, fails above 1.5 px centre/column spread or 2 px height difference, and resolves logical text edges in RTL. Actual glyph ranges avoid padded-container false passes; centred editable columns compare their field centres. Extra probes check real number baselines, icon/title/subtitle centres, composed card headers/paired heights and plain column values.
+
+Exceptions are registered by scene and exact semantic selector with a reason, reported with use counts. They distinguish controls in separate masonry departments/dashboard stacks, retain approved contextual Type chips and canonical status dots as complete value probes, compare decorative activity-avatar centres, and identify the approved 24 px inline request-note action. They do not waive a whole screen, table or numeric column. Unregistered caller exceptions are rejected. The oracle's browser negative controls deliberately shift real geometry in LTR/RTL and prove failures before restoring it.
+
+Direct row icon buttons use a square target matching the peer control height (44/40 px). The approved narrow Timesheet menu may explicitly retain a compact width; it still has a 44 px height. Other row icons cannot inherit the old 36 px width.
