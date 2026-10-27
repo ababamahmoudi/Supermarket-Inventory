@@ -163,3 +163,7 @@ Currency displays use at least two and at most four decimals, trimming only zero
 ### C9 presentation clarification
 
 The shared read-only product unit-cost display shows cents, including $4.99/lb; underlying source/canonical cost, editable inputs, calculations and retained financial/printed evidence keep their existing precision. Selling-price rendering is shared and atomic: struck regular before bold current only for a genuine lower sale; main/secondary weight units remain separate end-aligned lines. Frozen Price update snapshots do not adopt later live prices. No pricing-engine algorithm or seed expected value changes.
+
+## R2e A — case-bought weight invoice costs
+
+A weight case has an explicit mass and mass unit. Canonical per-lb purchase cost derives from case cost ÷ case mass, retaining four decimal places. The invoice amount uses the exact case cost and equivalent number of cases, rounded once to cents; it must not multiply rounded per-lb cost by mass when that would change paper cents. A change between Cases, Units, lb and kg converts quantity and cost together. Display kg/lb changes retain original source arithmetic and the configured conversion factor, so repeated switches do not reprice the paper. Unknown mass stays unresolved. A composite `4 × 10 lb` remains four units per case until weight is selected, then establishes a 40 lb case. The original paper line total is independent, with a greater-than-one-cent mismatch blocking confirmation/posting until repaired or explicitly acknowledged as a wrong paper total.

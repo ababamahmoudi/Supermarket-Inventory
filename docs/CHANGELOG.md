@@ -469,3 +469,8 @@ Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted
 - Made pricing band thresholds/endings/corrections explicit configuration data and margin flags category-specific. Added exact `.73` and Rice exact/just-above `.99` four-decimal fixtures (24 pricing cases).
 - Clarified unchanged-price costs: no approval for ordinary changes without a margin breach; below-margin results still receive deduplicated Supervisor review without blocking receiving or changing the approved cashier price.
 - Separated Step 0.1 setup/placeholder/bootstrap records from Step 0.2 demo and Phase 1 operational business features. Added reusable development tooling and pull-request CI; see the root `CHANGELOG.md` and README for implementation/verification details.
+
+### R2e A — measured weight cases
+
+- Added explicit measured-case invoice entry, quantity/cost unit conversion without changing paper cents, importer case-mass evidence and protected paper-total reconciliation.
+- Added fictional `r2e-weight-cases.json`, unit boundary/partial/mismatch/posting regressions and EN/FA desktop/phone import-to-approval browser proof. See `PR_R2E_A_REVIEW.md`.

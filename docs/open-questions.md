@@ -175,3 +175,8 @@ No additional question blocks the numbered work. Missing currency follows compan
 - Missing/conflicting historical currency, missing cost or ambiguous latest receipts requires manager review. Resolve manual posting currency from retained ledger evidence, never current configuration. No FX or alternate-currency settlement is invented. A changed company currency keeps an existing new return's original denomination and blocks pickup/correction/monetary credit writes until it matches; restoring that currency allows the original snapshot.
 - Before actual signed pickup, expected credit is informational and not deducted. Later unrelated receipts cannot replace frozen source cost/currency. These are conservative implementation defaults within the authorized task, not requests for another approval.
 - Browser-local authority/file storage remains the prototype boundary. No new HTTP service, cross-device sync, physical-camera/printer proof or real-photo fixture is claimed. Review the fictional [return click guide](PR_R2C_RETURNS.md); broader deployment/device work stays separate.
+
+## R2e A defaults recorded 2026-10-27
+
+- Weight display conversions retain the original kg/lb source arithmetic; displayed invoiced quantity uses three decimals and cost four. Delivered remains explicitly labelled in its retained source unit, avoiding invented precision or rounding a partial physical receipt. Cases show Delivered in cases.
+- A paper-line mismatch acknowledgment belongs to one exact paper/calculated pair and a real actor/time; an amount change requires acknowledgment again. A one-cent difference is tolerated; greater differences block both confirmation and posting.
