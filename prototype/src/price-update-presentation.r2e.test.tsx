@@ -43,6 +43,11 @@ it("keeps a genuine previous zero price and the frozen new price", () => {
   expect(screen.queryByText("New item")).not.toBeInTheDocument();
 });
 it.each([
+  [
+    "Package price recalculated",
+    "Package price updated",
+    "قیمت بسته به‌روز شد",
+  ],
   ["Approve product", "New product approved", "کالای جدید تأیید شد"],
   ["Approve price", "Price change approved", "تغییر قیمت تأیید شد"],
   ["Start sale", "Sale started", "حراج شروع شد"],

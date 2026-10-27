@@ -4,6 +4,10 @@ import type { Language } from "./types";
 /** Task copy describes the completed decision; stored audit actions stay intact. */
 export function priceUpdateReasonLabel(reason: string, language: Language) {
   const labels: Record<string, [string, string]> = {
+    "Package price recalculated": [
+      "Package price updated",
+      "قیمت بسته به‌روز شد",
+    ],
     "Approve product": ["New product approved", "کالای جدید تأیید شد"],
     "Approve price": ["Price change approved", "تغییر قیمت تأیید شد"],
     "Apply price to all branches": [
