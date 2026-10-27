@@ -521,3 +521,7 @@ If a genuine company-currency change has the exact same recorded timestamp as th
 ## R2e A: preserve measured-case and paper arithmetic
 
 A case cost must never become a cost per lb merely because the quantity unit changes. Preserve explicit measured case evidence and source kg/lb arithmetic; derive canonical pricing independently and round the invoice amount once. Keep paper line totals separate from recalculated amounts, with a protected, audited mismatch decision rather than implicit acceptance during Confirm. This prevents money changes from representation changes and preserves partial receipt evidence.
+
+## R2e C8/C11/C14 — Operational input and fictional seed defaults (2026-10-27)
+
+Return unit conversion keeps actual retained source cost/currency and normalizes kg/known cases to existing whole-unit/three-place-lb pickup quantities, with half-up lb rounding, a visible canonical preview and retained entered quantity/unit. Unknown packs are not choices; conversion evidence participates in stale-source checks. Lookup filters use protected public booleans scoped to current permitted locations and the existing recent-price window. Fresh/reset construction alone adds explicit fictional approved branch prices, retaining the one existing pending new-product example in North York and never populating saved-store gaps. These choices satisfy the authorized review fixes without inventing inventory availability, money authority or a migration rewrite.

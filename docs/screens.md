@@ -420,3 +420,27 @@ Labels → Products selects all eligible filtered products from its table-header
 ## R2e C7 — Alerts header control
 
 The All alerts card contains its Show resolved switch on the title row. The card and switch remain available when no pending alerts remain, so a person can still reveal resolved and intentional history. Alert decisions and the underlying retained records are unchanged.
+
+### R2e C10 — Product editor details
+
+The optional barcode is labelled explicitly. English and Persian descriptions share a full-width two-column row (one column on phones), so different Details fields cannot leave an empty grid cell between them. Date tracking uses the shared switch.
+
+### R2e C12 — Settings navigation and company logo
+
+The settings group is “Returns, dates and labels”; menu labels stay on one line at desktop/tablet widths. The Company Logo card uses a compact, vertically centred logo/Replace row without extra image top margin.
+
+### R2e C13 — Timesheet language and hours
+
+Operational department titles use only the selected language, falling back to English when Persian is absent. Operational hours use compact `H:MM` tabular text in both languages and stay on one line. Previous/next day arrow icons mirror in Persian. Bilingual print titles remain unchanged.
+
+### R2e C9 — Offer suggestion surfaces
+
+Each suggestion uses the existing field-tint surface and standard control radius without a border. At roomy desktop widths, its two optional date fields and Confirm/Dismiss actions share one baseline; narrower layouts wrap the actions without compressing controls.
+
+### R2e C8 — Return form and record details
+
+Return header actions centre with the title. Item locations use their configured branch names. Quantity and a shared Unit select share one row on desktop and phone. Select choices are based on actual retained receipt pack/weight evidence, default to the received unit when convertible, and never guess a case size. Converted quantities show the canonical units/lb preview before creation.
+
+### R2e C11 — Lookup quick filters
+
+Lookup combines remembered On offer, Expiring soon, Arrived today and Price changed recently chips with Taxable, Not approved here yet and category choices. Expiring soon appears beside offer facts in the current branch's result and product card. A protected query returns only public booleans from permitted current locations, never receipt/decision identities or private cost evidence. Aggregate selection combines authorized locations without choosing one implicitly.

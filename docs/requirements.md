@@ -932,3 +932,7 @@ New reading proposals remove supplier Promotion/Promo markers into a quiet “Su
 ### R2e B8 — supplier names from capitalized readings
 
 Only newly created suppliers whose printed name is entirely capitalized receive a readable title-case name. Legal suffixes use Inc./Ltd./Co./Corp.; digit-containing words retain their printed spelling. Existing supplier names are never renamed automatically. `reading_record.supplier_name_as_printed` and the original invoice image retain the printed form.
+
+## R2e C8–C14 — Review fixes
+
+Return forms use retained receipt unit choices, configured location names and level Quantity/Unit controls; source money and existing pickup precision remain authoritative. Offer suggestions use the shared field-tint item surface and compact level date/action row. Product descriptions share a row and barcode is explicitly optional. Lookup adds four combinable, per-person/location remembered public filters and current-branch reminder badges, backed by protected public-only facts. Settings keeps one-line group names and a compact logo row. Timesheet operational department titles use one selected language and compact H:MM hours with mirrored day arrows, while paper stays bilingual. Fresh/reset fictional practice has approved branch prices everywhere except its single deliberate North York pending new product; migrations do not populate saved prices.

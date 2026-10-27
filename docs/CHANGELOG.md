@@ -1,3 +1,10 @@
+## 2026-10-27 — R2e C8–C14 review fixes
+
+- Centred return header actions, resolved configured location names, and replaced the overlapping unit display with a level shared select backed by retained receipt conversions. Frozen cost/currency and existing pickup precision remain; original entered quantity/unit is retained.
+- Finished field-tint offer suggestions with level desktop date/actions, paired optional product descriptions, compact Settings logo/navigation, and single-language timesheet titles with H:MM hours and mirrored Persian day arrows. Paper remains bilingual.
+- Added protected public Lookup signals and four combinable remembered filters, including current-branch expiry badges. Added fresh/reset-only approved-price coverage, preserving one deliberate pending North York example and all existing saved records.
+- Fictional unit/browser proofs cover the new behavior and existing source-money/privacy rules; exact integrated CI is recorded on PR #29. See the per-item PR_R2E_C8–C14 review guides.
+
 ## 2026-10-26 — R2c and R2d final browser integration
 
 - Corrected loaded-font clipping in Supplier Status, the Persian Overdue header and long Dashboard invoice references; retained complete accessible references and one actual invoice-record control.
