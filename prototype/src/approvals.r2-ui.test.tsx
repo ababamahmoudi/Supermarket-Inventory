@@ -316,4 +316,7 @@ it("leaves requests needing an individual price choice or reason unchecked while
       (await fixture.readCanonical()).approvals.map((item) => item.status),
     ).toEqual(["approved", "pending", "pending", "pending"]),
   );
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+  );
 });
