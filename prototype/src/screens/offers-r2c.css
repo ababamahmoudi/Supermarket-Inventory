@@ -100,3 +100,27 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Suggestions use the existing field-tint item surface rather than a faint outline. */
+:root .offer-task.r2c-offer-task {
+  border: 0;
+  background: var(--field-fill);
+  border-radius: var(--radius-control);
+}
+.r2e-offer-decision-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 20px;
+}
+.r2e-offer-decision-row .field {
+  margin-block: 0;
+}
+.r2e-offer-decision-row .r2c-offer-actions {
+  flex-wrap: nowrap;
+}
+@media (max-width: 1100px) {
+  .r2e-offer-decision-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

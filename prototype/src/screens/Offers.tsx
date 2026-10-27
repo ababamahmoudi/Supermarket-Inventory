@@ -712,47 +712,49 @@ export function Offers() {
                           "عضویت در گروه ترکیبی",
                         )}
                       </Checkbox>
-                      <div className="grid-2">
-                        <Field
-                          label={t(
-                            "Start date (optional)",
-                            "تاریخ شروع (اختیاری)",
-                          )}
-                        >
-                          <DateField
-                            value={options.start}
-                            onChange={(value) => change({ start: value })}
-                          />
-                        </Field>
-                        <Field
-                          label={t(
-                            "End date (optional)",
-                            "تاریخ پایان (اختیاری)",
-                          )}
-                        >
-                          <DateField
-                            value={options.end}
-                            onChange={(value) => change({ end: value })}
-                          />
-                        </Field>
+                      <div className="r2e-offer-decision-row">
+                        <div className="grid-2">
+                          <Field
+                            label={t(
+                              "Start date (optional)",
+                              "تاریخ شروع (اختیاری)",
+                            )}
+                          >
+                            <DateField
+                              value={options.start}
+                              onChange={(value) => change({ start: value })}
+                            />
+                          </Field>
+                          <Field
+                            label={t(
+                              "End date (optional)",
+                              "تاریخ پایان (اختیاری)",
+                            )}
+                          >
+                            <DateField
+                              value={options.end}
+                              onChange={(value) => change({ end: value })}
+                            />
+                          </Field>
+                        </div>
+                        <div className="actions r2c-offer-actions">
+                          <Button
+                            variant="primary"
+                            disabled={readiness !== "ready"}
+                            aria-label={`${t("Confirm offer", "تأیید پیشنهاد")}: ${formatOffer(offer.label, lang, offer.currency)}`}
+                            onClick={() => activate(task)}
+                          >
+                            {t("Confirm offer", "تأیید پیشنهاد")}
+                          </Button>
+                          <Button
+                            variant="plain"
+                            onClick={() => stop(offer.id, true)}
+                          >
+                            {t("Dismiss", "کنار گذاشتن")}
+                          </Button>
+                        </div>
                       </div>
                       <p className="muted">{readyMessage(readiness)}</p>
-                      <div className="actions r2c-offer-actions">
-                        <Button
-                          variant="primary"
-                          disabled={readiness !== "ready"}
-                          aria-label={`${t("Confirm offer", "تأیید پیشنهاد")}: ${formatOffer(offer.label, lang, offer.currency)}`}
-                          onClick={() => activate(task)}
-                        >
-                          {t("Confirm offer", "تأیید پیشنهاد")}
-                        </Button>
-                        <Button
-                          variant="plain"
-                          onClick={() => stop(offer.id, true)}
-                        >
-                          {t("Dismiss", "کنار گذاشتن")}
-                        </Button>
-                      </div>
                     </section>
                   );
                 })
