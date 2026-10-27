@@ -1,3 +1,4 @@
+import { inspect } from "../scripts/c5-browser-proof.mjs";
 import { expect, test } from "@playwright/test";
 
 test("C8 return unit Select is level with Quantity and shows configured location", async ({
@@ -14,6 +15,40 @@ test("C8 return unit Select is level with Quantity and shows configured location
     b = (await unit.boundingBox())!;
   expect(Math.abs(a.y - b.y)).toBeLessThanOrEqual(1.5);
   expect(Math.abs(a.height - b.height)).toBeLessThanOrEqual(2);
+  await unit.evaluate((control) => {
+    control.style.transform = "translateY(4px)";
+  });
+  expect(
+    (
+      await inspect(
+        page,
+        "R2e C8 corrupted Quantity/Unit row",
+        "negative",
+        "manager",
+      )
+    ).failures,
+  ).toContain("New return quantity/unit alignment");
+  await unit.evaluate((control) => control.style.removeProperty("transform"));
+  await unit.evaluate((control) => {
+    control.style.setProperty("height", "40px", "important");
+    control.style.setProperty("min-height", "40px", "important");
+    control.style.setProperty("max-height", "40px", "important");
+  });
+  expect(
+    (await inspect(page, "R2e C8 corrupted Unit height", "negative", "manager"))
+      .failures,
+  ).toContain("New return field height: new-return-unit");
+  await unit.evaluate((control) => control.removeAttribute("style"));
+  expect(
+    (
+      await inspect(
+        page,
+        "R2e C8 restored complete composition",
+        "restored",
+        "manager",
+      )
+    ).failures,
+  ).toEqual([]);
   await unit.click();
   await expect(
     page.getByRole("option", { name: "Units", exact: true }),

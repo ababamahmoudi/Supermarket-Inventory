@@ -7,3 +7,5 @@ Returns → New return → choose supplier and a received product. Quantity and 
 Conversions use configured weight factors and half-up lb rounding to the existing three-place pickup precision. No on-hand cap is inferred. See open-questions.md for this explicit default.
 
 Proof: protected unit tests for case/kg conversions, missing/stale evidence, source cost and input rejection; original return creation guards; desktop/phone Quantity/Unit geometry and configured-location display.
+
+The strict C5 screen recognizer requires the actual seven-field form, including its two-field Quantity/Unit row and shared Select. It retains original complete-dialog/photo-section/counterfeit/action-height/radius negative controls and now also rejects a translated Unit control or a 40px Unit control. The original EN/FA desktop/phone return-control suite and the added geometry negative controls passed together (6 browser cases).

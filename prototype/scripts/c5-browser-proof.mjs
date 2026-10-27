@@ -1063,11 +1063,19 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         const footer = [
           ...dialog.querySelectorAll(":scope > .ui-dialog-footer > button"),
         ];
+        const quantityRow = grid?.querySelector(
+          ":scope > .new-return-quantity-row",
+        );
+        const quantityInput = quantityRow?.querySelector(
+          "#new-return-quantity",
+        );
+        const unitSelect = quantityRow?.querySelector("#new-return-unit");
         const fields = [
           "location",
           "supplier",
           "product",
           "quantity",
+          "unit",
           "reason",
           "note",
         ];
@@ -1087,7 +1095,11 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               )?.textContent,
             ),
           ) &&
-          grid?.querySelectorAll(":scope > .field").length === 7 &&
+          grid?.querySelectorAll(":scope > .field").length === 5 &&
+          grid?.querySelectorAll(".field").length === 7 &&
+          quantityRow?.querySelectorAll(":scope > .field").length === 2 &&
+          quantityInput?.matches("input.ui-input") &&
+          unitSelect?.matches('button.ui-select[role="combobox"]') &&
           fields.every((field) =>
             grid?.querySelector(`#new-return-${field}`),
           ) &&
@@ -1116,6 +1128,20 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             !control.closest(".ui-select-popup")
           )
             newReturnControls.add(control);
+        }
+        if (visible(quantityInput) && visible(unitSelect)) {
+          const quantityBounds = quantityInput.getBoundingClientRect();
+          const unitBounds = unitSelect.getBoundingClientRect();
+          if (
+            Math.abs(
+              quantityBounds.top +
+                quantityBounds.height / 2 -
+                unitBounds.top -
+                unitBounds.height / 2,
+            ) > 1.5 ||
+            Math.abs(quantityBounds.height - unitBounds.height) > 2
+          )
+            failures.push("New return quantity/unit alignment");
         }
         for (const control of grid.querySelectorAll(
           'input:not([type="file"]),[role="combobox"]',
