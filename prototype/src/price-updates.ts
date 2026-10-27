@@ -1,3 +1,7 @@
+import {
+  syncWeightPackages,
+  syncWeightPackagesAtClock,
+} from "./weight-packages";
 import type {
   AuthenticatedActor,
   DecisionAttribution,
@@ -811,6 +815,7 @@ export function capturePriceUpdateChanges(
   now = new Date(),
 ) {
   actor = freshActor(state, actor);
+  syncWeightPackages(state, actor, now);
   if (!state.prototype_e2_schema) initializePriceUpdates(state, now);
   reconcileChanges(state, snapshots(before, now), now, actor, before);
   syncGeneralNotifications(state, now);
@@ -918,6 +923,7 @@ export function evaluatePriceUpdates(
   now = new Date(attribution.applied_at),
 ) {
   requireSystemReconciliation(state, attribution, "price_updates");
+  syncWeightPackagesAtClock(state, attribution, now);
   if (!state.prototype_e2_schema) initializePriceUpdates(state, now);
   else
     reconcileChanges(

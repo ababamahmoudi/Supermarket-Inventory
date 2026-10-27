@@ -1367,6 +1367,8 @@ function savePriceChangeDraft(
   const preview = previewPriceChange(state, context, input, now);
   assertPreview(preview);
   const product = preview.product!;
+  if (input.mode === "regular" && product.package_of_product_id)
+    throw new SalesError("price");
   if (input.mode === "regular") {
     const price = canonicalInputPrice(input, state)!.toFixed(
       2,
