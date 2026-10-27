@@ -1,6 +1,7 @@
 import { offerVersion, stopCompanyOfferAtStore } from "./offer-store-scopes";
 import { businessFingerprint } from "./business-fingerprint";
-import type { AuthenticatedActor } from "./authority-types";
+import type { AuthenticatedActor, SystemAttribution } from "./authority-types";
+import { requireSystemReconciliation } from "./authority-repository";
 import {
   actorAtLocation,
   freshActor,
@@ -264,6 +265,7 @@ function reconcileOffersDraft(
   state: DemoState,
   productCode: string,
   companyId = state.config.company.seed_key,
+  now = new Date(),
 ): void {
   if (companyId !== state.config.company.seed_key) return;
   const product = currentProduct(state, productCode);
@@ -295,7 +297,7 @@ function reconcileOffersDraft(
     ) {
       offer.status = "stopped";
       offer.version = offerVersion(offer) + 1;
-      offer.stopped_at = new Date().toISOString();
+      offer.stopped_at = now.toISOString();
     }
   }
   const scopes: { scope: PriceScope; branch: Branch; price: string | null }[] =
@@ -355,6 +357,65 @@ function reconcileOffersDraft(
       status: "suggested",
     });
   }
+}
+
+/** Canonical derived-product maintenance; no caller-supplied prices or offer terms. */
+export function reconcileDerivedPackageOffers(
+  state: DemoState,
+  actor: AuthenticatedActor | null,
+  productCode: string,
+  now: Date,
+  system?: {
+    attribution: SystemAttribution;
+    source: "price_updates" | "sales_clock";
+  },
+): void {
+  if (actor) actor = freshActor(state, actor);
+  else if (system)
+    requireSystemReconciliation(state, system.attribution, system.source);
+  else throw new Error("Package reconciliation requires current authority");
+  const product = currentProduct(state, productCode);
+  const parent = state.products.find(
+    (item) =>
+      item.company_id === product.company_id &&
+      item.code === product.package_of_product_id &&
+      item.sold_by === "weight" &&
+      !item.package_of_product_id &&
+      item.status !== "archived",
+  );
+  if (!parent || product.status === "archived")
+    throw new Error("Package parent is unavailable");
+  const before = structuredClone(
+    state.offers.filter(
+      (item) =>
+        item.company_id === product.company_id &&
+        item.product_code === product.code,
+    ),
+  );
+  reconcileOffersDraft(state, productCode, product.company_id, now);
+  const after = structuredClone(
+    state.offers.filter(
+      (item) =>
+        item.company_id === product.company_id &&
+        item.product_code === product.code,
+    ),
+  );
+  if (JSON.stringify(before) === JSON.stringify(after)) return;
+  state.activity.push({
+    id: createId("package-offers"),
+    company_id: product.company_id,
+    branch: "all",
+    product_code: product.code,
+    entity_type: "product",
+    entity_id: product.code,
+    action: "Package offers reconciled",
+    by: actor?.actor ?? "System",
+    ...(actor ? actorAudit(state, actor, now) : {}),
+    at: now.toISOString(),
+    reversible: false,
+    before,
+    after,
+  });
 }
 
 /** Intentional conflicts acknowledge an exact set of effective prices, never future changes. */

@@ -1,3 +1,5 @@
+import { reconcileDerivedPackageOffers } from "./approvals";
+import { reconcilePackageSaleAlert } from "./sales";
 import Decimal from "decimal.js";
 import type { AuthenticatedActor, SystemAttribution } from "./authority-types";
 import { freshActor } from "./authority";
@@ -292,6 +294,10 @@ function reconcilePackages(
   state: DemoState,
   actor: AuthenticatedActor | null,
   now: Date,
+  system?: {
+    attribution: SystemAttribution;
+    source: "price_updates" | "sales_clock";
+  },
 ) {
   const company = state.config.company.seed_key;
   const branches = state.config.branches.flatMap((branch, index) => {
@@ -396,9 +402,27 @@ function reconcilePackages(
     for (const { branch, result } of updates) {
       const prior = product.branch_prices[branch] ?? null;
       const next = result?.selling_price ?? null;
-      if (prior === next) continue;
+      if (prior === next) {
+        reconcilePackageSaleAlert(
+          state,
+          actor,
+          product.code,
+          branch,
+          now,
+          system,
+        );
+        continue;
+      }
       if (next) product.branch_prices[branch] = next;
       else delete product.branch_prices[branch];
+      reconcilePackageSaleAlert(
+        state,
+        actor,
+        product.code,
+        branch,
+        now,
+        system,
+      );
       const id = createId("package-price");
       state.activity.push({
         id,
@@ -450,6 +474,7 @@ function reconcilePackages(
           preferred_template: "regular",
         });
     }
+    reconcileDerivedPackageOffers(state, actor, product.code, now, system);
   }
 }
 /** Run before canonical price-update snapshots, inside the same protected transaction. */
@@ -468,5 +493,5 @@ export function syncWeightPackagesAtClock(
   source: "price_updates" | "sales_clock" = "price_updates",
 ) {
   requireSystemReconciliation(state, attribution, source);
-  reconcilePackages(state, null, now);
+  reconcilePackages(state, null, now, { attribution, source });
 }

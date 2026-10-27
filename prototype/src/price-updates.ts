@@ -499,7 +499,16 @@ function sourceOf(
       (row.entity_type === "settings" &&
         ["catalog", "offers", "company"].includes(row.entity_id ?? "")),
   );
-  const entry = specific.at(-1) ?? invoiceSource ?? configSource;
+  const entry =
+    [...specific]
+      .reverse()
+      .find(
+        (row) =>
+          row.action === "Package price recalculated" && row.branch === branch,
+      ) ??
+    specific.at(-1) ??
+    invoiceSource ??
+    configSource;
   const saleId = next?.sale_id ?? previous?.sale_id;
   const sale = saleId
     ? state.sales?.find(

@@ -2629,6 +2629,112 @@ export function recordSaleReceiptCost(
   }
   return ids;
 }
+/** Derive a normal sale review from actual package/base terms, never fabricated invoice evidence. */
+export function reconcilePackageSaleAlert(
+  state: DemoState,
+  actor: AuthenticatedActor | null,
+  productCode: string,
+  branch: string,
+  now: Date,
+  system?: {
+    attribution: SystemAttribution;
+    source: "price_updates" | "sales_clock";
+  },
+): void {
+  if (actor) actor = freshActor(state, actor);
+  else if (system)
+    requireSystemReconciliation(state, system.attribution, system.source);
+  else throw new SalesError("permission");
+  const product = productInCompany(state, productCode);
+  const parent = product?.package_of_product_id
+    ? productInCompany(state, product.package_of_product_id)
+    : null;
+  if (
+    !product ||
+    !parent ||
+    parent.sold_by !== "weight" ||
+    parent.package_of_product_id ||
+    parent.status === "archived" ||
+    product.status === "archived"
+  )
+    return;
+  const sale = activeSaleAt(state, product, branch, now);
+  const regular = baseRegularPrice(product, branch);
+  if (
+    !sale ||
+    !regular ||
+    new SaleDecimal(regular).gt(saleCanonicalPrice(sale, state.config))
+  )
+    return;
+  const id = `${product.company_id}:package-sale:${product.code}:${branch}:${sale.id}:${sale.revision}:${regular}`;
+  if (
+    state.alerts.some(
+      (alert) => alert.company_id === product.company_id && alert.id === id,
+    )
+  )
+    return;
+  const cost = new SaleDecimal(product.last_cost_before_tax);
+  const salePrice = new SaleDecimal(saleCanonicalPrice(sale, state.config));
+  const margin = salePrice.isZero()
+    ? null
+    : salePrice.minus(cost).div(salePrice).toFixed(8);
+  state.alerts.push({
+    id,
+    company_id: product.company_id,
+    branch,
+    branch_id: branch,
+    product_code: product.code,
+    package_parent_product_code: parent.code,
+    type: "sale_regular_not_above_sale",
+    status: "pending",
+    sale_id: sale.id,
+    sale_revision: sale.revision,
+    sale_price: sale.sale_price,
+    sale_price_unit: sale.price_unit,
+    sale_last_day: sale.last_day,
+    regular_price_before: sale.regular_price_snapshot,
+    proposed_regular_price: regular,
+    previous_cost: product.last_cost_before_tax,
+    new_cost: product.last_cost_before_tax,
+    prior_margin: margin ?? undefined,
+    new_margin: margin ?? undefined,
+    minimum_margin:
+      state.config.pricing_categories.find(
+        (category) => category.key === product.pricing_category,
+      )?.minimum_margin ?? null,
+  });
+  state.activity.push({
+    id: createId("package-sale-review"),
+    company_id: product.company_id,
+    branch,
+    product_code: product.code,
+    entity_type: "alert",
+    entity_id: id,
+    action: "Package sale needs review",
+    by: actor?.actor ?? "System",
+    ...(actor ? actorAudit(state, actor, now) : {}),
+    at: now.toISOString(),
+    reversible: false,
+    after: {
+      package_parent_product_code: parent.code,
+      sale_id: sale.id,
+      sale_price: sale.sale_price,
+      proposed_regular_price: regular,
+    },
+  });
+  notifySupervisors(state, [], {
+    company_id: product.company_id,
+    branch,
+    event_key: id,
+    kind: "sale_regular_not_above_sale",
+    product_code: product.code,
+    sale_id: sale.id,
+    alert_id: id,
+    href: `alerts?alert=${encodeURIComponent(id)}`,
+    created_at: now.toISOString(),
+  });
+}
+
 export interface SaleAlertDecisionInput {
   decision: "keep" | "change" | "end";
   expected_sale_revision: number;
@@ -2919,6 +3025,30 @@ function invalidRetainedSales(state: DemoState): SaleSchedule[] {
       !priceValue(regular) ||
       !priceValue(sale.sale_price) ||
       !["each", "lb", "kg"].includes(sale.price_unit)
+    )
+      return false;
+    if (
+      product?.package_of_product_id &&
+      state.alerts.some(
+        (alert) =>
+          alert.company_id === product.company_id &&
+          alert.product_code === product.code &&
+          alert.branch === sale.branch &&
+          alert.package_parent_product_code === product.package_of_product_id &&
+          alert.type === "sale_regular_not_above_sale" &&
+          alert.sale_id === sale.id &&
+          alert.sale_revision === sale.revision &&
+          alert.sale_price === sale.sale_price &&
+          alert.sale_price_unit === sale.price_unit &&
+          alert.proposed_regular_price === regular &&
+          (alert.status === "pending" ||
+            (alert.status === "resolved" &&
+              alert.sale_decision === "keep" &&
+              alert.decision_attribution?.company_id === product.company_id &&
+              ["owner", "manager"].includes(
+                alert.decision_attribution.role_snapshot,
+              ))),
+      )
     )
       return false;
     return new SaleDecimal(saleCanonicalPrice(sale, state.config)).gte(regular);

@@ -1023,3 +1023,152 @@ describe("R2e package effects share the installed sales-clock write", () => {
     }
   });
 });
+
+describe("R2e packages retain the normal approved-sale decision workflow", () => {
+  it.each(["end", "change", "keep"] as const)(
+    "parent reduction creates one actual child conflict and a genuine Manager can %s it",
+    async (decision) => {
+      const { repository, service, identity, parentCode, snapshot, company } =
+        await repositoryFixture();
+      try {
+        const { decideSaleCostAlert, migrateSalePriceInvariants } =
+          await import("./sales");
+        const added = await service.add(identity, {
+          parent_code: parentCode,
+          expected_parent_snapshot: snapshot,
+          size: "250",
+          unit: "g",
+        });
+        const now = new Date();
+        const source = (await repository.loadBusiness<DemoState>(company))
+          .state;
+        const today = saleStoreDate(source.config, "Branch 1", now);
+        await repository.runBusinessCommand<DemoState, void>(
+          identity,
+          (state, actor) => {
+            const before = cloneWithAuthority(state);
+            savePriceChange(
+              state,
+              actor,
+              {
+                product_code: added.product_code,
+                mode: "sale",
+                scope: "current",
+                branches: ["Branch 1"],
+                price: "4.99",
+                price_unit: "each",
+                starts_on: today,
+                last_day: null,
+                accept_below_margin: true,
+                below_cost_reason: "Fictional package sale",
+                add_labels: false,
+              },
+              now,
+            );
+            capturePriceUpdateChanges(before, state, actor, now);
+          },
+        );
+        const changeParent = () =>
+          repository.runBusinessCommand<DemoState, void>(
+            identity,
+            (state, actor) => {
+              const before = cloneWithAuthority(state);
+              applyApprovedPrice(
+                state,
+                actor,
+                parentCode,
+                "5.99",
+                "branch",
+                "Branch 1",
+              );
+              capturePriceUpdateChanges(before, state, actor, now);
+            },
+          );
+        await changeParent();
+        let actual = (await repository.loadBusiness<DemoState>(company)).state;
+        const child = actual.products.find(
+          (item) => item.code === added.product_code,
+        )!;
+        expect(child.branch_prices?.["Branch 1"]).toBe("3.99");
+        const conflict = actual.alerts.find(
+          (item) =>
+            item.product_code === child.code &&
+            item.type === "sale_regular_not_above_sale",
+        )!;
+        expect(conflict).toMatchObject({
+          package_parent_product_code: parentCode,
+          status: "pending",
+          sale_price: "4.99",
+          proposed_regular_price: "3.99",
+        });
+        expect(conflict.invoice_id).toBeUndefined();
+        await changeParent();
+        actual = (await repository.loadBusiness<DemoState>(company)).state;
+        expect(
+          actual.alerts.filter(
+            (item) =>
+              item.product_code === child.code &&
+              item.type === "sale_regular_not_above_sale",
+          ),
+        ).toHaveLength(1);
+        await migrateSalePriceInvariants(repository, company);
+        actual = (await repository.loadBusiness<DemoState>(company)).state;
+        expect(
+          actual.sales?.find((item) => item.id === conflict.sale_id)?.status,
+        ).toBe("active");
+        await repository.runBusinessCommand<DemoState, void>(
+          identity,
+          (state, actor) => {
+            const before = cloneWithAuthority(state);
+            const sale = state.sales!.find(
+              (item) => item.id === conflict.sale_id,
+            )!;
+            decideSaleCostAlert(
+              state,
+              actor,
+              conflict.id,
+              {
+                decision,
+                expected_sale_revision: sale.revision,
+                reason: "Fictional package sale review",
+                ...(decision === "change"
+                  ? {
+                      input: {
+                        product_code: child.code,
+                        mode: "sale" as const,
+                        scope: "current" as const,
+                        branches: ["Branch 1"],
+                        price: "3.49",
+                        price_unit: "each" as const,
+                        starts_on: today,
+                        last_day: null,
+                        accept_below_margin: true,
+                        below_cost_reason: "Fictional revised sale",
+                        add_labels: false,
+                      },
+                    }
+                  : {}),
+              },
+              now,
+            );
+            capturePriceUpdateChanges(before, state, actor, now);
+          },
+        );
+        await migrateSalePriceInvariants(repository, company);
+        actual = (await repository.loadBusiness<DemoState>(company)).state;
+        expect(
+          actual.alerts.find((item) => item.id === conflict.id),
+        ).toMatchObject({ status: "resolved", sale_decision: decision });
+        const { effectivePrice } = await import("./catalog");
+        expect(effectivePrice(actual, child.code, "Branch 1", now)).toBe(
+          decision === "end" ? "3.99" : decision === "change" ? "3.49" : "4.99",
+        );
+        expect(
+          actual.sales?.find((item) => item.id === conflict.sale_id)?.status,
+        ).toBe(decision === "end" ? "ended" : "active");
+      } finally {
+        repository.dispose();
+      }
+    },
+  );
+});

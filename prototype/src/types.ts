@@ -249,6 +249,8 @@ export interface Approval extends ScopedRecord {
   sale_id?: string;
 }
 export interface Alert extends ScopedRecord {
+  /** Canonical derived-package sale review; never invoice receipt evidence. */
+  package_parent_product_code?: string;
   decided_by_user_id?: string;
   decision_attribution?: DecisionAttribution;
   id: string;

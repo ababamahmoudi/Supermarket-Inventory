@@ -409,14 +409,18 @@ export function SalesAlerts({
                                 )
                               : t("Keep the sale", "حراج ادامه یابد")}
                         </Button>
-                        {alert.type === "sale_cost_increase" && sale && (
-                          <Button
-                            variant="neutral"
-                            onClick={() => setChanging(alert)}
-                          >
-                            {t("Change the sale", "تغییر حراج")}
-                          </Button>
-                        )}
+                        {[
+                          "sale_cost_increase",
+                          "sale_regular_not_above_sale",
+                        ].includes(alert.type) &&
+                          sale && (
+                            <Button
+                              variant="neutral"
+                              onClick={() => setChanging(alert)}
+                            >
+                              {t("Change the sale", "تغییر حراج")}
+                            </Button>
+                          )}
                         <Button
                           variant="destructive"
                           onClick={() => setEnding(alert)}
