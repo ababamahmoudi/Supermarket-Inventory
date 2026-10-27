@@ -202,7 +202,8 @@ async function manual(read: () => Promise<ReturnType<typeof initialState>>) {
     const close = screen.queryByRole("button", { name: "Save and close" });
     if (close) fireEvent.click(close);
     await screen.findByLabelText("Invoice views");
-    fireEvent.click(screen.getByRole("tab", { name: /^Drafts / }));
+    // R2e C2 starts every invoice through the one four-choice dialog.
+    fireEvent.click(screen.getByRole("button", { name: "New invoice" }));
     await screen.findByRole("button", { name: "Manual entry" });
   }
   const previous = (await read()).invoice.id;
