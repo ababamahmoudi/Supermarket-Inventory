@@ -125,3 +125,13 @@
 :root .ui-dialog.invoice-entry-choice-dialog .ui-dialog-body > .helper {
   margin-block: 12px 0;
 }
+
+/* R2e C2: metadata stays inside its table column. */
+.invoice-queue-progress {
+  display: block;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.invoice-saved-drafts + .ui-card {
+  margin-block-start: 24px;
+}

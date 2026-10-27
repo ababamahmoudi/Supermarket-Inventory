@@ -279,13 +279,7 @@ export default function Invoices() {
           onSelect={startFallback}
           disabled={entryPending !== null}
         />
-        {!read.pending && (
-          <InvoicePickerList
-            onNew={(manual) => void startFallback(manual)}
-            pending={entryPending !== null}
-            chooserOpen={entryChoiceOpen}
-          />
-        )}
+        {!read.pending && <InvoicePickerList />}
       </>
     );
   return (
@@ -440,16 +434,8 @@ function InvoiceEntryChoices({
   );
 }
 /** Invoices the person may open when no invoice workspace is selected yet. */
-function InvoicePickerList({
-  onNew,
-  pending,
-  chooserOpen,
-}: {
-  onNew(manual: boolean): void;
-  pending: boolean;
-  chooserOpen: boolean;
-}) {
-  const { state, branch, setBranch, can, t } = useDemo();
+function InvoicePickerList() {
+  const { state, branch, setBranch, t } = useDemo();
   const [selected, setSelected] = useState<InvoiceTab | null>(null);
   const classification = useProtectedQuery(
     "invoices.read",
@@ -555,28 +541,6 @@ function InvoicePickerList({
           </p>
         )}
       </Card>
-      {tab === "drafts" && (
-        <Card title={t("New invoice", "فاکتور جدید")}>
-          <div
-            className="actions"
-            hidden={chooserOpen}
-            inert={chooserOpen || undefined}
-          >
-            <Button disabled={pending} onClick={() => onNew(false)}>
-              {t("Upload", "بارگذاری")}
-            </Button>
-            {can("invoices.enter_manual") && (
-              <Button
-                variant="secondary"
-                disabled={pending}
-                onClick={() => onNew(true)}
-              >
-                {t("Manual entry", "ورود دستی")}
-              </Button>
-            )}
-          </div>
-        </Card>
-      )}
     </>
   );
 }
@@ -1805,44 +1769,6 @@ function InvoiceWorkspace({
             </DataTable>
           )}
         </Card>
-      ) : !routeId && tab === "drafts" ? (
-        <Card title={t("New invoice", "فاکتور جدید")}>
-          <div
-            className="invoice-entry-choices"
-            hidden={entryChoiceOpen}
-            inert={entryChoiceOpen || undefined}
-          >
-            <Button onClick={() => start(false)} disabled={entryPending}>
-              {t("Upload", "بارگذاری")}
-            </Button>
-            {can("invoices.enter_manual", scope) && (
-              <Button
-                variant="secondary"
-                onClick={() => start(true)}
-                disabled={entryPending}
-              >
-                {t("Manual entry", "ورود دستی")}
-              </Button>
-            )}
-          </div>
-          <Field
-            label={t("Upload a PDF or photo", "بارگذاری PDF یا عکس")}
-            error={uploadError}
-          >
-            <Dropzone
-              id="invoice-original"
-              accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
-              onChange={(file) => void attachFile(file, true)}
-              disabled={uploadPending || entryPending}
-            />
-          </Field>
-          <p className="helper">
-            {t(
-              "AI invoice reading is simulated",
-              "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
-            )}
-          </p>
-        </Card>
       ) : !routeId && savedDrafts.length ? null : (!routeId && active) ||
         tab !== currentTab ? (
         <Card className="invoice-view-empty">
@@ -2264,54 +2190,7 @@ function InvoiceWorkspace({
             }
           />
         </>
-      ) : !routeId && tab !== "drafts" ? null : (
-        <Card title={t("New invoice", "فاکتور جدید")}>
-          <div
-            className="invoice-entry-choices"
-            hidden={entryChoiceOpen}
-            inert={entryChoiceOpen || undefined}
-          >
-            <Button onClick={() => start(false)} disabled={entryPending}>
-              {t("Upload", "بارگذاری")}
-            </Button>
-            {can("invoices.enter_manual", scope) && (
-              <Button
-                variant="secondary"
-                onClick={() => start(true)}
-                disabled={entryPending}
-              >
-                {t("Manual entry", "ورود دستی")}
-              </Button>
-            )}
-          </div>
-          {!invoice.original_available && (
-            <Field
-              label={t("Upload a PDF or photo", "بارگذاری PDF یا عکس")}
-              error={uploadError}
-            >
-              <Dropzone
-                id="invoice-original"
-                accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
-                onChange={(file) => {
-                  void attachFile(file);
-                }}
-                disabled={uploadPending || entryPending}
-              />
-            </Field>
-          )}
-          <p className="helper">
-            {t(
-              "AI invoice reading is simulated",
-              "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
-            )}
-          </p>
-          {invoice.status === "reading" && (
-            <p role="status">
-              {t("Reading invoice…", "در حال خواندن فاکتور…")}
-            </p>
-          )}
-        </Card>
-      )}
+      ) : null}
       <input
         ref={originalInput}
         className="ui-file-input"

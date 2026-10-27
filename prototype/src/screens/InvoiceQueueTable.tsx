@@ -170,10 +170,12 @@ export function InvoiceQueueTable({
                 <LtrValue value={String(saved.lines.length)} />
               </td>
               <td>
-                {t(
-                  `${confirmed} of ${saved.lines.length} lines confirmed · ${checks} to check`,
-                  `${confirmed} از ${saved.lines.length} ردیف تأیید شده · ${checks} نیاز به بررسی`,
-                )}
+                <span className="invoice-queue-progress">
+                  {t(
+                    `${confirmed}/${saved.lines.length} confirmed · ${checks} to check`,
+                    `${confirmed}/${saved.lines.length} تأیید شده · ${checks} نیاز به بررسی`,
+                  )}
+                </span>
               </td>
               <td>
                 <Button

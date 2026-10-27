@@ -396,3 +396,7 @@ Costs appear in source choices only with existing supplier-cost permission; Floo
 ## R2e C1 — Imported reading identity
 
 The invoice review header says “Read by AI · imported file” without model identifiers. Invoice details → More details → Reading retains the original model identifiers as reading evidence. Imported evidence is never relabelled as a live read.
+
+## R2e C2 — One invoice entry path
+
+Invoices has one New invoice action opening the existing Photo / PDF / Manual entry / JSON dialog. Draft and fallback lists have no legacy inline Upload / Manual entry card. Queue progress uses the compact “0/6 confirmed · 3 to check” form inside its own column; text wraps only within that cell. Consecutive invoice cards retain the normal gap.
