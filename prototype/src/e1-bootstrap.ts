@@ -1,4 +1,5 @@
 import { seedFreshDemoApprovedPrices } from "./fresh-demo-prices";
+import { initializePackageState } from "./package-state";
 import { hydrateTimesheetDemo } from "./timesheet-demo";
 import { initializeTimesheetState } from "./timesheet-state";
 import { configSeed, demoSeed } from "./config";
@@ -230,7 +231,9 @@ export function initialState(): DemoState {
   hydrateC6State(state);
   hydrateSalesDemo(state);
   seedFreshDemoApprovedPrices(state);
-  return hydrateTimesheetDemo(initializeTimesheetState(state));
+  return hydrateTimesheetDemo(
+    initializePackageState(initializeTimesheetState(state)),
+  );
 }
 
 function readLegacyState(): { state: DemoState; invalidHistoryRaw?: string } {

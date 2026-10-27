@@ -239,5 +239,37 @@
       "expected_secondary_price_per_kg": "16.51",
       "note": "The source cost is normalized per lb before the unchanged grocery rule."
     }
+  ],
+  "package_cases": [
+    {
+      "name": "fictional ground coriander 250 g package, Grocery bands",
+      "size": "250",
+      "unit": "g",
+      "parent_price_per_lb": "8.99",
+      "parent_cost_per_lb": "4.1000",
+      "category": "grocery",
+      "expected_size_lb": "0.551155",
+      "expected_selling_price": "5.49"
+    },
+    {
+      "name": "fictional ground coriander 100 g package, Grocery correction",
+      "size": "100",
+      "unit": "g",
+      "parent_price_per_lb": "8.99",
+      "parent_cost_per_lb": "4.1000",
+      "category": "grocery",
+      "expected_size_lb": "0.220462",
+      "expected_selling_price": "2.99"
+    },
+    {
+      "name": "fictional bulk rice 1 lb package, Rice upward ending",
+      "size": "1",
+      "unit": "lb",
+      "parent_price_per_lb": "8.99",
+      "parent_cost_per_lb": "4.1000",
+      "category": "rice",
+      "expected_size_lb": "1",
+      "expected_selling_price": "9.99"
+    }
   ]
 }
