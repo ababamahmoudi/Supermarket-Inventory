@@ -149,6 +149,22 @@ export function Disclosure({
     </details>
   );
 }
+/** A value in a column keeps a plain text edge, including an amber date. */
+export function ColumnValue({
+  tone = "default",
+  className,
+  ...props
+}: HTMLAttributes<HTMLSpanElement> & {
+  tone?: "default" | "pending" | "danger" | "muted";
+}) {
+  return (
+    <span
+      {...props}
+      className={cn("ui-column-value", `is-${tone}`, className)}
+    />
+  );
+}
+
 /** A composed card heading reserves the same row whether or not it has actions. */
 export function CardHeader({
   title,

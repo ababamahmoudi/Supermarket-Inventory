@@ -1530,3 +1530,23 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* R2f R0.5 — column values retain their text edge, without pill padding. */
+.ui-column-value {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-none);
+  background: var(--color-clear);
+  font-variant-numeric: tabular-nums;
+}
+.ui-column-value.is-pending {
+  color: var(--pending);
+}
+.ui-column-value.is-danger {
+  color: var(--danger);
+}
+.ui-column-value.is-muted {
+  color: var(--text-muted);
+}

@@ -15,3 +15,7 @@ Shared outer table padding is zero; the existing 12 px inner padding still separ
 ## R0.4 — Neighbouring cards
 
 `CardHeader` / `.ui-card-header` reserves at least 44 px whether actions exist or not. `.ui-card-row` stretches two neighbouring cards to the same height and becomes one column on a phone. These compose real paired cards rather than forcing masonry departments to the same height; the approved Timesheets design deliberately keeps independent department heights and its compact baseline-aligned heading.
+
+## R0.5 — Plain column values
+
+Shared `ColumnValue` / `.ui-column-value` keeps dates/numbers as plain text with no pill padding or background. Pending/danger/muted tones use existing tokens. Status badges remain status badges; an amber expiry value now preserves its column's actual text edge.
