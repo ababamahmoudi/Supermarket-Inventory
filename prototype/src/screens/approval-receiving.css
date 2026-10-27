@@ -342,3 +342,21 @@
   block-size: 44px;
   min-block-size: 44px;
 }
+
+/* R2e A: measured case facts use the same editable field rhythm. */
+.receiving-case-weight-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  gap: 12px;
+  align-items: center;
+}
+.receiving-paper-mismatch {
+  background: var(--pending-bg);
+  color: var(--text);
+  border-radius: var(--radius-control);
+  padding: 12px;
+  margin-block: 12px;
+}
+.receiving-paper-mismatch p {
+  margin-block: 0 8px;
+}

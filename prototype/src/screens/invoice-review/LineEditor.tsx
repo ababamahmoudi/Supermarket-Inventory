@@ -1,3 +1,4 @@
+import { LineArithmetic } from "./LineArithmetic";
 import { ProductPrice } from "../../weight-price-presentation";
 import { useRef, useState } from "react";
 import Decimal from "decimal.js";
@@ -30,6 +31,7 @@ import {
   setInvoiceLineCategory,
   confirmInvoiceLineChecks,
   InvoiceLineConfirmationError,
+  acknowledgeInvoicePaperTotal,
 } from "../../invoice-checks";
 import {
   removeInvoiceLine,
@@ -41,7 +43,11 @@ import {
 import {
   setInvoiceWeightCost,
   setInvoiceWeightReceived,
-  selectInvoiceWeightUnit,
+  selectInvoiceLineUnit,
+  setInvoiceCaseWeight,
+  setInvoiceWeightCaseCost,
+  invoiceWeightDisplayedQuantity,
+  invoiceWeightDisplayedCost,
   invoiceLineAmount,
 } from "../../invoice-weight";
 import { clearInvoiceOrderLine } from "../../invoice-orders";
@@ -302,6 +308,8 @@ export function LineEditor({
             unit_cost_before_tax: "cost",
             case_cost_before_tax: "case-cost",
             units_per_case: "pack",
+            case_weight: "case-weight",
+            line_total: "line-total",
             date_value: "date",
           };
           document
@@ -355,6 +363,14 @@ export function LineEditor({
   } catch {
     /* Keep incomplete edits visible. */
   }
+  const weightCases =
+    line.sold_by === "weight" && line.quantity_unit === "cases";
+  const missingCaseWeight =
+    line.sold_by === "weight" &&
+    !!line.weight_case_quantity &&
+    (!line.case_weight ||
+      !/^\d+(?:\.\d+)?$/.test(line.case_weight) ||
+      new Decimal(line.case_weight).lte(0));
   let calculated = "";
   try {
     calculated = invoiceLineAmount(line);
@@ -730,19 +746,11 @@ export function LineEditor({
                       edit(
                         "quantity_unit",
                         (item) => {
-                          if (value === "kg" || value === "lb") {
-                            selectInvoiceWeightUnit(item, value, state.config);
-                            onQuantity(
-                              item,
-                              item.quantity_entered ?? item.qty_invoiced,
-                              value,
-                            );
-                          } else
-                            onQuantity(
-                              item,
-                              item.quantity_entered ?? item.qty_invoiced,
-                              value as "cases" | "units",
-                            );
+                          selectInvoiceLineUnit(
+                            item,
+                            value as "cases" | "units" | "kg" | "lb",
+                            state.config,
+                          );
                         },
                         true,
                       )
@@ -773,8 +781,9 @@ export function LineEditor({
                     min="0"
                     step={line.sold_by === "weight" ? "0.001" : "1"}
                     value={
-                      line.sold_by === "weight"
-                        ? (line.source_quantity ?? "")
+                      line.sold_by === "weight" &&
+                      line.quantity_unit !== "cases"
+                        ? invoiceWeightDisplayedQuantity(line)
                         : (line.quantity_entered ?? line.qty_invoiced)
                     }
                     onChange={(value) =>
@@ -791,6 +800,69 @@ export function LineEditor({
                     }
                   />
                 </Field>
+                {(weightCases || missingCaseWeight) && (
+                  <Field
+                    readingField="case_weight"
+                    label={t("Weight per case", "وزن هر کارتن")}
+                    error={
+                      missingCaseWeight
+                        ? t(
+                            "Enter the weight per case",
+                            "وزن هر کارتن را وارد کنید",
+                          )
+                        : undefined
+                    }
+                  >
+                    <div className="receiving-case-weight-controls">
+                      <NumberField
+                        keepTyping
+                        id={id("case-weight")}
+                        aria-label={t("Weight per case", "وزن هر کارتن")}
+                        min="0"
+                        step="0.001"
+                        value={line.case_weight ?? ""}
+                        onChange={(value) =>
+                          edit(
+                            "case_weight",
+                            (item) =>
+                              setInvoiceCaseWeight(
+                                item,
+                                value,
+                                item.case_weight_unit ?? "lb",
+                                state.config,
+                              ),
+                            true,
+                          )
+                        }
+                      />
+                      <Select
+                        id={id("case-weight-unit")}
+                        aria-label={t(
+                          "Weight per case unit",
+                          "واحد وزن هر کارتن",
+                        )}
+                        value={line.case_weight_unit ?? "lb"}
+                        options={[
+                          { value: "lb", label: t("lb", "پوند") },
+                          { value: "kg", label: t("kg", "کیلوگرم") },
+                        ]}
+                        onChange={(value) =>
+                          edit(
+                            "case_weight",
+                            (item) =>
+                              setInvoiceCaseWeight(
+                                item,
+                                item.case_weight ?? "",
+                                value as "lb" | "kg",
+                                state.config,
+                              ),
+                            true,
+                          )
+                        }
+                      />
+                    </div>
+                  </Field>
+                )}
                 {line.quantity_unit === "cases" &&
                   line.sold_by !== "weight" && (
                     <Field
@@ -843,7 +915,16 @@ export function LineEditor({
                     </Field>
                   )}
                 <Field
-                  label={t("Delivered", "تحویل‌شده")}
+                  label={
+                    weightCases
+                      ? t("Delivered (cases)", "تحویل‌شده (کارتن)")
+                      : line.sold_by === "weight"
+                        ? t(
+                            `Delivered (${line.source_quantity_unit ?? "lb"})`,
+                            `تحویل‌شده (${line.source_quantity_unit === "kg" ? "کیلوگرم" : "پوند"})`,
+                          )
+                        : t("Delivered", "تحویل‌شده")
+                  }
                   error={receivedError}
                 >
                   <NumberField
@@ -854,16 +935,30 @@ export function LineEditor({
                     min="0"
                     step={line.sold_by === "weight" ? "0.001" : "1"}
                     value={
-                      line.sold_by === "weight"
-                        ? (line.source_received_quantity ?? "")
-                        : line.qty_received_at_posting
+                      weightCases &&
+                      line.case_weight &&
+                      line.source_received_quantity
+                        ? new Decimal(line.source_received_quantity)
+                            .div(line.case_weight)
+                            .toString()
+                        : line.sold_by === "weight"
+                          ? (line.source_received_quantity ?? "")
+                          : line.qty_received_at_posting
                     }
                     onChange={(value) =>
                       edit(
                         "qty_received_at_posting",
                         (item) => {
                           if (item.sold_by === "weight")
-                            setInvoiceWeightReceived(item, value, state.config);
+                            setInvoiceWeightReceived(
+                              item,
+                              weightCases && item.case_weight
+                                ? new Decimal(value || 0)
+                                    .times(item.case_weight)
+                                    .toString()
+                                : value,
+                              state.config,
+                            );
                           else item.qty_received_at_posting = Number(value);
                         },
                         true,
@@ -891,6 +986,14 @@ export function LineEditor({
                         edit(
                           "case_cost_before_tax",
                           (item) => {
+                            if (item.sold_by === "weight") {
+                              setInvoiceWeightCaseCost(
+                                item,
+                                inputValue,
+                                state.config,
+                              );
+                              return;
+                            }
                             item.case_cost_before_tax = inputValue;
                             try {
                               item.unit_cost_before_tax = costPerUnit(
@@ -912,15 +1015,17 @@ export function LineEditor({
                   label={
                     line.sold_by === "weight"
                       ? t(
-                          `Cost per ${line.source_cost_unit ?? "lb"}`,
-                          `هزینه هر ${line.source_cost_unit === "kg" ? "کیلوگرم" : "پوند"}`,
+                          `Cost per ${line.quantity_unit === "kg" ? "kg" : line.quantity_unit === "lb" ? "lb" : (line.source_cost_unit ?? "lb")}`,
+                          `هزینه هر ${line.quantity_unit === "kg" || (weightCases && line.source_cost_unit === "kg") ? "کیلوگرم" : "پوند"}`,
                         )
                       : t("Unit cost", "هزینه واحد")
                   }
                   error={costError}
+                  hint={weightCases ? t("Calculated", "محاسبه‌شده") : undefined}
                 >
                   <BufferedInput
                     id={id("cost")}
+                    readOnly={weightCases}
                     aria-label={t(
                       "Unit cost before tax",
                       "هزینه هر واحد پیش از مالیات",
@@ -929,7 +1034,7 @@ export function LineEditor({
                     inputMode="decimal"
                     value={
                       line.sold_by === "weight"
-                        ? (line.source_cost_before_tax ?? "")
+                        ? invoiceWeightDisplayedCost(line)
                         : line.unit_cost_before_tax
                     }
                     onChange={(e) => {
@@ -941,7 +1046,7 @@ export function LineEditor({
                             setInvoiceWeightCost(
                               item,
                               inputValue,
-                              item.source_cost_unit ?? "lb",
+                              item.quantity_unit === "kg" ? "kg" : "lb",
                               state.config,
                             );
                           else {
@@ -975,10 +1080,23 @@ export function LineEditor({
                   />
                 </p>
               )}
+              <LineArithmetic
+                line={line}
+                edit={edit}
+                acknowledge={
+                  correction
+                    ? undefined
+                    : () => {
+                        void reviewUpdate((draft, actor) =>
+                          acknowledgeInvoicePaperTotal(draft, actor, index),
+                        );
+                      }
+                }
+              />
               <div className="receiving-printed-total">
                 <span>
                   {t("Line total on paper:", "جمع ردیف روی فاکتور:")}{" "}
-                  <Money value={line.line_total} />
+                  <Money value={line.paper_line_total ?? line.line_total} />
                   {calculated && calculated !== line.line_total && (
                     <>
                       {" "}
@@ -1019,6 +1137,8 @@ export function LineEditor({
                       const inputValue = e.currentTarget.value;
                       edit("line_total", (item) => {
                         item.line_total = inputValue;
+                        item.paper_line_total = inputValue;
+                        item.paper_total_acknowledgement = undefined;
                       });
                     }}
                   />

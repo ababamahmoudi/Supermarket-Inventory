@@ -1,3 +1,4 @@
+import { invoiceLineAmount, invoicePaperTotalMismatch } from "./invoice-weight";
 import Decimal from "decimal.js";
 import { createId } from "./ids";
 import { costPerUnit, packUnits } from "./supplier-items";
@@ -111,6 +112,7 @@ const reviewableInvoiceFields = new Set([
   "units_per_case",
   "unit_cost_before_tax",
   "case_cost_before_tax",
+  "case_weight",
   "line_total",
   "pricing_category",
   "date_value",
@@ -418,12 +420,68 @@ export function confirmInvoiceLineChecks(
         "Check that the case cost matches the unit cost and units per case.",
       );
   }
+  if (invoicePaperTotalMismatch(line))
+    throw new InvoiceLineConfirmationError(
+      "line_total",
+      "Check the line arithmetic against the paper total, or acknowledge that the paper total is wrong.",
+    );
   for (const field of [...(line.low_confidence_fields ?? [])])
     acknowledgeRecordCheck(line, actor.user_id, field);
   line.low_confidence_fields = [];
   line.taxable_inferred = false;
   line.review_confirmed = true;
   line.review_changed_after_confirmation = false;
+}
+
+/** A distinct decision; ordinary Confirm must not silently waive a money mismatch. */
+export function acknowledgeInvoicePaperTotal(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  lineIndex: number,
+): void {
+  requireInvoiceAuthority(
+    state,
+    actor,
+    "invoices.edit",
+    state.invoice.id,
+    true,
+  );
+  const line = state.invoice.lines[lineIndex];
+  if (
+    !line ||
+    state.invoice.status === "posted" ||
+    !invoicePaperTotalMismatch(line)
+  )
+    throw new Error("Choose a draft line with a paper total difference.");
+  line.paper_total_acknowledgement = {
+    paper: line.paper_line_total!,
+    calculated: invoiceLineAmount(line),
+    checked_by_user_id: actor.user_id,
+    checked_at: new Date().toISOString(),
+  };
+  acknowledgeRecordCheck(line, actor.user_id, "line_total");
+  line.review_confirmed = false;
+  state.activity.push({
+    id: createId("invoice-paper-total"),
+    company_id: state.invoice.company_id,
+    branch: state.invoice.branch,
+    action: "Invoice paper total acknowledged as wrong",
+    by: actor.username,
+    actor_user_id: actor.user_id,
+    actor_username: actor.username,
+    actor_role_snapshot: actor.role,
+    at: line.paper_total_acknowledgement.checked_at,
+    reversible: false,
+    entity_type: "invoice",
+    entity_id: state.invoice.id,
+    after: {
+      line_id: line.id,
+      line_index: lineIndex,
+      paper_total_acknowledgement: structuredClone(
+        line.paper_total_acknowledgement,
+      ),
+    },
+  });
 }
 
 /** Complete supported missing-paper combinations; provenance is quiet, never an invented AI question. */
