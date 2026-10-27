@@ -92,6 +92,13 @@
   --font-size-lookup-price: 3.75rem;
   --line-height-lookup-price: 3.75rem;
   --font-weight-lookup-price: 800;
+  /* Approved R2f price hierarchies share tokens across their real screens. */
+  --font-size-approval-value: 1.0625rem;
+  --font-size-approval-price: 1.625rem;
+  --line-height-approval-value: 1.2;
+  --font-size-weight-lookup-price: 2.25rem;
+  --line-height-weight-lookup-price: 2.475rem;
+  --font-size-weight-lookup-unit: 1.125rem;
   --page: var(--klead-page);
   --surface-topbar: color-mix(in srgb, var(--page) 85%, var(--color-clear));
   --sidebar: var(--klead-surface);

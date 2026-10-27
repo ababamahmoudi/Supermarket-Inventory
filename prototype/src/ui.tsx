@@ -1343,6 +1343,49 @@ export function useListFilterOrigin(list: string) {
   };
 }
 
+/** Labels, differently sized values and notes share three grid tracks. */
+export function NumberGroup({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return <div {...props} className={cn("ui-number-group", className)} />;
+}
+export function NumberStat({
+  label,
+  value,
+  note,
+  column,
+  className,
+  style,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & {
+  label: ReactNode;
+  value: ReactNode;
+  note?: ReactNode;
+  column?: number;
+}) {
+  return (
+    <div
+      {...props}
+      className={cn("ui-number-stat", className)}
+      style={
+        {
+          ...style,
+          ...(column === undefined ? {} : { "--number-column": column }),
+        } as CSSProperties
+      }
+    >
+      <span className="ui-number-label">{label}</span>
+      <strong className="ui-number-value" data-number-baseline>
+        {value}
+      </strong>
+      <small className="ui-number-note">
+        {note ?? <span aria-hidden="true">&nbsp;</span>}
+      </small>
+    </div>
+  );
+}
+
 /** Peer controls share a height and centre; labelled field rows can bottom-align. */
 export function ControlRow({
   children,

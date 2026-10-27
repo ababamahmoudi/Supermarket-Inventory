@@ -1460,3 +1460,41 @@
     padding-inline-end: var(--table-edge-padding);
   }
 }
+
+/* R2f R0.3 — one shared label/value/note baseline grid. */
+.ui-number-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto auto;
+  column-gap: 20px;
+  row-gap: 0;
+  min-inline-size: 0;
+}
+.ui-number-stat {
+  display: contents;
+}
+.ui-number-stat > :is(.ui-number-label, .ui-number-value, .ui-number-note) {
+  grid-column: var(--number-column, auto);
+  min-inline-size: 0;
+  margin: 0;
+}
+.ui-number-label {
+  grid-row: 1;
+  align-self: end;
+  padding-block-end: 2px;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+}
+.ui-number-value {
+  grid-row: 2;
+  align-self: baseline;
+  font-size: var(--font-size-approval-value);
+  line-height: var(--line-height-approval-value);
+  font-variant-numeric: tabular-nums;
+}
+.ui-number-note {
+  grid-row: 3;
+  align-self: start;
+  padding-block-start: 2px;
+  font-size: var(--font-size-caption);
+}

@@ -7,3 +7,7 @@ Shared `ControlRow` / `.ui-control-row` arranges peer page controls on one centr
 ## R0.2 — Card and table edges
 
 Shared outer table padding is zero; the existing 12 px inner padding still separates columns by 24 px. First/last text and row rules meet the same card-content edges as the title/filter row. The same edge rule covers dedicated receiving/posted/batch tables. Numeric captions retain the shared logical end alignment and zero-padding sort buttons from R2e B1.
+
+## R0.3 — Number baselines
+
+`NumberGroup` / `.ui-number-group` owns three shared tracks: label, value and note. `NumberStat` uses display contents so differently sized values align on the same parent-grid baseline; optional column placement supports the approved arrow/divider layout. A quiet empty note preserves the common note track. Approved reusable typography tokens capture the 17/26 px approval values and 36/18 px weight Lookup hierarchy; existing ordinary Lookup typography is unchanged.
