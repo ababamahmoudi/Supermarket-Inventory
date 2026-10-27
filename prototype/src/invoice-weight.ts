@@ -30,6 +30,16 @@ export function invoiceLineCalculation(
     : calculatePrice(line.unit_cost_before_tax, category, config);
 }
 
+function hasValidCaseWeight(line: InvoiceEditableLine): boolean {
+  try {
+    return Boolean(
+      line.case_weight_unit && validateWeightQuantity(line.case_weight ?? ""),
+    );
+  } catch {
+    return false;
+  }
+}
+
 function caseCostFromWeight(
   line: InvoiceEditableLine,
   cost = line.source_cost_before_tax ?? "",
@@ -377,6 +387,11 @@ export function setInvoiceCaseWeight(
   try {
     validateWeightQuantity(weight);
     validateWeightQuantity(cases);
+    if (
+      line.case_cost_before_tax === undefined &&
+      /^\d+(?:\.\d{1,4})?$/.test(line.source_cost_before_tax ?? "")
+    )
+      line.case_cost_before_tax = caseCostFromWeight(line);
     if (!/^\d+(?:\.\d{1,4})?$/.test(line.case_cost_before_tax ?? ""))
       throw new Error("cost");
     line.source_cost_before_tax = new Decimal(line.case_cost_before_tax!)
@@ -399,10 +414,18 @@ export function setInvoiceCaseWeight(
           ? line.source_quantity
           : "";
     line.sold_by = "weight";
-    refreshInvoiceWeight(line, config);
+    if (line.source_received_quantity === "") {
+      // Derive valid invoice facts without inventing a persisted physical receipt.
+      line.source_received_quantity = "0";
+      refreshInvoiceWeight(line, config);
+      line.source_received_quantity = "";
+      line.qty_received_at_posting = -1;
+      line.weight_case_received_quantity = undefined;
+    } else refreshInvoiceWeight(line, config);
   } catch {
     line.source_quantity = "";
-    line.source_cost_before_tax = "";
+    if (line.case_cost_before_tax !== undefined)
+      line.source_cost_before_tax = "";
     line.source_received_quantity = "";
     line.unit_cost_before_tax = "";
     line.qty_invoiced = 0;
@@ -477,7 +500,36 @@ export function selectInvoiceLineUnit(
   let cases: Decimal;
   let deliveredCases: Decimal | undefined;
   if (line.sold_by === "weight") {
-    if (!line.case_weight || !line.case_weight_unit) {
+    if (
+      !line.case_weight ||
+      !line.case_weight_unit ||
+      !hasValidCaseWeight(line)
+    ) {
+      if (
+        line.weight_case_quantity &&
+        /^\d+(?:\.\d{1,4})?$/.test(line.case_cost_before_tax ?? "") &&
+        Number.isSafeInteger(pack) &&
+        pack > 0
+      ) {
+        // Cancelling a weight choice restores known package counts and money, without needing a mass.
+        line.sold_by = "each";
+        line.quantity_unit = "cases";
+        line.quantity_entered = line.weight_case_quantity;
+        line.qty_invoiced = new Decimal(line.weight_case_quantity)
+          .times(pack)
+          .toNumber();
+        line.qty_received_at_posting =
+          line.weight_case_received_quantity !== undefined
+            ? new Decimal(line.weight_case_received_quantity)
+                .times(pack)
+                .toNumber()
+            : -1;
+        line.unit_cost_before_tax = new Decimal(line.case_cost_before_tax!)
+          .div(pack)
+          .toFixed(4);
+        selectInvoiceLineUnit(line, unit, config);
+        return;
+      }
       line.quantity_unit = "cases";
       line.quantity_entered = line.weight_case_quantity ?? "";
       return;

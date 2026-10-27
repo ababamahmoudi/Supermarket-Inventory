@@ -14,6 +14,8 @@ import {
   setInvoiceCaseWeight,
   setInvoiceWeightCaseCost,
   setInvoiceWeightCost,
+  setInvoiceWeightQuantity,
+  setInvoiceWeightReceived,
 } from "./invoice-weight";
 import {
   validInvoiceLineQuantity,
@@ -132,6 +134,60 @@ describe("R2e A measured weight cases preserve money", () => {
       unit_cost_before_tax: "2.5000",
       line_total: "100.00",
     });
+  });
+  it("can cancel an unknown-mass weight choice without losing original cases, cost or a partial receipt", () => {
+    const { state, line } = example("Unknown case mass");
+    line.qty_received_at_posting = 2;
+    selectInvoiceLineUnit(line, "kg", state.config);
+    expect(validInvoiceLineQuantity(line)).toBe(false);
+    selectInvoiceLineUnit(line, "units", state.config);
+    expect(line).toMatchObject({
+      sold_by: "each",
+      quantity_unit: "units",
+      qty_invoiced: 4,
+      qty_received_at_posting: 2,
+      unit_cost_before_tax: "25.0000",
+      line_total: "100.00",
+    });
+    selectInvoiceLineUnit(line, "cases", state.config);
+    expect(line).toMatchObject({
+      quantity_entered: "4",
+      case_cost_before_tax: "25.0000",
+      line_total: "100.00",
+    });
+  });
+  it("derives a native weight line's case quote after mass is supplied, while requiring an explicit unresolved delivered quantity", () => {
+    const state = initialState();
+    const line = mapReadingLine(
+      state,
+      undefined,
+      {
+        description: "Fictional loose seed",
+        unit: "kg",
+        quantity: "10",
+        unit_cost_before_tax: "11.0000",
+        cost_basis: "kg",
+        line_total: "110.00",
+        taxable: false,
+      },
+      0,
+    );
+    line.source_received_quantity = "5";
+    line.qty_received_at_posting = 11.0231;
+    selectInvoiceLineUnit(line, "cases", state.config);
+    setInvoiceWeightQuantity(line, "2", "cases", state.config);
+    setInvoiceCaseWeight(line, "5", "kg", state.config);
+    expect(line).toMatchObject({
+      quantity_entered: "2",
+      case_cost_before_tax: "55.00",
+      source_cost_before_tax: "11.0000",
+      source_quantity: "10",
+      line_total: "110.00",
+    });
+    expect(validInvoiceLineReceived(line)).toBe(false);
+    setInvoiceWeightReceived(line, "5", state.config);
+    expect(validInvoiceLineReceived(line)).toBe(true);
+    expect(line.qty_received_at_posting).toBe(11.0231);
   });
   it("preserves exact case cents when division repeats, including after a case-cost edit", () => {
     const { state, line } = example("3 lb/CASE", "1.0000", "100");
