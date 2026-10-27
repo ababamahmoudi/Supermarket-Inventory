@@ -1,3 +1,7 @@
+import {
+  lookupProductSignals,
+  type LookupProductSignals,
+} from "../lookup-signals";
 import "../c3-tables.css";
 import {
   editAndApproveProduct,
@@ -2779,9 +2783,11 @@ function LookupOtherPrices({
 function LookupProductDetail({
   product,
   facts,
+  signals,
 }: {
   product: Product;
   facts?: LookupBranchProduct;
+  signals?: LookupProductSignals;
 }) {
   const { state, branch, t, lang } = useDemo();
   const approved = branch === "all" ? null : (facts?.price ?? null);
@@ -2849,6 +2855,11 @@ function LookupProductDetail({
                 </p>
               )}
               <div className="lookup-price-context">
+                {signals?.expiringSoon && (
+                  <Badge tone="pending">
+                    {t("Expiring soon", "به‌زودی منقضی")}
+                  </Badge>
+                )}
                 {approved && sale && (
                   <Badge tone="info" className="sale-pill">
                     {t("Sale", "حراج")}
@@ -2984,6 +2995,15 @@ export function Lookup() {
       actor.branch === "all" ? [] : lookupBranchCatalog(canonical, actor),
   );
   const factsByCode = new Map(branchFacts.data?.map((row) => [row.code, row]));
+  const signalQuery = useCatalogQuery(
+    "lookup.read",
+    { company_id: state.config.company.seed_key, kind: "company_shared" },
+    "lookup-public-signals",
+    (canonical, actor) => lookupProductSignals(canonical, actor),
+  );
+  const signalsByCode = new Map(
+    signalQuery.data?.map((row) => [row.code, row]),
+  );
   const [selectedCode, setSelectedCode] = useState("");
   const [activeCode, setActiveCode] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
@@ -3002,6 +3022,7 @@ export function Lookup() {
       filters,
       factsByCode.get(product.code),
       branch === "all",
+      signalsByCode.get(product.code),
     ),
   );
   const hereResults =
@@ -3160,6 +3181,29 @@ export function Lookup() {
                 })),
               ]}
             />
+            {(
+              [
+                ["onOffer", t("On offer", "دارای پیشنهاد")],
+                ["expiringSoon", t("Expiring soon", "به‌زودی منقضی")],
+                ["arrivedToday", t("Arrived today", "رسیده امروز")],
+                [
+                  "priceChangedRecently",
+                  t("Price changed recently", "قیمت به‌تازگی تغییر کرده"),
+                ],
+              ] as const
+            ).map(([key, label]) => (
+              <FilterChip
+                key={key}
+                checked={Boolean(filters[key])}
+                onChange={(value) => {
+                  setFilters((current) => ({ ...current, [key]: value }));
+                  setSelectedCode("");
+                  setActiveCode("");
+                }}
+              >
+                {label}
+              </FilterChip>
+            ))}
             <FilterChip
               checked={filters.taxable}
               onChange={(value) => {
@@ -3246,18 +3290,22 @@ export function Lookup() {
             category ||
             filters.pricingCategory ||
             filters.taxable ||
-            filters.unapproved) && (
+            filters.unapproved ||
+            filters.onOffer ||
+            filters.expiringSoon ||
+            filters.arrivedToday ||
+            filters.priceChangedRecently) && (
             <Button variant="ghost" onClick={clearSearch}>
               {t("Clear filters", "پاک کردن فیلترها")}
             </Button>
           )}
         </div>
       </div>
-      {branch !== "all" && !branchFacts.ready ? (
+      {(branch !== "all" && !branchFacts.ready) || !signalQuery.ready ? (
         <p className="muted" role="status">
           {t("Loading location products…", "در حال دریافت محصولات مکان…")}
         </p>
-      ) : branchFacts.error ? (
+      ) : branchFacts.error || signalQuery.error ? (
         <p role="alert">
           {t(
             "Location products are unavailable. Try again.",
@@ -3296,6 +3344,7 @@ export function Lookup() {
           <LookupProductDetail
             product={selected}
             facts={factsByCode.get(selected.code)}
+            signals={signalsByCode.get(selected.code)}
           />
           <Card
             title={t("Search results", "نتایج جست‌وجو")}
@@ -3437,6 +3486,12 @@ export function Lookup() {
                                     product={product}
                                     empty={false}
                                   />
+                                )}
+                                {signalsByCode.get(product.code)
+                                  ?.expiringSoon && (
+                                  <Badge tone="pending">
+                                    {t("Expiring soon", "به‌زودی منقضی")}
+                                  </Badge>
                                 )}
                                 {taxable && (
                                   <small className="muted">

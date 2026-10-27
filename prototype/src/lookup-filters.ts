@@ -1,3 +1,4 @@
+import type { LookupProductSignals } from "./lookup-signals";
 import type { CompanyConfig } from "./types";
 import type { ProductReadDTO } from "./catalog-read-model";
 import type { LookupBranchProduct } from "./lookup-branch";
@@ -7,12 +8,20 @@ export interface LookupFilters {
   pricingCategory: string;
   taxable: boolean;
   unapproved: boolean;
+  onOffer?: boolean;
+  expiringSoon?: boolean;
+  arrivedToday?: boolean;
+  priceChangedRecently?: boolean;
 }
 export const emptyLookupFilters: LookupFilters = {
   category: "",
   pricingCategory: "",
   taxable: false,
   unapproved: false,
+  onOffer: false,
+  expiringSoon: false,
+  arrivedToday: false,
+  priceChangedRecently: false,
 };
 
 export function lookupTaxable(
@@ -31,8 +40,13 @@ export function matchesLookupFilters(
   filters: LookupFilters,
   facts: LookupBranchProduct | undefined,
   allLocations: boolean,
+  signals?: LookupProductSignals,
 ) {
   return (
+    (!filters.onOffer || signals?.onOffer === true) &&
+    (!filters.expiringSoon || signals?.expiringSoon === true) &&
+    (!filters.arrivedToday || signals?.arrivedToday === true) &&
+    (!filters.priceChangedRecently || signals?.priceChangedRecently === true) &&
     (!filters.category || product.ai_category === filters.category) &&
     (!filters.pricingCategory ||
       product.pricing_category === filters.pricingCategory) &&
