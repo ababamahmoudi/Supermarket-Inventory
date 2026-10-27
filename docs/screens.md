@@ -400,3 +400,7 @@ The invoice review header says “Read by AI · imported file” without model i
 ## R2e C2 — One invoice entry path
 
 Invoices has one New invoice action opening the existing Photo / PDF / Manual entry / JSON dialog. Draft and fallback lists have no legacy inline Upload / Manual entry card. Queue progress uses the compact “0/6 confirmed · 3 to check” form inside its own column; text wraps only within that cell. Consecutive invoice cards retain the normal gap.
+
+## R2e C3 — Posted invoice numeric columns
+
+Posted invoice Quantity, Unit cost and Line total explicitly share the numeric alignment contract with their column headers. The shared table alignment and spacing rules apply to settled posted evidence as well as the review table; quantities and monetary evidence retain their original values.

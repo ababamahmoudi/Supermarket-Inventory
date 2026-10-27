@@ -450,12 +450,18 @@ export function PostedInvoice({
               </colgroup>
               <thead>
                 <tr>
-                  <th>{t("Product", "کالا")}</th>
-                  <th className="numeric">{t("Quantity", "تعداد")}</th>
-                  <th className="numeric">{t("Unit cost", "هزینه واحد")}</th>
-                  <th className="numeric">{t("Line total", "جمع ردیف")}</th>
+                  <th scope="col">{t("Product", "کالا")}</th>
+                  <th scope="col" className="numeric">
+                    {t("Quantity", "تعداد")}
+                  </th>
+                  <th scope="col" className="numeric">
+                    {t("Unit cost", "هزینه واحد")}
+                  </th>
+                  <th scope="col" className="numeric">
+                    {t("Line total", "جمع ردیف")}
+                  </th>
                   {hasTrackedDates && (
-                    <th>{t("Tracked date", "تاریخ پیگیری‌شده")}</th>
+                    <th scope="col">{t("Tracked date", "تاریخ پیگیری‌شده")}</th>
                   )}
                 </tr>
               </thead>
@@ -584,7 +590,7 @@ export function PostedInvoice({
                           )}
                         </div>
                       </td>
-                      <td className="receiving-quantity-cell">
+                      <td className="numeric receiving-quantity-cell">
                         <InvoiceQuantity line={line} />
                         {(short.quantity > 0 || refusedLine.quantity > 0) && (
                           <p className="muted">
