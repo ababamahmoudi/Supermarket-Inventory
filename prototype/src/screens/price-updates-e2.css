@@ -37,14 +37,14 @@
   justify-content: flex-end;
   gap: 8px;
 }
-@container (min-width: 880px) {
+@container (min-width: 1060px) {
   .price-updates-table-header,
   .price-updates-row {
     display: grid;
     grid-template-columns:
-      28px minmax(140px, 1.3fr) minmax(90px, 0.8fr) minmax(128px, 1fr)
-      minmax(140px, 1.4fr) minmax(150px, 1fr) 160px;
-    gap: 12px 20px;
+      28px minmax(140px, 1.3fr) minmax(80px, 0.8fr) minmax(128px, 1fr)
+      minmax(128px, 1.4fr) minmax(104px, 1fr) 160px;
+    gap: 12px 24px;
     padding-inline: 16px;
   }
   .price-updates-table-header {

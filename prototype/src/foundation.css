@@ -1210,7 +1210,8 @@
     text-align: end;
   }
   :root .ui-data-table .table-header-label {
-    min-inline-size: 0;
+    flex: 0 0 auto;
+    min-inline-size: max-content;
   }
   :root .ui-data-table .table-sort-indicator {
     flex: 0 0 auto;

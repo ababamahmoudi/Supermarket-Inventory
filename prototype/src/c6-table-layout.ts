@@ -68,6 +68,12 @@ export function tableResponsiveDefinition(
   const rank = tablePriorities[table]?.indexOf(column.key) ?? -1;
   return {
     ...column,
+    // Reserve the full Product Code caption plus its sort indicator and 24px
+    // cell padding, including the existing comfortable text-size option.
+    minWidth:
+      column.key === "code" && !column.fixedWidth
+        ? Math.max(128, column.minWidth ?? 0)
+        : column.minWidth,
     priority:
       column.priority ??
       (column.actions ? 2 : rank < 0 ? index + 20 : rank + 1),

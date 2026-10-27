@@ -1,6 +1,7 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { signIn, setLanguage, chooseOption } from "./helpers";
+import { signIn, setLanguage, chooseOption, openShellAction } from "./helpers";
 import { fileURLToPath } from "node:url";
+import { inspectResponsiveLayout } from "../scripts/c6-layout-proof.mjs";
 import {
   importReceivingFixture,
   openReceivingLine,
@@ -85,6 +86,8 @@ for (const lang of ["en", "fa"] as const) {
     await page.setViewportSize({ width: 1440, height: 1080 });
     await signIn(page, "Manager");
     await setLanguage(page, lang);
+    if (lang === "fa")
+      await (await openShellAction(page, "تغییر به تم تیره")).click();
     const checked: Record<string, number> = {};
     for (const route of [
       "products",
@@ -111,6 +114,50 @@ for (const lang of ["en", "fa"] as const) {
         const result = await numericEdges(table);
         checked[`${route}-${index}`] = result.checked;
         expect(result.errors, `${route}/${index}`).toEqual([]);
+        if (route === "products") {
+          for (const key of ["price", "code"]) {
+            const sort = table.locator(
+              `thead th[data-column-key="${key}"] button`,
+            );
+            for (let click = 0; click < 2; click++) {
+              await sort.click();
+              expect(
+                (await numericEdges(table)).errors,
+                `${key} sorted`,
+              ).toEqual([]);
+            }
+          }
+          expect(
+            (
+              await inspectResponsiveLayout(
+                page,
+                "R2e sorted Product Code",
+                lang,
+                1440,
+              )
+            ).failures,
+          ).toEqual([]);
+          const caption = table.locator(
+            'thead th[data-column-key="price"] .table-header-label',
+          );
+          const oldStyle = await caption.getAttribute("style");
+          await caption.evaluate((node) => {
+            (node as HTMLElement).style.transform = "translateX(4px)";
+          });
+          expect(
+            (await numericEdges(table)).errors.some((error) =>
+              error.includes("4.00px"),
+            ),
+          ).toBe(true);
+          await caption.evaluate(
+            (node, oldStyle) =>
+              oldStyle === null
+                ? node.removeAttribute("style")
+                : node.setAttribute("style", oldStyle),
+            oldStyle,
+          );
+          expect((await numericEdges(table)).errors).toEqual([]);
+        }
       }
     }
     const source = fileURLToPath(
@@ -222,6 +269,26 @@ for (const lang of ["en", "fa"] as const) {
     expect(priceEdges.length).toBeGreaterThan(0);
     expect(Math.max(...priceEdges)).toBeLessThanOrEqual(1);
     checked.priceUpdates = priceEdges.length;
+    const spacing = await page
+      .locator(".price-updates-list")
+      .evaluate((list) => {
+        const price = list.querySelector<HTMLElement>(
+          ".price-updates-price-heading",
+        )!;
+        const why = price.nextElementSibling!;
+        const range = document.createRange();
+        range.selectNodeContents(price);
+        const p = range.getBoundingClientRect();
+        range.selectNodeContents(why);
+        const w = range.getBoundingClientRect();
+        const rtl = getComputedStyle(price).direction === "rtl";
+        return {
+          gap: rtl ? p.left - w.right : w.left - p.right,
+          overflow: list.scrollWidth - list.clientWidth,
+        };
+      });
+    expect(spacing.gap).toBeGreaterThanOrEqual(24);
+    expect(spacing.overflow).toBeLessThanOrEqual(1);
     for (const family of [
       "products",
       "labels",
