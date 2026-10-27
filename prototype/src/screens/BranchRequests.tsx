@@ -139,6 +139,7 @@ export function RequestPickingList({
 }) {
   return (
     <OperationalPrintDocument
+      branding={config.branding}
       title_en="Picking list"
       title_fa="فهرست آماده‌سازی"
       company_name={

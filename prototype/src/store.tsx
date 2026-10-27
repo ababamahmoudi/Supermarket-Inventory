@@ -1,3 +1,4 @@
+import { makerPageTitle, synchronizeMakerIcons } from "./maker-branding";
 import {
   createContext,
   useCallback,
@@ -401,13 +402,18 @@ export function DemoProvider({
     }
     document.documentElement.dataset.textSize =
       activePreferences.comfortableText ? "comfortable" : "default";
-    const company = snapshot.view.config.company;
-    document.title = `${lang === "fa" ? company.name_fa : company.name_en} · ${translate("Demo", "دمو", lang)}`;
+    const publicBranding = {
+      company: snapshot.view.config.company,
+      branding: snapshot.view.config.branding,
+    };
+    document.title = makerPageTitle(publicBranding, lang);
+    synchronizeMakerIcons(publicBranding, document);
   }, [
     lang,
     activePreferences.theme,
     activePreferences.comfortableText,
     snapshot.view.config.company,
+    snapshot.view.config.branding,
     snapshot.stage,
     snapshot.actor,
   ]);

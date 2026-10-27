@@ -1,10 +1,11 @@
+import { StaffPrintMaker } from "../MakerBrand";
 import { createPortal } from "react-dom";
 import { branchLabel } from "../settings";
 import type { CompanyConfig } from "../types";
 import type { TimesheetDayRead, TimesheetWeekRead } from "../timesheets";
 import "./timesheet-print.css";
 
-type Config = Pick<CompanyConfig, "company" | "branches">;
+type Config = Pick<CompanyConfig, "company" | "branches" | "branding">;
 function Header({
   config,
   branch,
@@ -169,7 +170,7 @@ function DayPaper({
           ))}
         </section>
       </div>
-      <footer>Made with Klead</footer>
+      <StaffPrintMaker config={config} bilingual />
     </article>
   );
 }
@@ -266,7 +267,7 @@ function WeekPaper({
           </tr>
         </tfoot>
       </table>
-      <footer>Made with Klead</footer>
+      <StaffPrintMaker config={config} bilingual />
     </article>
   );
 }

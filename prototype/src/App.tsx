@@ -1,3 +1,4 @@
+import { PoweredByMaker } from "./MakerBrand";
 import PwaMenu from "./PwaMenu";
 import { CollapsedNavTooltip } from "./CollapsedNavTooltip";
 import { InitialSessionLoading, SessionProgress } from "./SessionProgress.c9";
@@ -537,7 +538,7 @@ function SignIn() {
   );
 }
 function AuthLayout({ children }: { children: ReactNode }) {
-  const { state, t } = useDemo();
+  const { state, t, lang } = useDemo();
   return (
     <div className="signin-page">
       <div className="signin-language">
@@ -558,6 +559,7 @@ function AuthLayout({ children }: { children: ReactNode }) {
           </span>
         </span>
         {children}
+        <PoweredByMaker config={state.config} language={lang} />
       </Card>
     </div>
   );

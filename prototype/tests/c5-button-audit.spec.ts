@@ -160,6 +160,7 @@ test("C5 button contract covers working Settings groups and their dialogs", asyn
       "Notifications",
       "Modules",
       "Data",
+      "About",
     ]) {
       await navigation
         .getByRole("button", { name: group, exact: true })

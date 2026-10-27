@@ -1,3 +1,4 @@
+import { StaffPrintMaker } from "../MakerBrand";
 import { payablesBoard } from "../payables-board";
 import { useProtectedQuery } from "../use-protected-query";
 import { domainScope } from "../domain-authority";
@@ -1826,6 +1827,7 @@ function PayablesContent({
                 </p>
               </Card>
             )}
+            <StaffPrintMaker config={state.config} language={lang} printOnly />
           </section>
         </>
       )}

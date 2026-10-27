@@ -459,3 +459,9 @@ A package is a normal company-scoped Product. `package_of_product_id` retains th
 The additive `prototype_r2e_package_schema` migration verifies an exact restorable private backup before adding only missing weighed-item settings. It never adds demo packages or rewrites existing products, names, barcodes, approved prices or custom settings.
 
 R2e D2 package barcodes use a configurable two-digit restricted-circulation prefix in 20–29 (default 20), then the zero-padded ten-digit Product Code, followed by the EAN-13 check digit. Manufacturer GTIN-8, UPC-A/GTIN-12, GTIN-13 and GTIN-14 identifiers are accepted after check-digit and same-company uniqueness checks; their printed form is retained, and zero-padding to a GTIN-14 identity prevents UPC/EAN aliases from bypassing uniqueness. The price is never encoded, and subsequent price changes retain the barcode. Invalid prefixes and exhausted ten-digit codes fail rather than wrap or reuse an identity.
+
+## R2e E — Public maker configuration
+
+Optional company configuration `branding` contains `maker` (null or `{name, enabled, logo_file, logo_dark_file, mark_file, favicon_file, icon_192_file, icon_512_file}`) and `maker_support` (empty by default). These are public presentation values in signed-out and authorized operational configuration projections. They grant no permissions and contain no credentials. Store identity and store palette remain under `company`; maker identity does not replace them. Missing branding on a retained store reads the seed defaults without persisting a mutation. Explicit maker null/disabled remains authoritative. Supplier order print snapshots include only the additional public branding config.
+
+Maker file ownership is explicit in `maker.asset_identity` (default Klead). Replacing only `maker.name` suppresses inherited logos/icons rather than displaying another maker's lettering; supply replacement files with the matching asset identity, or a complete new maker block.

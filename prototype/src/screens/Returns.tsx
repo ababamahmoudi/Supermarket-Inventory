@@ -730,6 +730,7 @@ function ReturnsContent() {
         {memo && (
           <>
             <ReturnMemoPreview
+              config={state.config}
               memo={memo}
               language={lang}
               documentLanguage={
@@ -788,6 +789,7 @@ function ReturnsContent() {
                   );
                   printDocument(
                     <ReturnMemoDocument
+                      config={state.config}
                       memo={freshMemo}
                       language={lang}
                       documentLanguage={

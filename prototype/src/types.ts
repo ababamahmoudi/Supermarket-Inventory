@@ -35,6 +35,7 @@ import type {
   PriceUpdatesSettings,
   NotificationSettings,
 } from "./price-updates";
+import type { MakerBranding } from "./maker-branding";
 import type { RoleDefinition } from "./role-config";
 import type { NoteEngagement } from "./note-engagement";
 export type Role = RoleId;
@@ -58,7 +59,9 @@ export type CompanyConfig = Omit<
   | "invoices"
   | "timesheets"
   | "modules"
+  | "branding"
 > & {
+  branding?: MakerBranding;
   invoices: Omit<typeof configSeed.invoices, "delivery_window"> & {
     delivery_window?: { start: string; end: string };
   };

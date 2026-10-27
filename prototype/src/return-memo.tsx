@@ -1,3 +1,5 @@
+import { StaffPrintMaker } from "./MakerBrand";
+import type { MakerConfig } from "./maker-branding";
 import { BilingualPrintText } from "./operational-print";
 import { formatMoney } from "./formatters";
 import type { ReturnMemoRead } from "./return-projections";
@@ -10,10 +12,12 @@ export function ReturnMemoPreview({
   memo,
   language,
   documentLanguage,
+  config = {},
 }: {
   memo: ReturnMemoRead;
   language: Language;
   documentLanguage?: "en" | "bilingual";
+  config?: MakerConfig;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
   const paper = useRef<HTMLDivElement>(null);
@@ -71,6 +75,7 @@ export function ReturnMemoPreview({
             memo={memo}
             language={language}
             documentLanguage={documentLanguage}
+            config={config}
           />
         </div>
       </div>
@@ -82,10 +87,12 @@ export function ReturnMemoDocument({
   memo,
   language,
   documentLanguage,
+  config = {},
 }: {
   memo: ReturnMemoRead;
   language: Language;
   documentLanguage?: "en" | "bilingual";
+  config?: MakerConfig;
 }) {
   const bilingual =
     (documentLanguage ?? memo.document_language ?? "en") === "bilingual";
@@ -231,6 +238,11 @@ export function ReturnMemoDocument({
           "اعتبار مورد انتظار یک ادعای در انتظار است، نه یادداشت اعتبار تأمین‌کننده.",
         )}
       </p>
+      <StaffPrintMaker
+        config={config}
+        language={bilingual ? language : "en"}
+        bilingual={bilingual}
+      />
     </article>
   );
 }

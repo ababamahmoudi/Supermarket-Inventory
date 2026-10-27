@@ -12,7 +12,7 @@ async function open(page: Page) {
   await visitPage(page, "Settings");
 }
 
-test("Settings presents the exact 13 authorized groups and unfinished groups cannot save", async ({
+test("Settings presents the exact 14 authorized groups and unfinished groups cannot save", async ({
   page,
 }) => {
   await open(page);
@@ -34,6 +34,7 @@ test("Settings presents the exact 13 authorized groups and unfinished groups can
     "Notifications",
     "Modules",
     "Data",
+    "About",
   ]);
   // E1 implements People, E2 Notifications, and R1 Data. The remaining
   // planned groups retain their original no-save/no-input guarantees.

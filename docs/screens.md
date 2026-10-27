@@ -444,3 +444,7 @@ Return header actions centre with the title. Item locations use their configured
 ### R2e C11 — Lookup quick filters
 
 Lookup combines remembered On offer, Expiring soon, Arrived today and Price changed recently chips with Taxable, Not approved here yet and category choices. Expiring soon appears beside offer facts in the current branch's result and product card. A protected query returns only public booleans from permitted current locations, never receipt/decision identities or private cost evidence. Aggregate selection combines authorized locations without choosing one implicitly.
+
+## R2e E — Maker surfaces
+
+Sign-in/lock retain the store logo and form, with a quiet Powered by maker line under the form. Settings → About is the final settings item: configured store app name, package version, Made by maker/logo and nonempty configured support. Theme changes select the supplied full white logo in dark mode. The browser title uses Store · Maker in the current UI language; favicon/install icons use configured maker assets. All maker surfaces disappear when maker attribution is disabled; the app name/version and company icons remain. Staff document footers are configured, including both timesheet day/week outputs; customer-facing labels retain their store-only design.

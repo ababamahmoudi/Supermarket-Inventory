@@ -369,3 +369,7 @@ R2e B4 modal action feedback is a short secondary-text footer status with Undo; 
 R2e B5 supersedes C9's 40 px list-filter frame: controls, search and whole segmented tracks are 44 px and share a centre line. Reserve count/Columns at the first row's logical end while filters wrap in the available start-side space; allow a separate end-group row only at phone widths. Keep 12 px gaps and the existing card inset.
 
 R2e B6 notes/descriptions use the shared automatically growing textarea, starting at two lines, bounded to six with internal scrolling and no manual resize handle. Native textarea children of Field use it automatically; BufferedTextarea retains the typing buffer on top of it. Receiving addresses retain their existing four-line cap/reserved layout. Logical width and loaded fonts trigger refitting without losing typed text or the caller's ref.
+
+## R2e E — Maker identity
+
+Use the supplied unmodified Klead files under `prototype/public/brand/klead/`; never redraw or stretch lettering. Maker identity is secondary to the configured store. Auth footers use the supplied mark in light theme and white logo in dark theme; About uses the full theme-appropriate logo. Preserve aspect ratio with contained images and at least a key-ring's width of surrounding clear space (the shared maker logo wrapper reserves 12px). Existing text/spacing tokens style the attribution; maker assets retain their approved colors. Staff print attribution is small plain text and follows the document language. Shelf/promotion labels have none.

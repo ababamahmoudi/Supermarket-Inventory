@@ -1,3 +1,5 @@
+import { MakerAbout } from "../MakerBrand";
+import packageInfo from "../../package.json";
 import { useSettingsConfiguration } from "../settings-configuration";
 import { SettingsConfigurationGate } from "../SettingsConfigurationGate";
 import People from "./People";
@@ -64,7 +66,8 @@ type Group =
   | "notifications"
   | "timesheets"
   | "modules"
-  | "data";
+  | "data"
+  | "about";
 type Translate = (en: string, fa: string) => string;
 const groups: {
   key: Group;
@@ -208,6 +211,11 @@ const groups: {
       "Import invoice readings or start with an empty store.",
       "خوانش فاکتورها را وارد کنید یا با فروشگاهی خالی شروع کنید.",
     ],
+  },
+  {
+    key: "about",
+    label: ["About", "درباره"],
+    description: ["App information and support.", "اطلاعات برنامه و پشتیبانی."],
   },
 ];
 function requestedGroup(): Group | undefined {
@@ -1321,7 +1329,7 @@ function PlannedSettings({ group }: { group: (typeof groups)[number] }) {
   );
 }
 function SettingsContent() {
-  const { state, t, can } = useDemo();
+  const { state, t, can, lang } = useDemo();
   const configuration = useSettingsConfiguration();
   const [selected, setSelected] = useState<Group>(() => {
     const requested = requestedGroup();
@@ -1429,6 +1437,18 @@ function SettingsContent() {
             />
           ) : selected === "data" ? (
             <InvoiceReadingsImport />
+          ) : selected === "about" ? (
+            <Card>
+              <MakerAbout
+                config={configuration}
+                language={lang}
+                appName={t(
+                  configuration.company.name_en,
+                  configuration.company.name_fa,
+                )}
+                version={packageInfo.version}
+              />
+            </Card>
           ) : (
             <PlannedSettings group={group} />
           )}{" "}

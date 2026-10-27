@@ -946,3 +946,9 @@ Every command refreshes genuine current company/person/session/location authorit
 ### R2e A2 — existing weight-product basis
 
 A matched existing Weight product keeps its catalog selling basis: selecting an Each/Units line representation cannot silently supply an each/case cost as a per-lb cost. The Unit field explains the mismatch, and canonical Confirm, Post and posted-correction validation reject it until Weight is restored. For an unmatched new product, the existing explicit Units choice still means Each; its visible unit-cost/price basis and eventual product/approval remain per unit.
+
+## R2e E — Configured maker attribution (2026-10-27)
+
+The store remains the app identity. Public `branding.maker` config supplies the maker name, enable switch and original light/dark logo, mark, favicon and installable-icon paths. Default maker is Klead; `branding.maker_support` is empty and hidden by default. Sign-in and lock show a small translated Powered by attribution; Settings → About is the final group and shows the store app name, package version, Made by identity and nonempty support. The tab title is the configured current-language store name followed by the enabled maker. Staff timesheets, supplier orders, internal picking lists, return pickup memos and Payables statements show a small Made with footer; customer shelf/promotion labels never show maker attribution. Respect each print's existing English-only/bilingual policy.
+
+An explicit null/disabled/blank-name maker removes maker text, images and support and uses existing company tab/install icons. Another maker's identity and files work through configuration. Old stores without the optional branding block read current configured presentation defaults without rewriting business records or requiring a data migration.

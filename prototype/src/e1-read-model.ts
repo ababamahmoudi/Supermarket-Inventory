@@ -189,6 +189,7 @@ function operationalConfig(config: CompanyConfig): CompanyReadConfig {
   const source = structuredClone(config);
   return {
     company: source.company,
+    branding: source.branding,
     branches: source.branches,
     roles: source.roles,
     pricing_categories: source.pricing_categories.map((category) => ({

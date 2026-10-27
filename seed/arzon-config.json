@@ -469,5 +469,19 @@
         "order": 7
       }
     ]
+  },
+  "branding": {
+    "maker": {
+      "name": "Klead",
+      "asset_identity": "Klead",
+      "enabled": true,
+      "logo_file": "brand/klead/klead-logo.svg",
+      "logo_dark_file": "brand/klead/klead-logo-white.svg",
+      "mark_file": "brand/klead/klead-mark.svg",
+      "favicon_file": "brand/klead/klead-icon-32.svg",
+      "icon_192_file": "brand/klead/klead-icon-192.png",
+      "icon_512_file": "brand/klead/klead-icon-512.png"
+    },
+    "maker_support": ""
   }
 }

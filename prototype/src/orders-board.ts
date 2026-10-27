@@ -30,7 +30,7 @@ import type {
 
 export type OrderPrintConfig = Pick<
   CompanyConfig,
-  "company" | "branches" | "supplier_documents"
+  "company" | "branches" | "supplier_documents" | "branding"
 >;
 export type OrderSupplierChoice = Pick<
   SupplierRecord,
@@ -297,6 +297,7 @@ export function orderPrintSnapshot(
     order,
     config: structuredClone({
       company: state.config.company,
+      branding: state.config.branding,
       branches: state.config.branches,
       supplier_documents: state.config.supplier_documents,
     }),

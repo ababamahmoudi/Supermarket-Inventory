@@ -503,3 +503,7 @@ Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted
 ### R2e A2 — existing weight-product basis
 
 - R2e A2 follow-up: blocked an existing Weight product's Each/Units line mismatch at Confirm, Post and posted correction; added actual posting/approval and correction-denial proof while preserving the explicit new Each-item flow.
+
+### R2e E — Klead maker attribution
+
+Added original approved logo/icon files, optional public maker/support config, theme-aware sign-in/lock attribution, final About settings group, store/maker tab title and configured favicon/install icons. Replaced both hardcoded Timesheet print footers and added configured staff attribution to supplier orders, picking lists, return pickup memos and Payables statements. No maker identity is added to customer labels. Existing stores read defaults without business migration; explicit maker omission and replacement are tested. See `PR_R2E_BRANDING_REVIEW.md` for validation and click paths.
