@@ -149,6 +149,29 @@ export function Disclosure({
     </details>
   );
 }
+/** The icon is centred over the whole title/subtitle block, not its first line. */
+export function IconText({
+  icon,
+  children,
+  className,
+  ...props
+}: HTMLAttributes<HTMLSpanElement> & { icon: ReactNode }) {
+  return (
+    <span {...props} className={cn("ui-icon-text", className)}>
+      <span
+        className="ui-icon-text-icon"
+        data-icon-text-icon
+        aria-hidden="true"
+      >
+        {icon}
+      </span>
+      <span className="ui-icon-text-copy" data-icon-text-copy>
+        {children}
+      </span>
+    </span>
+  );
+}
+
 /** A value in a column keeps a plain text edge, including an amber date. */
 export function ColumnValue({
   tone = "default",

@@ -1550,3 +1550,29 @@
 .ui-column-value.is-muted {
   color: var(--text-muted);
 }
+
+/* R2f R0.6 — icons centre on the complete two-line text block. */
+.ui-icon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.ui-icon-text > svg,
+.ui-icon-text-icon {
+  flex: 0 0 auto;
+  align-self: center;
+}
+.ui-icon-text-icon {
+  display: grid;
+  place-items: center;
+}
+.ui-icon-text-copy {
+  display: grid;
+  gap: 2px;
+  min-inline-size: 0;
+}
+.ui-icon-text-copy > :is(strong, small) {
+  margin: 0;
+}

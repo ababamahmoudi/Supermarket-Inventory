@@ -19,3 +19,7 @@ Shared outer table padding is zero; the existing 12 px inner padding still separ
 ## R0.5 — Plain column values
 
 Shared `ColumnValue` / `.ui-column-value` keeps dates/numbers as plain text with no pill padding or background. Pending/danger/muted tones use existing tokens. Status badges remain status badges; an amber expiry value now preserves its column's actual text edge.
+
+## R0.6 — Icons beside title/subtitle
+
+`IconText` / `.ui-icon-text` centres an icon on the whole title/subtitle block. The copy remains a two-line grid and the icon does not shrink. Existing approved icon size, colour and circle treatment remain the caller's ordinary tokens/composition; centring is shared.

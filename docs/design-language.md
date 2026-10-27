@@ -385,3 +385,5 @@ R2f R0.3 number groups use the shared label/value/note three-row grid, with valu
 R2f R0.4 composed CardHeader / `.ui-card-header` reserves a 44 px heading row, with or without actions. Use `.ui-card-row` for equal-height neighbouring cards. Approved Timesheets masonry departments are independent-height cards with the reference's compact baseline-aligned title/count header; the screenshot takes precedence over applying the paired-card contract to that masonry layout.
 
 R2f R0.5 data-column values use plain text with existing semantic colour when needed, rather than padded pills. Shared ColumnValue provides token-based pending/danger/muted text without changing the text edge; genuine status badges retain their existing role.
+
+R2f R0.6 icons beside title/subtitle copy centre on the complete two-line block using shared IconText / `.ui-icon-text`, with a nonshrinking icon and a two-line copy grid. Reuse the caller's approved icon size and semantic treatment.
