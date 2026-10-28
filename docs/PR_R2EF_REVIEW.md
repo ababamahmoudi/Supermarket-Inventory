@@ -15,7 +15,7 @@ npm run build
 npm run preview
 ```
 
-Open `http://localhost:5174`. Select Manager in the demo sign-in; if the password form is shown, use `manager` / `demo1234` and complete the simulated passkey step. Choose North York. Stop preview with Ctrl+C before rebuilding; restart preview after every new build. Keep an existing saved store to check migration preservation. Use a separate browser profile for a fresh fictional demo; do not clear an existing store to upgrade it. The app stores this prototype's data in the current browser.
+Open `http://localhost:5174`. Sign in with username `manager` and password `demo1234`, then complete the simulated passkey step. Choose North York. Stop preview with Ctrl+C before rebuilding; restart preview after every new build. Keep an existing saved store to check migration preservation. Use a separate browser profile for a fresh fictional demo; do not clear an existing store to upgrade it. The app stores this prototype's data in the current browser.
 
 ## R2e: implemented items and review paths
 
