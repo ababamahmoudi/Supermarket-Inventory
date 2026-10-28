@@ -308,15 +308,87 @@ it("leaves requests needing an individual price choice or reason unchecked while
     expect(checkbox).toBeDisabled();
   }
   expect(within(dialog).getAllByText("Review individually")).toHaveLength(3);
+  const before = await fixture.readCanonical();
+  const original = fixture.repository.runBusinessCommand.bind(
+    fixture.repository,
+  );
+  let release!: () => void;
+  const resultHeld = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let committed!: () => void;
+  let failed!: (cause: unknown) => void;
+  const actualCommit = new Promise<void>((resolve, reject) => {
+    committed = resolve;
+    failed = reject;
+  });
+  type Run = typeof fixture.repository.runBusinessCommand;
+  // Hold only delivery of the genuine accepted result: the real IDB command,
+  // current actor/permission checks and selected-only domain write all run first.
+  vi.spyOn(fixture.repository, "runBusinessCommand").mockImplementation((async (
+    ...args: Parameters<Run>
+  ) => {
+    if (args[2]?.capability !== "approvals.decide") return original(...args);
+    try {
+      const result = await original(...args);
+      committed();
+      await resultHeld;
+      return result;
+    } catch (cause) {
+      failed(cause);
+      throw cause;
+    }
+  }) as Run);
+  // Native publication is not command completion: reconciliation and a fresh
+  // authorized view still precede the real modal close. Observe that completion
+  // directly within the unchanged case budget rather than a 1s polling cutoff.
+  const closed = renderedUiReady(
+    () =>
+      !screen.queryByRole("dialog", {
+        name: "Review invoice approvals",
+      }),
+  );
   fireEvent.click(
     within(dialog).getByRole("button", { name: "Approve 1 product" }),
   );
-  await waitFor(async () =>
+  try {
+    await actualCommit;
+    const accepted = await fixture.readCanonical();
+    expect(accepted.approvals.map((item) => item.status)).toEqual([
+      "approved",
+      "pending",
+      "pending",
+      "pending",
+    ]);
+    expect(accepted.approvals.slice(1)).toEqual(before.approvals.slice(1));
     expect(
-      (await fixture.readCanonical()).approvals.map((item) => item.status),
-    ).toEqual(["approved", "pending", "pending", "pending"]),
-  );
-  await waitFor(() =>
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
-  );
+      dialog.querySelector(".invoice-approval-table-wrap"),
+    ).toHaveAttribute("aria-busy", "true");
+    expect(
+      within(dialog).getByRole("button", { name: /^Approve / }),
+    ).toBeDisabled();
+    expect(
+      within(dialog).getByRole("button", { name: "Cancel" }),
+    ).toBeDisabled();
+    for (const product of state.products.slice(1, 4)) {
+      const checkbox = within(dialog).getByRole("checkbox", {
+        name: `Include ${product.name_en}`,
+      });
+      expect(checkbox).toBeDisabled();
+      expect(checkbox).not.toBeChecked();
+    }
+    expect(within(dialog).getAllByText("Review individually")).toHaveLength(3);
+  } finally {
+    release();
+    await closed;
+  }
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  const completed = await fixture.readCanonical();
+  expect(completed.approvals.map((item) => item.status)).toEqual([
+    "approved",
+    "pending",
+    "pending",
+    "pending",
+  ]);
+  expect(completed.approvals.slice(1)).toEqual(before.approvals.slice(1));
 });
