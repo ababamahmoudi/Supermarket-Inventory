@@ -6,7 +6,7 @@ import { useCatalogQuery } from "./catalog-query";
 import { useDemo } from "./store";
 import { pendingPrice, effectiveOffer } from "./catalog";
 import { Badge } from "./ui";
-import { Money, LtrText, OfferLabel, UnitSize } from "./presentation";
+import { Money, LtrText, OfferLabel, UnitSize, MassSize } from "./presentation";
 import { SalePrice } from "./sales-presentation";
 
 export function LookupPackages({
@@ -76,9 +76,15 @@ export function LookupPackages({
                 data-icon-text-copy
               >
                 <strong>
-                  <UnitSize
-                    value={`${child.package_size} ${child.package_size_unit}`}
-                  />
+                  {child.package_size && child.package_size_unit ? (
+                    <MassSize
+                      value={child.package_size}
+                      unit={child.package_size_unit}
+                      language={lang}
+                    />
+                  ) : (
+                    <UnitSize value={child.unit_size} />
+                  )}
                 </strong>
                 <span className="muted">
                   {t(state.config.terminology.product_code, "کد محصول")}{" "}

@@ -1,5 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { LtrText, Money } from "./presentation";
+import { massUnitLabel, type MassUnit } from "./formatters";
+import type { Language } from "./types";
 import type { PriceSnapshot } from "./price-updates";
 import "./selling-price.css";
 
@@ -16,6 +18,7 @@ export function SellingPriceValue({
   currency,
   comparison = true,
   secondaryNote,
+  unitLanguage,
   className,
   ...props
 }: HTMLAttributes<HTMLSpanElement> & {
@@ -24,7 +27,16 @@ export function SellingPriceValue({
   currency?: string;
   comparison?: boolean;
   secondaryNote?: ReactNode;
+  unitLanguage?: Language;
 }) {
+  const unitLabel = (unit: MassUnit) =>
+    unitLanguage ? (
+      <bdi dir={unitLanguage === "fa" ? "rtl" : "ltr"}>
+        {massUnitLabel(unit, unitLanguage)}
+      </bdi>
+    ) : (
+      unit
+    );
   const discounted = comparison && isDiscountPrice(current, regular);
   const line = (
     amount: SellingAmount,
@@ -37,13 +49,13 @@ export function SellingPriceValue({
       {discounted && previous && previous.unit === amount.unit && (
         <del className="selling-price-regular sale-regular-price">
           <Money value={previous.amount} currency={currency} decimals={2} />
-          {previous.unit !== "each" && `/${previous.unit}`}
+          {previous.unit !== "each" && <>/{unitLabel(previous.unit)}</>}
         </del>
       )}
       <strong className="selling-price-current">
         <Money value={amount.amount} currency={currency} decimals={2} />
         {amount.unit !== "each" && (
-          <span className="selling-price-unit">/{amount.unit}</span>
+          <span className="selling-price-unit">/{unitLabel(amount.unit)}</span>
         )}
       </strong>
     </LtrText>

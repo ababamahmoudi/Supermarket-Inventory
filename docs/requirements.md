@@ -987,3 +987,7 @@ Returns overview retains filters, record routes, list memory and authority. Conc
 ## R2f D10 — Branch request item entry
 
 New/Edit request retains the existing endpoint permissions and canonical draft/send commands. Catalog search keeps the typed query after adding an item; an already included catalog product shows a disabled Added action and cannot be inserted twice. A genuine final action adds the typed description as a free-text item. Notes are optional inline disclosures; case-pack evidence remains editable from the item's metadata and is required for catalog cases before saving. Unknown free-text packs remain optional and never invent normalized stock. Cancel/back abandon local edits without writing; repeated Save/Send activation submits one guarded operation. Requests and transfer events still have no stock or supplier-money effect.
+
+### R2f weight label localization
+
+Approved FA weight parent prices, converted secondary prices and package-size labels use the shared localized mass display contract (پوند/کیلوگرم/گرم/اونس). This is presentation only: existing canonical unit codes, exact entered quantities, package formulas and Decimal prices are unchanged. Other screens retain the existing Latin-unit default unless explicitly opted in.

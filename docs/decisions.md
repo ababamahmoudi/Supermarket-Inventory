@@ -562,3 +562,5 @@ D7 replacement delivery counting uses each actual replacement stock-movement ide
 ### R2f D10 — Retain case evidence inside the approved item row (2026-10-27)
 
 The reference hides pack editing while the existing request command requires genuine units-per-case for catalog cases. Keep the approved Quantity/Unit/bin composition and expose the existing editor through a compact metadata disclosure; auto-open it when required evidence is missing. Retain optional unknown packs for free-text items. This preserves canonical normalization without guessing a pack or adding a permanent extra control column.
+
+**R2f mass labels (2026-10-28):** The owner's explicit screenshot precedence overrides the older Latin-unit wording for approved R2f weight presentations. Add one reusable massUnitLabel map plus opt-in shared price/size presentation instead of rewriting stored units or arbitrary product-name text. D3 and D4 use the same FA labels; ordinary UnitSize and non-opted-in price displays retain their prior behavior.

@@ -65,6 +65,17 @@ export function formatUnitSize(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 
+/** Display labels only: canonical mass codes and conversion quantities never change. */
+export type MassUnit = "g" | "kg" | "lb" | "oz";
+export function massUnitLabel(
+  unit: MassUnit,
+  language: Language = "en",
+): string {
+  return language === "fa"
+    ? { g: "گرم", kg: "کیلوگرم", lb: "پوند", oz: "اونس" }[unit]
+    : unit;
+}
+
 export type QuantityUnit = "units" | "cases" | "lb" | "kg";
 
 /** Semantic display parts retain the exact entered quantity and translated label. */

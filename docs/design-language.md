@@ -432,3 +432,7 @@ Returns uses fixed reference/supplier/date/status/action tracks and a flexible t
 ### R2f D10 request composition
 
 The 880px request form uses shared fields/selects/buttons, a thin-divider list and no grey item cards. Quantity, Unit and bin occupy one 44px control row and share a centre line. Inline note/Edit and case-pack metadata disclosures are deliberate 24px text controls, registered by exact semantic selectors in the R2f alignment helper; the actual note editor uses shared auto-growing text and 40px Done. The owned product-search popup preserves full field width. Its genuine free-item action uses intrinsic two-line height (minimum 56px), 8px × 12px padding and a 32px round plus centred against the complete copy. The strict C5 validator qualifies this composition from its actual route, fields, query, captions and geometry; action semantics remain intact. No blanket control-size exceptions apply.
+
+### R2f approved weight unit-label exception
+
+The approved R2f weight presentations override the earlier Latin-unit display convention for their localized labels: FA uses گرم, کیلوگرم, پوند and اونس. Reuse the shared `massUnitLabel` formatter, opt-in `unitLanguage` on the shared selling-price presentation and `MassSize` for a quantity with its localized label. Canonical g/kg/lb/oz codes, entered precision, Decimal conversion/rounding and all monetary values remain unchanged. Ordinary UnitSize and price renderers retain their existing Latin-unit default outside this opt-in contract. New-size unit selectors keep the approved Latin option codes.

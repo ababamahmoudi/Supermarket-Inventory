@@ -145,6 +145,7 @@ export function LookupLocations({ product }: { product: ProductReadDTO }) {
                         value={row.price}
                         product={product}
                         config={state.config}
+                        unitLanguage={lang}
                       />
                     ) : (
                       <span className="muted">

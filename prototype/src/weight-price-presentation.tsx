@@ -2,7 +2,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import { LtrText, Money } from "./presentation";
 import { weightPriceDisplay } from "./weighed";
 import { SellingPriceValue } from "./selling-price-presentation";
-import type { CompanyConfig, Product } from "./types";
+import type { CompanyConfig, Product, Language } from "./types";
 import "./weight-price.css";
 
 export function ProductPrice({
@@ -12,6 +12,7 @@ export function ProductPrice({
   stacked = false,
   className,
   secondaryNote,
+  unitLanguage,
   ...props
 }: HTMLAttributes<HTMLElement> & {
   value: string;
@@ -19,6 +20,7 @@ export function ProductPrice({
   config: Pick<CompanyConfig, "company" | "weighed_items">;
   stacked?: boolean;
   secondaryNote?: ReactNode;
+  unitLanguage?: Language;
 }) {
   const display =
     product.sold_by === "weight"
@@ -36,6 +38,7 @@ export function ProductPrice({
         .join(" ")}
       current={display}
       secondaryNote={secondaryNote}
+      unitLanguage={unitLanguage}
       currency={config.company.currency}
     />
   );

@@ -9,7 +9,16 @@ import type { createPackageService } from "../src/package-service";
 /** Actual source bundled only for a private Playwright route, using the signed-in session.
  * Every child, derived price, barcode and history entry comes from the protected API.
  */
-export async function addActualPackageSizes(page: Page, parentCode = "0016") {
+export async function addActualPackageSizes(
+  page: Page,
+  parentCode = "0016",
+  sizes: readonly { size: string; unit: "g" | "kg" | "lb" | "oz" }[] = [
+    "100",
+    "250",
+    "500",
+    "1000",
+  ].map((size) => ({ size, unit: "g" })),
+) {
   const token = `r2f-package-proof-${randomUUID()}`;
   const built = await build({
     configFile: false,
@@ -51,7 +60,7 @@ export async function addActualPackageSizes(page: Page, parentCode = "0016") {
   );
   try {
     return await page.evaluate(
-      async ({ url, key, parentCode }) => {
+      async ({ url, key, parentCode, sizes }) => {
         const identity = JSON.parse(
           sessionStorage.getItem(key) ?? "null",
         ) as CommandIdentity;
@@ -64,7 +73,7 @@ export async function addActualPackageSizes(page: Page, parentCode = "0016") {
         const repository = new sdk.BrowserAuthorityRepository();
         try {
           const service = sdk.createPackageService(repository);
-          for (const size of ["100", "250", "500", "1000"])
+          for (const { size, unit } of sizes)
             await service.add(identity, {
               parent_code: parentCode,
               expected_parent_snapshot: await service.parentSnapshot(
@@ -72,14 +81,14 @@ export async function addActualPackageSizes(page: Page, parentCode = "0016") {
                 parentCode,
               ),
               size,
-              unit: "g",
+              unit,
             });
           return await service.list(identity, parentCode);
         } finally {
           repository.dispose();
         }
       },
-      { url: `/__${token}.js`, key: AUTH_IDENTITY_KEY, parentCode },
+      { url: `/__${token}.js`, key: AUTH_IDENTITY_KEY, parentCode, sizes },
     );
   } finally {
     await page.unroute(pattern);

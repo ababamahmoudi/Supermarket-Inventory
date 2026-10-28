@@ -3459,6 +3459,7 @@ function LookupProductDetail({
                   <SalePrice
                     product={product}
                     comparison={false}
+                    unitLanguage={lang}
                     secondaryNote={
                       product.sold_by === "weight"
                         ? t("Before tax", "پیش از مالیات") +
@@ -4154,7 +4155,11 @@ export function Lookup() {
                               id={`${resultsId}-${product.code}-price`}
                             >
                               {price ? (
-                                <SalePrice product={product} stacked />
+                                <SalePrice
+                                  product={product}
+                                  stacked
+                                  unitLanguage={lang}
+                                />
                               ) : (
                                 <span className="muted">
                                   <LookupOtherPrices

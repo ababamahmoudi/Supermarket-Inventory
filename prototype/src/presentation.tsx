@@ -8,6 +8,8 @@ import {
   casesAndUnitsParts,
   quantityParts,
   type QuantityUnit,
+  type MassUnit,
+  massUnitLabel,
   formatDate,
   formatMoney,
   formatUnitSize,
@@ -128,6 +130,29 @@ export function UnitSize({
     </LtrText>
   );
 }
+/** Opt-in localized mass display; ordinary UnitSize keeps its existing Latin formatting. */
+export function MassSize({
+  value,
+  unit,
+  language = i18n.language as Language,
+}: {
+  value: string | number;
+  unit: MassUnit;
+  language?: Language;
+}) {
+  return (
+    <bdi
+      className="quantity-pair mass-size"
+      dir={language === "fa" ? "rtl" : "ltr"}
+    >
+      <LtrText className="quantity-number">{String(value)}</LtrText>{" "}
+      <bdi className="quantity-label" dir={language === "fa" ? "rtl" : "ltr"}>
+        {massUnitLabel(unit, language)}
+      </bdi>
+    </bdi>
+  );
+}
+
 /** Keep physical sizes together in ordinary display text, including Activity. */
 export function UnitText({
   children,

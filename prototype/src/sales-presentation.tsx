@@ -19,7 +19,7 @@ import { SellingPriceValue } from "./selling-price-presentation";
 import { OfferLabel } from "./presentation";
 import { Badge } from "./ui";
 import { saleCalendarDate, salesText } from "./sales-locale";
-import type { Branch } from "./types";
+import type { Branch, Language } from "./types";
 import type { ProductReadDTO } from "./catalog-read-model";
 
 export function SalePrice({
@@ -29,6 +29,7 @@ export function SalePrice({
   comparison = true,
   className,
   secondaryNote,
+  unitLanguage,
   ...props
 }: HTMLAttributes<HTMLSpanElement> & {
   product: ProductReadDTO;
@@ -36,6 +37,7 @@ export function SalePrice({
   stacked?: boolean;
   comparison?: boolean;
   secondaryNote?: ReactNode;
+  unitLanguage?: Language;
 }) {
   const { state, branch } = useDemo();
   const location = lookupBranch(selected ?? branch);
@@ -53,6 +55,7 @@ export function SalePrice({
         stacked={stacked}
         className={className}
         secondaryNote={secondaryNote}
+        unitLanguage={unitLanguage}
         {...props}
       />
     ) : (
@@ -74,6 +77,7 @@ export function SalePrice({
         .join(" ")}
       current={current}
       secondaryNote={secondaryNote}
+      unitLanguage={unitLanguage}
       regular={
         regular && advertisedSale
           ? product.sold_by === "weight"

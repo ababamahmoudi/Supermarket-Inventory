@@ -49,7 +49,7 @@ for (const width of [1440, 1000, 390])
         );
         await expect(
           detail.locator(".selling-price-secondary").first(),
-        ).toContainText("/kg");
+        ).toContainText(language === "fa" ? "/کیلوگرم" : "/kg");
         expect(
           await detail
             .locator(".lookup-approved-price > .price")
@@ -146,4 +146,57 @@ test("D4 Cashier uses genuine public package charging without edit/cost authorit
     await expect(
       page.locator(".lookup-detail").getByRole("button", { name }),
     ).toHaveCount(0);
+});
+
+test("D4 FA mass labels follow the reference for all real package units without changing canonical data", async ({
+  page,
+}, info) => {
+  await signIn(page, "Manager");
+  const packages = await addActualPackageSizes(page, "0016", [
+    { size: "100", unit: "g" },
+    { size: "1", unit: "kg" },
+    { size: "1", unit: "lb" },
+    { size: "4", unit: "oz" },
+  ]);
+  await page.reload();
+  await setBranch(page, "Branch 1");
+  await setLanguage(page, "fa");
+  await page.goto("/#lookup?search=0016");
+  const before = await readCanonicalBusinessEvidence(page);
+  const detail = page.locator(".lookup-detail.is-weight-lookup");
+  await expect(
+    detail.locator(".lookup-approved-price .selling-price-unit").first(),
+  ).toHaveText("/پوند");
+  await expect(
+    detail.locator(".lookup-approved-price .selling-price-secondary"),
+  ).toContainText("/کیلوگرم");
+  const labels = { g: "گرم", kg: "کیلوگرم", lb: "پوند", oz: "اونس" };
+  expect(new Set(packages.map((child) => child.package_size_unit))).toEqual(
+    new Set(["g", "kg", "lb", "oz"]),
+  );
+  for (const child of packages)
+    await expect(
+      detail
+        .locator(".lookup-package-box")
+        .filter({ hasText: child.code })
+        .locator(".mass-size .quantity-label"),
+    ).toHaveText(labels[child.package_size_unit!]);
+  expect((await auditR2fAlignment(page, { scene: "D4" })).failures).toEqual([]);
+  expect(
+    await page
+      .locator("html")
+      .evaluate((node) => node.scrollWidth - node.clientWidth),
+  ).toBeLessThanOrEqual(2);
+  for (const box of await detail.locator(".lookup-package-box").all())
+    expect(
+      await box.evaluate((node) => node.scrollWidth - node.clientWidth),
+    ).toBeLessThanOrEqual(2);
+  const after = await readCanonicalBusinessEvidence(page);
+  expect(after.products).toEqual(before.products);
+  expect(after.ledger).toEqual(before.ledger);
+  expect(after.stock_movements).toEqual(before.stock_movements);
+  await page.screenshot({
+    path: info.outputPath("weight-fa-mass-labels.png"),
+    fullPage: true,
+  });
 });
