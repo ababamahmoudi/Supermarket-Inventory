@@ -3841,6 +3841,7 @@ export function Lookup() {
               ] as const
             ).map(([key, label]) => (
               <FilterChip
+                appearance="neutral"
                 key={key}
                 checked={Boolean(filters[key])}
                 onChange={(value) => {
@@ -3854,6 +3855,7 @@ export function Lookup() {
               </FilterChip>
             ))}
             <FilterChip
+              appearance="neutral"
               checked={filters.taxable}
               onChange={(value) => {
                 setFilters((current) => ({ ...current, taxable: value }));
@@ -3865,6 +3867,7 @@ export function Lookup() {
               {t("Taxable", "مشمول مالیات")}
             </FilterChip>
             <FilterChip
+              appearance="neutral"
               checked={filters.unapproved}
               onChange={(value) => {
                 setFilters((current) => ({ ...current, unapproved: value }));

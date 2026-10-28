@@ -59,16 +59,22 @@ export function LookupPackages({
           return (
             <button
               type="button"
-              className="lookup-package-box"
+              className="lookup-package-box ui-icon-text"
               data-control-kind="disclosure"
               key={child.code}
               onClick={() => onOpen(child.code)}
               aria-label={`${t("Open", "باز کردن")} ${lang === "fa" ? child.name_fa || child.name_en : child.name_en}`}
             >
-              <span className="lookup-package-icon">
+              <span
+                className="lookup-package-icon ui-icon-text-icon"
+                data-icon-text-icon
+              >
                 <Package size={20} aria-hidden="true" />
               </span>
-              <span className="lookup-package-name">
+              <span
+                className="lookup-package-name ui-icon-text-copy"
+                data-icon-text-copy
+              >
                 <strong>
                   <UnitSize
                     value={`${child.package_size} ${child.package_size_unit}`}

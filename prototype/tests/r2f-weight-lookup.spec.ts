@@ -56,9 +56,9 @@ for (const width of [1440, 1000, 390])
             .evaluate((n) => parseFloat(getComputedStyle(n).fontSize)),
         ).toBe(36);
         await page.evaluate(() => document.fonts.ready);
-        expect(
-          (await auditR2fAlignment(page, { scene: "D4" })).failures,
-        ).toEqual([]);
+        const alignment = await auditR2fAlignment(page, { scene: "D4" });
+        expect(alignment.failures).toEqual([]);
+        expect(alignment.icons).toBeGreaterThanOrEqual(4);
         expect(
           await page
             .locator("html")
@@ -108,6 +108,16 @@ test("D4 Cashier uses genuine public package charging without edit/cost authorit
 }) => {
   await signIn(page, "Manager");
   const packages = await addActualPackageSizes(page);
+  await page.reload();
+  await setBranch(page, "all");
+  await page.goto(`/#lookup?search=${packages[0].code}`);
+  const locations = page.locator(".lookup-locations-table");
+  await expect(locations.locator('[data-location="Branch 1"]')).toContainText(
+    "$1.99",
+  );
+  await expect(locations.locator('[data-location="Warehouse"]')).toContainText(
+    "Not sold here",
+  );
   await signIn(page, "Cashier");
   await setBranch(page, "Branch 1");
   await page.goto("/#lookup?search=0016");
