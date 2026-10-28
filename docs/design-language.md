@@ -426,3 +426,6 @@ By-location expiry stays plaintext using the shared column-value alignment, ambe
 
 Dashboard explicitly sets the shared table column `desktopMinWidth` to 160 px; other desktop name/product/supplier columns retain their 240 px default. Fixed Type/Price/Margin/Actions widths remain exact and the real full approval destination retains omitted narrow-width facts.
 
+### R2f D8 — compact return records
+
+Returns uses fixed reference/supplier/date/status/action tracks and a flexible two-name Items track. Phone record boxes use shared field tint/menu radius, 8 px separation, compact heading/status, one metadata line and separated next action. Phone search/select/segment filters occupy the full content width. Hidden financial fields never supply custom phone slots or record links. Tablet selected columns scroll within the card.

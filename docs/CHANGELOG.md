@@ -550,3 +550,4 @@ Added original approved logo/icon files, optional public maker/support config, t
 - Add delivery grouping cases and actual responsive EN/FA dashboard geometry, strict alignment and destination browser proof. Executed results are recorded in the R2f review guide and final PR checks.
 
 - R2f D7 follow-up: count replacement deliveries by actual stock-movement identity; prove two canonical same-return/same-day replacement receipts remain two deliveries even without a Received timestamp.
+- R2f D8: named return items, concrete-location simplification, protected original-currency retained credit, and separated responsive record boxes with real detail links.

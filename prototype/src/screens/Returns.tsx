@@ -1,3 +1,7 @@
+import Decimal from "decimal.js";
+import { returnOverviewCredits } from "../return-overview-credit";
+import { useCatalogQuery } from "../catalog-query";
+import "./returns-r2f.css";
 import { returnReasonLabel } from "../return-reason-copy";
 import { returnReasons, type ReturnReason } from "../return-create";
 import { NewReturnDialog } from "./NewReturnDialog";
@@ -55,7 +59,15 @@ import {
   TableRowLink,
   useTableColumns,
 } from "../ui";
-import { DateText, demoUserLabel, LtrText, ProductName } from "../presentation";
+import {
+  DateText,
+  demoUserLabel,
+  LtrText,
+  ProductName,
+  Money,
+  QuantityText,
+  UnitText,
+} from "../presentation";
 import {
   operationError,
   returnUnpickedQuantity,
@@ -248,38 +260,90 @@ function ReturnsContent() {
           (item) => item.reference === memoReference,
         ) ?? null)
       : null);
+  const showBranch = branch === "all";
+  const mayReadCredit = can("returns.amount_read", domainScope(state));
+  const creditQuery = useCatalogQuery(
+    "returns.amount_read",
+    domainScope(state),
+    "returns-overview-credit",
+    (canonical, current) => returnOverviewCredits(canonical, current),
+  );
+  const creditsById = new Map(
+    creditQuery.data?.map((row) => [row.return_id, row]),
+  );
   const tableColumns = useTableColumns("returns", [
     {
       key: "reference",
-      minWidth: 108,
-      label: t("Return #", "شماره مرجوعی"),
+      minWidth: 72,
+      label: t("Return #", "مرجوعی #"),
       required: true,
-      width: 108,
+      width: 72,
+      fixedWidth: true,
       priority: 0,
       mobilePrimary: true,
     },
     {
       key: "supplier",
-      minWidth: 240,
+      minWidth: 148,
       label: t("Supplier", "تأمین‌کننده"),
       required: true,
-      width: 220,
+      width: 200,
+      fixedWidth: true,
       priority: 0,
     },
-    { key: "location", label: t("Branch", "شعبه"), width: 144, priority: 3 },
-    { key: "date", label: t("Created", "ایجادشده"), width: 128, priority: 4 },
+    ...(showBranch
+      ? [
+          {
+            key: "location",
+            label: t("Branch", "شعبه"),
+            width: 136,
+            priority: 4,
+          },
+        ]
+      : []),
     {
       key: "items",
       label: t("Items", "اقلام"),
-      width: 76,
-      align: "end",
-      priority: 5,
+      minWidth: 180,
+      priority: 0,
+      required: true,
     },
-    { key: "status", label: t("Status", "وضعیت"), width: 172, priority: 1 },
+    ...(mayReadCredit
+      ? [
+          {
+            key: "credit",
+            label: t("Credit due", "اعتبار مورد انتظار"),
+            width: 112,
+            fixedWidth: true,
+            minWidth: 104,
+            align: "end" as const,
+            priority: 1,
+          },
+        ]
+      : []),
+    {
+      key: "date",
+      label: t("Created", "ایجادشده"),
+      width: 116,
+      fixedWidth: true,
+      minWidth: 108,
+      align: "end",
+      priority: 3,
+    },
+    {
+      key: "status",
+      label: t("Status", "وضعیت"),
+      width: 176,
+      fixedWidth: true,
+      minWidth: 140,
+      priority: 1,
+    },
     {
       key: "actions",
       label: t("Next action", "اقدام بعدی"),
-      width: 144,
+      width: 176,
+      fixedWidth: true,
+      minWidth: 140,
       align: "end",
       actions: true,
       priority: 2,
@@ -335,7 +399,9 @@ function ReturnsContent() {
     return (
       matchesStatus &&
       (supplier === "all" || record.supplier === supplier) &&
-      (returnBranch === "all" || record.branch === returnBranch) &&
+      (!showBranch ||
+        returnBranch === "all" ||
+        record.branch === returnBranch) &&
       (!searchQuery || searchableText.includes(searchQuery))
     );
   });
@@ -360,6 +426,63 @@ function ReturnsContent() {
         ? product.name_fa || product.name_en
         : product.name_en
       : code;
+  };
+  const overviewItems = (record: OperationalReturnRead) => {
+    const totals = new Map<string, Decimal>();
+    for (const line of record.lines) {
+      const unit = usesPounds(line) ? "lb" : "units";
+      totals.set(unit, (totals.get(unit) ?? new Decimal(0)).plus(line.qty));
+    }
+    const reason = record.lines[0]?.reason ?? "";
+    return (
+      <div className="return-list-items">
+        <div className="return-list-item-names">
+          {record.lines.slice(0, 2).map((line, index) => (
+            <span key={`${line.product_code}:${index}`}>
+              <UnitText>{productName(line.product_code)}</UnitText>{" "}
+              <span className="muted">
+                × <LtrText>{line.qty}</LtrText>
+                {index === 1 && record.lines.length > 2 ? (
+                  <>
+                    {" "}
+                    ·{" "}
+                    {t(
+                      `+${record.lines.length - 2} more`,
+                      `+${record.lines.length - 2} قلم دیگر`,
+                    )}
+                  </>
+                ) : null}
+              </span>
+            </span>
+          ))}
+        </div>
+        <small className="muted">
+          {[...totals].map(([unit, total], index) => (
+            <span key={unit}>
+              {index > 0 ? " · " : ""}
+              <QuantityText
+                value={total.toString()}
+                unit={unit === "lb" ? "lb" : "units"}
+                language={lang}
+              />
+            </span>
+          ))}
+          {reason && (
+            <>
+              {" "}
+              ·{" "}
+              {returnReasons.includes(reason as ReturnReason)
+                ? returnReasonLabel(reason as ReturnReason, t)
+                : reason === "Leaking"
+                  ? t("Leaking", "نشتی")
+                  : reason === "Torn bag"
+                    ? t("Torn bag", "کیسه پاره")
+                    : reason}
+            </>
+          )}
+        </small>
+      </div>
+    );
   };
   const statusLabel = (status: string) => returnUiStatusLabel(status, t);
   const returnStatus = (record: OperationalReturnRead) => (
@@ -525,32 +648,34 @@ function ReturnsContent() {
                   ).map((value) => ({ value, label: statusLabel(value) })),
                 ]}
               />
-              <Select
-                aria-label={t("Return branch", "شعبه مرجوعی")}
-                value={returnBranch}
-                onChange={setReturnBranch}
-                options={[
-                  {
-                    value: "all",
-                    label: can("returns.amount_read")
-                      ? t("All branches", "همه شعب")
-                      : currentActor.allowed_branches.length > 1
-                        ? t("All my locations", "همه محل‌های من")
-                        : configuredBranchLabel(
-                            state.config,
-                            overviewContext.branch,
-                            lang,
-                          ),
-                  },
-                  ...branches.map((value) => ({
-                    value,
-                    label: configuredBranchLabel(state.config, value, lang),
-                  })),
-                ]}
-              />
+              {showBranch && (
+                <Select
+                  aria-label={t("Return branch", "شعبه مرجوعی")}
+                  value={returnBranch}
+                  onChange={setReturnBranch}
+                  options={[
+                    {
+                      value: "all",
+                      label: can("returns.amount_read")
+                        ? t("All branches", "همه شعب")
+                        : currentActor.allowed_branches.length > 1
+                          ? t("All my locations", "همه محل‌های من")
+                          : configuredBranchLabel(
+                              state.config,
+                              overviewContext.branch,
+                              lang,
+                            ),
+                    },
+                    ...branches.map((value) => ({
+                      value,
+                      label: configuredBranchLabel(state.config, value, lang),
+                    })),
+                  ]}
+                />
+              )}
               {(supplier !== "all" ||
                 status !== "all" ||
-                returnBranch !== "all" ||
+                (showBranch && returnBranch !== "all") ||
                 search ||
                 returnTab !== "open") && (
                 <Button
@@ -574,22 +699,57 @@ function ReturnsContent() {
               phoneList={{
                 name: "supplier",
                 value: "status",
-                secondary: ["reference", "location", "date"],
+                secondary: ["reference", "items", "date", "credit"],
+                render: ({ cell, recordLink }) => (
+                  <>
+                    <td className="return-phone-header">
+                      <span className="return-phone-reference">
+                        {cell("reference")}
+                      </span>
+                      <span className="return-phone-supplier">
+                        {cell("supplier")}
+                      </span>
+                      <span className="return-phone-status">
+                        {cell("status")}
+                      </span>
+                    </td>
+                    <td className="return-phone-items">{cell("items")}</td>
+                    <td className="return-phone-meta">
+                      <span>{cell("date")}</span>
+                      <span>{cell("credit")}</span>
+                    </td>
+                    <td className="return-phone-next">
+                      {cell("actions")}
+                      {recordLink}
+                    </td>
+                  </>
+                ),
               }}
-              columns={tableColumns.columns}
+              horizontalScroll
+              // Keep the person's selected facts available on tablets via the
+              // existing bounded scroll surface, rather than dropping credit.
+              columns={tableColumns.columns.map((column) => ({
+                ...column,
+                required: true,
+              }))}
             >
               <thead>
                 <tr>
-                  <th>{t("Return #", "شماره مرجوعی")}</th>
+                  <th>{t("Return #", "مرجوعی #")}</th>
                   <th>{t("Supplier", "تأمین‌کننده")}</th>
-                  <th>{t("Branch", "شعبه")}</th>
-                  <th>{t("Created", "ایجادشده")}</th>
-                  <th className="number-cell returns-items-cell">
-                    {t("Items", "اقلام")}
-                  </th>
+                  {showBranch && <th>{t("Branch", "شعبه")}</th>}
+                  <th>{t("Items", "اقلام")}</th>
+                  {mayReadCredit && (
+                    <th className="numeric">
+                      {t("Credit due", "اعتبار مورد انتظار")}
+                    </th>
+                  )}
+                  <th className="numeric">{t("Created", "ایجادشده")}</th>
                   <th>{t("Status", "وضعیت")}</th>
-                  <th className="action-cell">
-                    {t("Next action", "اقدام بعدی")}
+                  <th className="numeric action-cell">
+                    <span className="returns-next-action-heading">
+                      {t("Next action", "اقدام بعدی")}
+                    </span>
                   </th>
                 </tr>
               </thead>
@@ -649,23 +809,70 @@ function ReturnsContent() {
                           <LtrText>{record.supplier}</LtrText>
                         </a>
                       </td>
-                      <td className="branch-label">
-                        {configuredBranchLabel(
-                          state.config,
-                          record.branch,
-                          lang,
-                        )}
-                      </td>
-                      <td>
-                        <DateText value={record.created_at} />
-                      </td>
-                      <td className="number-cell returns-items-cell">
-                        <LtrText>
-                          {record.lines.reduce(
-                            (sum, line) => sum + line.qty,
-                            0,
+                      {showBranch && (
+                        <td className="branch-label">
+                          {configuredBranchLabel(
+                            state.config,
+                            record.branch,
+                            lang,
                           )}
-                        </LtrText>
+                        </td>
+                      )}
+                      <td>{overviewItems(record)}</td>
+                      {mayReadCredit && (
+                        <td className="numeric return-credit-due">
+                          {mayReadCredit &&
+                            (() => {
+                              if (!creditQuery.ready)
+                                return (
+                                  <span className="muted" role="status">
+                                    {t("Loading…", "در حال دریافت…")}
+                                  </span>
+                                );
+                              if (creditQuery.error)
+                                return (
+                                  <span
+                                    className="muted"
+                                    title={t(
+                                      "Credit amounts are unavailable. Refresh to try again.",
+                                      "مبالغ اعتبار در دسترس نیست. صفحه را تازه کنید.",
+                                    )}
+                                  >
+                                    {t("Unavailable", "در دسترس نیست")}
+                                  </span>
+                                );
+                              const value = creditsById.get(record.id);
+                              return value?.amount !== null &&
+                                value?.amount !== undefined &&
+                                value.currency ? (
+                                <strong>
+                                  <Money
+                                    value={value.amount}
+                                    currency={value.currency}
+                                  />
+                                  {value.currency !==
+                                    state.config.company.currency && (
+                                    <small className="return-credit-currency muted">
+                                      <LtrText>{value.currency}</LtrText>
+                                    </small>
+                                  )}
+                                </strong>
+                              ) : (
+                                <span
+                                  className="muted"
+                                  title={t(
+                                    "Retained cost or currency needs review",
+                                    "هزینه یا ارز نگهداری‌شده نیاز به بررسی دارد",
+                                  )}
+                                >
+                                  {t("Needs review", "نیاز به بررسی")}
+                                </span>
+                              );
+                            })()}
+                        </td>
+                      )}
+                      <td className="numeric">
+                        <DateText value={record.created_at} />
                       </td>
                       <td>{returnStatus(record)}</td>
                       <td className="action-cell">
