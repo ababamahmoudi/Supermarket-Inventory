@@ -132,11 +132,14 @@ for (const role of ["Supervisor", "Floor Worker", "Cashier"] as const) {
   });
 }
 
-test("weighed defaults persist, change only display/rules, and a kg editor save preserves the approved lb amount", async ({
+test("weighed defaults persist, change only display/rules, and a kg cost editor save preserves the approved lb amount", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
   await approvedLookupPrices(page, [PRODUCT_CODE]);
+  const weighedBefore = structuredClone(
+    (await readCanonicalBusinessEvidence(page)).config.weighed_items,
+  );
   const productsBefore = await readCanonicalBusinessEvidence(page).then(
     (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
   );
@@ -172,6 +175,7 @@ test("weighed defaults persist, change only display/rules, and a kg editor save 
       ),
     )
     .toEqual({
+      ...weighedBefore,
       conversion_factor: "2.20462",
       main_display_unit: "kg",
       show_second_unit: false,
@@ -209,17 +213,34 @@ test("weighed defaults persist, change only display/rules, and a kg editor save 
     name: "Edit product",
     exact: true,
   });
-  await expect(editor.getByLabel("Sold by", { exact: true })).toHaveText(
-    "Weight",
+  const soldBy = editor.getByRole("group", { name: "Sold by", exact: true });
+  await expect(
+    soldBy.getByRole("button", { name: "By weight", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    soldBy.getByRole("button", { name: "Each", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
+  const perKg = editor
+    .getByRole("group", { name: "Cost unit", exact: true })
+    .getByRole("button", { name: "per kg", exact: true });
+  await perKg.click();
+  await expect(perKg).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    editor.getByLabel("Cost before tax", { exact: true }),
+  ).toHaveValue("11.0000");
+  // The R2f weight editor deliberately presents canonical lb price with its kg
+  // comparison; the operational Lookup/list above still follows kg settings.
+  const sellingPrice = editor.locator(".weight-product-price-card");
+  await expect(sellingPrice.locator(".weight-product-price-main")).toHaveText(
+    "$7.49/lb",
   );
-  await expect(
-    editor.locator(".product-editor-current-price .weight-price-main"),
-  ).toHaveText("$16.51/kg");
-  await expect(
-    editor.locator(".product-editor-current-price input"),
-  ).toHaveCount(0);
+  await expect(sellingPrice.locator(".weight-product-price-second")).toHaveText(
+    "$16.51 /kg · Before tax",
+  );
+  await expect(sellingPrice.locator("input")).toHaveCount(0);
   // This undated fixture must resolve tracking before a metadata save. The
   // approved amount remains read-only; this does not open Change price.
+  await editor.locator(".weight-product-optional-details > summary").click();
   await editor
     .getByRole("switch", { name: "Date tracking", exact: true })
     .uncheck();

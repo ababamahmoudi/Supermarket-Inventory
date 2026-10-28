@@ -14,4 +14,12 @@ The removed inline invoice-entry card no longer puts its simulated AI warning on
 
 A real reload at navigation commit reproduces the old race: the helper sees the new document's initial English and returns before the retained Persian preference and actor restore. All four original Supervisor/390px/1440px negative cases fail with the old helper. The repaired helper waits for the actual actor-backed branch picker to mount (not for permission to switch locations), checks the real menu's expanded state and enabled target, and verifies the resulting language/localized shell.
 
-Twelve restored-session cases pass for Supervisor, one-branch Floor Worker and Cashier at390px/1440px in both browser projects, retaining the same person. Both existing FA390 catalog cases also pass. No sleep, retry, timeout, permission or app source changes are added.
+Twelve restored-session cases pass for Supervisor, one-branch Floor Worker and Cashier at 390px/1440px in both browser projects, retaining the same person. Both existing FA390 catalog cases also pass. No sleep, retry, timeout, permission or app source changes are added.
+
+## R2e D / R2f D3 — complete persisted weighed settings and current editor
+
+The persistence regression captures the full original weighed configuration, then compares it with exact deep equality after changing only the three intended display/rounding fields. Its original conversion-factor assertion remains explicit; package/container/barcode/ounce settings must survive unchanged. All original product and approved-price/cost assertions remain.
+
+The regression follows the approved editor's Each/By weight selected state, explicitly switches cost to kg and verifies 11.0000, checks the read-only 7.49/lb price plus 16.51/kg comparison, opens More details for its existing date-tracking decision, and saves. It still requires canonical price 7.49/cost 4.9895 and the operational 16.51/kg display. No money, stock, permissions or product save behavior is changed.
+
+The final six originally failing desktop/phone workflows pass with all repairs applied. The 12 new restored-role cases and two original FA390 catalog cases also pass as recorded above; counts are distinct. TypeScript, affected ESLint/Prettier and fresh production build pass. Final integrated CI is reported on the root branch.
