@@ -3690,7 +3690,9 @@ export function Lookup() {
     results.find((product) => product.code === selectedCode) ??
     results[0];
   const active =
-    results.find((product) => product.code === activeCode) ?? selected;
+    results.find((product) => product.code === activeCode) ??
+    results.find((product) => product.code === selected?.code) ??
+    results[0];
   const categories = [
     ...new Set(
       availableProducts.map((product) => product.ai_category).filter(Boolean),
@@ -4012,6 +4014,8 @@ export function Lookup() {
                 setOpenedPackage({ code, scope: packageScope });
                 setSelectedCode(code);
                 setActiveCode(code);
+                searchRef.current?.focus();
+                searchRef.current?.select();
               }
             }}
           />

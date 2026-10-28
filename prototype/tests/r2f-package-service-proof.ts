@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
-import { rolldown } from "rolldown";
+import { build } from "vite";
 import type { Page } from "@playwright/test";
 import { AUTH_IDENTITY_KEY } from "../src/auth-preferences.e1";
 import type { CommandIdentity } from "../src/authority-types";
@@ -11,13 +11,19 @@ import type { createPackageService } from "../src/package-service";
  */
 export async function addActualPackageSizes(page: Page, parentCode = "0016") {
   const token = `r2f-package-proof-${randomUUID()}`;
-  const bundle = await rolldown({
-    input: token,
+  const built = await build({
+    configFile: false,
+    logLevel: "silent",
+    build: {
+      write: false,
+      minify: false,
+      lib: { entry: token, formats: ["es"], fileName: "private-package-proof" },
+    },
     plugins: [
       {
         name: "private-package-proof",
         resolveId(id) {
-          if (id === token) return `\0${token}`;
+          if (id === token || id.endsWith(`/${token}`)) return `\0${token}`;
         },
         load(id) {
           if (id === `\0${token}`)
@@ -29,8 +35,10 @@ export async function addActualPackageSizes(page: Page, parentCode = "0016") {
       },
     ],
   });
-  const { output } = await bundle.generate({ format: "esm" });
-  await bundle.close();
+  const result = Array.isArray(built) ? built[0] : built;
+  if (!("output" in result))
+    throw new Error("Expected actual private package build output");
+  const { output } = result;
   if (output.length !== 1 || output[0].type !== "chunk")
     throw new Error("Expected one actual private package module");
   const pattern = `**/__${token}.js`;

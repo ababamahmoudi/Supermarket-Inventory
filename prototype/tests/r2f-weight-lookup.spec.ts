@@ -76,6 +76,14 @@ for (const width of [1440, 1000, 390])
         await expect(page.locator(".lookup-product-meta")).toContainText(
           packages[0].code,
         );
+        const lookupSearch = page.locator(".lookup-search-pill input");
+        await expect(lookupSearch).toBeFocused();
+        await expect(lookupSearch).toHaveValue("0016");
+        const activeId = await lookupSearch.getAttribute(
+          "aria-activedescendant",
+        );
+        expect(activeId).toBeTruthy();
+        await expect(page.locator(`[id="${activeId}"]`)).toHaveCount(1);
         await expect(page.locator(".lookup-approved-price")).not.toContainText(
           "/lb",
         );
