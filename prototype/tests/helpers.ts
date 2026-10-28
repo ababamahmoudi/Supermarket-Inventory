@@ -35,10 +35,20 @@ export async function openAlert(scope: Page | Locator, name?: string | RegExp) {
     await head.click();
 }
 
+async function waitForShellActions(page: Page) {
+  // Public loading chrome has no LocationPicker. Its branch-pill only mounts
+  // with the restored actor; presence is independent of switching permission.
+  const shell = page.locator(".topbar");
+  await expect(shell).toBeVisible();
+  await expect(shell.locator(".branch-pill[role=combobox]")).toBeVisible();
+  return shell;
+}
+
 export async function openShellAction(page: Page, name: string) {
-  const direct = page.getByRole("button", { name, exact: true });
+  const shell = await waitForShellActions(page);
+  const direct = shell.getByRole("button", { name, exact: true });
   const item = page.getByRole("menuitem", { name, exact: true });
-  const more = page.locator(".mobile-more-menu");
+  const more = shell.locator("button.mobile-more-menu");
   await expect
     .poll(
       async () =>
@@ -47,9 +57,19 @@ export async function openShellAction(page: Page, name: string) {
         (await more.isVisible()),
     )
     .toBe(true);
-  if (await direct.isVisible()) return direct;
-  if (!(await item.isVisible())) await more.click();
+  if (await direct.isVisible()) {
+    await expect(direct).toBeEnabled();
+    return direct;
+  }
+  if (!(await item.isVisible())) {
+    await expect(more).toBeVisible();
+    await expect(more).toBeEnabled();
+    if ((await more.getAttribute("aria-expanded")) !== "true")
+      await more.click();
+    await expect(more).toHaveAttribute("aria-expanded", "true");
+  }
   await expect(item).toBeVisible();
+  await expect(item).toBeEnabled();
   return item;
 }
 
@@ -179,6 +199,8 @@ export async function setBranch(page: Page, branch: string) {
 }
 
 export async function setLanguage(page: Page, language: "en" | "fa") {
+  // Do not mistake the new document's default English for restored preferences.
+  await waitForShellActions(page);
   if ((await page.locator("html").getAttribute("lang")) === language) return;
   await (
     await openShellAction(
@@ -186,6 +208,13 @@ export async function setLanguage(page: Page, language: "en" | "fa") {
       language === "fa" ? "Switch to Persian" : "تغییر به انگلیسی",
     )
   ).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", language);
+  await expect(
+    page.locator(".topbar").getByRole("combobox", {
+      name: language === "fa" ? "مکان" : "Location",
+      exact: true,
+    }),
+  ).toBeVisible();
 }
 
 export async function resetDemo(page: Page) {
