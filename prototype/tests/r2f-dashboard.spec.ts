@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { runCanonicalBusinessFixture } from "./business-fixture";
 import { auditR2fAlignment } from "./r2f-alignment";
+import { inspectDashboardCardLayout } from "./dashboard-card-layout";
+import { inspectResponsiveLayout } from "../scripts/c6-layout-proof.mjs";
 import { openShellAction, setBranch, setLanguage, signIn } from "./helpers";
 
 for (const width of [1440, 1000, 390])
@@ -202,3 +204,141 @@ for (const width of [1440, 1000, 390])
       expect(errors).toEqual([]);
     });
   }
+
+for (const language of ["en", "fa"] as const)
+  test(`R2f D7 responsive cards and raw captions reject invalid layouts ${language}`, async ({
+    page,
+  }, info) => {
+    await signIn(page, "Manager");
+    await setBranch(page, "North York");
+    await setLanguage(page, language);
+    await page.goto("/#dashboard");
+    const root = page.locator(".r2c-dashboard");
+    await expect(root).toBeVisible();
+    const reports = [];
+    for (const width of [390, 768, 900, 1000, 1024, 1180, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 1000 });
+      const responsive = await inspectResponsiveLayout(
+        page,
+        "dashboard",
+        language,
+        width,
+      );
+      expect(responsive.failures).toEqual([]);
+      const layout = await inspectDashboardCardLayout(page);
+      expect(layout.failures).toEqual([]);
+      expect(layout.sameRow).toBe(width > 1100);
+      const tiles = await root
+        .locator(".dashboard-kpis > .kpi-card")
+        .evaluateAll((cards) =>
+          cards.map((card) => ({
+            top: card.getBoundingClientRect().top,
+            captions: [...card.querySelectorAll(".kpi-label,.kpi-detail")].map(
+              (caption) => {
+                const range = document.createRange();
+                range.selectNodeContents(caption);
+                const textLines = new Set(
+                  [...range.getClientRects()]
+                    .filter((bounds) => bounds.width > 0 && bounds.height > 0)
+                    .map((bounds) => Math.round(bounds.top)),
+                ).size;
+                return {
+                  text: caption.textContent,
+                  detail: caption.classList.contains("kpi-detail"),
+                  textLines,
+                  overflow: getComputedStyle(caption).textOverflow,
+                };
+              },
+            ),
+          })),
+        );
+      expect(tiles).toHaveLength(6);
+      expect(new Set(tiles.map((tile) => Math.round(tile.top))).size).toBe(
+        width < 760 ? 3 : width < 1000 ? 2 : 1,
+      );
+      for (const tile of tiles)
+        for (const caption of tile.captions) {
+          expect(caption.text).not.toContain("…");
+          expect(caption.overflow).not.toBe("ellipsis");
+          // R2f caption examples describe details; full titles retain the
+          // unchanged word-break and overflow proof above at every width.
+          if (caption.detail)
+            expect(
+              caption.textLines,
+              `${width}px ${caption.text}`,
+            ).toBeLessThanOrEqual(2);
+        }
+      reports.push({ width, layout, tiles });
+      if ([390, 768, 1000, 1440].includes(width))
+        await page.screenshot({
+          path: info.outputPath(
+            `dashboard-responsive-${width}-${language}.png`,
+          ),
+          fullPage: true,
+        });
+    }
+    // A copied pair class cannot allow an unrelated card to stretch.
+    const unrelated = root.locator(".dashboard-alerts");
+    await unrelated.evaluate((card) => {
+      card.classList.add("dashboard-purchase-pair");
+      card.setAttribute("style", "align-self: stretch");
+    });
+    expect((await inspectDashboardCardLayout(page)).failures).toContain(
+      `${language === "en" ? "Alerts" : "هشدارها"}: natural card is stretch`,
+    );
+    await unrelated.evaluate((card) => {
+      card.classList.remove("dashboard-purchase-pair");
+      card.removeAttribute("style");
+    });
+    const purchase = root.locator(".dashboard-supplier-purchases");
+    await purchase.evaluate((card) => {
+      const height = card.getBoundingClientRect().height;
+      card.setAttribute(
+        "style",
+        `transform-origin: top; transform: scaleY(${(height - 4) / height})`,
+      );
+    });
+    expect((await inspectDashboardCardLayout(page)).failures).toContain(
+      "Paired purchase card heights differ",
+    );
+    await purchase.evaluate((card) => card.removeAttribute("style"));
+    await page.setViewportSize({ width: 1000, height: 1000 });
+    await purchase.evaluate((card) =>
+      card.setAttribute("style", "align-self: stretch"),
+    );
+    expect(
+      (await inspectDashboardCardLayout(page)).failures.some((failure) =>
+        failure.includes("natural card is stretch"),
+      ),
+    ).toBe(true);
+    await purchase.evaluate((card) => card.removeAttribute("style"));
+    await page.setViewportSize({ width: 768, height: 1000 });
+    const kpis = root.locator(".dashboard-kpis");
+    await kpis.evaluate((grid) =>
+      grid.setAttribute(
+        "style",
+        "grid-template-columns: repeat(6,minmax(0,1fr))",
+      ),
+    );
+    const broken = await inspectResponsiveLayout(
+      page,
+      "dashboard-negative",
+      language,
+      768,
+    );
+    expect(
+      broken.failures.some((failure: string) =>
+        failure.includes("content word broken in middle"),
+      ),
+    ).toBe(true);
+    await kpis.evaluate((grid) => grid.removeAttribute("style"));
+    expect((await inspectDashboardCardLayout(page)).failures).toEqual([]);
+    expect(
+      (await inspectResponsiveLayout(page, "dashboard-restored", language, 768))
+        .failures,
+    ).toEqual([]);
+    await info.attach("D7 responsive positive and negative proofs", {
+      body: JSON.stringify(reports),
+      contentType: "application/json",
+    });
+  });

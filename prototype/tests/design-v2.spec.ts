@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
 import { approvedLookupPrices } from "./lookup-approved-price-fixture";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
 import {
   chooseOption,
@@ -503,12 +504,12 @@ test("dashboard approvals and notes have actions that change the actual records 
   page,
 }) => {
   await signIn(page, "Manager");
-  await page.getByText("More operations", { exact: true }).click();
+  await expect(page.locator(".dashboard-this-week")).toBeVisible();
   for (const heading of [
     "Approvals waiting",
     "Alerts",
     "Recent invoices",
-    "Returns",
+    "This week",
     "Supplier balances",
     managerNotesHeading,
     "Activity",
@@ -516,6 +517,11 @@ test("dashboard approvals and notes have actions that change the actual records 
     await expect(
       page.getByRole("heading", { name: heading, exact: true }),
     ).toBeVisible();
+  await expect(
+    page
+      .locator(".dashboard-this-week")
+      .getByRole("link", { name: "Returns", exact: true }),
+  ).toHaveAttribute("href", "#returns");
   const notes = page.locator(".dashboard-aside .card").filter({
     has: page.getByRole("heading", {
       name: managerNotesHeading,
@@ -530,6 +536,13 @@ test("dashboard approvals and notes have actions that change the actual records 
   const lavash = page
     .locator(".dashboard-queue-row")
     .filter({ hasText: "Lavash Bread 500 g" });
+  const approvalId = await lavash.getAttribute("data-approval-id");
+  expect(approvalId).toBeTruthy();
+  expect(
+    (await readCanonicalBusinessEvidence(page)).approvals.find(
+      (approval) => approval.id === approvalId,
+    )?.status,
+  ).toBe("pending");
   await lavash.getByRole("button", { name: "Approve", exact: true }).click();
   const dialog = page.getByRole("dialog", {
     name: "Review approval",
@@ -545,6 +558,12 @@ test("dashboard approvals and notes have actions that change the actual records 
     .getByRole("button", { name: "Approve price", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText("Approved price");
+  await expect(dialog).not.toBeVisible();
+  expect(
+    (await readCanonicalBusinessEvidence(page)).approvals.find(
+      (approval) => approval.id === approvalId,
+    )?.status,
+  ).toBe("approved");
   await page.goto("/#lookup?search=0006");
   await expect(page.locator(".price")).toHaveText("$2.99");
   await expect(

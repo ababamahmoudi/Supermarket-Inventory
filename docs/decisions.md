@@ -578,3 +578,7 @@ The reference hides pack editing while the existing request command requires gen
 The receiving summary displays the retained English product name. At 1280px, the Persian interface inherited a Vazirmatn-first order, mixing its spaces/punctuation with Manrope letters and making “Canned Fava Beans 400 g” overflow the product cell. CDP confirmed both were bundled faces; this was not a host-font substitution.
 
 Use the reusable `--font-en-bilingual` order (Manrope, Vazirmatn, system fallbacks) only for that retained-name display. Latin characters now use the same face in both interfaces; actual Persian characters still have the bundled fallback. Keep all column widths, single-line ellipsis, full title, check counts and clipping tolerances unchanged. Generic LtrValue and other screens retain their own font contracts.
+
+### 2026-10-28 — D7 intermediate tile width and genuine chart pairing
+
+Keep the approved six-column KPI row from 1000 px and two-column phone layout. Use three columns at 760–999 px so raw English/Persian captions keep complete words within two text lines. Scope purchase-card stretching to the existing actual two-column grid (1101 px and wider); stacked charts retain natural height. Browser proofs qualify the genuine grid through its exact children and actual non-overlapping same-row boxes, with negative controls for copied classes, unrelated cards and changed geometry. The old More operations disclosure is replaced by the approved visible This week card and genuine destination links.

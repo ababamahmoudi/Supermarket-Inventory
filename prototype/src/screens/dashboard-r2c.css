@@ -241,8 +241,12 @@
 }
 :root .r2c-dashboard .dashboard-purchase-pair > .card {
   grid-column: auto;
-  align-self: stretch;
   display: block;
+}
+@media (min-width: 1101px) {
+  :root .r2c-dashboard .dashboard-purchase-pair > .card {
+    align-self: stretch;
+  }
 }
 :root .r2c-dashboard .dashboard-chart-context {
   display: flex;
@@ -776,5 +780,12 @@
 @media (min-width: 760px) {
   .r2c-dashboard .dashboard-kpis.has-timesheets {
     grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+/* Keep raw bilingual captions whole before the six-tile desktop row fits. */
+@media (min-width: 760px) and (max-width: 999px) {
+  :root .r2c-dashboard .dashboard-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

@@ -2,6 +2,7 @@ import { expect, test, type Locator } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
 import { signIn, setLanguage, setBranch } from "./helpers";
 import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
+import { inspectDashboardCardLayout } from "./dashboard-card-layout";
 import { inspectResponsiveLayout } from "../scripts/c6-layout-proof.mjs";
 
 async function expectDelayedNavigationTooltip(
@@ -162,7 +163,7 @@ for (const language of ["en", "fa"] as const)
           expect(actual.kpis).toHaveLength(6);
           expect(
             new Set(actual.kpis.map((card) => Math.round(card.y))).size,
-          ).toBe(width < 760 ? 3 : 1);
+          ).toBe(width < 760 ? 3 : width < 1000 ? 2 : 1);
           for (const row of actual.rows) {
             expect(row.cards).toHaveLength(2);
             const [first, second] = row.cards;
@@ -171,7 +172,7 @@ for (const language of ["en", "fa"] as const)
               expect(second.y).toBeGreaterThanOrEqual(first.bottom + 15);
             } else {
               expect(first.y).toBeCloseTo(second.y, 0);
-              // R2c approved cards size to content, rather than stretching.
+              // D7 stretches only the actual neighbouring purchase pair.
               expect(first.height).toBeGreaterThan(0);
               expect(second.height).toBeGreaterThan(0);
               const gap =
@@ -188,9 +189,9 @@ for (const language of ["en", "fa"] as const)
           }
           if (width >= 1440)
             expect(actual.main.width / actual.aside.width).toBeCloseTo(2, 1);
-          expect(
-            actual.contentCards.every((card) => card.alignSelf === "start"),
-          ).toBe(true);
+          const cardLayout = await inspectDashboardCardLayout(page);
+          expect(cardLayout.cards.length).toBe(actual.contentCards.length);
+          expect(cardLayout.failures).toEqual([]);
         }
       }
       await page.goto("/#product?code=0006");

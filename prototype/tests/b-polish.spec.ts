@@ -7,6 +7,7 @@ import { openShellAction, setLanguage, signIn, uploadInvoice } from "./helpers";
 import { inspect, settled } from "../scripts/c5-browser-proof.mjs";
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { inspectDashboardCardLayout } from "./dashboard-card-layout";
 import { runCanonicalBusinessFixture } from "./business-fixture";
 
 async function visibleGeometry(page: Page, route: string) {
@@ -427,7 +428,7 @@ test("R2 invoice names and four-decimal cost values fit on one line", async ({
   }
 });
 
-test("Part 1 purchase charts show calendar weeks, hover/focus amounts and content-height desktop cards", async ({
+test("Part 1 purchase charts show calendar weeks, hover/focus amounts and equal-height paired desktop cards", async ({
   page,
 }, testInfo) => {
   await signIn(page, "Supervisor");
@@ -466,9 +467,11 @@ test("Part 1 purchase charts show calendar weeks, hover/focus amounts and conten
         })),
       );
     expect(cards).toHaveLength(2);
-    expect(
-      cards.every((card) => card.height > 0 && card.alignSelf === "start"),
-    ).toBe(true);
+    expect(cards.every((card) => card.height > 0)).toBe(true);
+    const layout = await inspectDashboardCardLayout(page);
+    expect(layout.sameRow).toBe(true);
+    expect(layout.cards.filter((card) => card.paired)).toHaveLength(2);
+    expect(layout.failures).toEqual([]);
   }
 });
 

@@ -13,6 +13,12 @@
 - Keep item quantities and +N counts visible beside fitted product names, preserving the complete original name in its tooltip and full record.
 - Qualified the intentional bounded Returns selected-column scroller in the existing C3 proof without changing cell/heading glyph budgets. Added actual EN/FA scroll, keyboard, no-write and malformed-scroller negative controls; other table pages retain their no-scroll checks.
 
+## 2026-10-28 — R2f D7 responsive dashboard follow-up
+
+- Preserve complete raw bilingual KPI captions with three intermediate-width columns; retain the approved 1000 px six-column and phone two-column layouts.
+- Equalize only genuine neighbouring purchase charts. Stacked and unrelated cards retain content height, with actual-grid and deliberately invalid-layout browser proofs.
+- Follow the approved visible This week summary in the legacy action regression while retaining actual Notes navigation, canonical approval and charged-price evidence.
+
 ## 2026-10-28 — R2f D3 weight Product add/edit
 
 - Matched the approved How sold, cost/unit, real rule/price card and package-size editor with responsive EN/FA/themed layout. Parent metadata, cost, explicit Change price and all package drafts save atomically; Cancel allocates/writes nothing.
