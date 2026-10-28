@@ -1,3 +1,4 @@
+import { chooseC8Date } from "../scripts/capture-c8-proof.mjs";
 import { auditR2fAlignment } from "./r2f-alignment";
 import { expect, test, type Page, type Locator } from "@playwright/test";
 import {
@@ -85,8 +86,7 @@ test("R2f D3 stages costs and new sizes without writes on Cancel, then saves a r
   const tomorrow = new Intl.DateTimeFormat("en-CA", {
     timeZone: before.config.company.timezone,
   }).format(new Date(Date.now() + 86400000));
-  await dialog.locator('[id$="-new-date"]').click();
-  await page.getByRole("button", { name: tomorrow, exact: true }).click();
+  await chooseC8Date(page, dialog.locator('[id$="-new-date"]'), tomorrow);
   await dialog
     .getByRole("button", { name: "Save product", exact: true })
     .click();

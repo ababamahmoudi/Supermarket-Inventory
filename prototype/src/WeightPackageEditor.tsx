@@ -231,8 +231,10 @@ export function PackageSizeSection({
           {t("Package price = size × ", "قیمت بسته = اندازه × ")}
           {pricePerLb ? (
             <>
-              <Money value={pricePerLb} currency={currency} />{" "}
-              <LtrText>/lb</LtrText>
+              <LtrText>
+                <Money value={pricePerLb} currency={currency} />
+                /lb
+              </LtrText>
             </>
           ) : (
             t("approved price per lb", "قیمت تأییدشده هر پوند")
@@ -484,8 +486,9 @@ export function PackageSizeSection({
                     ...editing,
                     barcode: event.target.value,
                     generated:
-                      editing.generated &&
-                      event.target.value === editing.barcode,
+                      rows.find((row) => row.key === editing.key)?.generated &&
+                      event.target.value ===
+                        rows.find((row) => row.key === editing.key)?.barcode,
                   })
                 }
               />

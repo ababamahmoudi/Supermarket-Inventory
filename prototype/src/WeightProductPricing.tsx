@@ -151,11 +151,11 @@ export function WeightProductPricing({
             {calculation ? (
               <>
                 {t(`${categoryName} rule: `, `قاعده ${categoryName}: `)}
-                <Money
-                  value={calculation.canonical_cost_per_lb}
-                  currency={currency}
-                />{" "}
                 <LtrText>
+                  <Money
+                    value={calculation.canonical_cost_per_lb}
+                    currency={currency}
+                  />{" "}
                   ÷ {calculation.divisor} ={" "}
                   <Money
                     value={new Decimal(calculation.raw_price).toFixed(2)}
