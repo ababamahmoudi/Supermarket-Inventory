@@ -384,7 +384,6 @@ Requirements §38 and design-language’s C9 section supersede earlier conflicti
 
 Approvals’ four tabs include sale-request counts and actual decided cards, with no decided actions and tab-specific empty copy. Product/Lookup/Products/Labels/Offers/Prices by store/Price updates use the shared inline current/regular-price presentation and genuine current/frozen terms. Every specified list uses the shared 40 px toolbar inside its card with changed-only Clear filters. Branch request list/form matches Lists.png without swapping persisted endpoint semantics. See the original owner request and C9 review for exact scenes, click paths and honest remaining differences.
 
-
 ## R2c 7.1 — New return and protected creation evidence (2026-10-26)
 
 Returns has a primary **New return** action for all five roles at permitted active locations, including Cashier at assigned Stores. The shared structured dialog uses Location, searchable Supplier, searchable Product, latest receipt hint, Quantity, read-only canonical Unit, Reason, optional Note and Photos. Product search includes EN/FA name/code/barcode without private search metadata. Units are whole and lb permits at most three decimal places, matching pickup precision. Other requires a note; Damaged/Expired requires saved photo evidence. **What's missing** links each real field; failed/incomplete attempts create no return. Source conflicts show a human manager-review message and explicit refresh/reselection; another delivery cannot silently replace a pinned receipt.
@@ -449,9 +448,6 @@ Lookup combines remembered On offer, Expiring soon, Arrived today and Price chan
 
 Sign-in/lock retain the store logo and form, with a quiet Powered by maker line under the form. Settings → About is the final settings item: configured store app name, package version, Made by maker/logo and nonempty configured support. Theme changes select the supplied full white logo in dark mode. The browser title uses Store · Maker in the current UI language; favicon/install icons use configured maker assets. All maker surfaces disappear when maker attribution is disabled; the app name/version and company icons remain. Staff document footers are configured, including both timesheet day/week outputs; customer-facing labels retain their store-only design.
 
-
-
-
 ## R2f D1 — Approved Timesheets day sheet
 
 Use the R2f Timesheets PNG/source references. Header actions are History then Manage staff; the subtitle holds real day totals. The toolbar places previous/date/next/Today at start and Day/Week tabs, Print and CSV at end. Standard page controls are 44px high; the supplied blank arrow buttons are 48px wide, and the date field is 168px where it fits. Masonry department cards fill 3/2/1 columns at 1440/1000/390 with compact baseline title/count headings and no empty table in an empty department. Rows have one name, centred 60px In/Out fields, end-aligned compact hours and a narrow 44px-high shift menu containing confirmed Remove. Empty time focus offers a bounded shared Now popover; typing 730 and Persian/Arabic digits keeps the established normalization. On shift shows blue elapsed time/so far; overnight shows +1 day; past missing Out remains amber. Notes is last; no redundant History card remains below it.
@@ -464,12 +460,9 @@ Timesheets → Manage staff opens Staff · configured branch in an880px rounded 
 
 Weight Lookup uses the shared 36 px amount/18 px unit typography, secondary conversion/tax line and protected public package boxes. Package taps show the genuine ordinary child result without clearing remembered filters. Actual approved location prices and separate pending amounts govern charging; aggregate selection never picks a store implicitly. All six 44 px quick filters remain; AI categories move into an initially closed shared More filters disclosure with remembered active summary. Phone actions sit below metadata, as in the approved PNG. See `PR_R2F_LOOKUP_RETURNS.md` for click paths and deliberate data/capability differences.
 
-
-
 ### R2f D5 — Lookup by location
 
 The compact comparison has Location, genuinely approved Price, real Offer, Last delivered and plaintext Next expiry. Warehouse is Not sold here; a missing approval stays unknown. Genuine minority differences are amber with an actual-location title; ties do not select a preferred branch. Phone follows the approved PNG's name/price and offer/date lines, intentionally omitting expiry. All public facts retain actor/company/location scope.
-
 
 ## R2f D6 — Approved approval cards
 
@@ -477,20 +470,22 @@ Pending product/price and sale requests use the approved shared card: linked bil
 
 Below-minimum sale requests keep their existing explicit acknowledgment and below-cost reason commands. Ordinary pending price/product cards show the same amber acknowledgment row; the local checkbox is bound to the current actor/location and exact protected price/cost/margin/minimum snapshot and checked again before opening the approval preview. Editing or changing authority invalidates it. Existing manual-price reasons, specialized margin-review Keep/Override workflow, barcode review, snapshot validation and atomic Edit and approve remain authoritative. Batch counts, selected-only decisions and quiet modal feedback retain R2e behavior.
 
-
 ## R2f D7 — Dashboard
 
 Keep the R2c layout with raw two-line KPI captions, shared 44 px card headers and equally tall neighbouring purchase charts. Approvals uses a flexible product column plus fixed 120/128/80/168 px Type/Price/Margin/Actions columns and no visible Actions heading. More → View approval is the complete real record destination. One three-stat This week card links to Returns, Received and Price updates. Activity has a single list, a separate end time/date column and no trailing separator. At phone width This week appears directly after the tiles, following the approved screenshot. See [review steps](PR_R2F_DASHBOARD.md).
 
 D7 replacement delivery counting uses each actual replacement stock-movement identity. The existing canonical workflow emits one movement per replacement event, so distinct receipts for one return on the same day remain distinct even when the Received projection has no timestamp. It never groups those events by return/date. Invoice multi-product lines still share their actual source/timestamp group.
+
 ### R2f D8 — Returns overview
 
 Return #, Supplier, optional aggregate Branch, two named Items +N more, authorized original-currency Credit due, Created, canonical Status and actual Next action replace count-only items. Concrete topbar locations suppress the redundant Branch filter/column. Phone separates tinted record boxes with heading/status, names, date/opposite money and detail chevron; full filters stack above count/Columns. Unknown retained cost/currency is Needs review. Financial columns and Columns choices remain absent without returns.amount_read; reads create no settlement or stock effects.
+
 ## R2f D9 — Original invoice header and toolbar
 
 The original viewer has the approved plain Expand/Hide header, with the actual protected file name and page count directly below its title. One 44 px field-tint toolbar contains four divided groups: truthful pagination, zoom, Fit width/Rotate and end-aligned More. All seven icon controls remain available; their transparent hit targets are 44 px high and their inline slots shrink within 28–36 px to fit a narrow pane without sideways scrolling. The adjacent Add line button and Select share a 44 px row. The short-delivery summary wraps within its quantity cell instead of extending beyond the numeric edge. The status column reserves room for the genuine icon and two-digit row index.
 
 At 1000 px the same viewer stays above the work and Hide/Show remains usable. On phones the existing thumbnail opens the full-screen original; the media flexes beneath the genuine title, file/page description and toolbar. PDF/image pagination, protected bytes and downloads, fit, zoom, rotation, touch behavior and original-node stability remain the existing workflow. This change never edits invoice amounts, receipt quantities, retained originals or correction evidence.
+
 ## R2f D10 — New branch request
 
 Branch requests → New request shows a back link, title/explanation, paired Ask this location/Deliver to fields and one Items section. Plain rows share thin dividers: selected-language name, code/size or Not in the catalog, quiet note/Edit or Add note, centred 88px Quantity, 132px Unit and 44px danger bin. A compact case-pack metadata disclosure retains the existing evidence editor. On phones the name spans the row above 72px Quantity, flexible Unit and 44px bin. Search fills the card; matches have Add/disabled Added and a final two-line free-item action with a 32px round plus centred against the complete copy. Footer is Cancel / Save as draft / Send request, with Send full-width below the other two on phones. See [click paths and proof](PR_R2F_D10_REVIEW.md).

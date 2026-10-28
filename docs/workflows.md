@@ -383,7 +383,6 @@ The installed sales-clock adapter also derives package prices and captures tasks
 
 Package price derivation retains the ordinary C8 Sale review workflow. If a new derived regular child price is at or below its own existing approved sale, the same protected write keeps that sale and creates one actual `sale_regular_not_above_sale` alert linked to the real child, parent, location and sale revision, with no invented invoice. Owner/Manager can Keep, Change or End through the existing decision command. Repeated derivation does not duplicate the alert or notification. A matching pending package alert or genuine authorized Keep decision survives the retained-sale startup check; unrelated invalid sale records still follow the existing repair. Automatic package offer maintenance reuses the configured normal offer reconciliation, stops stale old-price mappings, adds current suggestions and audits actual changed offers; it never activates a suggestion automatically.
 
-
 ## R2f D3 — weight Product add/edit
 
 Owner/Manager opens Products or Lookup → weight product → Edit. Names, How it's sold, actual cost and rule preview, staged Change price, Package sizes, category and supplier share one Save product. Optional descriptions/barcode/unit/date fields remain under More details. Existing date validation opens that section and focuses the real missing field. Cancel, close and inner Apply to draft never write business data. A stale source/config/package snapshot keeps the draft and asks the user to reopen; a pre-existing unrelated pending invoice-price review must be decided before changing cost rather than silently superseded.
@@ -397,7 +396,11 @@ A below-minimum ordinary pending price/product card asks for the explicit amber 
 ### R2f D8 — overview credit is informational
 
 Opening Returns queries the existing authorized return records and a separate returns.amount_read projection. Before pickup, the expected amount uses retained original cost/currency; actual signed pickup memo cents take over for picked coverage, and posted settlements consume that coverage once. Put-back/discarded shortfalls leave expected coverage, while kept quantities remain planned. The overview never posts a credit, replacement, stock movement or claim. Incomplete/conflicting legacy evidence says Needs review, including missing signed pickup projections and missing retained monetary basis. The actual record chevron opens the existing protected detail/action workflow.
+
 ## R2f D9 — Inspect retained invoice evidence
 
 Open an actual invoice and its reading. The original viewer identifies the retained file and actual page count before the grouped toolbar. Previous/Next is enabled only for available pages; Zoom, Fit width, Rotate and More → Fit page/Download act on the real protected source. Expand opens the original dialog; Hide/Show collapses/restores the inline panel. On a phone the existing thumbnail opens the full-screen original with reachable controls and media. Viewing or downloading an original never replaces its bytes or changes any invoice/receipt/correction evidence.
+
+### R2f D3 — Package quotes during a Sale
+
 For an active parent Sale, Package sizes and New size quote the actual effective Sale price through the same protected engine used by Save. The formula labels Sale price; the Selling price card retains the approved regular price. A genuine staged regular/Sale decision is applied only to the read-only quote candidate, including normal Keep/Change/End results. Final Save revalidates actual source/Sale fingerprints and effective clock-boundary prices. No invoice evidence, independent Sale policy or query write is introduced.

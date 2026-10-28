@@ -378,11 +378,9 @@ Use the supplied unmodified Klead files under `prototype/public/brand/klead/`; n
 
 Use shared ControlRow / `.ui-control-row` for 44 px page peers, or its small 40 px variant for in-card action rows. Grid compositions use `.ui-control-row-grid`; labelled field/action pairs bottom-align with `.is-field-row`. Whole segmented tracks share the row height, have no bottom margin and centre themselves. Their inner buttons fit inside the track. Icon widths may follow the approved composition; heights match the adjacent field/action. Shared quick-filter chips are 44 px.
 
-
 R2f R0.2 supersedes S1's 16 px outer table inset: first/last column content and row dividers now meet the card's content edges. Keep the existing 12 px inner-cell spacing, shared numeric logical end alignment and zero inline padding on sortable captions. Dedicated receiving/posted/batch tables use those same outer edges.
 
 R2f R0.3 number groups use the shared label/value/note three-row grid, with values baseline-aligned across different font sizes. NumberStat contributes contents to those shared tracks, with optional explicit column placement for arrows/dividers. Approved typography tokens hold 17 px approval values / 26 px primary price, and 36 px weight-Lookup price / 18 px unit/package values. Reuse existing weights and colours; ordinary Lookup keeps its existing typography.
-
 
 R2f R0.4 composed CardHeader / `.ui-card-header` reserves a 44 px heading row, with or without actions. Use `.ui-card-row` for equal-height neighbouring cards. Approved Timesheets masonry departments are independent-height cards with the reference's compact baseline-aligned title/count header; the screenshot takes precedence over applying the paired-card contract to that masonry layout.
 
@@ -406,19 +404,13 @@ Match `design-reference/r2f/weight-product-*` and its approved source: an 860px 
 
 Only successful outer Save assigns codes/barcodes. Pending prices and pending archive rows are explicit. Keep the active input/action anchored during typing, cost-unit switches, How sold changes, package additions and archive staging; reuse the receiving scroll-anchor and reserve the dialog/content frame to avoid centering or scroll-clamp movement. The strict shared R0 alignment audit has no D3 exception.
 
-
 ### R2f D4 — weight Lookup composition
 
 Use the central weight-Lookup 36 px amount and 18 px unit tokens; secondary unit/tax context uses body text. Package boxes use field tint, shared menu radius, a 36 px package icon and genuine size/code/end price; two desktop columns become one on phone. Lookup product header peers consume the shared 44 px control-row contract. The approved phone places those actions after the bilingual title/metadata.
 
-
-
-
 ### R2f D5 — compact location facts
 
 By-location expiry stays plaintext using the shared column-value alignment, amber only when actually due soon. Different approved location prices use amber text/dot. Phone comparisons have exactly two logical lines without duplicated captions.
-
-
 
 ## R2f D7 — Dashboard compositions
 
@@ -429,6 +421,7 @@ Dashboard explicitly sets the shared table column `desktopMinWidth` to 160 px; o
 ### R2f D8 — compact return records
 
 Returns uses fixed reference/supplier/date/status/action tracks and a flexible two-name Items track. Phone record boxes use shared field tint/menu radius, 8 px separation, compact heading/status, one metadata line and separated next action. Phone search/select/segment filters occupy the full content width. Hidden financial fields never supply custom phone slots or record links. Tablet selected columns scroll within the card.
+
 ### R2f D10 request composition
 
 The 880px request form uses shared fields/selects/buttons, a thin-divider list and no grey item cards. Quantity, Unit and bin occupy one 44px control row and share a centre line. Inline note/Edit and case-pack metadata disclosures are deliberate 24px text controls, registered by exact semantic selectors in the R2f alignment helper; the actual note editor uses shared auto-growing text and 40px Done. The owned product-search popup preserves full field width. Its genuine free-item action uses intrinsic two-line height (minimum 56px), 8px × 12px padding and a 32px round plus centred against the complete copy. The strict C5 validator qualifies this composition from its actual route, fields, query, captions and geometry; action semantics remain intact. No blanket control-size exceptions apply.

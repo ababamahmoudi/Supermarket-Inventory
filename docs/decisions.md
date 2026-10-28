@@ -534,8 +534,6 @@ Use the stable company Product Code as the parent reference; add package records
 
 Context: the store app needs secondary maker attribution while remaining reusable for other stores/makers. Decision: public optional top-level maker config, shared theme-aware original-asset component and one staff-print attribution component; retained stores read defaults without a write. Why: preserve store palette/business evidence and existing print language while making replacement/omission a configuration choice. Native install metadata is built from configuration; live title/favicon follows the authorized public config.
 
-
-
 ## R2f D1 — Separate elapsed display from completed payroll
 
 Context: the approved day sheet shows current elapsed hours, while R2d correctly keeps a missing-Out shift at zero completed hours. Decision: a pure daily display helper adds current-day elapsed minutes to presentation only; canonical week/CSV/print durations and blank Out evidence remain unchanged. Why: match the live staff view without inventing a payroll clock-out. Reuse the established save registry and original-actor/navigation bridge rather than replacing their workflow during the redesign.
@@ -552,18 +550,19 @@ Context: the approved directory moves Add into an inline form and replaces row a
 
 **Why:** Cancel/failure writes nothing, current charges remain approved, and no invoice, stock or payable is invented or rewritten. New package identities are truthfully Assigned on save and date tracking defaults Off until actual date evidence is entered. A pending unrelated invoice-price review is resolved before a new manual cost edit, avoiding silent review replacement.
 
-
 ## 2026-10-27 — R2f D7 screenshot precedence and truthful dashboard captions
 
 The approved phone PNG places This week before Approvals; implement that order although the prose says after purchase charts. Use Reminder window rather than claiming every product expires within seven days: existing reminders are configurable. Count actual grouped deliveries rather than receipt product lines, without publishing private source identities. Prior activity dates use compact English month/day values in both interfaces to match the approved value presentation; today/full timestamps still use company-local boundaries. Neighbouring purchase cards alone stretch to equal height.
 
 D7 replacement delivery counting uses each actual replacement stock-movement identity. The existing canonical workflow emits one movement per replacement event, so distinct receipts for one return on the same day remain distinct even when the Received projection has no timestamp. It never groups those events by return/date. Invoice multi-product lines still share their actual source/timestamp group.
 **R2f D8 retained-credit read (2026-10-28):** Use a separate fresh-actor/returns.amount_read query rather than adding private money to public return DTOs. Reuse existing signed memo line cents and proportional partial-settlement rounding; value unpicked coverage only from original frozen cost/currency, rounding each line half-up. Require signed quantities and projections to agree. Missing/conflicting legacy facts remain unknown, preserving original currency without a catalog fallback or FX. This is a readonly display and creates no financial/stock evidence.
+
 ### R2f D10 — Retain case evidence inside the approved item row (2026-10-27)
 
 The reference hides pack editing while the existing request command requires genuine units-per-case for catalog cases. Keep the approved Quantity/Unit/bin composition and expose the existing editor through a compact metadata disclosure; auto-open it when required evidence is missing. Retain optional unknown packs for free-text items. This preserves canonical normalization without guessing a pack or adding a permanent extra control column.
 
 **R2f mass labels (2026-10-28):** The owner's explicit screenshot precedence overrides the older Latin-unit wording for approved R2f weight presentations. Add one reusable massUnitLabel map plus opt-in shared price/size presentation instead of rewriting stored units or arbitrary product-name text. D3 and D4 use the same FA labels; ordinary UnitSize and non-opted-in price displays retain their prior behavior.
+
 ### 2026-10-28 — All-location cost review preserves each branch's decision
 
 **Context:** one all-scope price proposal cannot represent distinct branch manual prices and prior receipt costs.

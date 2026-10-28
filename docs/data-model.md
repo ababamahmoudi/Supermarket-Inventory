@@ -465,7 +465,6 @@ Optional company configuration `branding` contains `maker` (null or `{name, enab
 
 Maker file ownership is explicit in `maker.asset_identity` (default Klead). Replacing only `maker.name` suppresses inherited logos/icons rather than displaying another maker's lettering; supply replacement files with the matching asset identity, or a complete new maker block.
 
-
 ## R2f D3 — atomic weight-editor drafts
 
 `Product.manual_costs[location]` retains the genuine Owner/Manager's manual canonical cost decision, attribution and private per-location `receipt_basis` fingerprint. A fingerprint includes effective source-line ID, four-place cost, sold-by unit, posting time and later-delivery ID/time, so an append-only correction of the same line also invalidates it. It is a cost decision, never a fabricated invoice or purchase-history entry. `Product.package_branch_costs[location]` is a private derived four-place cost cache, recomputed from the parent's current actual regular basis. Both fields are financial-only and excluded from public DTOs/history payloads.
@@ -477,7 +476,11 @@ Weight-product drafts keep package adds/edits/archives and any cost/manual-price
 No new persisted records or migration. `receivedDeliveryCount` groups already authorized receipts by company, branch, source kind/document and exact received timestamp, allowing several product lines in one receipt. Replacement records also retain their return source identity. Missing legacy source identities retain each actual receipt ID rather than guessing a merge. The protected dashboard summary returns the derived scalar before reducing arrivals to their public projection; private source IDs are not added to that projection. Money, costs, FX and approval authorities remain unchanged.
 
 D7 replacement delivery counting uses each actual replacement stock-movement identity. The existing canonical workflow emits one movement per replacement event, so distinct receipts for one return on the same day remain distinct even when the Received projection has no timestamp. It never groups those events by return/date. Invoice multi-product lines still share their actual source/timestamp group.
+
 ### R2f D8 — readonly return credit projection
 
 `returnOverviewCredits` adds no stored field. It returns only allowed return IDs, known retained amount and original currency after fresh actor/company/location/returns.amount_read checks. Frozen line costs value still-planned quantities; signed pickup and deduplicated actual settlement evidence constrain those quantities. Disposed or recovered shortfalls are excluded, kept shortfalls remain planned. Signed pickup and retained pickup projections must agree, preventing missing legacy projections from double-counting planned goods. Legacy money needs complete active signed memo valuation; conflicting/malformed/missing facts return null rather than today's catalog cost, zero or a conversion. Reading never updates the ledger, stock, return or claim.
+
+### R2f D3 — All-location cost review evidence
+
 All-location manual weight-cost review creates one ordinary approval per permitted selling branch, carrying that branch's own `manual_price_review.kept_price` and actual `prior_cost`; `prior_cost` may be null when no known basis exists. It never uses a company-level selling amount as a fabricated branch approval. The opaque weight-editor/new-product pricing snapshots also bind the genuine actor/session, selected location and permitted selling target set, so a cross-tab session-location change cannot widen an already-open draft's cost scope.

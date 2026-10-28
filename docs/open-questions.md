@@ -208,8 +208,6 @@ A package's independent approved sale follows the ordinary C8 conflict workflow 
 
 Maker file ownership is explicit in `maker.asset_identity` (default Klead). Replacing only `maker.name` suppresses inherited logos/icons rather than displaying another maker's lettering; supply replacement files with the matching asset identity, or a complete new maker block.
 
-
-
 ## R2f D1 display defaults — 2026-10-27
 
 - “So far” is presentation-only elapsed time for the currently selected branch's today, from a valid In no later than its actual clock and no Out. Department/day captions include that elapsed display; stored duration, weekly totals and payroll CSV continue to count only completed shifts. No Out is inferred. Past missing-Out shifts stay amber/zero, and future clock-ins have no elapsed claim. The dashboard's existing prior-unclosed count is unchanged.
@@ -232,12 +230,14 @@ Maker file ownership is explicit in `maker.asset_identity` (default Klead). Repl
 
 A location without accepted local regular receipt/manual evidence retains the existing company-level latest-known-cost fallback. A local manual edit updates that fallback as existing regular receipt posting does; actual evidence at another location wins. Manual-cost proposal replacement is restricted to overlapping location scope; a concrete branch cannot partially replace an All locations review.
 
-
 ## R2f D7 — Implemented defaults
 
 No new product decision is required. Approved screenshots win the phone This week order. Reminder window is a truthful configurable-horizon caption; no seven-day predicate is invented. Prior activity dates use English month/day value captions in both languages, with the complete company-local timestamp available. One actual multi-line received transaction counts once; later short/replacement receipts count separately. See [review guide](PR_R2F_DASHBOARD.md).
 
 D7 replacement delivery counting uses each actual replacement stock-movement identity. The existing canonical workflow emits one movement per replacement event, so distinct receipts for one return on the same day remain distinct even when the Received projection has no timestamp. It never groups those events by return/date. Invoice multi-product lines still share their actual source/timestamp group.
+
+### R2f D3 — Manual-cost and package-menu defaults
+
 Manual weight-cost decisions are not receipts. Existing Sale-cost alerts remain actual-receipt-bound; do not invent invoice evidence for them. Preserve the Sale and ordinary pending regular-price review, while explicit staged price changes retain normal Sale/margin validation. Standalone package row menus follow the approved 36px footprint; their New size peer controls remain 44px.
 
 An All locations manual weight-cost decision retains one all-scope cost marker and separate ordinary pending reviews per fresh permitted selling branch. Each review retains its own approved/manual price and actual prior cost (null if unknown). Exclude Warehouse/inactive/non-selling targets. Only explicitly staged regular-price-covered branches skip pending review. A retained overlapping all-scope review remains blocking if a partial replacement would lose another branch's work. Bind the genuine session/location to editor snapshots so a later location switch cannot expand an old draft's scope.

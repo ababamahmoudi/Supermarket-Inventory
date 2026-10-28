@@ -526,7 +526,6 @@ Added original approved logo/icon files, optional public maker/support config, t
 - R2f R0.7 follow-up: require actual separate visual columns before the masonry/dashboard exception; prove phone/same-column overlaps fail. Exclude genuinely closed-disclosure controls using browser visibility, and retain an explicit whole status-icon/row-number probe for the Original invoice # column without exempting money/quantity glyphs.
 - R2f R0.7: measure the Dashboard's exact decision-control group edge rather than its differently sized centred captions; LTR/RTL negative controls reject a shifted group without exempting numeric columns or peer controls.
 
-
 - R2f D1: matched the approved compact masonry day sheet, header/toolbar, focused explicit Now choice, current-day so-far display, overnight/past-missing warnings, Notes and header History. Preserved completed payroll/CSV and all protected save/navigation/print behavior; added causal elapsed-versus-payroll and real rendered geometry proofs.
 - R2f R0.7: audit each registered actual popup as its own render plane; retain strict peer checks within it and reject static copied popup wrappers. Browser proof rejects an internal 40/44 px mismatch.
 - R2f R0.1: give shared quick-filter chips a neutral idle appearance for approved Lookup, retaining existing surface chips elsewhere and the same selected/keyboard/geometry contract.
@@ -536,10 +535,7 @@ Added original approved logo/icon files, optional public maker/support config, t
 
 - R2f D4: real weight Lookup/package composition, protected child navigation, shared pricing-unit/tax presentation and preserved quick/category filters.
 
-
-
 - R2f D5: genuine approved location comparison, amber differences/plain expiry, and compact two-line phone facts with protected public reads.
-
 
 ## 2026-10-27 — R2f D7 Dashboard corrections
 
@@ -562,6 +558,7 @@ Rebuilt New/Edit request around the approved paired locations, thin-divider item
 - R2f D4: share opt-in localized mass labels for approved FA weight prices/package sizes without changing stored codes, quantities or monetary calculations.
 
 - R2f R0 token integration: reuse the existing round/none radii and row-divider shadow, plus one shared bottom-corner radius composition, in staff, package and request rows. Values and geometry stay identical; the strict token audit remains unchanged and passes.
+
 ### R2f C1/C2 CI compatibility
 
 Updated the legacy simulated-reading copy assertion to follow the approved entry chooser: the Drafts queue and retained review stay clear of the old inline-card warning, while the actual chooser/Photo workspace still explain simulated reading. Preserved Demo menu and unrelated-page assertions; reproduced the old failure and verified both desktop/phone cases. See `PR_R2F_CI202_RECEIVING.md`.

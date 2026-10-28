@@ -953,8 +953,6 @@ The store remains the app identity. Public `branding.maker` config supplies the 
 
 An explicit null/disabled/blank-name maker removes maker text, images and support and uses existing company tab/install icons. Another maker's identity and files work through configuration. Old stores without the optional branding block read current configured presentation defaults without rewriting business records or requiring a data migration.
 
-
-
 ## R2f D1 — Current daily timesheet presentation
 
 The approved R2f day-sheet references replace the prior daily composition. The header carries branch/day, distinct people, displayed hours and current on-shift count, with History and Manage staff at the end. Date/arrows/Today and Day/Week/Print/CSV form aligned 44px control rows. Department cards use independently sized masonry columns (three at 1440px, two at 1000px, one at 390px), one-language names and compact Name / In / Out / Hours / shift menu rows. Time fields are 60px wide and 44px high; blank focused fields offer an explicit current branch-local Now choice, without inventing a time. Remove remains confirmed and audited. Notes closes the daily sheet with bounded auto-growing text and truthful save feedback. History opens the same authorized day history from its header action.
@@ -969,21 +967,20 @@ Manage staff uses the approved 880px dialog, with aligned44px Search / Active–
 
 The public weight parent presentation keeps configured main/secondary units, actual approved charge, tax and offer facts. The protected package read supplies real active children, size/code/count and approved/pending location prices. Selecting a package displays its normal product result with no mutation or implicit location choice. Keep person/company/location search preferences and all six combinable quick filters; retain the prior AI-category capability inside a shared disclosure.
 
-
-
 ### R2f D5: public location comparison
 
 Lookup By location uses an actual approved selling-price basis for each parent/child/Store. Warehouse cannot charge. Plain active expiry reminders and retained delivery/offer facts are scoped public data; distinct genuine prices receive amber treatment without implicitly choosing a branch. The approved phone comparison omits expiry and keeps two lines per location.
-
 
 ## R2f D7 — Dashboard refinement (2026-10-27)
 
 The existing authorized dashboard keeps its actual financial/approval/branch selectors. The approvals product column uses remaining space; Type/Price/Margin/Actions are 120/128/80/168 px, with a blank accessible Actions heading. Each row's existing More → View approval opens the complete canonical approval, including facts omitted at narrow widths. KPI captions wrap to two lines without ellipsis. Purchase cards sharing a row stretch equally and use shared 44 px headers. One This week card replaces More operations with actual open-return, received-delivery and price-change counts and their real destinations. A multi-product receipt counts once per same-company/location/source/received timestamp; distinct later short/replacement receipts remain separate. Compute only the scalar count before the public dashboard projection; do not expose source invoice identities. Activity is one list with company-local 24-hour time for today, English month/day numeric-value captions for prior dates in both interfaces, and the full timestamp available. The approved phone screenshot places This week immediately after the KPI tiles, before Approvals; this overrides the prompt's after-charts sentence.
 
 D7 replacement delivery counting uses each actual replacement stock-movement identity. The existing canonical workflow emits one movement per replacement event, so distinct receipts for one return on the same day remain distinct even when the Received projection has no timestamp. It never groups those events by return/date. Invoice multi-product lines still share their actual source/timestamp group.
+
 ### R2f D8: retained return money
 
 Returns overview retains filters, record routes, list memory and authority. Concrete location removes redundant Branch controls. Items show genuine names/quantities/reason. Credit due requires the existing returns.amount_read capability at read time and values only retained original cost/currency and signed pickup/actual settlement evidence. Pending financial claims do not settle. Signed pickup quantities must agree with the retained projection; missing or contradictory legacy evidence remains unknown. Signed memo lines retain their original cent snapshots and proportional partial-settlement rounding; each unpicked original cost line rounds half-up separately. No catalog-price fallback, assumed zero or FX conversion is allowed. Unauthorized users receive neither monetary cells nor a monetary Columns option. Tablet tables retain selected columns via bounded scrolling; phone filters span the content width.
+
 ## R2f D10 — Branch request item entry
 
 New/Edit request retains the existing endpoint permissions and canonical draft/send commands. Catalog search keeps the typed query after adding an item; an already included catalog product shows a disabled Added action and cannot be inserted twice. A genuine final action adds the typed description as a free-text item. Notes are optional inline disclosures; case-pack evidence remains editable from the item's metadata and is required for catalog cases before saving. Unknown free-text packs remain optional and never invent normalized stock. Cancel/back abandon local edits without writing; repeated Save/Send activation submits one guarded operation. Requests and transfer events still have no stock or supplier-money effect.
