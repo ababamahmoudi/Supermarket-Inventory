@@ -267,3 +267,34 @@ test("R0.7 registered popup controls are measured within their render plane, wit
     "Expected an actual overlay plane: request-results",
   );
 });
+
+for (const direction of ["ltr", "rtl"] as const)
+  test(`R0.7 linked app login measures its actual icon/value edge and rejects a shifted value (${direction})`, async ({
+    page,
+  }) => {
+    await page.setContent(
+      `<html dir="${direction}"><style>*{box-sizing:border-box}.timesheet-managed-person{display:grid;grid-template-columns:32px 160px 100px 160px 44px;gap:12px;align-items:center;height:64px}.timesheet-staff-login{display:inline-flex;align-items:center;gap:6px}button{height:36px;width:36px;border:0}</style><main><section class="timesheet-manage-staff"><ul class="timesheet-managed-list">${[false, true, false].map((linked, i) => `<li class="timesheet-managed-person" data-staff-id="fictional-${i}"><span aria-hidden="true"></span><strong>Fictional person ${i}</strong><span>Bakery</span><span class="timesheet-staff-login">${linked ? '<svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="4"/></svg><bdi dir="ltr">cashier</bdi>' : "No app login"}</span><button aria-label="Actions">⋯</button></li>`).join("")}</ul></section></main></html>`,
+    );
+    const audit = () => auditR2fAlignment(page, { scene: "D2" });
+    expect(
+      (
+        await auditR2fAlignment(page, { scene: "D2", exceptionIds: [] })
+      ).failures.some((item) => item.startsWith("col ")),
+    ).toBe(true);
+    const clean = await audit();
+    expect(clean.failures).toEqual([]);
+    expect(
+      clean.allowed.find((entry) => entry.id === "D2-linked-login-icon")?.count,
+    ).toBeGreaterThan(0);
+    const value = page.locator(".timesheet-staff-login:has(svg)");
+    await value.evaluate(
+      (node) => ((node as HTMLElement).style.transform = "translateX(4px)"),
+    );
+    expect(
+      (await audit()).failures.some((item) => item.startsWith("col ")),
+    ).toBe(true);
+    await value.evaluate((node) =>
+      (node as HTMLElement).style.removeProperty("transform"),
+    );
+    expect((await audit()).failures).toEqual([]);
+  });

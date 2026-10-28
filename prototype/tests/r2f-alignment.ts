@@ -6,6 +6,15 @@ export type R2fScene =
 /** Explicit semantic exceptions, never a page/class-wide bypass of the audit. */
 export const r2fAlignmentExceptions = [
   {
+    id: "D2-linked-login-icon",
+    scene: "D2",
+    kind: "composite-column-value",
+    selector:
+      ".timesheet-manage-staff .timesheet-managed-person[data-staff-id] > .timesheet-staff-login:has(> svg[aria-hidden='true'])",
+    reason:
+      "The approved linked app login includes its leading user icon and 6px gap. Compare the complete icon/login value edge with the plain No app login and heading edges; the Name/Department columns retain actual glyph probes.",
+  },
+  {
     id: "D1-independent-departments",
     scene: "D1",
     kind: "independent-controls",

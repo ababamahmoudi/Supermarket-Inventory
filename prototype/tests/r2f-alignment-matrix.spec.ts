@@ -84,10 +84,18 @@ async function measure(
     report.controls,
     `${scene} must audit actual visible controls`,
   ).toBeGreaterThan(0);
-  expect(
-    report.pairs,
-    `${scene} must compare actual peer controls`,
-  ).toBeGreaterThan(0);
+  // These approved phone compositions have one control per separate row.
+  // Their actual column/stack/boxed-record edges are proved below instead.
+  if (
+    (scene === "D8" || (scene === "D2" && phase === "staff-list")) &&
+    (await page.evaluate(() => innerWidth)) === 390
+  )
+    expect(report.pairs).toBe(0);
+  else
+    expect(
+      report.pairs,
+      `${scene} must compare actual peer controls`,
+    ).toBeGreaterThan(0);
   expect(
     await page
       .locator("html")
@@ -136,7 +144,49 @@ async function prepareScene(
         .click();
       const dialog = page.locator("dialog.timesheet-manage-staff[open]");
       await expect(dialog.locator(".timesheet-managed-person")).toHaveCount(10);
-      await measure(page, info, scene, "staff-list");
+      const report = await measure(page, info, scene, "staff-list");
+      expect(report.columns).toBeGreaterThanOrEqual(3);
+      expect(report.cells).toBeGreaterThanOrEqual(30);
+      if (width === 390) {
+        const stack = async () =>
+          dialog.locator(".timesheet-staff-toolbar").evaluate((toolbar) => {
+            const rects = [...toolbar.children].map((node) =>
+              node.getBoundingClientRect(),
+            );
+            return {
+              count: rects.length,
+              heights: rects.map((rect) => rect.height),
+              widths:
+                Math.max(...rects.map((rect) => rect.width)) -
+                Math.min(...rects.map((rect) => rect.width)),
+              edges:
+                Math.max(...rects.map((rect) => rect.left)) -
+                Math.min(...rects.map((rect) => rect.left)),
+              steps: rects
+                .slice(1)
+                .map((rect, index) => rect.top - rects[index].top),
+            };
+          });
+        const verifyStack = (result: Awaited<ReturnType<typeof stack>>) => {
+          expect(result.count).toBe(3);
+          for (const height of result.heights)
+            expect(Math.abs(height - 44)).toBeLessThanOrEqual(2);
+          expect(result.widths).toBeLessThanOrEqual(1.5);
+          expect(result.edges).toBeLessThanOrEqual(1.5);
+          for (const step of result.steps)
+            expect(Math.abs(step - 54)).toBeLessThanOrEqual(1.5);
+        };
+        verifyStack(await stack());
+        const action = dialog.locator(".timesheet-staff-toolbar > :last-child");
+        await action.evaluate(
+          (node) => ((node as HTMLElement).style.transform = "translateX(4px)"),
+        );
+        expect((await stack()).edges).toBeGreaterThan(1.5);
+        await action.evaluate((node) =>
+          (node as HTMLElement).style.removeProperty("transform"),
+        );
+        verifyStack(await stack());
+      }
       await dialog
         .locator(".timesheet-staff-toolbar")
         .getByRole("button", {
@@ -246,10 +296,66 @@ async function prepareScene(
       await expect(table).toContainText("$11.00");
       if (width === 390)
         await expect(table.locator(".return-phone-header")).toHaveCount(3);
-      const report = await measure(page, info, scene, "retained-returns", {
-        exceptionIds: [],
-      });
-      if (width === 1440) expect(report.columns).toBeGreaterThanOrEqual(5);
+      const report = await measure(page, info, scene, "retained-returns");
+      if (width === 1440) {
+        expect(report.columns).toBeGreaterThanOrEqual(5);
+        expect(
+          report.allowed.find((entry) => entry.id === "D8-status-dot")?.count,
+        ).toBeGreaterThanOrEqual(3);
+      } else {
+        const alignPhoneRows = async () =>
+          table.evaluate((node) => {
+            const rtl = getComputedStyle(node).direction === "rtl";
+            const glyph = (element: Element) => {
+              const range = document.createRange();
+              range.selectNodeContents(element);
+              const rect = range.getBoundingClientRect();
+              return {
+                start: rtl ? rect.right : rect.left,
+                end: rtl ? rect.left : rect.right,
+              };
+            };
+            const rows = [...node.querySelectorAll("tbody tr")].map((row) => ({
+              reference: glyph(row.querySelector(".return-phone-reference")!)
+                .start,
+              date: glyph(
+                row.querySelector(".return-phone-meta > :first-child")!,
+              ).start,
+              credit: glyph(
+                row.querySelector(".return-phone-meta > :last-child")!,
+              ).end,
+              next: glyph(row.querySelector(".return-phone-next .actions")!)
+                .start,
+              chevron: (() => {
+                const rect = row
+                  .querySelector(".return-phone-next .table-row-link")!
+                  .getBoundingClientRect();
+                return rtl ? rect.left : rect.right;
+              })(),
+            }));
+            return Object.keys(rows[0]).map((key) => {
+              const values = rows.map((row) => row[key as keyof typeof row]);
+              return Math.max(...values) - Math.min(...values);
+            });
+          });
+        for (const spread of await alignPhoneRows())
+          expect(spread).toBeLessThanOrEqual(1.5);
+        // A real credit shift must fail the same logical-edge measurements.
+        const credit = table
+          .locator(".return-phone-meta > :last-child")
+          .first();
+        await credit.evaluate(
+          (node) => ((node as HTMLElement).style.transform = "translateX(4px)"),
+        );
+        expect((await alignPhoneRows()).some((spread) => spread > 1.5)).toBe(
+          true,
+        );
+        await credit.evaluate((node) =>
+          (node as HTMLElement).style.removeProperty("transform"),
+        );
+        for (const spread of await alignPhoneRows())
+          expect(spread).toBeLessThanOrEqual(1.5);
+      }
     }
     return;
   }
