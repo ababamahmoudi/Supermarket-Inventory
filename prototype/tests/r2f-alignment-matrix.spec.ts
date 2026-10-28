@@ -179,6 +179,9 @@ async function prepareScene(
         })
         .fill("125");
       await expect(dialog.locator(".weight-package-add-preview")).toBeVisible();
+      await expect(dialog.locator(".weight-package-add-preview")).toContainText(
+        "$",
+      );
       const report = await measure(
         page,
         info,
