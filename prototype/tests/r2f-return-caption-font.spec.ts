@@ -44,6 +44,56 @@ const amount =
 const unknown =
   '.returns-overview-table tbody tr[data-row-href="#return?id=r2f-return-two"] td[data-column-key="credit"] .ui-numeric-caption';
 
+async function renderCaptionFont(page: Page, historical: boolean) {
+  const transition = await page
+    .locator(caption)
+    .evaluate(async (node, previous) => {
+      const element = node as HTMLElement;
+      if (previous) element.style.fontFamily = "var(--font-en)";
+      else element.style.removeProperty("font-family");
+      const expectedFamily = previous
+        ? getComputedStyle(document.documentElement).getPropertyValue(
+            "--font-en",
+          )
+        : getComputedStyle(element.parentElement!).fontFamily;
+      const inspect = () => {
+        const fontFamily = getComputedStyle(element).fontFamily;
+        const box = element.getBoundingClientRect();
+        return {
+          inlineFamily: element.style.fontFamily,
+          fontFamily,
+          width: box.width,
+          height: box.height,
+        };
+      };
+      // CDP platform fonts describe rendered glyphs. Establish the actual style
+      // and layout, then let font loading and a paint finish before reading them.
+      const requested = inspect();
+      await document.fonts.ready;
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      );
+      return { expectedFamily, requested, rendered: inspect() };
+    }, historical);
+  const normalizedFamily = (family: string) =>
+    family
+      .replace(/["']/g, "")
+      .replace(/\s*,\s*/g, ",")
+      .trim();
+  for (const style of [transition.requested, transition.rendered]) {
+    expect(style.inlineFamily).toBe(historical ? "var(--font-en)" : "");
+    expect(normalizedFamily(style.fontFamily)).toBe(
+      normalizedFamily(transition.expectedFamily),
+    );
+    expect(style.width).toBeGreaterThan(0);
+    expect(style.height).toBeGreaterThan(0);
+  }
+  expect(transition.rendered.fontFamily.includes("Vazirmatn")).toBe(
+    !historical,
+  );
+  return transition;
+}
+
 test("FA numeric captions use bundled interface glyphs across host fallbacks while return money retains numeric glyphs", async ({
   page,
 }, info) => {
@@ -106,29 +156,31 @@ test("FA numeric captions use bundled interface glyphs across host fallbacks whi
     }
   // The actual previous .numeric font contract is rejected even on a host whose
   // default Arabic fallback happens to fit. This is font evidence, not a waiver.
-  await page
-    .locator(caption)
-    .evaluate(
-      (node) => ((node as HTMLElement).style.fontFamily = "var(--font-en)"),
-    );
+  const historicalStyle = await renderCaptionFont(page, true);
   const previous = await platformFonts(page, { caption, amount });
   expect(bundledPersian(previous.caption)).toBe(false);
+  expect(
+    previous.caption.some((font) => !font.isCustomFont && font.glyphCount > 0),
+  ).toBe(true);
   expect(
     previous.amount.every(
       (font) => font.isCustomFont && /Manrope/.test(font.familyName),
     ),
   ).toBe(true);
-  await page
-    .locator(caption)
-    .evaluate((node) =>
-      (node as HTMLElement).style.removeProperty("font-family"),
-    );
-  expect(bundledPersian((await platformFonts(page, { caption })).caption)).toBe(
-    true,
-  );
+  expect(
+    previous.amount.reduce((count, font) => count + font.glyphCount, 0),
+  ).toBeGreaterThanOrEqual(6);
+  const restoredStyle = await renderCaptionFont(page, false);
+  const restored = await platformFonts(page, { caption });
+  expect(bundledPersian(restored.caption)).toBe(true);
+  expect(restored.caption.every((font) => font.isCustomFont)).toBe(true);
   expect((await auditR2fAlignment(page, { scene: "D8" })).failures).toEqual([]);
   await info.attach("actual-platform-fonts-and-alignment", {
-    body: JSON.stringify({ scenes, previous }, null, 2),
+    body: JSON.stringify(
+      { scenes, historicalStyle, previous, restoredStyle, restored },
+      null,
+      2,
+    ),
     contentType: "application/json",
   });
 });
