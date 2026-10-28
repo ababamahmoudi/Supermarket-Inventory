@@ -128,12 +128,29 @@ async function checkAlignment(table: Locator) {
           );
         });
         const compact = row.matches(".phone-list-row");
-        const compactRegion = ["name", "value", "secondary", "chevron"].find(
-          (region) => cell.classList.contains(`phone-list-${region}`),
+        const richReturn =
+          wrapper.matches(".returns-overview-table") &&
+          row.querySelector(":scope > .return-phone-header") !== null;
+        const regions = richReturn
+          ? [
+              "return-phone-header",
+              "return-phone-items",
+              "return-phone-meta",
+              "return-phone-next",
+            ]
+          : [
+              "phone-list-name",
+              "phone-list-value",
+              "phone-list-secondary",
+              "phone-list-chevron",
+            ];
+        const compactRegion = regions.find((region) =>
+          cell.classList.contains(region),
         );
-        const chevron = row.querySelector<HTMLElement>(
-          ".phone-list-chevron .table-row-link",
-        );
+        const chevronSelector = richReturn
+          ? ".return-phone-next .table-row-link"
+          : ".phone-list-chevron .table-row-link";
+        const chevron = row.querySelector<HTMLElement>(chevronSelector);
         const rowStyle = getComputedStyle(row);
         const rtl = rowStyle.direction === "rtl";
         const visualEnd = rtl
@@ -146,26 +163,17 @@ async function checkAlignment(table: Locator) {
         cardCells.push({
           compact,
           compactRegion,
-          compactRegionsComplete: [
-            "name",
-            "value",
-            "secondary",
-            "chevron",
-          ].every(
+          compactRegionsComplete: regions.every(
             (region) =>
-              row.querySelectorAll(`:scope > .phone-list-${region}`).length ===
-              1,
+              row.querySelectorAll(`:scope > .${region}`).length === 1,
           ),
           compactRegionValid:
             compactRegion !== undefined &&
-            row.querySelectorAll(`:scope > .phone-list-${compactRegion}`)
-              .length === 1,
+            row.querySelectorAll(`:scope > .${compactRegion}`).length === 1,
           compactNoCaptions:
             label === "" && ["none", "normal"].includes(caption.content),
           compactGrid: rowStyle.display === "grid",
-          compactChevronCount: row.querySelectorAll(
-            ".phone-list-chevron .table-row-link",
-          ).length,
+          compactChevronCount: row.querySelectorAll(chevronSelector).length,
           compactNoDisclosure:
             row.querySelector(".table-details-toggle") === null,
           compactChevronAtEnd:
@@ -209,7 +217,19 @@ async function checkAlignment(table: Locator) {
         });
       }
     }
+    const boundedScroll =
+      !cards &&
+      wrapper.matches(".returns-overview-table.is-scrollable") &&
+      wrapper.scrollWidth > wrapper.clientWidth + 2;
+    const parentBox = wrapper.parentElement!.getBoundingClientRect();
     return {
+      boundedScroll,
+      scrollAuto: ["auto", "scroll"].includes(
+        getComputedStyle(wrapper).overflowX,
+      ),
+      wrapperContained:
+        wrapperBox.left >= parentBox.left - 2 &&
+        wrapperBox.right <= parentBox.right + 2,
       cards,
       visibleRows: rows.length,
       columns,
@@ -224,14 +244,20 @@ async function checkAlignment(table: Locator) {
   });
   expect(geometry.visibleRows).toBeGreaterThan(0);
   expect(geometry.uniqueHeaderIdentities).toBe(true);
-  expect(geometry.tableContained).toBe(true);
-  expect(geometry.noTableOverflow).toBe(true);
+  if (geometry.boundedScroll) {
+    // D8 retains all selected tablet columns on its genuine bounded scroll surface.
+    expect(geometry.scrollAuto).toBe(true);
+    expect(geometry.wrapperContained).toBe(true);
+  } else {
+    expect(geometry.tableContained).toBe(true);
+    expect(geometry.noTableOverflow).toBe(true);
+  }
   expect(geometry.noPageOverflow).toBe(true);
   if (geometry.cards) {
     expect(geometry.cardCells.length).toBeGreaterThan(0);
     for (const cell of geometry.cardCells) {
       if (cell.compact) {
-        // E3's overview uses explicit name/value/secondary/chevron regions.
+        // Validate the exact E3 or D8 semantic slots without skipping any cell.
         // Keep every original visible-glyph/control/2 px containment guard.
         expect(cell.compactRegionsComplete).toBe(true);
         expect(cell.compactRegionValid).toBe(true);
@@ -273,6 +299,10 @@ test("Returns starts with all suppliers and Open records, and opens each return 
 }) => {
   await signIn(page, "Supervisor");
   await visitPage(page, "Returns");
+  await expect(page.getByLabel("Return branch", { exact: true })).toHaveCount(
+    0,
+  );
+  await setBranch(page, "all");
   await expect(page.getByLabel("Supplier", { exact: true })).toHaveText(
     "All suppliers",
   );
