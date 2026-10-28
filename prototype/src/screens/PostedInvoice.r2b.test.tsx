@@ -130,6 +130,8 @@ it("places permissioned actions in the header and shows collapsed human reading 
   expect(
     document.querySelectorAll(".posted-invoice-totals > div"),
   ).toHaveLength(5);
+  expect(invoice.other_charges ?? []).toHaveLength(0);
+  expect(document.querySelector(".posted-invoice-other-charges")).toBeNull();
 });
 
 it("includes the tracked-date column only when at least one retained line has a real date", async () => {

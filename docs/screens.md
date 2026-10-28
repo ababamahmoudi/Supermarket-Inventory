@@ -493,3 +493,5 @@ Branch requests → New request shows a back link, title/explanation, paired Ask
 Posted invoice details retain their responsive grid; the repeated invoice number fits one visible line in its actual field with its complete source value in the native title. The page heading retains the full readable and accessible reference. This presentation never changes stored references, original evidence, invoice routing or recorded amounts.
 
 Posted source costs retain four decimals and the original source unit. Keep each amount and /unit fragment whole; a narrow Unit cost column may break only immediately before the complete suffix. Preserve numeric-column padding and logical heading/value edges.
+
+Posted Other charges and credits uses one padded surface Card with a shared 44 px heading row when any charges exist. Empty invoices have no charges Card; the review editor retains its existing inline heading. Source descriptions, amounts, taxable states and totals are unchanged.

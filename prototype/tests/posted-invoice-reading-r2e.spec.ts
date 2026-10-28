@@ -160,6 +160,43 @@ for (const language of ["en", "fa"] as const)
     )!;
     expect(invoice.status).toBe("posted");
     expect(invoice.reading_record).toEqual(imported.reading_record);
+    const chargeCard = page.locator(".posted-invoice-other-charges");
+    await expect(chargeCard).toBeVisible();
+    const chargesHeading =
+      language === "en"
+        ? "Other charges and credits"
+        : "هزینه‌ها و اعتبارهای دیگر";
+    await expect(
+      page.getByRole("heading", { name: chargesHeading, exact: true }),
+    ).toHaveCount(1);
+    await expect(
+      chargeCard.getByRole("heading", {
+        name: chargesHeading,
+        exact: true,
+        level: 2,
+      }),
+    ).toBeVisible();
+    const cardGeometry = await chargeCard.evaluate((card) => {
+      const header = card.querySelector(":scope > .ui-card-header")!;
+      const heading = header.querySelector("h2")!;
+      const bounds = card.getBoundingClientRect(),
+        title = heading.getBoundingClientRect();
+      const style = getComputedStyle(card);
+      const gap =
+        style.direction === "rtl"
+          ? bounds.right - title.right
+          : title.left - bounds.left;
+      return {
+        height: header.getBoundingClientRect().height,
+        titleEdge: Math.abs(gap - parseFloat(style.paddingInlineStart)),
+      };
+    });
+    expect(cardGeometry.height).toBeGreaterThanOrEqual(44);
+    expect(cardGeometry.titleEdge).toBeLessThanOrEqual(1.5);
+    expect(invoice.other_charges).toHaveLength(2);
+    for (const charge of invoice.other_charges!)
+      await expect(chargeCard).toContainText(charge.description);
+
     const references = invoice.original_pages!.map((page) => page.file_data);
     const expectedDigests = entry.pages.map((page) =>
       createHash("sha256")

@@ -24,7 +24,7 @@ import {
   Money,
   ProductName,
 } from "../presentation";
-import { Badge, Button, Card, Disclosure } from "../ui";
+import { Badge, Button, Card, CardHeader, Disclosure } from "../ui";
 import { OriginalViewer } from "./invoice-review/OriginalViewer";
 import { FitText } from "../FitText";
 import { importedReadingReceived } from "../invoice-reading-dates";
@@ -682,7 +682,17 @@ export function PostedInvoice({
               </tbody>
             </table>
           </Card>
-          <InvoiceOtherCharges invoice={invoice} />
+          {(invoice.other_charges?.length ?? 0) > 0 && (
+            <Card className="posted-invoice-other-charges">
+              <CardHeader
+                title={t(
+                  "Other charges and credits",
+                  "هزینه‌ها و اعتبارهای دیگر",
+                )}
+              />
+              <InvoiceOtherCharges invoice={invoice} showHeading={false} />
+            </Card>
+          )}
           <Card className="receiving-totals">
             <div className="receiving-card-title">
               <h2>{t("Totals", "جمع‌ها")}</h2>

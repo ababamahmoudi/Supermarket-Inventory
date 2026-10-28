@@ -149,3 +149,7 @@
   white-space: nowrap;
   overflow: hidden;
 }
+
+.posted-invoice-other-charges > .invoice-other-charges {
+  margin-block: 0;
+}

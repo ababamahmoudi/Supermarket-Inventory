@@ -1,3 +1,8 @@
+## 2026-10-28 — Posted Other charges surface
+
+- Put nonempty posted Other charges and credits in one padded Card with a shared 44 px heading, retaining review presentation and every financial value.
+- All eight original and real-import EN/FA desktop/phone receiving cases pass with complete unfiltered C8 reports; actual source-cost, original-byte and no-write checks remain strict.
+
 ## 2026-10-28 — Posted source-cost atoms
 
 - Preserve the complete four-decimal source amount and source unit with a legal break only before the whole suffix; retain existing column widths, gaps, typography and currency behavior.

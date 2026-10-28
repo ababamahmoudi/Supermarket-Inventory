@@ -62,8 +62,10 @@ export function InvoiceOtherCharges({
   invoice,
   onAcknowledge,
   onEdit,
+  showHeading = true,
 }: {
   invoice: InvoiceReadDTO;
+  showHeading?: boolean;
   onAcknowledge?(index: number, field: string): void;
   onEdit?(index: number, field: string, value: string): void;
 }) {
@@ -76,7 +78,9 @@ export function InvoiceOtherCharges({
   );
   return (
     <section className="invoice-other-charges">
-      <h3>{t("Other charges and credits", "هزینه‌ها و اعتبارهای دیگر")}</h3>
+      {showHeading && (
+        <h3>{t("Other charges and credits", "هزینه‌ها و اعتبارهای دیگر")}</h3>
+      )}
       <DataTable
         density="compact"
         columns={[
