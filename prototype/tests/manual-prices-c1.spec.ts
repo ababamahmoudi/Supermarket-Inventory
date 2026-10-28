@@ -18,6 +18,10 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
   page,
 }) => {
   await signIn(page, "Supervisor");
+  const fresh = await readCanonicalBusinessEvidence(page);
+  const freshBranchPrices = fresh.products.find(
+    (product) => product.code === "0009",
+  )!.branch_prices;
   await setBranch(page, "all");
   await page.goto("/#products");
   await page.getByLabel("Search products", { exact: true }).fill("0009");
@@ -186,16 +190,38 @@ test("manual price stays visible to staff while catalog cost, margin and cost hi
   await expect(page.locator(".lookup-detail .manual-price-pill")).toHaveCount(
     0,
   );
-  await expect(
-    page.locator(".lookup-detail .lookup-other-prices"),
-  ).toContainText("Not approved here yet");
-  await expect(page.locator(".lookup-detail .price")).toHaveCount(0);
+  // C14 resets every ordinary demo product to genuine approved branch prices.
+  await expect(page.locator(".lookup-detail .price")).toHaveText("$2.99");
+  await expect(page.locator(".lookup-detail .lookup-other-prices")).toHaveCount(
+    0,
+  );
   const reset = await readCanonicalBusinessEvidence(page);
   const resetProduct = reset.products.find(
     (product) => product.code === "0009",
   )!;
   expect(resetProduct.selling_price).toBe("2.99");
-  expect(resetProduct.branch_prices).toEqual({});
+  expect(resetProduct.branch_prices).toEqual(freshBranchPrices);
+  // Keep the original unapproved/no-charge guard on C14's explicit pending example.
+  const pending = reset.products.find((product) => product.code === "0015")!;
+  expect(pending.status).toBe("pending_approval");
+  expect(pending.branch_prices?.["Branch 1"]).toBeUndefined();
+  expect(pending.pending_price).toBeTruthy();
+  expect(
+    reset.approvals.some(
+      (approval) =>
+        approval.product_code === pending.code &&
+        approval.branch === "Branch 1" &&
+        approval.status === "pending",
+    ),
+  ).toBe(true);
+  await page.getByLabel("Search products", { exact: true }).fill("0015");
+  await expect(page.locator(".lookup-detail .manual-price-pill")).toHaveCount(
+    0,
+  );
+  await expect(
+    page.locator(".lookup-detail .lookup-other-prices"),
+  ).toContainText("Not approved here yet");
+  await expect(page.locator(".lookup-detail .price")).toHaveCount(0);
 });
 
 test("branch-only manual prices do not flag the other location", async ({
