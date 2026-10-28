@@ -212,3 +212,9 @@ Maker file ownership is explicit in `maker.asset_identity` (default Klead). Repl
 - “So far” is presentation-only elapsed time for the currently selected branch's today, from a valid In no later than its actual clock and no Out. Department/day captions include that elapsed display; stored duration, weekly totals and payroll CSV continue to count only completed shifts. No Out is inferred. Past missing-Out shifts stay amber/zero, and future clock-ins have no elapsed claim. The dashboard's existing prior-unclosed count is unchanged.
 - The header on-shift count deduplicates current-day people. The display refreshes at minute boundaries and when a tab becomes visible; it never changes the chosen day, saved records or actor evidence.
 - Screenshot-specific masonry cards keep compact baseline headings and independent heights. Narrow day-row menus are28px wide but44px high, as the source; ordinary operational cards retain the shared R0 header contract.
+
+## R2f D2 recorded defaults — 2026-10-28
+
+- New person initially selects the first configured department, as the existing guarded staff editor did; the operator can change it. English name is required; Persian name and app login are optional. The list remains mounted while the inline form is open. After a successful Add, clear search and select Active so the new actual person is visible. Cancel discards only the unsaved form.
+- Login display comes from the permitted current branch account query. Loading, unavailable and failed-account-query states are explicit; a missing query result is never shown as No app login when a stored link exists. Name-only edits retain an unchanged unavailable link, while changing/clearing a link still uses normal protected validation.
+- Stale staff versions keep the staged form and report that the person changed. Close/reopen loads the current evidence. Archive remains a confirmed soft status change; Restore does not remove historical rows.

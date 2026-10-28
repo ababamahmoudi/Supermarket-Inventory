@@ -407,25 +407,23 @@ test("staff can be edited, linked, archived and restored without removing past s
   await independentTimesheetRows(page, "Cashier");
   await visitPage(page, "Timesheets");
   await page.getByRole("button", { name: "Manage staff", exact: true }).click();
-  const dialog = page.getByRole("dialog", {
-    name: "Manage branch staff",
-    exact: true,
-  });
+  const dialog = page.locator("dialog.timesheet-manage-staff[open]");
   await dialog
     .locator(".timesheet-managed-person")
     .filter({ hasText: "Emery Vale" })
-    .getByRole("button", { name: "Edit", exact: true })
+    .getByRole("button", { name: "Actions for Emery Vale", exact: true })
     .click();
+  await page.getByRole("menuitem", { name: "Edit", exact: true }).click();
   const edit = page.getByRole("dialog", {
     name: "Edit staff member",
     exact: true,
   });
   await edit
-    .getByLabel("Persian name (optional)", { exact: true })
+    .getByLabel("Name (Persian) (optional)", { exact: true })
     .fill("نام نمونه");
   await chooseOption(
     page,
-    edit.getByRole("combobox", { name: "App person (optional)" }),
+    edit.getByRole("combobox", { name: "App login (optional)" }),
     "Demo Cashier · cashier",
   );
   await edit
@@ -434,21 +432,23 @@ test("staff can be edited, linked, archived and restored without removing past s
   const person = dialog
     .locator(".timesheet-managed-person")
     .filter({ hasText: "Emery Vale" });
-  await person.getByRole("button", { name: "Archive", exact: true }).click();
+  await person
+    .getByRole("button", { name: "Actions for Emery Vale", exact: true })
+    .click();
+  await page.getByRole("menuitem", { name: "Archive", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Archive this staff member?" })
     .getByRole("button", { name: "Archive", exact: true })
     .click();
   await expect(person).toHaveCount(0);
-  await dialog
-    .getByRole("button", { name: "Show archived", exact: true })
-    .click();
+  await dialog.getByRole("tab", { name: /Archived/ }).click();
   await dialog
     .locator(".timesheet-managed-person")
     .filter({ hasText: "Emery Vale" })
-    .getByRole("button", { name: "Restore", exact: true })
+    .getByRole("button", { name: "Actions for Emery Vale", exact: true })
     .click();
-  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Restore", exact: true }).click();
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
   await expect(
     page.getByRole("textbox", { name: "In time for Emery Vale", exact: true }),
   ).toHaveValue("06:00");

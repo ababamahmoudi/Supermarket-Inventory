@@ -537,3 +537,7 @@ Context: the store app needs secondary maker attribution while remaining reusabl
 ## R2f D1 — Separate elapsed display from completed payroll
 
 Context: the approved day sheet shows current elapsed hours, while R2d correctly keeps a missing-Out shift at zero completed hours. Decision: a pure daily display helper adds current-day elapsed minutes to presentation only; canonical week/CSV/print durations and blank Out evidence remain unchanged. Why: match the live staff view without inventing a payroll clock-out. Reuse the established save registry and original-actor/navigation bridge rather than replacing their workflow during the redesign.
+
+## R2f D2 — Preserve staff history and staged evidence
+
+Context: the approved directory moves Add into an inline form and replaces row actions with a menu. Decision: retain protected staff commands, the original signed-in actor, soft archival and existing shift identities; check the captured staff version before saving a staged edit/status change. Keep failed asynchronous archival in its confirmation dialog and retain typed edits on failure. Why: presentation changes must not erase history, overwrite newer staff details or close before the real write succeeds. An unchanged retained login link is omitted from an edit patch so a name-only correction does not clear or recreate an account that is no longer an eligible new selection.

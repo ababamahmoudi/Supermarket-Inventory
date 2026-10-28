@@ -522,3 +522,5 @@ Added original approved logo/icon files, optional public maker/support config, t
 - R2f R0.7: audit each registered actual popup as its own render plane; retain strict peer checks within it and reject static copied popup wrappers. Browser proof rejects an internal 40/44 px mismatch.
 - R2f R0.1: give shared quick-filter chips a neutral idle appearance for approved Lookup, retaining existing surface chips elsewhere and the same selected/keyboard/geometry contract.
 - R2f R0.2: add the approved shared medium table density (48 px body/32 px headings) for location comparisons, retaining default/compact/phone behavior and shared logical column edges.
+
+- R2f D2: match the approved880px Manage staff window with actual Active/Archived counts, boxed bilingual-name/avatar/department/login rows,44px peer controls and narrow contextual menus; add the inline New person form above the retained list and the three full-width phone toolbar rows. Preserve guarded staff writes and soft history, reject stale staged edits, and keep asynchronous archive failures visible in the confirmation.
