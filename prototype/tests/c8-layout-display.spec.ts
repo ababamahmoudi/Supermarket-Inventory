@@ -1,3 +1,4 @@
+import { inspectTableAlignment } from "./alignment-a2-proof";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -364,19 +365,32 @@ for (const language of ["en", "fa"] as const) {
         await expect(disclosure).toHaveCount(0);
       }
       if (await row.evaluate((element) => element.matches(".phone-list-row"))) {
+        const richReturn = route === "returns";
+        if (richReturn) {
+          const proof = await inspectTableAlignment(page);
+          expect(proof.failures).toEqual([]);
+          expect(proof.maxError).toBeLessThanOrEqual(2);
+          expect(proof.returnCards).toBe(
+            await page.locator(`${selector} tbody > tr[data-row-href]`).count(),
+          );
+          expect(proof.returnCards).toBeGreaterThan(0);
+        }
+        const chevronSelector = richReturn
+          ? ".return-phone-next .table-row-link"
+          : ".phone-list-chevron .table-row-link";
         await expect(row.locator(".table-row-link")).toHaveCount(1);
         await expect(row.locator(".table-row-link")).toHaveAttribute(
           "href",
           (await row.getAttribute("data-row-href"))!,
         );
-        await expect(
-          row.locator(".phone-list-chevron .table-row-link"),
-        ).toHaveCount(1);
+        await expect(row.locator(chevronSelector)).toHaveCount(1);
         await expect(disclosure).toHaveCount(0);
         expect(
-          await row.evaluate((element) => {
+          await row.evaluate((element, richReturn) => {
             const control = element.querySelector<HTMLElement>(
-              ".phone-list-chevron .table-row-link",
+              richReturn
+                ? ".return-phone-next .table-row-link"
+                : ".phone-list-chevron .table-row-link",
             )!;
             const rect = control.getBoundingClientRect();
             const bounds = element.getBoundingClientRect();
@@ -397,15 +411,21 @@ for (const language of ["en", "fa"] as const) {
                 rect.top >= bounds.top - 1 && rect.bottom <= bounds.bottom + 1,
               afterValues: [...element.querySelectorAll(":scope > td")].every(
                 (cell) => {
-                  if (cell.matches(".phone-list-chevron")) return true;
+                  if (
+                    cell.matches(
+                      richReturn ? ".return-phone-next" : ".phone-list-chevron",
+                    )
+                  )
+                    return true;
                   const other = cell.getBoundingClientRect();
+                  if (richReturn) return other.bottom <= rect.top + 1;
                   return rtl
                     ? other.left >= rect.right - 1
                     : other.right <= rect.left + 1;
                 },
               ),
             };
-          }),
+          }, richReturn),
         ).toEqual({
           grid: "grid",
           icons: 1,

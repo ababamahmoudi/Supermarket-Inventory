@@ -596,3 +596,4 @@ Updated the legacy simulated-reading copy assertion to follow the approved entry
 - Strengthen the native Timesheets unload regression with actual pre-write and accepted-result barriers, canonical/audit assertions and app-work completion observation; retain reload protection until the complete save callback settles without relying on a one-second scheduling poll.
 
 - R2f invoice integration: stabilize retained English receiving-name glyphs across EN/FA with a reusable bundled bilingual font-order token; preserve table widths, ellipsis and strict clipping budgets.
+- CI203 integration: distinguish real signed-out language controls from restored actor chrome in the browser driver, retaining authentication/session assertions. Update E3/C8 phone proof to canonical D8 four-slot records and D7’s This week destination; preserve the2px geometry, permitted-credit and real-chevron guards, with a copied-auth-form negative check.

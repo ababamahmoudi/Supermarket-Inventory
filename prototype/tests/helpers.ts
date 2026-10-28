@@ -199,7 +199,43 @@ export async function setBranch(page: Page, branch: string) {
 }
 
 export async function setLanguage(page: Page, language: "en" | "fa") {
-  // Do not mistake the new document's default English for restored preferences.
+  // Language is also available on the actual signed-out/setup/lock surface.
+  // Wait for either completed actor chrome or that root auth form; the public
+  // loading shell's default English is never evidence of restored preferences.
+  const auth = page.locator("#root > .signin-page");
+  const authToggle = auth.locator(
+    ":scope > .signin-language > button.language-toggle[lang]",
+  );
+  const actorLocation = page.locator(".topbar .branch-pill[role=combobox]");
+  await expect
+    .poll(
+      async () =>
+        (await actorLocation.isVisible()) ||
+        ((await auth.isVisible()) &&
+          (await auth.locator(":scope > .signin-card").isVisible()) &&
+          (await auth.getByRole("heading", { level: 1 }).isVisible()) &&
+          (await authToggle.isVisible())),
+    )
+    .toBe(true);
+  if (await auth.isVisible()) {
+    await expect(actorLocation).toHaveCount(0);
+    await expect(authToggle).toBeEnabled();
+    if ((await page.locator("html").getAttribute("lang")) !== language) {
+      await expect(authToggle).toHaveAttribute("lang", language);
+      await authToggle.click();
+    }
+    await expect(page.locator("html")).toHaveAttribute("lang", language);
+    await expect(authToggle).toHaveAttribute(
+      "lang",
+      language === "fa" ? "en" : "fa",
+    );
+    await expect(authToggle).toHaveAccessibleName(
+      language === "fa" ? "تغییر به انگلیسی" : "Switch to Persian",
+    );
+    await expect(auth.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(actorLocation).toHaveCount(0);
+    return;
+  }
   await waitForShellActions(page);
   if ((await page.locator("html").getAttribute("lang")) === language) return;
   await (
