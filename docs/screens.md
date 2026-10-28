@@ -394,7 +394,7 @@ Costs appear in source choices only with existing supplier-cost permission; Floo
 
 ## R2e C1 — Imported reading identity
 
-The invoice review header says “Read by AI · imported file” without model identifiers. Invoice details → More details → Reading retains the original model identifiers as reading evidence. Imported evidence is never relabelled as a live read.
+Invoice review and posted headers say “Read by AI · imported file” without model identifiers. On both views, Invoice details → More details → Reading retains the original model identifiers as reading evidence and starts closed. Imported evidence is never relabelled as a live read.
 
 ## R2e C2 — One invoice entry path
 

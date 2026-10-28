@@ -4,7 +4,7 @@ Use the existing Manager or Owner account and a fictional demo or fictional read
 
 | Item | Click path | Expected result |
 | --- | --- | --- |
-| C1 | Invoices → import the fictional reading → open Needs review → Invoice details → More details → Reading | The page header says “Read by AI · imported file”. Only Reading contains the retained model identifiers. |
+| C1 | Invoices → import the fictional reading → open Needs review → Invoice details → More details → Reading | Review and posted headers say “Read by AI · imported file”. Only the initially closed More details → Reading contains the retained model identifiers; posting and reload retain every identifier. |
 | C2 | Invoices → Drafts → New invoice | There is one entry action and the existing four equal Photo / PDF / Manual entry / JSON choices. No inline Upload / Manual entry card appears below Drafts. Queue progress uses the shorter confirmed/check count inside its own column. |
 | C3 | Open a posted fictional invoice → Invoice lines | Quantity, Unit cost and Line total use the same numeric edge as their headers, through the shared B1 table rules. Retained quantities, amounts and precision are unchanged. |
 | C4 | Approve a newly received fictional product → Price updates | Its first retained price shows New item and the new price, without a missing-price arrow. Why describes the completed decision and identifies its actual decision maker. Package recalculations say Package price updated. |
@@ -21,3 +21,5 @@ C2’s protected pending-invoice tests use the shared entry chooser. Their exist
 A responsive 1000 px list may omit the existing lower-priority Progress column according to the shared table allocator. The visible progress text is compact and bounded; the full invoice remains reachable through its existing record action. The all-filtered label selection notice is shown whenever every eligible match is selected, whether or not every row currently fits in the viewport.
 
 Physical browser/device/printer verification remains part of the existing overall review limits; these tests do not claim physical Safari or iPhone coverage.
+
+C1 posted follow-up: import the repository’s fictional two-page export, review and post it normally, then repeat in EN/FA on phone and desktop. The original header reproduced both forbidden model IDs; the fixed four real import/review/post cases pass (48.7 sec). Each checks every retained ID under Reading, default-closed disclosure after reload, genuine Correct invoice → Cancel, complete source-page SHA256 before/after opening evidence, and unchanged canonical invoice/correction/stock/ledger/product/approval records. Three posted-component native repository cases also pass. Header formatting never relabels the import as a live read or changes retained originals, prices, permissions or model metadata.

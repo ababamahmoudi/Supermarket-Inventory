@@ -1,3 +1,8 @@
+## 2026-10-28 — R2e C1 posted reading provenance
+
+- Match the human imported-reading caption on posted and review headers. Retain every model identifier under initially closed More details → Reading.
+- Verify real JSON import, review, posting and correction Cancel in EN/FA on desktop/phone, including unchanged source-page bytes and canonical business evidence.
+
 ## 2026-10-28 — Posted invoice reference containment
 
 - Fit the repeated Invoice details number to its actual field, preserving the full heading, native source title and invoice route.

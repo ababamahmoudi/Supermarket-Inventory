@@ -37,9 +37,19 @@ function Harness({ id, company }: { id: string; company: string }) {
     />
   ) : null;
 }
-async function open(tracked = false) {
+async function open(tracked = false, imported = false) {
   const state = initialState();
   const invoice = state.invoices!.find((record) => record.status === "posted")!;
+  if (imported)
+    invoice.reading_record = {
+      source: "imported",
+      file_name: invoice.file_name || "fictional-posted-reading.png",
+      page_sha256s: ["a".repeat(64)],
+      models: ["fictional-model-a", "fictional-model-b"],
+      reading_cost_usd: "0.0100",
+      exported_at: "2026-10-18T12:00:00Z",
+      ai_source: "fictional import",
+    };
   invoice.import_warnings = [
     "No ship-to address is printed; used bill-to for branch_hint.",
     "Sub Total is Tax Inclusive with no separate tax amount printed.",
@@ -130,4 +140,38 @@ it("includes the tracked-date column only when at least one retained line has a 
   expect(document.querySelector(".posted-tracked-cell")).toHaveTextContent(
     "2026-12-03",
   );
+});
+
+it("keeps imported model identifiers in initially closed Reading evidence instead of the posted header", async () => {
+  const user = userEvent.setup();
+  const invoice = await open(false, true);
+  const fixture = fixtures.at(-1)!;
+  const before = await fixture.readCanonical();
+  const header = document.querySelector(
+    ".posted-receiving > .receiving-header",
+  )!;
+  expect(header).toHaveTextContent("Read by AI · imported file");
+  expect(header).not.toHaveTextContent("AI reading, imported (not live)");
+  for (const model of invoice.reading_record!.models)
+    expect(header).not.toHaveTextContent(model);
+  const more = document.querySelector(".posted-receiving .receiving-more")!;
+  expect(more).not.toHaveAttribute("open");
+  expect(
+    within(more as HTMLElement).getByRole("heading", {
+      name: "Reading",
+      hidden: true,
+    }),
+  ).not.toBeVisible();
+  await user.click(
+    within(more as HTMLElement).getByText("More details", { exact: true }),
+  );
+  expect(more).toHaveAttribute("open");
+  expect(
+    within(more as HTMLElement).getByRole("heading", { name: "Reading" }),
+  ).toBeVisible();
+  expect(more).toHaveTextContent(invoice.reading_record!.models.join(", "));
+  const after = await fixture.readCanonical();
+  expect(after.invoices).toEqual(before.invoices);
+  expect(after.stock_movements).toEqual(before.stock_movements);
+  expect(after.ledger).toEqual(before.ledger);
 });

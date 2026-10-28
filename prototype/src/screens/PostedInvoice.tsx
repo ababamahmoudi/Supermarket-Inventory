@@ -247,11 +247,9 @@ export function PostedInvoice({
             {invoice.reading_record && (
               <small className="muted">
                 {t(
-                  "AI reading, imported (not live)",
-                  "خوانش هوش مصنوعی، واردشده (زنده نیست)",
+                  "Read by AI · imported file",
+                  "خوانده‌شده با هوش مصنوعی · فایل واردشده",
                 )}
-                {" · "}
-                {invoice.reading_record.models.join(", ")}
               </small>
             )}
           </div>
@@ -442,6 +440,28 @@ export function PostedInvoice({
                 </div>
               )}
             </dl>
+            {invoice.reading_record && (
+              <Disclosure
+                className="receiving-more"
+                summary={t("More details", "جزئیات بیشتر")}
+              >
+                <div className="receiving-reading-evidence">
+                  <h3>{t("Reading", "خوانش")}</h3>
+                  <p className="muted">
+                    {t(
+                      "Read by AI · imported file",
+                      "خوانده‌شده با هوش مصنوعی · فایل واردشده",
+                    )}
+                  </p>
+                  <p>
+                    {t("Models", "مدل‌ها")}:{" "}
+                    <LtrText>
+                      {invoice.reading_record.models.join(", ")}
+                    </LtrText>
+                  </p>
+                </div>
+              </Disclosure>
+            )}
           </Card>
           <Card className="receiving-lines">
             <div className="receiving-card-title">
