@@ -22,6 +22,7 @@ for (const language of ["en", "fa"] as const)
         if (!invoice)
           throw new Error("The fictional posted invoice is required.");
         invoice.supplier_invoice_number = args.reference;
+        invoice.number_is_system_assigned = true;
         return invoice.id;
       },
       { reference },
@@ -47,6 +48,12 @@ for (const language of ["en", "fa"] as const)
         reference,
       );
       await expect(number).toHaveAttribute("title", reference);
+      await expect(number.locator("+ .muted")).toHaveText(
+        language === "en" ? "System assigned" : "اختصاص‌یافته توسط سیستم",
+      );
+      expect((await number.locator("..").innerText()).trim()).not.toMatch(
+        /\n\s*·/,
+      );
       const shown = (await number.innerText()).trim();
       expect(shown.length).toBeGreaterThan(1);
       expect(

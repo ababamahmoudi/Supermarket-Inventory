@@ -337,7 +337,9 @@ export function PostedInvoice({
                     render={(visible) => <LtrText>{visible}</LtrText>}
                   />
                   {invoice.number_is_system_assigned && (
-                    <> · {t("System assigned", "اختصاص‌یافته توسط سیستم")}</>
+                    <small className="muted">
+                      {t("System assigned", "اختصاص‌یافته توسط سیستم")}
+                    </small>
                   )}
                 </dd>
               </div>
