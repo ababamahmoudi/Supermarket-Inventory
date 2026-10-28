@@ -139,7 +139,11 @@ jobs:
       - name: Check prototype lint and formatting
         run: npm run lint
       - name: Run prototype unit tests and every seed pricing case
-        run: npm test
+        # Native repository tests retain their own concurrent-write proofs. One
+        # file worker avoids CPU contention on the two-core hosted runner.
+        run: |
+          npm exec -- vitest run --maxWorkers=1
+          npm run test:sdk
       - name: Build the prototype
         run: npm run build
 
