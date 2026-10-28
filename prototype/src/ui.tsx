@@ -556,7 +556,7 @@ export function DataTable({
   columns?: ResponsiveColumn[];
   responsive?: boolean;
   horizontalScroll?: boolean;
-  density?: "default" | "compact";
+  density?: "default" | "medium" | "compact";
   expandedRowKeys?: string[];
   onExpandedRowKeysChange?: (keys: string[]) => void;
   /** A canonical detail page/dialog exposes omitted facts; omit a second row disclosure. */
@@ -1189,6 +1189,7 @@ export function DataTable({
         layoutResponsive && "is-responsive",
         horizontalScroll && "is-scrollable",
         density === "compact" && "is-compact",
+        density === "medium" && "is-medium",
         mobile && "is-mobile",
         printing && "is-printing",
         mobile && phoneList && "is-phone-list",

@@ -724,6 +724,23 @@
   }
 }
 
+/* Approved 48px list rhythm, between default and compact operational tables. */
+@media (min-width: 761px) {
+  :root .ui-data-table.is-medium:not(.is-phone-list) tbody tr > td {
+    padding-block: 4px;
+  }
+  :root
+    .ui-data-table.is-medium
+    tbody
+    tr:not(.table-expanded-row):nth-child(n) {
+    block-size: 48px;
+  }
+  :root .ui-data-table.is-medium:not(.is-phone-list) thead th {
+    block-size: 32px;
+    padding-block: 0;
+  }
+}
+
 :root .ui-badge.badge.is-wrappable {
   display: inline-block;
   white-space: normal;

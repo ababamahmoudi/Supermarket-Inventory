@@ -43,3 +43,5 @@ The Dashboard decision column uses the approved real control-group edge, with it
 Registered fixed/absolute popups add separate audit render planes to the source's main/dialog scope. Controls behind an overlay are not its peers; controls within each actual popup still use the same strict 1.5/2 px limits. A negative control proves a 40/44 px mismatch inside the popup fails, while an actual background/footer cannot create a false cross-plane pair. A static element cannot claim the registered overlay-plane contract.
 
 The shared FilterChip offers a neutral idle appearance for the approved Lookup row while other lists retain the existing surface idle appearance. Both use the same reserved check, pressed-state accent, keyboard toggle, 44 px height and token palette; no screen overrides a shared chip style.
+
+DataTable also offers the approved medium list density: 48 px body rows and a 32 px heading track on desktop, using the same shared column padding/edges. Existing default/compact densities and phone record layouts keep their prior contract. Lookup's location table consumes this shared option instead of restyling a table on one screen.
