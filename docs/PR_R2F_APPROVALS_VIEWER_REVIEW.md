@@ -20,3 +20,7 @@ Numbers and dates can differ from the reference because the screen uses actual f
 5. Switch language and theme at 1440, 1000 and 390 px. The toolbar keeps its groups and actual state. The 44 px transparent hit targets preserve the approved 36 px visual icon slots; narrow panes shrink the slots to fit rather than hiding Rotate or requiring sideways scroll.
 
 Executed proof for D6/D9 covers visible EN/FA flows in both themes, strict shared alignment checks, the original byte hash, selected/atomic approval guards, worker sale privacy and the existing geometry oracle’s negative controls. Source-controlled tests retain fictional data only; final screenshots were individually opened for review outside the repository. The D9 oracle’s prior flat 36×36 controls and hidden Rotate are replaced with the approved four groups and all seven 44 px-high controls; containment and no-overflow assertions remain strict.
+
+## CI follow-up — explicit company-default preview fixture
+
+The existing approval-header browser test now explicitly installs its fictional company-default-only product through the native repository fixture and verifies that no branch prices remain before opening the preview. C14's ordinary demo receipts retain actual location prices, so the default seeded product correctly shows an Override removed consequence when an all-location decision replaces them. The original one-group, store-only, no-false-warning, contained-text and shared-navigation assertions remain unchanged. Existing C3 cases continue to verify real branch-override warnings separately.

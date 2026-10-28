@@ -7,6 +7,7 @@ import { openShellAction, setLanguage, signIn, uploadInvoice } from "./helpers";
 import { inspect, settled } from "../scripts/c5-browser-proof.mjs";
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { runCanonicalBusinessFixture } from "./business-fixture";
 
 async function visibleGeometry(page: Page, route: string) {
   await page.goto(`/#${route}`);
@@ -529,6 +530,26 @@ test("Part 1 approval headers are complete and sortable Products headers and bac
   page,
 }) => {
   await signIn(page, "Supervisor");
+  // This case is the company-default-only preview. C14's ordinary seeded
+  // receipts retain real location prices, whose removal correctly gets a warning.
+  await runCanonicalBusinessFixture(
+    page,
+    (draft) => {
+      const product = draft.products.find(
+        (item) =>
+          item.company_id === draft.config.company.seed_key &&
+          item.code === "0006",
+      );
+      if (!product) throw new Error("The fictional preview product is missing");
+      product.branch_prices = {};
+    },
+    null,
+  );
+  await page.reload();
+  const fixture = await readCanonicalBusinessEvidence(page);
+  expect(
+    fixture.products.find((item) => item.code === "0006")?.branch_prices,
+  ).toEqual({});
   await page.goto("/#approvals");
   await page
     .getByRole("button", { name: "Approve price", exact: true })
