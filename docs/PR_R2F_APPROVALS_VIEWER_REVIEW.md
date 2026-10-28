@@ -24,3 +24,7 @@ Executed proof for D6/D9 covers visible EN/FA flows in both themes, strict share
 ## CI follow-up — explicit company-default preview fixture
 
 The existing approval-header browser test now explicitly installs its fictional company-default-only product through the native repository fixture and verifies that no branch prices remain before opening the preview. C14's ordinary demo receipts retain actual location prices, so the default seeded product correctly shows an Override removed consequence when an all-location decision replaces them. The original one-group, store-only, no-false-warning, contained-text and shared-navigation assertions remain unchanged. Existing C3 cases continue to verify real branch-override warnings separately.
+
+## CI follow-up — repeat the retained offer's exact scope
+
+The repeated-offer browser test explicitly chooses Company default price to match its retained active offer. Selecting a product with actual branch price evidence correctly defaults a new offer to that branch, which is a distinct permitted scope rather than an idempotent repeat. The test verifies the retained scope, then keeps its original no-new-offer/no-new-History, stop-to-Past and Undo-to-Current checks. Both affected browser cases pass on desktop and phone against the fresh production build; application offer deduplication and permission guards are unchanged.

@@ -792,6 +792,15 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
     exact: true,
   });
   await choose(page, field(dialog, "Product"), /Sour Cherry Juice 1 L.*0003/);
+  const retained = before.offers.filter(
+    (offer: { product_code: string; status: string }) =>
+      offer.product_code === "0003" && offer.status === "active",
+  );
+  expect(retained).toHaveLength(1);
+  expect(retained[0]).toMatchObject({ scope: "all", branch: "all" });
+  // Repeating an offer includes its exact scope. A new branch-only offer is a
+  // different real record even when its price/terms match the company default.
+  await choose(page, field(dialog, "Offer scope"), "Company default price");
   await assertContract(page, "Create offer dialog", "en-light");
   await button(dialog, "Create offer").click();
   await expect(dialog).not.toBeVisible();
