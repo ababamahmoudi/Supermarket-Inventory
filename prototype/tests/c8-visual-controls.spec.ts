@@ -173,204 +173,294 @@ for (const language of ["en", "fa"] as const) {
     expect(after.invoices).toEqual(before.invoices);
     expect(after.ledger).toEqual(before.ledger);
   });
-  test(`C8 Edit product date rows, column-filling selects and hairlines render as requested (${language})`, async ({
-    page,
-  }) => {
-    await signIn(page, "Supervisor");
-    await setBranch(page, "Branch 1");
-    await setLanguage(page, language);
-    const before = await readC8State(page);
-    const dialog = await openC8ProductEditor(page, "0006");
-    const fields = await dialog
-      .locator(".product-editor-fields .field:has(.ui-select)")
-      .evaluateAll((elements) =>
-        elements.map((element) => {
-          const control = element.querySelector(".ui-select")!;
-          const field = element.getBoundingClientRect(),
-            input = control.getBoundingClientRect();
-          return {
-            label: element.querySelector("label")?.textContent,
-            width: field.width,
-            controlWidth: input.width,
-            startGap: input.left - field.left,
-            endGap: field.right - input.right,
-          };
-        }),
-      );
-    expect(fields.length).toBeGreaterThanOrEqual(4);
-    for (const field of fields) {
-      expect(
-        Math.abs(field.width - field.controlWidth),
-        field.label ?? "Select fills its column",
-      ).toBeLessThanOrEqual(1);
-      expect(Math.abs(field.startGap)).toBeLessThanOrEqual(1);
-      expect(Math.abs(field.endGap)).toBeLessThanOrEqual(1);
-    }
-    const sections = await dialog
-      .locator(".product-editor-section,.product-date-editor")
-      .evaluateAll((elements) =>
-        elements.map((element) => {
-          const style = getComputedStyle(element);
-          return {
-            title: element.querySelector("h3")?.textContent,
-            width: parseFloat(style.borderTopWidth),
-            style: style.borderTopStyle,
-            colour: style.borderTopColor,
-          };
-        }),
-      );
-    expect(sections).toHaveLength(4);
-    for (const section of sections) {
-      expect(section.width, section.title ?? "Section hairline").toBe(1);
-      expect(section.style).toBe("solid");
-      expect(section.colour).not.toMatch(/rgba\([^)]*,\s*0\)/);
-    }
-    const inline = dialog.locator(".product-editor-date-inline");
-    await inline.scrollIntoViewIfNeeded();
-    const add = button(inline, "Add", "افزودن");
-    const date = inline.getByLabel(exact("Date", "تاریخ"));
-    const localDay = await page.evaluate(
-      (timeZone) =>
-        new Intl.DateTimeFormat("en-CA", {
-          timeZone,
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(new Date()),
-      before.config.company.timezone,
-    );
-    const relative = (days: number) => {
-      const value = new Date(localDay + "T12:00:00Z");
-      value.setUTCDate(value.getUTCDate() + days);
-      return value.toISOString().slice(0, 10);
-    };
-    for (const days of [-1, 60]) {
-      await chooseC8Date(page, date, relative(days));
-      await add.click();
-    }
-    const inlineProof = await inline.evaluate((element) => {
-      const labels = Array.from(
-        element.querySelectorAll(
-          ".field:not(.product-editor-date-add) > label",
-        ),
-        (label) => {
-          const range = document.createRange();
-          range.selectNodeContents(label);
-          return {
-            text: label.textContent,
-            lines: Array.from(range.getClientRects())
-              .filter((rect) => rect.width > 0)
-              .map((rect) => rect.top),
-            width: label.getBoundingClientRect().width,
-            textWidth: range.getBoundingClientRect().width,
-          };
-        },
-      );
-      const controls = Array.from(
-        element.querySelectorAll(
-          ".field:not(.product-editor-date-add) > input,.field:not(.product-editor-date-add) > button,.field:not(.product-editor-date-add) > .ui-select,.field:not(.product-editor-date-add) > .ui-date",
-        ),
-        (control) => ({
-          height: control.getBoundingClientRect().height,
-          bottom: control.getBoundingClientRect().bottom,
-        }),
-      );
-      const add = element.querySelector(".product-editor-date-add > button");
-      if (!add)
-        throw new Error(
-          "The real Add date button must be inside its aligned field wrapper.",
-        );
-      return {
-        labels,
-        controls,
-        add: {
-          height: add.getBoundingClientRect().height,
-          bottom: add.getBoundingClientRect().bottom,
-        },
-      };
-    });
-    expect(inlineProof.labels).toHaveLength(4);
-    expect(inlineProof.controls).toHaveLength(4);
-    for (const label of inlineProof.labels) {
-      expect(
-        new Set(label.lines.map((top) => Math.round(top))).size,
-        label.text ?? "Single-line label",
-      ).toBe(1);
-      expect(label.textWidth).toBeLessThanOrEqual(label.width + 1);
-    }
-    expect(inlineProof.add.height).toBeCloseTo(44, 0);
-    for (const control of inlineProof.controls) {
-      expect(control.height).toBeCloseTo(44, 0);
-      if (await page.evaluate(() => window.innerWidth >= 760))
-        expect(
-          Math.abs(control.bottom - inlineProof.add.bottom),
-        ).toBeLessThanOrEqual(1);
-    }
-    const rows = await dialog
-      .locator(".product-editor-date-row")
-      .evaluateAll((elements) =>
-        elements.map((element) => {
-          const value = element.querySelector(".product-editor-date-value")!,
-            status = element.querySelector(".product-editor-date-status")!,
-            remove = element.querySelector(".product-editor-remove-date")!,
-            dot = element.querySelector(".product-date-dot")!;
-          const rects = [value, status, remove].map((part) =>
-            part.getBoundingClientRect(),
-          );
-          const token = dot.classList.contains("danger")
-            ? "--danger-dot"
-            : dot.classList.contains("pending")
-              ? "--pending-dot"
-              : "--approved-dot";
-          const probe = document.createElement("span");
-          probe.style.color = `var(${token})`;
-          dot.append(probe);
-          const expectedColour = getComputedStyle(probe).color;
-          probe.remove();
-          return {
-            text: status.textContent,
-            centers: rects.map((rect) => rect.top + rect.height / 2),
-            statusWhiteSpace: getComputedStyle(status).whiteSpace,
-            dotColour: getComputedStyle(dot).backgroundColor,
-            expectedColour,
-            dotKind: dot.className,
-            edges: rects.map((rect) => ({
-              left: rect.left,
-              right: rect.right,
-            })),
-          };
-        }),
-      );
-    expect(rows.length).toBeGreaterThanOrEqual(3);
-    expect(rows.some((row) => row.dotKind.includes("danger"))).toBe(true);
-    expect(rows.some((row) => row.dotKind.includes("pending"))).toBe(true);
-    expect(rows.some((row) => row.dotKind.includes("approved"))).toBe(true);
-    for (const row of rows) {
-      expect(
-        Math.max(...row.centers) - Math.min(...row.centers),
-      ).toBeLessThanOrEqual(1);
-      expect(row.statusWhiteSpace).toBe("nowrap");
-      expect(row.text).not.toMatch(/\d\s{2,}(?:days?|روز)/);
-      expect(row.dotColour).toBe(row.expectedColour);
-      for (let index = 1; index < row.edges.length; index++)
-        expect(
-          Math.min(row.edges[index - 1].right, row.edges[index].right) -
-            Math.max(row.edges[index - 1].left, row.edges[index].left),
-        ).toBeLessThanOrEqual(1);
-    }
-    const proof = await inspectC8Layout(
+  for (const code of ["0006", "0016"] as const) {
+    test(`C8 Edit product ${code} date rows, column-filling selects and hairlines render as requested (${language})`, async ({
       page,
-      "edit-product-dates",
-      language,
-      await page.evaluate(() => window.innerWidth),
-    );
-    expect(proof.failures).toEqual([]);
-    await button(dialog, "Cancel", "انصراف").click();
-    const after = await readC8State(page);
-    expect(after.products).toEqual(before.products);
-    expect(after.expiry).toEqual(before.expiry);
-    expect(after.ledger).toEqual(before.ledger);
-  });
+    }) => {
+      await signIn(page, "Supervisor");
+      await setBranch(page, "Branch 1");
+      await setLanguage(page, language);
+      const before = await readC8State(page);
+      const product = before.products.find((entry) => entry.code === code)!;
+      const weight = product.sold_by === "weight";
+      const dialog = await openC8ProductEditor(page, code);
+      const dateEditor = dialog.getByRole("region", {
+        name: exact("Date tracking", "پیگیری تاریخ"),
+      });
+      if (weight) {
+        // D3 retains real dates under its native optional-fields disclosure.
+        const details = dialog.locator(".weight-product-optional-details");
+        await expect(details).not.toHaveAttribute("open");
+        await expect(dateEditor).toBeHidden();
+        await details.getByText(exact("More details", "جزئیات بیشتر")).click();
+        await expect(details).toHaveAttribute("open", "");
+      }
+      await expect(dateEditor).toBeVisible();
+      const soldBy = dialog.getByRole("group", {
+        name: exact("Sold by", "روش فروش"),
+      });
+      const soldByOptions = soldBy.getByRole("button");
+      await expect(soldByOptions).toHaveCount(2);
+      await expect(button(soldBy, "Each", "عددی")).toHaveAttribute(
+        "aria-pressed",
+        String(!weight),
+      );
+      await expect(button(soldBy, "By weight", "وزنی")).toHaveAttribute(
+        "aria-pressed",
+        String(weight),
+      );
+      const segments = await soldByOptions.evaluateAll((elements) =>
+        elements.map((element) => {
+          const rect = element.getBoundingClientRect();
+          return { height: rect.height, center: rect.top + rect.height / 2 };
+        }),
+      );
+      expect(
+        Math.abs(segments[0].center - segments[1].center),
+      ).toBeLessThanOrEqual(1);
+      // The shared 44px track retains its approved 4px internal padding.
+      expect(
+        await soldBy.evaluate(
+          (element) => element.getBoundingClientRect().height,
+        ),
+      ).toBe(44);
+      for (const segment of segments) expect(segment.height).toBeCloseTo(36, 0);
+      const fields = await dialog
+        .locator(".product-editor-fields .field:has(.ui-select)")
+        .evaluateAll((elements) =>
+          elements.map((element) => {
+            const control = element.querySelector(".ui-select")!;
+            const field = element.getBoundingClientRect(),
+              input = control.getBoundingClientRect();
+            return {
+              label: element.querySelector("label")?.textContent,
+              width: field.width,
+              controlWidth: input.width,
+              startGap: input.left - field.left,
+              endGap: field.right - input.right,
+            };
+          }),
+        );
+      // Sold by is now the actual two-segment control above, not a fourth Select.
+      expect(
+        fields.map((field) => field.label?.replace(/\s+/g, " ").trim()),
+      ).toEqual(
+        language === "en"
+          ? ["Pricing category", "Category (optional)", "Supplier"]
+          : [
+              weight ? "دسته قیمت‌گذاری" : "دستهٔ قیمت‌گذاری",
+              "دسته (اختیاری)",
+              "تأمین‌کننده",
+            ],
+      );
+      for (const field of fields) {
+        expect(
+          Math.abs(field.width - field.controlWidth),
+          field.label ?? "Select fills its column",
+        ).toBeLessThanOrEqual(1);
+        expect(Math.abs(field.startGap)).toBeLessThanOrEqual(1);
+        expect(Math.abs(field.endGap)).toBeLessThanOrEqual(1);
+      }
+      const sections = await dialog
+        .locator(".product-editor-section,.product-date-editor")
+        .evaluateAll((elements) =>
+          elements.map((element) => {
+            const style = getComputedStyle(element);
+            return {
+              title: element.querySelector("h3")?.textContent,
+              width: parseFloat(style.borderTopWidth),
+              style: style.borderTopStyle,
+              colour: style.borderTopColor,
+            };
+          }),
+        );
+      expect(sections.map((section) => section.title)).toEqual(
+        language === "en"
+          ? [
+              "Names",
+              "How it's sold",
+              "Pricing",
+              ...(weight ? ["Package sizes"] : []),
+              "Details",
+              "Date tracking",
+            ]
+          : [
+              "نام‌ها",
+              "نحوه فروش",
+              "قیمت‌گذاری",
+              ...(weight ? ["اندازه بسته‌ها"] : []),
+              "جزئیات",
+              "پیگیری تاریخ",
+            ],
+      );
+      for (const section of sections) {
+        expect(section.width, section.title ?? "Section hairline").toBe(1);
+        expect(section.style).toBe("solid");
+        expect(section.colour).not.toMatch(/rgba\([^)]*,\s*0\)/);
+      }
+      const inline = dialog.locator(".product-editor-date-inline");
+      await inline.scrollIntoViewIfNeeded();
+      const add = button(inline, "Add", "افزودن");
+      const date = inline.getByLabel(exact("Date", "تاریخ"));
+      const localDay = await page.evaluate(
+        (timeZone) =>
+          new Intl.DateTimeFormat("en-CA", {
+            timeZone,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(new Date()),
+        before.config.company.timezone,
+      );
+      const relative = (days: number) => {
+        const value = new Date(localDay + "T12:00:00Z");
+        value.setUTCDate(value.getUTCDate() + days);
+        return value.toISOString().slice(0, 10);
+      };
+      const retainedDates = before.expiry
+        .filter(
+          (entry) =>
+            entry.company_id === product.company_id &&
+            entry.product_code === code &&
+            entry.branch === "Branch 1" &&
+            entry.status === "active",
+        )
+        .map((entry) => entry.date);
+      await expect(
+        dateEditor.locator(".product-editor-date-value .date-text"),
+      ).toHaveText(retainedDates);
+      const stagedDates = [-1, 1, 60].map(relative);
+      for (const value of stagedDates) {
+        await chooseC8Date(page, date, value);
+        await add.click();
+      }
+      const inlineProof = await inline.evaluate((element) => {
+        const labels = Array.from(
+          element.querySelectorAll(
+            ".field:not(.product-editor-date-add) > label",
+          ),
+          (label) => {
+            const range = document.createRange();
+            range.selectNodeContents(label);
+            return {
+              text: label.textContent,
+              lines: Array.from(range.getClientRects())
+                .filter((rect) => rect.width > 0)
+                .map((rect) => rect.top),
+              width: label.getBoundingClientRect().width,
+              textWidth: range.getBoundingClientRect().width,
+            };
+          },
+        );
+        const controls = Array.from(
+          element.querySelectorAll(
+            ".field:not(.product-editor-date-add) > input,.field:not(.product-editor-date-add) > button,.field:not(.product-editor-date-add) > .ui-select,.field:not(.product-editor-date-add) > .ui-date",
+          ),
+          (control) => ({
+            height: control.getBoundingClientRect().height,
+            bottom: control.getBoundingClientRect().bottom,
+          }),
+        );
+        const add = element.querySelector(".product-editor-date-add > button");
+        if (!add)
+          throw new Error(
+            "The real Add date button must be inside its aligned field wrapper.",
+          );
+        return {
+          labels,
+          controls,
+          add: {
+            height: add.getBoundingClientRect().height,
+            bottom: add.getBoundingClientRect().bottom,
+          },
+        };
+      });
+      expect(inlineProof.labels).toHaveLength(4);
+      expect(inlineProof.controls).toHaveLength(4);
+      for (const label of inlineProof.labels) {
+        expect(
+          new Set(label.lines.map((top) => Math.round(top))).size,
+          label.text ?? "Single-line label",
+        ).toBe(1);
+        expect(label.textWidth).toBeLessThanOrEqual(label.width + 1);
+      }
+      expect(inlineProof.add.height).toBeCloseTo(44, 0);
+      for (const control of inlineProof.controls) {
+        expect(control.height).toBeCloseTo(44, 0);
+        if (await page.evaluate(() => window.innerWidth >= 760))
+          expect(
+            Math.abs(control.bottom - inlineProof.add.bottom),
+          ).toBeLessThanOrEqual(1);
+      }
+      const rows = await dialog
+        .locator(".product-editor-date-row")
+        .evaluateAll((elements) =>
+          elements.map((element) => {
+            const value = element.querySelector(".product-editor-date-value")!,
+              status = element.querySelector(".product-editor-date-status")!,
+              remove = element.querySelector(".product-editor-remove-date")!,
+              dot = element.querySelector(".product-date-dot")!;
+            const rects = [value, status, remove].map((part) =>
+              part.getBoundingClientRect(),
+            );
+            const token = dot.classList.contains("danger")
+              ? "--danger-dot"
+              : dot.classList.contains("pending")
+                ? "--pending-dot"
+                : "--approved-dot";
+            const probe = document.createElement("span");
+            probe.style.color = `var(${token})`;
+            dot.append(probe);
+            const expectedColour = getComputedStyle(probe).color;
+            probe.remove();
+            return {
+              text: status.textContent,
+              centers: rects.map((rect) => rect.top + rect.height / 2),
+              statusWhiteSpace: getComputedStyle(status).whiteSpace,
+              dotColour: getComputedStyle(dot).backgroundColor,
+              expectedColour,
+              dotKind: dot.className,
+              edges: rects.map((rect) => ({
+                left: rect.left,
+                right: rect.right,
+              })),
+            };
+          }),
+        );
+      expect(rows).toHaveLength(retainedDates.length + stagedDates.length);
+      await expect(
+        dateEditor.locator(".product-editor-date-value .date-text"),
+      ).toHaveText([...retainedDates, ...stagedDates]);
+      expect(rows.some((row) => row.dotKind.includes("danger"))).toBe(true);
+      expect(rows.some((row) => row.dotKind.includes("pending"))).toBe(true);
+      expect(rows.some((row) => row.dotKind.includes("approved"))).toBe(true);
+      for (const row of rows) {
+        expect(
+          Math.max(...row.centers) - Math.min(...row.centers),
+        ).toBeLessThanOrEqual(1);
+        expect(row.statusWhiteSpace).toBe("nowrap");
+        expect(row.text).not.toMatch(/\d\s{2,}(?:days?|روز)/);
+        expect(row.dotColour).toBe(row.expectedColour);
+        for (let index = 1; index < row.edges.length; index++)
+          expect(
+            Math.min(row.edges[index - 1].right, row.edges[index].right) -
+              Math.max(row.edges[index - 1].left, row.edges[index].left),
+          ).toBeLessThanOrEqual(1);
+      }
+      const proof = await inspectC8Layout(
+        page,
+        "edit-product-dates",
+        language,
+        await page.evaluate(() => window.innerWidth),
+      );
+      expect(proof.failures).toEqual([]);
+      await button(dialog, "Cancel", "انصراف").click();
+      const after = await readC8State(page);
+      expect(after.products).toEqual(before.products);
+      expect(after.expiry).toEqual(before.expiry);
+      expect(after.ledger).toEqual(before.ledger);
+    });
+  }
 
   test(`C8 New order uses filled inputs and headers, units and totals share their real columns (${language})`, async ({
     page,

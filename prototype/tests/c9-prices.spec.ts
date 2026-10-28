@@ -384,6 +384,7 @@ test("C9 approved, rejected, withdrawn and expired sale requests retain their te
   const approvedPrice = new Decimal(approval.requested_price)
     .plus("0.01")
     .toFixed(2);
+  expect(approvedPrice).toBe("6.40");
   await dialog.locator(".change-price-amount-field input").fill(approvedPrice);
   await submitPrice(dialog, /^Change and approve$/);
   const rejectedCard = page.locator(`[data-sale-request-id="${rejection.id}"]`);
@@ -495,8 +496,28 @@ test("C9 approved, rejected, withdrawn and expired sale requests retain their te
         /Receive an invoice to create a proposal|برای ایجاد پیشنهاد، یک فاکتور دریافت کنید/,
       );
       if (entry.ids.includes(approval.id)) {
-        await expect(approvedCard.locator(".selling-price-current")).toHaveText(
-          money(approvedPrice),
+        // D6 intentionally shows both regular and Sale amounts. Bind the
+        // decided Sale slot, rather than selecting every monetary value.
+        const saleSlot = approvedCard.locator(".approval-number-price");
+        await expect(saleSlot.locator(".ui-number-label")).toHaveText(
+          translated(language, "Sale price", "قیمت حراج"),
+        );
+        await expect(saleSlot.locator(".selling-price-current")).toHaveText(
+          "$6.40",
+        );
+        const product = finalEvidence.products.find(
+          (entry) =>
+            entry.company_id === approved.company_id &&
+            entry.code === approved.product_code,
+        )!;
+        const regular =
+          product.branch_prices?.[approved.branch] ?? product.selling_price;
+        const regularSlot = approvedCard.locator(".approval-number-leading");
+        await expect(regularSlot.locator(".ui-number-label")).toHaveText(
+          translated(language, "Regular price", "قیمت عادی"),
+        );
+        await expect(regularSlot.locator(".selling-price-current")).toHaveText(
+          money(regular),
         );
         await expect(approvedCard).toContainText(
           approved.approved_terms!.starts_on,
@@ -538,4 +559,13 @@ test("C9 approved, rejected, withdrawn and expired sale requests retain their te
       }
     }
   }
+  const afterViewing = await readCanonicalBusinessEvidence(page);
+  expect(afterViewing.sale_requests).toEqual(finalEvidence.sale_requests);
+  expect(afterViewing.sales).toEqual(finalEvidence.sales);
+  expect(afterViewing.products).toEqual(finalEvidence.products);
+  expect(afterViewing.approvals).toEqual(finalEvidence.approvals);
+  expect(afterViewing.price_update_tasks).toEqual(
+    finalEvidence.price_update_tasks,
+  );
+  expect(afterViewing.ledger).toEqual(finalEvidence.ledger);
 });

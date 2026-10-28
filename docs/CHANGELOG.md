@@ -3,6 +3,11 @@
 - Keep numeric table headings and Returns' nonnumeric credit states in the bundled interface font; actual numeric data retains Manrope/tabular figures. This fixes host-dependent Persian glyph clipping and heading/value misalignment without changing geometry budgets.
 - Added actual Chromium platform-font and strict alignment regressions with known/unknown retained credit in both themes at 1440/1000 on desktop and phone devices.
 
+## 2026-10-28 — CI203 Product/date and decided Sale regression coverage
+
+- Bound Product editor geometry to its actual Sold by segments and named Select/section/date controls, including the weight parent's real More details disclosure; retained all hairline, date-status, alignment and Cancel evidence assertions.
+- Bound the decided Sale amount to its labelled D6 slot, independently checked the regular amount, and added canonical no-write checks while retaining exact approved money, deciders and tab counts. See [repair evidence](PR_R2F_CI203_PRODUCT_SALE.md).
+
 ## 2026-10-28 — R2f D3 weight Product add/edit
 
 - Matched the approved How sold, cost/unit, real rule/price card and package-size editor with responsive EN/FA/themed layout. Parent metadata, cost, explicit Change price and all package drafts save atomically; Cancel allocates/writes nothing.
@@ -556,6 +561,7 @@ Added original approved logo/icon files, optional public maker/support config, t
 ### R2f D10 — Branch request form
 
 Rebuilt New/Edit request around the approved paired locations, thin-divider item rows, centred Quantity/Unit/bin, inline notes and full-width Add/Added/free-item search. Retained canonical scope/actor/pack/quantity guards and transfer behavior; local cancel/back do not write and repeated save activation is coalesced. Added real draft/send/cancel, note, duplicate, composition-negative and EN/FA responsive browser proof plus exact shared alignment registration. See `PR_R2F_D10_REVIEW.md` for final executed results and reference differences.
+
 - R2f R0.7: add an ordinary discovered 40-scene alignment matrix using real routes/records at both required widths and bilingual theme variants, with nonvacuous control/row/column/icon/number/card checks and JSON audit evidence; retain all strict geometry limits and shifted-geometry negative controls.
 - R2f R0.7: measure the exact approved linked app-login icon/value composite and Returns status-dot value; prove the actual stacked phone toolbar and boxed-return edges with shifted-geometry negative controls when the approved layout has no adjacent control peers.
 - R2f R0.3: make generic number-grid/slot selectors zero-specificity defaults so the approved composed approval columns retain their geometry; require all actual desktop approval number groups to stay 521 px wide.
@@ -567,6 +573,7 @@ Rebuilt New/Edit request around the approved paired locations, thin-divider item
 ### R2f C1/C2 CI compatibility
 
 Updated the legacy simulated-reading copy assertion to follow the approved entry chooser: the Drafts queue and retained review stay clear of the old inline-card warning, while the actual chooser/Photo workspace still explain simulated reading. Preserved Demo menu and unrelated-page assertions; reproduced the old failure and verified both desktop/phone cases. See `PR_R2F_CI202_RECEIVING.md`.
+
 - R2f integration proof: fit Labels phone header/body checkbox controls to their44px selection track. Qualify the genuine C6 selection header and D8 four-slot return cards in the existing alignment oracle, binding authorized record/product identity, actual chevrons and optional credit; retain the2px checks and add displaced/hidden/copied/private-data negative probes.
 
 - Run all prototype unit files with one CI worker on the two-core runner, retaining the complete SDK/pricing suite and all native concurrent-write proofs. Command-completion tests keep their original guards and distinguish native commit from the remaining guarded reconciliation/render work.
