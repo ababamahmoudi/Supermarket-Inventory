@@ -176,6 +176,7 @@ export async function auditR2fAlignment(
           columns: 0,
           cells: 0,
           numberGroups: 0,
+          numberAssociations: 0,
           icons: 0,
           cardHeaders: 0,
           cardPairs: 0,
@@ -496,12 +497,59 @@ export async function auditR2fAlignment(
         }
       }
       let numberGroups = 0,
+        numberAssociations = 0,
         icons = 0;
       for (const group of all(".ui-number-group")) {
         const values = [
           ...group.querySelectorAll<HTMLElement>("[data-number-baseline]"),
         ].filter(visible);
         if (values.length < 2) continue;
+        const slotEdge = (
+          element: HTMLElement,
+          alignment: "left" | "right" | "center",
+        ) => {
+          const rect = element.getBoundingClientRect();
+          return alignment === "left"
+            ? rect.left
+            : alignment === "right"
+              ? rect.right
+              : (rect.left + rect.right) / 2;
+        };
+        for (const stat of group.querySelectorAll<HTMLElement>(
+          ":scope > .ui-number-stat",
+        )) {
+          const label = stat.querySelector<HTMLElement>(
+            ":scope > .ui-number-label",
+          );
+          const value = stat.querySelector<HTMLElement>(
+            ":scope > .ui-number-value",
+          );
+          const note = stat.querySelector<HTMLElement>(
+            ":scope > .ui-number-note",
+          );
+          if (!label || !value || !visible(label) || !visible(value)) continue;
+          const alignment = logicalAlignment(value);
+          numberAssociations++;
+          if (
+            Math.abs(slotEdge(label, alignment) - slotEdge(value, alignment)) >
+            1.5
+          )
+            failures.push(`number label/value slot: ${name(stat)}`);
+          if (
+            note &&
+            visible(note) &&
+            note.textContent?.trim() &&
+            getComputedStyle(note).gridRowStart !==
+              getComputedStyle(value).gridRowStart
+          ) {
+            numberAssociations++;
+            if (
+              Math.abs(slotEdge(note, alignment) - slotEdge(value, alignment)) >
+              1.5
+            )
+              failures.push(`number value/note slot: ${name(stat)}`);
+          }
+        }
         const baselines = values.map((value) => {
           const marker = document.createElement("span");
           marker.setAttribute("aria-hidden", "true");
@@ -594,6 +642,7 @@ export async function auditR2fAlignment(
         columns,
         cells,
         numberGroups,
+        numberAssociations,
         icons,
         cardHeaders,
         cardPairs,

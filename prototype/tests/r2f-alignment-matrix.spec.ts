@@ -460,6 +460,7 @@ async function prepareScene(
       { exceptionIds: [] },
     );
     expect(report.numberGroups).toBe(3);
+    expect(report.numberAssociations).toBeGreaterThanOrEqual(9);
   } else if (scene === "D7") {
     await page.goto("/#dashboard");
     await expect(

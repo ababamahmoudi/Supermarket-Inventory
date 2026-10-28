@@ -29,6 +29,7 @@ for (const direction of ["ltr", "rtl"] as const) {
     expect(clean.pairs).toBeGreaterThan(0);
     expect(clean.columns).toBe(2);
     expect(clean.numberGroups).toBe(1);
+    expect(clean.numberAssociations).toBe(6);
     expect(clean.icons).toBe(1);
     expect(clean.cardHeaders).toBe(2);
     expect(clean.cardPairs).toBe(1);
@@ -38,6 +39,31 @@ for (const direction of ["ltr", "rtl"] as const) {
       (await audit()).failures.some((value) => value.startsWith("row:")),
     ).toBe(true);
     await page.locator("#hidden-controls summary").click();
+    expect((await audit()).failures).toEqual([]);
+    const labelSlot = page.locator(".ui-number-label").first();
+    await labelSlot.evaluate(
+      (node) => ((node as HTMLElement).style.gridColumn = "2"),
+    );
+    expect(
+      (await audit()).failures.some((failure) =>
+        failure.startsWith("number label/value slot:"),
+      ),
+    ).toBe(true);
+    await labelSlot.evaluate((node) =>
+      (node as HTMLElement).style.removeProperty("grid-column"),
+    );
+    const noteSlot = page.locator(".ui-number-note").first();
+    await noteSlot.evaluate(
+      (node) => ((node as HTMLElement).style.transform = "translateX(4px)"),
+    );
+    expect(
+      (await audit()).failures.some((failure) =>
+        failure.startsWith("number value/note slot:"),
+      ),
+    ).toBe(true);
+    await noteSlot.evaluate((node) =>
+      (node as HTMLElement).style.removeProperty("transform"),
+    );
     expect((await audit()).failures).toEqual([]);
     await page
       .locator("#second")

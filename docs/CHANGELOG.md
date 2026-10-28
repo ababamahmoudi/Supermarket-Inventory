@@ -558,6 +558,7 @@ Rebuilt New/Edit request around the approved paired locations, thin-divider item
 - R2f R0.7: add an ordinary discovered 40-scene alignment matrix using real routes/records at both required widths and bilingual theme variants, with nonvacuous control/row/column/icon/number/card checks and JSON audit evidence; retain all strict geometry limits and shifted-geometry negative controls.
 - R2f R0.7: measure the exact approved linked app-login icon/value composite and Returns status-dot value; prove the actual stacked phone toolbar and boxed-return edges with shifted-geometry negative controls when the approved layout has no adjacent control peers.
 - R2f R0.3: make generic number-grid/slot selectors zero-specificity defaults so the approved composed approval columns retain their geometry; require all actual desktop approval number groups to stay 521 px wide.
+- R2f R0.7: audit real number label/value/note slot associations as well as baselines, with LTR/RTL wrong-column and shifted-note negative controls and nine nonvacuous approval label/value associations.
 - R2f D4: share opt-in localized mass labels for approved FA weight prices/package sizes without changing stored codes, quantities or monetary calculations.
 
 - R2f R0 token integration: reuse the existing round/none radii and row-divider shadow, plus one shared bottom-corner radius composition, in staff, package and request rows. Values and geometry stay identical; the strict token audit remains unchanged and passes.
