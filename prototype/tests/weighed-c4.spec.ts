@@ -125,9 +125,9 @@ for (const role of ["Supervisor", "Floor Worker", "Cashier"] as const) {
       ).toHaveCount(0);
     await setLanguage(page, "fa");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-    await expect(price.locator(".weight-price-main")).toHaveText("$7.49/lb");
+    await expect(price.locator(".weight-price-main")).toHaveText("$7.49/پوند");
     await expect(price.locator(".weight-price-secondary")).toContainText(
-      "$16.51/kg",
+      "$16.51/کیلوگرم",
     );
   });
 }

@@ -23,3 +23,7 @@ The persistence regression captures the full original weighed configuration, the
 The regression follows the approved editor's Each/By weight selected state, explicitly switches cost to kg and verifies 11.0000, checks the read-only 7.49/lb price plus 16.51/kg comparison, opens More details for its existing date-tracking decision, and saves. It still requires canonical price 7.49/cost 4.9895 and the operational 16.51/kg display. No money, stock, permissions or product save behavior is changed.
 
 The final six originally failing desktop/phone workflows pass with all repairs applied. The 12 new restored-role cases and two original FA390 catalog cases also pass as recorded above; counts are distinct. TypeScript, affected ESLint/Prettier and fresh production build pass. Final integrated CI is reported on the root branch.
+
+## CI203 — approved Persian mass labels
+
+The three existing Lookup role cases now expect the approved Persian labels `/پوند` and `/کیلوگرم` after switching language. Exact amounts 7.49/16.51, English assertions, bidi isolation and Cashier edit/privacy guards are unchanged. All six Supervisor/Floor Worker/Cashier desktop/phone cases pass against a fresh production build of `88b8f21`; affected lint/format pass. No application source or earlier weighed-editor regression changes are included.
