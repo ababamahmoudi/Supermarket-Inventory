@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import Decimal from "decimal.js";
+import { FitText } from "../../FitText";
 import { useDemo } from "../../store";
 import { SegmentedControl, TableRowLink } from "../../ui";
 import { LtrValue, QuantityText } from "../../presentation";
@@ -173,9 +174,11 @@ export function LinesTable({
                 x.company_id === invoice.company_id &&
                 x.code === line.product_code,
             );
-            const name = correction
-              ? product?.name_en || line.new_name_en || line.description
-              : line.new_name_en || product?.name_en || line.description;
+            const name =
+              (correction
+                ? product?.name_en || line.new_name_en || line.description
+                : line.new_name_en || product?.name_en || line.description) ||
+              t("Not added", "ثبت نشده");
             const category = state.config.pricing_categories.find(
               (x) =>
                 x.key === (line.pricing_category ?? product?.pricing_category),
@@ -370,15 +373,22 @@ export function LinesTable({
                       }}
                       className="invoice-line-toggle"
                       data-control-kind="disclosure"
+                      aria-label={
+                        count > 0
+                          ? `${name} ${t(`${count} to check`, `${count} برای بررسی`)}`
+                          : name
+                      }
                       aria-expanded={expanded}
                       onClick={(event) => {
                         event.preventDefault();
                         toggle(document.getElementById(rowId) ?? undefined);
                       }}
                     >
-                      <span className="receiving-product-name" title={name}>
-                        <LtrValue value={name} />
-                      </span>
+                      <FitText
+                        className="receiving-product-name"
+                        value={name}
+                        render={(visible) => <LtrValue value={visible} />}
+                      />
                       {count > 0 && (
                         <small className="receiving-check-summary receiving-line-check-count">
                           {t(`${count} to check`, `${count} برای بررسی`)}

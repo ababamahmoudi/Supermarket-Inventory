@@ -604,3 +604,4 @@ Updated the legacy simulated-reading copy assertion to follow the approved entry
 - CI203 integration: distinguish real signed-out language controls from restored actor chrome in the browser driver, retaining authentication/session assertions. Update E3/C8 phone proof to canonical D8 four-slot records and D7’s This week destination; preserve the2px geometry, permitted-credit and real-chevron guards, with a copied-auth-form negative check.
 
 - Allow 40 minutes for the expanded browser CI jobs after a clean 399-case shard required 28.3 minutes before setup. Keep every test, individual timeout, worker/retry setting, skip and assertion unchanged; actual failures still fail the combined gate.
+- CI204 receiving integration: fit the actual visible product-name prefix to its available box with the shared measured fitter; retain full title/accessibility and numeric geometry. Strengthen full-title guards and retain title-removal-only negative coverage.

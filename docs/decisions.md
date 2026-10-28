@@ -592,3 +592,9 @@ The final intrinsic Returns name retains its full canonical tooltip while showin
 ### 2026-10-28 — Allow the expanded browser suite to complete
 
 CI204's clean second browser shard passed all 399 cases in 28.3 minutes of test execution, leaving almost no room for setup within the old 30-minute job cap. Allow 40 minutes for each existing browser job so the full suite can finish and report failures. Keep four shards, two workers, all tests, the combined gate, individual test timeouts, retries, skips and assertion limits unchanged. The separate invoice clipping and font-oracle failures still require their own fixes; a larger outer job cap does not turn failed assertions into success.
+
+## 2026-10-28 — Measure the visible receiving-name prefix
+
+The bilingual font-order correction made glyph selection stable, but the 1280px receiving cell still had less than one pixel of spare space for a full ordinary name. CSS ellipsis hid the visible overflow while the complete live text range could leave the cell on a different browser renderer. CI204 exposed that remaining failure after integration.
+
+Reuse bounded FitText in the receiving name's actual flex box. Preserve the existing English-value/bundled-Persian font contract, full native title and a complete accessible disclosure name including its check count. The fitted prefix updates on actual font readiness and ResizeObserver changes. Keep every table width, numeric gap and clipping tolerance unchanged. C5/C8 additionally require the full title, matching visible prefix and complete accessible disclosure; missing-title-only negative probes remain failures.
