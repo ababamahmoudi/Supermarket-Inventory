@@ -14,3 +14,7 @@ The dashboard retains all existing private selectors, original evidence, role/br
 Validation: all six new actual browser cases passed at 1440/1000/390 px in EN light/FA dark (1.6 minutes), using the strict shared audit and exact canonical hash destinations. All 18 existing R2c dashboard cases passed unchanged, including negative control/style checks and All locations queue count. Four affected unit files passed 17 tests; two existing dashboard authority/currency files passed six more. Changed-source ESLint and the production build passed. Final integrated CI is recorded in the combined R2e/R2f review guide. No screenshot is treated as proof that a business command succeeded.
 
 The shared table keeps its default 240 px desktop name minimum. Dashboard explicitly requests a 160 px minimum through the generic `desktopMinWidth` column option so all four approved fixed columns fit without suppressing Type. Other tables retain their current default.
+
+D7 replacement delivery counting uses each actual replacement stock-movement identity. The existing canonical workflow emits one movement per replacement event, so distinct receipts for one return on the same day remain distinct even when the Received projection has no timestamp. It never groups those events by return/date. Invoice multi-product lines still share their actual source/timestamp group.
+
+The replacement follow-up passed four affected dashboard/Received/operations unit files (53 tests), including real signed pickup and two distinct same-day replacement commands; changed-file lint also passed.

@@ -237,3 +237,4 @@ A location without accepted local regular receipt/manual evidence retains the ex
 
 No new product decision is required. Approved screenshots win the phone This week order. Reminder window is a truthful configurable-horizon caption; no seven-day predicate is invented. Prior activity dates use English month/day value captions in both languages, with the complete company-local timestamp available. One actual multi-line received transaction counts once; later short/replacement receipts count separately. See [review guide](PR_R2F_DASHBOARD.md).
 
+D7 replacement delivery counting uses each actual replacement stock-movement identity. The existing canonical workflow emits one movement per replacement event, so distinct receipts for one return on the same day remain distinct even when the Received projection has no timestamp. It never groups those events by return/date. Invoice multi-product lines still share their actual source/timestamp group.

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { receivedDeliveryCount } from "./dashboard-data";
-import type { DeliveryReceipt } from "./received";
+import { receivedLog, type DeliveryReceipt } from "./received";
+import { initialState } from "./store";
+import { authenticatedTestActor } from "./authority-test-fixture";
+import { recordPickup, receiveReplacement } from "./operations";
 
 const receipt = (edits: Partial<DeliveryReceipt> = {}): DeliveryReceipt => ({
   id: "fictional-receipt-a",
@@ -41,12 +44,6 @@ describe("R2f D7 received delivery count", () => {
           kind: "replacement",
           return_id: "fictional-return-a",
         }),
-        receipt({
-          id: "fictional-replacement-b",
-          kind: "replacement",
-          return_id: "fictional-return-a",
-          line_index: 1,
-        }),
       ]),
     ).toBe(3);
   });
@@ -62,5 +59,38 @@ describe("R2f D7 received delivery count", () => {
       ]),
     ).toBe(6);
     expect(receivedDeliveryCount([])).toBe(0);
+  });
+  it("retains two genuine replacement receipts for the same return on the same day", () => {
+    const state = initialState();
+    const manager = authenticatedTestActor(state, "manager", {
+      selection: { kind: "location", location_id: "Branch 1" },
+    });
+    const record = state.returns[0];
+    recordPickup(state, manager, record.id, {
+      quantities: { "0003": 3 },
+      representative: "Fictional Representative",
+      slip: "FICTIONAL-PICKUP-D7",
+    });
+    for (const document of [
+      "FICTIONAL-REPLACEMENT-D7-A",
+      "FICTIONAL-REPLACEMENT-D7-B",
+    ]) {
+      receiveReplacement(state, manager, record.id, {
+        product_code: "0002",
+        qty: 1,
+        covers: { "0003": 1 },
+        date: "2026-10-27",
+        representative: "Fictional Representative",
+        receipt: document,
+      });
+    }
+    const rows = receivedLog(state, manager).filter(
+      (row) => row.kind === "replacement" && row.return_id === record.id,
+    );
+    expect(rows).toHaveLength(2);
+    expect(new Set(rows.map((row) => row.date)).size).toBe(1);
+    expect(rows.every((row) => !row.received_at)).toBe(true);
+    expect(new Set(rows.map((row) => row.id)).size).toBe(2);
+    expect(receivedDeliveryCount(rows)).toBe(2);
   });
 });

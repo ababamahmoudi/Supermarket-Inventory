@@ -147,9 +147,7 @@ export function receivedDeliveryCount(
         row.company_id,
         row.branch,
         row.kind,
-        row.kind === "replacement"
-          ? row.return_id || row.invoice_id || row.id
-          : row.invoice_id || row.id,
+        row.kind === "replacement" ? row.id : row.invoice_id || row.id,
         row.received_at || row.date,
       ]),
     ),
