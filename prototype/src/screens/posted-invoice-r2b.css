@@ -139,3 +139,13 @@
     padding: 0;
   }
 }
+
+/* Keep the repeated source reference inside its actual details column.
+   The complete reference stays in the heading and the shared native title. */
+.posted-receiving .posted-invoice-number {
+  display: block;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}

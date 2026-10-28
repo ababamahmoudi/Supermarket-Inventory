@@ -26,6 +26,7 @@ import {
 } from "../presentation";
 import { Badge, Button, Card, Disclosure } from "../ui";
 import { OriginalViewer } from "./invoice-review/OriginalViewer";
+import { FitText } from "../FitText";
 import { importedReadingReceived } from "../invoice-reading-dates";
 import { correctHandwrittenReceivedDate } from "../invoice-received-time";
 import { readingNoteCopy } from "../invoice-reading-note-copy";
@@ -330,7 +331,11 @@ export function PostedInvoice({
               <div>
                 <dt>{t("Invoice number", "شماره فاکتور")}</dt>
                 <dd>
-                  <LtrText>{invoice.supplier_invoice_number}</LtrText>
+                  <FitText
+                    className="posted-invoice-number"
+                    value={invoice.supplier_invoice_number}
+                    render={(visible) => <LtrText>{visible}</LtrText>}
+                  />
                   {invoice.number_is_system_assigned && (
                     <> · {t("System assigned", "اختصاص‌یافته توسط سیستم")}</>
                   )}

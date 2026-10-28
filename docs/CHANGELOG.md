@@ -1,3 +1,8 @@
+## 2026-10-28 — Posted invoice reference containment
+
+- Fit the repeated Invoice details number to its actual field, preserving the full heading, native source title and invoice route.
+- Retain the original phone/desktop EN/FA C8 word and real short-posting money guards; added actual-box, deliberate-wrap-negative and canonical no-write proof.
+
 ## 2026-10-28 — R2f source-bound C5 Lookup and Returns proof
 
 - Qualify the actual 44 px Lookup rows and four-region Returns phone records against their real source composition; keep strict dimensions, containment, financial privacy and corruption controls.
