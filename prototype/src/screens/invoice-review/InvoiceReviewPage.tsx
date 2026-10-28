@@ -262,7 +262,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
             }}
           />
           <section className="list-box receiving-add-line">
-            <div className="actions">
+            <div className="actions ui-control-row" data-control-row>
               <Select
                 searchable
                 aria-label={t(

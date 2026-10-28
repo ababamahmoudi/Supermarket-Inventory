@@ -10,3 +10,13 @@
 6. Use Approve all (N), change the checked rows and confirm a selected subset. Pending counts, reasons, private margins, retained invoice evidence and the reserved footer/Undo behavior remain protected.
 
 Numbers and dates can differ from the reference because the screen uses actual fictional records and the pricing engine. Decided sale requests retain their immutable approved sale terms; an explicitly labelled current regular price is not presented as historical approval evidence.
+
+## D9 — Original invoice viewer
+
+1. Sign in as Manager, choose Branch 1 and open Invoices. Open the first actual invoice and choose Read invoice. At 1440 px compare the original panel with both approved EN/light and FA/dark references: title, file/page subtitle, plain Expand/Hide, four divided toolbar groups and More at the end.
+2. Confirm all seven controls fit the 44 px tinted toolbar. At 1000 px the viewer stays above the invoice work; at 390 px open the original from its thumbnail. The phone media and close action remain inside the viewport. The adjacent Add line and Select share a 44 px row.
+3. Use Zoom in, Rotate, Fit width and More → Fit page. Previous/Next remains disabled for the genuine single-page fixture. A real multi-page original retains its ordinary PDF/image navigation. Hide then Show the original and open/close Expand.
+4. Use More → Download. The new browser proof compares the actual saved bytes’ SHA-256 with the retained original hash and checks invoice total and every line unchanged. Existing original-source permission, stale-source and page-storage tests remain in force.
+5. Switch language and theme at 1440, 1000 and 390 px. The toolbar keeps its groups and actual state. The 44 px transparent hit targets preserve the approved 36 px visual icon slots; narrow panes shrink the slots to fit rather than hiding Rotate or requiring sideways scroll.
+
+Executed proof for D6/D9 covers visible EN/FA flows in both themes, strict shared alignment checks, the original byte hash, selected/atomic approval guards, worker sale privacy and the existing geometry oracle’s negative controls. Source-controlled tests retain fictional data only; final screenshots were individually opened for review outside the repository. The D9 oracle’s prior flat 36×36 controls and hidden Rotate are replaced with the approved four groups and all seven 44 px-high controls; containment and no-overflow assertions remain strict.

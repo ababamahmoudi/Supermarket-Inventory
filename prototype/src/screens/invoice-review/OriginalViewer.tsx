@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, Expand, FileImage } from "lucide-react";
+import { ChevronRight, Maximize2, FileImage } from "lucide-react";
 import type { InvoiceReadDTO } from "../../invoice-projections";
 import { useDemo } from "../../store";
 import { useInvoiceOriginal } from "../../use-invoice-original";
 import { Button, Dialog } from "../../ui";
+import { LtrValue } from "../../presentation";
 import { OriginalInvoice } from "../OriginalInvoice";
 import "./invoice-review.css";
 
@@ -90,32 +91,49 @@ export function OriginalViewer({
   return (
     <aside
       id="invoice-original-field"
-      aria-label={t("Original invoice", "اصل فاکتور")}
+      aria-label={t("Original invoice", "فاکتور اصلی")}
       tabIndex={-1}
       className="original-viewer"
       data-hidden={hidden}
     >
       <div className="original-viewer-header">
-        <h2>{t("Original invoice", "اصل فاکتور")}</h2>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="original-viewer-hide"
-          onClick={toggle}
-        >
-          {hidden
-            ? t("Show original", "نمایش اصل")
-            : t("Hide original", "پنهان کردن اصل")}
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="original-viewer-expand"
-          onClick={() => setExpanded(true)}
-        >
-          <Expand size={16} aria-hidden="true" />
-          {t("Expand", "بزرگ کردن")}
-        </Button>
+        <div className="original-viewer-title">
+          <h2>{t("Original invoice", "فاکتور اصلی")}</h2>
+          {invoice.original_available && (
+            <p className="original-viewer-file muted">
+              <LtrValue value={firstPage.name ?? invoice.file_name} /> ·{" "}
+              {t(
+                `${pageCount} ${pageCount === 1 ? "page" : "pages"}`,
+                `${pageCount.toLocaleString("fa-IR")} صفحه`,
+              )}
+            </p>
+          )}
+        </div>
+        <div className="original-viewer-header-actions" data-control-row>
+          <Button
+            variant="plain"
+            size="sm"
+            className="original-viewer-expand"
+            disabled={!invoice.original_available}
+            onClick={() => setExpanded(true)}
+          >
+            <Maximize2 size={16} aria-hidden="true" />
+            {t("Expand", "بزرگ کردن")}
+          </Button>
+          <Button
+            variant="plain"
+            size="sm"
+            className="original-viewer-hide"
+            aria-label={
+              hidden
+                ? t("Show original", "نمایش اصل")
+                : t("Hide original", "پنهان کردن اصل")
+            }
+            onClick={toggle}
+          >
+            {hidden ? t("Show original", "نمایش اصل") : t("Hide", "پنهان")}
+          </Button>
+        </div>
       </div>
       <div className="original-viewer-panel">
         {!expanded && (
@@ -181,7 +199,16 @@ export function OriginalViewer({
       <Dialog
         open={expanded}
         onOpenChange={setExpanded}
-        title={t("Original invoice", "اصل فاکتور")}
+        title={t("Original invoice", "فاکتور اصلی")}
+        description={
+          <>
+            <LtrValue value={firstPage.name ?? invoice.file_name} /> ·{" "}
+            {t(
+              `${pageCount} ${pageCount === 1 ? "page" : "pages"}`,
+              `${pageCount.toLocaleString("fa-IR")} صفحه`,
+            )}
+          </>
+        }
         className="original-viewer-dialog dialog-phone-fullscreen"
       >
         {expanded && (

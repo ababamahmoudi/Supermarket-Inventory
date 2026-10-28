@@ -768,6 +768,89 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             `R2c field height: ${tidy(element.getAttribute("aria-label") || element.id)}`,
           );
       }
+      // D9 retains the approved compact plain header and field-height Add line row.
+      const r2fOriginalHeaderActions = new Set();
+      for (const group of document.querySelectorAll(
+        ".original-viewer > .original-viewer-header > .original-viewer-header-actions",
+      )) {
+        if (!visible(group)) continue;
+        const viewer = group.closest(".original-viewer");
+        const controls = [...group.querySelectorAll(":scope > button")].filter(
+          visible,
+        );
+        const boxes = controls.map((control) =>
+          control.getBoundingClientRect(),
+        );
+        const valid =
+          viewer?.id === "invoice-original-field" &&
+          viewer.querySelector(":scope > .original-viewer-panel") &&
+          viewer.querySelector(":scope > .original-viewer-phone-trigger") &&
+          group.parentElement.querySelector(
+            ":scope > .original-viewer-title > h2",
+          ) &&
+          controls.length === 2 &&
+          controls.every((control) =>
+            control.classList.contains("button-plain"),
+          ) &&
+          /^(Expand|بزرگ کردن)$/.test(tidy(controls[0].textContent)) &&
+          /^(Hide|Show original|پنهان|نمایش اصل)$/.test(
+            tidy(controls[1].textContent),
+          ) &&
+          boxes.every(
+            (box) =>
+              Math.abs(box.height - 32) <= 1 &&
+              Math.abs(
+                box.top + box.height / 2 - boxes[0].top - boxes[0].height / 2,
+              ) <= 1.5,
+          );
+        if (!valid)
+          failures.push(
+            "Original invoice header actions need their exact plain, aligned controls",
+          );
+        else
+          controls.forEach((control) => r2fOriginalHeaderActions.add(control));
+      }
+      const r2fAddLineControls = new Set();
+      for (const group of document.querySelectorAll(
+        '.receiving-review[data-testid="invoice-review"] .receiving-add-line > .actions.ui-control-row[data-control-row]',
+      )) {
+        if (!visible(group)) continue;
+        const select = group.querySelector(
+          ':scope > #invoice-add-product[role="combobox"]',
+        );
+        const controls = [
+          ...group.querySelectorAll(":scope > .ui-button.button"),
+        ].filter(visible);
+        const boxes = [select, ...controls]
+          .filter(Boolean)
+          .map((control) => control.getBoundingClientRect());
+        const valid =
+          select &&
+          controls.length === 2 &&
+          /^(Add line|افزودن ردیف)$/.test(tidy(controls[0].textContent)) &&
+          /^(\+ Add new product|\+ افزودن کالای جدید)$/.test(
+            tidy(controls[1].textContent),
+          ) &&
+          controls[0].classList.contains("button-secondary") &&
+          controls[1].classList.contains("button-plain") &&
+          boxes.every(
+            (box) =>
+              Math.abs(box.height - 44) <= 1 &&
+              boxes.every(
+                (peer) =>
+                  Math.abs(
+                    box.top + box.height / 2 - peer.top - peer.height / 2,
+                  ) <= 1.5 ||
+                  box.bottom + 7 <= peer.top ||
+                  peer.bottom + 7 <= box.top,
+              ),
+          );
+        if (!valid)
+          failures.push(
+            "Add line needs its exact field-aligned Select and two actions",
+          );
+        else controls.forEach((control) => r2fAddLineControls.add(control));
+      }
       // R2f D6 keeps the previous direct-row contract below and adds its exact
       // approved footer composition. Only a fully validated composition earns
       // the 40px desktop / 44px phone controls and two-row phone action slots.
@@ -1488,29 +1571,32 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           );
           const expectedHeight = labelAction
             ? 32
-            : r2fApprovalActions.has(element)
-              ? phone
-                ? 44
-                : 40
-              : newReturnControl ||
-                  r2cControl ||
-                  dashboardAction ||
-                  structuredFooter ||
-                  approvalDecisionButtons.has(element) ||
-                  approvalEditorFooters.has(element) ||
-                  notificationHeaderActions.has(element) ||
-                  modalFooterFeedback ||
-                   sharedFilterChip
-                ? 44
-                : genuineFilterToolbar
-                  ? element.closest(".ui-segments")
-                    ? 36
-                    : 44
-                  : phone || fieldAlignedAdd
-                    ? 44
-                    : small
-                      ? 32
-                      : 40;
+            : r2fOriginalHeaderActions.has(element)
+              ? 32
+              : r2fApprovalActions.has(element)
+                ? phone
+                  ? 44
+                  : 40
+                : newReturnControl ||
+                    r2fAddLineControls.has(element) ||
+                    r2cControl ||
+                    dashboardAction ||
+                    structuredFooter ||
+                    approvalDecisionButtons.has(element) ||
+                    approvalEditorFooters.has(element) ||
+                    notificationHeaderActions.has(element) ||
+                    modalFooterFeedback ||
+                     sharedFilterChip
+                  ? 44
+                  : genuineFilterToolbar
+                    ? element.closest(".ui-segments")
+                      ? 36
+                      : 44
+                    : phone || fieldAlignedAdd
+                      ? 44
+                      : small
+                        ? 32
+                        : 40;
 
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;

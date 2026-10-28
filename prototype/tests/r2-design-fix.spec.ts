@@ -167,22 +167,25 @@ async function originalToolbarFits(toolbar: Locator) {
     geometry.scroll,
     "Original toolbar fits without sideways scroll",
   ).toBeLessThanOrEqual(geometry.client);
-  expect(geometry.children.length).toBeGreaterThan(5);
+  expect(geometry.children).toHaveLength(4);
+  await expect(
+    toolbar.locator(":scope > .invoice-original-control-group"),
+  ).toHaveCount(4);
   for (const child of geometry.children) {
     expect(child.left).toBeGreaterThanOrEqual(geometry.left);
     expect(child.right).toBeLessThanOrEqual(geometry.right);
     expect(child.top).toBeGreaterThanOrEqual(geometry.top);
     expect(child.bottom).toBeLessThanOrEqual(geometry.bottom);
   }
-  expect(geometry.buttons.length).toBeGreaterThanOrEqual(6);
+  expect(geometry.buttons).toHaveLength(7);
   for (const button of geometry.buttons) {
-    expect(Math.abs(button.width - 36)).toBeLessThanOrEqual(1);
-    expect(Math.abs(button.height - 36)).toBeLessThanOrEqual(1);
+    expect(button.width).toBeGreaterThanOrEqual(28);
+    expect(button.width).toBeLessThanOrEqual(36);
+    expect(Math.abs(button.height - 44)).toBeLessThanOrEqual(1);
   }
   const tops = geometry.buttons.map((button) => button.top);
   expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
-  if (geometry.containerWidth < 340)
-    await expect(toolbar.locator(".invoice-original-rotate")).toBeHidden();
+  await expect(toolbar.locator(".invoice-original-rotate")).toBeVisible();
 }
 
 async function phoneOriginalKeepsItsToolbar(
@@ -191,7 +194,7 @@ async function phoneOriginalKeepsItsToolbar(
 ) {
   await page.locator(".original-viewer-phone-trigger").click();
   const dialog = page.getByRole("dialog", {
-    name: word(language, "Original invoice", "اصل فاکتور"),
+    name: word(language, "Original invoice", "فاکتور اصلی"),
     exact: true,
   });
   await expect(dialog).toBeVisible();

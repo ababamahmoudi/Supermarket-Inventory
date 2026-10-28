@@ -241,7 +241,7 @@
   line-height: var(--line-height-body);
 }
 .receiving-col-status {
-  inline-size: 54px;
+  inline-size: 64px;
 }
 .receiving-col-quantity {
   inline-size: 128px;
@@ -392,7 +392,8 @@
 .receiving-quantity-cell > .receiving-short-summary {
   color: var(--danger);
   font-weight: 700;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .receiving-cost-cell,
 .receiving-total-cell {
@@ -593,9 +594,6 @@
   }
 }
 @container receiving-lines (max-width: 580px) {
-  .receiving-col-status {
-    inline-size: 48px;
-  }
   .receiving-col-quantity {
     inline-size: 112px;
   }
@@ -689,10 +687,27 @@
 }
 .original-viewer-header {
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   margin-block-end: 12px;
+}
+.original-viewer-title {
+  min-inline-size: 0;
+}
+.original-viewer-file {
+  margin: 2px 0 0;
+  font-size: var(--font-size-caption);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-inline-size: 260px;
+}
+.original-viewer-header-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 4px;
 }
 .original-viewer-header h2 {
   margin: 0;
@@ -715,29 +730,99 @@
   container-name: invoice-toolbar;
   min-inline-size: 0;
 }
-@container invoice-toolbar (max-width: 339px) {
-  .invoice-original-toolbar-container
-    .invoice-original-controls
-    > .ui-button.button.invoice-original-rotate {
-    display: none;
-  }
-}
-.original-viewer .invoice-original-controls,
-.original-viewer-dialog .invoice-original-controls {
+/* One contained toolbar retains all genuine viewer actions at narrow widths. */
+:root .invoice-original-toolbar-container > .invoice-original-controls {
   display: flex;
   flex-wrap: nowrap;
-  gap: 2px;
   align-items: center;
-  margin-block: 0 12px;
+  block-size: 44px;
+  min-block-size: 44px;
+  gap: 0;
+  padding-inline: 4px;
+  margin-block: 4px 12px;
+  border-radius: var(--radius-control);
+  background: var(--klead-field);
+  overflow-x: auto;
+  overflow-y: hidden;
 }
-.original-viewer .invoice-original-controls > *,
-.original-viewer-dialog .invoice-original-controls > * {
-  flex: 0 0 auto;
+.invoice-original-control-group {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  gap: 2px;
+  padding-inline: 4px;
+  block-size: 44px;
 }
-.original-viewer .invoice-original-page,
-.original-viewer-dialog .invoice-original-page {
+.invoice-original-control-group + .invoice-original-control-group {
+  border-inline-start: 1px solid var(--divider);
+}
+.invoice-original-toolbar-end {
+  margin-inline-start: auto;
+}
+:root
+  .invoice-original-controls
+  :is(.ui-icon-button.ui-button.button, .ui-menu-trigger) {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  inline-size: 36px;
+  min-inline-size: 28px;
+  flex: 0 1 36px;
+  block-size: 44px;
+  min-block-size: 44px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: var(--radius-small);
+  background: var(--color-clear);
+  color: var(--text);
+  box-shadow: var(--shadow-none);
+}
+:root
+  .invoice-original-controls
+  :is(.ui-icon-button.ui-button.button, .ui-menu-trigger):disabled {
+  opacity: 0.45;
+}
+:root
+  .invoice-original-controls
+  :is(.ui-icon-button.ui-button.button, .ui-menu-trigger):hover:not(:disabled) {
+  background: var(--surface);
+}
+:root .invoice-original-controls .invoice-original-page,
+:root .invoice-original-controls .invoice-original-zoom {
+  min-inline-size: 44px;
+  text-align: center;
   white-space: nowrap;
   font-size: var(--font-size-caption);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+:root .invoice-original-controls .invoice-original-zoom {
+  min-inline-size: 48px;
+}
+@container invoice-toolbar (max-width: 340px) {
+  .invoice-original-control-group {
+    gap: 1px;
+    padding-inline: 1px;
+  }
+  :root .invoice-original-controls .invoice-original-page {
+    min-inline-size: 28px;
+  }
+  :root .invoice-original-controls .invoice-original-zoom {
+    min-inline-size: 36px;
+  }
+}
+.original-viewer[data-hidden="true"] .original-viewer-panel {
+  display: none;
+}
+.original-viewer[data-hidden="true"] {
+  block-size: auto;
+}
+:root .receiving-add-line > .actions > :is(.ui-select, .ui-button.button) {
+  block-size: 44px;
+  min-block-size: 44px;
 }
 .original-viewer .invoice-original-media,
 .original-viewer-dialog .invoice-original-media {
@@ -749,7 +834,6 @@
   block-size: calc(100dvh - 280px);
   min-block-size: 260px;
 }
-.original-viewer-expand,
 .original-viewer-phone-trigger {
   display: none;
 }
@@ -761,8 +845,26 @@
   padding: 16px;
   overflow: hidden;
 }
-.original-viewer-dialog .invoice-original-media {
-  block-size: calc(100dvh - 186px);
+.ui-dialog.original-viewer-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.ui-dialog.original-viewer-dialog > .ui-dialog-header,
+.ui-dialog.original-viewer-dialog > .dialog-description,
+.ui-dialog.original-viewer-dialog > .invoice-original-toolbar-container {
+  flex: 0 0 auto;
+}
+.ui-dialog.original-viewer-dialog > .dialog-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-caption);
+}
+:root .ui-dialog.original-viewer-dialog[open] > .invoice-original-media {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  block-size: auto;
 }
 .invoice-original-skeleton {
   position: absolute;
@@ -821,9 +923,6 @@
   }
 }
 @media (min-width: 761px) and (max-width: 1179px) {
-  .original-viewer-hide {
-    display: none;
-  }
   .original-viewer-expand {
     display: inline-flex;
   }

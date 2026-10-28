@@ -188,7 +188,7 @@ for (const language of ["en", "fa"] as const)
             .getByRole("button", { name: /^(View original|مشاهده اصل)/ })
             .click();
           const viewer = page.getByRole("dialog", {
-            name: t("Original invoice", "اصل فاکتور"),
+            name: t("Original invoice", "فاکتور اصلی"),
             exact: true,
           });
           await expect(viewer).toBeVisible();
