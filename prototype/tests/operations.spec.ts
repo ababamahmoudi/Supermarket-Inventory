@@ -357,7 +357,7 @@ test("dashboard shows five operational KPIs and authorized on-shift staff, and o
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await runCanonicalBusinessFixture(
+  const fixture = await runCanonicalBusinessFixture(
     page,
     (state) => {
       const common = { at: new Date().toISOString(), by: "Demo Supervisor" };
@@ -384,6 +384,7 @@ test("dashboard shows five operational KPIs and authorized on-shift staff, and o
           action: "Stop offer",
         },
       ];
+      return { at: common.at };
     },
     undefined,
   );
@@ -393,12 +394,15 @@ test("dashboard shows five operational KPIs and authorized on-shift staff, and o
   await expect(page.getByText("Create offer", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Stop offer", { exact: true })).toHaveCount(0);
   await assertDashboardOperationalAndShiftTiles(page);
-  await page.getByText("More operations", { exact: true }).click();
+  const beforeReads = await readCanonicalBusinessEvidence(page);
+  await expect(page.getByText("More operations", { exact: true })).toHaveCount(
+    0,
+  );
   for (const heading of [
     "Approvals waiting",
     "Alerts",
     "Recent invoices",
-    "Returns",
+    "This week",
     "Supplier balances",
     `Notes for ${configuredRoleLabel(readConfiguredRoleDefinitions(configuration.roles), "manager", "en")}`,
     "Activity",
@@ -406,6 +410,40 @@ test("dashboard shows five operational KPIs and authorized on-shift staff, and o
     await expect(
       page.getByRole("heading", { name: heading, exact: true }),
     ).toBeVisible();
+  const activity = page.locator(".dashboard-activity");
+  await expect(activity.locator(".dashboard-activity-list")).toHaveCount(1);
+  await expect(activity.getByRole("listitem")).toHaveCount(1);
+  await expect(activity.locator("time")).toHaveAttribute(
+    "datetime",
+    fixture.at,
+  );
+  await expect(activity.locator("time")).toHaveText(/^\d{2}:\d{2}$/);
+  const weekly = page.locator(".dashboard-this-week");
+  await expect(weekly.locator(".dashboard-week-stat")).toHaveCount(3);
+  await expect(weekly.getByRole("link")).toHaveText([
+    "Returns",
+    "Received",
+    "Price updates",
+  ]);
+  for (const value of await weekly
+    .locator(".dashboard-week-stat > strong")
+    .allTextContents())
+    expect(value.trim()).toMatch(/^\d+$/);
+  for (const href of ["#returns", "#received", "#price-updates"]) {
+    await weekly.locator(`a[href="${href}"]`).click();
+    await expect(page).toHaveURL((url) => url.hash === href);
+    await page.goto("/#dashboard");
+    await expect(weekly).toBeVisible();
+    await expect(
+      activity.getByText("Approve price", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      activity.getByText("Create offer", { exact: true }),
+    ).toHaveCount(0);
+    await expect(activity.getByText("Stop offer", { exact: true })).toHaveCount(
+      0,
+    );
+  }
   await page
     .getByRole("button", { name: "Expiring soon: 2", exact: true })
     .click();
@@ -422,6 +460,12 @@ test("dashboard shows five operational KPIs and authorized on-shift staff, and o
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  const afterReads = await readCanonicalBusinessEvidence(page);
+  expect(afterReads.activity).toEqual(beforeReads.activity);
+  expect(afterReads.invoices).toEqual(beforeReads.invoices);
+  expect(afterReads.stock_movements).toEqual(beforeReads.stock_movements);
+  expect(afterReads.ledger).toEqual(beforeReads.ledger);
+  expect(afterReads.products).toEqual(beforeReads.products);
 });
 
 test("invalid pickup evidence, invalid store-use quantities, and invalid financial amounts show errors without changing records or crashing the app", async ({
