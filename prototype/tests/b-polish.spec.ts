@@ -93,14 +93,9 @@ for (const language of ["en", "fa"] as const) {
           ["field", "action", "icon", "choice"],
           `${route}: ${control.name} has a defined control kind`,
         ).toContain(control.kind);
-        // R2c explicitly opts Offers into 44px ordinary controls. Genuine
-        // icon controls and the unchanged C9 screens retain their own sizes.
-        const expectedHeight =
-          route === "offers" && !control.iconOnly
-            ? 44
-            : control.kind === "choice"
-              ? 32
-              : 40;
+        // R2e B5 shares a 44px filter row; its segmented track contains
+        // 36px choices. Every other scoped control keeps the 44px target.
+        const expectedHeight = control.kind === "choice" ? 36 : 44;
         expect(
           Math.abs(control.height - expectedHeight),
           `${route}: ${control.name}`,

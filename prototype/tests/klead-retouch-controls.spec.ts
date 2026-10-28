@@ -359,7 +359,7 @@ for (const language of ["en", "fa"] as const) {
     });
   });
 
-  test(`Klead retouch: tables paint one inset row divider without cell underlines (${language})`, async ({
+  test(`Klead retouch: tables paint one row divider at their content edges without cell underlines (${language})`, async ({
     page,
   }, info) => {
     await start(page, language);
@@ -408,7 +408,11 @@ for (const language of ["en", "fa"] as const) {
     expect.soft(geometry.rowRule).not.toBe("none");
     expect.soft(geometry.repeat).toBe("no-repeat");
     expect.soft(geometry.position).toBe("50% 100%");
-    expect.soft(geometry.inset).toBeCloseTo(16, 0);
+    // R0.2 desktop rules reach the table edges. Existing phone record boxes
+    // retain the 16px inset matching their padded content.
+    expect
+      .soft(geometry.inset)
+      .toBeCloseTo((page.viewportSize()?.width ?? 1280) <= 760 ? 16 : 0, 0);
     expect.soft(geometry.lineHeight).toBe(1);
     expect(geometry.cells.length).toBeGreaterThan(1);
     for (const cell of geometry.cells) {

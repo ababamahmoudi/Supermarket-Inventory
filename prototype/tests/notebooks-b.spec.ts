@@ -69,9 +69,9 @@ test("Notes search has a search icon, a placeholder, bounded fields and touch ac
   );
   for (const control of controls) {
     expect(["field", "action", "icon", "segment"]).toContain(control.kind);
-    // C9 list controls are 40px; the segmented track contains 32px choices.
+    // R2e B5 shares 44px list controls and 36px segmented choices.
     expect(
-      Math.abs(control.height - (control.kind === "segment" ? 32 : 40)),
+      Math.abs(control.height - (control.kind === "segment" ? 36 : 44)),
     ).toBeLessThanOrEqual(1);
   }
 });
