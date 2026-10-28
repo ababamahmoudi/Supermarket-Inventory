@@ -68,6 +68,17 @@ async function measure(
     body: JSON.stringify(report, null, 2),
     contentType: "application/json",
   });
+  const capture = info.outputPath(
+    `${info.title.replace(/\s+/g, "-")}-${phase}.png`,
+  );
+  await page.screenshot({
+    path: capture,
+    fullPage: (await page.locator("dialog[open]").count()) === 0,
+  });
+  await info.attach(`${scene}-${phase}-actual-screen`, {
+    path: capture,
+    contentType: "image/png",
+  });
   expect(report.failures, `${scene} ${phase}`).toEqual([]);
   expect(
     report.controls,
@@ -318,6 +329,12 @@ async function prepareScene(
     await expect(
       page.locator(".sale-request-card .approval-numbers"),
     ).toBeVisible();
+    for (const card of await page.locator(".approval-detail-row").all()) {
+      const actions = card.locator(".approval-card-footer .actions > button");
+      await expect(actions).toHaveCount(3);
+      for (const action of await actions.all())
+        await expect(action).toBeVisible();
+    }
     const report = await measure(
       page,
       info,
@@ -379,6 +396,19 @@ async function prepareScene(
       })
       .click();
     await expect(page.getByTestId("invoice-review")).toBeVisible();
+    const toolbarName = t("Original invoice", "فاکتور اصلی");
+    const requireOriginalToolbar = async () => {
+      const toolbar = page.getByRole("toolbar", {
+        name: toolbarName,
+        exact: true,
+      });
+      await expect(toolbar).toBeVisible();
+      await expect(
+        toolbar.locator(":scope > .invoice-original-control-group"),
+      ).toHaveCount(4);
+      await expect(toolbar.getByRole("button")).toHaveCount(7);
+    };
+    if (width === 1440) await requireOriginalToolbar();
     const report = await measure(page, info, scene, "review-and-original");
     if (width === 1440) expect(report.columns).toBeGreaterThanOrEqual(5);
     else {
@@ -389,6 +419,7 @@ async function prepareScene(
           exact: true,
         }),
       ).toBeVisible();
+      await requireOriginalToolbar();
       await measure(page, info, scene, "phone-original-dialog");
     }
   }
