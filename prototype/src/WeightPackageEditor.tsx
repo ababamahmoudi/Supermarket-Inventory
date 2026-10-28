@@ -35,6 +35,7 @@ import {
   AutoTextarea as Textarea,
 } from "./ui";
 import { Money, LtrText, UnitText, categoryLabel } from "./presentation";
+import { massUnitLabel } from "./formatters";
 import "./weight-product-editor.css";
 
 export function PackageSizeSection({
@@ -147,7 +148,7 @@ export function PackageSizeSection({
   };
   const sizeText = (row: Pick<WeightPackageDraft, "size" | "unit">) =>
     lang === "fa"
-      ? `${row.size.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)])} ${{ g: "گرم", kg: "کیلوگرم", lb: "پوند", oz: "اونس" }[row.unit]}`
+      ? `${row.size.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)])} ${massUnitLabel(row.unit, lang)}`
       : `${row.size} ${row.unit}`;
   const validate = (row: WeightPackageDraft) => {
     packageSizeInLb(row.size, row.unit, state.config);
