@@ -150,7 +150,9 @@ jobs:
   prototype_browser_tests:
     name: Prototype browser shard ${{ matrix.shard }}/4
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The expanded suite has about 400 cases per shard; a clean CI204 shard
+    # needed 28.3 minutes before setup. Keep individual test limits unchanged.
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:

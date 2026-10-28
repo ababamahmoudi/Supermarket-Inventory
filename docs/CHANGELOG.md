@@ -602,3 +602,5 @@ Updated the legacy simulated-reading copy assertion to follow the approved entry
 
 - R2f invoice integration: stabilize retained English receiving-name glyphs across EN/FA with a reusable bundled bilingual font-order token; preserve table widths, ellipsis and strict clipping budgets.
 - CI203 integration: distinguish real signed-out language controls from restored actor chrome in the browser driver, retaining authentication/session assertions. Update E3/C8 phone proof to canonical D8 four-slot records and D7’s This week destination; preserve the2px geometry, permitted-credit and real-chevron guards, with a copied-auth-form negative check.
+
+- Allow 40 minutes for the expanded browser CI jobs after a clean 399-case shard required 28.3 minutes before setup. Keep every test, individual timeout, worker/retry setting, skip and assertion unchanged; actual failures still fail the combined gate.
