@@ -48,6 +48,8 @@
   --radius-search: 16px;
   --radius-toast: 14px;
   --radius-round: 999px;
+  --radius-small-bottom: var(--radius-none) var(--radius-none)
+    var(--radius-small) var(--radius-small);
   --radius-keycap: 4px;
   --radius-chart-bar: var(--radius-keycap) var(--radius-keycap)
     var(--radius-none) var(--radius-none);

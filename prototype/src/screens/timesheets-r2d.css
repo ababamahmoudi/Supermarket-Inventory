@@ -459,7 +459,7 @@
 .timesheet-staff-avatar {
   inline-size: 40px;
   block-size: 40px;
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   display: grid;
   place-items: center;
   background: var(--accent-soft);
