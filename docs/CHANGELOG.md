@@ -1,3 +1,8 @@
+## 2026-10-28 — Posted source-cost atoms
+
+- Preserve the complete four-decimal source amount and source unit with a legal break only before the whole suffix; retain existing column widths, gaps, typography and currency behavior.
+- Measure real imported EN/FA source-cost atoms at 1440/1280/1000/390 px and retain the complete original C8 reports and a split-unit negative control.
+
 ## 2026-10-28 — R2e C1 posted reading provenance
 
 - Match the human imported-reading caption on posted and review headers. Retain every model identifier under initially closed More details → Reading.

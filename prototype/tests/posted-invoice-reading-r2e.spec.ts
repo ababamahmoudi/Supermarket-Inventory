@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
+import { writeFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import readings from "./fixtures/r1-fictional-readings-export.json" with { type: "json" };
 import { FILE_DATABASE_NAME } from "../src/file-database";
+import Decimal from "decimal.js";
+import { inspectC8Layout } from "../scripts/capture-c8-proof.mjs";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import {
   chooseOption,
@@ -166,6 +169,176 @@ for (const language of ["en", "fa"] as const)
     expect(await sourceDigests(page, invoice.company_id, references)).toEqual(
       expectedDigests,
     );
+    const originalWidth = page.viewportSize()!.width;
+    const weightedIndex = invoice.lines.findIndex(
+      (line) => line.sold_by === "weight",
+    );
+    expect(weightedIndex).toBeGreaterThanOrEqual(0);
+    const weightedLine = invoice.lines[weightedIndex];
+    expect(weightedLine.source_cost_unit).toBe("kg");
+    const currencySymbol = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: before.config.company.currency,
+      currencyDisplay: "narrowSymbol",
+    })
+      .formatToParts(0)
+      .find((part) => part.type === "currency")!.value;
+    const amount =
+      currencySymbol +
+      new Decimal(
+        weightedLine.source_cost_before_tax ??
+          weightedLine.unit_cost_before_tax,
+      ).toFixed(4);
+    expect(amount).toBe("$2.5000");
+    const row = page.locator(`[data-posted-line="${weightedIndex}"]`);
+    const costs = [];
+    for (const width of [1440, 1280, 1000, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      const cost = row.locator(
+        width < 760
+          ? ".receiving-phone-quantity .posted-source-cost"
+          : ".receiving-cost-cell > .posted-source-cost",
+      );
+      await expect(cost).toBeVisible();
+      await expect(cost).toHaveText(`${amount}/kg`);
+      const proof = await inspectC8Layout(
+        page,
+        "posted-source-cost",
+        language,
+        width,
+      );
+      const geometry = await cost.evaluate((element, phone) => {
+        const cell = element.closest("td")!;
+        const bounds = cell.getBoundingClientRect();
+        const cellStyle = getComputedStyle(cell);
+        const start = bounds.left + parseFloat(cellStyle.paddingLeft);
+        const end = bounds.right - parseFloat(cellStyle.paddingRight);
+        const glyphs = (node: Element) => {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          return [...range.getClientRects()].filter(
+            (rect) => rect.width > 0 && rect.height > 0,
+          );
+        };
+        const atomNodes = [
+          ...element.querySelectorAll(":scope > .weight-price-main"),
+        ];
+        const atoms = atomNodes.map((node) => {
+          const rects = glyphs(node);
+          return {
+            text: node.textContent,
+            lines: new Set(rects.map((rect) => Math.round(rect.top))).size,
+            width:
+              Math.max(...rects.map((rect) => rect.right)) -
+              Math.min(...rects.map((rect) => rect.left)),
+            contained: rects.every(
+              (rect) => rect.left >= start - 1.5 && rect.right <= end + 1.5,
+            ),
+            fontSize: getComputedStyle(node).fontSize,
+            fontWeight: getComputedStyle(node).fontWeight,
+          };
+        });
+        const th = cell.closest("table")!.querySelector("thead tr")!.children[
+          cell.cellIndex
+        ];
+        const values = glyphs(element),
+          headings = glyphs(th);
+        return {
+          atoms,
+          cellWidth: bounds.width,
+          paddingStart: parseFloat(cellStyle.paddingInlineStart),
+          paddingEnd: parseFloat(cellStyle.paddingInlineEnd),
+          cellDirection: cellStyle.direction,
+          headingDirection: getComputedStyle(th).direction,
+          cellAlign: cellStyle.textAlign,
+          headingAlign: getComputedStyle(th).textAlign,
+          leftDifference: phone
+            ? 0
+            : Math.abs(
+                Math.min(...values.map((rect) => rect.left)) -
+                  Math.min(...headings.map((rect) => rect.left)),
+              ),
+          edgeDifference: phone
+            ? 0
+            : cellStyle.direction === "rtl"
+              ? Math.abs(
+                  Math.min(...values.map((rect) => rect.left)) -
+                    Math.min(...headings.map((rect) => rect.left)),
+                )
+              : Math.abs(
+                  Math.max(...values.map((rect) => rect.right)) -
+                    Math.max(...headings.map((rect) => rect.right)),
+                ),
+          overflow: document.documentElement.scrollWidth - window.innerWidth,
+        };
+      }, width < 760);
+      expect(geometry.cellDirection).toBe(language === "fa" ? "rtl" : "ltr");
+      expect(geometry.headingDirection).toBe(language === "fa" ? "rtl" : "ltr");
+      expect(geometry.atoms).toHaveLength(2);
+      expect(geometry.atoms.map((atom) => atom.text)).toEqual([amount, "/kg"]);
+      for (const atom of geometry.atoms) {
+        expect(atom.lines).toBe(1);
+        expect(atom.contained).toBe(true);
+        // Existing shared caption/body tokens are 12/14px; the cost keeps them.
+        expect(atom.fontSize).toBe(width < 760 ? "12px" : "14px");
+        expect(atom.fontWeight).toBe("500");
+      }
+      expect(
+        geometry.edgeDifference,
+        `${width} ${JSON.stringify(geometry)}`,
+      ).toBeLessThanOrEqual(1.5);
+      expect(geometry.overflow).toBeLessThanOrEqual(1);
+      if (width >= 760) {
+        expect(geometry.paddingStart).toBe(12);
+        expect(geometry.paddingEnd).toBe(12);
+      }
+      costs.push({ width, geometry, proof });
+      await page.evaluate(() =>
+        window.scrollTo({ top: 0, behavior: "instant" }),
+      );
+      await page.screenshot({
+        path: info.outputPath(`posted-source-cost-${width}-${language}.png`),
+        fullPage: true,
+      });
+    }
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const unit = row
+      .locator(".receiving-cost-cell .posted-source-cost > .weight-price-main")
+      .last();
+    await unit.evaluate((element) =>
+      element.setAttribute(
+        "style",
+        "white-space: normal; display: inline-block; inline-size: 8px; overflow-wrap: anywhere",
+      ),
+    );
+    const broken = await inspectC8Layout(
+      page,
+      "posted-source-cost-negative",
+      language,
+      1280,
+    );
+    const splitUnitLines = await unit.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return new Set(
+        [...range.getClientRects()]
+          .filter((rect) => rect.width > 0 && rect.height > 0)
+          .map((rect) => Math.round(rect.top)),
+      ).size;
+    });
+    expect(splitUnitLines).toBeGreaterThan(1);
+    await unit.evaluate((element) => element.removeAttribute("style"));
+    const restored = await inspectC8Layout(
+      page,
+      "posted-source-cost-restored",
+      language,
+      1280,
+    );
+    await page.setViewportSize({ width: originalWidth, height: 900 });
+    await info.attach("Actual source-cost atoms and unchanged C8 word proof", {
+      body: JSON.stringify({ costs, broken }),
+      contentType: "application/json",
+    });
     const header = page.locator(".posted-receiving > .receiving-header");
     await expect(header).toContainText(
       language === "en"
@@ -253,4 +426,16 @@ for (const language of ["en", "fa"] as const)
     await expect(
       page.locator(".posted-receiving > .receiving-header"),
     ).not.toContainText(entry.ai_models.join(", "));
+    await writeFile(
+      info.outputPath("posted-source-cost-proof.json"),
+      JSON.stringify({ costs, restored, broken, splitUnitLines }, null, 2),
+    );
+    await info.attach("Full unfiltered posted-scene C8 reports", {
+      body: JSON.stringify({ costs, restored, broken, splitUnitLines }),
+      contentType: "application/json",
+    });
+    expect([
+      ...costs.flatMap((cost) => cost.proof.failures),
+      ...restored.failures,
+    ]).toEqual([]);
   });

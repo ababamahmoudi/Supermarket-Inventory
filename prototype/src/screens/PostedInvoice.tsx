@@ -31,6 +31,7 @@ import { importedReadingReceived } from "../invoice-reading-dates";
 import { correctHandwrittenReceivedDate } from "../invoice-received-time";
 import { readingNoteCopy } from "../invoice-reading-note-copy";
 import "./posted-invoice-r2b.css";
+import "../weight-price.css";
 import type {
   InvoiceReadDTO,
   InvoicePurchaseReadDTO,
@@ -109,6 +110,32 @@ export function InvoiceQuantity({ line }: { line: InvoiceEditableLine }) {
         "{{count}} واحد",
         "{{count}} واحد",
         line.qty_invoiced,
+      )}
+    </LtrText>
+  );
+}
+
+/** Retain the source four-decimal amount and unit as complete price atoms. */
+function InvoiceSourceCost({ line }: { line: InvoiceEditableLine }) {
+  return (
+    <LtrText className="posted-source-cost">
+      <Money
+        className="weight-price-main"
+        decimals={4}
+        fixedDecimals
+        value={
+          line.sold_by === "weight"
+            ? (line.source_cost_before_tax ?? line.unit_cost_before_tax)
+            : line.unit_cost_before_tax
+        }
+      />
+      {line.sold_by === "weight" && (
+        <>
+          <wbr />
+          <LtrText className="weight-price-main">
+            /{line.source_cost_unit ?? "lb"}
+          </LtrText>
+        </>
       )}
     </LtrText>
   );
@@ -540,19 +567,7 @@ export function PostedInvoice({
                         </p>
                         <small className="receiving-phone-quantity">
                           <InvoiceQuantity line={line} /> ·{" "}
-                          <Money
-                            value={
-                              line.sold_by === "weight"
-                                ? (line.source_cost_before_tax ??
-                                  line.unit_cost_before_tax)
-                                : line.unit_cost_before_tax
-                            }
-                            decimals={4}
-                            fixedDecimals
-                          />
-                          {line.sold_by === "weight" && (
-                            <LtrText>/{line.source_cost_unit ?? "lb"}</LtrText>
-                          )}
+                          <InvoiceSourceCost line={line} />
                         </small>
                         {line.date_tracking && line.date_value && (
                           <small className="posted-phone-tracked-date">
@@ -631,20 +646,7 @@ export function PostedInvoice({
                         )}
                       </td>
                       <td className="numeric receiving-cost-cell">
-                        <LtrText>
-                          <Money
-                            decimals={4}
-                            fixedDecimals
-                            value={
-                              line.sold_by === "weight"
-                                ? (line.source_cost_before_tax ??
-                                  line.unit_cost_before_tax)
-                                : line.unit_cost_before_tax
-                            }
-                          />
-                          {line.sold_by === "weight" &&
-                            `/${line.source_cost_unit ?? "lb"}`}
-                        </LtrText>
+                        <InvoiceSourceCost line={line} />
                       </td>
                       <td className="numeric receiving-total-cell">
                         <Money value={line.line_total} />
