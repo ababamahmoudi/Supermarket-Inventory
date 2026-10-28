@@ -339,7 +339,7 @@ test("Supplier invoice links open the actual posted document and retained origin
   const phone = (page.viewportSize()?.width ?? 1440) < 760;
   const originalDialog = () =>
     page.getByRole("dialog", {
-      name: /^(Original invoice|اصل فاکتور)$/,
+      name: /^(Original invoice|فاکتور اصلی)$/,
     });
   const showOriginal = async () => {
     if (!phone) return;

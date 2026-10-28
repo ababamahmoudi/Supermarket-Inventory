@@ -15,3 +15,9 @@ Click check: Supervisor → Invoices → New invoice → Photo (AI reading) → 
 The original C4 layout flow reproduced a stale Persian expectation: Lookup displays `$7.49/پوند` and `$16.51/کیلوگرم`. Only those two assertions now select the approved labels by language. English `/lb` and `/kg`, exact amounts, approved-price setup, private/canonical evidence and every geometry assertion are unchanged. The ordinary Catalog price contract is unchanged.
 
 All six original desktop workflows pass at 1280/1440/1920px in EN/FA (3.2min, fresh production source plus the receiving font correction, one worker). This includes the explicit New item order comparison, retained posted original, correction evidence, dates and pending credits. No tolerance, timeout or skip changed.
+
+## Exact original-viewer title
+
+The existing original-document flow reproduced a stale phone-only Persian dialog name. Its exact anchored name now matches the approved `فاکتور اصلی`; the English `Original invoice` name is unchanged. Every retained source/Blob/byte/SHA-256 comparison, supplier document route, bilingual close/reopen, reload and no-console-error assertion remains. Both original desktop/phone cases pass (17.3sec). The posted version-navigation link still deliberately uses `اصل فاکتور`; source inspection confirmed its separate existing test is correct and remains untouched.
+
+Final local total: 12 original browser cases pass (four invoice theme/language cases, six document-layout cases and two original-viewer cases), plus all three token tests, fresh production build, affected lint/format and diff checks. No C5 Catalog assertions or proof script changes are included.
