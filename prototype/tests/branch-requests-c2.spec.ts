@@ -46,10 +46,17 @@ test("request catalog cases and free text; fulfil at Warehouse, receive Missing,
     "cases",
     "Cases",
   );
-  await catalogLine.getByLabel("Units per case", { exact: true }).fill("12");
+  const pack = catalogLine.getByLabel("Units per case", { exact: true });
+  if (!(await pack.isVisible()))
+    await catalogLine.locator(".request-line-pack-action").click();
+  await pack.fill("12");
+  await catalogLine
+    .getByRole("button", { name: "Add note", exact: true })
+    .click();
   await catalogLine
     .getByLabel("Note (optional)", { exact: true })
     .fill("For the front shelf");
+  await catalogLine.getByRole("button", { name: "Done", exact: true }).click();
   await page
     .getByLabel("Add a product, or type an item that isn't in the catalog", {
       exact: true,

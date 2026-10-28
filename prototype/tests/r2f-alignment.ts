@@ -84,6 +84,15 @@ export const r2fAlignmentExceptions = [
     reason:
       "The approved Add note/Edit action is a 24px inline action beneath the item name, separate from the 44px Quantity/Unit/bin row.",
   },
+  {
+    id: "D10-inline-pack-action",
+    scene: "D10",
+    kind: "compact-text-control",
+    selector:
+      ".request-draft-line .request-line-meta .request-line-pack-action",
+    reason:
+      "A 24px metadata disclosure preserves the existing required/optional case-pack editor without adding a permanently expanded field to the approved 44px Quantity/Unit/bin row.",
+  },
 ] as const;
 
 export interface R2fAlignmentOptions {

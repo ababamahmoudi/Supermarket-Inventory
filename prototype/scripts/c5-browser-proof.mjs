@@ -33,8 +33,8 @@ export async function settled(page) {
 }
 
 export async function appearance(page, variant) {
-  const language = variant === "fa-light" ? "fa" : "en";
-  const theme = variant === "en-dark" ? "dark" : "light";
+  const language = ["fa-light", "fa-dark"].includes(variant) ? "fa" : "en";
+  const theme = ["en-dark", "fa-dark"].includes(variant) ? "dark" : "light";
   if ((await page.locator("html").getAttribute("lang")) !== language)
     await (
       await shellAction(page, "Switch to Persian", "تغییر به انگلیسی")
@@ -1330,6 +1330,252 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             );
         }
       }
+      // R2f D10: qualify only the real request form and its owned search popup.
+      // These composed controls retain action semantics; unrelated buttons keep C5's contract.
+      const requestActionShapes = new Map();
+      const requestForm = document.querySelector(
+        "main .request-form[data-r2f-scene='D10']",
+      );
+      const requestFa = document.documentElement.lang.startsWith("fa");
+      const requestTitle = tidy(
+        requestForm?.parentElement?.querySelector(":scope > .page-header h1")
+          ?.textContent,
+      );
+      const genuineRequestForm = Boolean(
+        window.location.hash.split("?")[0] === "#requests" &&
+        requestForm &&
+        visible(requestForm) &&
+        [
+          "New request",
+          "Edit draft",
+          "درخواست جدید",
+          "ویرایش پیش‌نویس",
+        ].includes(requestTitle) &&
+        requestForm.parentElement?.querySelector(
+          "a.request-form-back[href='#requests']",
+        ) &&
+        requestForm.querySelector(
+          "#request-source.ui-select[role='combobox']",
+        ) &&
+        requestForm.querySelector(
+          "#request-destination.ui-select[role='combobox']",
+        ) &&
+        requestForm.querySelector("ul.request-draft-lines") &&
+        requestForm.querySelector("#request-products"),
+      );
+      if (genuineRequestForm) {
+        const footer = requestForm.querySelector(
+          ":scope > .request-form-actions.ui-control-row[data-ui-control-size='page']",
+        );
+        const actions = [
+          ...(footer?.querySelectorAll(":scope > button") ?? []),
+        ];
+        const captions = requestFa
+          ? ["انصراف", "ذخیره پیش‌نویس", "ارسال درخواست"]
+          : ["Cancel", "Save as draft", "Send request"];
+        const validFooter =
+          actions.length === 3 &&
+          actions.every(
+            (action, index) =>
+              action.matches(
+                "button.ui-button.button[data-control-kind='action']",
+              ) && tidy(action.textContent) === captions[index],
+          );
+        if (!validFooter)
+          failures.push("Invalid R2f D10 request footer composition");
+        else {
+          const phoneGrid =
+            phone && getComputedStyle(footer).display === "grid";
+          if (phoneGrid) {
+            const bounds = footer.getBoundingClientRect();
+            const widths = actions.map(
+              (action) => action.getBoundingClientRect().width,
+            );
+            if (
+              Math.abs(widths[2] - bounds.width) > 1.5 ||
+              Math.abs(widths[0] - widths[1]) > 1.5
+            )
+              failures.push(
+                "R2f D10 phone footer actions must fill their grid cells",
+              );
+          }
+          for (const action of actions)
+            requestActionShapes.set(action, {
+              height: 44,
+              fullWidth: phoneGrid,
+            });
+        }
+        for (const editor of requestForm.querySelectorAll(
+          ".request-line-name > .request-line-note-editor",
+        )) {
+          const done = editor.querySelector(
+            ":scope > .request-line-note-actions.ui-control-row[data-ui-control-size='small'] > button",
+          );
+          const valid =
+            editor.querySelector(".field > textarea.ui-auto-textarea") &&
+            done?.matches(
+              "button.ui-button.button.button-sm[data-control-kind='action']",
+            ) &&
+            tidy(done.textContent) === (requestFa ? "انجام شد" : "Done");
+          if (valid) requestActionShapes.set(done, { height: 40 });
+          else failures.push("Invalid R2f D10 inline note editor composition");
+        }
+        const search = requestForm.querySelector("#request-products");
+        const popup = document.getElementById(
+          search.getAttribute("aria-controls") || "",
+        );
+        const query = search.value.trim();
+        if (popup && visible(popup)) {
+          const genuinePopup = Boolean(
+            query &&
+            popup.matches(
+              ".request-search-results.ui-popover[data-r2f-scene='D10'][role='region']",
+            ) &&
+            search.closest(".request-search-pill") &&
+            popup.id === "request-product-results",
+          );
+          if (!genuinePopup)
+            failures.push("Invalid R2f D10 owned product search popup");
+          else {
+            for (const option of popup.querySelectorAll(
+              ":scope > .request-search-option[data-product-code]",
+            )) {
+              const action = option.querySelector(":scope > button");
+              const code = option.dataset.productCode;
+              const added = [
+                ...requestForm.querySelectorAll(
+                  ".request-draft-line[data-product-code]",
+                ),
+              ].some((line) => line.dataset.productCode === code);
+              const expectedCaption = added
+                ? requestFa
+                  ? "اضافه شد"
+                  : "Added"
+                : requestFa
+                  ? "افزودن"
+                  : "Add";
+              const valid =
+                code &&
+                option.matches(
+                  ".ui-control-row[data-ui-control-size='small']",
+                ) &&
+                tidy(
+                  option.querySelector(".request-search-option-name > strong")
+                    ?.textContent,
+                ) &&
+                tidy(
+                  option.querySelector(".request-search-option-name > .muted")
+                    ?.textContent,
+                ).includes(code) &&
+                action?.matches(
+                  "button.ui-button.button.button-sm[data-control-kind='action']",
+                ) &&
+                tidy(action.textContent) === expectedCaption &&
+                action.disabled === added &&
+                action.querySelector(
+                  added ? "svg.lucide-check" : "svg.lucide-plus",
+                );
+              if (valid) requestActionShapes.set(action, { height: 40 });
+              else
+                failures.push(
+                  "Invalid R2f D10 Add/Added search option composition",
+                );
+            }
+            const action = popup.querySelector(
+              ":scope > button.request-search-new",
+            );
+            const circle = action?.querySelector(
+              ":scope > .request-search-new-icon[data-icon-text-icon]",
+            );
+            const copy = action?.querySelector(
+              ":scope > .request-search-new-text[data-icon-text-copy]",
+            );
+            const expectedTitle = requestFa
+              ? `افزودن «${query}» به عنوان قلم جدید`
+              : `Add “${query}” as a new item`;
+            const expectedHint = requestFa
+              ? "برای چیزهایی که در فهرست کالا نیستند"
+              : "For things that aren't in the catalog";
+            let valid = Boolean(
+              action?.matches(
+                "button.ui-button.button.button-plain.ui-icon-text[data-control-kind='action']",
+              ) &&
+              circle?.querySelector(":scope > svg.lucide-plus") &&
+              copy?.children.length === 2 &&
+              tidy(copy.querySelector(":scope > strong")?.textContent) ===
+                expectedTitle &&
+              tidy(
+                copy.querySelector(":scope > .muted#request-new-item-hint")
+                  ?.textContent,
+              ) === expectedHint &&
+              action.getAttribute("aria-label") ===
+                `${requestFa ? "افزودن مورد" : "Add item"}: ${query}` &&
+              action.getAttribute("aria-describedby") ===
+                "request-new-item-hint",
+            );
+            if (valid) {
+              const actionStyle = getComputedStyle(action),
+                popupStyle = getComputedStyle(popup);
+              const bounds = action.getBoundingClientRect(),
+                circleBounds = circle.getBoundingClientRect(),
+                copyBounds = copy.getBoundingClientRect(),
+                popupBounds = popup.getBoundingClientRect();
+              const innerLeft =
+                popupBounds.left +
+                parseFloat(popupStyle.borderLeftWidth) +
+                parseFloat(popupStyle.paddingLeft);
+              const innerRight =
+                popupBounds.right -
+                parseFloat(popupStyle.borderRightWidth) -
+                parseFloat(popupStyle.paddingRight);
+              const intrinsicHeight = Math.max(
+                56,
+                Math.max(circleBounds.height, copyBounds.height) +
+                  parseFloat(actionStyle.paddingTop) +
+                  parseFloat(actionStyle.paddingBottom) +
+                  parseFloat(actionStyle.borderTopWidth) +
+                  parseFloat(actionStyle.borderBottomWidth),
+              );
+              valid =
+                Math.abs(circleBounds.width - 32) <= 1 &&
+                Math.abs(circleBounds.height - 32) <= 1 &&
+                Math.abs(
+                  (circleBounds.top +
+                    circleBounds.bottom -
+                    copyBounds.top -
+                    copyBounds.bottom) /
+                    2,
+                ) <= 1.5 &&
+                Math.abs(bounds.left - innerLeft) <= 1.5 &&
+                Math.abs(bounds.right - innerRight) <= 1.5 &&
+                Math.abs(parseFloat(actionStyle.paddingLeft) - 12) <= 0.5 &&
+                Math.abs(parseFloat(actionStyle.paddingRight) - 12) <= 0.5 &&
+                Math.abs(parseFloat(actionStyle.paddingTop) - 8) <= 0.5 &&
+                Math.abs(parseFloat(actionStyle.paddingBottom) - 8) <= 0.5 &&
+                Math.abs(bounds.height - intrinsicHeight) <= 1.5 &&
+                copy.scrollWidth - copy.clientWidth <= 1;
+              if (valid)
+                requestActionShapes.set(action, {
+                  height: intrinsicHeight,
+                  fullWidth: true,
+                  radii: ["0px", "0px", "10px", "10px"],
+                });
+            }
+            if (!valid)
+              failures.push(
+                "Invalid R2f D10 two-line new-item action composition",
+              );
+          }
+        }
+      }
+      for (const action of document.querySelectorAll(
+        "button.request-search-new",
+      ))
+        if (visible(action) && !requestActionShapes.has(action))
+          failures.push(
+            "R2f D10 new-item action outside validated request composition",
+          );
+
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
       )) {
@@ -1528,6 +1774,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             element.classList.contains("button-sm") ||
             element.closest(".table-actions, .catalog-row-actions");
           const expectedRadius = small ? "10px" : "12px";
+          const requestShape = requestActionShapes.get(element);
           // C8 requires field-aligned Add controls to be 44px at every width.
           const fieldAlignedAdd = element.matches(
             ".date-quick-actions > button[type='submit'], .product-editor-date-add > button",
@@ -1569,35 +1816,36 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             element.parentElement?.querySelectorAll(":scope > button")
               .length === 1,
           );
-          const expectedHeight = labelAction
-            ? 32
-            : r2fOriginalHeaderActions.has(element)
+          const expectedHeight =
+            requestShape?.height ??
+            (labelAction
               ? 32
-              : r2fApprovalActions.has(element)
-                ? phone
-                  ? 44
-                  : 40
-                : newReturnControl ||
-                    r2fAddLineControls.has(element) ||
-                    r2cControl ||
-                    dashboardAction ||
-                    structuredFooter ||
-                    approvalDecisionButtons.has(element) ||
-                    approvalEditorFooters.has(element) ||
-                    notificationHeaderActions.has(element) ||
-                    modalFooterFeedback ||
-                     sharedFilterChip
-                  ? 44
-                  : genuineFilterToolbar
-                    ? element.closest(".ui-segments")
-                      ? 36
-                      : 44
-                    : phone || fieldAlignedAdd
-                      ? 44
-                      : small
-                        ? 32
-                        : 40;
-
+              : r2fOriginalHeaderActions.has(element)
+                ? 32
+                : r2fApprovalActions.has(element)
+                  ? phone
+                    ? 44
+                    : 40
+                  : newReturnControl ||
+                      r2fAddLineControls.has(element) ||
+                      r2cControl ||
+                      dashboardAction ||
+                      structuredFooter ||
+                      approvalDecisionButtons.has(element) ||
+                      approvalEditorFooters.has(element) ||
+                      notificationHeaderActions.has(element) ||
+                      modalFooterFeedback ||
+                      sharedFilterChip
+                    ? 44
+                    : genuineFilterToolbar
+                      ? element.closest(".ui-segments")
+                        ? 36
+                        : 44
+                      : phone || fieldAlignedAdd
+                        ? 44
+                        : small
+                          ? 32
+                          : 40);
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {
@@ -1623,7 +1871,12 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               failures.push(
                 `Choice text contrast: ${label} (${round(choiceTextContrast)}:1)`,
               );
-          } else if (entry.radii.some((radius) => radius !== expectedRadius))
+          } else if (
+            entry.radii.some(
+              (radius, index) =>
+                radius !== (requestShape?.radii?.[index] ?? expectedRadius),
+            )
+          )
             failures.push(
               `Text action radius: ${label} (${entry.radii.join("/")})`,
             );
@@ -1667,6 +1920,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             !phoneReceivingWidths.has(element) &&
             !r2fApprovalWidths.has(element) &&
             !dashboardWideActions.has(element) &&
+            !requestShape?.fullWidth &&
             rect.width > Math.max(40, intrinsicWidth) + 5
           )
             failures.push(

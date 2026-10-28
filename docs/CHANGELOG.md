@@ -551,3 +551,7 @@ Added original approved logo/icon files, optional public maker/support config, t
 
 - R2f D7 follow-up: count replacement deliveries by actual stock-movement identity; prove two canonical same-return/same-day replacement receipts remain two deliveries even without a Received timestamp.
 - R2f D8: named return items, concrete-location simplification, protected original-currency retained credit, and separated responsive record boxes with real detail links.
+
+### R2f D10 — Branch request form
+
+Rebuilt New/Edit request around the approved paired locations, thin-divider item rows, centred Quantity/Unit/bin, inline notes and full-width Add/Added/free-item search. Retained canonical scope/actor/pack/quantity guards and transfer behavior; local cancel/back do not write and repeated save activation is coalesced. Added real draft/send/cancel, note, duplicate, composition-negative and EN/FA responsive browser proof plus exact shared alignment registration. See `PR_R2F_D10_REVIEW.md` for final executed results and reference differences.

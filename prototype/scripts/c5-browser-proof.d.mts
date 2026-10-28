@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
-export type C5Variant = "en-light" | "en-dark" | "fa-light" | "phone";
+export type C5Variant =
+  "en-light" | "en-dark" | "fa-light" | "fa-dark" | "phone";
 export type C5Button = {
   screen: string;
   variant: string;
