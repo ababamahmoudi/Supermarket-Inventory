@@ -333,10 +333,10 @@ for (const width of [1280, 1440, 1920]) {
         })
         .fill("0016");
       await expect(page.locator(".lookup-approved-price")).toContainText(
-        "$7.49/lb",
+        copy(language, "$7.49/lb", "$7.49/پوند"),
       );
       await expect(page.locator(".lookup-approved-price")).toContainText(
-        "$16.51/kg",
+        copy(language, "$16.51/kg", "$16.51/کیلوگرم"),
       );
       await check(
         "Weighed primary and secondary selling prices",
