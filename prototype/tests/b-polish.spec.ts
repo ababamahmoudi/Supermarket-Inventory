@@ -619,7 +619,7 @@ test("Part 1 approval headers are complete and sortable Products headers and bac
   ).toBeVisible();
 });
 
-test("Part 1 demo disclaimer appears inside Demo and only invoice AI reading remains in page copy", async ({
+test("Demo disclaimers stay in Demo and simulated AI reading is explained in its entry flow", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -639,7 +639,7 @@ test("Part 1 demo disclaimer appears inside Demo and only invoice AI reading rem
   );
   await page.goto("/#invoices");
   await page.getByRole("tab", { name: /^Drafts \d+$/, exact: false }).click();
-  await expect(page.locator("main")).toContainText(
+  await expect(page.locator("main")).not.toContainText(
     "AI invoice reading is simulated",
   );
   await page
@@ -647,6 +647,19 @@ test("Part 1 demo disclaimer appears inside Demo and only invoice AI reading rem
     .first()
     .click();
   await expect(page.locator("main")).not.toContainText(
+    "AI invoice reading is simulated",
+  );
+  await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  const chooser = page.getByRole("dialog", {
+    name: "New invoice",
+    exact: true,
+  });
+  await expect(chooser).toContainText("AI reading is simulated in this demo");
+  await chooser
+    .getByRole("button", { name: "Photo (AI reading)", exact: true })
+    .click();
+  await expect(page.locator("main")).toContainText(
     "AI invoice reading is simulated",
   );
 });

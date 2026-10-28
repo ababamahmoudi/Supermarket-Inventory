@@ -561,3 +561,6 @@ Rebuilt New/Edit request around the approved paired locations, thin-divider item
 - R2f D4: share opt-in localized mass labels for approved FA weight prices/package sizes without changing stored codes, quantities or monetary calculations.
 
 - R2f R0 token integration: reuse the existing round/none radii and row-divider shadow, plus one shared bottom-corner radius composition, in staff, package and request rows. Values and geometry stay identical; the strict token audit remains unchanged and passes.
+### R2f C1/C2 CI compatibility
+
+Updated the legacy simulated-reading copy assertion to follow the approved entry chooser: the Drafts queue and retained review stay clear of the old inline-card warning, while the actual chooser/Photo workspace still explain simulated reading. Preserved Demo menu and unrelated-page assertions; reproduced the old failure and verified both desktop/phone cases. See `PR_R2F_CI202_RECEIVING.md`.
