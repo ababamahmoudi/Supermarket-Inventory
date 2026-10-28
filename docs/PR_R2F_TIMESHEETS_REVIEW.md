@@ -31,3 +31,7 @@ The real Now popup retains shared viewport bounds and can flip above a field nea
 ## Integration alignment follow-up
 
 The existing full-route phone alignment check now understands C6’s visible Select all/Product band above five-region product cards, and D8’s approved header/items/meta/next return cards. It binds actual product names/codes and canonical return IDs/numbers/suppliers/items, requires the real matching record chevron, and distinguishes an omitted/private credit column from an authorized displayed credit. Checkbox controls fit the44px Labels selection track. The2px desktop columns, phone containment and logical-edge budget remain. New EN/FA probes select actual eligible products, measure at least three real returns, reject a4px shift, hidden checkbox, forged destination, copied markup and Cashier credit injection, and verify that following the real chevron writes no return/ledger state.
+
+## Native unload completion proof
+
+The unit regression holds the genuine repository transaction before its write and again after the actual canonical07:30 update/original-actor audit has committed but its result is still in flight. Unload must remain blocked through both phases. It then observes actual app-work completion before asserting that the pending-work flag clears and native unload is allowed. This replaces a one-second poll after merely releasing a scheduling gate; no application hook, timeout increase, retry or weaker assertion is introduced. The existing30-second test budget still catches a save that never completes.

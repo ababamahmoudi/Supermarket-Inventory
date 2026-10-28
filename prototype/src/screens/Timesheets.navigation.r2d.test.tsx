@@ -10,7 +10,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import App from "../App";
 import { DemoProvider, initialState, useDemo } from "../store";
 import { IDBObjectStore as FakeObjectStore } from "fake-indexeddb";
-import { appWorkPending } from "../app-work";
+import { appWorkPending, subscribeAppWork } from "../app-work";
 import { authenticatedProviderFixture } from "../authority-provider-test-fixture";
 import type { DemoState } from "../types";
 import {
@@ -494,19 +494,37 @@ it("clean fields allow unload, while a genuine in-flight save stays protected un
   const original = fixture.repository.runBusinessCommand.bind(
     fixture.repository,
   );
-  const pending = new Promise<void>((resolve) => {
-    release = resolve;
+  let startWrite!: () => void, returnAccepted!: () => void;
+  let arrived!: () => void, wrote!: () => void;
+  const writeGate = new Promise<void>((resolve) => {
+    startWrite = resolve;
   });
-  let held = false;
+  const resultGate = new Promise<void>((resolve) => {
+    returnAccepted = resolve;
+  });
+  const entered = new Promise<void>((resolve) => {
+    arrived = resolve;
+  });
+  const committed = new Promise<void>((resolve) => {
+    wrote = resolve;
+  });
+  release = () => {
+    startWrite();
+    returnAccepted();
+  };
   type Run = typeof fixture.repository.runBusinessCommand;
   vi.spyOn(fixture.repository, "runBusinessCommand").mockImplementation((async (
     ...args: Parameters<Run>
   ) => {
-    if (args[2]?.capability === "timesheets.edit") {
-      held = true;
-      await pending;
-    }
-    return original(...args);
+    if (args[2]?.capability !== "timesheets.edit") return original(...args);
+    arrived();
+    await writeGate;
+    // Keep the actual accepted IDB result in flight, rather than guessing that
+    // releasing its scheduling gate means reconciliation/view refresh finished.
+    const result = await original(...args);
+    wrote();
+    await resultGate;
+    return result;
   }) as Run);
   render(
     <DemoProvider options={fixture.options}>
@@ -521,17 +539,51 @@ it("clean fields allow unload, while a genuine in-flight save stays protected un
   window.dispatchEvent(clean);
   expect(clean.defaultPrevented).toBe(false);
   const input = screen.getByRole("textbox", { name: "In time for Emery Vale" });
-  act(() => input.focus());
-  fireEvent.change(input, { target: { value: "730" } });
-  fireEvent.blur(input);
-  await waitFor(() => expect(held).toBe(true));
+  await act(async () => {
+    input.focus();
+    fireEvent.change(input, { target: { value: "730" } });
+    fireEvent.blur(input);
+    await entered;
+  });
   const pendingUnload = new Event("beforeunload", { cancelable: true });
   window.dispatchEvent(pendingUnload);
   expect(pendingUnload.defaultPrevented).toBe(true);
+  expect((await fixture.readCanonical()).timesheet_rows?.[0].in_time).toBe(
+    "06:00",
+  );
   await act(async () => {
-    release?.();
+    startWrite();
+    await committed;
   });
-  await waitFor(() => expect(appWorkPending()).toBe(false));
+  const canonical = await fixture.readCanonical();
+  expect(canonical.timesheet_rows?.[0].in_time).toBe("07:30");
+  expect(
+    canonical.activity.filter((event) => event.action === "Edit timesheet row"),
+  ).toMatchObject([{ actor_user_id: fixture.actor.user_id }]);
+  // Native acceptance alone is insufficient: the save callback is still real
+  // pending work until the result, reconciliation and public view are accepted.
+  expect(appWorkPending()).toBe(true);
+  const resultPendingUnload = new Event("beforeunload", { cancelable: true });
+  window.dispatchEvent(resultPendingUnload);
+  expect(resultPendingUnload.defaultPrevented).toBe(true);
+  let unsubscribe = () => {};
+  const completed = new Promise<void>((resolve) => {
+    unsubscribe = subscribeAppWork(() => {
+      if (!appWorkPending()) {
+        unsubscribe();
+        resolve();
+      }
+    });
+  });
+  try {
+    await act(async () => {
+      returnAccepted();
+      await completed;
+    });
+  } finally {
+    unsubscribe();
+  }
+  expect(appWorkPending()).toBe(false);
   const accepted = new Event("beforeunload", { cancelable: true });
   window.dispatchEvent(accepted);
   expect(accepted.defaultPrevented).toBe(false);
