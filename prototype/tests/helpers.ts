@@ -291,13 +291,16 @@ export async function openInvoiceUpload(page: Page) {
   // A retained unread original now has a real list row. Start the upload
   // workspace through its action rather than replacing a browser record.
   if ((await input.count()) === 0) {
-    await page
-      .getByRole("button", { name: "New invoice", exact: true })
-      .click();
     const chooser = page.getByRole("dialog", {
       name: "New invoice",
       exact: true,
     });
+    // Some audit flows deliberately open and inspect the real source chooser
+    // before uploading; its native modal correctly blocks the page action.
+    if (!(await chooser.isVisible()))
+      await page
+        .getByRole("button", { name: "New invoice", exact: true })
+        .click();
     await expect(chooser).toBeVisible();
     await chooser
       .getByRole("button", { name: "Photo (AI reading)", exact: true })
