@@ -19,6 +19,7 @@ import {
   addWeightProductEditor,
   savePackageEditor,
   weightPriceCandidate,
+  previewWeightEditorPackages,
   type WeightPackageDraft,
 } from "./weight-product-editor";
 import { productStoreCost, productCostHistory } from "./product-costs";
@@ -34,7 +35,7 @@ import {
   setInvoiceWeightCost,
   setInvoiceWeightReceived,
 } from "./invoice-weight";
-import { savePriceChange } from "./sales";
+import { savePriceChange, saleStoreDate } from "./sales";
 import {
   correctPostedInvoice,
   invoiceContentCorrectionPreview,
@@ -902,6 +903,230 @@ describe("R2f D3 atomic real weight-product editor commands", () => {
       expect(child.package_pending_prices?.["Branch 1"]).toBe("4.99");
       expect(child.branch_prices?.["Branch 2"]).toBe("5.99");
       expect(child.package_pending_prices?.["Branch 2"]).toBeUndefined();
+    } finally {
+      f.repository.dispose();
+    }
+  });
+  it("quotes the actual active parent Sale and a genuine staged End through a read-only protected candidate, matching Save", async () => {
+    const f = await fixture();
+    try {
+      const sale = await f.repository.runBusinessCommand<DemoState, string>(
+        f.identity,
+        (state, actor) => {
+          const before = cloneWithAuthority(state);
+          savePriceChange(state, actor, {
+            product_code: f.code,
+            mode: "sale",
+            scope: "current",
+            branches: ["Branch 1"],
+            price: "5.99",
+            price_unit: "lb",
+            starts_on: saleStoreDate(state.config, "Branch 1"),
+            last_day: saleStoreDate(state.config, "Branch 1"),
+            accept_below_margin: true,
+            below_cost_reason: "Fictional authorized sale",
+            add_labels: false,
+          });
+          capturePriceUpdateChanges(before, state, actor);
+          return state.sales!.find(
+            (item) =>
+              item.product_code === f.code &&
+              item.branch === "Branch 1" &&
+              item.status === "active",
+          )!.id;
+        },
+      );
+      const before = await f.read();
+      const currentQuote = await f.repository.queryBusiness(
+        f.identity,
+        (state, actor) =>
+          previewWeightEditorPackages(state as DemoState, actor, {
+            parent_code: f.code,
+            branch: "Branch 1",
+            sizes: [{ size: "1", unit: "lb" }],
+            candidate: {
+              code: f.code,
+              cost: "4.1000",
+              cost_unit: "lb",
+              pricing_category: "grocery",
+            },
+          }),
+      );
+      expect(currentQuote.value).toEqual({
+        price_per_lb: "5.99",
+        basis_kind: "sale",
+        prices: ["6.49"],
+      });
+      expect(await f.read()).toEqual(before);
+      const keepQuote = await f.repository.queryBusiness(
+        f.identity,
+        (state, actor) =>
+          previewWeightEditorPackages(state as DemoState, actor, {
+            parent_code: f.code,
+            branch: "Branch 1",
+            sizes: [{ size: "1", unit: "lb" }],
+            candidate: {
+              code: f.code,
+              cost: "4.1000",
+              cost_unit: "lb",
+              pricing_category: "grocery",
+            },
+            staged_price: {
+              product_code: f.code,
+              mode: "regular",
+              scope: "current",
+              branches: ["Branch 1"],
+              price: "9.99",
+              price_unit: "lb",
+              starts_on: "",
+              last_day: null,
+              accept_below_margin: true,
+              below_cost_reason: "Fictional regular decision retaining sale",
+              add_labels: false,
+            },
+          }),
+      );
+      expect(keepQuote.value).toEqual({
+        price_per_lb: "5.99",
+        basis_kind: "sale",
+        prices: ["6.49"],
+      });
+      expect(await f.read()).toEqual(before);
+      const revision = before.state.sales!.find(
+        (item) => item.id === sale.value,
+      )!.revision;
+      const staged: ChangePriceInput = {
+        product_code: f.code,
+        mode: "regular",
+        scope: "current",
+        branches: ["Branch 1"],
+        price: "4.99",
+        price_unit: "lb",
+        starts_on: "",
+        last_day: null,
+        accept_below_margin: true,
+        below_cost_reason: "Fictional explicit below-cost review",
+        add_labels: false,
+        regular_sale_resolutions: [
+          { sale_id: sale.value, expected_revision: revision, action: "end" },
+        ],
+      };
+      const quote = await f.repository.queryBusiness(
+        f.identity,
+        (state, actor) =>
+          previewWeightEditorPackages(state as DemoState, actor, {
+            parent_code: f.code,
+            branch: "Branch 1",
+            sizes: [{ size: "1", unit: "lb" }],
+            candidate: {
+              code: f.code,
+              cost: "5.1000",
+              cost_unit: "lb",
+              pricing_category: "grocery",
+            },
+            staged_price: staged,
+          }),
+      );
+      expect(quote.value).toEqual({
+        price_per_lb: "4.99",
+        basis_kind: "regular",
+        prices: ["5.49"],
+      });
+      expect(await f.read()).toEqual(before);
+      const changeQuote = await f.repository.queryBusiness(
+        f.identity,
+        (state, actor) =>
+          previewWeightEditorPackages(state as DemoState, actor, {
+            parent_code: f.code,
+            branch: "Branch 1",
+            sizes: [{ size: "1", unit: "lb" }],
+            candidate: {
+              code: f.code,
+              cost: "5.1000",
+              cost_unit: "lb",
+              pricing_category: "grocery",
+            },
+            staged_price: {
+              ...staged,
+              regular_sale_resolutions: [
+                {
+                  sale_id: sale.value,
+                  expected_revision: revision,
+                  action: "change",
+                  sale_price: "4.49",
+                  price_unit: "lb",
+                },
+              ],
+            },
+          }),
+      );
+      expect(changeQuote.value).toEqual({
+        price_per_lb: "4.49",
+        basis_kind: "sale",
+        prices: ["4.99"],
+      });
+      expect(await f.read()).toEqual(before);
+      const boot = (await f.boot()).value;
+      await expect(
+        f.repository.runBusinessCommand<DemoState, void>(
+          f.identity,
+          (state, actor) =>
+            saveWeightProductEditor(
+              state,
+              actor,
+              f.code,
+              edits(state.products.find((item) => item.code === f.code)!),
+              boot.snapshot,
+              [],
+              { value: "4.1000", unit: "lb" },
+              new Date(Date.now() + 2 * 86400000),
+            ),
+        ),
+      ).rejects.toThrow("stale");
+      expect(await f.read()).toEqual(before);
+      await f.repository.runBusinessCommand<DemoState, void>(
+        f.identity,
+        (state, actor) => {
+          const prior = cloneWithAuthority(state);
+          saveWeightProductEditor(
+            state,
+            actor,
+            f.code,
+            edits(state.products.find((item) => item.code === f.code)!),
+            boot.snapshot,
+            [{ ...packageDraft("1"), unit: "lb" }],
+            { value: "5.1000", unit: "lb" },
+            new Date(),
+            staged,
+          );
+          capturePriceUpdateChanges(prior, state, actor);
+        },
+      );
+      const after = (await f.read()).state;
+      expect(
+        after.products.find(
+          (item) =>
+            item.package_of_product_id === f.code &&
+            item.package_size_unit === "lb",
+        )?.branch_prices?.["Branch 1"],
+      ).toBe(quote.value.prices[0]);
+      expect(after.sales!.find((item) => item.id === sale.value)?.status).toBe(
+        "ended",
+      );
+      expect(after.invoices).toEqual(before.state.invoices);
+      expect(after.ledger).toEqual(before.state.ledger);
+      const bs = await f.auth.switchDemoUser(f.company, "rh-supervisor");
+      const prior = await f.read();
+      await expect(
+        f.repository.queryBusiness(bs.identity, (state, actor) =>
+          previewWeightEditorPackages(state as DemoState, actor, {
+            parent_code: f.code,
+            branch: "Branch 1",
+            sizes: [{ size: "1", unit: "lb" }],
+          }),
+        ),
+      ).rejects.toThrow();
+      expect(await f.read()).toEqual(prior);
     } finally {
       f.repository.dispose();
     }

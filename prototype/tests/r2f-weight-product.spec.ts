@@ -491,3 +491,86 @@ test("R2f D3 creates a weight parent with packages and stages an explicit price 
   expect(saved.invoices).toEqual(original.invoices);
   expect(saved.ledger).toEqual(original.ledger);
 });
+
+test("R2f D3 New size uses the actual parent Sale basis and saves exactly its read-only preview", async ({
+  page,
+}) => {
+  await signIn(page, "Manager");
+  await setBranch(page, "Branch 1");
+  await page.goto("/#products");
+  await page.getByRole("button", { name: "Add product", exact: true }).click();
+  let dialog = page.getByRole("dialog", { name: "Add product", exact: true });
+  await dialog
+    .getByRole("textbox", { name: "English name", exact: true })
+    .fill("Fictional Mountain Tarragon");
+  await dialog
+    .getByRole("group", { name: "Sold by", exact: true })
+    .getByRole("button", { name: "By weight", exact: true })
+    .click();
+  await dialog
+    .getByRole("textbox", { name: "Cost before tax", exact: true })
+    .fill("3.4900");
+  await dialog
+    .getByRole("button", { name: "Add product", exact: true })
+    .click();
+  await expect(dialog).toBeHidden();
+  const added = await readCanonicalBusinessEvidence(page);
+  const parent = added.products.find(
+    (item) => item.name_en === "Fictional Mountain Tarragon",
+  )!;
+  await page.goto(`/#product?code=${parent.code}`);
+  await page
+    .locator(".product-header-actions")
+    .getByRole("button", { name: "Change price", exact: true })
+    .click();
+  const sale = page.getByRole("dialog", { name: "Change price", exact: true });
+  await sale
+    .getByRole("textbox", { name: "Price (per lb)", exact: true })
+    .fill("4.99");
+  await sale.getByRole("button", { name: "Start sale", exact: true }).click();
+  await expect(sale).toBeHidden();
+  const before = await readCanonicalBusinessEvidence(page);
+  dialog = await openWeightProductEditor(page, parent.code);
+  await expect(dialog.locator(".weight-product-price-main")).toContainText(
+    "$5.49",
+  );
+  await expect(dialog.locator(".weight-package-formula")).toContainText(
+    "$4.99/lb",
+  );
+  await expect(dialog.locator(".weight-package-formula")).toContainText(
+    "Sale price",
+  );
+  await dialog
+    .getByRole("textbox", { name: "New size", exact: true })
+    .fill("1");
+  await chooseOption(
+    page,
+    dialog.getByRole("combobox", { name: "Package unit", exact: true }),
+    "lb",
+  );
+  await expect(dialog.locator(".weight-package-add-preview")).toContainText(
+    "$5.49",
+  );
+  await dialog.getByRole("button", { name: "Add size", exact: true }).click();
+  await expect(
+    dialog.locator('[data-package-code="staged"] .weight-package-price'),
+  ).toContainText("$5.49");
+  const queried = await readCanonicalBusinessEvidence(page);
+  expect(queried.products).toEqual(before.products);
+  expect(queried.approvals).toEqual(before.approvals);
+  expect(queried.product_code_high_water).toBe(before.product_code_high_water);
+  await dialog
+    .getByRole("button", { name: "Save product", exact: true })
+    .click();
+  await expect(dialog).toBeHidden();
+  const saved = await readCanonicalBusinessEvidence(page);
+  expect(
+    saved.products.find((item) => item.package_of_product_id === parent.code)
+      ?.branch_prices?.["Branch 1"],
+  ).toBe("5.49");
+  expect(
+    saved.sales?.find((item) => item.product_code === parent.code)?.sale_price,
+  ).toBe("4.99");
+  expect(saved.invoices).toEqual(before.invoices);
+  expect(saved.ledger).toEqual(before.ledger);
+});

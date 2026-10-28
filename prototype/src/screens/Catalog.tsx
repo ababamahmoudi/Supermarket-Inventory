@@ -1578,14 +1578,19 @@ export function ProductEditor({
                     onChange={setPackageRows}
                     pricePerLb={weightCardPrice}
                     pendingPricePerLb={prospectivePending}
-                    stagedPricePerLb={stagedCanonicalPrice}
-                    stagedPriceBranches={
-                      stagedWeightPrice?.mode === "regular"
-                        ? stagedWeightPrice.branches
-                        : undefined
-                    }
                     pendingPriceBranches={pendingWeightLocations}
                     pricingConfig={weightQuote.data?.pricing_config}
+                    weightCandidate={
+                      !isNew
+                        ? {
+                            code: product.code,
+                            cost,
+                            cost_unit: costUnit,
+                            pricing_category: values.pricing_category,
+                          }
+                        : undefined
+                    }
+                    stagedPrice={stagedWeightPrice}
                     parentIsNew={isNew}
                   />
                 )}

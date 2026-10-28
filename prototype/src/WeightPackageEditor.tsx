@@ -15,10 +15,12 @@ import {
   type PackageUnit,
 } from "./package-pricing";
 import { validatePackageBarcode } from "./package-barcodes";
-import { previewWeightPackage } from "./package-service";
+import type { ChangePriceInput } from "./sales";
 import {
   readWeightEditor,
+  previewWeightEditorPackages,
   savePackageEditor,
+  type WeightPriceCandidateInput,
   type WeightPackageDraft,
 } from "./weight-product-editor";
 import type { ProductReadDTO } from "./catalog-read-model";
@@ -44,9 +46,9 @@ export function PackageSizeSection({
   onChange,
   pricePerLb,
   pendingPricePerLb,
-  stagedPriceBranches,
-  stagedPricePerLb,
   pendingPriceBranches,
+  weightCandidate,
+  stagedPrice,
   pricingConfig,
   parentIsNew = false,
 }: {
@@ -55,9 +57,9 @@ export function PackageSizeSection({
   onChange(rows: WeightPackageDraft[]): void;
   pricePerLb: string | null;
   pendingPricePerLb?: string | null;
-  stagedPriceBranches?: readonly string[];
-  stagedPricePerLb?: string | null;
   pendingPriceBranches?: readonly string[];
+  weightCandidate?: WeightPriceCandidateInput;
+  stagedPrice?: ChangePriceInput;
   pricingConfig?: WeightPricingConfig;
   parentIsNew?: boolean;
 }) {
@@ -89,22 +91,21 @@ export function PackageSizeSection({
       kind: "company_shared",
       entity_id: parentIsNew ? undefined : parent.code,
     },
-    JSON.stringify({ parent: parent.code, location, queryInput }),
+    JSON.stringify({
+      parent: parent.code,
+      location,
+      queryInput,
+      weightCandidate,
+      stagedPrice,
+    }),
     (canonical, current) => {
-      if (parentIsNew || !location) return [];
-      return queryInput.map((row) => {
-        try {
-          return previewWeightPackage(
-            canonical,
-            current,
-            parent.code,
-            row.size,
-            row.unit,
-            location,
-          ).price;
-        } catch {
-          return null;
-        }
+      if (parentIsNew || !location) return null;
+      return previewWeightEditorPackages(canonical, current, {
+        parent_code: parent.code,
+        branch: location,
+        sizes: queryInput,
+        candidate: weightCandidate,
+        staged_price: stagedPrice,
       });
     },
   );
@@ -115,6 +116,8 @@ export function PackageSizeSection({
     proposed = false,
   ): string | null => {
     try {
+      if (!proposed && !parentIsNew)
+        return previews.data?.prices[index] ?? null;
       const price = proposed
         ? pendingPriceBranches
           ? pendingPriceBranches.includes(location)
@@ -125,13 +128,7 @@ export function PackageSizeSection({
               ? pendingPrice(state, parent, location)
               : null
             : pendingPricePerLb
-        : branch === "all" && !parentIsNew
-          ? location
-            ? stagedPriceBranches?.includes(location)
-              ? stagedPricePerLb
-              : regularPrice(state, parent, location)
-            : null
-          : pricePerLb;
+        : pricePerLb;
       if (pricingConfig && price && (location || parentIsNew))
         return calculatePackagePrice(
           rowSize,
@@ -141,7 +138,7 @@ export function PackageSizeSection({
           parent.pricing_category,
           pricingConfig,
         ).selling_price;
-      return proposed ? null : (previews.data?.[index] ?? null);
+      return null;
     } catch {
       return null;
     }
@@ -188,6 +185,7 @@ export function PackageSizeSection({
       );
     }
   };
+  const formulaPrice = parentIsNew ? pricePerLb : previews.data?.price_per_lb;
   const currency = state.config.company.currency;
   const fee = packageSettings(state.config).container_fee;
   const category = state.config.pricing_categories.find(
@@ -230,12 +228,15 @@ export function PackageSizeSection({
         <Calculator aria-hidden="true" size={16} />
         <span>
           {t("Package price = size × ", "قیمت بسته = اندازه × ")}
-          {pricePerLb ? (
+          {formulaPrice ? (
             <>
               <LtrText>
-                <Money value={pricePerLb} currency={currency} />
+                <Money value={formulaPrice} currency={currency} />
                 /lb
               </LtrText>
+              {previews.data?.basis_kind === "sale" && (
+                <> ({t("Sale price", "قیمت حراج")})</>
+              )}
             </>
           ) : (
             t("approved price per lb", "قیمت تأییدشده هر پوند")

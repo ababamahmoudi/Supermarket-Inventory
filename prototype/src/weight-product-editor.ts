@@ -15,7 +15,7 @@ import {
   archiveWeightPackage,
   packageParentSnapshot,
 } from "./weight-packages";
-import { readWeightPackages } from "./package-service";
+import { readWeightPackages, previewWeightPackage } from "./package-service";
 import { productStoreCost, recordManualProductCost } from "./product-costs";
 import {
   calculateWeighedPrice,
@@ -23,7 +23,7 @@ import {
   type WeightUnit,
 } from "./weighed";
 import { manualPrice } from "./manual-prices";
-import { regularPrice } from "./catalog";
+import { regularPrice, effectivePrice } from "./catalog";
 import { projectProductReadDTO } from "./catalog-read-model";
 import { createId } from "./ids";
 import { hasApprovedPriceAtLocation } from "./lookup-branch";
@@ -31,6 +31,7 @@ import { actorAudit } from "./domain-authority";
 import type { PackageUnit } from "./package-pricing";
 import {
   savePriceChange,
+  activeSaleAt,
   sellingSaleBranches,
   type ChangePriceInput,
 } from "./sales";
@@ -109,6 +110,7 @@ export function weightEditorSnapshot(
   actor: AuthenticatedActor,
   code: string,
   packageOnly = false,
+  now = new Date(),
 ): string {
   actor = guard(state, actor, packageOnly);
   const product = parent(state, code);
@@ -124,6 +126,14 @@ export function weightEditorSnapshot(
       ? undefined
       : costDecisionLocations(state, actor),
     product,
+    live_prices: sellingSaleBranches(state)
+      .filter((location) => actor.allowed_branches.includes(location))
+      .map((location) => [
+        location,
+        hasApprovedPriceAtLocation(state, product, location, now)
+          ? effectivePrice(state, product, location, now)
+          : null,
+      ]),
     children: state.products.filter(
       (item) =>
         item.company_id === actor.company_id &&
@@ -386,7 +396,7 @@ export function saveWeightProductEditor(
   stagedPrice?: ChangePriceInput,
 ): void {
   actor = guard(state, actor);
-  if (weightEditorSnapshot(state, actor, code) !== expectedSnapshot)
+  if (weightEditorSnapshot(state, actor, code, false, now) !== expectedSnapshot)
     throw new WeightEditorError("stale");
   const draft = cloneWithAuthority(state);
   const product = parent(draft, code);
@@ -538,7 +548,7 @@ export function savePackageEditor(
   now = new Date(),
 ): void {
   actor = guard(state, actor, true);
-  if (weightEditorSnapshot(state, actor, code, true) !== expectedSnapshot)
+  if (weightEditorSnapshot(state, actor, code, true, now) !== expectedSnapshot)
     throw new WeightEditorError("stale");
   const draft = cloneWithAuthority(state);
   applyPackages(draft, actor, parent(draft, code), packages, now);
@@ -572,6 +582,71 @@ export function weightPriceCandidate(
   recordManualProductCost(draft, actor, product, cost);
   return draft;
 }
+/** Read-only hypothetical quote through the same protected Sale and package commands used by Save. */
+export function previewWeightEditorPackages(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  input: {
+    parent_code: string;
+    branch: string;
+    sizes: readonly { size: string; unit: PackageUnit }[];
+    candidate?: WeightPriceCandidateInput;
+    staged_price?: ChangePriceInput;
+  },
+  now = new Date(),
+) {
+  actor = guard(state, actor, true);
+  const draft = input.candidate
+    ? weightPriceCandidate(state, actor, input.candidate)
+    : cloneWithAuthority(state);
+  if (input.candidate && input.candidate.code !== input.parent_code)
+    throw new WeightEditorError("stale");
+  if (input.staged_price) {
+    if (
+      !input.candidate ||
+      input.staged_price.product_code !== input.parent_code
+    )
+      throw new WeightEditorError("stale");
+    savePriceChange(draft, actor, input.staged_price, now);
+  }
+  if (!sellingSaleBranches(draft).includes(input.branch))
+    throw new WeightEditorError("stale");
+  actorAtLocation(draft, actor, input.branch);
+  const product = parent(draft, input.parent_code);
+  const accepted = hasApprovedPriceAtLocation(
+    draft,
+    product,
+    input.branch,
+    now,
+  );
+  const price = accepted
+    ? effectivePrice(draft, product, input.branch, now)
+    : null;
+  return {
+    price_per_lb: price,
+    basis_kind: price
+      ? activeSaleAt(draft, product, input.branch, now)
+        ? ("sale" as const)
+        : ("regular" as const)
+      : null,
+    prices: input.sizes.map((row) => {
+      try {
+        return previewWeightPackage(
+          draft,
+          actor,
+          product.code,
+          row.size,
+          row.unit,
+          input.branch,
+          now,
+        ).price;
+      } catch {
+        return null;
+      }
+    }),
+  };
+}
+
 export function weightEditorPricePreview(
   state: DemoState,
   actor: AuthenticatedActor,
