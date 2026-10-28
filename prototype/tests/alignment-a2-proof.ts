@@ -50,11 +50,55 @@ export async function inspectTableAlignment(page: Page) {
     }
   }
 
-  return page.locator("main").evaluate((main, expectedApprovals) => {
+  const expectedProducts: { code: string; en: string; fa: string }[] = [];
+  const expectedReturns: {
+    id: string;
+    number: number;
+    supplier: string;
+    items: { en: string; fa: string; qty: number }[];
+  }[] = [];
+  if (await page.locator(".labels-products-card,.returns-overview").count()) {
+    const state = await readCanonicalBusinessEvidence(page);
+    const company = state.config.company.seed_key;
+    expectedProducts.push(
+      ...state.products
+        .filter((item) => item.company_id === company)
+        .map((item) => ({
+          code: item.code,
+          en: item.name_en,
+          fa: item.name_fa.trim() ? item.name_fa : item.name_en,
+        })),
+    );
+    state.returns
+      .filter((item) => item.company_id === company)
+      .forEach((record, index) => {
+        expectedReturns.push({
+          id: record.id,
+          number: index + 1,
+          supplier: record.supplier,
+          items: record.lines.slice(0, 2).map((line) => {
+            const product = state.products.find(
+              (item) =>
+                item.company_id === company && item.code === line.product_code,
+            );
+            return {
+              en: product?.name_en || line.product_code,
+              fa: product?.name_fa || product?.name_en || line.product_code,
+              qty: line.qty,
+            };
+          }),
+        });
+      });
+  }
+  const evidence = { expectedApprovals, expectedProducts, expectedReturns };
+  return page.locator("main").evaluate((main, data) => {
+    const { expectedApprovals, expectedProducts, expectedReturns } = data;
     let cells = 0;
     let maxError = 0;
     let cards = 0;
     let decisionCards = 0;
+    let selectionHeaderCards = 0;
+    let returnCards = 0;
     const failures: string[] = [];
     const tidy = (value: string | null | undefined) =>
       (value ?? "")
@@ -183,14 +227,139 @@ export async function inspectTableAlignment(page: Page) {
         ).length === 0,
       );
     };
+    const edge = (element: Element, end = false) => {
+      const box = element.getBoundingClientRect();
+      const rtl = getComputedStyle(element).direction === "rtl";
+      return end ? (rtl ? box.left : box.right) : rtl ? box.right : box.left;
+    };
+    const glyphEdge = (element: Element, end = false) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const box = range.getBoundingClientRect();
+      const rtl = getComputedStyle(element).direction === "rtl";
+      return end ? (rtl ? box.left : box.right) : rtl ? box.right : box.left;
+    };
+    const labelsSelectionHeader = (table: Element, headers: Element[]) => {
+      const wrapper = table.closest(
+        ".labels-products-card > .r2e-labels-products.is-mobile.is-responsive.is-phone-list.has-phone-selection",
+      );
+      return Boolean(
+        wrapper &&
+        main.querySelector(
+          ".labels-products-card > .r2e-labels-products > table",
+        ) === table &&
+        headers.length >= 3 &&
+        headers[0].getAttribute("data-column-key") === "selection" &&
+        headers[1].getAttribute("data-column-key") === "product" &&
+        headers.some(
+          (header) => header.getAttribute("data-column-key") === "price",
+        ) &&
+        headers.slice(2).every((header) => !visible(header)) &&
+        headers.slice(0, 2).every(visible) &&
+        ["Product", "کالا"].includes(tidy(headers[1].textContent)) &&
+        headers[0].querySelectorAll('[role="checkbox"]').length === 1 &&
+        visible(headers[0].querySelector('[role="checkbox"]')!) &&
+        ["Select all filtered", "انتخاب همه نتایج فیلترشده"].includes(
+          headers[0]
+            .querySelector('[role="checkbox"]')
+            ?.getAttribute("aria-label") || "",
+        ),
+      );
+    };
+    const richReturn = (row: Element, table: Element) => {
+      const wrapper = table.closest(
+        ".returns-overview .returns-overview-table.is-mobile.is-responsive.is-phone-list",
+      );
+      const expected = expectedReturns.find(
+        (item) =>
+          `#return?id=${encodeURIComponent(item.id)}` ===
+          row.getAttribute("data-row-href"),
+      );
+      const slots = [
+        "return-phone-header",
+        "return-phone-items",
+        "return-phone-meta",
+        "return-phone-next",
+      ];
+      if (
+        !wrapper ||
+        main.querySelector(
+          ".returns-overview .returns-overview-table > table",
+        ) !== table ||
+        !expected ||
+        row.children.length !== 4 ||
+        !row.matches(".returns-clickable-row.phone-list-row") ||
+        !slots.every(
+          (slot, index) =>
+            row.children[index].matches(`.${slot}`) &&
+            visible(row.children[index]),
+        )
+      )
+        return false;
+      const reference = row.querySelector(
+        ".return-phone-reference > a.returns-number-link",
+      );
+      const supplier = row.querySelector(
+        ".return-phone-supplier > a.entity-link",
+      );
+      const names = [
+        ...row.querySelectorAll(
+          ".return-phone-items .return-list-item-names > span",
+        ),
+      ];
+      const meta = row.querySelector(".return-phone-meta")!;
+      const next = row.querySelector(".return-phone-next")!;
+      const chevrons = [...next.querySelectorAll(".table-row-link")];
+      const href = row.getAttribute("data-row-href");
+      const credit = table.querySelector('thead th[data-column-key="credit"]');
+      const fa = document.documentElement.lang.startsWith("fa");
+      return Boolean(
+        reference &&
+        supplier &&
+        visible(reference) &&
+        visible(supplier) &&
+        reference.getAttribute("href") === href &&
+        supplier.getAttribute("href") === href &&
+        tidy(reference.textContent) === `#${expected.number}` &&
+        tidy(supplier.textContent) === tidy(expected.supplier) &&
+        row
+          .querySelector(".return-phone-status .ui-badge")
+          ?.textContent?.trim() &&
+        names.length === expected.items.length &&
+        names.every((name, index) =>
+          tidy(name.textContent).startsWith(
+            `${tidy(fa ? expected.items[index].fa : expected.items[index].en)} × ${expected.items[index].qty}`,
+          ),
+        ) &&
+        row
+          .querySelector(".return-phone-items .return-list-items > small")
+          ?.textContent?.trim() &&
+        meta.children.length === 2 &&
+        meta.children[0].querySelector(".date-text")?.textContent?.trim() &&
+        (credit
+          ? Boolean(tidy(meta.children[1].textContent))
+          : !tidy(meta.children[1].textContent)) &&
+        next
+          .querySelector(".actions > [data-action-fact]")
+          ?.textContent?.trim() &&
+        chevrons.length === 1 &&
+        visible(chevrons[0]) &&
+        chevrons[0].getAttribute("href") === href &&
+        !row.querySelector(".table-details-toggle"),
+      );
+    };
     const tables = [
       ...main.querySelectorAll(".ui-data-table table, table.receiving-table"),
     ];
     for (const [tableIndex, table] of tables.entries()) {
       const headers = [...table.querySelectorAll("thead tr:first-child th")];
+      const selectionHeader = labelsSelectionHeader(table, headers);
       const stacked =
         getComputedStyle(table).display !== "table" &&
-        headers.every((header) => header.getBoundingClientRect().height === 0);
+        (headers.every(
+          (header) => header.getBoundingClientRect().height === 0,
+        ) ||
+          selectionHeader);
       const labelledCard = table.closest(
         ".ui-data-table.is-mobile.is-responsive",
       );
@@ -230,6 +399,87 @@ export async function inspectTableAlignment(page: Page) {
                 `table ${tableIndex}, receiving card ${rowIndex}: expected one record chevron`,
               );
           } else if (compact) {
+            const returnCandidate = Boolean(
+              table.closest(".returns-overview-table"),
+            );
+            const returnCard = returnCandidate && richReturn(row, table);
+            if (returnCandidate && !returnCard)
+              failures.push(
+                `table ${tableIndex}, phone list ${rowIndex}: invalid retained Returns card`,
+              );
+            if (returnCard) {
+              returnCards++;
+              const reference = row.querySelector(".return-phone-reference")!;
+              const meta = row.querySelector(".return-phone-meta")!;
+              const next = row.querySelector(".return-phone-next")!;
+              const chevron = next.querySelector(".table-row-link")!;
+              const rtl = getComputedStyle(row).direction === "rtl";
+              const style = getComputedStyle(row);
+              const end = rtl
+                ? bounds.left + parseFloat(style.paddingLeft)
+                : bounds.right - parseFloat(style.paddingRight);
+              const errors = [
+                Math.abs(glyphEdge(reference) - glyphEdge(meta.children[0])),
+                Math.abs(
+                  glyphEdge(reference) -
+                    glyphEdge(next.querySelector("[data-action-fact]")!),
+                ),
+                Math.abs(edge(chevron, true) - end),
+              ];
+              if (tidy(meta.children[1].textContent))
+                errors.push(Math.abs(glyphEdge(meta.children[1], true) - end));
+              maxError = Math.max(maxError, ...errors);
+              if (errors.some((error) => error > 2))
+                failures.push(
+                  `table ${tableIndex}, Returns card ${rowIndex}: logical edges ${errors.join("/")}px`,
+                );
+            }
+            if (selectionHeader) {
+              const href = row.getAttribute("data-row-href");
+              const expected = expectedProducts.find(
+                (item) =>
+                  href === `#product?code=${encodeURIComponent(item.code)}`,
+              );
+              const name = row.querySelector(
+                ".phone-list-name .product-name strong",
+              );
+              const selection = row.querySelector(
+                '.phone-list-selection [role="checkbox"]',
+              );
+              const fa = document.documentElement.lang.startsWith("fa");
+              if (
+                !expected ||
+                tidy(name?.textContent) !==
+                  tidy(fa ? expected.fa : expected.en) ||
+                !selection ||
+                !visible(selection) ||
+                selection.getAttribute("aria-label") !==
+                  (fa
+                    ? `انتخاب کالای ${expected.code}`
+                    : `Select product ${expected.code}`)
+              ) {
+                failures.push(
+                  `table ${tableIndex}, phone list ${rowIndex}: invalid Labels product selection`,
+                );
+              } else {
+                selectionHeaderCards++;
+                const headerSelection =
+                  headers[0].querySelector('[role="checkbox"]')!;
+                const errors = [
+                  Math.abs(edge(headerSelection) - edge(selection)),
+                  Math.abs(edge(headerSelection, true) - edge(selection, true)),
+                  Math.abs(
+                    glyphEdge(headers[1]) -
+                      edge(row.querySelector(".phone-list-name")!),
+                  ),
+                ];
+                maxError = Math.max(maxError, ...errors);
+                if (errors.some((error) => error > 2))
+                  failures.push(
+                    `table ${tableIndex}, Labels selection ${rowIndex}: edges ${errors.join("/")}px`,
+                  );
+              }
+            }
             const decisionCandidate =
               row.matches(".dashboard-queue-row[data-approval-id]") &&
               Boolean(table.closest(".dashboard-approval-table"));
@@ -242,11 +492,13 @@ export async function inspectTableAlignment(page: Page) {
             if (decisionCard) decisionCards++;
             // E3 replaces repeated label/value cards with explicit list
             // regions. Keep the same containment check on every cell.
-            for (const region of decisionCard
-              ? ["name", "value", "secondary"]
-              : ["name", "value", "secondary", "chevron"]) {
+            for (const region of returnCard
+              ? ["header", "items", "meta", "next"]
+              : decisionCard
+                ? ["name", "value", "secondary"]
+                : ["name", "value", "secondary", "chevron"]) {
               const matches = row.querySelectorAll(
-                `:scope > .phone-list-${region}`,
+                `:scope > .${returnCard ? "return-phone" : "phone-list"}-${region}`,
               );
               const element = matches[0] as HTMLElement | undefined;
               if (
@@ -261,6 +513,7 @@ export async function inspectTableAlignment(page: Page) {
             }
             if (
               !decisionCard &&
+              !returnCard &&
               row.querySelectorAll(".phone-list-chevron .table-row-link")
                 .length !== 1
             )
@@ -394,8 +647,10 @@ export async function inspectTableAlignment(page: Page) {
       cells,
       cards,
       decisionCards,
+      selectionHeaderCards,
+      returnCards,
       maxError,
       failures,
     };
-  }, expectedApprovals);
+  }, evidence);
 }

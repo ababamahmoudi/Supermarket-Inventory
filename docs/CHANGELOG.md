@@ -564,3 +564,4 @@ Rebuilt New/Edit request around the approved paired locations, thin-divider item
 ### R2f C1/C2 CI compatibility
 
 Updated the legacy simulated-reading copy assertion to follow the approved entry chooser: the Drafts queue and retained review stay clear of the old inline-card warning, while the actual chooser/Photo workspace still explain simulated reading. Preserved Demo menu and unrelated-page assertions; reproduced the old failure and verified both desktop/phone cases. See `PR_R2F_CI202_RECEIVING.md`.
+- R2f integration proof: fit Labels phone header/body checkbox controls to their44px selection track. Qualify the genuine C6 selection header and D8 four-slot return cards in the existing alignment oracle, binding authorized record/product identity, actual chevrons and optional credit; retain the2px checks and add displaced/hidden/copied/private-data negative probes.

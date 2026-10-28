@@ -10,6 +10,15 @@
   :root
     .labels-products-card
     .r2e-labels-products.is-mobile.is-phone-list
+    [role="checkbox"] {
+    inline-size: 44px;
+    min-inline-size: 44px;
+    padding-inline: 0;
+    justify-content: center;
+  }
+  :root
+    .labels-products-card
+    .r2e-labels-products.is-mobile.is-phone-list
     thead {
     display: block;
   }
