@@ -38,57 +38,28 @@ async function auditReferenceControls(
 }
 
 async function missingProductTitleIsDetected(page: Page) {
-  const clipped = await page
-    .locator(".receiving-table .receiving-product-name")
-    .evaluateAll((elements) => {
-      for (const element of elements) {
-        const cell = element.closest("td")!;
-        const bounds = cell.getBoundingClientRect();
-        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-        let node;
-        while ((node = walker.nextNode())) {
-          const text = (node.textContent ?? "")
-            .replace(/[\u2066-\u2069]/g, "")
-            .replace(/\s+/g, " ")
-            .trim();
-          if (!text) continue;
-          const range = document.createRange();
-          range.selectNodeContents(node);
-          if (
-            Array.from(range.getClientRects()).some(
-              (rect) =>
-                rect.left < bounds.left - 2 || rect.right > bounds.right + 2,
-            )
-          )
-            return {
-              rowId: element.closest("tr")!.getAttribute("data-testid")!,
-              text,
-            };
-        }
-      }
-      return null;
-    });
-  expect(
-    clipped,
-    "The negative control uses a genuinely clipped name",
-  ).not.toBeNull();
-  if (!clipped) throw new Error("No clipped reference product name to audit");
-  const name = page
-    .getByTestId(clipped.rowId)
-    .locator(".receiving-product-name");
+  const name = page.locator(".receiving-table .receiving-product-name").first();
   const title = await name.getAttribute("title");
   expect(title).toBeTruthy();
   if (!title)
     throw new Error("The full product title must exist before removal");
+  const prefix = (await name.innerText())
+    .replace(/[\u2066-\u2069]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  expect(prefix.endsWith("…")).toBe(true);
+  expect(title.startsWith(prefix.slice(0, -1))).toBe(true);
   await name.evaluate((element) => element.removeAttribute("title"));
   try {
     const report = await inspect(
       page,
-      "Clipped receiving name without title",
+      "Fitted receiving name without title",
       "desktop-en-1280-negative",
       "owner",
     );
-    expect(report.failures).toContain(`Clipped table text: ${clipped.text}`);
+    expect(report.failures).toContain(
+      `Receiving full product title is missing or inconsistent: ${prefix}`,
+    );
   } finally {
     await name.evaluate(
       (element, value) => element.setAttribute("title", value),

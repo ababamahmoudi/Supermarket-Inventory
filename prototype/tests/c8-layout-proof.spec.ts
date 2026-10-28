@@ -314,13 +314,29 @@ for (const language of ["en", "fa"] as const) {
         return original;
       });
       try {
-        const narrowed = await name.evaluate((element) => ({
-          width: element.getBoundingClientRect().width,
-          clientWidth: element.clientWidth,
-          scrollWidth: element.scrollWidth,
-        }));
-        expect(Math.abs(narrowed.width - 16)).toBeLessThanOrEqual(1);
-        expect(narrowed.scrollWidth).toBeGreaterThan(narrowed.clientWidth + 1);
+        await expect
+          .poll(async () => {
+            const fitted = await name.evaluate((element) => {
+              const bounds = element.getBoundingClientRect();
+              const range = document.createRange();
+              range.selectNodeContents(element);
+              return {
+                width: bounds.width,
+                prefix: element.textContent ?? "",
+                contained: Array.from(range.getClientRects()).every(
+                  (rect) =>
+                    rect.left >= bounds.left - 1.5 &&
+                    rect.right <= bounds.right + 1.5,
+                ),
+              };
+            });
+            return (
+              Math.abs(fitted.width - 16) <= 1 &&
+              fitted.prefix.endsWith("…") &&
+              fitted.contained
+            );
+          })
+          .toBe(true);
         const ellipsis = await inspectC8Layout(
           page,
           "receiving:full-title-ellipsis",
@@ -338,7 +354,9 @@ for (const language of ["en", "fa"] as const) {
         );
         expect(
           missingTitle.failures.some((failure: string) =>
-            failure.startsWith("Receiving text leaves cell:"),
+            failure.startsWith(
+              "Receiving full product title is missing or inconsistent:",
+            ),
           ),
         ).toBe(true);
         await expectPaintedName();

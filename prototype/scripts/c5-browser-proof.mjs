@@ -2948,6 +2948,30 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               `Desktop panel overflow: ${panel.className || panel.tagName}`,
             );
         }
+        for (const name of area.querySelectorAll(
+          ".receiving-table .invoice-line-toggle > .receiving-product-name",
+        )) {
+          if (!visible(name)) continue;
+          const title = tidy(name.getAttribute("title"));
+          const prefix = tidy(name.textContent);
+          const toggle = name.parentElement;
+          const count = tidy(
+            toggle.querySelector(".receiving-line-check-count")?.textContent,
+          );
+          if (
+            !title ||
+            !prefix ||
+            !(
+              prefix === title ||
+              (prefix.endsWith("…") && title.startsWith(prefix.slice(0, -1)))
+            ) ||
+            tidy(toggle.getAttribute("aria-label")) !==
+              [title, count].filter(Boolean).join(" ")
+          )
+            failures.push(
+              `Receiving full product title is missing or inconsistent: ${prefix}`,
+            );
+        }
         for (const cell of area.querySelectorAll("th, td")) {
           if (!visible(cell)) continue;
           const bounds = cell.getBoundingClientRect();

@@ -286,6 +286,35 @@ export async function inspectC8Containment(page) {
         });
       }
       if (receiving) {
+        for (const name of wrapper.querySelectorAll(
+          ".invoice-line-toggle > .receiving-product-name",
+        )) {
+          if (!visible(name)) continue;
+          const tidy = (value) =>
+            (value ?? "")
+              .replace(/[\u2066-\u2069]/g, "")
+              .replace(/\s+/g, " ")
+              .trim();
+          const title = tidy(name.getAttribute("title"));
+          const prefix = tidy(name.textContent);
+          const toggle = name.parentElement;
+          const count = tidy(
+            toggle.querySelector(".receiving-line-check-count")?.textContent,
+          );
+          if (
+            !title ||
+            !prefix ||
+            !(
+              prefix === title ||
+              (prefix.endsWith("…") && title.startsWith(prefix.slice(0, -1)))
+            ) ||
+            tidy(toggle.getAttribute("aria-label")) !==
+              [title, count].filter(Boolean).join(" ")
+          )
+            failures.push(
+              `Receiving full product title is missing or inconsistent: ${prefix}`,
+            );
+        }
         // C6 retains its shared-table contract. Apply those same cell-word,
         // neighbor and control guards to the dedicated receiving component.
         for (const row of wrapper.querySelectorAll("thead > tr, tbody > tr")) {
