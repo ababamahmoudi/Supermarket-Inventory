@@ -1401,6 +1401,11 @@
 .receiving-details-grid > .field {
   align-content: start;
 }
+/* Retained English names use the same bundled glyphs in either interface.
+   Keep Vazirmatn available for a description containing Persian characters. */
+.receiving-product-name {
+  font-family: var(--font-en-bilingual);
+}
 /* A check count remains visible without adding a third metadata line. */
 .receiving-product-cell .invoice-line-toggle {
   display: flex;

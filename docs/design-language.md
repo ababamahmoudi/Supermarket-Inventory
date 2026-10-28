@@ -431,3 +431,5 @@ The 880px request form uses shared fields/selects/buttons, a thin-divider list a
 ### R2f approved weight unit-label exception
 
 The approved R2f weight presentations override the earlier Latin-unit display convention for their localized labels: FA uses گرم, کیلوگرم, پوند and اونس. Reuse the shared `massUnitLabel` formatter, opt-in `unitLanguage` on the shared selling-price presentation and `MassSize` for a quantity with its localized label. Canonical g/kg/lb/oz codes, entered precision, Decimal conversion/rounding and all monetary values remain unchanged. Ordinary UnitSize and price renderers retain their existing Latin-unit default outside this opt-in contract. New-size unit selectors keep the approved Latin option codes.
+
+Receiving's retained English product-name display uses `--font-en-bilingual` in both interfaces so Latin letters, spaces and punctuation have stable Manrope metrics, with bundled Vazirmatn for actual Persian characters. Keep the existing single-line ellipsis, full title and table geometry.

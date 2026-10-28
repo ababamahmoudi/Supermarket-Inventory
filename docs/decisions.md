@@ -572,3 +572,9 @@ The reference hides pack editing while the existing request command requires gen
 **Decision:** keep the one actual all-scope manual cost marker, but create ordinary proposals at each freshly permitted selling branch, preserving its actual prior cost, approved price and manual Keep/Rule provenance. An explicit staged regular-price decision suppresses only the branches it covers. Unknown cost remains null; unapproved branches do not borrow a company selling amount as approval evidence. Bind actor/session/location and target eligibility into the draft fingerprint.
 
 **Why:** this preserves independently approved prices and allows a genuine Keep in one branch and Use rule in another, in the same atomic workflow without new authority or invented receipt/price evidence.
+
+## 2026-10-28 — Stable retained invoice-name glyphs across interface languages
+
+The receiving summary displays the retained English product name. At 1280px, the Persian interface inherited a Vazirmatn-first order, mixing its spaces/punctuation with Manrope letters and making “Canned Fava Beans 400 g” overflow the product cell. CDP confirmed both were bundled faces; this was not a host-font substitution.
+
+Use the reusable `--font-en-bilingual` order (Manrope, Vazirmatn, system fallbacks) only for that retained-name display. Latin characters now use the same face in both interfaces; actual Persian characters still have the bundled fallback. Keep all column widths, single-line ellipsis, full title, check counts and clipping tolerances unchanged. Generic LtrValue and other screens retain their own font contracts.

@@ -578,3 +578,5 @@ Updated the legacy simulated-reading copy assertion to follow the approved entry
 
 - Run all prototype unit files with one CI worker on the two-core runner, retaining the complete SDK/pricing suite and all native concurrent-write proofs. Command-completion tests keep their original guards and distinguish native commit from the remaining guarded reconciliation/render work.
 - Strengthen the native Timesheets unload regression with actual pre-write and accepted-result barriers, canonical/audit assertions and app-work completion observation; retain reload protection until the complete save callback settles without relying on a one-second scheduling poll.
+
+- R2f invoice integration: stabilize retained English receiving-name glyphs across EN/FA with a reusable bundled bilingual font-order token; preserve table widths, ellipsis and strict clipping budgets.
