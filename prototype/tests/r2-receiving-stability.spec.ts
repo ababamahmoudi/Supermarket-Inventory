@@ -1,5 +1,6 @@
 import { openInvoiceDetails } from "./helpers";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 import {
   expectReceivingStable,
   importReceivingFixture,
@@ -8,6 +9,56 @@ import {
   setReceivingCategory,
   word,
 } from "./r2-receiving-helpers";
+
+/** Inspect the painted prefix, rather than the retained full tooltip value. */
+async function fittedNameEvidence(row: Locator, fullName: string) {
+  return row.locator(".receiving-product-name").evaluate((element, full) => {
+    const box = element.getBoundingClientRect();
+    const visible = element.textContent?.trim() ?? "";
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const glyphs = Array.from(range.getClientRects());
+    return {
+      title: element.getAttribute("title"),
+      visible,
+      exactPrefix:
+        visible === full ||
+        (visible.length > 1 &&
+          visible.endsWith("…") &&
+          full.startsWith(visible.slice(0, -1))),
+      fragments: glyphs.length,
+      fits:
+        glyphs.length > 0 &&
+        glyphs.every(
+          (glyph) =>
+            glyph.left >= box.left - 1.5 &&
+            glyph.right <= box.right + 1.5 &&
+            glyph.height <= box.height + 1.5,
+        ),
+      box: box.toJSON(),
+      glyphs: glyphs.map((glyph) => glyph.toJSON()),
+    };
+  }, fullName);
+}
+
+async function expectFittedName(row: Locator, fullName: string) {
+  await expect(row.locator(".receiving-product-name")).toHaveAttribute(
+    "title",
+    fullName,
+  );
+  const checkCount = await row
+    .locator(".receiving-line-check-count")
+    .allTextContents();
+  await expect(row.locator(".invoice-line-toggle")).toHaveAccessibleName(
+    [fullName, ...checkCount].join(" "),
+  );
+  await expect
+    .poll(async () => {
+      const proof = await fittedNameEvidence(row, fullName);
+      return { exactPrefix: proof.exactPrefix, fits: proof.fits };
+    })
+    .toEqual({ exactPrefix: true, fits: true });
+}
 
 for (const language of ["en", "fa"] as const) {
   test(`R2 line editor remains anchored while receiving in ${language}`, async ({
@@ -19,7 +70,12 @@ for (const language of ["en", "fa"] as const) {
     });
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    await importReceivingFixture(page, language);
+    const imported = await importReceivingFixture(page, language);
+    const currentInvoice = async () => {
+      const { invoice } = await readCanonicalBusinessEvidence(page);
+      expect(invoice.id).toBe(imported.id);
+      return invoice;
+    };
     await expect(
       page
         .locator('[role="region"]')
@@ -54,7 +110,56 @@ for (const language of ["en", "fa"] as const) {
       await expect(row).toHaveText(rowText);
     }
     await name.press("Tab");
-    await expect(row).toContainText(editedName);
+    await expectFittedName(row, editedName);
+    await expect
+      .poll(async () => (await currentInvoice()).lines[0].new_name_en)
+      .toBe(editedName);
+    const renamed = (await currentInvoice()).lines[0];
+    for (const field of [
+      "description",
+      "pack_size",
+      "supplier_item_code",
+      "quantity_unit",
+      "quantity_entered",
+      "units_per_case",
+      "qty_invoiced",
+      "qty_received_at_posting",
+      "unit_cost_before_tax",
+      "case_cost_before_tax",
+      "line_total",
+      "source_quantity",
+      "source_received_quantity",
+      "source_cost_before_tax",
+      "source_cost_unit",
+    ] as const) {
+      expect(renamed[field], `Renaming preserves ${field}`).toEqual(
+        imported.lines[0][field],
+      );
+    }
+    // A correct tooltip alone cannot excuse a wrong prefix or overflowing glyphs.
+    const visibleName = row.locator(".receiving-product-name bdi");
+    const prefix = await visibleName.textContent();
+    try {
+      await visibleName.evaluate((element) => {
+        element.textContent = "Z…";
+      });
+      expect((await fittedNameEvidence(row, editedName)).exactPrefix).toBe(
+        false,
+      );
+      await visibleName.evaluate((element, full) => {
+        element.textContent = full.repeat(8);
+      }, editedName);
+      expect((await fittedNameEvidence(row, editedName)).fits).toBe(false);
+    } finally {
+      await visibleName.evaluate((element, text) => {
+        element.textContent = text;
+      }, prefix);
+    }
+    await expectFittedName(row, editedName);
+    await testInfo.attach("renamed-receiving-name", {
+      body: JSON.stringify(await fittedNameEvidence(row, editedName), null, 2),
+      contentType: "application/json",
+    });
     const category = editor.locator("#invoice-line-0-category");
     await expectReceivingStable(page, category, async () => {
       await setReceivingCategory(page, editor, language);
@@ -111,6 +216,9 @@ for (const language of ["en", "fa"] as const) {
     ).toHaveCount(0);
     // Closing a line keeps edits and anchors the row as well.
     const reopened = await openReceivingLine(page, 0);
+    await expect(reopened.locator("#invoice-line-0-name-en")).toHaveValue(
+      editedName,
+    );
     const close = reopened.getByRole("button", {
       name: word(language, "Close", "بستن"),
       exact: true,
@@ -135,6 +243,17 @@ for (const language of ["en", "fa"] as const) {
         page.getByTestId("invoice-totals-card").locator(".please-check-field"),
       ).toHaveCount(0);
     });
+    const beforeReload = await currentInvoice();
+    expect(beforeReload.lines[0].new_name_en).toBe(editedName);
+    await page.reload();
+    await expect(page.getByTestId("invoice-review")).toBeVisible();
+    await expectFittedName(receivingRow(page, 0), editedName);
+    const afterReload = await currentInvoice();
+    expect(afterReload).toEqual(beforeReload);
+    const persistedEditor = await openReceivingLine(page, 0);
+    await expect(
+      persistedEditor.locator("#invoice-line-0-name-en"),
+    ).toHaveValue(editedName);
     expect(errors).toEqual([]);
   });
 }

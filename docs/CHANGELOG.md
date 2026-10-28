@@ -1,3 +1,8 @@
+## 2026-10-28 — Receiving-name driver persistence proof
+
+- Align two renamed-row assertions with the intentional bounded prefix/full-title/accessibility contract; retain every existing geometry and business check.
+- Verify complete canonical names, unchanged source/pack/quantity/cost evidence and exact invoice persistence across reload; all six Chromium desktop/phone cases pass. Firefox projects remain unchanged for final CI because the local official browser download is blocked by network policy.
+
 ## 2026-10-28 — Posted Other charges surface
 
 - Put nonempty posted Other charges and credits in one padded Card with a shared 44 px heading, retaining review presentation and every financial value.
