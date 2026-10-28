@@ -39,11 +39,13 @@
 :root .r2c-dashboard .is-zero .kpi-value {
   color: var(--text-muted);
 }
-:root .r2c-dashboard .kpi-detail {
+:root .r2c-dashboard .ui-summary-tile .kpi-detail {
   padding-inline-end: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.35;
+  min-block-size: 2.7em;
   color: var(--text-muted);
   min-inline-size: 0;
 }
@@ -102,7 +104,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-block-end: 10px;
+  min-block-size: 44px;
+  margin-block-end: 12px;
 }
 :root .r2c-dashboard .dashboard-card-title {
   display: flex;
@@ -110,8 +113,7 @@
   gap: 8px;
   min-inline-size: 0;
 }
-:root .r2c-dashboard .dashboard-card-header h2,
-:root .r2c-dashboard .dashboard-operation-cards h2 {
+:root .r2c-dashboard .dashboard-card-header h2 {
   margin: 0;
   font-size: 1.0625rem;
   line-height: 1.5rem;
@@ -234,11 +236,12 @@
 :root .r2c-dashboard .dashboard-row.dashboard-purchase-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
+  align-items: stretch;
   gap: 20px;
 }
 :root .r2c-dashboard .dashboard-purchase-pair > .card {
   grid-column: auto;
+  align-self: stretch;
   display: block;
 }
 :root .r2c-dashboard .dashboard-chart-context {
@@ -414,28 +417,24 @@
 :root .r2c-dashboard .dashboard-overdue {
   color: var(--danger);
 }
-:root .r2c-dashboard .dashboard-activity-day > h3 {
-  margin: 14px 0 12px;
-  font-size: var(--font-size-caption);
-  font-weight: 600;
-}
 :root .r2c-dashboard .dashboard-activity-list {
   display: grid;
-  gap: 14px;
+  gap: 0;
   padding: 0;
   margin: 0;
   list-style: none;
 }
 :root .r2c-dashboard .dashboard-activity-item {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: 32px minmax(0, 1fr) auto;
   gap: 12px;
-  align-items: start;
+  align-items: center;
+  padding-block: 10px;
   margin: 0;
 }
 :root .r2c-dashboard .initials-avatar {
-  inline-size: 28px;
-  block-size: 28px;
+  inline-size: 32px;
+  block-size: 32px;
   font-size: 0.625rem;
   background: var(--neutral-fill);
   color: var(--text-muted);
@@ -453,19 +452,46 @@
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
 }
-:root .r2c-dashboard .dashboard-operation-cards {
+/* R2f: one source-backed weekly summary and a flat activity list. */
+:root .r2c-dashboard .dashboard-week-grid {
   display: grid;
-  gap: 16px;
-  padding-block-start: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
-:root .r2c-dashboard .dashboard-list-row {
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  grid-template-areas: none;
+:root .r2c-dashboard .dashboard-week-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: var(--radius-menu);
+  background: var(--field-fill);
 }
-:root .r2c-dashboard .dashboard-list-copy,
-:root .r2c-dashboard .dashboard-list-pill,
-:root .r2c-dashboard .dashboard-list-action {
-  grid-area: auto;
+:root .r2c-dashboard .dashboard-week-stat > strong {
+  font-size: var(--font-size-weekly-stat);
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+:root .r2c-dashboard .dashboard-week-stat > .muted,
+:root .r2c-dashboard .dashboard-week-link,
+:root .r2c-dashboard .dashboard-activity-time {
+  font-size: var(--font-size-caption);
+}
+:root .r2c-dashboard .dashboard-week-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-block-start: 6px;
+  font-weight: 600;
+  text-decoration: none;
+}
+:root .r2c-dashboard .dashboard-activity-time {
+  text-align: end;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+:root .r2c-dashboard .dashboard-activity-item + .dashboard-activity-item {
+  border-block-start: 1px solid var(--row-divider);
 }
 @media (max-width: 1100px) and (min-width: 760px) {
   :root .r2c-dashboard .dashboard-layout {
@@ -509,7 +535,7 @@
   }
   :root .r2c-dashboard .dashboard-layout .card,
   :root .r2c-dashboard .dashboard-layout .dashboard-row,
-  :root .r2c-dashboard .dashboard-more-operations {
+  :root .r2c-dashboard .dashboard-this-week {
     inline-size: 100%;
   }
   :root .r2c-dashboard .dashboard-approvals {
@@ -536,8 +562,8 @@
   :root .r2c-dashboard .dashboard-activity {
     order: 8;
   }
-  :root .r2c-dashboard .dashboard-more-operations {
-    order: 9;
+  :root .r2c-dashboard .dashboard-this-week {
+    order: 0;
   }
   :root .r2c-dashboard .dashboard-row.dashboard-purchase-pair {
     grid-template-columns: minmax(0, 1fr);
@@ -545,6 +571,9 @@
   }
   :root .r2c-dashboard .dashboard-card-header {
     gap: 4px;
+  }
+  :root .r2c-dashboard .dashboard-week-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
   :root .r2c-dashboard .dashboard-approval-table .phone-list-row {
     grid-template-columns: minmax(0, 1fr) auto;

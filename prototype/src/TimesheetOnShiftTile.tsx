@@ -17,16 +17,11 @@ export function TimesheetOnShiftTile() {
       className="dashboard-summary-tile timesheet-on-shift-tile"
       label={t("On shift now", "اکنون در حال کار")}
       value={count ?? "—"}
+      detailLines={2}
       detail={
         count === null
-          ? t(
-              "Choose a branch to see its staff",
-              "برای دیدن کارکنان یک شعبه را انتخاب کنید",
-            )
-          : t(
-              "Clocked in without an Out time",
-              "ورود ثبت شده و خروج هنوز ثبت نشده",
-            )
+          ? t("Choose a branch", "یک شعبه انتخاب کنید")
+          : t(`${count} without Out time`, `${count} نفر بدون زمان خروج`)
       }
       tone={count ? "accent" : "approved"}
       onClick={() => navigate("timesheets")}

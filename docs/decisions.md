@@ -535,6 +535,7 @@ Use the stable company Product Code as the parent reference; add package records
 Context: the store app needs secondary maker attribution while remaining reusable for other stores/makers. Decision: public optional top-level maker config, shared theme-aware original-asset component and one staff-print attribution component; retained stores read defaults without a write. Why: preserve store palette/business evidence and existing print language while making replacement/omission a configuration choice. Native install metadata is built from configuration; live title/favicon follows the authorized public config.
 
 
+
 ## R2f D1 — Separate elapsed display from completed payroll
 
 Context: the approved day sheet shows current elapsed hours, while R2d correctly keeps a missing-Out shift at zero completed hours. Decision: a pure daily display helper adds current-day elapsed minutes to presentation only; canonical week/CSV/print durations and blank Out evidence remain unchanged. Why: match the live staff view without inventing a payroll clock-out. Reuse the established save registry and original-actor/navigation bridge rather than replacing their workflow during the redesign.
@@ -550,4 +551,9 @@ Context: the approved directory moves Add into an inline form and replaces row a
 **Decision:** stage every field and package operation until a single actual protected Save. Existing cost changes create ordinary pending rule-price review; explicit Owner/Manager staged regular-price decisions reuse their existing authority and acknowledgments. A private attributed cost marker fingerprints the complete effective accepted receipt basis; a new receipt, same-line correction or later delivery supersedes it. Derive package costs independently per branch. Give Supervisors the narrow package-only dialog, without full Product editor or cost access.
 
 **Why:** Cancel/failure writes nothing, current charges remain approved, and no invoice, stock or payable is invented or rewritten. New package identities are truthfully Assigned on save and date tracking defaults Off until actual date evidence is entered. A pending unrelated invoice-price review is resolved before a new manual cost edit, avoiding silent review replacement.
+
+
+## 2026-10-27 — R2f D7 screenshot precedence and truthful dashboard captions
+
+The approved phone PNG places This week before Approvals; implement that order although the prose says after purchase charts. Use Reminder window rather than claiming every product expires within seven days: existing reminders are configurable. Count actual grouped deliveries rather than receipt product lines, without publishing private source identities. Prior activity dates use compact English month/day values in both interfaces to match the approved value presentation; today/full timestamps still use company-local boundaries. Neighbouring purchase cards alone stretch to equal height.
 

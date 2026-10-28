@@ -209,6 +209,7 @@ A package's independent approved sale follows the ordinary C8 conflict workflow 
 Maker file ownership is explicit in `maker.asset_identity` (default Klead). Replacing only `maker.name` suppresses inherited logos/icons rather than displaying another maker's lettering; supply replacement files with the matching asset identity, or a complete new maker block.
 
 
+
 ## R2f D1 display defaults — 2026-10-27
 
 - “So far” is presentation-only elapsed time for the currently selected branch's today, from a valid In no later than its actual clock and no Out. Department/day captions include that elapsed display; stored duration, weekly totals and payroll CSV continue to count only completed shifts. No Out is inferred. Past missing-Out shifts stay amber/zero, and future clock-ins have no elapsed claim. The dashboard's existing prior-unclosed count is unchanged.
@@ -230,4 +231,9 @@ Maker file ownership is explicit in `maker.asset_identity` (default Klead). Repl
 - Pending archives remain visible as struck-through rows with Undo until outer Save, keeping the acted-on area stable. New rows say Assigned on save until the actual protected allocation.
 
 A location without accepted local regular receipt/manual evidence retains the existing company-level latest-known-cost fallback. A local manual edit updates that fallback as existing regular receipt posting does; actual evidence at another location wins. Manual-cost proposal replacement is restricted to overlapping location scope; a concrete branch cannot partially replace an All locations review.
+
+
+## R2f D7 — Implemented defaults
+
+No new product decision is required. Approved screenshots win the phone This week order. Reminder window is a truthful configurable-horizon caption; no seven-day predicate is invented. Prior activity dates use English month/day value captions in both languages, with the complete company-local timestamp available. One actual multi-line received transaction counts once; later short/replacement receipts count separately. See [review guide](PR_R2F_DASHBOARD.md).
 

@@ -451,6 +451,7 @@ Sign-in/lock retain the store logo and form, with a quiet Powered by maker line 
 
 
 
+
 ## R2f D1 — Approved Timesheets day sheet
 
 Use the R2f Timesheets PNG/source references. Header actions are History then Manage staff; the subtitle holds real day totals. The toolbar places previous/date/next/Today at start and Day/Week tabs, Print and CSV at end. Standard page controls are 44px high; the supplied blank arrow buttons are 48px wide, and the date field is 168px where it fits. Masonry department cards fill 3/2/1 columns at 1440/1000/390 with compact baseline title/count headings and no empty table in an empty department. Rows have one name, centred 60px In/Out fields, end-aligned compact hours and a narrow 44px-high shift menu containing confirmed Remove. Empty time focus offers a bounded shared Now popover; typing 730 and Persian/Arabic digits keeps the established normalization. On shift shows blue elapsed time/so far; overnight shows +1 day; past missing Out remains amber. Notes is last; no redundant History card remains below it.
@@ -475,4 +476,9 @@ The compact comparison has Location, genuinely approved Price, real Offer, Last 
 Pending product/price and sale requests use the approved shared card: linked bilingual product identity and context on the start side, a fixed 521 px field-tint numbers box on wide screens, and one divided metadata/actions footer. Cost/regular price, proposed/sale price and margin share label/value/note rows with aligned numeric baselines; the proposed price is 26 px and weight 800. Real prices, dates, percentage changes and configured minimums come from the existing protected projections, never screenshot constants. At 390 px the numbers form two rows and Approve fills the first action row above Edit/Change and Reject. Desktop in-card actions are 40 px; phone actions remain 44 px, with 8 px gaps.
 
 Below-minimum sale requests keep their existing explicit acknowledgment and below-cost reason commands. Ordinary pending price/product cards show the same amber acknowledgment row; the local checkbox is bound to the current actor/location and exact protected price/cost/margin/minimum snapshot and checked again before opening the approval preview. Editing or changing authority invalidates it. Existing manual-price reasons, specialized margin-review Keep/Override workflow, barcode review, snapshot validation and atomic Edit and approve remain authoritative. Batch counts, selected-only decisions and quiet modal feedback retain R2e behavior.
+
+
+## R2f D7 — Dashboard
+
+Keep the R2c layout with raw two-line KPI captions, shared 44 px card headers and equally tall neighbouring purchase charts. Approvals uses a flexible product column plus fixed 120/128/80/168 px Type/Price/Margin/Actions columns and no visible Actions heading. More → View approval is the complete real record destination. One three-stat This week card links to Returns, Received and Price updates. Activity has a single list, a separate end time/date column and no trailing separator. At phone width This week appears directly after the tiles, following the approved screenshot. See [review steps](PR_R2F_DASHBOARD.md).
 

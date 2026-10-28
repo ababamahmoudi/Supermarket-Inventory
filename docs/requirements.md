@@ -954,6 +954,7 @@ The store remains the app identity. Public `branding.maker` config supplies the 
 An explicit null/disabled/blank-name maker removes maker text, images and support and uses existing company tab/install icons. Another maker's identity and files work through configuration. Old stores without the optional branding block read current configured presentation defaults without rewriting business records or requiring a data migration.
 
 
+
 ## R2f D1 — Current daily timesheet presentation
 
 The approved R2f day-sheet references replace the prior daily composition. The header carries branch/day, distinct people, displayed hours and current on-shift count, with History and Manage staff at the end. Date/arrows/Today and Day/Week/Print/CSV form aligned 44px control rows. Department cards use independently sized masonry columns (three at 1440px, two at 1000px, one at 390px), one-language names and compact Name / In / Out / Hours / shift menu rows. Time fields are 60px wide and 44px high; blank focused fields offer an explicit current branch-local Now choice, without inventing a time. Remove remains confirmed and audited. Notes closes the daily sheet with bounded auto-growing text and truthful save feedback. History opens the same authorized day history from its header action.
@@ -973,4 +974,9 @@ The public weight parent presentation keeps configured main/secondary units, act
 ### R2f D5: public location comparison
 
 Lookup By location uses an actual approved selling-price basis for each parent/child/Store. Warehouse cannot charge. Plain active expiry reminders and retained delivery/offer facts are scoped public data; distinct genuine prices receive amber treatment without implicitly choosing a branch. The approved phone comparison omits expiry and keeps two lines per location.
+
+
+## R2f D7 — Dashboard refinement (2026-10-27)
+
+The existing authorized dashboard keeps its actual financial/approval/branch selectors. The approvals product column uses remaining space; Type/Price/Margin/Actions are 120/128/80/168 px, with a blank accessible Actions heading. Each row's existing More → View approval opens the complete canonical approval, including facts omitted at narrow widths. KPI captions wrap to two lines without ellipsis. Purchase cards sharing a row stretch equally and use shared 44 px headers. One This week card replaces More operations with actual open-return, received-delivery and price-change counts and their real destinations. A multi-product receipt counts once per same-company/location/source/received timestamp; distinct later short/replacement receipts remain separate. Compute only the scalar count before the public dashboard projection; do not expose source invoice identities. Activity is one list with company-local 24-hour time for today, English month/day numeric-value captions for prior dates in both interfaces, and the full timestamp available. The approved phone screenshot places This week immediately after the KPI tiles, before Approvals; this overrides the prompt's after-charts sentence.
 

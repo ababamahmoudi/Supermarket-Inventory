@@ -12,6 +12,7 @@ export function SummaryTile({
   onClick,
   className,
   accessibleLabel,
+  detailLines = 1,
 }: {
   label: string;
   value: ReactNode;
@@ -20,6 +21,7 @@ export function SummaryTile({
   onClick?: () => void;
   className?: string;
   accessibleLabel?: string;
+  detailLines?: 1 | 2;
 }) {
   const content = (
     <>
@@ -28,7 +30,7 @@ export function SummaryTile({
       <strong className="kpi-value" dir="ltr">
         {value}
       </strong>
-      {typeof detail === "string" ? (
+      {typeof detail === "string" && detailLines === 1 ? (
         <FitText value={detail} className="kpi-detail" />
       ) : (
         <span className="kpi-detail">{detail}</span>

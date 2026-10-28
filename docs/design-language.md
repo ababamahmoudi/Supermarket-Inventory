@@ -391,6 +391,7 @@ R2f R0.5 data-column values use plain text with existing semantic colour when ne
 R2f R0.6 icons beside title/subtitle copy centre on the complete two-line block using shared IconText / `.ui-icon-text`, with a nonshrinking icon and a two-line copy grid. Reuse the caller's approved icon size and semantic treatment.
 
 R2f R0.7 keeps the approved alignment scan's strict limits: peer centres and column glyph edges within 1.5 px, heights within 2 px, with logical start/end in RTL. Use only the scene-specific semantic exception registry, each with its reason and use count; no whole-screen/table/numeric-column waiver. Number baselines, full two-line icon centres, paired-card title/height tracks and plain values are also measured. Tests must prove shifted-geometry negative controls fail and restoration passes.
+
 ## R2f D1 — Department sheets
 
 Department cards follow the approved independently sized masonry composition, including compact baseline headings rather than the general 44px neighbouring operational-card header. Card padding is 20/20/12px (phone16/16/8); column gap20; row columns are free name /60/60/48/28px with8px gaps and56px minimum height. The 28px-wide contextual menu retains a44px height and separation from time fields. Plain Add person starts at the same content edge as names. Time fields retain field tint; focus/Now use existing accent/focus tokens. Use shared ControlRow and bounded popover APIs, with the approved56px popup minimum and6px gap. Notes starts at72px, grows to six lines and has no resize grip. Names, time headers and hours share their respective text/control edges in both directions.
@@ -416,4 +417,12 @@ Use the central weight-Lookup 36 px amount and 18 px unit tokens; secondary unit
 ### R2f D5 — compact location facts
 
 By-location expiry stays plaintext using the shared column-value alignment, amber only when actually due soon. Different approved location prices use amber text/dot. Phone comparisons have exactly two logical lines without duplicated captions.
+
+
+
+## R2f D7 — Dashboard compositions
+
+`SummaryTile` may opt into two raw wrapping caption lines; existing one-line callers retain FitText. Dashboard uses shared card-header/card-row contracts and `--font-size-weekly-stat` (24 px) for weekly counts. Purchase cards stretch only when they share the same grid row. A centred Approve/Review label is measured through its actual fixed decision group for the Actions column; peer control heights/centres, shifted group edges and numeric glyph edges remain checked. No global Actions or numeric-column exclusion applies.
+
+Dashboard explicitly sets the shared table column `desktopMinWidth` to 160 px; other desktop name/product/supplier columns retain their 240 px default. Fixed Type/Price/Margin/Actions widths remain exact and the real full approval destination retains omitted narrow-width facts.
 

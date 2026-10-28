@@ -3,6 +3,7 @@ import {
   receivedLog,
   effectiveInvoiceLocation,
   effectiveApprovalLocation,
+  type DeliveryReceipt,
 } from "./received";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { companyDate, dateAfter } from "./invoice";
@@ -134,6 +135,25 @@ export function dashboardArrivals(
     from: companyWeekStart(today),
     to: today,
   });
+}
+
+/** Count actual authorized delivery groups, not one delivery per product line. */
+export function receivedDeliveryCount(
+  rows: readonly DeliveryReceipt[],
+): number {
+  return new Set(
+    rows.map((row) =>
+      JSON.stringify([
+        row.company_id,
+        row.branch,
+        row.kind,
+        row.kind === "replacement"
+          ? row.return_id || row.invoice_id || row.id
+          : row.invoice_id || row.id,
+        row.received_at || row.date,
+      ]),
+    ),
+  ).size;
 }
 
 export function companyWeekStart(today: string) {
@@ -316,7 +336,9 @@ export function dashboardSummary(
       ).invoices.filter((invoice) => new Decimal(invoice.amount).gt(0)).length,
     }));
   const purchases = dashboardPurchases(state, actor, today);
-  const arrivals = dashboardArrivals(state, actor, today).map((row) => ({
+  const receivedArrivals = dashboardArrivals(state, actor, today);
+  const deliveryCount = receivedDeliveryCount(receivedArrivals);
+  const arrivals = receivedArrivals.map((row) => ({
     id: row.id,
     product_code: row.product_code,
     branch: row.branch,
@@ -469,6 +491,7 @@ export function dashboardSummary(
     balances,
     purchases,
     arrivals,
+    deliveryCount,
     weeklyChanges,
     approvalPrices,
   };

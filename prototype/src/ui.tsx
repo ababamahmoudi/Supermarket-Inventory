@@ -662,7 +662,13 @@ export function DataTable({
     window.innerWidth >= 1440 &&
     !column.actions &&
     /^(name|product|supplier)$/.test(column.key ?? "")
-      ? { ...column, minWidth: Math.max(240, column.minWidth ?? 0) }
+      ? {
+          ...column,
+          minWidth: Math.max(
+            column.desktopMinWidth ?? 240,
+            column.minWidth ?? 0,
+          ),
+        }
       : column,
   );
   const layout = layoutResponsive

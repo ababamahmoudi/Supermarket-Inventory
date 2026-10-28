@@ -465,8 +465,14 @@ Optional company configuration `branding` contains `maker` (null or `{name, enab
 
 Maker file ownership is explicit in `maker.asset_identity` (default Klead). Replacing only `maker.name` suppresses inherited logos/icons rather than displaying another maker's lettering; supply replacement files with the matching asset identity, or a complete new maker block.
 
+
 ## R2f D3 — atomic weight-editor drafts
 
 `Product.manual_costs[location]` retains the genuine Owner/Manager's manual canonical cost decision, attribution and private per-location `receipt_basis` fingerprint. A fingerprint includes effective source-line ID, four-place cost, sold-by unit, posting time and later-delivery ID/time, so an append-only correction of the same line also invalidates it. It is a cost decision, never a fabricated invoice or purchase-history entry. `Product.package_branch_costs[location]` is a private derived four-place cost cache, recomputed from the parent's current actual regular basis. Both fields are financial-only and excluded from public DTOs/history payloads.
 
 Weight-product drafts keep package adds/edits/archives and any cost/manual-price decision in memory until outer Save. `saveWeightProductEditor`, `addWeightProductEditor` and narrow `savePackageEditor` operate on an authority-bound candidate within the real repository command: failure commits nothing. Codes/barcodes allocate only on successful Save; pending new rows display Assigned on save. The existing parent/date/pricing snapshot is revalidated. Archives retain codes/history and a reason. A newly created package defaults date tracking Off; it has no invented expiry/receipt/stock evidence. Existing parent date requirements remain enforced.
+
+## R2f D7 — Derived dashboard delivery count
+
+No new persisted records or migration. `receivedDeliveryCount` groups already authorized receipts by company, branch, source kind/document and exact received timestamp, allowing several product lines in one receipt. Replacement records also retain their return source identity. Missing legacy source identities retain each actual receipt ID rather than guessing a merge. The protected dashboard summary returns the derived scalar before reducing arrivals to their public projection; private source IDs are not added to that projection. Money, costs, FX and approval authorities remain unchanged.
+

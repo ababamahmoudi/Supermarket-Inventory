@@ -43,7 +43,6 @@ import {
   DataTable,
   EmptyState,
   PageHeader,
-  Disclosure,
   Menu,
   MenuItem,
   TableRowLink,
@@ -63,7 +62,7 @@ function DashboardHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="dashboard-card-header">
+    <div className="ui-card-header dashboard-card-header">
       <div className="dashboard-card-title">
         <h2>{title}</h2>
         {count !== undefined && (
@@ -98,14 +97,6 @@ export function Dashboard() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [now, setNow] = useState(Date.now);
-  const [wideDashboard, setWideDashboard] = useState(
-    () => window.innerWidth >= 1440,
-  );
-  useEffect(() => {
-    const resize = () => setWideDashboard(window.innerWidth >= 1440);
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(timer);
@@ -149,7 +140,7 @@ export function Dashboard() {
     activity,
     balances,
     purchases,
-    arrivals,
+    deliveryCount,
     weeklyChanges,
   } = result.data;
 
@@ -458,25 +449,25 @@ export function Dashboard() {
           newProducts
             ? count(
                 newProducts,
-                "{{count}} new product",
-                "{{count}} new products",
-                "{{count}} محصول جدید",
+                "{{count}} product",
+                "{{count}} products",
+                "{{count}} محصول",
               )
             : "",
           priceChanges
             ? count(
                 priceChanges,
-                "{{count}} price change",
-                "{{count}} price changes",
-                "{{count}} تغییر قیمت",
+                "{{count}} price",
+                "{{count}} prices",
+                "{{count}} قیمت",
               )
             : "",
           saleRequests
             ? count(
                 saleRequests,
-                "{{count}} sale request",
-                "{{count}} sale requests",
-                "{{count}} درخواست تخفیف",
+                "{{count}} sale",
+                "{{count}} sales",
+                "{{count}} حراج",
               )
             : "",
         ]
@@ -495,7 +486,7 @@ export function Dashboard() {
     {
       label: t("Open alerts", "هشدارهای باز"),
       value: alerts.length,
-      detail: `${count(conflicts, "{{count}} conflict", "{{count}} conflicts", "{{count}} اختلاف")} · ${count(dateChecks, "{{count}} date check", "{{count}} date checks", "{{count}} بررسی تاریخ")}`,
+      detail: `${count(conflicts, "{{count}} conflict", "{{count}} conflicts", "{{count}} اختلاف")} · ${count(dateChecks, "{{count}} date", "{{count}} dates", "{{count}} تاریخ")}`,
       page: "alerts",
       tone: "pending",
     },
@@ -503,15 +494,15 @@ export function Dashboard() {
       label: t("Open shorts", "کسری‌های باز"),
       value: shortCount,
       detail: shortCount
-        ? t("Items waiting for delivery", "کالاهای در انتظار تحویل")
-        : t("Nothing waiting for delivery", "کالایی در انتظار تحویل نیست"),
+        ? t("Waiting for delivery", "در انتظار تحویل")
+        : t("Nothing waiting", "چیزی در انتظار نیست"),
       page: "invoices",
       tone: "approved",
     },
     {
       label: t("Expiring soon", "انقضای نزدیک"),
       value: expiryCount,
-      detail: t("Within reminder window", "در بازهٔ یادآوری"),
+      detail: t("Reminder window", "بازهٔ یادآوری"),
       page: "expiry",
       tone: "pending",
     },
@@ -542,11 +533,16 @@ export function Dashboard() {
     lang === "fa" ? "fa-IR-u-ca-gregory" : "en-CA",
     { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" },
   ).format(new Date(`${today}T12:00:00Z`));
-  const groupedActivity = new Map<string, typeof activity>();
-  for (const entry of activity.slice(0, 8)) {
-    const date = companyDateTime(state.config, entry.at).date;
-    groupedActivity.set(date, [...(groupedActivity.get(date) ?? []), entry]);
-  }
+  const activityDate = (at: string) => {
+    const local = companyDateTime(state.config, at);
+    return local.date === today
+      ? local.time
+      : new Intl.DateTimeFormat("en-CA", {
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        }).format(new Date(`${local.date}T12:00:00Z`));
+  };
   return (
     <div
       className="r2c-dashboard"
@@ -591,6 +587,7 @@ export function Dashboard() {
             label={item.label}
             value={item.value}
             detail={item.detail}
+            detailLines={2}
             tone={item.tone as "accent" | "pending" | "approved"}
             onClick={() => navigate(item.page)}
           />
@@ -609,6 +606,7 @@ export function Dashboard() {
               <>
                 <DataTable
                   className="dashboard-approval-table"
+                  recordDetails
                   phoneList={{
                     name: "product",
                     value: "price",
@@ -618,31 +616,40 @@ export function Dashboard() {
                     {
                       key: "product",
                       required: true,
-                      width: wideDashboard ? 190 : 150,
-                      fixedWidth: true,
-                      minWidth: wideDashboard ? 190 : 150,
+                      width: 180,
+                      minWidth: 160,
+                      desktopMinWidth: 160,
                       priority: 1,
                     },
-                    { key: "type", width: 140, minWidth: 140, priority: 4 },
+                    {
+                      key: "type",
+                      width: 120,
+                      minWidth: 120,
+                      fixedWidth: true,
+                      priority: 4,
+                    },
                     {
                       key: "price",
                       required: true,
-                      width: 145,
-                      minWidth: 115,
+                      width: 128,
+                      minWidth: 128,
+                      fixedWidth: true,
                       align: "end",
                       priority: 2,
                     },
                     {
                       key: "margin",
-                      width: 65,
-                      minWidth: 60,
+                      width: 80,
+                      minWidth: 80,
+                      fixedWidth: true,
                       align: "end",
                       priority: 3,
                     },
                     {
                       key: "actions",
-                      width: 140,
-                      minWidth: 132,
+                      width: 168,
+                      minWidth: 168,
+                      fixedWidth: true,
                       actions: true,
                       priority: 0,
                     },
@@ -654,7 +661,7 @@ export function Dashboard() {
                       <th>{t("Type", "نوع")}</th>
                       <th>{t("Price", "قیمت")}</th>
                       <th>{t("Margin", "حاشیه سود")}</th>
-                      <th>{t("Action", "عملیات")}</th>
+                      <th aria-label={t("Actions", "کارها")} />
                     </tr>
                   </thead>
                   <tbody>
@@ -954,7 +961,7 @@ export function Dashboard() {
               </QuietEmpty>
             )}
           </Card>
-          <div className="dashboard-row dashboard-row-halves dashboard-purchase-pair">
+          <div className="dashboard-row dashboard-row-halves dashboard-purchase-pair ui-card-row">
             <Card className="dashboard-purchases dashboard-supplier-purchases">
               <DashboardHeading
                 title={t("Purchases by supplier", "خرید از تأمین‌کنندگان")}
@@ -1113,116 +1120,54 @@ export function Dashboard() {
               )}
             </Card>
           </div>
-          <div className="dashboard-more-operations">
-            <Disclosure summary={t("More operations", "عملیات بیشتر")}>
-              <div className="dashboard-operation-cards">
-                <Card
-                  title={t("Returns", "مرجوعی‌ها")}
-                  className="dashboard-returns"
-                >
-                  {openReturns.length ? (
-                    openReturns.slice(0, 5).map((row) => (
-                      <div className="dashboard-list-row" key={row.id}>
-                        <div className="dashboard-list-copy">
-                          <a
-                            className="entity-link"
-                            href={`#return?id=${encodeURIComponent(row.id)}`}
-                          >
-                            <bdi>{row.supplier}</bdi>
-                          </a>
-                          <small className="muted">
-                            {branchName(row.branch)}
-                          </small>
-                        </div>
-                        <div className="dashboard-list-pill">
-                          <Badge tone="pending">{t("Open", "باز")}</Badge>
-                        </div>
-                        <div className="dashboard-list-action">
-                          <TableRowLink
-                            href={`#return?id=${encodeURIComponent(row.id)}`}
-                            aria-label={t("View", "مشاهده")}
-                          />
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <QuietEmpty>
-                      {t("No open returns.", "مرجوعی بازی نیست.")}
-                    </QuietEmpty>
-                  )}
-                  {viewAll(
-                    "returns",
-                    t("View all returns", "مشاهده همه مرجوعی‌ها"),
-                  )}
-                </Card>
-                <Card title={t("Arrived this week", "دریافتی‌های این هفته")}>
-                  {arrivals.length ? (
-                    arrivals.slice(0, 6).map((row) => (
-                      <div className="dashboard-list-row" key={row.id}>
-                        <div className="dashboard-list-copy">
-                          {link(row.product_code)}
-                          <small className="muted">
-                            {branchName(row.branch)} ·{" "}
-                            <DateText value={row.date} /> ·{" "}
-                            <LtrText>{row.invoice_number}</LtrText>
-                          </small>
-                        </div>
-                        <Badge tone="info">
-                          {count(
-                            row.units,
-                            "{{count}} unit",
-                            "{{count}} units",
-                            "{{count}} واحد",
-                          )}
-                        </Badge>
-                        <TableRowLink
-                          href={`#received?product=${encodeURIComponent(row.product_code)}`}
-                          aria-label={t("View", "مشاهده")}
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <QuietEmpty>
-                      {t(
-                        "No deliveries this week.",
-                        "این هفته تحویلی ثبت نشده است.",
-                      )}
-                    </QuietEmpty>
-                  )}
-                </Card>
-                <Card
-                  title={t(
-                    "Price changes this week",
-                    "تغییر قیمت‌های این هفته",
-                  )}
-                >
-                  {weeklyChanges.length ? (
-                    weeklyChanges.slice(0, 6).map((row) => (
-                      <div className="dashboard-list-row" key={row.id}>
-                        <div className="dashboard-list-copy">
-                          {link(row.product_code!)}
-                          <small className="muted">
-                            {branchName(row.branch)} ·{" "}
-                            <DateText value={row.at} />
-                          </small>
-                        </div>
-                        {row.regular_price && (
-                          <Money value={row.regular_price} />
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <QuietEmpty>
-                      {t(
-                        "No price changes this week.",
-                        "این هفته تغییری در قیمت ثبت نشده است.",
-                      )}
-                    </QuietEmpty>
-                  )}
-                </Card>
-              </div>
-            </Disclosure>
-          </div>
+          <Card className="dashboard-this-week">
+            <DashboardHeading title={t("This week", "این هفته")} />
+            <div className="dashboard-week-grid">
+              {[
+                {
+                  value: openReturns.length,
+                  label: count(
+                    openReturns.length,
+                    "Open return",
+                    "Open returns",
+                    "مرجوعی باز",
+                  ),
+                  href: "#returns",
+                  link: t("Returns", "مرجوعی‌ها"),
+                },
+                {
+                  value: deliveryCount,
+                  label: t("Deliveries received", "تحویل دریافت‌شده"),
+                  href: "#received",
+                  link: t("Received", "دریافت‌شده"),
+                },
+                {
+                  value: weeklyChanges.length,
+                  label: t("Price changes", "تغییر قیمت"),
+                  href: "#price-updates",
+                  link: t("Price updates", "به‌روزرسانی قیمت"),
+                },
+              ].map((item) => (
+                <div className="dashboard-week-stat" key={item.href}>
+                  <strong>
+                    <LtrText>{item.value}</LtrText>
+                  </strong>
+                  <span className="muted">{item.label}</span>
+                  <a
+                    className="entity-link dashboard-week-link"
+                    href={item.href}
+                  >
+                    {item.link}
+                    <ArrowRight
+                      size={16}
+                      className="directional"
+                      aria-hidden="true"
+                    />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
         <aside
           className="dashboard-aside"
@@ -1429,53 +1374,41 @@ export function Dashboard() {
           </Card>
           <Card className="dashboard-activity" id="recent-activity">
             <DashboardHeading title={t("Activity", "فعالیت")} />
-            {groupedActivity.size ? (
-              [...groupedActivity].map(([day, entries]) => (
-                <div className="dashboard-activity-day" key={day}>
-                  <h3 className="muted">
-                    {day === today ? (
-                      t("Today", "امروز")
-                    ) : (
-                      <DateText value={day} />
-                    )}
-                  </h3>
-                  <ol className="dashboard-activity-list">
-                    {entries.map((item) => (
-                      <li className="dashboard-activity-item" key={item.id}>
-                        <span className="initials-avatar" aria-hidden="true">
-                          {initials(item.by)}
-                        </span>
-                        <div>
-                          <strong>
-                            {actionLabel(item.action)}
-                            {item.product_code && (
-                              <>
-                                {" "}
-                                ·{" "}
-                                <UnitText>
-                                  {productName(item.product_code)}
-                                </UnitText>
-                              </>
-                            )}
-                          </strong>
-                          <small className="muted">
-                            {demoUserLabel(item.by, lang)} ·{" "}
-                            {branchName(item.branch)} ·{" "}
-                            <time
-                              dateTime={item.at}
-                              title={companyTimestamp(state.config, item.at)}
-                            >
-                              <LtrText>
-                                {companyDateTime(state.config, item.at).time}
-                              </LtrText>
-                            </time>
-                          </small>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              ))
+            {activity.length ? (
+              <ol className="dashboard-activity-list">
+                {activity.slice(0, 8).map((item) => (
+                  <li className="dashboard-activity-item" key={item.id}>
+                    <span className="initials-avatar" aria-hidden="true">
+                      {initials(item.by)}
+                    </span>
+                    <div>
+                      <strong>
+                        {actionLabel(item.action)}
+                        {item.product_code && (
+                          <>
+                            {" "}
+                            ·{" "}
+                            <UnitText>
+                              {productName(item.product_code)}
+                            </UnitText>
+                          </>
+                        )}
+                      </strong>
+                      <small className="muted">
+                        {demoUserLabel(item.by, lang)} ·{" "}
+                        {branchName(item.branch)}
+                      </small>
+                    </div>
+                    <time
+                      className="dashboard-activity-time muted"
+                      dateTime={item.at}
+                      title={companyTimestamp(state.config, item.at)}
+                    >
+                      <LtrText>{activityDate(item.at)}</LtrText>
+                    </time>
+                  </li>
+                ))}
+              </ol>
             ) : (
               <QuietEmpty>
                 {t(

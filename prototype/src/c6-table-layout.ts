@@ -2,6 +2,8 @@ import type { TableColumnDefinition } from "./c3-column-preferences";
 
 export type ResponsiveColumn = Partial<TableColumnDefinition> & {
   hidden?: boolean;
+  /** Explicit composition minimum for desktop name/product/supplier columns; defaults to 240 px. */
+  desktopMinWidth?: number;
 };
 
 const tablePriorities: Record<string, string[]> = {
