@@ -45,7 +45,7 @@ for (const width of [1440, 1000, 390])
           .all())
           expect((await chip.boundingBox())!.height).toBe(44);
         await expect(detail.locator(".selling-price-unit").first()).toHaveText(
-          "/lb",
+          language === "fa" ? "/پوند" : "/lb",
         );
         await expect(
           detail.locator(".selling-price-secondary").first(),
