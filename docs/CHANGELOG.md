@@ -627,3 +627,5 @@ Updated the legacy simulated-reading copy assertion to follow the approved entry
 - CI204 receiving integration: fit the actual visible product-name prefix to its available box with the shared measured fitter; retain full title/accessibility and numeric geometry. Strengthen full-title guards and retain title-removal-only negative coverage.
 
 - R2f D9 follow-up: bound the original filename separately from its visible page count; retain the full native/accessible filename in embedded and fullscreen views. Prove the actual two-page C1 import across desktop/phone EN/FA, both retained source hashes, native downloads and existing toolbar guards.
+
+- CI205 C8 driver: identify the single active original filename widget through its semantic viewer/header/description, preserving both readable/decorative copies, exact title/prefix bounds, negative identity checks and retained-source evidence.

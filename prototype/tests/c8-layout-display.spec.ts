@@ -89,16 +89,51 @@ async function quantityEvidence(page: Page, row: Locator) {
 }
 
 async function showOriginal(page: Page, language: "en" | "fa") {
-  if ((page.viewportSize()?.width ?? 1440) <= 760) {
+  const phone = (page.viewportSize()?.width ?? 1440) <= 760;
+  if (phone) {
     await page
       .getByRole("button", {
         name: language === "en" ? /^View original \(/ : /^مشاهده اصل/,
       })
       .click();
   }
-  await expect(
-    page.locator(".invoice-original-media img").filter({ visible: true }),
-  ).toBeVisible();
+  const viewer = page.getByRole(phone ? "dialog" : "complementary", {
+    name: copy(language, "Original invoice", "فاکتور اصلی"),
+    exact: true,
+  });
+  await expect(viewer).toBeVisible();
+  await expect(viewer.locator(".invoice-original-media img")).toBeVisible();
+  return viewer;
+}
+
+function originalFilename(viewer: Locator) {
+  return viewer
+    .locator(":scope > .original-viewer-header, :scope > .dialog-description")
+    .locator(".original-viewer-file-name");
+}
+
+async function originalFilenameIsIntact(viewer: Locator, expected: string) {
+  const filename = originalFilename(viewer);
+  if ((await filename.count()) !== 1) return false;
+  return filename.evaluate((element, expected) => {
+    const full = element.querySelector(":scope > .sr-only");
+    const painted = element.querySelector(":scope > [aria-hidden=true]");
+    if (!full || !painted || !painted.getClientRects().length) return false;
+    const prefix = painted.textContent?.trim() ?? "";
+    const bounds = element.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNodeContents(painted);
+    return (
+      element.getAttribute("title") === expected &&
+      full.textContent?.trim() === expected &&
+      (prefix === expected ||
+        (prefix.endsWith("…") && expected.startsWith(prefix.slice(0, -1)))) &&
+      Array.from(range.getClientRects()).every(
+        (rect) =>
+          rect.left >= bounds.left - 1.5 && rect.right <= bounds.right + 1.5,
+      )
+    );
+  }, expected);
 }
 
 for (const language of ["en", "fa"] as const) {
@@ -182,14 +217,40 @@ for (const language of ["en", "fa"] as const) {
     expect(await retainedOriginalHash(page, after.file_data!)).toBe(
       originalHash,
     );
-    await showOriginal(page, language);
-    await expect(
-      page
-        .getByText(before.file_name!, { exact: true })
-        .filter({ visible: true }),
-    ).toHaveCount(1);
+    const original = await showOriginal(page, language);
+    const filename = originalFilename(original);
+    await expect(filename).toHaveCount(1);
+    await expect(filename).toBeVisible();
+    await expect
+      .poll(() => originalFilenameIsIntact(original, before.file_name!))
+      .toBe(true);
+    if ((page.viewportSize()?.width ?? 1440) <= 760)
+      await expect(original).toHaveAccessibleDescription(
+        `${before.file_name} ${copy(language, "1 page", "۱ صفحه")}`,
+      );
+    // The same strict identity check must reject a mismatched native title,
+    // even while the readable and painted filename copies remain present.
+    await filename.evaluate((element) =>
+      element.setAttribute("title", "fictional-wrong-original.svg"),
+    );
+    try {
+      expect(await originalFilenameIsIntact(original, before.file_name!)).toBe(
+        false,
+      );
+    } finally {
+      await filename.evaluate(
+        (element, title) => element.setAttribute("title", title),
+        before.file_name!,
+      );
+    }
+    expect(await originalFilenameIsIntact(original, before.file_name!)).toBe(
+      true,
+    );
     await page.reload();
-    await showOriginal(page, language);
+    const reloadedOriginal = await showOriginal(page, language);
+    await expect
+      .poll(() => originalFilenameIsIntact(reloadedOriginal, before.file_name!))
+      .toBe(true);
     expect(await retainedOriginalHash(page, after.file_data!)).toBe(
       originalHash,
     );
