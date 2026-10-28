@@ -598,3 +598,9 @@ CI204's clean second browser shard passed all 399 cases in 28.3 minutes of test 
 The bilingual font-order correction made glyph selection stable, but the 1280px receiving cell still had less than one pixel of spare space for a full ordinary name. CSS ellipsis hid the visible overflow while the complete live text range could leave the cell on a different browser renderer. CI204 exposed that remaining failure after integration.
 
 Reuse bounded FitText in the receiving name's actual flex box. Preserve the existing English-value/bundled-Persian font contract, full native title and a complete accessible disclosure name including its check count. The fitted prefix updates on actual font readiness and ResizeObserver changes. Keep every table width, numeric gap and clipping tolerance unchanged. C5/C8 additionally require the full title, matching visible prefix and complete accessible disclosure; missing-title-only negative probes remain failures.
+
+## 2026-10-28 — Separate the retained original filename from page count
+
+The actual two-page imported/posted fixture exposed an original-viewer subtitle whose CSS ellipsis hid the page count with the long filename. Its live count glyphs also left the subtitle box and could approach the header actions.
+
+Give the title the remaining header space and fit only the filename, retaining its exact native title and complete screen-reader text. Keep the separator/count as nonshrinking groups on the same line. Reuse the caption in the fullscreen description so it still conveys the full filename and count. Preserve existing32px header actions,44px toolbar and all OriginalInvoice source/page/download logic.

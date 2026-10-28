@@ -6,6 +6,7 @@ import { useInvoiceOriginal } from "../../use-invoice-original";
 import { Button, Dialog } from "../../ui";
 import { LtrValue } from "../../presentation";
 import { OriginalInvoice } from "../OriginalInvoice";
+import { FitText } from "../../FitText";
 import "./invoice-review.css";
 
 /** The preference belongs to the person, never to a particular invoice. */
@@ -68,6 +69,34 @@ export function OriginalViewer({
       ? pdfPages.count
       : (invoice.original_page_count ?? 1);
   const firstPage = useInvoiceOriginal(invoice, 0);
+  const fileName =
+    firstPage.name ?? invoice.file_name ?? t("Not added", "ثبت نشده");
+  const pageCountLabel = t(
+    `${pageCount} ${pageCount === 1 ? "page" : "pages"}`,
+    `${pageCount.toLocaleString("fa-IR")} صفحه`,
+  );
+  const fileCaption = (
+    <span className="original-viewer-file-caption">
+      <FitText
+        className="original-viewer-file-name"
+        value={fileName}
+        render={(visible) => (
+          <>
+            <span className="sr-only">
+              <LtrValue value={fileName} />{" "}
+            </span>
+            <span aria-hidden="true">
+              <LtrValue value={visible} />
+            </span>
+          </>
+        )}
+      />
+      <span className="original-viewer-file-separator" aria-hidden="true">
+        ·
+      </span>
+      <span className="original-viewer-page-count">{pageCountLabel}</span>
+    </span>
+  );
   const thumbnailUrl =
     invoice.file_type === "application/pdf"
       ? pdfThumbnail.sourceKey === firstPage.key &&
@@ -100,13 +129,7 @@ export function OriginalViewer({
         <div className="original-viewer-title">
           <h2>{t("Original invoice", "فاکتور اصلی")}</h2>
           {invoice.original_available && (
-            <p className="original-viewer-file muted">
-              <LtrValue value={firstPage.name ?? invoice.file_name} /> ·{" "}
-              {t(
-                `${pageCount} ${pageCount === 1 ? "page" : "pages"}`,
-                `${pageCount.toLocaleString("fa-IR")} صفحه`,
-              )}
-            </p>
+            <p className="original-viewer-file muted">{fileCaption}</p>
           )}
         </div>
         <div className="original-viewer-header-actions" data-control-row>
@@ -200,15 +223,7 @@ export function OriginalViewer({
         open={expanded}
         onOpenChange={setExpanded}
         title={t("Original invoice", "فاکتور اصلی")}
-        description={
-          <>
-            <LtrValue value={firstPage.name ?? invoice.file_name} /> ·{" "}
-            {t(
-              `${pageCount} ${pageCount === 1 ? "page" : "pages"}`,
-              `${pageCount.toLocaleString("fa-IR")} صفحه`,
-            )}
-          </>
-        }
+        description={fileCaption}
         className="original-viewer-dialog dialog-phone-fullscreen"
       >
         {expanded && (

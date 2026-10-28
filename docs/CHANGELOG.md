@@ -620,3 +620,5 @@ Updated the legacy simulated-reading copy assertion to follow the approved entry
 
 - Allow 40 minutes for the expanded browser CI jobs after a clean 399-case shard required 28.3 minutes before setup. Keep every test, individual timeout, worker/retry setting, skip and assertion unchanged; actual failures still fail the combined gate.
 - CI204 receiving integration: fit the actual visible product-name prefix to its available box with the shared measured fitter; retain full title/accessibility and numeric geometry. Strengthen full-title guards and retain title-removal-only negative coverage.
+
+- R2f D9 follow-up: bound the original filename separately from its visible page count; retain the full native/accessible filename in embedded and fullscreen views. Prove the actual two-page C1 import across desktop/phone EN/FA, both retained source hashes, native downloads and existing toolbar guards.

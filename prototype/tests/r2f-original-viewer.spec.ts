@@ -56,9 +56,9 @@ for (const language of ["en", "fa"] as const) {
               exact: true,
             }),
           ).toBeVisible();
-          await expect(header.locator(".original-viewer-file")).toContainText(
-            before.file_name!,
-          );
+          await expect(
+            header.locator(".original-viewer-file-name"),
+          ).toHaveAttribute("title", before.file_name!);
           const actions = header.locator(
             ".original-viewer-header-actions > button",
           );

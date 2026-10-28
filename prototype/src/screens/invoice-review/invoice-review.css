@@ -693,15 +693,33 @@
   margin-block-end: 12px;
 }
 .original-viewer-title {
+  flex: 1 1 0;
   min-inline-size: 0;
 }
 .original-viewer-file {
   margin: 2px 0 0;
   font-size: var(--font-size-caption);
+  max-inline-size: 260px;
+}
+.original-viewer-file-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.original-viewer-file-name {
+  display: block;
+  flex: 1 1 auto;
+  min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-inline-size: 260px;
+}
+.original-viewer-file-separator,
+.original-viewer-page-count {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 .original-viewer-header-actions {
   display: flex;
@@ -856,9 +874,6 @@
   flex: 0 0 auto;
 }
 .ui-dialog.original-viewer-dialog > .dialog-description {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: var(--font-size-caption);
 }
 :root .ui-dialog.original-viewer-dialog[open] > .invoice-original-media {
