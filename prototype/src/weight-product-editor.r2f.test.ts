@@ -113,7 +113,7 @@ function postRealCost(
   };
   postInvoice(state, actor);
 }
-async function fixture(withReceipts = false) {
+async function fixture(withReceipts = false, legacyAllReview = false) {
   const state = initialState();
   state.invoices = [];
   state.ledger = [];
@@ -140,6 +140,21 @@ async function fixture(withReceipts = false) {
     date_tracking: false,
   };
   state.products.push(parent);
+  if (legacyAllReview)
+    state.approvals.push({
+      id: "fictional-retained-all-cost-review",
+      company_id: parent.company_id,
+      branch: "all",
+      product_code: parent.code,
+      type: "price_change",
+      status: "pending",
+      proposed_price: "8.99",
+      current_price: "6.49",
+      unit_cost: "5.7000",
+      config_version: "manual-weight-cost:retained-legacy",
+      triggered_by: "Fictional prior manager",
+      triggered_by_user_id: "demo-person-manager",
+    });
   const repository = new BrowserAuthorityRepository(new IDBFactory());
   await initializeAuthority(repository, {
     state,
@@ -434,7 +449,7 @@ describe("R2f D3 atomic real weight-product editor commands", () => {
       f.repository.dispose();
     }
   });
-  it("preserves another branch's pending cost review while editing this branch and blocks partial replacement of an all-location review", async () => {
+  it("preserves another branch's pending cost review while editing this branch", async () => {
     const f = await fixture();
     try {
       await f.repository.runBusinessCommand<DemoState, void>(
@@ -496,29 +511,15 @@ describe("R2f D3 atomic real weight-product editor commands", () => {
       const child = after.products.find((item) => item.code === f.childCode)!;
       expect(child.package_pending_prices?.["Branch 1"]).toBe("4.99");
       expect(child.package_pending_prices?.["Branch 2"]).toBe("5.99");
-      const same = await f.boot();
-      await f.auth.setLocation(f.identity, { kind: "all_locations" });
-      await f.repository.runBusinessCommand<DemoState, void>(
-        f.identity,
-        (state, actor) => {
-          const all = actor;
-          saveWeightProductEditor(
-            state,
-            all,
-            f.code,
-            edits(state.products.find((item) => item.code === f.code)!),
-            weightEditorSnapshot(state, all, f.code),
-            [],
-            { value: "5.7000", unit: "lb" },
-          );
-        },
-      );
-      const allReview = await f.read();
-      await f.auth.setLocation(f.identity, {
-        kind: "location",
-        location_id: "Branch 1",
-      });
-      const fresh = (await f.boot()).value;
+    } finally {
+      f.repository.dispose();
+    }
+  });
+  it("does not partially replace a retained legacy all-location cost review", async () => {
+    const f = await fixture(false, true);
+    try {
+      const source = (await f.boot()).value;
+      const before = await f.read();
       await expect(
         f.repository.runBusinessCommand<DemoState, void>(
           f.identity,
@@ -528,14 +529,179 @@ describe("R2f D3 atomic real weight-product editor commands", () => {
               actor,
               f.code,
               edits(state.products.find((item) => item.code === f.code)!),
-              fresh.snapshot,
+              source.snapshot,
               [],
-              { value: "5.9000", unit: "lb" },
+              { value: "5.1000", unit: "lb" },
             ),
         ),
       ).rejects.toThrow("pending_cost_review");
-      expect(await f.read()).toEqual(allReview);
-      expect(same.value.snapshot).not.toBe(fresh.snapshot);
+      expect(await f.read()).toEqual(before);
+    } finally {
+      f.repository.dispose();
+    }
+  });
+  it("reviews an All-locations cost decision against each selling branch's real prior cost and distinct manual price", async () => {
+    const f = await fixture(true);
+    try {
+      await f.repository.runBusinessCommand<DemoState, void>(
+        f.identity,
+        (state, actor) => {
+          const before = cloneWithAuthority(state);
+          for (const [branch, price] of [
+            ["Branch 1", "9.99"],
+            ["Branch 2", "11.99"],
+          ] as const)
+            savePriceChange(state, actor, {
+              product_code: f.code,
+              mode: "regular",
+              scope: "selected",
+              branches: [branch],
+              price,
+              price_unit: "lb",
+              starts_on: "",
+              last_day: null,
+              accept_below_margin: true,
+              below_cost_reason: "Fictional reviewed branch-specific price",
+              add_labels: false,
+            });
+          capturePriceUpdateChanges(before, state, actor);
+        },
+      );
+      const original = (await f.read()).state;
+      const manual = structuredClone(
+        original.products.find((item) => item.code === f.code)!.manual_prices,
+      );
+      await f.auth.setLocation(f.identity, { kind: "all_locations" });
+      const source = (await f.boot()).value;
+      await f.repository.runBusinessCommand<DemoState, void>(
+        f.identity,
+        (state, actor) => {
+          const before = cloneWithAuthority(state);
+          saveWeightProductEditor(
+            state,
+            actor,
+            f.code,
+            edits(state.products.find((item) => item.code === f.code)!),
+            source.snapshot,
+            [],
+            { value: "5.1000", unit: "lb" },
+          );
+          capturePriceUpdateChanges(before, state, actor);
+        },
+      );
+      const pending = (await f.read()).state;
+      const product = pending.products.find((item) => item.code === f.code)!;
+      expect(product.manual_costs?.all).toMatchObject({
+        branch: "all",
+        unit_cost_before_tax: "5.1000",
+        by_user_id: "demo-person-manager",
+      });
+      expect(Object.keys(product.manual_costs ?? {})).toEqual(["all"]);
+      expect(product.manual_prices).toEqual(manual);
+      expect(product.branch_prices).toMatchObject({
+        "Branch 1": "9.99",
+        "Branch 2": "11.99",
+      });
+      const proposals = pending.approvals.filter(
+        (item) => item.product_code === f.code && item.status === "pending",
+      );
+      expect(proposals.map((item) => item.branch).sort()).toEqual([
+        "Branch 1",
+        "Branch 2",
+        "Branch 3",
+      ]);
+      expect(
+        proposals.find((item) => item.branch === "Branch 1")
+          ?.manual_price_review,
+      ).toMatchObject({
+        kept_price: "9.99",
+        prior_cost: "4.1000",
+        received_cost: "5.1000",
+        calculated_price: "7.99",
+      });
+      expect(
+        proposals.find((item) => item.branch === "Branch 2")
+          ?.manual_price_review,
+      ).toMatchObject({
+        kept_price: "11.99",
+        prior_cost: "6.0000",
+        received_cost: "5.1000",
+        calculated_price: "7.99",
+      });
+      expect(proposals.find((item) => item.branch === "Branch 3")?.type).toBe(
+        "new_product",
+      );
+      expect(
+        proposals.some(
+          (item) => item.branch === "all" || item.branch === "Warehouse",
+        ),
+      ).toBe(false);
+      expect(pending.invoices).toEqual(original.invoices);
+      expect(pending.ledger).toEqual(original.ledger);
+      expect(pending.stock_movements).toEqual(original.stock_movements);
+      await f.repository.runBusinessCommand<DemoState, void>(
+        f.identity,
+        (state, actor) => {
+          const before = cloneWithAuthority(state);
+          for (const [branch, decision] of [
+            ["Branch 1", "keep"],
+            ["Branch 2", "rule"],
+          ] as const)
+            resolveApproval(
+              state,
+              actor,
+              proposals.find((item) => item.branch === branch)!.id,
+              "approve",
+              "branch",
+              branch,
+              undefined,
+              undefined,
+              decision,
+            );
+          capturePriceUpdateChanges(before, state, actor);
+        },
+      );
+      const decided = (await f.read()).state;
+      const current = decided.products.find((item) => item.code === f.code)!;
+      expect(current.branch_prices).toMatchObject({
+        "Branch 1": "9.99",
+        "Branch 2": "7.99",
+      });
+      expect(current.manual_prices?.["Branch 1"]).toEqual(manual?.["Branch 1"]);
+      expect(current.manual_prices?.["Branch 2"]).toBeUndefined();
+      expect(
+        decided.products.find((item) => item.code === f.childCode)
+          ?.branch_prices,
+      ).toMatchObject({ "Branch 1": "5.99", "Branch 2": "4.99" });
+      expect(decided.invoices).toEqual(original.invoices);
+      expect(decided.ledger).toEqual(original.ledger);
+      expect(decided.stock_movements).toEqual(original.stock_movements);
+    } finally {
+      f.repository.dispose();
+    }
+  });
+  it("rejects a stale concrete-location editor after the real session switches to All locations", async () => {
+    const f = await fixture();
+    try {
+      const source = (await f.boot()).value;
+      await f.auth.setLocation(f.identity, { kind: "all_locations" });
+      const before = await f.read();
+      await expect(
+        f.repository.runBusinessCommand<DemoState, void>(
+          f.identity,
+          (state, actor) =>
+            saveWeightProductEditor(
+              state,
+              actor,
+              f.code,
+              edits(state.products.find((item) => item.code === f.code)!),
+              source.snapshot,
+              [],
+              { value: "5.1000", unit: "lb" },
+            ),
+        ),
+      ).rejects.toThrow("stale");
+      expect(await f.read()).toEqual(before);
     } finally {
       f.repository.dispose();
     }

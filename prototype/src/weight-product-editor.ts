@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import type { AuthenticatedActor } from "./authority-types";
 import { freshActor, cloneWithAuthority, actorAtLocation } from "./authority";
-import { requireCapability } from "./permissions";
+import { can, requireCapability } from "./permissions";
 import { businessFingerprint } from "./business-fingerprint";
 import {
   productEditSnapshot,
@@ -26,10 +26,14 @@ import { manualPrice } from "./manual-prices";
 import { regularPrice } from "./catalog";
 import { projectProductReadDTO } from "./catalog-read-model";
 import { createId } from "./ids";
-import { sellingBranches } from "./settings";
+import { hasApprovedPriceAtLocation } from "./lookup-branch";
 import { actorAudit } from "./domain-authority";
 import type { PackageUnit } from "./package-pricing";
-import { savePriceChange, type ChangePriceInput } from "./sales";
+import {
+  savePriceChange,
+  sellingSaleBranches,
+  type ChangePriceInput,
+} from "./sales";
 import type { DemoState, Product } from "./types";
 
 export interface WeightPackageDraft {
@@ -79,6 +83,27 @@ function parent(state: DemoState, code: string) {
   if (!product) throw new WeightEditorError("stale");
   return product;
 }
+function costDecisionLocations(
+  state: DemoState,
+  actor: AuthenticatedActor,
+): string[] {
+  actor = freshActor(state, actor);
+  return sellingSaleBranches(state).filter(
+    (location) =>
+      actor.allowed_branches.includes(location) &&
+      can(state, actor, "pricing.regular_manage", {
+        company_id: actor.company_id,
+        kind: "location_record",
+        location_ids: [location],
+        mutation: true,
+      }).allowed,
+  );
+}
+function knownCost(value: string | null): string | null {
+  return value && /^\d+(?:\.\d{1,4})?$/.test(value)
+    ? new Decimal(value).toFixed(4)
+    : null;
+}
 export function weightEditorSnapshot(
   state: DemoState,
   actor: AuthenticatedActor,
@@ -88,6 +113,16 @@ export function weightEditorSnapshot(
   actor = guard(state, actor, packageOnly);
   const product = parent(state, code);
   return businessFingerprint({
+    actor: {
+      company_id: actor.company_id,
+      user_id: actor.user_id,
+      session_id: actor.session_id,
+      branch: actor.branch,
+      allowed_branches: actor.allowed_branches,
+    },
+    cost_locations: packageOnly
+      ? undefined
+      : costDecisionLocations(state, actor),
     product,
     children: state.products.filter(
       (item) =>
@@ -242,12 +277,14 @@ function costProposal(
   actor: AuthenticatedActor,
   product: Product,
   cost: string,
-  previousCost: string,
+  previousCost: string | null,
   now: Date,
 ) {
   const branch = actor.branch;
-  const manual = manualPrice(state, product, branch);
-  const current = regularPrice(state, product, branch);
+  const current = hasApprovedPriceAtLocation(state, product, branch, now)
+    ? regularPrice(state, product, branch)
+    : null;
+  const manual = current ? manualPrice(state, product, branch) : null;
   const calculation = calculateWeighedPrice(
     cost,
     "lb",
@@ -353,7 +390,24 @@ export function saveWeightProductEditor(
     throw new WeightEditorError("stale");
   const draft = cloneWithAuthority(state);
   const product = parent(draft, code);
-  const priorCost = productStoreCost(draft, actor, product);
+  const priorCost = knownCost(productStoreCost(draft, actor, product));
+  const eligibleCostLocations = costDecisionLocations(draft, actor);
+  const targetCostLocations =
+    actor.branch === "all"
+      ? eligibleCostLocations
+      : eligibleCostLocations.filter((location) => location === actor.branch);
+  const priorLocationCosts = new Map(
+    targetCostLocations.map((location) => [
+      location,
+      knownCost(
+        productStoreCost(
+          draft,
+          actorAtLocation(draft, actor, location),
+          product,
+        ),
+      ),
+    ]),
+  );
   const newCost = costInput
     ? weightCostPerLb(costInput.value, costInput.unit, draft.config)
     : priorCost;
@@ -387,7 +441,7 @@ export function saveWeightProductEditor(
   );
   if (
     costInput &&
-    !new Decimal(newCost).eq(priorCost ?? product.last_cost_before_tax)
+    (priorCost === null || !new Decimal(newCost).eq(priorCost))
   ) {
     if (product.sold_by !== "weight") throw new WeightEditorError("cost");
     recordManualProductCost(draft, actor, product, newCost, now);
@@ -395,16 +449,9 @@ export function saveWeightProductEditor(
       stagedPrice?.mode === "regular"
         ? new Set(stagedPrice.branches)
         : new Set<string>();
-    const pendingLocations =
-      actor.branch === "all" && stagedPrice?.mode === "regular"
-        ? sellingBranches(draft.config).filter(
-            (location) =>
-              actor.allowed_branches.includes(location) &&
-              !covered.has(location),
-          )
-        : !covered.has(actor.branch)
-          ? [actor.branch]
-          : [];
+    const pendingLocations = targetCostLocations.filter(
+      (location) => !covered.has(location),
+    );
     for (const location of pendingLocations)
       costProposal(
         draft,
@@ -413,7 +460,7 @@ export function saveWeightProductEditor(
           : actorAtLocation(draft, actor, location),
         product,
         newCost,
-        priorCost ?? product.last_cost_before_tax,
+        priorLocationCosts.get(location) ?? null,
         now,
       );
   }
@@ -442,6 +489,13 @@ export function weightPricingSnapshot(
   });
   return businessFingerprint({
     company: actor.company_id,
+    actor: {
+      user_id: actor.user_id,
+      session_id: actor.session_id,
+      branch: actor.branch,
+      allowed_branches: actor.allowed_branches,
+    },
+    cost_locations: costDecisionLocations(state, actor),
     categories: state.config.pricing_categories,
     bands: state.config.rounding_bands,
     corrections: state.config.special_corrections,

@@ -253,7 +253,7 @@ export interface Approval extends ScopedRecord {
   manual_price_review?: {
     kept_price: string;
     calculated_price: string;
-    prior_cost: string;
+    prior_cost: string | null;
     received_cost: string;
     receiver_recommendation: "keep" | "rule";
     decision?: "keep" | "rule";
