@@ -54,6 +54,7 @@ export function LookupLocations({ product }: { product: ProductReadDTO }) {
       ) : (
         <DataTable
           className="lookup-locations-table"
+          density="medium"
           recordDetails
           columns={[
             {
