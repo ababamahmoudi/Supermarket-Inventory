@@ -83,6 +83,32 @@ async function approvalNumberAssociations(group: Locator, width: number) {
   }, width);
 }
 
+async function approvalPhoneInsets(card: Locator) {
+  return card.evaluate((element) => {
+    const outer = element.getBoundingClientRect();
+    const failures: string[] = [];
+    for (const selector of [
+      ".approval-row-heading",
+      ".approval-numbers",
+      ".approval-card-footer .button-primary",
+    ]) {
+      const node = element.querySelector(selector);
+      if (!node)
+        throw new Error(`Missing actual approval content: ${selector}`);
+      const rect = node.getBoundingClientRect();
+      for (const [side, inset] of [
+        ["left", rect.left - outer.left],
+        ["right", outer.right - rect.right],
+      ] as const)
+        if (Math.abs(inset - 20) > 1.5)
+          failures.push(
+            `phone ${selector} ${side} inset: ${inset.toFixed(2)}px`,
+          );
+    }
+    return failures;
+  });
+}
+
 async function misplacedNumberSlotsAreDetected(group: Locator, width: number) {
   const label = group.locator(
     width === 390
@@ -125,6 +151,23 @@ async function misplacedNumberSlotsAreDetected(group: Locator, width: number) {
         else node.setAttribute("style", original);
       }, original);
     }
+  } else {
+    const card = group.locator("..");
+    const original = await card.getAttribute("style");
+    await card.evaluate((node) => {
+      (node as HTMLElement).style.paddingInline = "16px";
+    });
+    try {
+      expect(await approvalPhoneInsets(card)).toContainEqual(
+        expect.stringMatching(/^phone \.approval-numbers left inset: 16/),
+      );
+    } finally {
+      await card.evaluate((node, original) => {
+        if (original === null) node.removeAttribute("style");
+        else node.setAttribute("style", original);
+      }, original);
+    }
+    expect(await approvalPhoneInsets(card)).toEqual([]);
   }
   expect((await approvalNumberAssociations(group, width)).failures).toEqual([]);
 }
@@ -160,6 +203,8 @@ for (const language of ["en", "fa"] as const) {
         const cards = page.locator(".approval-detail-row");
         expect(await cards.count()).toBeGreaterThanOrEqual(3);
         for (const card of await cards.all()) {
+          if (width === 390)
+            expect(await approvalPhoneInsets(card)).toEqual([]);
           const group = card.locator(".approval-numbers");
           await expect(group).toBeVisible();
           const association = await approvalNumberAssociations(group, width);

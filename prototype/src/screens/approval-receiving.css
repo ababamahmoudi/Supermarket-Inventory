@@ -248,7 +248,7 @@
 @media (max-width: 759px) {
   :root .ui-card.approval-card.approval-detail-row,
   :root .ui-card.sale-request-card.approval-detail-row {
-    padding: 16px;
+    padding: 20px;
     gap: 16px;
   }
   .approval-numbers {
