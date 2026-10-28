@@ -78,6 +78,8 @@ GitHub Actions on PR #29 is authoritative for its current commit; the final hand
 
 Fixture updates only cover intentional new behavior: fresh genuine approvals, added package defaults, redesigned controls/regions and localized mass labels. Permission, money, containment, source-byte, idempotency and 2 px stability checks remain enforced.
 
+The CI integration fixes also cover bundled Persian numeric captions, stable retained English invoice names, intermediate-width Dashboard captions, bounded Returns columns and visible item counts. The retained browser drivers follow the actual signed-out language control, current product segments, decided Sale slots, rich return cards and This week links. Their source, unchanged safeguards and executed cases are recorded in the [invoice guide](PR_R2F_CI203_INVOICES.md), [product and Sale guide](PR_R2F_CI203_PRODUCT_SALE.md), [Dashboard destination guide](PR_R2F_CI203_DASHBOARD_DRIVERS.md), [shell and phone guide](PR_R2F_CI203_SHELL_PHONE.md) and [C5 composition guide](PR_R2F_C5_COMPOSITION.md).
+
 ## Limits
 
 This is the local browser prototype: authentication/AI are simulated; no production server, deployment, shared-device sync, cash register or physical printer/iPhone Safari validation is included. No private uploaded data was committed. No merge or force-push was performed. Nothing further is needed from Ali to run the review.
