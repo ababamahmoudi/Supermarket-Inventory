@@ -439,6 +439,14 @@ async function prepareScene(
       page.locator(".sale-request-card .approval-numbers"),
     ).toBeVisible();
     for (const card of await page.locator(".approval-detail-row").all()) {
+      if (width === 1440)
+        expect(
+          Math.abs(
+            (await card.locator(".approval-numbers").boundingBox())!.width -
+              521,
+          ),
+          "approved shared five-column number box",
+        ).toBeLessThanOrEqual(1.5);
       const actions = card.locator(".approval-card-footer .actions > button");
       await expect(actions).toHaveCount(3);
       for (const action of await actions.all())
