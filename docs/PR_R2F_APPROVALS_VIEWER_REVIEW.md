@@ -28,3 +28,9 @@ The existing approval-header browser test now explicitly installs its fictional 
 ## CI follow-up — repeat the retained offer's exact scope
 
 The repeated-offer browser test explicitly chooses Company default price to match its retained active offer. Selecting a product with actual branch price evidence correctly defaults a new offer to that branch, which is a distinct permitted scope rather than an idempotent repeat. The test verifies the retained scope, then keeps its original no-new-offer/no-new-History, stop-to-Past and Undo-to-Current checks. Both affected browser cases pass on desktop and phone against the fresh production build; application offer deduplication and permission guards are unchanged.
+
+## Integrated number-slot regression
+
+The shared number-group grid and slot rules are defaults with zero specificity, so the approved composed five-column grid and its responsive slot placement remain authoritative. Desktop approval panels stay 521 px on every card. A baseline alone cannot prove that a label describes the number beneath it: the D6 browser test now checks the actual logical text edges of each label, value and note. On phones it checks cost/price across the top, Margin's label/value below the cost column, and its minimum note in the opposite lower cell, matching the approved design.
+
+The same tests deliberately move a real Price/Margin label into the wrong grid column and widen a real panel by 4 px, require detection, restore the actual component and require a clean result. The existing 1.5 px association/baseline limits, 521 px width, 26 px price, no-overflow and action-order checks remain intact. All four EN/FA desktop/phone cases and four existing worker sale/privacy/acknowledgment cases pass on the fresh integrated production build. Final approved D6 screenshots were copied and individually reviewed at `/tmp/r2f-d6-final-associations/` outside the repository.
