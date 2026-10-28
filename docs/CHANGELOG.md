@@ -1,3 +1,8 @@
+## 2026-10-28 — R2f Persian numeric captions
+
+- Keep numeric table headings and Returns' nonnumeric credit states in the bundled interface font; actual numeric data retains Manrope/tabular figures. This fixes host-dependent Persian glyph clipping and heading/value misalignment without changing geometry budgets.
+- Added actual Chromium platform-font and strict alignment regressions with known/unknown retained credit in both themes at 1440/1000 on desktop and phone devices.
+
 ## 2026-10-28 — R2f D3 weight Product add/edit
 
 - Matched the approved How sold, cost/unit, real rule/price card and package-size editor with responsive EN/FA/themed layout. Parent metadata, cost, explicit Change price and all package drafts save atomically; Cancel allocates/writes nothing.

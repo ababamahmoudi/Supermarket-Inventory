@@ -825,14 +825,17 @@ function ReturnsContent() {
                             (() => {
                               if (!creditQuery.ready)
                                 return (
-                                  <span className="muted" role="status">
+                                  <span
+                                    className="muted ui-numeric-caption"
+                                    role="status"
+                                  >
                                     {t("Loading…", "در حال دریافت…")}
                                   </span>
                                 );
                               if (creditQuery.error)
                                 return (
                                   <span
-                                    className="muted"
+                                    className="muted ui-numeric-caption"
                                     title={t(
                                       "Credit amounts are unavailable. Refresh to try again.",
                                       "مبالغ اعتبار در دسترس نیست. صفحه را تازه کنید.",
@@ -859,7 +862,7 @@ function ReturnsContent() {
                                 </strong>
                               ) : (
                                 <span
-                                  className="muted"
+                                  className="muted ui-numeric-caption"
                                   title={t(
                                     "Retained cost or currency needs review",
                                     "هزینه یا ارز نگهداری‌شده نیاز به بررسی دارد",

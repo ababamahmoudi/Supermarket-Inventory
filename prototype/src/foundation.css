@@ -102,6 +102,14 @@
 :root .ui-data-table :is(td, th)[style*="text-align: end"] {
   font-variant-numeric: tabular-nums;
 }
+/* Captions describe numeric values; keep the interface's bundled language face.
+   The numeric data cells retain their own Manrope/tabular-digit contract. */
+:root th.numeric {
+  font-family: inherit;
+}
+:root .ui-numeric-caption:lang(fa) {
+  font-family: var(--font-fa);
+}
 :root .ui-data-table td.numeric > :is(div, span):only-child {
   justify-content: flex-end;
   justify-items: end;

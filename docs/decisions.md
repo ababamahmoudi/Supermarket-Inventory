@@ -563,6 +563,8 @@ The reference hides pack editing while the existing request command requires gen
 
 **R2f mass labels (2026-10-28):** The owner's explicit screenshot precedence overrides the older Latin-unit wording for approved R2f weight presentations. Add one reusable massUnitLabel map plus opt-in shared price/size presentation instead of rewriting stored units or arbitrary product-name text. D3 and D4 use the same FA labels; ordinary UnitSize and non-opted-in price displays retain their prior behavior.
 
+**R2f numeric captions (2026-10-28):** Numeric headings describe values and therefore inherit the interface's bundled language font. Nonnumeric states inside a numeric cell opt into the shared caption class. Actual numeric data keeps Manrope. Chromium's actual platform-font evidence showed Persian heading glyphs falling back to a host Arabic face, whose width differs across Linux images; using bundled Vazirmatn removes that dependency without changing widths, padding or alignment tolerances.
+
 ### 2026-10-28 — All-location cost review preserves each branch's decision
 
 **Context:** one all-scope price proposal cannot represent distinct branch manual prices and prior receipt costs.
