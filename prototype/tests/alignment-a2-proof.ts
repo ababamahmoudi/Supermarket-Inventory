@@ -55,6 +55,7 @@ export async function inspectTableAlignment(page: Page) {
     id: string;
     number: number;
     supplier: string;
+    remaining: number;
     items: { en: string; fa: string; qty: number }[];
   }[] = [];
   if (await page.locator(".labels-products-card,.returns-overview").count()) {
@@ -76,6 +77,7 @@ export async function inspectTableAlignment(page: Page) {
           id: record.id,
           number: index + 1,
           supplier: record.supplier,
+          remaining: Math.max(0, record.lines.length - 2),
           items: record.lines.slice(0, 2).map((line) => {
             const product = state.products.find(
               (item) =>
@@ -326,11 +328,29 @@ export async function inspectTableAlignment(page: Page) {
           .querySelector(".return-phone-status .ui-badge")
           ?.textContent?.trim() &&
         names.length === expected.items.length &&
-        names.every((name, index) =>
-          tidy(name.textContent).startsWith(
-            `${tidy(fa ? expected.items[index].fa : expected.items[index].en)} × ${expected.items[index].qty}`,
-          ),
-        ) &&
+        names.every((name, index) => {
+          const sourceName = tidy(
+            fa ? expected.items[index].fa : expected.items[index].en,
+          );
+          const metadata = `× ${expected.items[index].qty}${index === 1 && expected.remaining > 0 ? ` · +${expected.remaining} ${fa ? "قلم دیگر" : "more"}` : ""}`;
+          const fitted = name.querySelector(".return-list-item-name[title]");
+          if (!fitted)
+            return tidy(name.textContent) === `${sourceName} ${metadata}`;
+          const shown = tidy(fitted.textContent);
+          const prefix = shown.replace(/…$/, "").trim();
+          return (
+            fitted.getAttribute("title") === sourceName &&
+            visible(fitted) &&
+            prefix.length > 0 &&
+            (shown.endsWith("…")
+              ? sourceName.startsWith(prefix)
+              : shown === sourceName) &&
+            tidy(
+              name.querySelector(".return-list-item-quantity")?.textContent ??
+                "",
+            ) === metadata
+          );
+        }) &&
         row
           .querySelector(".return-phone-items .return-list-items > small")
           ?.textContent?.trim() &&

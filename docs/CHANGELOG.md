@@ -8,6 +8,11 @@
 - Bound Product editor geometry to its actual Sold by segments and named Select/section/date controls, including the weight parent's real More details disclosure; retained all hairline, date-status, alignment and Cancel evidence assertions.
 - Bound the decided Sale amount to its labelled D6 slot, independently checked the regular amount, and added canonical no-write checks while retaining exact approved money, deciders and tab counts. See [repair evidence](PR_R2F_CI203_PRODUCT_SALE.md).
 
+## 2026-10-28 — R2f retained Returns columns and item counts
+
+- Keep item quantities and +N counts visible beside fitted product names, preserving the complete original name in its tooltip and full record.
+- Qualified the intentional bounded Returns selected-column scroller in the existing C3 proof without changing cell/heading glyph budgets. Added actual EN/FA scroll, keyboard, no-write and malformed-scroller negative controls; other table pages retain their no-scroll checks.
+
 ## 2026-10-28 — R2f D3 weight Product add/edit
 
 - Matched the approved How sold, cost/unit, real rule/price card and package-size editor with responsive EN/FA/themed layout. Parent metadata, cost, explicit Change price and all package drafts save atomically; Cancel allocates/writes nothing.

@@ -34,6 +34,7 @@ import {
 } from "../return-workflow";
 import "./returns-a2.css";
 import { ReturnStatusBadge } from "../ReturnStatusBadge";
+import { FitText } from "../FitText";
 import { ReturnActionForms, ReturnCancellationForm } from "./ReturnActionForms";
 import { ReturnEvidenceImage } from "../ReturnEvidenceImage";
 import type { DemoState } from "../types";
@@ -439,8 +440,12 @@ function ReturnsContent() {
         <div className="return-list-item-names">
           {record.lines.slice(0, 2).map((line, index) => (
             <span key={`${line.product_code}:${index}`}>
-              <UnitText>{productName(line.product_code)}</UnitText>{" "}
-              <span className="muted">
+              <FitText
+                className="return-list-item-name"
+                value={productName(line.product_code)}
+                render={(visible) => <UnitText>{visible}</UnitText>}
+              />{" "}
+              <span className="muted return-list-item-quantity">
                 × <LtrText>{line.qty}</LtrText>
                 {index === 1 && record.lines.length > 2 ? (
                   <>
