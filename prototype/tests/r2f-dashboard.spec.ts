@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { runCanonicalBusinessFixture } from "./business-fixture";
 import { auditR2fAlignment } from "./r2f-alignment";
-import { setBranch, setLanguage, signIn } from "./helpers";
+import { openShellAction, setBranch, setLanguage, signIn } from "./helpers";
 
 for (const width of [1440, 1000, 390])
   for (const language of ["en", "fa"] as const) {
@@ -15,10 +15,6 @@ for (const width of [1440, 1000, 390])
       await signIn(page, "Manager");
       await setBranch(page, "North York");
       await setLanguage(page, language);
-      await page.evaluate((value) => {
-        document.documentElement.dataset.theme = value;
-        localStorage.setItem("arzon-theme", value);
-      }, theme);
       const now = new Date().toISOString();
       const previous = new Date(Date.now() - 2 * 86400000).toISOString();
       await runCanonicalBusinessFixture(
@@ -47,6 +43,16 @@ for (const width of [1440, 1000, 390])
       await page.goto("/#dashboard");
       const dashboard = page.locator(".r2c-dashboard");
       await expect(dashboard).toBeVisible();
+      if ((await page.locator("html").getAttribute("data-theme")) !== theme) {
+        await (
+          await openShellAction(
+            page,
+            language === "en" ? "Switch to light theme" : "تغییر به تم تیره",
+          )
+        ).click();
+      }
+      await expect(page.locator("html")).toHaveAttribute("lang", language);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
       await page.evaluate(() => document.fonts.ready);
       const weekly = dashboard.locator(".dashboard-this-week");
       await expect(
