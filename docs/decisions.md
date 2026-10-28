@@ -604,3 +604,7 @@ Reuse bounded FitText in the receiving name's actual flex box. Preserve the exis
 The actual two-page imported/posted fixture exposed an original-viewer subtitle whose CSS ellipsis hid the page count with the long filename. Its live count glyphs also left the subtitle box and could approach the header actions.
 
 Give the title the remaining header space and fit only the filename, retaining its exact native title and complete screen-reader text. Keep the separator/count as nonshrinking groups on the same line. Reuse the caption in the fullscreen description so it still conveys the full filename and count. Preserve existing32px header actions,44px toolbar and all OriginalInvoice source/page/download logic.
+
+### 2026-10-28 — Retain only Lookup input through a protected remount
+
+An accepted location refresh can briefly remove the protected workspace while fresh authority/data is read. Keep only its typed search in an in-memory draft scoped to genuine company/person/session/role/authority version and exact route. Drop it on Lookup exit or authority change; a temporary observer handles exits while the widget is absent, retains at most one input and unsubscribes after discard. Do not cache selected packages, product/branch projections or money. The fresh protected queries remain authoritative. This preserves user input while withholding old location facts and introduces no business write or broader retained application subtree.

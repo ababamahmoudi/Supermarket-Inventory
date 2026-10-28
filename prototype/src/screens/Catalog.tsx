@@ -1,3 +1,4 @@
+import { useLookupSearchDraft } from "../lookup-search-draft";
 import { PackageSizeSection, PackageSizesDialog } from "../WeightPackageEditor";
 import {
   packageDraftsFromProducts,
@@ -3620,7 +3621,8 @@ export function Lookup() {
     code: string;
     scope: string;
   } | null>(null);
-  const [search, setSearch] = useState(searchFromLookupHash);
+  const [search, setSearch] = useLookupSearchDraft(actor, searchFromLookupHash);
+  const lastSearchHash = useRef(window.location.hash);
   const [filters, setFilters] = useListState<LookupFilters>(
     "lookup.filters",
     emptyLookupFilters,
@@ -3711,8 +3713,18 @@ export function Lookup() {
   );
 
   useEffect(() => {
-    const syncSearch = () => {
-      if (window.location.hash.slice(1).split("?")[0] !== "lookup") return;
+    const syncSearch = (event: HashChangeEvent) => {
+      const destination = event.newURL
+        ? new URL(event.newURL).hash
+        : window.location.hash;
+      // Initial/duplicate hash events must not erase text already entered.
+      if (lastSearchHash.current === destination) return;
+      lastSearchHash.current = destination;
+      if (
+        destination !== window.location.hash ||
+        window.location.hash.slice(1).split("?")[0] !== "lookup"
+      )
+        return;
       setSearch(searchFromLookupHash());
       setSelectedCode("");
       setOpenedPackage(null);
@@ -3721,7 +3733,7 @@ export function Lookup() {
     };
     window.addEventListener("hashchange", syncSearch);
     return () => window.removeEventListener("hashchange", syncSearch);
-  }, []);
+  }, [setSearch]);
 
   const selectProduct = (product: Product) => {
     setOpenedPackage(null);

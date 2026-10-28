@@ -1,3 +1,7 @@
+## 2026-10-28 — CI205 Lookup query retention
+
+- Preserved only the scoped typed query through a transient protected Lookup remount during an actual location change. Fresh branch facts/prices and authority masking remain; no product, package, cost or money DTO is cached. Kept Clear/route/identity boundaries and genuine search deep links. Added a real accepted-location regression with the original-source negative control and canonical no-write/privacy checks. See [cause and review steps](PR_R2F_CI205_LOOKUP.md).
+
 ## 2026-10-28 — Receiving-name driver persistence proof
 
 - Align two renamed-row assertions with the intentional bounded prefix/full-title/accessibility contract; retain every existing geometry and business check.
