@@ -24,6 +24,46 @@ for (const language of ["en", "fa"] as const)
       expect(valid.toolbarGroups[0].gap).toBeGreaterThan(16.5);
       expect(valid.toolbarGroups[0].centerDifference).toBeLessThanOrEqual(1);
       const first = rows.first();
+      const fittedName = first.locator(".return-list-item-name[title]").first();
+      const canonicalTitle = await fittedName.getAttribute("title");
+      await fittedName.evaluate((node) =>
+        node.setAttribute("title", "Not the retained product"),
+      );
+      expect((await audit()).failures).toContain(
+        "Invalid retained Returns phone composition",
+      );
+      await fittedName.evaluate(
+        (node, title) => node.setAttribute("title", title!),
+        canonicalTitle,
+      );
+      const quantity = first.locator(".return-list-item-quantity").first();
+      for (const shift of ["translateX(4px)", "translateY(4px)"]) {
+        await quantity.evaluate(
+          (node, shift) => ((node as HTMLElement).style.transform = shift),
+          shift,
+        );
+        expect((await audit()).failures).toContain(
+          "Invalid retained Returns phone composition",
+        );
+      }
+      await quantity.evaluate((node) =>
+        (node as HTMLElement).style.removeProperty("transform"),
+      );
+      const extraQuantity = rows
+        .nth(2)
+        .locator(".return-list-item-quantity")
+        .nth(1);
+      const retainedMetadata = await extraQuantity.innerHTML();
+      await extraQuantity.evaluate(
+        (node) => (node.textContent = "× 1 · +99 more"),
+      );
+      expect((await audit()).failures).toContain(
+        "Invalid retained Returns phone composition",
+      );
+      await extraQuantity.evaluate(
+        (node, html) => (node.innerHTML = html),
+        retainedMetadata,
+      );
       const supplier = first.locator(".return-phone-supplier > a > bdi");
       const retainedSupplier = await supplier.textContent();
       await supplier.evaluate(

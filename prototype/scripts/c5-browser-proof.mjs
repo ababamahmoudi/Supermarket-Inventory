@@ -127,6 +127,7 @@ async function retainedReturnEvidence(page) {
                 id: item.id,
                 number: index + 1,
                 supplier: item.supplier,
+                remaining: Math.max(0, item.lines.length - 2),
                 items: item.lines.slice(0, 2).map((line) => {
                   const product = state.products.find(
                     (product) =>
@@ -2297,11 +2298,136 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             row.querySelector(".return-phone-status .ui-badge")?.textContent,
           ) &&
           names.length === expected.items.length &&
-          names.every((name, index) =>
-            tidy(name.textContent).startsWith(
-              `${tidy(faReturns ? expected.items[index].fa : expected.items[index].en)} × ${expected.items[index].qty}`,
-            ),
-          ) &&
+          names.every((name, index) => {
+            const sourceName = tidy(
+              faReturns ? expected.items[index].fa : expected.items[index].en,
+            );
+            const metadata = `× ${expected.items[index].qty}${index === 1 && expected.remaining > 0 ? ` · +${expected.remaining} ${faReturns ? "قلم دیگر" : "more"}` : ""}`;
+            const fitted = name.querySelector(
+              ":scope > .return-list-item-name.ui-fit-text-intrinsic[title]",
+            );
+            const quantity = name.querySelector(
+              ":scope > .return-list-item-quantity",
+            );
+            if (
+              !fitted ||
+              !quantity ||
+              name.children.length !== 2 ||
+              !visible(fitted) ||
+              !visible(quantity) ||
+              tidy(fitted.getAttribute("title")) !== sourceName ||
+              tidy(quantity.textContent) !== metadata
+            )
+              return false;
+            const shown = tidy(fitted.textContent);
+            const truncated = shown.endsWith("…");
+            const prefix = shown.replace(/…$/, "").trim();
+            if (
+              !prefix ||
+              (truncated
+                ? !sourceName.startsWith(prefix)
+                : shown !== sourceName)
+            )
+              return false;
+            const glyphs = (element) => {
+              const rects = [];
+              const walker = document.createTreeWalker(
+                element,
+                NodeFilter.SHOW_TEXT,
+              );
+              for (
+                let node = walker.nextNode();
+                node;
+                node = walker.nextNode()
+              ) {
+                if (
+                  !node.textContent?.trim() ||
+                  !node.parentElement ||
+                  !visible(node.parentElement)
+                )
+                  continue;
+                const range = document.createRange();
+                range.selectNodeContents(node);
+                rects.push(
+                  ...[...range.getClientRects()].filter(
+                    (rect) => rect.width > 0 && rect.height > 0,
+                  ),
+                );
+              }
+              return rects.length
+                ? {
+                    left: Math.min(...rects.map((rect) => rect.left)),
+                    right: Math.max(...rects.map((rect) => rect.right)),
+                    top: Math.min(...rects.map((rect) => rect.top)),
+                    bottom: Math.max(...rects.map((rect) => rect.bottom)),
+                  }
+                : null;
+            };
+            const baseline = (element) => {
+              const marker = document.createElement("span");
+              marker.setAttribute("aria-hidden", "true");
+              Object.assign(marker.style, {
+                display: "inline-block",
+                inlineSize: "0",
+                blockSize: "0",
+                padding: "0",
+                margin: "0",
+                border: "0",
+                verticalAlign: "baseline",
+              });
+              element.append(marker);
+              const y = marker.getBoundingClientRect().top;
+              marker.remove();
+              return y;
+            };
+            const titleGlyphs = glyphs(fitted),
+              quantityGlyphs = glyphs(quantity);
+            if (!titleGlyphs || !quantityGlyphs) return false;
+            const nameBox = name.getBoundingClientRect(),
+              fittedBox = fitted.getBoundingClientRect(),
+              quantityBox = quantity.getBoundingClientRect();
+            const rtl = getComputedStyle(name).direction === "rtl";
+            const elementGap = rtl
+              ? fittedBox.left - quantityBox.right
+              : quantityBox.left - fittedBox.right;
+            const glyphGap = rtl
+              ? titleGlyphs.left - quantityGlyphs.right
+              : quantityGlyphs.left - titleGlyphs.right;
+            // The reference has one ~4px glyph space. Intrinsic FitText reserves
+            // that space internally, so its actual element edge touches quantity.
+            // A fitted prefix can leave at most its next character's advance.
+            let maximumGlyphGap = 5.5;
+            if (truncated) {
+              const style = getComputedStyle(fitted),
+                context = document.createElement("canvas").getContext("2d");
+              if (!context) return false;
+              context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+              context.letterSpacing = style.letterSpacing;
+              const next =
+                sourceName.slice(prefix.length).match(/^\s*\S/u)?.[0] || "";
+              maximumGlyphGap += context.measureText(next).width;
+            }
+            return (
+              Math.abs(elementGap) <= 1.5 &&
+              glyphGap >= -0.5 &&
+              glyphGap <= maximumGlyphGap &&
+              (truncated || Math.abs(glyphGap - 4) <= 1.5) &&
+              Math.abs(baseline(fitted) - baseline(quantity)) <= 1.5 &&
+              [titleGlyphs, quantityGlyphs].every(
+                (bounds) =>
+                  bounds.left >= nameBox.left - 1 &&
+                  bounds.right <= nameBox.right + 1,
+              ) &&
+              // Range includes the font's ascent/descent beyond its CSS line
+              // box. Use actual line boxes for vertical containment; the real
+              // inline baseline markers above still reject a moved quantity.
+              [fittedBox, quantityBox].every(
+                (bounds) =>
+                  bounds.top >= nameBox.top - 1 &&
+                  bounds.bottom <= nameBox.bottom + 1,
+              )
+            );
+          }) &&
           tidy(
             row.querySelector(".return-phone-items .return-list-items > small")
               ?.textContent,

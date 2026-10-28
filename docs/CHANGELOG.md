@@ -2,6 +2,7 @@
 
 - Qualify the actual 44 px Lookup rows and four-region Returns phone records against their real source composition; keep strict dimensions, containment, financial privacy and corruption controls.
 - Match the approved phone Returns count/Columns opposite-edge row, including empty results, and open the real Lookup category disclosure in the retained token test. See [proof details](PR_R2F_C5_COMPOSITION.md).
+- Bind the final fitted Returns name to its complete canonical tooltip and visible prefix, with exact reserved quantity/+N text, real glyph adjacency, baseline and containment checks; reject forged titles/counts and shifted quantities.
 
 ## 2026-10-28 — CI203 Dashboard destination coverage
 
