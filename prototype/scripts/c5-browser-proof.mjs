@@ -1,5 +1,7 @@
-/* global document, window, getComputedStyle, NodeFilter, requestAnimationFrame */
+/* global document, window, getComputedStyle, NodeFilter, requestAnimationFrame, indexedDB */
 import { expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { URL } from "node:url";
 
 const escape = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export const exact = (en, fa = en) =>
@@ -64,12 +66,119 @@ export async function today(page, scope = page) {
   await button(page.locator(".ui-calendar"), "Today", "امروز").click();
 }
 
+/** Read only the real configured company record; never initialize a proof database. */
+async function retainedReturnEvidence(page) {
+  if (!(await page.locator(".returns-overview").count())) return [];
+  const [authoritySource, sourceConfig, retainedConfig] = await Promise.all([
+    readFile(
+      new URL("../src/authority-repository.ts", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../../seed/arzon-config.json", import.meta.url), "utf8"),
+    readFile(
+      new URL("../src/compat/configuration.json", import.meta.url),
+      "utf8",
+    ),
+  ]);
+  const databaseName = authoritySource.match(
+    /AUTHORITY_DATABASE_NAME\s*=\s*"([^"]+)"/,
+  )?.[1];
+  const companyId = {
+    ...JSON.parse(retainedConfig).company,
+    ...JSON.parse(sourceConfig).company,
+  }.seed_key;
+  if (!databaseName || !companyId)
+    throw new Error("Missing canonical Returns proof configuration");
+  return page.evaluate(
+    ({ databaseName, companyId }) =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open(databaseName);
+        open.onupgradeneeded = () => {
+          open.transaction.abort();
+          reject(new Error("Returns proof cannot create a database"));
+        };
+        open.onerror = open.onblocked = () =>
+          reject(new Error("Cannot open canonical Returns evidence"));
+        open.onsuccess = () => {
+          const database = open.result;
+          database.onversionchange = () => database.close();
+          if (!database.objectStoreNames.contains("business")) {
+            database.close();
+            reject(new Error("Missing canonical business store"));
+            return;
+          }
+          const transaction = database.transaction("business", "readonly");
+          const request = transaction.objectStore("business").get(companyId);
+          let records;
+          request.onsuccess = () => {
+            const record = request.result;
+            if (
+              record?.company_id !== companyId ||
+              record.state?.config?.company?.seed_key !== companyId ||
+              !Number.isSafeInteger(record.revision)
+            ) {
+              transaction.abort();
+              return;
+            }
+            const state = record.state;
+            records = state.returns
+              .filter((item) => item.company_id === companyId)
+              .map((item, index) => ({
+                id: item.id,
+                number: index + 1,
+                supplier: item.supplier,
+                items: item.lines.slice(0, 2).map((line) => {
+                  const product = state.products.find(
+                    (product) =>
+                      product.company_id === companyId &&
+                      product.code === line.product_code,
+                  );
+                  return {
+                    en: product?.name_en || line.product_code,
+                    fa:
+                      product?.name_fa || product?.name_en || line.product_code,
+                    qty: line.qty,
+                  };
+                }),
+              }));
+          };
+          transaction.oncomplete = () => {
+            database.close();
+            if (records) resolve(records);
+            else reject(new Error("Missing canonical Returns evidence"));
+          };
+          transaction.onerror = transaction.onabort = () => {
+            database.close();
+            reject(new Error("Cannot read canonical Returns evidence"));
+          };
+        };
+      }),
+    { databaseName, companyId },
+  );
+}
+
 /** Measures every visible real control, including semantic widget exceptions. */
 export async function inspect(page, screen, variant, role = "supervisor") {
   await settled(page);
+  const expectedReturns = await retainedReturnEvidence(page);
   return page.evaluate(
-    ({ screen, variant, role }) => {
+    ({ screen, variant, role, expectedReturns }) => {
       const visible = (element) => {
+        if (
+          typeof element.checkVisibility === "function" &&
+          !element.checkVisibility({
+            contentVisibilityAuto: true,
+            visibilityProperty: true,
+          })
+        )
+          return false;
+        for (
+          let closed = element.closest("details:not([open])");
+          closed;
+          closed = closed.parentElement?.closest("details:not([open])")
+        )
+          if (!closed.querySelector(":scope > summary")?.contains(element))
+            return false;
         const style = getComputedStyle(element);
         const rect = element.getBoundingClientRect();
         return (
@@ -1576,6 +1685,169 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             "R2f D10 new-item action outside validated request composition",
           );
 
+      // R0's 44px Lookup rows belong to the real search/detail composition.
+      // A copied row class or a button with a different product name cannot
+      // obtain this contract on another page or in an unrelated fragment.
+      const lookupRowControls = new Set();
+      const lookupRoots = [
+        ...document.querySelectorAll("main#main-content > .lookup-page"),
+      ];
+      const lookupRoot = lookupRoots.length === 1 ? lookupRoots[0] : null;
+      const lookupHero = lookupRoot?.querySelector(":scope > .lookup-hero");
+      const lookupSearch = lookupHero?.querySelector(
+        ":scope > .lookup-search-pill > input.lookup-search[type='search'][role='combobox'][aria-autocomplete='list']",
+      );
+      const lookupResults = lookupSearch?.getAttribute("aria-controls");
+      const lookupHint = lookupSearch?.getAttribute("aria-describedby");
+      const lookupPricing = lookupHero?.querySelector(
+        ":scope > .lookup-filterbar > .lookup-pricing-filters",
+      );
+      const lookupChips = [
+        ...(lookupPricing?.querySelectorAll(
+          ":scope > button.filter-chip[data-ui-component='filter-chip'][aria-pressed]",
+        ) ?? []),
+      ];
+      const genuineLookup = Boolean(
+        window.location.hash.split("?")[0] === "#lookup" &&
+        ["Cashier lookup", "جست‌وجوی صندوق‌دار"].includes(
+          tidy(
+            lookupRoot?.querySelector(":scope > .page-header h1")?.textContent,
+          ),
+        ) &&
+        lookupSearch?.id &&
+        lookupHero?.querySelector(`label[for='${lookupSearch.id}']`) &&
+        lookupResults &&
+        (lookupSearch.getAttribute("aria-expanded") === "false" ||
+          lookupRoot?.querySelector(
+            `.lookup-results-card > .lookup-results-list[role='listbox'][id='${lookupResults}']`,
+          )) &&
+        lookupHint &&
+        lookupHero?.querySelector(
+          `.lookup-keyboard-hint[id='${lookupHint}']`,
+        ) &&
+        lookupPricing?.querySelector(":scope > .ui-select[role='combobox']") &&
+        lookupChips.length === 6 &&
+        lookupChips.every((chip) =>
+          chip.querySelector(
+            ":scope > .filter-chip-check[aria-hidden='true'] > svg.lucide-check",
+          ),
+        ),
+      );
+      if (genuineLookup) {
+        const disclosure = lookupHero.querySelector(
+          ":scope > .lookup-filterbar > details.lookup-more-filters",
+        );
+        const categories = disclosure?.querySelector(
+          ":scope > .lookup-category-chips.ui-control-row[role='group']",
+        );
+        const choices = [
+          ...(categories?.querySelectorAll(
+            ":scope > button.filter-chip[aria-pressed]",
+          ) ?? []),
+        ];
+        const more = categories?.querySelector(
+          ":scope > button.lookup-category-more.ui-menu-trigger[aria-haspopup='menu']",
+        );
+        const selected =
+          choices.filter(
+            (choice) => choice.getAttribute("aria-pressed") === "true",
+          ).length + Number(Boolean(more?.classList.contains("is-selected")));
+        if (
+          ["AI category", "دستهٔ هوش مصنوعی"].includes(
+            categories?.getAttribute("aria-label"),
+          ) &&
+          /^(More filters|فیلترهای بیشتر)(?:$|\s*·)/.test(
+            tidy(disclosure?.querySelector(":scope > summary")?.textContent),
+          ) &&
+          choices.length >= 1 &&
+          choices.length <= 4 &&
+          ["All", "همه"].includes(tidy(choices[0]?.textContent)) &&
+          choices.every((choice) =>
+            ["true", "false"].includes(choice.getAttribute("aria-pressed")),
+          ) &&
+          selected === 1 &&
+          categories.children.length ===
+            choices.length + Number(Boolean(more)) &&
+          (!more ||
+            ["More categories", "دسته‌های بیشتر"].includes(
+              more.getAttribute("aria-label"),
+            ))
+        )
+          for (const control of [...choices, ...(more ? [more] : [])])
+            lookupRowControls.add(control);
+
+        const detail = lookupRoot.querySelector(":scope > .lookup-detail");
+        const heading = detail?.querySelector(":scope > .lookup-detail-header");
+        const actions = heading?.querySelector(
+          ":scope > .product-header-actions.ui-control-row",
+        );
+        const names = [
+          ...(heading?.querySelectorAll(
+            ":scope > div:first-child > h2, :scope > div:first-child > p[lang]",
+          ) ?? []),
+        ];
+        const normalizeName = (value) =>
+          tidy(value)
+            .replace(/کیلوگرم/g, "kg")
+            .replace(/گرم/g, "g")
+            .replace(/پوند/g, "lb")
+            .replace(/اونس/g, "oz")
+            .replace(/\s+/g, "")
+            .toLowerCase();
+        const code = tidy(
+          heading?.querySelector(".lookup-product-meta > span:first-child bdi")
+            ?.textContent,
+        );
+        const actionButtons = [
+          ...(actions?.querySelectorAll(
+            ":scope > button:not(.ui-icon-button)",
+          ) ?? []),
+        ];
+        const captions = actionButtons.map((action) =>
+          tidy(action.textContent),
+        );
+        const validAction = (action) => {
+          const text = tidy(action.textContent);
+          if (["Edit", "ویرایش"].includes(text)) {
+            const editName = action
+              .getAttribute("aria-label")
+              ?.replace(/^(Edit |ویرایش )/, "");
+            return (
+              editName &&
+              names.some(
+                (name) =>
+                  normalizeName(name.textContent) === normalizeName(editName),
+              )
+            );
+          }
+          return [
+            "Change price",
+            "تغییر قیمت",
+            "Change sale",
+            "تغییر حراج",
+            "Request a sale",
+            "درخواست حراج",
+            "Package sizes",
+            "اندازه بسته‌ها",
+          ].includes(text);
+        };
+        if (
+          code &&
+          names.length &&
+          actionButtons.length <= 3 &&
+          new Set(captions).size === captions.length &&
+          actionButtons.every(validAction)
+        )
+          for (const control of actionButtons) lookupRowControls.add(control);
+      }
+      for (const control of document.querySelectorAll(
+        ".lookup-category-chips.ui-control-row > button, .product-header-actions.ui-control-row > button:not(.ui-icon-button)",
+      ))
+        if (visible(control) && !lookupRowControls.has(control))
+          failures.push(
+            `Lookup 44px row outside validated search/product composition: ${tidy(control.getAttribute("aria-label") || control.textContent)}`,
+          );
+
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
       )) {
@@ -1835,6 +2107,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
                       approvalEditorFooters.has(element) ||
                       notificationHeaderActions.has(element) ||
                       modalFooterFeedback ||
+                      lookupRowControls.has(element) ||
                       sharedFilterChip
                     ? 44
                     : genuineFilterToolbar
@@ -1928,6 +2201,125 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             );
         }
       }
+      // D8 uses four genuine retained-record regions, with its one record
+      // chevron in the final region. Bind the source slots and public links to
+      // canonical record provenance; copied classes cannot obtain this contract.
+      const returnsRoots = [
+        ...document.querySelectorAll("main#main-content > .returns-overview"),
+      ];
+      const returnsRoot = returnsRoots.length === 1 ? returnsRoots[0] : null;
+      const returnsTable = returnsRoot?.querySelector(
+        ":scope > .returns-overview-table > table",
+      );
+      const returnsToolbar = returnsRoot?.querySelector(
+        ":scope > .returns-toolbar[data-ui-component='filter-toolbar']",
+      );
+      const faReturns = document.documentElement.lang.startsWith("fa");
+      const genuineReturns = Boolean(
+        window.location.hash.split("?")[0] === "#returns" &&
+        returnsRoot &&
+        returnsTable &&
+        returnsToolbar &&
+        tidy(
+          document.querySelector("main#main-content > .page-header h1")
+            ?.textContent,
+        ) === (faReturns ? "مرجوعی‌ها" : "Returns") &&
+        returnsToolbar.getAttribute("aria-label") ===
+          (faReturns ? "فیلتر مرجوعی‌ها" : "Filter returns") &&
+        returnsToolbar.querySelector(
+          `:scope > .filter-toolbar-controls > .filter-search-pill > input[aria-label='${faReturns ? "جستجوی مرجوعی‌ها" : "Search returns"}']`,
+        ) &&
+        returnsToolbar.querySelector(
+          `:scope > .filter-toolbar-controls > .ui-segments.ui-tabs[role='tablist'][aria-label='${faReturns ? "نمایش مرجوعی‌ها" : "Returns view"}']`,
+        ) &&
+        returnsToolbar.querySelector(
+          `:scope > .filter-toolbar-controls > .ui-select[aria-label='${faReturns ? "تأمین‌کننده" : "Supplier"}']`,
+        ) &&
+        returnsToolbar.querySelector(
+          `:scope > .filter-toolbar-controls > .ui-select[aria-label='${faReturns ? "وضعیت" : "Status"}']`,
+        ) &&
+        returnsTable.querySelector('thead th[data-column-key="reference"]') &&
+        returnsTable.querySelector('thead th[data-column-key="items"]'),
+      );
+      const richReturn = (row) => {
+        const expected = expectedReturns.find(
+          (item) =>
+            row.getAttribute("data-row-href") ===
+            `#return?id=${encodeURIComponent(item.id)}`,
+        );
+        const slots = [
+          "return-phone-header",
+          "return-phone-items",
+          "return-phone-meta",
+          "return-phone-next",
+        ];
+        if (
+          !genuineReturns ||
+          row.closest("table") !== returnsTable ||
+          !expected ||
+          !row.matches(".returns-clickable-row.phone-list-row") ||
+          row.children.length !== 4 ||
+          !slots.every(
+            (slot, index) =>
+              row.children[index].matches(`td.${slot}`) &&
+              visible(row.children[index]),
+          )
+        )
+          return false;
+        const href = row.getAttribute("data-row-href");
+        const reference = row.querySelector(
+          ".return-phone-reference > a.returns-number-link",
+        );
+        const supplier = row.querySelector(
+          ".return-phone-supplier > a.entity-link",
+        );
+        const names = [
+          ...row.querySelectorAll(
+            ".return-phone-items .return-list-item-names > span",
+          ),
+        ];
+        const meta = row.querySelector(".return-phone-meta");
+        const next = row.querySelector(".return-phone-next");
+        const links = [...next.querySelectorAll(".table-row-link")];
+        const credit = returnsTable.querySelector(
+          'thead th[data-column-key="credit"]',
+        );
+        return Boolean(
+          reference &&
+          supplier &&
+          visible(reference) &&
+          visible(supplier) &&
+          reference.getAttribute("href") === href &&
+          supplier.getAttribute("href") === href &&
+          tidy(reference.textContent) === `#${expected.number}` &&
+          tidy(supplier.textContent) === tidy(expected.supplier) &&
+          tidy(
+            row.querySelector(".return-phone-status .ui-badge")?.textContent,
+          ) &&
+          names.length === expected.items.length &&
+          names.every((name, index) =>
+            tidy(name.textContent).startsWith(
+              `${tidy(faReturns ? expected.items[index].fa : expected.items[index].en)} × ${expected.items[index].qty}`,
+            ),
+          ) &&
+          tidy(
+            row.querySelector(".return-phone-items .return-list-items > small")
+              ?.textContent,
+          ) &&
+          meta.children.length === 2 &&
+          tidy(meta.children[0].querySelector(".date-text")?.textContent) &&
+          (credit
+            ? Boolean(tidy(meta.children[1].textContent))
+            : !tidy(meta.children[1].textContent)) &&
+          tidy(
+            next.querySelector(".actions > [data-action-fact]")?.textContent,
+          ) &&
+          links.length === 1 &&
+          visible(links[0]) &&
+          links[0].getAttribute("href") === href &&
+          !row.querySelector(".table-details-toggle"),
+        );
+      };
       for (const row of document.querySelectorAll("tbody tr")) {
         const rowNavigation = [...row.querySelectorAll(".table-row-link")]
           .filter(visible)
@@ -1945,8 +2337,16 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const cells = [...row.querySelectorAll(":scope > td")].filter(
             visible,
           );
+          const returnCandidate = Boolean(
+            row.closest(".returns-overview-table"),
+          );
+          const returnCard = returnCandidate && richReturn(row);
+          if (returnCandidate && !returnCard)
+            failures.push("Invalid retained Returns phone composition");
           const chevronCells = cells.filter((cell) =>
-            cell.matches(".phone-list-chevron"),
+            cell.matches(
+              returnCard ? ".return-phone-next" : ".phone-list-chevron",
+            ),
           );
           const importContentRow = row.matches(
             ".invoice-readings-table tr.phone-list-row[data-import-id]",
@@ -2043,14 +2443,32 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               : bounds.right -
                 parseFloat(style.borderRightWidth || "0") -
                 parseFloat(style.paddingRight || "0");
+            const returnAction = returnCard
+              ? chevronCell
+                  .querySelector("[data-action-fact]")
+                  ?.getBoundingClientRect()
+              : null;
+            const returnOverlap =
+              returnCard &&
+              (cells.some((cell) => {
+                const box = cell.getBoundingClientRect();
+                return (
+                  box.left < bounds.left - 1 || box.right > bounds.right + 1
+                );
+              }) ||
+                !returnAction ||
+                (rtl
+                  ? returnAction.left < rect.right - 1
+                  : returnAction.right > rect.left + 1));
             if (
+              returnOverlap ||
               control.closest("td") !== chevronCell ||
               control.querySelectorAll("svg").length !== 1 ||
               Math.abs((rtl ? rect.left : rect.right) - end) > 2 ||
               rect.top < bounds.top - 1 ||
               rect.bottom > bounds.bottom + 1 ||
               cells.some((cell) => {
-                if (cell === chevronCell) return false;
+                if (cell === chevronCell || returnCard) return false;
                 const other = cell.getBoundingClientRect();
                 return rtl
                   ? other.left < rect.right - 1
@@ -2196,7 +2614,54 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             height: round(control.height),
           },
         });
-        if (gap < -0.5 || gap > 16.5 || centerDifference > 1)
+        const returnsCount =
+          genuineReturns &&
+          document.documentElement.clientWidth < 760 &&
+          wrapper ===
+            returnsToolbar.querySelector(
+              ":scope > .filter-toolbar-trailing > .filter-count",
+            ) &&
+          group ===
+            wrapper.querySelector(
+              ":scope > .returns-toolbar-end.filter-toolbar-end",
+            ) &&
+          group.children.length === 3 &&
+          count.matches("span[aria-live='polite']") &&
+          group.children[1] === columns &&
+          group.children[2].matches("dialog.ui-dialog.c3-column-dialog") &&
+          group.children[2].querySelector(
+            ".c3-column-options [role='checkbox']",
+          ) &&
+          columns.matches("button.ui-button.button-neutral") &&
+          columns.querySelector(
+            ":scope > svg.lucide-columns-3[aria-hidden='true']",
+          ) &&
+          /^\d+ (results?|نتیجه)$/.test(tidy(count.textContent)) &&
+          Number(tidy(count.textContent).split(" ")[0]) ===
+            returnsTable.querySelectorAll("tbody > tr:not(.table-expanded-row)")
+              .length;
+        const groupBox = group.getBoundingClientRect();
+        const toolbarBox = returnsToolbar?.getBoundingClientRect();
+        const edgeError = returnsCount
+          ? Math.max(
+              Math.abs(
+                (direction === "rtl" ? text.right : text.left) -
+                  (direction === "rtl" ? groupBox.right : groupBox.left),
+              ),
+              Math.abs(
+                (direction === "rtl" ? control.left : control.right) -
+                  (direction === "rtl" ? groupBox.left : groupBox.right),
+              ),
+              Math.abs(groupBox.left - toolbarBox.left),
+              Math.abs(groupBox.right - toolbarBox.right),
+            )
+          : 0;
+        if (
+          gap < -0.5 ||
+          (!returnsCount && gap > 16.5) ||
+          centerDifference > 1 ||
+          edgeError > 2
+        )
           failures.push(
             `Columns separated from result count: ${tidy(count.textContent)} (${round(gap)}px gap; ${round(centerDifference)}px center difference)`,
           );
@@ -2422,7 +2887,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         failures,
       };
     },
-    { screen, variant, role },
+    { screen, variant, role, expectedReturns },
   );
 }
 

@@ -307,7 +307,10 @@ for (const language of ["en", "fa"] as const) {
   }, info) => {
     await start(page, language);
     await page.goto("/#lookup");
-    const chips = page.locator(".lookup-category-chips");
+    const disclosure = page.locator("details.lookup-more-filters");
+    await disclosure.locator(":scope > summary").click();
+    await expect(disclosure).toHaveAttribute("open", "");
+    const chips = disclosure.locator(":scope > .lookup-category-chips");
     const reports = [];
     for (const theme of ["light", "dark"] as const) {
       if (theme === "dark") await dark(page, language);

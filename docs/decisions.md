@@ -582,3 +582,7 @@ Use the reusable `--font-en-bilingual` order (Manrope, Vazirmatn, system fallbac
 ### 2026-10-28 — D7 intermediate tile width and genuine chart pairing
 
 Keep the approved six-column KPI row from 1000 px and two-column phone layout. Use three columns at 760–999 px so raw English/Persian captions keep complete words within two text lines. Scope purchase-card stretching to the existing actual two-column grid (1101 px and wider); stacked charts retain natural height. Browser proofs qualify the genuine grid through its exact children and actual non-overlapping same-row boxes, with negative controls for copied classes, unrelated cards and changed geometry. The old More operations disclosure is replaced by the approved visible This week card and genuine destination links.
+
+### 2026-10-28 — Retained C5 proofs follow approved R2f compositions
+
+The approved phone Returns PNG deliberately places Count and Columns at opposite ends of one row, and rich cards place the genuine record chevron beside Next action. Qualify those exact real source compositions with canonical record provenance, authorized financial declarations and unchanged edge/centre budgets; retain adjacency for every other toolbar and reject copied classes. Lookup's actual source rows use 44 px controls, while closed native details must be audited only after the actual disclosure opens. This changes proof recognition, without changing application behavior or relaxing shared limits.

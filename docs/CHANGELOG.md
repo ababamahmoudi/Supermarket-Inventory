@@ -1,3 +1,8 @@
+## 2026-10-28 — R2f source-bound C5 Lookup and Returns proof
+
+- Qualify the actual 44 px Lookup rows and four-region Returns phone records against their real source composition; keep strict dimensions, containment, financial privacy and corruption controls.
+- Match the approved phone Returns count/Columns opposite-edge row, including empty results, and open the real Lookup category disclosure in the retained token test. See [proof details](PR_R2F_C5_COMPOSITION.md).
+
 ## 2026-10-28 — R2f Persian numeric captions
 
 - Keep numeric table headings and Returns' nonnumeric credit states in the bundled interface font; actual numeric data retains Manrope/tabular figures. This fixes host-dependent Persian glyph clipping and heading/value misalignment without changing geometry budgets.

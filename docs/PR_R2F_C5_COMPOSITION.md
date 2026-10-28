@@ -1,0 +1,17 @@
+# R2f C5 composition proof follow-up
+
+The R2f Lookup header/category rows and Returns phone cards replace older C5 compositions. The proof follows the actual approved source and keeps the existing geometry, money/privacy, radius, contrast and clipping checks.
+
+- Lookup: only the real `#lookup` search, result list, six shared pricing chips and source category disclosure qualify their actual category/header actions for 44 px. Edit must name the product in that same header. Copied row classes, an unrelated product name and a real 40 px peer are rejected. Closed native details are excluded using real browser visibility; opening the actual disclosure restores every control to the audit.
+- Returns: [the approved 390 px reference](design-reference/r2f/screens/returns-390-light-en.png) places the count and Columns at opposite ends of the same row. This layout qualifies only in the actual Returns toolbar with its search, view Tabs, Supplier/Status Selects, real table and Columns dialog. The count must equal the actual rendered records, including zero. Its logical group edges remain within 2 px and vertical centres within 1 px. All other toolbars keep the existing 16.5 px adjacency bound.
+- Rich phone cards: a native readonly transaction reads the existing configured company's canonical record, with no database creation, command or write. Actual record IDs, reference numbers, suppliers, item names/quantities, authorized credit declaration and navigation targets must match the source four-region card. The single genuine chevron stays at the logical row end within 2 px, contained beside the actual next action. Copied roots, forged destinations, shifted chevrons and private-credit injection are rejected.
+- The older Klead category-token driver now opens the genuine More filters disclosure before measuring or clicking its choices. Its original token, radius, contrast, selection and geometry assertions remain.
+
+The new proofs use independent fictional canonical returns and the app's real sign-in/routes/controls. `c5-lookup-rows-r2f.spec.ts` covers 1440/1000/390 EN-light/FA-dark; `c5-returns-r2f.spec.ts` covers EN/FA and Manager/Cashier, with three retained records and an empty filtered list. Original affected browser proofs and strict R0 negative controls are also rerun against a fresh production build; final execution counts are recorded below after completion. No timing, retry, skip or geometry budgets change.
+
+Validation on fresh production build `2866d5d` (including the Persian numeric-caption correction), with the preview restarted on port 5191 and one browser worker:
+
+- 19/19 new composition and strict R0 oracle cases passed: six actual Lookup variants, four Returns role/language variants, nine existing negative-oracle cases.
+- 12/12 original cases passed: eight 1440/1000 Lookup language/theme states, both shared chip/switch cases and both Klead category-token cases.
+- All 17 affected original phone cases passed across bounded runs: the complete C5 presentation flows, C8 Quantity/Unit corruption controls and EN/FA photographed return-creation controls. Ordinary Catalog mass labels retain their existing Latin-unit assertions; the R2f localized mass-unit policy applies to its opted-in D3/D4 presentations.
+- Production build/typecheck, targeted ESLint/Prettier and `git diff --check` passed. Final combined CI is checked on the parent PR's integrated head.
