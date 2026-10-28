@@ -6,6 +6,14 @@ import { configSeed } from "./config";
 import { configuredRoleLabel } from "./role-config";
 
 const actions: Record<string, [string, string]> = {
+  "Edit weight product cost": [
+    "Edit weight product cost",
+    "ویرایش هزینه کالای وزنی",
+  ],
+  "Propose price after manual cost edit": [
+    "Propose price after manual cost edit",
+    "پیشنهاد قیمت پس از ویرایش دستی هزینه",
+  ],
   "Invoice paper total acknowledged as wrong": [
     "Invoice paper total acknowledged as wrong",
     "جمع اشتباه روی فاکتور تأیید شد",

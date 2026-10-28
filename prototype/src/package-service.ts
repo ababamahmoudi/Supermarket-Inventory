@@ -1,3 +1,5 @@
+import { productStoreCost } from "./product-costs";
+import { actorAtLocation } from "./authority";
 import { BrowserAuthorityRepository } from "./authority-repository";
 import type { AuthenticatedActor, CommandIdentity } from "./authority-types";
 import { freshActor, cloneWithAuthority } from "./authority";
@@ -90,7 +92,8 @@ export function previewWeightPackage(
     size,
     unit,
     price,
-    parent.last_cost_before_tax,
+    productStoreCost(state, actorAtLocation(state, actor, branch), parent) ??
+      parent.last_cost_before_tax,
     parent.pricing_category,
     state.config,
   );

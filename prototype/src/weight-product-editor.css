@@ -1,0 +1,288 @@
+:root .product-editor-dialog.weight-product-dialog {
+  inline-size: min(860px, calc(100vw - 32px));
+  max-inline-size: min(860px, calc(100vw - 32px));
+}
+.weight-product-dialog .product-editor-section {
+  padding-block: 20px 0;
+  border-block-end: 0;
+}
+.weight-product-dialog .product-editor-section:last-child {
+  border-block-end: 0;
+}
+.weight-product-soldby {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.weight-product-soldby .helper {
+  margin: 0;
+  flex: 1;
+  min-inline-size: 220px;
+}
+.weight-product-cost {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.weight-product-cost input {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+}
+.weight-product-cost .ui-segments {
+  flex: none;
+}
+.weight-product-price-card {
+  margin-block-start: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: var(--radius-menu);
+  background: var(--klead-accent-tint);
+}
+.weight-product-price-label {
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.weight-product-price-main {
+  margin: 2px 0 0;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.weight-product-price-main > span:last-child {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-inline-start: 2px;
+}
+.weight-product-price-second {
+  margin: 2px 0 0;
+  font-size: var(--font-size-caption);
+}
+.weight-product-price-why {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: end;
+  max-inline-size: 60%;
+}
+.weight-product-price-why .helper {
+  margin: 0;
+}
+.weight-product-price-why .button {
+  padding-inline: 0;
+  min-block-size: 40px;
+}
+.weight-product-price-edit {
+  inline-size: 100%;
+  margin-block-start: 12px;
+}
+.weight-product-price-preview {
+  min-block-size: 20px;
+  margin: 4px 0 0;
+}
+.weight-package-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.weight-package-heading .muted {
+  font-size: var(--font-size-caption);
+}
+.weight-package-formula {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-small);
+  background: var(--klead-field);
+  font-size: var(--font-size-caption);
+  color: var(--text-muted);
+}
+.weight-package-formula svg {
+  flex: none;
+  margin-block-start: 1px;
+}
+.weight-package-table {
+  display: flex;
+  flex-direction: column;
+}
+.weight-package-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px 170px 84px 44px;
+  gap: 16px;
+  align-items: center;
+  min-block-size: 52px;
+  box-shadow: inset 0 -1px var(--row-divider);
+}
+.weight-package-table-head {
+  min-block-size: 32px;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+}
+.weight-package-number {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.weight-package-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.weight-package-size svg {
+  color: var(--text-muted);
+  flex: none;
+}
+.weight-package-barcode {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+.weight-package-barcode > span:last-child {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.weight-package-price {
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.weight-package-price > .muted {
+  font-size: 11px;
+  font-weight: 400;
+}
+.weight-package-menu > .ui-menu-trigger {
+  inline-size: 44px;
+  min-inline-size: 44px;
+  block-size: 44px;
+  min-block-size: 44px;
+  padding: 0;
+}
+.weight-product-dialog .weight-package-add {
+  display: grid;
+  grid-template-columns: 120px 110px 1fr auto;
+  gap: 12px;
+  align-items: end;
+  margin-block-start: 16px;
+}
+.weight-package-add .field {
+  margin: 0;
+}
+.weight-package-add .field input,
+.weight-package-add .ui-select {
+  inline-size: 100%;
+  margin: 0;
+}
+.weight-package-add-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  block-size: 44px;
+}
+.weight-package-add-preview .muted {
+  font-size: 11px;
+}
+.weight-package-empty {
+  margin: 12px 0;
+}
+.weight-product-optional-details {
+  margin-block: 8px;
+}
+.weight-product-optional-details > summary {
+  color: var(--accent);
+  cursor: pointer;
+  padding-block: 12px;
+  min-block-size: 44px;
+}
+.weight-product-optional-details[open] > .form-grid {
+  margin-block-start: 12px;
+}
+.weight-product-dialog .weight-product-price-card .field {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .weight-product-price-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .weight-product-price-why {
+    align-items: flex-start;
+    text-align: start;
+    max-inline-size: 100%;
+  }
+  .weight-package-row {
+    grid-template-columns: minmax(0, 1fr) auto 44px;
+    row-gap: 0;
+  }
+  .weight-package-row > :nth-child(2) {
+    display: none;
+  }
+  .weight-package-row > .weight-package-barcode {
+    grid-column: 1;
+    grid-row: 2;
+    align-items: flex-start;
+    padding: 0 0 10px 26px;
+  }
+  .weight-package-row > .weight-package-price {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .weight-package-table-head > :nth-child(3) {
+    display: none;
+  }
+  .weight-package-row > :last-child {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .weight-product-dialog .weight-package-add {
+    grid-template-columns: 1fr 1fr;
+  }
+  .weight-package-add-preview {
+    align-items: flex-start;
+  }
+  .weight-product-cost {
+    flex-wrap: wrap;
+  }
+}
+
+.weight-product-dialog .product-editor-body {
+  display: block;
+  overflow-anchor: none;
+}
+.weight-product-content {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  min-inline-size: 0;
+}
+.product-editor-content {
+  display: contents;
+}
+.weight-package-row[data-pending-archive] .weight-package-size strong {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.weight-package-undo {
+  inline-size: 44px;
+  min-inline-size: 44px;
+  padding-inline: 0;
+}
+.weight-package-table-head > :first-child {
+  padding-inline-start: 26px;
+}

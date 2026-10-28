@@ -1,3 +1,7 @@
+import {
+  weightPriceCandidate,
+  type WeightPriceCandidateInput,
+} from "./weight-product-editor";
 import { useEffect, useId, useMemo, useState } from "react";
 import Decimal from "decimal.js";
 import { useDemo } from "./store";
@@ -61,6 +65,9 @@ import {
 export interface ChangePriceDialogProps {
   product_code: string;
   onClose: () => void;
+  onStage?: (input: ChangePriceInput) => void;
+  weightCandidate?: WeightPriceCandidateInput;
+  stagedInput?: ChangePriceInput;
   branch?: Branch;
   mode?: "sale" | "regular";
   existing_sale_id?: string;
@@ -91,7 +98,13 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
   const mayManageSale = can("sales.manage");
   const mayManageRegular = can("pricing.regular_manage");
   const mayProposeRegular = can("pricing.propose_manual");
-  const allowRegular = mayManageRegular || mayProposeRegular;
+  const allowRegular =
+    (mayManageRegular || mayProposeRegular) &&
+    !state.products.find(
+      (item) =>
+        item.company_id === state.config.company.seed_key &&
+        item.code === props.product_code,
+    )?.package_of_product_id;
   const worker = !mayManageSale;
   const product = state.products.find(
     (item) =>
@@ -149,6 +162,8 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     originalSale ? saleGroup(state, originalSale) : [],
   );
   const [input, setInput] = useState<ChangePriceInput>(() => {
+    if (props.onStage && props.stagedInput?.product_code === props.product_code)
+      return structuredClone(props.stagedInput);
     const existingBranches = originalRequest
       ? [originalRequest.branch]
       : originalGroup.map((item) => item.branch);
@@ -234,6 +249,7 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     context?.authority_epoch,
     businessRevision,
     location,
+    props.weightCandidate,
   ]);
   const [previewRecord, setPreviewRecord] = useState<{
     key: string;
@@ -271,7 +287,14 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     let current = true;
     if (!context) return;
     void query(writeCapability, queryScope, (freshState, freshActor) =>
-      queryPriceChangePreview(freshState, freshActor, input, location),
+      queryPriceChangePreview(
+        props.weightCandidate
+          ? weightPriceCandidate(freshState, freshActor, props.weightCandidate)
+          : freshState,
+        freshActor,
+        input,
+        location,
+      ),
     )
       .then((value) => {
         if (!current) return;
@@ -315,6 +338,7 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     businessRevision,
     location,
     query,
+    props.weightCandidate,
   ]);
   const preview = previewRecord?.key === inputKey ? previewRecord.value : null;
   // Retain the controls while their next protected preview is being checked.
@@ -483,7 +507,18 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
         writeCapability,
         queryScope,
         (freshState, freshActor) =>
-          queryPriceChangePreview(freshState, freshActor, input, location),
+          queryPriceChangePreview(
+            props.weightCandidate
+              ? weightPriceCandidate(
+                  freshState,
+                  freshActor,
+                  props.weightCandidate,
+                )
+              : freshState,
+            freshActor,
+            input,
+            location,
+          ),
       );
       const currentMissing = validation(checked.issues);
       if (currentMissing.length) {
@@ -491,6 +526,11 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
         requestAnimationFrame(() =>
           focusValidationField(currentMissing[0].fieldId),
         );
+        return;
+      }
+      if (props.onStage) {
+        props.onStage(structuredClone(input));
+        props.onClose();
         return;
       }
       await command(
@@ -1232,16 +1272,18 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
             {t("Cancel", "انصراف")}
           </Button>
           <Button type="submit" disabled={!preview}>
-            {worker
-              ? salesText(t, "sendRequest")
-              : props.approve_request_id
-                ? salesText(t, "changeApprove")
-                : isSale
-                  ? salesText(
-                      t,
-                      input.starts_on > today ? "scheduleSale" : "startSale",
-                    )
-                  : salesText(t, "saveRegular")}
+            {props.onStage
+              ? t("Apply to draft", "اعمال در پیش‌نویس")
+              : worker
+                ? salesText(t, "sendRequest")
+                : props.approve_request_id
+                  ? salesText(t, "changeApprove")
+                  : isSale
+                    ? salesText(
+                        t,
+                        input.starts_on > today ? "scheduleSale" : "startSale",
+                      )
+                    : salesText(t, "saveRegular")}
           </Button>
         </DialogActions>
       </form>

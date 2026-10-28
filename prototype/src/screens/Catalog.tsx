@@ -1,3 +1,19 @@
+import { PackageSizeSection, PackageSizesDialog } from "../WeightPackageEditor";
+import {
+  packageDraftsFromProducts,
+  weightEditorErrorText,
+  useWeightEditorScrollAnchor,
+} from "../weight-product-editor-ui";
+import { WeightProductPricing } from "../WeightProductPricing";
+import {
+  readWeightEditor,
+  weightEditorPricePreview,
+  saveWeightProductEditor,
+  addWeightProductEditor,
+  WeightEditorError,
+  type WeightPackageDraft,
+} from "../weight-product-editor";
+import type { ChangePriceInput } from "../sales";
 import {
   lookupProductSignals,
   type LookupProductSignals,
@@ -148,6 +164,7 @@ import {
   PageHeader,
   FilterToolbar,
   Select,
+  SegmentedControl,
   useTableColumns,
   Menu,
   MenuItem,
@@ -354,6 +371,11 @@ export function ProductEditor({
     "rule" | "keep"
   >("rule");
   const [costUnit, setCostUnit] = useState<WeightUnit>("lb");
+  const weightCostSource = useRef<{
+    display: string;
+    unit: WeightUnit;
+    canonical: string;
+  } | null>(null);
   const formId = useId();
   const dateLocation = invoiceQuickAdd
     ? (state.invoice?.branch ?? branch)
@@ -391,6 +413,13 @@ export function ProductEditor({
       expected: existingProduct
         ? productEditSnapshot(draft, freshActor, existingProduct.code)
         : "",
+      weight:
+        existingProduct &&
+        !approval &&
+        !invoiceQuickAdd &&
+        !existingProduct.package_of_product_id
+          ? readWeightEditor(draft, freshActor, existingProduct.code)
+          : undefined,
       dates: existingProduct
         ? productDateDrafts(
             draft,
@@ -448,12 +477,30 @@ export function ProductEditor({
     lookupBranch(branch),
   );
   const [expected, setExpected] = useState("");
+  const [weightExpected, setWeightExpected] = useState("");
+  const weightSession =
+    !approval && !invoiceQuickAdd && !product.package_of_product_id;
+  const retainWeightControl = useWeightEditorScrollAnchor();
+  const [packageRows, setPackageRows] = useState<WeightPackageDraft[]>([]);
+  const [stagedWeightPrice, setStagedWeightPrice] = useState<
+    ChangePriceInput | undefined
+  >();
+  const [weightError, setWeightError] = useState("");
+  const [formSaving, setFormSaving] = useState(false);
   useEffect(() => {
     if (!editorBoot.data || initializedBoot.current === initializationKey)
       return;
     initializedBoot.current = initializationKey;
     setDates(editorBoot.data.dates);
     setExpected(editorBoot.data.expected);
+    const weightBoot = editorBoot.data.weight;
+    if (weightBoot)
+      queueMicrotask(() => {
+        if (initializedBoot.current !== initializationKey) return;
+        setWeightExpected(weightBoot.snapshot);
+        setPackageRows(packageDraftsFromProducts(weightBoot.packages));
+        setCost(weightBoot.cost_per_lb ?? "");
+      });
   }, [editorBoot.data, initializationKey]);
   const [error, setError] = useState<
     ProductEditErrorCode | NewProductError["code"] | null
@@ -499,12 +546,91 @@ export function ProductEditor({
     )
   )
     suppliers.push(values.main_supplier);
+  const modernWeight =
+    weightProduct &&
+    !approval &&
+    !invoiceQuickAdd &&
+    !product.package_of_product_id;
+  const weightQuote = useCatalogQuery(
+    editorCapability,
+    editorScope,
+    JSON.stringify({
+      cost,
+      costUnit,
+      category: values.pricing_category,
+      modernWeight,
+    }),
+    (draft, current) =>
+      modernWeight
+        ? weightEditorPricePreview(
+            draft,
+            current,
+            {
+              cost,
+              cost_unit: costUnit,
+              pricing_category: values.pricing_category,
+            },
+            isNew,
+          )
+        : undefined,
+  );
+  const approvedWeightPrice = !isNew
+    ? regularPrice(state, product, branch)
+    : null;
+  const stagedCanonicalPrice =
+    stagedWeightPrice?.mode === "regular"
+      ? stagedWeightPrice.price_unit === "kg"
+        ? new Decimal(stagedWeightPrice.price)
+            .div(state.config.weighed_items?.conversion_factor ?? "2.20462")
+            .toFixed(2)
+        : stagedWeightPrice.price
+      : null;
+  const stagedPriceAppliesHere =
+    stagedWeightPrice?.mode === "regular" &&
+    (branch === "all"
+      ? priceLocations.every((location) =>
+          stagedWeightPrice.branches.includes(location),
+        )
+      : stagedWeightPrice.branches.includes(branch));
+  const displayedStagedPrice = stagedPriceAppliesHere
+    ? stagedCanonicalPrice
+    : null;
+  const weightCostChanged =
+    !isNew &&
+    weightQuote.data &&
+    editorBoot.data?.weight?.cost_per_lb &&
+    weightQuote.data.canonical_cost_per_lb !==
+      editorBoot.data.weight.cost_per_lb;
+  const pendingWeightLocations = weightCostChanged
+    ? (branch === "all" ? priceLocations : [branch]).filter(
+        (location) =>
+          !(
+            stagedWeightPrice?.mode === "regular" &&
+            stagedWeightPrice.branches.includes(location)
+          ),
+      )
+    : undefined;
+  const weightCardPrice = isNew
+    ? manualPrice
+      ? sellingPrice || null
+      : (weightQuote.data?.selling_price ?? null)
+    : (displayedStagedPrice ?? approvedWeightPrice);
+  const prospectivePending =
+    weightCostChanged && pendingWeightLocations?.length
+      ? (weightQuote.data?.selling_price ?? null)
+      : pendingPrice(state, product, branch);
   const pricingInput = {
     cost,
     costUnit,
     soldBy: values.sold_by,
     category: values.pricing_category,
-    sellingPrice,
+    sellingPrice:
+      modernWeight &&
+      manualPrice &&
+      sellingPrice &&
+      /^\d+(?:\.\d{1,2})?$/.test(sellingPrice)
+        ? weightPriceDisplay(sellingPrice, state.config).main.amount
+        : sellingPrice,
     manualPrice,
   };
   const pricePreview = useCatalogQuery(
@@ -514,12 +640,14 @@ export function ProductEditor({
     (draft, freshActor) =>
       newProductPricePreview(draft, freshActor, pricingInput, invoiceQuickAdd),
   );
-  const calculatedPrice = pricePreview.data?.displayCalculatedPrice ?? "";
+  const calculatedPrice = modernWeight
+    ? (weightQuote.data?.selling_price ?? "")
+    : (pricePreview.data?.displayCalculatedPrice ?? "");
   const effectiveSellingPrice =
     (isNew || approval) && !manualPrice ? calculatedPrice : sellingPrice;
   let canonicalSellingPrice = effectiveSellingPrice;
   try {
-    if (weightProduct && effectiveSellingPrice)
+    if (weightProduct && !modernWeight && effectiveSellingPrice)
       canonicalSellingPrice = approvedWeightPricePerLb(
         effectiveSellingPrice,
         displayUnit,
@@ -550,6 +678,54 @@ export function ProductEditor({
   );
 
   const similar = isNew ? similarProductNames(state, values.name_en) : [];
+  const dateEditorFields = (
+    <>
+      {values.date_tracking && dateLocation === "all" && (
+        <Field
+          label={t("Location", "مکان")}
+          error={fieldIssue("date-location")}
+        >
+          <Select
+            id={`${formId}-date-location`}
+            value={chosenDateLocation}
+            onChange={(value) => {
+              setChosenDateLocation(value);
+              clearIssue(`${formId}-date-location`);
+            }}
+            options={[
+              {
+                placeholder: true,
+                value: "",
+                label: t("Choose location", "انتخاب مکان"),
+              },
+              ...branches.map((value) => ({
+                value,
+                label: configuredBranchLabel(state.config, value, lang),
+              })),
+            ]}
+          />
+        </Field>
+      )}
+      <ProductDateEditor
+        productCode={product.code}
+        location={pendingDateLocation}
+        enabled={values.date_tracking}
+        onEnabledChange={(value) => patch("date_tracking", value)}
+        dates={dates}
+        onDatesChange={setDates}
+        pendingDate={pendingDate}
+        onPendingDateChange={setPendingDate}
+        reminderDays={reminderDays}
+        onReminderDaysChange={setReminderDays}
+        stopRequired={!isNew && product.date_tracking !== false}
+        stopChoice={stopChoice}
+        onStopChoiceChange={setStopChoice}
+        idPrefix={formId}
+        issues={issues}
+        onFieldChange={clearIssue}
+      />
+    </>
+  );
   if (!actor || !mayEdit) return null;
   return (
     <>
@@ -575,24 +751,51 @@ export function ProductEditor({
               </UnitText>
             </bdi>
             {" · "}
-            {t("Product Code", "کد محصول")} <LtrText>{product.code}</LtrText>
+            {t("Product Code", "کد محصول")}{" "}
+            <LtrText>
+              {isNew && modernWeight
+                ? t("Assigned on save", "هنگام ذخیره تعیین می‌شود")
+                : product.code}
+            </LtrText>
           </span>
         }
         className={
-          approval
-            ? "product-editor-dialog approval-product-editor ui-form-surface"
-            : isNew
-              ? "product-editor-dialog manual-entry-dialog"
-              : "product-editor-dialog"
+          weightSession
+            ? "product-editor-dialog manual-entry-dialog weight-product-dialog"
+            : approval
+              ? "product-editor-dialog approval-product-editor ui-form-surface"
+              : isNew
+                ? "product-editor-dialog manual-entry-dialog"
+                : "product-editor-dialog"
         }
       >
         <form
           className="stack product-editor-form"
           id={`${formId}-form`}
           noValidate
+          onPointerDownCapture={(event) => {
+            if (!weightSession) return;
+            const target =
+              event.target instanceof Element
+                ? event.target.closest<HTMLElement>(
+                    "button,input,summary,[role=combobox]",
+                  )
+                : null;
+            if (target) retainWeightControl(target);
+          }}
+          onInputCapture={(event) => {
+            if (weightSession && event.target instanceof HTMLElement)
+              retainWeightControl(event.target);
+          }}
+          onKeyDownCapture={(event) => {
+            if (weightSession && event.target instanceof HTMLElement)
+              retainWeightControl(event.target);
+          }}
           onSubmit={async (event) => {
             event.preventDefault();
+            if (formSaving) return;
             setError(null);
+            setWeightError("");
             const missing: ValidationIssue[] = [];
             const datesToSave = [...dates];
             const addIssue = (key: string, message: string) =>
@@ -610,7 +813,7 @@ export function ProductEditor({
               addIssue("pricing_category", editorError("pricing_category", t));
             if (!values.main_supplier)
               addIssue("main_supplier", editorError("supplier", t));
-            if (isNew && !/^\d+(\.\d{1,4})?$/.test(cost))
+            if ((isNew || modernWeight) && !/^\d+(\.\d{1,4})?$/.test(cost))
               addIssue("cost", editorError("cost", t));
             if (
               (isNew || approval || priceChanged) &&
@@ -749,9 +952,12 @@ export function ProductEditor({
               );
             if (missing.length) {
               setIssues(missing);
-              requestAnimationFrame(() =>
-                focusValidationField(missing[0].fieldId),
-              );
+              requestAnimationFrame(() => {
+                const control = document.getElementById(missing[0].fieldId);
+                const folded = control?.closest("details");
+                if (folded) folded.open = true;
+                focusValidationField(missing[0].fieldId);
+              });
               return;
             }
             setIssues([]);
@@ -851,6 +1057,62 @@ export function ProductEditor({
                 }
                 return;
               }
+              if (
+                modernWeight ||
+                (!approval && !invoiceQuickAdd && product.sold_by === "weight")
+              ) {
+                setFormSaving(true);
+                const editsToSave = {
+                  ...values,
+                  dates: datesToSave,
+                  date_reminder_days: Number(reminderDays),
+                  date_tracking_stop: stopChoice || undefined,
+                };
+                if (isNew) {
+                  const created = await command(
+                    editorCapability,
+                    writeScope,
+                    (draft, current) =>
+                      addWeightProductEditor(
+                        draft,
+                        current,
+                        {
+                          ...editsToSave,
+                          last_cost_before_tax: cost,
+                          last_cost_unit: costUnit,
+                          selling_price: manualPrice
+                            ? canonicalSellingPrice || undefined
+                            : undefined,
+                          minimum_margin_confirmed: marginConfirmed,
+                          similar_name_confirmed: similarConfirmed,
+                        },
+                        packageRows,
+                        weightQuote.data?.pricing_snapshot ?? "",
+                      ),
+                  );
+                  onCreated?.(created);
+                } else
+                  await command(
+                    editorCapability,
+                    writeScope,
+                    (draft, current) =>
+                      saveWeightProductEditor(
+                        draft,
+                        current,
+                        product.code,
+                        editsToSave,
+                        weightExpected,
+                        packageRows,
+                        modernWeight
+                          ? { value: cost, unit: costUnit }
+                          : undefined,
+                        new Date(),
+                        stagedWeightPrice,
+                      ),
+                  );
+                onClose();
+                return;
+              }
               if (isNew) {
                 const created = await command(
                   editorCapability,
@@ -899,6 +1161,24 @@ export function ProductEditor({
               );
               onClose();
             } catch (cause) {
+              if (
+                cause instanceof WeightEditorError ||
+                (cause &&
+                  !(cause instanceof ProductEditError) &&
+                  !(cause instanceof NewProductError) &&
+                  typeof cause === "object" &&
+                  "code" in cause &&
+                  [
+                    "duplicate_size",
+                    "barcode",
+                    "barcode_conflict",
+                    "package",
+                    "parent",
+                  ].includes(String(cause.code)))
+              ) {
+                setWeightError(weightEditorErrorText(cause, t));
+                return;
+              }
               if (cause instanceof DateTrackingError) {
                 setIssues([
                   {
@@ -966,655 +1246,911 @@ export function ProductEditor({
                     message: editorError(code, t),
                   },
                 ]);
+            } finally {
+              setFormSaving(false);
             }
           }}
         >
           <div className="product-editor-body">
-            <WhatsMissing issues={issues} />
-            <section
-              className="product-editor-section"
-              aria-label={t("Names", "نام‌ها")}
+            <div
+              className={
+                weightSession
+                  ? "weight-product-content"
+                  : "product-editor-content"
+              }
             >
-              <h3 className="product-editor-section-title">
-                {t("Names", "نام‌ها")}
-              </h3>
-              <div className="form-grid product-editor-fields">
-                <Field
-                  label={t("English name", "نام انگلیسی")}
-                  error={
-                    fieldIssue("name_en") ??
-                    (error === "name_en" ? editorError(error, t) : undefined)
-                  }
-                >
-                  <input
-                    autoFocus
-                    id={`${formId}-name_en`}
-                    dir="ltr"
-                    value={values.name_en}
-                    onChange={(event) => {
-                      patch("name_en", event.target.value);
-                      setSimilarConfirmed(false);
-                    }}
-                  />
-                </Field>
-                <Field
-                  label={t("Persian name (optional)", "نام فارسی (اختیاری)")}
-                  error={
-                    error === "name_fa" ? editorError(error, t) : undefined
-                  }
-                >
-                  <input
-                    dir="rtl"
-                    value={values.name_fa}
-                    onChange={(event) => patch("name_fa", event.target.value)}
-                  />
-                </Field>
-              </div>
-            </section>
-            <section
-              className="product-editor-section"
-              aria-label={t("Pricing", "قیمت‌گذاری")}
-            >
-              <h3 className="product-editor-section-title">
-                {t("Pricing", "قیمت‌گذاری")}
-              </h3>
-              <div className="form-grid product-editor-fields">
-                <Field
-                  label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
-                  error={
-                    fieldIssue("pricing_category") ??
-                    (error === "pricing_category"
-                      ? editorError(error, t)
-                      : undefined)
-                  }
-                >
-                  <Select
-                    id={`${formId}-pricing_category`}
-                    value={values.pricing_category}
-                    onChange={(value) => {
-                      patch("pricing_category", value);
-                      if (approval) {
-                        setManualPrice(false);
-                        setMarginConfirmed(false);
-                        setApprovalError("");
-                      }
-                    }}
-                    options={activePricingCategories(state.config).map(
-                      (item) => ({
-                        value: item.key,
-                        label: categoryLabel(item.label, lang),
-                      }),
-                    )}
-                  />
-                </Field>
-                {isNew && (
+              <WhatsMissing issues={issues} />
+              <section
+                className="product-editor-section"
+                aria-label={t("Names", "نام‌ها")}
+              >
+                <h3 className="product-editor-section-title">
+                  {t("Names", "نام‌ها")}
+                </h3>
+                <div className="form-grid product-editor-fields">
                   <Field
-                    label={t(
-                      "Last unit cost before tax",
-                      "آخرین هزینهٔ واحد پیش از مالیات",
-                    )}
+                    label={t("English name", "نام انگلیسی")}
                     error={
-                      fieldIssue("cost") ??
-                      (error === "cost" ? editorError(error, t) : undefined)
+                      fieldIssue("name_en") ??
+                      (error === "name_en" ? editorError(error, t) : undefined)
                     }
                   >
                     <input
-                      id={`${formId}-cost`}
+                      autoFocus
+                      id={`${formId}-name_en`}
                       dir="ltr"
-                      inputMode="decimal"
-                      className="control-narrow"
-                      value={cost}
+                      value={values.name_en}
                       onChange={(event) => {
-                        setCost(event.target.value);
-                        clearIssue(`${formId}-cost`);
-                        setMarginConfirmed(false);
-                        if (error === "cost" || error === "margin")
-                          setError(null);
+                        patch("name_en", event.target.value);
+                        setSimilarConfirmed(false);
                       }}
                     />
                   </Field>
-                )}
-                {isNew && weightProduct && (
-                  <Field label={t("Cost unit", "واحد هزینه")}>
-                    <Select
-                      value={costUnit}
-                      onChange={(value) => {
-                        setCostUnit(value as WeightUnit);
-                        setMarginConfirmed(false);
-                        if (error === "cost" || error === "margin")
-                          setError(null);
-                      }}
-                      options={[
-                        { value: "lb", label: "lb" },
-                        { value: "kg", label: "kg" },
-                      ]}
-                    />
-                  </Field>
-                )}
-                <Field
-                  label={
-                    weightProduct
-                      ? displayUnit === "lb"
-                        ? t("Selling price (per lb)", "قیمت فروش (هر پوند)")
-                        : t("Selling price (per kg)", "قیمت فروش (هر کیلوگرم)")
-                      : t("Selling price (per unit)", "قیمت فروش (هر واحد)")
-                  }
-                  error={
-                    fieldIssue("price") ??
-                    (error === "price" ? editorError(error, t) : undefined)
-                  }
-                  className="short-field"
-                >
-                  {isNew || approval ? (
+                  <Field
+                    label={t("Persian name (optional)", "نام فارسی (اختیاری)")}
+                    error={
+                      error === "name_fa" ? editorError(error, t) : undefined
+                    }
+                  >
                     <input
-                      id={`${formId}-price`}
-                      dir="ltr"
-                      inputMode="decimal"
-                      value={effectiveSellingPrice}
-                      readOnly={isNew && !mayOverridePrice}
-                      onChange={(event) => {
-                        setSellingPrice(event.target.value);
-                        clearIssue(`${formId}-price`);
-                        setManualPrice(true);
-                        setMarginConfirmed(false);
-                        if (error === "price" || error === "margin")
-                          setError(null);
-                      }}
+                      dir="rtl"
+                      value={values.name_fa}
+                      onChange={(event) => patch("name_fa", event.target.value)}
                     />
-                  ) : (
-                    <div className="product-editor-current-price">
-                      <SalePrice product={product} />
-                      <Button
-                        variant="plain"
-                        onClick={() => setPriceDialogOpen(true)}
-                      >
-                        {salesText(t, "change")}
-                      </Button>
-                    </div>
-                  )}
-                </Field>
-              </div>
-            </section>
-            <section
-              className="product-editor-section"
-              aria-label={t("Details", "جزئیات")}
-            >
-              <h3 className="product-editor-section-title">
-                {t("Details", "جزئیات")}
-              </h3>
-              <div className="form-grid product-editor-fields">
-                <Field
-                  label={t("Unit size", "اندازهٔ واحد")}
-                  error={
-                    fieldIssue("unit_size") ??
-                    (error === "unit_size" ? editorError(error, t) : undefined)
-                  }
+                  </Field>
+                </div>
+              </section>
+              {!approval && (
+                <section
+                  className="product-editor-section"
+                  aria-label={t("How it's sold", "نحوه فروش")}
                 >
-                  <input
-                    id={`${formId}-unit_size`}
-                    dir="ltr"
-                    value={values.unit_size}
-                    onChange={(event) => patch("unit_size", event.target.value)}
-                  />
-                </Field>
-                {!approval && (
-                  <Field label={t("Sold by", "روش فروش")}>
-                    <Select
+                  <h3 className="product-editor-section-title">
+                    {t("How it's sold", "نحوه فروش")}
+                  </h3>
+                  <div className="weight-product-soldby ui-control-row">
+                    <SegmentedControl
+                      aria-label={t("Sold by", "روش فروش")}
                       value={values.sold_by ?? "each"}
                       onChange={(value) => {
                         patch("sold_by", value as "each" | "weight");
-                        setSellingPrice(
-                          value === "weight" && startingPrice
-                            ? weightPriceDisplay(startingPrice, state.config)
-                                .main.amount
-                            : startingPrice,
-                        );
+                        if (value === "weight" && !values.unit_size.trim())
+                          patch("unit_size", "lb");
                         setManualPrice(false);
                         setMarginConfirmed(false);
                       }}
                       options={[
-                        { value: "each", label: t("Each", "عدد") },
-                        { value: "weight", label: t("Weight", "وزن") },
+                        { value: "each", label: t("Each", "عددی") },
+                        { value: "weight", label: t("By weight", "وزنی") },
                       ]}
                     />
-                  </Field>
-                )}
-                <Field
-                  label={t("Category (optional)", "دسته (اختیاری)")}
-                  error={
-                    error === "category" ? editorError(error, t) : undefined
-                  }
-                >
-                  <Select
-                    value={values.ai_category}
-                    onChange={(value) => patch("ai_category", value)}
-                    options={[
-                      { value: "", label: t("No category", "بدون دسته") },
-                      ...categories.map((value) => ({
-                        value,
-                        label: categoryLabel(value, lang),
-                      })),
-                    ]}
+                    <p className="helper">
+                      {values.sold_by === "weight"
+                        ? t(
+                            "Priced per lb, with the price per kg shown too. You can sell it loose, in packages, or both.",
+                            "قیمت به ازای هر پوند، همراه با قیمت هر کیلوگرم. می‌توانید فله‌ای، بسته‌بندی یا هر دو بفروشید.",
+                          )
+                        : t("Priced for each item.", "قیمت برای هر عدد کالا.")}
+                    </p>
+                  </div>
+                </section>
+              )}
+              <section
+                className="product-editor-section"
+                aria-label={t("Pricing", "قیمت‌گذاری")}
+              >
+                <h3 className="product-editor-section-title">
+                  {t("Pricing", "قیمت‌گذاری")}
+                </h3>
+                {modernWeight ? (
+                  <WeightProductPricing
+                    formId={formId}
+                    category={values.pricing_category}
+                    onCategoryChange={(value) =>
+                      patch("pricing_category", value)
+                    }
+                    cost={cost}
+                    onCostChange={(value) => {
+                      setCost(value);
+                      weightCostSource.current = null;
+                      clearIssue(`${formId}-cost`);
+                      setMarginConfirmed(false);
+                      setWeightError("");
+                    }}
+                    unit={costUnit}
+                    onUnitChange={(next) => {
+                      if (
+                        next !== costUnit &&
+                        /^\d+(?:\.\d{1,4})?$/.test(cost)
+                      ) {
+                        const factor =
+                          state.config.weighed_items?.conversion_factor ??
+                          "2.20462";
+                        const saved = weightCostSource.current;
+                        const canonical =
+                          saved?.display === cost && saved.unit === costUnit
+                            ? saved.canonical
+                            : (costUnit === "kg"
+                                ? new Decimal(cost).div(factor)
+                                : new Decimal(cost)
+                              ).toFixed(4);
+                        const display =
+                          next === "kg"
+                            ? new Decimal(canonical).times(factor).toFixed(4)
+                            : canonical;
+                        weightCostSource.current = {
+                          display,
+                          unit: next,
+                          canonical,
+                        };
+                        setCost(display);
+                      }
+                      setCostUnit(next);
+                    }}
+                    calculation={weightQuote.data}
+                    pricePerLb={weightCardPrice}
+                    pendingPerLb={prospectivePending}
+                    onChangePrice={() => {
+                      if (isNew) setManualPrice((value) => !value);
+                      else setPriceDialogOpen(true);
+                    }}
+                    costError={fieldIssue("cost")}
+                    categoryError={fieldIssue("pricing_category")}
+                    newProduct={isNew}
+                    newManualPrice={
+                      isNew && manualPrice ? sellingPrice : undefined
+                    }
+                    onNewManualPriceChange={(value) => {
+                      setSellingPrice(value);
+                      setManualPrice(true);
+                      setMarginConfirmed(false);
+                    }}
                   />
-                </Field>
-                <Field
-                  label={t("Supplier", "تأمین‌کننده")}
-                  error={
-                    fieldIssue("main_supplier") ??
-                    (error === "supplier" ? editorError(error, t) : undefined)
-                  }
-                >
-                  <Select
-                    searchable
-                    id={`${formId}-main_supplier`}
-                    value={values.main_supplier}
-                    onChange={(value) => patch("main_supplier", value)}
-                    options={suppliers.map((value) => ({
-                      value,
-                      label: value,
-                    }))}
-                  />
-                </Field>
-                <Field
-                  label={t("Barcode (optional)", "بارکد (اختیاری)")}
-                  error={
-                    error === "barcode_conflict"
-                      ? editorError(error, t)
-                      : undefined
-                  }
-                >
-                  <input
-                    id={`${formId}-barcode`}
-                    dir="ltr"
-                    value={values.barcode}
-                    onChange={(event) => patch("barcode", event.target.value)}
-                  />
-                </Field>
-                {approval && (
+                ) : (
                   <>
-                    <Field
-                      label={t(
-                        "Supplier code (optional)",
-                        "کد تأمین‌کننده (اختیاری)",
+                    <div className="form-grid product-editor-fields">
+                      <Field
+                        label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
+                        error={
+                          fieldIssue("pricing_category") ??
+                          (error === "pricing_category"
+                            ? editorError(error, t)
+                            : undefined)
+                        }
+                      >
+                        <Select
+                          id={`${formId}-pricing_category`}
+                          value={values.pricing_category}
+                          onChange={(value) => {
+                            patch("pricing_category", value);
+                            if (approval) {
+                              setManualPrice(false);
+                              setMarginConfirmed(false);
+                              setApprovalError("");
+                            }
+                          }}
+                          options={activePricingCategories(state.config).map(
+                            (item) => ({
+                              value: item.key,
+                              label: categoryLabel(item.label, lang),
+                            }),
+                          )}
+                        />
+                      </Field>
+                      {isNew && (
+                        <Field
+                          label={t(
+                            "Last unit cost before tax",
+                            "آخرین هزینهٔ واحد پیش از مالیات",
+                          )}
+                          error={
+                            fieldIssue("cost") ??
+                            (error === "cost"
+                              ? editorError(error, t)
+                              : undefined)
+                          }
+                        >
+                          <input
+                            id={`${formId}-cost`}
+                            dir="ltr"
+                            inputMode="decimal"
+                            className="control-narrow"
+                            value={cost}
+                            onChange={(event) => {
+                              setCost(event.target.value);
+                              clearIssue(`${formId}-cost`);
+                              setMarginConfirmed(false);
+                              if (error === "cost" || error === "margin")
+                                setError(null);
+                            }}
+                          />
+                        </Field>
                       )}
+                      {isNew && weightProduct && (
+                        <Field label={t("Cost unit", "واحد هزینه")}>
+                          <Select
+                            value={costUnit}
+                            onChange={(value) => {
+                              setCostUnit(value as WeightUnit);
+                              setMarginConfirmed(false);
+                              if (error === "cost" || error === "margin")
+                                setError(null);
+                            }}
+                            options={[
+                              { value: "lb", label: "lb" },
+                              { value: "kg", label: "kg" },
+                            ]}
+                          />
+                        </Field>
+                      )}
+                      <Field
+                        label={
+                          weightProduct
+                            ? displayUnit === "lb"
+                              ? t(
+                                  "Selling price (per lb)",
+                                  "قیمت فروش (هر پوند)",
+                                )
+                              : t(
+                                  "Selling price (per kg)",
+                                  "قیمت فروش (هر کیلوگرم)",
+                                )
+                            : t(
+                                "Selling price (per unit)",
+                                "قیمت فروش (هر واحد)",
+                              )
+                        }
+                        error={
+                          fieldIssue("price") ??
+                          (error === "price"
+                            ? editorError(error, t)
+                            : undefined)
+                        }
+                        className="short-field"
+                      >
+                        {isNew || approval ? (
+                          <input
+                            id={`${formId}-price`}
+                            dir="ltr"
+                            inputMode="decimal"
+                            value={effectiveSellingPrice}
+                            readOnly={isNew && !mayOverridePrice}
+                            onChange={(event) => {
+                              setSellingPrice(event.target.value);
+                              clearIssue(`${formId}-price`);
+                              setManualPrice(true);
+                              setMarginConfirmed(false);
+                              if (error === "price" || error === "margin")
+                                setError(null);
+                            }}
+                          />
+                        ) : (
+                          <div className="product-editor-current-price">
+                            <SalePrice product={product} />
+                            <Button
+                              variant="plain"
+                              onClick={() => setPriceDialogOpen(true)}
+                            >
+                              {salesText(t, "change")}
+                            </Button>
+                          </div>
+                        )}
+                      </Field>
+                    </div>
+                  </>
+                )}
+              </section>
+              {modernWeight && stagedWeightPrice && (
+                <p className="helper weight-product-price-draft" role="status">
+                  {t("Draft price", "قیمت پیش‌نویس")}:{" "}
+                  <Money
+                    value={stagedWeightPrice.price}
+                    currency={state.config.company.currency}
+                  />
+                  <LtrText>/{stagedWeightPrice.price_unit}</LtrText> ·{" "}
+                  {stagedWeightPrice.branches
+                    .map((location) =>
+                      configuredBranchLabel(state.config, location, lang),
+                    )
+                    .join("، ")}{" "}
+                  ·{" "}
+                  {stagedWeightPrice.mode === "regular"
+                    ? t("Regular price", "قیمت عادی")
+                    : t("Sale", "حراج")}
+                </p>
+              )}
+              {modernWeight &&
+                can("catalog.package_edit", {
+                  company_id: product.company_id,
+                  kind: "company_shared",
+                }) && (
+                  <PackageSizeSection
+                    parent={{
+                      ...product,
+                      name_en: values.name_en,
+                      name_fa: values.name_fa,
+                      pricing_category: values.pricing_category,
+                    }}
+                    rows={packageRows}
+                    onChange={setPackageRows}
+                    pricePerLb={weightCardPrice}
+                    pendingPricePerLb={prospectivePending}
+                    stagedPricePerLb={stagedCanonicalPrice}
+                    stagedPriceBranches={
+                      stagedWeightPrice?.mode === "regular"
+                        ? stagedWeightPrice.branches
+                        : undefined
+                    }
+                    pendingPriceBranches={pendingWeightLocations}
+                    pricingConfig={weightQuote.data?.pricing_config}
+                    parentIsNew={isNew}
+                  />
+                )}
+              <section
+                className="product-editor-section"
+                aria-label={t("Details", "جزئیات")}
+              >
+                <h3 className="product-editor-section-title">
+                  {t("Details", "جزئیات")}
+                </h3>
+                {modernWeight ? (
+                  <>
+                    <div className="form-grid product-editor-fields">
+                      <Field
+                        label={t("Category (optional)", "دسته (اختیاری)")}
+                        error={
+                          error === "category"
+                            ? editorError(error, t)
+                            : undefined
+                        }
+                      >
+                        <Select
+                          value={values.ai_category}
+                          onChange={(value) => patch("ai_category", value)}
+                          options={[
+                            { value: "", label: t("No category", "بدون دسته") },
+                            ...categories.map((value) => ({
+                              value,
+                              label: categoryLabel(value, lang),
+                            })),
+                          ]}
+                        />
+                      </Field>
+                      <Field
+                        label={t("Supplier", "تأمین‌کننده")}
+                        error={
+                          fieldIssue("main_supplier") ??
+                          (error === "supplier"
+                            ? editorError(error, t)
+                            : undefined)
+                        }
+                      >
+                        <Select
+                          searchable
+                          id={`${formId}-main_supplier`}
+                          value={values.main_supplier}
+                          onChange={(value) => patch("main_supplier", value)}
+                          options={suppliers.map((value) => ({
+                            value,
+                            label: value,
+                          }))}
+                        />
+                      </Field>
+                    </div>
+                    <details className="weight-product-optional-details">
+                      <summary>{t("More details", "جزئیات بیشتر")}</summary>
+                      <div className="form-grid product-editor-fields">
+                        <Field
+                          label={t("Unit size", "اندازهٔ واحد")}
+                          error={
+                            fieldIssue("unit_size") ??
+                            (error === "unit_size"
+                              ? editorError(error, t)
+                              : undefined)
+                          }
+                        >
+                          <input
+                            id={`${formId}-unit_size`}
+                            dir="ltr"
+                            value={values.unit_size}
+                            onChange={(event) =>
+                              patch("unit_size", event.target.value)
+                            }
+                          />
+                        </Field>
+                        <Field
+                          label={t("Barcode (optional)", "بارکد (اختیاری)")}
+                          error={
+                            error === "barcode_conflict"
+                              ? editorError(error, t)
+                              : undefined
+                          }
+                        >
+                          <input
+                            id={`${formId}-barcode`}
+                            dir="ltr"
+                            value={values.barcode}
+                            onChange={(event) =>
+                              patch("barcode", event.target.value)
+                            }
+                          />
+                        </Field>
+                        <div className="product-editor-description-row">
+                          <Field
+                            label={t(
+                              "Description (English) (optional)",
+                              "توضیحات (انگلیسی) (اختیاری)",
+                            )}
+                          >
+                            <textarea
+                              dir="ltr"
+                              value={values.description_en}
+                              onChange={(event) =>
+                                patch("description_en", event.target.value)
+                              }
+                              rows={2}
+                            />
+                          </Field>
+                          <Field
+                            label={t(
+                              "Description (Persian) (optional)",
+                              "توضیحات (فارسی) (اختیاری)",
+                            )}
+                          >
+                            <textarea
+                              dir="rtl"
+                              value={values.description_fa}
+                              onChange={(event) =>
+                                patch("description_fa", event.target.value)
+                              }
+                              rows={2}
+                            />
+                          </Field>
+                        </div>
+                      </div>
+                      {dateEditorFields}
+                    </details>
+                  </>
+                ) : (
+                  <>
+                    <div className="form-grid product-editor-fields">
+                      <Field
+                        label={t("Unit size", "اندازهٔ واحد")}
+                        error={
+                          fieldIssue("unit_size") ??
+                          (error === "unit_size"
+                            ? editorError(error, t)
+                            : undefined)
+                        }
+                      >
+                        <input
+                          id={`${formId}-unit_size`}
+                          dir="ltr"
+                          value={values.unit_size}
+                          onChange={(event) =>
+                            patch("unit_size", event.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field
+                        label={t("Category (optional)", "دسته (اختیاری)")}
+                        error={
+                          error === "category"
+                            ? editorError(error, t)
+                            : undefined
+                        }
+                      >
+                        <Select
+                          value={values.ai_category}
+                          onChange={(value) => patch("ai_category", value)}
+                          options={[
+                            { value: "", label: t("No category", "بدون دسته") },
+                            ...categories.map((value) => ({
+                              value,
+                              label: categoryLabel(value, lang),
+                            })),
+                          ]}
+                        />
+                      </Field>
+                      <Field
+                        label={t("Supplier", "تأمین‌کننده")}
+                        error={
+                          fieldIssue("main_supplier") ??
+                          (error === "supplier"
+                            ? editorError(error, t)
+                            : undefined)
+                        }
+                      >
+                        <Select
+                          searchable
+                          id={`${formId}-main_supplier`}
+                          value={values.main_supplier}
+                          onChange={(value) => patch("main_supplier", value)}
+                          options={suppliers.map((value) => ({
+                            value,
+                            label: value,
+                          }))}
+                        />
+                      </Field>
+                      <Field
+                        label={t("Barcode (optional)", "بارکد (اختیاری)")}
+                        error={
+                          error === "barcode_conflict"
+                            ? editorError(error, t)
+                            : undefined
+                        }
+                      >
+                        <input
+                          id={`${formId}-barcode`}
+                          dir="ltr"
+                          value={values.barcode}
+                          onChange={(event) =>
+                            patch("barcode", event.target.value)
+                          }
+                        />
+                      </Field>
+                      {approval && (
+                        <>
+                          <Field
+                            label={t(
+                              "Supplier code (optional)",
+                              "کد تأمین‌کننده (اختیاری)",
+                            )}
+                          >
+                            <input
+                              id={`${formId}-supplier-code`}
+                              dir="ltr"
+                              value={supplierItemCode}
+                              onChange={(event) => {
+                                setSupplierItemCode(event.target.value);
+                                setApprovalError("");
+                              }}
+                            />
+                          </Field>
+                          <Field label={t("Taxable", "مشمول مالیات")}>
+                            <Select
+                              id={`${formId}-taxable`}
+                              value={taxable ? "yes" : "no"}
+                              options={[
+                                { value: "yes", label: t("Yes", "بله") },
+                                { value: "no", label: t("No", "خیر") },
+                              ]}
+                              onChange={(value) => setTaxable(value === "yes")}
+                            />
+                          </Field>
+                        </>
+                      )}
+                      <div className="product-editor-description-row">
+                        <Field
+                          label={t(
+                            "Description (English) (optional)",
+                            "توضیحات (انگلیسی) (اختیاری)",
+                          )}
+                        >
+                          <textarea
+                            dir="ltr"
+                            value={values.description_en}
+                            onChange={(event) =>
+                              patch("description_en", event.target.value)
+                            }
+                            rows={2}
+                          />
+                        </Field>
+                        <Field
+                          label={t(
+                            "Description (Persian) (optional)",
+                            "توضیحات (فارسی) (اختیاری)",
+                          )}
+                        >
+                          <textarea
+                            dir="rtl"
+                            value={values.description_fa}
+                            onChange={(event) =>
+                              patch("description_fa", event.target.value)
+                            }
+                            rows={2}
+                          />
+                        </Field>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </section>
+              {!modernWeight && dateEditorFields}
+              {(isNew || approval) && belowMinimum && mayOverridePrice && (
+                <div className="banner info" id={`${formId}-margin`}>
+                  <p>
+                    {t(
+                      "This price is below the minimum margin.",
+                      "این قیمت کمتر از حداقل حاشیه است.",
+                    )}
+                  </p>
+                  <Checkbox
+                    checked={marginConfirmed}
+                    onChange={(value) => {
+                      setMarginConfirmed(value);
+                      clearIssue(`${formId}-margin`);
+                      if (error === "margin") setError(null);
+                    }}
+                  >
+                    {t(
+                      "Confirm price below minimum margin",
+                      "تأیید قیمت زیر حداقل حاشیه",
+                    )}
+                  </Checkbox>
+                </div>
+              )}
+              {approval && (
+                <section className="product-editor-section approval-product-decision">
+                  <h3 className="product-editor-section-title">
+                    {t("Approval", "تأیید")}
+                  </h3>
+                  {approval.manualReview && (
+                    <Field
+                      label={t("Regular price decision", "تصمیم قیمت عادی")}
                     >
-                      <input
-                        id={`${formId}-supplier-code`}
-                        dir="ltr"
-                        value={supplierItemCode}
-                        onChange={(event) => {
-                          setSupplierItemCode(event.target.value);
+                      <Select
+                        value={approvalManualChoice}
+                        options={[
+                          {
+                            value: "rule",
+                            label: t(
+                              "Use the new calculated price",
+                              "استفاده از قیمت محاسبه‌شدهٔ جدید",
+                            ),
+                          },
+                          {
+                            value: "keep",
+                            label: t(
+                              "Keep the current approved price",
+                              "حفظ قیمت تأییدشدهٔ فعلی",
+                            ),
+                          },
+                        ]}
+                        onChange={(value) => {
+                          setApprovalManualChoice(value as "rule" | "keep");
+                          if (value === "keep") {
+                            const kept =
+                              approval.manualPriceReview?.keptPrice ??
+                              regularPrice(state, product, approval.branch) ??
+                              "";
+                            setSellingPrice(
+                              weightProduct && kept
+                                ? weightPriceDisplay(kept, state.config).main
+                                    .amount
+                                : kept,
+                            );
+                            setManualPrice(true);
+                            patch("scope", "branch");
+                            setTargetBranch(approval.branch);
+                          } else setManualPrice(false);
                           setApprovalError("");
                         }}
                       />
                     </Field>
-                    <Field label={t("Taxable", "مشمول مالیات")}>
-                      <Select
-                        id={`${formId}-taxable`}
-                        value={taxable ? "yes" : "no"}
-                        options={[
-                          { value: "yes", label: t("Yes", "بله") },
-                          { value: "no", label: t("No", "خیر") },
-                        ]}
-                        onChange={(value) => setTaxable(value === "yes")}
-                      />
-                    </Field>
-                  </>
-                )}
-                <div className="product-editor-description-row">
-                  <Field
-                    label={t(
-                      "Description (English) (optional)",
-                      "توضیحات (انگلیسی) (اختیاری)",
-                    )}
-                  >
-                    <textarea
-                      dir="ltr"
-                      value={values.description_en}
-                      onChange={(event) =>
-                        patch("description_en", event.target.value)
-                      }
-                      rows={2}
-                    />
-                  </Field>
-                  <Field
-                    label={t(
-                      "Description (Persian) (optional)",
-                      "توضیحات (فارسی) (اختیاری)",
-                    )}
-                  >
-                    <textarea
-                      dir="rtl"
-                      value={values.description_fa}
-                      onChange={(event) =>
-                        patch("description_fa", event.target.value)
-                      }
-                      rows={2}
-                    />
-                  </Field>
-                </div>
-              </div>
-            </section>
-            {values.date_tracking && dateLocation === "all" && (
-              <Field
-                label={t("Location", "مکان")}
-                error={fieldIssue("date-location")}
-              >
-                <Select
-                  id={`${formId}-date-location`}
-                  value={chosenDateLocation}
-                  onChange={(value) => {
-                    setChosenDateLocation(value);
-                    clearIssue(`${formId}-date-location`);
-                  }}
-                  options={[
-                    {
-                      placeholder: true,
-                      value: "",
-                      label: t("Choose location", "انتخاب مکان"),
-                    },
-                    ...branches.map((value) => ({
-                      value,
-                      label: configuredBranchLabel(state.config, value, lang),
-                    })),
-                  ]}
-                />
-              </Field>
-            )}
-            <ProductDateEditor
-              productCode={product.code}
-              location={pendingDateLocation}
-              enabled={values.date_tracking}
-              onEnabledChange={(value) => patch("date_tracking", value)}
-              dates={dates}
-              onDatesChange={setDates}
-              pendingDate={pendingDate}
-              onPendingDateChange={setPendingDate}
-              reminderDays={reminderDays}
-              onReminderDaysChange={setReminderDays}
-              stopRequired={!isNew && product.date_tracking !== false}
-              stopChoice={stopChoice}
-              onStopChoiceChange={setStopChoice}
-              idPrefix={formId}
-              issues={issues}
-              onFieldChange={clearIssue}
-            />
-            {(isNew || approval) && belowMinimum && mayOverridePrice && (
-              <div className="banner info" id={`${formId}-margin`}>
-                <p>
-                  {t(
-                    "This price is below the minimum margin.",
-                    "این قیمت کمتر از حداقل حاشیه است.",
                   )}
-                </p>
-                <Checkbox
-                  checked={marginConfirmed}
-                  onChange={(value) => {
-                    setMarginConfirmed(value);
-                    clearIssue(`${formId}-margin`);
-                    if (error === "margin") setError(null);
-                  }}
-                >
-                  {t(
-                    "Confirm price below minimum margin",
-                    "تأیید قیمت زیر حداقل حاشیه",
-                  )}
-                </Checkbox>
-              </div>
-            )}
-            {approval && (
-              <section className="product-editor-section approval-product-decision">
-                <h3 className="product-editor-section-title">
-                  {t("Approval", "تأیید")}
-                </h3>
-                {approval.manualReview && (
-                  <Field label={t("Regular price decision", "تصمیم قیمت عادی")}>
+                  <Field label={t("Approval scope", "محدودهٔ تأیید")}>
                     <Select
-                      value={approvalManualChoice}
+                      value={values.scope}
+                      onChange={(value) =>
+                        patch("scope", value as "all" | "branch")
+                      }
                       options={[
                         {
-                          value: "rule",
+                          value: "all",
                           label: t(
-                            "Use the new calculated price",
-                            "استفاده از قیمت محاسبه‌شدهٔ جدید",
+                            "All selling locations",
+                            "همهٔ مکان‌های فروش",
                           ),
                         },
                         {
-                          value: "keep",
+                          value: "branch",
                           label: t(
-                            "Keep the current approved price",
-                            "حفظ قیمت تأییدشدهٔ فعلی",
+                            "Receiving location only",
+                            "فقط مکان دریافت",
                           ),
                         },
                       ]}
-                      onChange={(value) => {
-                        setApprovalManualChoice(value as "rule" | "keep");
-                        if (value === "keep") {
-                          const kept =
-                            approval.manualPriceReview?.keptPrice ??
-                            regularPrice(state, product, approval.branch) ??
-                            "";
-                          setSellingPrice(
-                            weightProduct && kept
-                              ? weightPriceDisplay(kept, state.config).main
-                                  .amount
-                              : kept,
-                          );
-                          setManualPrice(true);
-                          patch("scope", "branch");
-                          setTargetBranch(approval.branch);
-                        } else setManualPrice(false);
+                    />
+                  </Field>
+                  <p className="muted">
+                    {t("Unit cost", "هزینه واحد")}:{" "}
+                    <ProductCost
+                      value={approval.unitCost}
+                      product={product}
+                      config={state.config}
+                    />
+                  </p>
+                  <Field
+                    label={
+                      approvalReasonRequired
+                        ? t("Reason (required)", "دلیل (الزامی)")
+                        : t("Reason (optional)", "دلیل (اختیاری)")
+                    }
+                  >
+                    <textarea
+                      id={`${formId}-approval-reason`}
+                      rows={2}
+                      value={approvalReason}
+                      onChange={(event) => {
+                        setApprovalReason(event.target.value);
+                        clearIssue(`${formId}-approval-reason`);
                         setApprovalError("");
                       }}
                     />
                   </Field>
-                )}
-                <Field label={t("Approval scope", "محدودهٔ تأیید")}>
-                  <Select
-                    value={values.scope}
-                    onChange={(value) =>
-                      patch("scope", value as "all" | "branch")
-                    }
-                    options={[
-                      {
-                        value: "all",
-                        label: t("All selling locations", "همهٔ مکان‌های فروش"),
-                      },
-                      {
-                        value: "branch",
-                        label: t("Receiving location only", "فقط مکان دریافت"),
-                      },
-                    ]}
-                  />
-                </Field>
-                <p className="muted">
-                  {t("Unit cost", "هزینه واحد")}:{" "}
-                  <ProductCost
-                    value={approval.unitCost}
-                    product={product}
-                    config={state.config}
-                  />
-                </p>
-                <Field
-                  label={
-                    approvalReasonRequired
-                      ? t("Reason (required)", "دلیل (الزامی)")
-                      : t("Reason (optional)", "دلیل (اختیاری)")
-                  }
-                >
-                  <textarea
-                    id={`${formId}-approval-reason`}
-                    rows={2}
-                    value={approvalReason}
-                    onChange={(event) => {
-                      setApprovalReason(event.target.value);
-                      clearIssue(`${formId}-approval-reason`);
-                      setApprovalError("");
-                    }}
-                  />
-                </Field>
-                {approvalError && (
-                  <p className="form-error" role="alert">
-                    {approvalError}
-                  </p>
-                )}
-              </section>
-            )}
-            {!!similar.length && (
-              <div
-                className="banner info manual-similar-warning"
-                role="status"
-                id={`${formId}-similar`}
-              >
-                <p>
-                  {t(
-                    "A similar product already exists.",
-                    "یک محصول مشابه وجود دارد.",
+                  {approvalError && (
+                    <p className="form-error" role="alert">
+                      {approvalError}
+                    </p>
                   )}
-                </p>
-                {similar.map((item) => (
-                  <Button
-                    key={item.code}
-                    variant="secondary"
-                    onClick={() => {
-                      onClose();
-                      navigate(`product?code=${item.code}`);
+                </section>
+              )}
+              {!!similar.length && (
+                <div
+                  className="banner info manual-similar-warning"
+                  role="status"
+                  id={`${formId}-similar`}
+                >
+                  <p>
+                    {t(
+                      "A similar product already exists.",
+                      "یک محصول مشابه وجود دارد.",
+                    )}
+                  </p>
+                  {similar.map((item) => (
+                    <Button
+                      key={item.code}
+                      variant="secondary"
+                      onClick={() => {
+                        onClose();
+                        navigate(`product?code=${item.code}`);
+                      }}
+                    >
+                      {lang === "fa" ? (
+                        item.name_fa
+                      ) : (
+                        <LtrText>{item.name_en}</LtrText>
+                      )}
+                    </Button>
+                  ))}
+                  <Checkbox
+                    checked={similarConfirmed}
+                    onChange={(value) => {
+                      setSimilarConfirmed(value);
+                      clearIssue(`${formId}-similar`);
+                      if (error === "similar") setError(null);
                     }}
                   >
-                    {lang === "fa" ? (
-                      item.name_fa
-                    ) : (
-                      <LtrText>{item.name_en}</LtrText>
+                    {t(
+                      "Continue with this product name",
+                      "ادامه با این نام محصول",
                     )}
-                  </Button>
-                ))}
-                <Checkbox
-                  checked={similarConfirmed}
-                  onChange={(value) => {
-                    setSimilarConfirmed(value);
-                    clearIssue(`${formId}-similar`);
-                    if (error === "similar") setError(null);
-                  }}
-                >
-                  {t(
-                    "Continue with this product name",
-                    "ادامه با این نام محصول",
-                  )}
-                </Checkbox>
-              </div>
-            )}
-            {!isNew && !approval && priceChanged && (
-              <div className="stack product-editor-price-scope">
-                <Field label={t("Approval scope", "محدودهٔ تأیید")}>
-                  <Select
-                    value={values.scope}
-                    onChange={(value) =>
-                      patch("scope", value as "all" | "branch")
-                    }
-                    options={[
-                      {
-                        value: "all",
-                        label: t("All branches", "همهٔ شعبه‌ها"),
-                      },
-                      ...(branch === "all" ||
-                      branchSellsToCustomers(state.config, branch)
-                        ? [
-                            {
-                              value: "branch",
-                              label: t("This branch only", "فقط این شعبه"),
-                            },
-                          ]
-                        : []),
-                    ]}
-                  />
-                </Field>
-                {values.scope === "branch" && branch === "all" && (
-                  <Field label={t("Branch", "شعبه")}>
+                  </Checkbox>
+                </div>
+              )}
+              {!isNew && !approval && priceChanged && (
+                <div className="stack product-editor-price-scope">
+                  <Field label={t("Approval scope", "محدودهٔ تأیید")}>
                     <Select
-                      value={targetBranch}
-                      onChange={(value) => {
-                        setTargetBranch(value as Branch);
-                        if (error === "branch") setError(null);
-                      }}
-                      options={priceLocations.map((value) => ({
-                        value,
-                        label: configuredBranchLabel(state.config, value, lang),
-                      }))}
+                      value={values.scope}
+                      onChange={(value) =>
+                        patch("scope", value as "all" | "branch")
+                      }
+                      options={[
+                        {
+                          value: "all",
+                          label: t("All branches", "همهٔ شعبه‌ها"),
+                        },
+                        ...(branch === "all" ||
+                        branchSellsToCustomers(state.config, branch)
+                          ? [
+                              {
+                                value: "branch",
+                                label: t("This branch only", "فقط این شعبه"),
+                              },
+                            ]
+                          : []),
+                      ]}
                     />
                   </Field>
-                )}
-                <DataTable
-                  columns={[
-                    { width: "40%" },
-                    { width: "30%", align: "end" },
-                    { width: "30%", align: "end" },
-                  ]}
-                >
-                  <thead>
-                    <tr>
-                      <th>{t("Branch", "شعبه")}</th>
-                      <th>{t("Old", "قبلی")}</th>
-                      <th>{t("New", "جدید")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(values.scope === "all"
-                      ? priceLocations
-                      : [targetBranch]
-                    ).map((item) => (
-                      <tr key={item}>
-                        <td>
-                          {configuredBranchLabel(state.config, item, lang)}
-                        </td>
-                        <td>
-                          {effectivePrice(state, product, item) ? (
-                            <SellingPrice
-                              value={effectivePrice(state, product, item)!}
-                              product={product}
-                              config={state.config}
-                            />
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td>
-                          <LtrText>
-                            {/^\d+(\.\d{1,2})?$/.test(sellingPrice) ? (
+                  {values.scope === "branch" && branch === "all" && (
+                    <Field label={t("Branch", "شعبه")}>
+                      <Select
+                        value={targetBranch}
+                        onChange={(value) => {
+                          setTargetBranch(value as Branch);
+                          if (error === "branch") setError(null);
+                        }}
+                        options={priceLocations.map((value) => ({
+                          value,
+                          label: configuredBranchLabel(
+                            state.config,
+                            value,
+                            lang,
+                          ),
+                        }))}
+                      />
+                    </Field>
+                  )}
+                  <DataTable
+                    columns={[
+                      { width: "40%" },
+                      { width: "30%", align: "end" },
+                      { width: "30%", align: "end" },
+                    ]}
+                  >
+                    <thead>
+                      <tr>
+                        <th>{t("Branch", "شعبه")}</th>
+                        <th>{t("Old", "قبلی")}</th>
+                        <th>{t("New", "جدید")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(values.scope === "all"
+                        ? priceLocations
+                        : [targetBranch]
+                      ).map((item) => (
+                        <tr key={item}>
+                          <td>
+                            {configuredBranchLabel(state.config, item, lang)}
+                          </td>
+                          <td>
+                            {effectivePrice(state, product, item) ? (
                               <SellingPrice
-                                value={canonicalSellingPrice}
-                                product={{
-                                  ...product,
-                                  sold_by: values.sold_by,
-                                }}
+                                value={effectivePrice(state, product, item)!}
+                                product={product}
                                 config={state.config}
                               />
                             ) : (
                               "—"
                             )}
-                          </LtrText>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </DataTable>
-              </div>
-            )}
-            {error &&
-              ![
-                "name_en",
-                "name_fa",
-                "unit_size",
-                "category",
-                "pricing_category",
-                "supplier",
-                "barcode_conflict",
-                "cost",
-                "price",
-              ].includes(error) && (
+                          </td>
+                          <td>
+                            <LtrText>
+                              {/^\d+(\.\d{1,2})?$/.test(sellingPrice) ? (
+                                <SellingPrice
+                                  value={canonicalSellingPrice}
+                                  product={{
+                                    ...product,
+                                    sold_by: values.sold_by,
+                                  }}
+                                  config={state.config}
+                                />
+                              ) : (
+                                "—"
+                              )}
+                            </LtrText>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </DataTable>
+                </div>
+              )}
+              {weightError && (
                 <p className="form-error" role="alert">
-                  {editorError(error, t)}
+                  {weightError}
                 </p>
               )}
+              {error &&
+                ![
+                  "name_en",
+                  "name_fa",
+                  "unit_size",
+                  "category",
+                  "pricing_category",
+                  "supplier",
+                  "barcode_conflict",
+                  "cost",
+                  "price",
+                ].includes(error) && (
+                  <p className="form-error" role="alert">
+                    {editorError(error, t)}
+                  </p>
+                )}
+            </div>
           </div>
           <DialogActions className="product-editor-actions">
             <Button variant="neutral" onClick={onClose}>
@@ -1625,7 +2161,9 @@ export function ProductEditor({
               disabled={
                 !editorBoot.ready ||
                 ((isNew || Boolean(approval)) && !pricePreview.ready) ||
-                approvalSaving
+                approvalSaving ||
+                formSaving ||
+                (modernWeight && !isNew && !weightExpected)
               }
             >
               {approval
@@ -1640,7 +2178,27 @@ export function ProductEditor({
       {priceDialogOpen && (
         <ChangePriceDialog
           product_code={product.code}
+          mode={modernWeight ? "regular" : undefined}
+          stagedInput={modernWeight ? stagedWeightPrice : undefined}
           onClose={() => setPriceDialogOpen(false)}
+          onStage={
+            modernWeight
+              ? (input) => {
+                  setStagedWeightPrice(input);
+                  setWeightError("");
+                }
+              : undefined
+          }
+          weightCandidate={
+            modernWeight
+              ? {
+                  code: product.code,
+                  cost,
+                  cost_unit: costUnit,
+                  pricing_category: values.pricing_category,
+                }
+              : undefined
+          }
           onSaved={({ before_product_snapshot, after_product_snapshot }) =>
             setExpected((previous) =>
               previous === before_product_snapshot
@@ -1851,9 +2409,24 @@ function ProductActionMenu({
   );
 }
 
-function ProductHeaderActions({ product }: { product: Product }) {
+function ProductHeaderActions({
+  product,
+  lookup = false,
+}: {
+  product: Product;
+  lookup?: boolean;
+}) {
   const { state, branch, actor, can, t } = useDemo();
   const [priceOpen, setPriceOpen] = useState(false);
+  const [packageOpen, setPackageOpen] = useState(false);
+  const mayManagePackages =
+    product.sold_by === "weight" &&
+    can("catalog.package_edit", {
+      company_id: product.company_id,
+      kind: "company_shared",
+      entity_id: product.code,
+    });
+
   const sale = activeSaleAt(state, product, lookupBranch(branch));
   const scope: ResourceScope = {
     company_id: product.company_id,
@@ -1880,11 +2453,14 @@ function ProductHeaderActions({ product }: { product: Product }) {
       kind: "company_shared",
       entity_id: product.code,
     }) &&
-    !mayAddDate
+    !mayAddDate &&
+    !mayManagePackages
   )
     return null;
   return (
-    <div className="actions product-header-actions">
+    <div
+      className={`actions product-header-actions${lookup ? " ui-control-row" : ""}`}
+    >
       {product.status === "active" && mayChange && (
         <Button onClick={() => setPriceOpen(true)}>
           {salesText(
@@ -1894,6 +2470,21 @@ function ProductHeaderActions({ product }: { product: Product }) {
         </Button>
       )}
       <ProductEditButton product={product} />
+      {mayManagePackages &&
+        !can("catalog.edit", {
+          company_id: product.company_id,
+          kind: "company_shared",
+        }) && (
+          <Button variant="neutral" onClick={() => setPackageOpen(true)}>
+            {t("Package sizes", "اندازه بسته‌ها")}
+          </Button>
+        )}
+      {packageOpen && (
+        <PackageSizesDialog
+          product={product}
+          onClose={() => setPackageOpen(false)}
+        />
+      )}
       <ProductActionMenu product={product} showChange={false} />
       {priceOpen && (
         <ChangePriceDialog

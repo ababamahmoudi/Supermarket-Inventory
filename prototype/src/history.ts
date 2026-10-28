@@ -1537,6 +1537,8 @@ export function hydrateLegacyReversals(state: DemoState): void {
 }
 
 const financialHistoryKeys = new Set([
+  "manual_costs",
+  "package_branch_costs",
   "paper_line_total",
   "paper_total_acknowledgement",
   "weight_case_cost_basis",

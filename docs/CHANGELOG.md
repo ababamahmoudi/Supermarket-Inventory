@@ -1,3 +1,10 @@
+## 2026-10-28 — R2f D3 weight Product add/edit
+
+- Matched the approved How sold, cost/unit, real rule/price card and package-size editor with responsive EN/FA/themed layout. Parent metadata, cost, explicit Change price and all package drafts save atomically; Cancel allocates/writes nothing.
+- Added the narrow Supervisor package-only dialog on Product/Lookup headers. Costs, receipt fingerprints and per-branch derived cost maps stay private.
+- Kept current approved prices until actual approval after cost-only edits, retained manual Keep/Rule and Sale conflict workflows, and used real current branch receipt/manual cost for package margins. Same-source corrections and later deliveries supersede manual markers without rewriting originals.
+- Added actual repository rollback/authority/cost-source tests and browser package lifecycle, unit conversion, alignment/stability evidence. See [D3 review guide](PR_R2F_WEIGHT_REVIEW.md); final integrated checks belong to PR #29.
+
 ## 2026-10-27 — R2e C8–C14 review fixes
 
 - Centred return header actions, resolved configured location names, and replaced the overlapping unit display with a level shared select backed by retained receipt conversions. Frozen cost/currency and existing pickup precision remain; original entered quantity/unit is retained.
@@ -499,7 +506,6 @@ Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted
 
 - R2e D1–D6: fixed-size weight packages as ordinary company-scoped products; validated fixed-size EAN-13/standard manufacturer GTINs; Decimal formula and shared category rounding; protected derived-price/task/label/audit propagation; narrow Supervisor package authority, privacy and orphan guards; verified additive backup/restore migration; fictional fixture and canonical repository tests. Package screens follow in R2f.
 
-
 ### R2e A2 — existing weight-product basis
 
 - R2e A2 follow-up: blocked an existing Weight product's Each/Units line mismatch at Confirm, Post and posted correction; added actual posting/approval and correction-denial proof while preserving the explicit new Each-item flow.
@@ -507,6 +513,7 @@ Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted
 ### R2e E — Klead maker attribution
 
 Added original approved logo/icon files, optional public maker/support config, theme-aware sign-in/lock attribution, final About settings group, store/maker tab title and configured favicon/install icons. Replaced both hardcoded Timesheet print footers and added configured staff attribution to supplier orders, picking lists, return pickup memos and Payables statements. No maker identity is added to customer labels. Existing stores read defaults without business migration; explicit maker omission and replacement are tested. See `PR_R2E_BRANDING_REVIEW.md` for validation and click paths.
+
 - R2f R0.1: add the shared peer-control row/grid contract, centred margin-free segmented tracks, matching icon/control heights and universal 44 px quick filters.
 - R2f R0.2: align first/last table content and full-width row rules with card titles and filters, preserving the 24 px inner-column gap.
 - R2f R0.3: add the shared three-track number group and approved reusable approval/weight-Lookup typography tokens so labels, values and notes align consistently.

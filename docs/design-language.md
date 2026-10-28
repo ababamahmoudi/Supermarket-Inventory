@@ -378,6 +378,7 @@ Use the supplied unmodified Klead files under `prototype/public/brand/klead/`; n
 
 Use shared ControlRow / `.ui-control-row` for 44 px page peers, or its small 40 px variant for in-card action rows. Grid compositions use `.ui-control-row-grid`; labelled field/action pairs bottom-align with `.is-field-row`. Whole segmented tracks share the row height, have no bottom margin and centre themselves. Their inner buttons fit inside the track. Icon widths may follow the approved composition; heights match the adjacent field/action. Shared quick-filter chips are 44 px.
 
+
 R2f R0.2 supersedes S1's 16 px outer table inset: first/last column content and row dividers now meet the card's content edges. Keep the existing 12 px inner-cell spacing, shared numeric logical end alignment and zero inline padding on sortable captions. Dedicated receiving/posted/batch tables use those same outer edges.
 
 R2f R0.3 number groups use the shared label/value/note three-row grid, with values baseline-aligned across different font sizes. NumberStat contributes contents to those shared tracks, with optional explicit column placement for arrows/dividers. Approved typography tokens hold 17 px approval values / 26 px primary price, and 36 px weight-Lookup price / 18 px unit/package values. Reuse existing weights and colours; ordinary Lookup keeps its existing typography.
@@ -396,3 +397,10 @@ Department cards follow the approved independently sized masonry composition, in
 ## R2f D2 — Staff directory composition
 
 Use the approved880px structured dialog with16px body gaps. Directory header/rows share40px avatar / flexible name (minimum180px) /120px department /140px login /36px menu tracks,16px gaps and14px-start/12px-end padding. Rows are64px minimum, field-tint boxes with8px between them. Avatar40px; row menus36px square standalone icons. The inline add form has16px field-tint padding and12px gaps; its Cancel/Add actions use the shared small40px row, as the approved source, while the top toolbar and footer remain44px. At640px and below, toolbar controls stack at full width with10px gaps, column captions hide, row tracks become40px /flexible name /36px, and department/login occupy separate rows below the name. Keep dialog scrolling bounded rather than forcing this window full-screen.
+
+## R2f D3 weight Product editor
+
+Match `design-reference/r2f/weight-product-*` and its approved source: an 860px bounded dialog, Names, 44px Each/By weight segment with helper, Pricing category plus cost/unit row, accent-tint real price/rule card, fixed-size package table and live New size row, then category/supplier. The card uses canonical lb prominently and kg beneath as in the approved D3 reference; ordinary catalog display settings elsewhere remain configurable. Package columns use plain end-aligned codes/barcodes/prices and In-store below generated barcodes. Phones expose size/price/actions above barcode; actual codes remain available in the normal package destination. Details not present in the illustration remain in the existing More details section, including guarded dates and descriptions.
+
+Only successful outer Save assigns codes/barcodes. Pending prices and pending archive rows are explicit. Keep the active input/action anchored during typing, cost-unit switches, How sold changes, package additions and archive staging; reuse the receiving scroll-anchor and reserve the dialog/content frame to avoid centering or scroll-clamp movement. The strict shared R0 alignment audit has no D3 exception.
+

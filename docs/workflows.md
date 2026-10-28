@@ -360,7 +360,6 @@ Read requirements §38 and the C9 design-language rules. Seen is an independent 
 
 An Owner/Manager changing regular price during a sale changes its after-sale price. Above the sale retains the actual sale; at/below it requires the explicit default End the sale now or Change the sale price resolution in the same guarded transaction. A decided sale request remains in its relevant Approvals tab with immutable approved terms or rejection/expiry/withdrawal evidence, not a pending action. Additive invalid-demo repair preserves exact prior evidence and never resets unrelated data.
 
-
 ## R2c 7.1 — Create a scoped supplier return
 
 1. Any of the five genuine roles opens **Returns → New return** at an allowed active location. Cashier uses assigned Stores only. Aggregate selection explicitly chooses the responsible location. Module-off, company, current person/session and assignment checks happen in the canonical query/command, independently of the button.
@@ -383,3 +382,9 @@ For every changed child/location, append non-reversible formula/before/after His
 The installed sales-clock adapter also derives package prices and captures tasks before committing the parent start/end lifecycle write, using that transaction’s `sales_clock` witness. It does not defer child propagation to the later price-updates job. The later job rechecks current state idempotently.
 
 Package price derivation retains the ordinary C8 Sale review workflow. If a new derived regular child price is at or below its own existing approved sale, the same protected write keeps that sale and creates one actual `sale_regular_not_above_sale` alert linked to the real child, parent, location and sale revision, with no invented invoice. Owner/Manager can Keep, Change or End through the existing decision command. Repeated derivation does not duplicate the alert or notification. A matching pending package alert or genuine authorized Keep decision survives the retained-sale startup check; unrelated invalid sale records still follow the existing repair. Automatic package offer maintenance reuses the configured normal offer reconciliation, stops stale old-price mappings, adds current suggestions and audits actual changed offers; it never activates a suggestion automatically.
+
+## R2f D3 — weight Product add/edit
+
+Owner/Manager opens Products or Lookup → weight product → Edit. Names, How it's sold, actual cost and rule preview, staged Change price, Package sizes, category and supplier share one Save product. Optional descriptions/barcode/unit/date fields remain under More details. Existing date validation opens that section and focuses the real missing field. Cancel, close and inner Apply to draft never write business data. A stale source/config/package snapshot keeps the draft and asks the user to reopen; a pre-existing unrelated pending invoice-price review must be decided before changing cost rather than silently superseded.
+
+New size shows a live price for the selected location and allocates identities on Save. The package menu stages Edit or Archive with a reason; a pending archive keeps its row with Undo until Save. New parent plus all packages commit together. Archive active children before converting the parent to Each. Branch Supervisors use the separate Package sizes header action (shared by Product and Lookup); it has no cost fields or parent-metadata authority. Floor Workers and Cashiers retain their existing ordinary product actions and cannot call package writes.

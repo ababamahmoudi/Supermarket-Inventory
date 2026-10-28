@@ -2673,7 +2673,9 @@ export function reconcilePackageSaleAlert(
     )
   )
     return;
-  const cost = new SaleDecimal(product.last_cost_before_tax);
+  const cost = new SaleDecimal(
+    product.package_branch_costs?.[branch] ?? product.last_cost_before_tax,
+  );
   const salePrice = new SaleDecimal(saleCanonicalPrice(sale, state.config));
   const margin = salePrice.isZero()
     ? null
@@ -2694,8 +2696,10 @@ export function reconcilePackageSaleAlert(
     sale_last_day: sale.last_day,
     regular_price_before: sale.regular_price_snapshot,
     proposed_regular_price: regular,
-    previous_cost: product.last_cost_before_tax,
-    new_cost: product.last_cost_before_tax,
+    previous_cost:
+      product.package_branch_costs?.[branch] ?? product.last_cost_before_tax,
+    new_cost:
+      product.package_branch_costs?.[branch] ?? product.last_cost_before_tax,
     prior_margin: margin ?? undefined,
     new_margin: margin ?? undefined,
     minimum_margin:

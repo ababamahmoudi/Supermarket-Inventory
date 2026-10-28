@@ -1,3 +1,4 @@
+import { reconcilePackageBranchCosts } from "./product-costs";
 import { reconcileDerivedPackageOffers } from "./approvals";
 import { reconcilePackageSaleAlert } from "./sales";
 import Decimal from "decimal.js";
@@ -13,7 +14,6 @@ import { nextProductCode } from "./manual-product";
 import { createId } from "./ids";
 import {
   calculatePackagePrice,
-  calculatePackageCost,
   packageSettings,
   packageSizeInLb,
   type PackageUnit,
@@ -205,7 +205,7 @@ export function addWeightPackage(
     taxable: parent.taxable,
     main_supplier: parent.main_supplier,
     ai_category: parent.ai_category,
-    date_tracking: parent.date_tracking,
+    date_tracking: false,
     last_cost_before_tax: "0.0000",
     selling_price: "",
     branch_prices: {},
@@ -367,37 +367,7 @@ function reconcilePackages(
       main_supplier: parent.main_supplier,
       package_pending_prices: pending,
     });
-    const priorCost = product.last_cost_before_tax;
-    product.last_cost_before_tax = calculatePackageCost(
-      product.package_size,
-      product.package_size_unit,
-      parent.last_cost_before_tax,
-      state.config,
-    );
-    if (priorCost !== product.last_cost_before_tax)
-      state.activity.push({
-        id: createId("package-cost"),
-        company_id: company,
-        branch: "all",
-        product_code: product.code,
-        entity_type: "product",
-        entity_id: product.code,
-        action: "Package cost recalculated",
-        by: actor?.actor ?? "System",
-        ...(actor ? actorAudit(state, actor, now) : {}),
-        at: now.toISOString(),
-        reversible: false,
-        before: { unit_cost_before_tax: priorCost },
-        after: {
-          unit_cost_before_tax: product.last_cost_before_tax,
-          package_cost_basis: {
-            parent_product_code: parent.code,
-            size_lb: sizeLb,
-            parent_cost_per_lb: parent.last_cost_before_tax,
-            container_cost: packageSettings(state.config).container_cost,
-          },
-        },
-      });
+    reconcilePackageBranchCosts(state, actor, product.code, now, system);
     product.branch_prices ??= {};
     for (const { branch, result } of updates) {
       const prior = product.branch_prices[branch] ?? null;

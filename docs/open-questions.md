@@ -180,6 +180,7 @@ No additional question blocks the numbered work. Missing currency follows compan
 
 - Weight display conversions retain the original kg/lb source arithmetic; displayed invoiced quantity uses three decimals and cost four. Delivered remains explicitly labelled in its retained source unit, avoiding invented precision or rounding a partial physical receipt. Cases show Delivered in cases.
 - A paper-line mismatch acknowledgment belongs to one exact paper/calculated pair and a real actor/time; an amount change requires acknowledgment again. A one-cent difference is tolerated; greater differences block both confirmation and posting.
+
 ## R2e shared-control defaults (2026-10-27)
 
 These are implementation choices within the requested design fixes, with no new business or permission rule. Shared page filters are 44 px throughout, replacing C9's mixed sizes. Desktop list count/Columns reserves the first row's end; phone layouts may wrap that group. Received's selected Today/This week/This month chip clears that range when chosen again. Modal feedback reserves a 44 px footer track on opening, with the page toast deferred and its remaining eight-second Undo display budget paused until closing; the underlying guarded Undo eligibility is unchanged. Shared Product Code columns reserve 128 px for full sortable captions including comfortable text. Notes/descriptions start at two lines and grow through six; receiving addresses keep their existing four-line reservation.
@@ -207,6 +208,7 @@ A package's independent approved sale follows the ordinary C8 conflict workflow 
 
 Maker file ownership is explicit in `maker.asset_identity` (default Klead). Replacing only `maker.name` suppresses inherited logos/icons rather than displaying another maker's lettering; supply replacement files with the matching asset identity, or a complete new maker block.
 
+
 ## R2f D1 display defaults — 2026-10-27
 
 - “So far” is presentation-only elapsed time for the currently selected branch's today, from a valid In no later than its actual clock and no Out. Department/day captions include that elapsed display; stored duration, weekly totals and payroll CSV continue to count only completed shifts. No Out is inferred. Past missing-Out shifts stay amber/zero, and future clock-ins have no elapsed claim. The dashboard's existing prior-unclosed count is unchanged.
@@ -218,3 +220,14 @@ Maker file ownership is explicit in `maker.asset_identity` (default Klead). Repl
 - New person initially selects the first configured department, as the existing guarded staff editor did; the operator can change it. English name is required; Persian name and app login are optional. The list remains mounted while the inline form is open. After a successful Add, clear search and select Active so the new actual person is visible. Cancel discards only the unsaved form.
 - Login display comes from the permitted current branch account query. Loading, unavailable and failed-account-query states are explicit; a missing query result is never shown as No app login when a stored link exists. Name-only edits retain an unchanged unavailable link, while changing/clearing a link still uses normal protected validation.
 - Stale staff versions keep the staged form and report that the person changed. Close/reopen loads the current evidence. Archive remains a confirmed soft status change; Restore does not remove historical rows.
+
+## R2f D3 recorded implementation defaults — 2026-10-28
+
+- Existing cost changes use current selected-location cost authority; All locations records one explicit company-wide manual cost decision with per-location receipt fingerprints. A branch with a later genuine accepted receipt uses that receipt again. A manual marker never appears in purchase history.
+- An existing unrelated pending invoice-price review blocks a new manual cost edit with an actionable Approvals message. The editor may replace its own earlier manual-cost proposal; it never silently supersedes invoice evidence.
+- Explicit Owner/Manager Change price in the draft is the actual authorized price decision and preserves normal reasons, margin acknowledgments and Sale conflict choices. A cost-only edit uses normal pending approval.
+- New package date tracking defaults Off because inheritance covers category/tax/supplier, not dates. Existing parent date requirements and ordinary package date actions remain.
+- Pending archives remain visible as struck-through rows with Undo until outer Save, keeping the acted-on area stable. New rows say Assigned on save until the actual protected allocation.
+
+A location without accepted local regular receipt/manual evidence retains the existing company-level latest-known-cost fallback. A local manual edit updates that fallback as existing regular receipt posting does; actual evidence at another location wins. Manual-cost proposal replacement is restricted to overlapping location scope; a concrete branch cannot partially replace an All locations review.
+

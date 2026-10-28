@@ -177,6 +177,21 @@ export type Product = Omit<
   package_barcode_generated?: boolean;
   package_version?: number;
   package_pending_prices?: Record<Branch, string>;
+  /** Financial-only derived per-location costs; absent from public catalog DTOs. */
+  package_branch_costs?: Record<Branch, string>;
+  manual_costs?: Record<
+    Branch,
+    {
+      company_id: string;
+      branch: string;
+      unit_cost_before_tax: string;
+      receipt_basis: Record<Branch, string | null>;
+      at: string;
+      by_user_id: string;
+      by: string;
+    }
+  >;
+
   price_provenance?: Record<Branch, PriceProvenance>;
   manual_prices?: Record<
     Branch,

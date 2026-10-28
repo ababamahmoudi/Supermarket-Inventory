@@ -58,7 +58,12 @@ function stateFixture() {
   state.price_update_tasks = [];
   state.offers = [];
   state.sales = [];
-  const parent = state.products[0];
+  const parent = {
+    ...structuredClone(state.products[0]),
+    code: "9100",
+    barcode: "FICTIONAL-PARENT-9100",
+  };
+  state.products.push(parent);
   Object.assign(parent, {
     name_en: "Fictional Ground Coriander",
     name_fa: "گشنیز خیالی",
@@ -885,7 +890,8 @@ describe("R2e package cost audit privacy", () => {
       state.activity.filter(
         (item) =>
           item.product_code === child.code &&
-          item.action === "Package cost recalculated",
+          item.action === "Package cost recalculated" &&
+          item.branch === "all",
       ),
     ).toHaveLength(2);
   });
