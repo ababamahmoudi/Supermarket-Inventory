@@ -555,3 +555,4 @@ Added original approved logo/icon files, optional public maker/support config, t
 ### R2f D10 — Branch request form
 
 Rebuilt New/Edit request around the approved paired locations, thin-divider item rows, centred Quantity/Unit/bin, inline notes and full-width Add/Added/free-item search. Retained canonical scope/actor/pack/quantity guards and transfer behavior; local cancel/back do not write and repeated save activation is coalesced. Added real draft/send/cancel, note, duplicate, composition-negative and EN/FA responsive browser proof plus exact shared alignment registration. See `PR_R2F_D10_REVIEW.md` for final executed results and reference differences.
+- R2f R0.7: add an ordinary discovered 40-scene alignment matrix using real routes/records at both required widths and bilingual theme variants, with nonvacuous control/row/column/icon/number/card checks and JSON audit evidence; retain all strict geometry limits and shifted-geometry negative controls.
