@@ -110,6 +110,11 @@
 :root .ui-numeric-caption:lang(fa) {
   font-family: var(--font-fa);
 }
+/* Preserve the original intrinsic width while FitText shortens its visible
+   copy. Flex neighbours stay adjacent, without width/shrink feedback loops. */
+:root .ui-fit-text-intrinsic {
+  inline-size: var(--fit-text-intrinsic-size, auto);
+}
 :root .ui-data-table td.numeric > :is(div, span):only-child {
   justify-content: flex-end;
   justify-items: end;

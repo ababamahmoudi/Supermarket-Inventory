@@ -5,10 +5,12 @@ export function FitText({
   value,
   className,
   render,
+  intrinsic = false,
 }: {
   value: string;
   className?: string;
   render?: (visible: string) => ReactNode;
+  intrinsic?: boolean;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [visible, setVisible] = useState(value);
@@ -20,16 +22,22 @@ export function FitText({
       if (!active) return;
       if (typeof CanvasRenderingContext2D === "undefined") return;
       const style = getComputedStyle(element);
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      if (!context) return;
+      context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      if (intrinsic) context.letterSpacing = style.letterSpacing;
+      if (intrinsic)
+        element.style.setProperty(
+          "--fit-text-intrinsic-size",
+          `${Math.ceil(context.measureText(value).width) + 4}px`,
+        );
       const width =
         element.clientWidth -
         parseFloat(style.paddingInlineStart || "0") -
         parseFloat(style.paddingInlineEnd || "0") -
         4; // Leave room for glyph overhang and tabular-number advance widths.
       if (width <= 0) return;
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      if (!context) return;
-      context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
       if (context.measureText(value).width <= width) {
         setVisible(value);
         return;
@@ -56,10 +64,19 @@ export function FitText({
     return () => {
       active = false;
       observer.disconnect();
+      element.style.removeProperty("--fit-text-intrinsic-size");
     };
-  }, [value]);
+  }, [value, intrinsic]);
   return (
-    <span ref={ref} className={className} title={value}>
+    <span
+      ref={ref}
+      className={
+        [className, intrinsic && "ui-fit-text-intrinsic"]
+          .filter(Boolean)
+          .join(" ") || undefined
+      }
+      title={value}
+    >
       {render ? render(visible) : visible}
     </span>
   );

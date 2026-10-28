@@ -441,6 +441,7 @@ function ReturnsContent() {
           {record.lines.slice(0, 2).map((line, index) => (
             <span key={`${line.product_code}:${index}`}>
               <FitText
+                intrinsic
                 className="return-list-item-name"
                 value={productName(line.product_code)}
                 render={(visible) => <UnitText>{visible}</UnitText>}

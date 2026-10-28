@@ -15,11 +15,11 @@
 .return-list-item-names > span {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 0;
   min-inline-size: 0;
 }
 .return-list-item-name {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;

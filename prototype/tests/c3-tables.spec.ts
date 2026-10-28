@@ -299,6 +299,46 @@ for (const language of ["en", "fa"] as const) {
     expect(final.failures).toEqual([]);
     expect(final.boundedScrolls).toHaveLength(1);
     expect(await wrapper.locator("tbody").innerText()).toBe(retained);
+    // The approved phone composition keeps a short name's quantity adjacent,
+    // while the desktop's narrow name track still reserves the complete +N.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(wrapper).toHaveClass(/is-phone-list/);
+    const firstItem = wrapper.locator(".return-list-item-names > span").first();
+    const firstProduct = before.products.find((item) => item.code === "0001")!;
+    await expect(firstItem.locator(".return-list-item-name")).toHaveText(
+      language === "fa"
+        ? firstProduct.name_fa || firstProduct.name_en
+        : firstProduct.name_en,
+    );
+    const adjacency = await firstItem.evaluate((node) => {
+      const glyphs = (selector: string) => {
+        const range = document.createRange();
+        range.selectNodeContents(node.querySelector(selector)!);
+        return range.getBoundingClientRect();
+      };
+      const name = glyphs(".return-list-item-name");
+      const quantity = glyphs(".return-list-item-quantity");
+      const gap =
+        getComputedStyle(node).direction === "rtl"
+          ? name.left - quantity.right
+          : quantity.left - name.right;
+      const style = getComputedStyle(
+        node.querySelector(".return-list-item-name")!,
+      );
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d")!;
+      context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      return { gap, inlineSpace: context.measureText(" ").width };
+    });
+    expect(adjacency.gap).toBeGreaterThanOrEqual(0);
+    expect(
+      Math.abs(adjacency.gap - 4),
+      JSON.stringify(adjacency),
+    ).toBeLessThanOrEqual(1.5);
+    await page.screenshot({
+      path: info.outputPath(`adjacent-items-${language}.png`),
+      fullPage: true,
+    });
     const after = await readCanonicalBusinessEvidence(page);
     for (const field of [
       "returns",
@@ -310,7 +350,11 @@ for (const language of ["en", "fa"] as const) {
         before[field],
       );
     await info.attach("bounded-selected-column-scroller", {
-      body: JSON.stringify({ initial, scans, final }, null, 2),
+      body: JSON.stringify(
+        { initial, scans, final, phoneAdjacency: adjacency },
+        null,
+        2,
+      ),
       contentType: "application/json",
     });
   });
