@@ -236,7 +236,11 @@ export default function Invoices() {
         },
         (draft, currentActor) => {
           retainInvoiceWorkspace(draft);
-          draft.invoice = createInvoice(draft, currentActor, location, manual);
+          draft.invoice = createInvoice(draft, currentActor, location, manual, {
+            empty:
+              !manual &&
+              getLiveReaderSettings(draft.config.receiving).mode === "live",
+          });
           draft.invoice.receiving_employee = currentActor.actor;
           return draft.invoice.id;
         },
@@ -948,14 +952,19 @@ function InvoiceWorkspace({
           },
           (draft, currentActor) => {
             retainInvoiceWorkspace(draft);
+            const live =
+              !manual &&
+              getLiveReaderSettings(draft.config.receiving).mode === "live";
             draft.invoice = createInvoice(
               draft,
               currentActor,
               location,
               manual,
+              { empty: live },
             );
             draft.invoice.receiving_employee = currentActor.actor;
-            initializeInvoiceManualPriceDecisions(draft, currentActor);
+            if (!live)
+              initializeInvoiceManualPriceDecisions(draft, currentActor);
             return draft.invoice.id;
           },
         );
