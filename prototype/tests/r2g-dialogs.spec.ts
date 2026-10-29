@@ -28,7 +28,18 @@ for (const [language, theme] of [
         '.current-offers-table tr[data-product-code="0003"]',
       );
       const stopText = language === "en" ? "Stop offer" : "توقف پیشنهاد";
-      await row.getByRole("button", { name: stopText, exact: true }).click();
+      const stopAction = row.getByRole("button", {
+        name: stopText,
+        exact: true,
+      });
+      await expect(stopAction).toBeVisible();
+      const rowBounds = await row.boundingBox();
+      const stopBounds = await stopAction.boundingBox();
+      expect(stopBounds!.y).toBeGreaterThanOrEqual(rowBounds!.y - 1.5);
+      expect(stopBounds!.y + stopBounds!.height).toBeLessThanOrEqual(
+        rowBounds!.y + rowBounds!.height + 1.5,
+      );
+      await stopAction.click();
       await page
         .getByRole("dialog", { name: stopText, exact: true })
         .getByRole("button", { name: stopText, exact: true })
