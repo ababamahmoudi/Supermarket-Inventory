@@ -58,9 +58,9 @@ test("R2f D3 stages costs and new sizes without writes on Cancel, then saves a r
     .getByRole("textbox", { name: "Cost before tax", exact: true })
     .fill("5.1000");
   await stageWeightPackage(page, "250");
-  await expect(dialog.locator('[data-package-code="staged"]')).toContainText(
-    "Assigned on save",
-  );
+  await expect(
+    dialog.locator('[data-package-code="staged"] .weight-package-new'),
+  ).toHaveText(["New", "New"]);
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
   const cancelled = await readCanonicalBusinessEvidence(page);
   expect(cancelled.products).toEqual(before.products);
@@ -414,9 +414,9 @@ test("R2f D3 creates a weight parent with packages and stages an explicit price 
     .getByRole("textbox", { name: "New size", exact: true })
     .fill("250");
   await dialog.getByRole("button", { name: "Add size", exact: true }).click();
-  await expect(dialog.locator('[data-package-code="staged"]')).toContainText(
-    "Assigned on save",
-  );
+  await expect(
+    dialog.locator('[data-package-code="staged"] .weight-package-new'),
+  ).toHaveText(["New", "New"]);
   await dialog
     .getByRole("button", { name: "Add product", exact: true })
     .click();

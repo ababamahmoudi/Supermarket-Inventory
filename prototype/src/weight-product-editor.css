@@ -2,6 +2,17 @@
   inline-size: min(860px, calc(100vw - 32px));
   max-inline-size: min(860px, calc(100vw - 32px));
 }
+:root .product-editor-dialog {
+  text-align: start;
+}
+.product-editor-caption {
+  display: block;
+  overflow-wrap: anywhere;
+}
+:root .product-editor-dialog > .dialog-description {
+  flex: 0 0 auto;
+  margin-block-end: 0;
+}
 .weight-product-dialog .product-editor-section {
   padding-block: 20px 0;
   border-block-end: 0;
@@ -203,6 +214,11 @@
 }
 .weight-package-empty {
   margin: 12px 0;
+  text-align: start;
+}
+.weight-package-new {
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 .weight-product-optional-details {
   margin-block: 8px;
@@ -215,6 +231,9 @@
 }
 .weight-product-optional-details[open] > .form-grid {
   margin-block-start: 12px;
+}
+.weight-product-optional-details > .product-date-editor {
+  margin-block-start: 16px;
 }
 .weight-product-dialog .weight-product-price-card .field {
   margin: 0;

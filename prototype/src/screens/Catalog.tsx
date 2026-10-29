@@ -806,7 +806,7 @@ export function ProductEditor({
               missing.push({ id: key, fieldId: `${formId}-${key}`, message });
             if (!values.name_en.trim())
               addIssue("name_en", editorError("name_en", t));
-            if (!values.unit_size.trim())
+            if (values.sold_by !== "weight" && !values.unit_size.trim())
               addIssue("unit_size", editorError("unit_size", t));
             if (
               !activePricingCategories(state.config).some(
@@ -1649,24 +1649,6 @@ export function ProductEditor({
                       <summary>{t("More details", "جزئیات بیشتر")}</summary>
                       <div className="form-grid product-editor-fields">
                         <Field
-                          label={t("Unit size", "اندازهٔ واحد")}
-                          error={
-                            fieldIssue("unit_size") ??
-                            (error === "unit_size"
-                              ? editorError(error, t)
-                              : undefined)
-                          }
-                        >
-                          <input
-                            id={`${formId}-unit_size`}
-                            dir="ltr"
-                            value={values.unit_size}
-                            onChange={(event) =>
-                              patch("unit_size", event.target.value)
-                            }
-                          />
-                        </Field>
-                        <Field
                           label={t("Barcode (optional)", "بارکد (اختیاری)")}
                           error={
                             error === "barcode_conflict"
@@ -1722,24 +1704,26 @@ export function ProductEditor({
                 ) : (
                   <>
                     <div className="form-grid product-editor-fields">
-                      <Field
-                        label={t("Unit size", "اندازهٔ واحد")}
-                        error={
-                          fieldIssue("unit_size") ??
-                          (error === "unit_size"
-                            ? editorError(error, t)
-                            : undefined)
-                        }
-                      >
-                        <input
-                          id={`${formId}-unit_size`}
-                          dir="ltr"
-                          value={values.unit_size}
-                          onChange={(event) =>
-                            patch("unit_size", event.target.value)
+                      {!weightProduct && (
+                        <Field
+                          label={t("Unit size", "اندازهٔ واحد")}
+                          error={
+                            fieldIssue("unit_size") ??
+                            (error === "unit_size"
+                              ? editorError(error, t)
+                              : undefined)
                           }
-                        />
-                      </Field>
+                        >
+                          <input
+                            id={`${formId}-unit_size`}
+                            dir="ltr"
+                            value={values.unit_size}
+                            onChange={(event) =>
+                              patch("unit_size", event.target.value)
+                            }
+                          />
+                        </Field>
+                      )}
                       <Field
                         label={t("Category (optional)", "دسته (اختیاری)")}
                         error={

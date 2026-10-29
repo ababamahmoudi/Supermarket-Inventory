@@ -53,7 +53,7 @@ export function WeightProductPricing({
         unit === "lb"
           ? new Decimal(cost).times(factor)
           : new Decimal(cost).div(factor)
-      ).toFixed(4);
+      ).toFixed(unit === "lb" ? 2 : 4, Decimal.ROUND_HALF_UP);
   } catch {
     /* Invalid input is reported by the guarded preview/save. */
   }
@@ -108,7 +108,12 @@ export function WeightProductPricing({
           <p className="helper weight-product-price-preview">
             {secondaryCost ? (
               <>
-                = <Money value={secondaryCost} currency={currency} />{" "}
+                ={" "}
+                <Money
+                  value={secondaryCost}
+                  currency={currency}
+                  decimals={unit === "lb" ? 2 : 4}
+                />{" "}
                 {unit === "lb"
                   ? t("per kg", "هر کیلوگرم")
                   : t("per lb", "هر پوند")}

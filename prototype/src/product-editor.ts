@@ -142,8 +142,12 @@ export function saveProductEdits(
     expectedSnapshot
   )
     fail("stale");
-  for (const key of ["name_en", "unit_size"] as const)
-    if (!edits[key].trim()) fail(key);
+  if (!edits.name_en.trim()) fail("name_en");
+  if (
+    (edits.sold_by ?? product.sold_by) !== "weight" &&
+    !edits.unit_size.trim()
+  )
+    fail("unit_size");
   if (
     !state.config.pricing_categories.some(
       (category) => category.key === edits.pricing_category,

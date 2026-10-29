@@ -34,6 +34,7 @@ import {
   Select,
   Menu,
   MenuItem,
+  ColumnValue,
   AutoTextarea as Textarea,
 } from "./ui";
 import { Money, LtrText, UnitText, categoryLabel } from "./presentation";
@@ -304,19 +305,25 @@ export function PackageSizeSection({
                 </strong>
               </span>
               <span role="cell" className="weight-package-number">
-                <LtrText>
-                  {row.code ??
-                    t("Assigned on save", "هنگام ذخیره تعیین می‌شود")}
-                </LtrText>
+                {row.code ? (
+                  <LtrText>{row.code}</LtrText>
+                ) : (
+                  <ColumnValue tone="muted" className="weight-package-new">
+                    {t("New", "جدید")}
+                  </ColumnValue>
+                )}
               </span>
               <span
                 role="cell"
                 className="weight-package-number weight-package-barcode"
               >
-                <LtrText>
-                  {row.barcode ||
-                    t("Assigned on save", "هنگام ذخیره تعیین می‌شود")}
-                </LtrText>
+                {row.barcode ? (
+                  <LtrText>{row.barcode}</LtrText>
+                ) : (
+                  <ColumnValue tone="muted" className="weight-package-new">
+                    {t("New", "جدید")}
+                  </ColumnValue>
+                )}
                 {(row.generated || row.archived) && (
                   <span>
                     {row.archived
