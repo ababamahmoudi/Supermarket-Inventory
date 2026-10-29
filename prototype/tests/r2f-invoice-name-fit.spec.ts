@@ -133,9 +133,13 @@ for (const language of ["en", "fa"] as const) {
       .poll(async () => (await nameGeometry(page)).failures)
       .toEqual([]);
     const first = names.first();
+    const fullNameFragment = first.locator(":scope > bdi.ltr-fragment");
+    await expect(fullNameFragment).toHaveCount(1);
+    await expect(fullNameFragment).toHaveText(titles[0]!);
     // Keep all text/title intact, then deliberately move a painted glyph 4px
-    // beyond the exact name edge. The geometry oracle must reject it.
-    const original = await first.locator("bdi").evaluate((element) => {
+    // beyond the exact name edge. Mutate the full-name fragment rather than
+    // the nested numeric bdi that keeps its size atom together.
+    const original = await fullNameFragment.evaluate((element) => {
       const style = element.getAttribute("style");
       const name = element.parentElement!.getBoundingClientRect();
       const range = document.createRange();
@@ -147,8 +151,10 @@ for (const language of ["en", "fa"] as const) {
       (element as HTMLElement).style.left = `${name.right - right + 4}px`;
       return style;
     });
-    expect((await nameGeometry(page)).failures.length).toBeGreaterThan(0);
-    await first.locator("bdi").evaluate((element, style) => {
+    expect((await nameGeometry(page)).failures).toContain(
+      `Visible name leaves its box: ${titles[0]}`,
+    );
+    await fullNameFragment.evaluate((element, style) => {
       if (style === null) element.removeAttribute("style");
       else element.setAttribute("style", style);
     }, original);
