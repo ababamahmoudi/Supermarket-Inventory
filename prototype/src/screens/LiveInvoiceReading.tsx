@@ -5,6 +5,7 @@ import {
   loadInvoiceOriginal,
   storeInvoiceUpload,
   type InvoiceUploadHandle,
+  type ProtectedInvoiceQuery,
 } from "../invoice-file-access";
 import {
   attachLiveInvoiceOriginals,
@@ -49,6 +50,25 @@ function untilCancelled<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
       .then(resolve, reject)
       .finally(() => signal.removeEventListener("abort", cancel));
   });
+}
+async function retainedFiles(
+  query: ProtectedInvoiceQuery,
+  companyId: string,
+  invoiceId: string,
+  count: number,
+) {
+  const files: File[] = [];
+  for (let page = 0; page < count; page++) {
+    const original = await loadInvoiceOriginal(query, {
+      company_id: companyId,
+      invoice_id: invoiceId,
+      page,
+    });
+    files.push(
+      new File([original.source], original.name, { type: original.type }),
+    );
+  }
+  return files;
 }
 
 /** Store all original bytes before any preparation or external request. */
@@ -276,21 +296,16 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
   useEffect(() => {
     let permitted = true;
     void (async () => {
-      const loaded: File[] = [];
       const count =
         invoice.file_type === "application/pdf"
           ? 1
           : Math.max(1, invoice.original_page_count);
-      for (let page = 0; page < count; page++) {
-        const original = await loadInvoiceOriginal(query, {
-          company_id: invoice.company_id,
-          invoice_id: invoice.id,
-          page,
-        });
-        loaded.push(
-          new File([original.source], original.name, { type: original.type }),
-        );
-      }
+      const loaded = await retainedFiles(
+        query,
+        invoice.company_id,
+        invoice.id,
+        count,
+      );
       if (permitted) setFileState({ key: sourceKey, files: loaded });
     })().catch(() => {
       if (permitted) {
@@ -344,6 +359,15 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
         ).catch(() => undefined);
     };
   }, [token, command, invoice.company_id, invoice.id]);
+  useEffect(() => {
+    const pending = operation.current;
+    if (
+      pending?.attemptId &&
+      (invoice.live_reading?.attempt_id !== pending.attemptId ||
+        invoice.live_reading?.phase !== "processing")
+    )
+      pending.controller.abort();
+  }, [invoice.live_reading?.attempt_id, invoice.live_reading?.phase]);
 
   async function read() {
     if (
@@ -388,8 +412,19 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
         attempt.attempt_id,
         attempt.started_at,
       );
+      // Read the current protected source order after the accepted begin. A
+      // different tab's saved reorder must never pair old images with new hashes.
+      const readingFiles = await untilCancelled(
+        retainedFiles(
+          query,
+          invoice.company_id,
+          invoice.id,
+          attempt.original_sha256s.length,
+        ),
+        pending.controller.signal,
+      );
       const images = await untilCancelled(
-        prepareLiveReaderImages(files, pending.controller.signal),
+        prepareLiveReaderImages(readingFiles, pending.controller.signal),
         pending.controller.signal,
       );
       if (!valid()) throw new DOMException("Cancelled", "AbortError");
@@ -404,13 +439,13 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
       deadline = undefined;
       setStage("finding");
       const hashes =
-        files.length === 1 && files[0].type === "application/pdf"
+        readingFiles.length === 1 && readingFiles[0].type === "application/pdf"
           ? images.map(() => attempt.original_sha256s[0])
           : attempt.original_sha256s;
       const exported = buildLiveInvoiceReadingsExport(response, {
         images,
         originalSha256: hashes,
-        fileName: files[0].name,
+        fileName: readingFiles[0].name,
         id: invoice.id,
       });
       if (!valid()) throw new DOMException("Cancelled", "AbortError");
