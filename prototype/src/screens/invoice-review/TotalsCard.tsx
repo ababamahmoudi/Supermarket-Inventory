@@ -125,6 +125,7 @@ export function TotalsCard({
               dir="ltr"
               inputMode="decimal"
               value={invoice[key]}
+              onFocus={() => setEditing(true)}
               onChange={(e) => {
                 const value = e.target.value;
                 update((draft, actor) => {
