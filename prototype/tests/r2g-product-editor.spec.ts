@@ -373,3 +373,91 @@ test("R2g C1 rebases repeated package frames and releases them for real user scr
   ).toBe("");
   expect(await dialog.evaluate((element) => element.style.blockSize)).toBe("");
 });
+
+for (const width of [360, 390, 509, 760, 1440])
+  test(`R2g C1 retains viewport scroll capacity through repeated sold-by round trips at ${width}${width === 509 ? " @r2g-509" : ""}`, async ({
+    page,
+  }, info) => {
+    const language = width === 1440 ? "en" : "fa";
+    await page.setViewportSize({ width, height: width === 1440 ? 1500 : 1700 });
+    await fixture(page);
+    await setLanguage(page, language);
+    const before = await readCanonicalBusinessEvidence(page);
+    const dialog = await openEditor(page, language);
+    for (const size of ["250", "500", "750"]) {
+      const input = dialog.getByRole("textbox", {
+        name: language === "en" ? "New size" : "اندازه جدید",
+        exact: true,
+      });
+      await stable(input, () => input.fill(size));
+      const add = dialog.getByRole("button", {
+        name: language === "en" ? "Add size" : "افزودن اندازه",
+        exact: true,
+      });
+      await stable(add, () => add.click());
+    }
+    const frames = [];
+    for (let round = 0; round < 2; round++) {
+      await dialog
+        .locator(".weight-product-optional-details > summary")
+        .click();
+      const soldBy = dialog.getByRole("group", {
+        name: language === "en" ? "Sold by" : "روش فروش",
+        exact: true,
+      });
+      const each = soldBy.getByRole("button", {
+        name: language === "en" ? "Each" : "عددی",
+        exact: true,
+      });
+      await stable(each, () => each.click());
+      const body = dialog.locator(".product-editor-body");
+      const weight = soldBy.getByRole("button", {
+        name: language === "en" ? "By weight" : "وزنی",
+        exact: true,
+      });
+      // Reproduce a partial field-navigation scroll in the held Each frame.
+      // The next pointer action must preserve this real viewport capacity.
+      const held = await weight.evaluate((element) => {
+        const parent = element.closest<HTMLElement>(".product-editor-body")!;
+        const available = parent.scrollHeight - parent.clientHeight;
+        const visibleRoom =
+          element.getBoundingClientRect().top -
+          parent.getBoundingClientRect().top +
+          parent.scrollTop -
+          parseFloat(getComputedStyle(parent).paddingTop);
+        const target = Math.min(
+          parent.clientHeight / 10,
+          available,
+          visibleRoom,
+        );
+        parent.scrollTop = target;
+        return {
+          available,
+          scrollTop: parent.scrollTop,
+          viewport: parent.clientHeight,
+        };
+      });
+      expect(held.scrollTop).toBeGreaterThan(0);
+      await stable(weight, () => weight.click());
+      const afterScroll = await body.evaluate((element) => element.scrollTop);
+      expect(Math.abs(afterScroll - held.scrollTop)).toBeLessThanOrEqual(2);
+      await expect(weight).toHaveAttribute("aria-pressed", "true");
+      await expect(dialog.locator('[data-package-code="staged"]')).toHaveCount(
+        3,
+      );
+      frames.push({ round, ...held, afterScroll });
+    }
+    await info.attach("viewport-capacity-round-trips", {
+      body: JSON.stringify(frames, null, 2),
+      contentType: "application/json",
+    });
+    await dialog
+      .getByRole("button", {
+        name: language === "en" ? "Cancel" : "انصراف",
+        exact: true,
+      })
+      .click();
+    const after = await readCanonicalBusinessEvidence(page);
+    expect(after.products).toEqual(before.products);
+    expect(after.product_code_high_water).toBe(before.product_code_high_water);
+  });

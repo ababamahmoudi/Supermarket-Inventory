@@ -77,12 +77,18 @@ export function useWeightEditorScrollAnchor() {
         // retaining only the tail needed to keep the current viewport in place.
         const parent = productScrollParent(control);
         const scrollTop = parent?.scrollTop ?? 0;
+        const viewport = parent?.clientHeight ?? 0;
+        const style = parent ? getComputedStyle(parent) : null;
+        const padding = style
+          ? (parseFloat(style.paddingTop) || 0) +
+            (parseFloat(style.paddingBottom) || 0)
+          : 0;
         content.style.removeProperty("min-block-size");
         const natural = content.getBoundingClientRect().height;
-        const tail = parent
-          ? Math.max(0, scrollTop - (parent.scrollHeight - parent.clientHeight))
-          : 0;
-        content.style.minBlockSize = `${natural + Math.ceil(tail)}px`;
+        // scrollHeight cannot reveal missing extent when natural content is
+        // shorter than the viewport. Keep the pre-rebase scroll capacity.
+        const extent = parent ? viewport + scrollTop - padding : 0;
+        content.style.minBlockSize = `${Math.max(natural, Math.ceil(extent))}px`;
         if (parent) parent.scrollTop = scrollTop;
         held.current = { dialog, content };
       }
