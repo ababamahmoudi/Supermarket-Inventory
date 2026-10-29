@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 import Decimal from "decimal.js";
 import { useDemo } from "../../store";
 import { SegmentedControl } from "../../ui";
-import { LtrValue, QuantityText } from "../../presentation";
+import { LtrText, LtrValue, QuantityText, UnitText } from "../../presentation";
 import { visibleInvoiceCheckFields } from "../../invoice-checks";
 import { invoiceLineId } from "../../invoice-line-links";
 import { categoryLabel } from "../../formatters";
@@ -386,27 +386,17 @@ export function LinesTable({
                       }}
                     >
                       <span className="receiving-product-name" title={name}>
-                        <LtrValue value={name} />
+                        <LtrText>
+                          <UnitText>{name}</UnitText>
+                        </LtrText>
                       </span>
                     </a>
                     <small className="receiving-product-meta">
-                      {line.pack_size && (
-                        <>
-                          <LtrValue value={line.pack_size} />
-                          <span aria-hidden="true">·</span>
-                        </>
-                      )}
-                      {line.supplier_item_code &&
-                        line.supplier_item_code.trim().toLocaleLowerCase() !==
-                          name.trim().toLocaleLowerCase() && (
-                          <>
-                            <LtrValue value={line.supplier_item_code} />
-                            <span aria-hidden="true">·</span>
-                          </>
-                        )}
                       <span
                         className={
-                          category ? undefined : "receiving-check-summary"
+                          category
+                            ? "receiving-product-category"
+                            : "receiving-product-category receiving-check-summary"
                         }
                       >
                         {category

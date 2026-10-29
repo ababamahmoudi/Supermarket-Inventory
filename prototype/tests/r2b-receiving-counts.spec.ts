@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { openShellAction } from "./helpers";
 import { importReceivingFixture, word } from "./r2-receiving-helpers";
+import { inspectReceivingDensity } from "./r2g-receiving-density";
 
 for (const language of ["en", "fa"] as const) {
   for (const theme of ["light", "dark"] as const) {
@@ -89,8 +90,12 @@ for (const language of ["en", "fa"] as const) {
       expect(geometry.rows.every((height) => height >= 44)).toBe(true);
       expect(geometry.overflow).toBe(false);
       if (!phone) {
-        expect(geometry.review).toBeLessThanOrEqual(2700);
-        expect(geometry.document).toBeLessThanOrEqual(2700);
+        const density = await inspectReceivingDensity(page, invoice);
+        await testInfo.attach("R2g reference-based closed-line density", {
+          body: JSON.stringify(density),
+          contentType: "application/json",
+        });
+        expect(density.failures).toEqual([]);
       }
     });
   }

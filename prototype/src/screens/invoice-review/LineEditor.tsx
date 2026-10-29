@@ -131,6 +131,7 @@ export function LineEditor({
     "expiry_as_printed",
     "description",
     "handwritten_note",
+    "pack_size",
   ];
   const [more, setMore] = useState(
     () =>
@@ -1469,23 +1470,32 @@ export function LineEditor({
                   ],
                   description: ["Printed description", "شرح چاپ‌شده"],
                   handwritten_note: ["Handwritten note", "یادداشت دست‌نویس"],
+                  pack_size: ["Pack as printed", "بستهٔ چاپ‌شده"],
                 };
                 return (
                   <Field key={key} readingField={key} label={t(...labels[key])}>
                     <BufferedInput
                       id={id(key)}
-                      readOnly={!!correction && key !== "lot_number"}
+                      readOnly={
+                        key === "pack_size" ||
+                        (!!correction && key !== "lot_number")
+                      }
                       dir="ltr"
                       value={String(
                         (line as unknown as Record<string, unknown>)[key] ?? "",
                       )}
-                      onChange={(e) => {
-                        const inputValue = e.currentTarget.value;
-                        edit(key, (item) => {
-                          (item as unknown as Record<string, unknown>)[key] =
-                            inputValue;
-                        });
-                      }}
+                      onChange={
+                        key === "pack_size"
+                          ? undefined
+                          : (e) => {
+                              const inputValue = e.currentTarget.value;
+                              edit(key, (item) => {
+                                (item as unknown as Record<string, unknown>)[
+                                  key
+                                ] = inputValue;
+                              });
+                            }
+                      }
                     />
                   </Field>
                 );

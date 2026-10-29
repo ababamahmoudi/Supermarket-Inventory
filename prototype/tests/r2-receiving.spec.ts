@@ -1,6 +1,7 @@
 import { openInvoiceDetails, setBranch } from "./helpers";
 import { expect, test } from "@playwright/test";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { inspectReceivingDensity } from "./r2g-receiving-density";
 import { openShellAction } from "./helpers";
 import {
   importReceivingFixture,
@@ -46,27 +47,12 @@ for (const language of ["en", "fa"] as const) {
     ).toHaveCount(0);
     const review = page.getByTestId("invoice-review");
     if (!phone) {
-      const height = await review.evaluate(
-        (element) => element.getBoundingClientRect().height,
-      );
-      expect(
-        height,
-        "All 25 closed lines, header and totals fit in three desktop windows",
-      ).toBeLessThanOrEqual(2700);
-      const documentHeight = await page.evaluate(
-        () => document.documentElement.scrollHeight,
-      );
+      const density = await inspectReceivingDensity(page, imported);
+      expect(density.failures).toEqual([]);
       testInfo.annotations.push({
-        type: "closed-invoice-height",
-        description: JSON.stringify({
-          review: height,
-          document: documentHeight,
-        }),
+        type: "r2g-closed-invoice-density",
+        description: JSON.stringify(density),
       });
-      expect(
-        documentHeight,
-        "The entire invoice page, including the app header, fits in three desktop windows",
-      ).toBeLessThanOrEqual(2700);
       const table = review.locator(".receiving-lines-table");
       await expect(table).toHaveCount(1);
       expect(
