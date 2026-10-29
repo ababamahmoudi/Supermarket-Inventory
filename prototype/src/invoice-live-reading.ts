@@ -15,6 +15,7 @@ import {
   liveOriginalPages,
   liveOriginalSignature,
   requireLiveInvoice,
+  requireLiveManualTransition,
   requireLiveReadingTarget,
 } from "./invoice-live-reading-state";
 import type { LiveReadingProvenance } from "./invoice-live-reading-types";
@@ -131,9 +132,11 @@ export function reorderLiveInvoiceOriginals(
     input.order.some((index) => !Number.isSafeInteger(index) || !pages[index])
   )
     throw new Error("Choose each saved page once.");
+  if (input.order.every((index, position) => index === position)) return;
   const ordered = input.order.map((index) => structuredClone(pages[index]));
   invoice.original_pages = ordered;
   Object.assign(invoice, ordered[0]);
+  invoice.version = (invoice.version ?? 1) + 1;
   invoice.live_reading!.authority = captureAuthority(invoice, currentActor);
   publish(state, invoice);
 }
@@ -185,7 +188,10 @@ export function settleLiveInvoiceReading(
   },
   now = new Date(),
 ) {
-  const { invoice } = requireLiveReadingTarget(state, actor, input, "settle");
+  const { invoice } =
+    input.outcome === "manual"
+      ? requireLiveManualTransition(state, actor, input)
+      : requireLiveReadingTarget(state, actor, input, "settle");
   if (
     input.outcome !== "manual" &&
     !["ready", "processing"].includes(invoice.live_reading!.phase)

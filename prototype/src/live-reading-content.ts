@@ -2,12 +2,9 @@
 export function isUsableLiveReadingItem(value: unknown): boolean {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const line = value as Record<string, unknown>;
-  if (
-    line.line_type != null &&
-    line.line_type !== "" &&
-    line.line_type !== "item"
-  )
-    return false;
+  const kind =
+    typeof line.line_type === "string" ? line.line_type.trim() : line.line_type;
+  if (kind != null && kind !== "" && kind !== "item") return false;
   return [
     "description",
     "supplier_sku",

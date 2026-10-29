@@ -424,9 +424,15 @@ export function addManualLine(
     state.invoice.id,
     true,
   );
-  if (state.invoice.live_reading?.phase === "manual")
-    actor = requireLiveManualInvoice(state, actor, state.invoice.id);
-  else
+  if (
+    canInvoiceAuthority(
+      state,
+      actor,
+      "invoices.enter_manual",
+      state.invoice.id,
+      true,
+    )
+  )
     requireInvoiceAuthority(
       state,
       actor,
@@ -434,6 +440,7 @@ export function addManualLine(
       state.invoice.id,
       true,
     );
+  else actor = requireLiveManualInvoice(state, actor, state.invoice.id);
   const product = state.products.find(
     (item) =>
       item.code === code && item.company_id === state.invoice.company_id,

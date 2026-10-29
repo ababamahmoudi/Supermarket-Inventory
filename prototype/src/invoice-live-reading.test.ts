@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import sample from "../tests/fixtures/fictional-readings-export.json";
 import { initialState } from "./e1-bootstrap";
 import { authenticatedTestActor } from "./authority-test-fixture";
+import { authoritySnapshot, bindAuthoritySnapshot } from "./authority";
 import type { RoleId } from "./authority-types";
 import { addManualLine, createInvoice } from "./invoice";
 import {
@@ -491,6 +492,9 @@ describe("R3 protected live reading domain", () => {
     expect(() => addManualLine(data.state, data.actor, "0002")).not.toThrow();
     expect(data.state.invoice.lines).toHaveLength(1);
     expect(data.state.invoice.original_pages).toHaveLength(1);
+    expect(() =>
+      createInvoice(data.state, data.actor, "Branch 1", true),
+    ).toThrow();
     const before = snapshot(data.state);
     const other = authenticatedTestActor(data.state, "floor_worker", {
       user_id: "fictional-other-worker",
@@ -625,14 +629,7 @@ describe("R3 protected live reading domain", () => {
     },
   );
 
-  it.each([
-    "original",
-    "session",
-    "branch",
-    "posted",
-    "origin",
-    "company",
-  ] as const)(
+  it.each(["original", "branch", "posted", "origin", "company"] as const)(
     "manual fallback rejects a changed %s without writes",
     async (change) => {
       const data = await processing("floor_worker");
@@ -644,8 +641,6 @@ describe("R3 protected live reading domain", () => {
         delete data.state.invoice.file_data;
         delete data.state.invoice.original_pages;
       }
-      if (change === "session")
-        data.actor = authenticatedTestActor(data.state, "floor_worker");
       if (change === "branch") data.state.invoice.branch = "Branch 2";
       if (change === "company")
         data.state.invoice.company_id = "fictional-other-company";
@@ -701,5 +696,167 @@ describe("R3 protected live reading domain", () => {
       beginLiveInvoiceReading(data.state, cashier, data.attempt.invoice_id),
     ).toThrow();
     expect(snapshot(data.state)).toBe(before);
+  });
+
+  it.each(["same-manager", "other-manager", "same-worker"] as const)(
+    "a fresh %s can continue the existing manual fallback under current authority",
+    async (kind) => {
+      const data = await processing(
+        kind === "same-worker" ? "floor_worker" : "manager",
+      );
+      settleLiveInvoiceReading(data.state, data.actor, {
+        ...data.attempt,
+        outcome: "manual",
+      });
+      const stale = data.actor;
+      const current = authenticatedTestActor(
+        data.state,
+        kind === "same-worker" ? "floor_worker" : "manager",
+        kind === "other-manager"
+          ? {
+              user_id: "fictional-other-manager",
+              username: "fictional-other-manager",
+            }
+          : {},
+      );
+      const original = structuredClone(data.state.invoice.original_pages);
+      const before = snapshot(data.state);
+      if (kind !== "other-manager") {
+        const directory = structuredClone(authoritySnapshot(data.state));
+        directory.sessions.find(
+          (session) => session.id === stale.session_id,
+        )!.state = "revoked";
+        bindAuthoritySnapshot(data.state, directory);
+        expect(() => addManualLine(data.state, stale, "0002")).toThrow();
+        expect(snapshot(data.state)).toBe(before);
+      }
+      expect(() => addManualLine(data.state, current, "0002")).not.toThrow();
+      expect(data.state.invoice.lines).toHaveLength(1);
+      expect(data.state.invoice.original_pages).toEqual(original);
+      if (kind === "same-worker")
+        expect(
+          canUseLiveManualInvoice(data.state, current, data.attempt.invoice_id),
+        ).toBe(true);
+    },
+  );
+
+  it.each(["same-worker", "other-manager"] as const)(
+    "a fresh %s can explicitly choose manual entry for its recoverable original",
+    async (kind) => {
+      const data = await processing(
+        kind === "same-worker" ? "floor_worker" : "manager",
+      );
+      const actor = authenticatedTestActor(
+        data.state,
+        kind === "same-worker" ? "floor_worker" : "manager",
+        kind === "other-manager"
+          ? {
+              user_id: "fictional-adopting-manager",
+              username: "fictional-adopting-manager",
+            }
+          : {},
+      );
+      const originals = structuredClone(data.state.invoice.original_pages);
+      settleLiveInvoiceReading(data.state, actor, {
+        ...data.attempt,
+        outcome: "manual",
+      });
+      expect(() => addManualLine(data.state, actor, "0002")).not.toThrow();
+      expect(data.state.invoice.original_pages).toEqual(originals);
+      expect(() =>
+        applyLiveInvoiceReading(data.state, actor, {
+          ...data.attempt,
+          exported: envelope(data.attempt),
+          provenance,
+        }),
+      ).toThrow();
+    },
+  );
+
+  it.each([
+    { line_type: "item", line_no: 1, confidence: 0.9 },
+    { line_type: "item", pack_size: "12 x fictional packs" },
+    { line_type: "note", description: "Fictional note only" },
+    { line_type: "fee", description: "Fictional charge", line_total: "1.00" },
+  ])(
+    "does not turn incomplete or non-item content into phantom items: %j",
+    async (line) => {
+      const data = await processing();
+      const exported = envelope(data.attempt);
+      exported.invoices[0].ai_reading!.lines = [line];
+      const before = snapshot(data.state);
+      expect(() =>
+        applyLiveInvoiceReading(data.state, data.actor, {
+          ...data.attempt,
+          exported,
+          provenance,
+        }),
+      ).toThrow();
+      expect(snapshot(data.state)).toBe(before);
+    },
+  );
+
+  it("a genuinely recognized partial item remains reviewable with unreadable money", async () => {
+    const data = await processing();
+    const exported = envelope(data.attempt);
+    exported.invoices[0].ai_reading!.lines = [
+      {
+        line_type: "item",
+        barcode: "FICTIONAL-PARTIAL-ITEM",
+        quantity: null,
+        unit_cost_before_tax: null,
+        line_total: null,
+      },
+    ];
+    exported.invoices[0].ai_statuses = {
+      "lines[0].quantity": "check",
+      "lines[0].unit_cost_before_tax": "check",
+    };
+    const result = applyLiveInvoiceReading(data.state, data.actor, {
+      ...data.attempt,
+      exported,
+      provenance,
+    });
+    expect(result.imported).toEqual([data.attempt.invoice_id]);
+    expect(data.state.invoice.status).toBe("review");
+    expect(data.state.invoice.lines[0].low_confidence_fields).toContain(
+      "quantity_entered",
+    );
+  });
+
+  it("a three-photo tail reorder changes the public version and refreshes the guarded order", async () => {
+    const data = await draft("manager", [
+      source("a.jpg", "fictional A", "image/jpeg"),
+      source("b.jpg", "fictional B", "image/jpeg"),
+      source("c.jpg", "fictional C", "image/jpeg"),
+    ]);
+    const before = structuredClone(data.state.invoice);
+    reorderLiveInvoiceOriginals(data.state, data.actor, {
+      invoice_id: before.id,
+      order: [0, 2, 1],
+    });
+    expect(data.state.invoice.file_name).toBe(before.file_name);
+    expect(data.state.invoice.file_type).toBe(before.file_type);
+    expect(data.state.invoice.file_size).toBe(before.file_size);
+    expect(data.state.invoice.original_pages).toHaveLength(3);
+    expect(data.state.invoice.version).toBe((before.version ?? 1) + 1);
+    expect(invoiceView(data.state, data.actor, before.id).version).toBe(
+      data.state.invoice.version,
+    );
+    const attempt = beginLiveInvoiceReading(data.state, data.actor, before.id);
+    expect(attempt.original_sha256s).toEqual([
+      before.original_pages![0].original_sha256,
+      before.original_pages![2].original_sha256,
+      before.original_pages![1].original_sha256,
+    ]);
+    applyLiveInvoiceReading(data.state, data.actor, {
+      ...attempt,
+      exported: envelope(attempt),
+      provenance,
+    });
+    expect(data.state.invoice.status).toBe("review");
+    expect(data.state.invoice.reading_record?.page_sha256s).toEqual(
+      attempt.original_sha256s,
+    );
   });
 });
