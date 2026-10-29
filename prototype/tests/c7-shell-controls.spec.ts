@@ -29,7 +29,23 @@ for (const language of ["en", "fa"] as const) {
     await page.keyboard.press(en ? "ArrowRight" : "ArrowLeft");
     const submenu = page.locator(".ui-submenu-items");
     await expect(submenu).toBeVisible();
-    await expect(submenu.getByRole("menuitem").first()).toBeFocused();
+    const items = submenu.locator(
+      ':is([role="menuitem"], [role="menuitemcheckbox"]):not(:disabled)',
+    );
+    const simulated = submenu.getByRole("menuitemcheckbox", {
+      name: en ? "Simulated reading" : "خواندن شبیه‌سازی‌شده",
+      exact: true,
+    });
+    await expect(items.first()).toHaveAttribute("role", "menuitemcheckbox");
+    await expect(items.first()).toHaveAccessibleName(
+      en ? "Simulated reading" : "خواندن شبیه‌سازی‌شده",
+    );
+    await expect(simulated).toBeChecked();
+    await expect(simulated).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(items.nth(1)).toBeFocused();
+    await page.keyboard.press("Home");
+    await expect(simulated).toBeFocused();
     await page.keyboard.press("End");
     await expect(
       submenu.getByRole("menuitem", {
