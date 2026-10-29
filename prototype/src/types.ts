@@ -461,6 +461,7 @@ export type DemoInvoice = Omit<
     version?: number;
     status: "empty" | "reading" | "draft" | "review" | "posted";
     live_reading?: LiveInvoiceReading;
+    simulated_reading?: true;
     lines: InvoiceLine[];
     file_name?: string;
     file_type?: string;

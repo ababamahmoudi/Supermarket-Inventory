@@ -257,6 +257,7 @@ export function useSimulatedLiveInvoiceReading(
   Object.assign(invoice, identity(current.invoice), pages[0], {
     original_pages: pages,
     status: "reading",
+    simulated_reading: true,
   });
   delete invoice.live_reading;
   delete invoice.reading_record;

@@ -169,6 +169,7 @@ const lineMoneyKeys = [
 ] as const satisfies readonly InvoiceLineMoney[];
 const invoiceKeys = [
   "id",
+  "simulated_reading",
   "company_id",
   "branch",
   "branch_id",

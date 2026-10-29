@@ -20,13 +20,30 @@ export function redactLiveReadingProvenance<T>(value: T): T {
   if (Array.isArray(value)) return value.map(redactLiveReadingProvenance) as T;
   if (!value || typeof value !== "object") return value;
   const record = value as Record<string, unknown>;
-  const path = record.path;
-  const diagnosticPatch =
-    Array.isArray(path) &&
-    path.includes("reading_record") &&
-    path.some((part) =>
-      ["models", "reading_cost_usd", "seconds"].includes(String(part)),
+  const path = Array.isArray(record.path)
+    ? record.path.map((part) =>
+        typeof part === "string"
+          ? part
+          : part && typeof part === "object" && "key" in part
+            ? String(part.key)
+            : "",
+      )
+    : [];
+  const wholeLiveRecord =
+    path.at(-1) === "reading_record" &&
+    [record.before, record.after, record.current, record.guards].some(
+      (item) =>
+        item &&
+        typeof item === "object" &&
+        "source" in item &&
+        item.source === "live",
     );
+  const diagnosticPatch =
+    path.includes("reading_record") &&
+    (wholeLiveRecord ||
+      path.some((part) =>
+        ["models", "reading_cost_usd", "seconds"].includes(String(part)),
+      ));
   return Object.fromEntries(
     Object.entries(record)
       .filter(([key, item]) => {

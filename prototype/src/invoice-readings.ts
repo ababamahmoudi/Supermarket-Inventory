@@ -1779,6 +1779,7 @@ export function importInvoiceReadings(
       ...(live ? { seconds: live.provenance.seconds } : {}),
     };
     if (live && target) {
+      delete invoice.simulated_reading;
       const originals = structuredClone(liveOriginalPages(target.invoice));
       invoice.original_pages = originals;
       Object.assign(invoice, originals[0]);
