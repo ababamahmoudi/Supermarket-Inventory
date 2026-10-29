@@ -6,6 +6,8 @@ Work stays on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababama
 
 Tier 1 integrates **B1 → B4 → B2 → B3 → C1 → A2 → A5 → A7**. Its deadline is Thursday, October 29 at **18:00 Toronto time**, including seven green CI checks. Code freezes at **22:00 Toronto**; no subsequent push is authorized until Ali says so after the demo. Tier 2 may start only after green Tier 1 and with time before freeze. Incomplete items stay off the pushed branch.
 
+**Superseding instruction, October 29:** Ali asked to make the thirteen browser failures on `61cc3d7` green first, then stop further R2g work and implement R3c P0 followed by P1. He explicitly lifted the 22:00 freeze and instructed work to continue until complete. The original schedule above is historical; it does not authorize starting R2g Tier 2 while R3c is active.
+
 ## Start the app
 
 Use Node 22.22.2 or a later Node 22 release. From the repository:
@@ -97,7 +99,7 @@ No real reader/provider call or physical-phone claim follows from intercepted br
 
 ## Remaining scope
 
-- **Conditional Tier 2:** B5/B6 Offers, B8 New order, B9 phone Timesheets, A1 fields, A3 other filter bars and A4/B7 phone lists. Do not treat their retained reference PNGs as implemented work.
+- **Stopped for R3c:** B5/B6 Offers, B8 New order, B9 phone Timesheets, A1 fields, A3 other filter bars and A4/B7 phone lists. Do not treat their retained reference PNGs as implemented work or resume them while R3c is active.
 - **After the demo:** A6 tables/checkbox alignment, A8 all-screen alignment expansion, C2 Manager-reviewed posted weight-cost repair, C4 approval checkboxes, remaining C5 Labels alignment, remaining C6 notebook role/section fixes, C7 audited selected name cleanup/aliases and C8 branch-request details. Shared A5 also addresses C3's empty password band and notebook scrolling.
 - **Group D, recorded only:** persistent per-item Loaded per request/person with who/when; Mark all as being sent followed by individual Short choices.
 
