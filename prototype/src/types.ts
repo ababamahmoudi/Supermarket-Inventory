@@ -60,7 +60,15 @@ export type CompanyConfig = Omit<
   | "timesheets"
   | "modules"
   | "branding"
+  | "receiving"
 > & {
+  receiving: Omit<
+    typeof configSeed.receiving,
+    "ai_reading_mode" | "ai_reader_address"
+  > & {
+    ai_reading_mode?: "simulated" | "live";
+    ai_reader_address?: string | null;
+  };
   branding?: MakerBranding;
   invoices: Omit<typeof configSeed.invoices, "delivery_window"> & {
     delivery_window?: { start: string; end: string };

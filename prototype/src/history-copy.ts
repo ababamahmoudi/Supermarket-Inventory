@@ -145,6 +145,10 @@ const actions: Record<string, [string, string]> = {
     "Company settings changed",
     "تنظیمات شرکت تغییر کرد",
   ],
+  "AI reading settings changed": [
+    "AI reading settings changed",
+    "تنظیمات خواندن هوش مصنوعی تغییر کرد",
+  ],
   "Branches changed": ["Branches changed", "شعبه‌ها تغییر کردند"],
   "Pricing rules changed": [
     "Pricing rules changed",
