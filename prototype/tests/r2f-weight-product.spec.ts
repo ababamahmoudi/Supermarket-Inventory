@@ -444,7 +444,11 @@ test("R2f D3 creates a weight parent with packages and stages an explicit price 
   await price
     .getByRole("textbox", { name: "Price (per lb)", exact: true })
     .fill("9.99");
-  await expect(price.getByText(/Margin at this price/)).toContainText("49%");
+  await expect(
+    price
+      .locator(".change-price-facts > span")
+      .filter({ hasText: /^Margin\b/ }),
+  ).toHaveText("Margin 49%");
   await price
     .getByRole("button", { name: "Apply to draft", exact: true })
     .click();
