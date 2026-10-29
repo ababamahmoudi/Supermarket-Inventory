@@ -1,4 +1,6 @@
 import type { Page } from "@playwright/test";
+import Decimal from "decimal.js";
+import { invoiceLineId } from "../src/invoice-line-links";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 
 export async function inspectTableAlignment(page: Page) {
@@ -92,15 +94,123 @@ export async function inspectTableAlignment(page: Page) {
         });
       });
   }
-  const evidence = { expectedApprovals, expectedProducts, expectedReturns };
+  const expectedReceiving: {
+    id: string;
+    rowId: string;
+    name: string;
+    total: string;
+    cost: string;
+    quantity: string;
+    unit: { en: string; fa: string };
+    currency: string;
+    costUnit: string;
+    category: { en: string; fa: string };
+    checks: number;
+  }[] = [];
+  if (await page.locator(".receiving-lines table.receiving-table").count()) {
+    const state = await readCanonicalBusinessEvidence(page);
+    for (const [index, line] of state.invoice.lines.entries()) {
+      const product = state.products.find(
+        (item) =>
+          item.company_id === state.invoice.company_id &&
+          item.code === line.product_code,
+      );
+      const weighted = line.sold_by === "weight";
+      const category = state.config.pricing_categories.find(
+        (item) =>
+          item.key === (line.pricing_category ?? product?.pricing_category),
+      );
+      // Public bilingual fixture captions; the selected category is always
+      // resolved from the canonical invoice/config rather than the row text.
+      const persianCategory: Record<string, string> = {
+        grocery: "مواد غذایی",
+        "grocery (taxable)": "مواد غذایی (مشمول مالیات)",
+        rice: "برنج",
+        kitchenware: "لوازم آشپزخانه",
+      };
+      const unit = weighted
+        ? (line.source_quantity_unit ?? "lb")
+        : line.quantity_unit === "cases"
+          ? "cases"
+          : "units";
+      const QuantityDecimal = Decimal.clone({ precision: 80 });
+      const quantity = weighted
+        ? (line.source_quantity ??
+          (unit === "kg"
+            ? new QuantityDecimal(line.qty_invoiced).div(
+                line.weight_conversion_factor ??
+                  state.config.weighed_items?.conversion_factor ??
+                  "2.20462",
+              )
+            : new QuantityDecimal(line.qty_invoiced)
+          ).toString())
+        : line.quantity_unit === "cases"
+          ? String(line.quantity_entered ?? 0)
+          : String(line.qty_invoiced);
+      expectedReceiving.push({
+        id: invoiceLineId(line, index),
+        rowId: `invoice-line-row-${index}`,
+        name: line.new_name_en || product?.name_en || line.description,
+        total: new Decimal(line.line_total)
+          .toFixed(4, Decimal.ROUND_HALF_UP)
+          .replace(/(\.\d{2,}?)0+$/, "$1"),
+        cost: new Decimal(
+          line.sold_by === "weight"
+            ? (line.source_cost_before_tax ?? line.unit_cost_before_tax)
+            : line.unit_cost_before_tax,
+        ).toFixed(4, Decimal.ROUND_HALF_UP),
+        quantity,
+        unit: {
+          en:
+            unit === "units" || unit === "cases"
+              ? new Decimal(quantity).eq(1)
+                ? unit.slice(0, -1)
+                : unit
+              : unit,
+          fa: unit === "units" ? "واحد" : unit === "cases" ? "کارتن" : unit,
+        },
+        currency:
+          new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: state.config.company.currency,
+            currencyDisplay: "narrowSymbol",
+          })
+            .formatToParts(0)
+            .find((part) => part.type === "currency")?.value ??
+          state.config.company.currency,
+        costUnit: weighted ? `/${line.source_cost_unit ?? "lb"}` : "",
+        category: {
+          en: category?.label ?? "Choose a category",
+          fa: category
+            ? (persianCategory[category.label.toLowerCase()] ?? category.label)
+            : "انتخاب دسته",
+        },
+        // The canonical review normalizer has already filtered unsupported
+        // reader fields and deduplicated aliases before retaining these checks.
+        checks: line.low_confidence_fields?.length ?? 0,
+      });
+    }
+  }
+  const evidence = {
+    expectedApprovals,
+    expectedProducts,
+    expectedReturns,
+    expectedReceiving,
+  };
   return page.locator("main").evaluate((main, data) => {
-    const { expectedApprovals, expectedProducts, expectedReturns } = data;
+    const {
+      expectedApprovals,
+      expectedProducts,
+      expectedReturns,
+      expectedReceiving,
+    } = data;
     let cells = 0;
     let maxError = 0;
     let cards = 0;
     let decisionCards = 0;
     let selectionHeaderCards = 0;
     let returnCards = 0;
+    let receivingCards = 0;
     const failures: string[] = [];
     const tidy = (value: string | null | undefined) =>
       (value ?? "")
@@ -414,10 +524,108 @@ export async function inspectTableAlignment(page: Page) {
                   `table ${tableIndex}, receiving card ${rowIndex}: missing visible ${region}`,
                 );
             }
-            if (row.querySelectorAll(".receiving-phone-chevron").length !== 1)
+            // B4's complete line card opens its genuine inline editor through
+            // the row or product disclosure. Ordinary phone-list records keep
+            // their separate, strictly checked record chevron below.
+            const expected = expectedReceiving.find(
+              (line) => line.id === row.getAttribute("data-line-id"),
+            );
+            const toggle = row.querySelector(
+              ":scope > .receiving-product-cell > a.invoice-line-toggle",
+            );
+            const name = toggle?.querySelector(".receiving-product-name");
+            const status = row.querySelector(
+              ".receiving-status-icon[role='img'][aria-label]",
+            );
+            const quantity = row.querySelector(".receiving-phone-quantity");
+            const cost = quantity?.querySelector(".receiving-phone-cost");
+            const total = row.querySelector(".receiving-total-cell");
+            const category = row.querySelector(
+              ".receiving-product-meta > span:not([aria-hidden])",
+            );
+            const checkCount = row.querySelector(".receiving-line-check-count");
+            const expanded = row.getAttribute("aria-expanded");
+            const language =
+              document.documentElement.lang === "fa" ? "fa" : "en";
+            if (
+              !table.closest(
+                ".receiving-lines > .receiving-lines-table[role='region']",
+              ) ||
+              !row.matches(
+                ".invoice-line-summary[data-control-kind='disclosure'][tabindex='0']",
+              ) ||
+              !expected ||
+              row.id !== expected.rowId ||
+              main.querySelectorAll(`[id="${CSS.escape(row.id)}"]`).length !==
+                1 ||
+              row.getAttribute("data-testid") !== expected.rowId ||
+              !["true", "false"].includes(expanded ?? "") ||
+              !toggle ||
+              !visible(toggle) ||
+              toggle.getAttribute("href") !== "#invoice-line-editor" ||
+              toggle.getAttribute("data-control-kind") !== "disclosure" ||
+              toggle.getAttribute("aria-expanded") !== expanded ||
+              !name ||
+              tidy(name.textContent) !== tidy(expected.name) ||
+              tidy(name.getAttribute("title")) !== tidy(expected.name) ||
+              !status ||
+              !visible(status) ||
+              !tidy(status.getAttribute("aria-label")) ||
+              !category ||
+              !visible(category) ||
+              tidy(category.textContent) !== expected.category[language] ||
+              (expected.checks > 0
+                ? !checkCount ||
+                  !visible(checkCount) ||
+                  tidy(checkCount.textContent) !==
+                    `${expected.checks} ${language === "fa" ? "برای بررسی" : "to check"}`
+                : checkCount !== null) ||
+              !quantity ||
+              !visible(quantity) ||
+              tidy(quantity.querySelector(".quantity-number")?.textContent) !==
+                expected.quantity ||
+              tidy(quantity.querySelector(".quantity-label")?.textContent) !==
+                expected.unit[language] ||
+              !cost ||
+              !visible(cost) ||
+              tidy(cost.textContent)
+                .replaceAll(",", "")
+                .replace(expected.currency, "") !==
+                expected.cost + expected.costUnit ||
+              !tidy(cost.textContent).includes(expected.currency) ||
+              !total ||
+              tidy(total.textContent)
+                .replaceAll(",", "")
+                .replace(expected.currency, "") !== expected.total ||
+              !tidy(total.textContent).includes(expected.currency) ||
+              row.querySelectorAll(".invoice-line-toggle").length !== 1 ||
+              row.querySelector(".receiving-phone-chevron,.table-row-link")
+            )
               failures.push(
-                `table ${tableIndex}, receiving card ${rowIndex}: expected one record chevron`,
+                `table ${tableIndex}, receiving card ${rowIndex}: invalid B4 line disclosure or source values`,
               );
+            else receivingCards++;
+            if (total) {
+              const style = getComputedStyle(row);
+              const totalBox = total.getBoundingClientRect();
+              const endError =
+                style.direction === "rtl"
+                  ? Math.abs(
+                      totalBox.left -
+                        bounds.left -
+                        parseFloat(style.paddingLeft),
+                    )
+                  : Math.abs(
+                      bounds.right -
+                        totalBox.right -
+                        parseFloat(style.paddingRight),
+                    );
+              maxError = Math.max(maxError, endError);
+              if (endError > 2)
+                failures.push(
+                  `table ${tableIndex}, receiving card ${rowIndex}: line total end ${endError}px`,
+                );
+            }
           } else if (compact) {
             const returnCandidate = Boolean(
               table.closest(".returns-overview-table"),
@@ -669,6 +877,7 @@ export async function inspectTableAlignment(page: Page) {
       decisionCards,
       selectionHeaderCards,
       returnCards,
+      receivingCards,
       maxError,
       failures,
     };

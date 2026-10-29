@@ -70,10 +70,54 @@ for (const language of ["en", "fa"] as const) {
                 row.locator(`.receiving-${cell}-cell`),
               ).toBeVisible();
             await expect(row.locator(".receiving-status-icon")).toBeVisible();
-            await expect(row.locator(".receiving-phone-chevron")).toBeVisible();
+            await expect(row.locator(".receiving-phone-chevron")).toHaveCount(
+              0,
+            );
+            await expect(row.locator(".invoice-line-toggle")).toBeVisible();
+            await expect(row).toHaveAttribute(
+              "data-control-kind",
+              "disclosure",
+            );
           }
+          expect(metrics.receivingCards).toBe(6);
           expect(metrics.cards).toBe(6);
           expect(metrics.cells).toBe(18);
+          const before = await readCanonicalBusinessEvidence(page);
+          const first = rows.first();
+          const editor = page.locator("#invoice-line-0-detail");
+          const close = () =>
+            editor
+              .getByRole("button", {
+                name: language === "en" ? "Close" : "بستن",
+                exact: true,
+              })
+              .click();
+          await first.locator(".invoice-line-toggle").click();
+          await expect(editor).toBeVisible();
+          const supplierCode = editor.locator("#invoice-line-0-supplier-code");
+          await expect(supplierCode).toBeVisible();
+          await expect(supplierCode).toHaveValue(
+            before.invoice.lines[0].supplier_item_code ?? "",
+          );
+          await expect(first).toHaveAttribute("aria-expanded", "true");
+          await close();
+          for (const key of ["Enter", "Space"]) {
+            await first.focus();
+            await first.press(key);
+            await expect(editor).toBeVisible();
+            await expect(first.locator(".invoice-line-toggle")).toHaveAttribute(
+              "aria-expanded",
+              "true",
+            );
+            await close();
+            await expect(first).toHaveAttribute("aria-expanded", "false");
+          }
+          await first.click({ position: { x: 4, y: 4 } });
+          await expect(editor).toBeVisible();
+          await close();
+          expect((await readCanonicalBusinessEvidence(page)).invoice).toEqual(
+            before.invoice,
+          );
         } else expect(metrics.cells).toBeGreaterThanOrEqual(30);
       }
       report.push({
@@ -97,6 +141,162 @@ for (const language of ["en", "fa"] as const) {
     });
   });
 }
+
+for (const language of ["en", "fa"] as const)
+  test(`B4 receiving line cards retain real disclosure and source values, rejecting copied or shifted contracts (${language})`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: 509, height: 1000 });
+    await signIn(page, "Supervisor");
+    await page.goto("/#invoices");
+    await uploadInvoice(page);
+    await setLanguage(page, language);
+    const rows = page.locator(".receiving-table .invoice-line-summary");
+    await expect(rows).toHaveCount(6);
+    const clean = await inspectTableAlignment(page);
+    expect(clean.failures).toEqual([]);
+    expect(clean.receivingCards).toBe(6);
+    const before = await readCanonicalBusinessEvidence(page);
+    const first = rows.first();
+    const failures: { scene: string; failures: string[]; maxError: number }[] =
+      [];
+    const rejects = async (
+      scene: string,
+      mutate: () => Promise<unknown>,
+      restore: () => Promise<unknown>,
+      geometry = false,
+    ) => {
+      await mutate();
+      try {
+        const broken = await inspectTableAlignment(page);
+        expect(
+          broken.failures.some((failure) =>
+            failure.includes(
+              geometry ? "line total end" : "invalid B4 line disclosure",
+            ),
+          ),
+          scene,
+        ).toBe(true);
+        if (geometry) expect(broken.maxError).toBeGreaterThan(2);
+        failures.push({
+          scene,
+          failures: broken.failures,
+          maxError: broken.maxError,
+        });
+      } finally {
+        await restore();
+      }
+    };
+    await rejects(
+      "copied display-only row kind",
+      () =>
+        first.evaluate((row) => row.setAttribute("data-control-kind", "copy")),
+      () =>
+        first.evaluate((row) =>
+          row.setAttribute("data-control-kind", "disclosure"),
+        ),
+    );
+    const toggle = first.locator(".invoice-line-toggle");
+    await rejects(
+      "unrelated editor destination",
+      () => toggle.evaluate((link) => link.setAttribute("href", "#products")),
+      () =>
+        toggle.evaluate((link) =>
+          link.setAttribute("href", "#invoice-line-editor"),
+        ),
+    );
+    for (const [scene, selector] of [
+      ["wrong original source cost", ".receiving-phone-cost > bdi:first-child"],
+      ["wrong source quantity", ".receiving-phone-quantity .quantity-number"],
+      ["wrong line total", ".receiving-total-cell > bdi"],
+      [
+        "wrong canonical category",
+        ".receiving-product-meta > span:not([aria-hidden])",
+      ],
+    ]) {
+      const fact = first.locator(selector);
+      const original = await fact.textContent();
+      await rejects(
+        scene,
+        () =>
+          fact.evaluate((node) => {
+            node.textContent = "$999.9999";
+          }),
+        () =>
+          fact.evaluate((node, text) => {
+            node.textContent = text;
+          }, original),
+      );
+    }
+    const checks = page.locator(".receiving-line-check-count").first();
+    await expect(checks).toBeVisible();
+    const originalChecks = await checks.textContent();
+    await rejects(
+      "wrong canonical check count",
+      () =>
+        checks.evaluate((node) => {
+          node.textContent = "99 to check";
+        }),
+      () =>
+        checks.evaluate((node, text) => {
+          node.textContent = text;
+        }, originalChecks),
+    );
+    await rejects(
+      "counterfeit duplicate line card",
+      () =>
+        first.evaluate((row) => {
+          const copy = row.cloneNode(true) as HTMLElement;
+          copy.dataset.counterfeitLine = "true";
+          row.parentElement!.append(copy);
+        }),
+      () =>
+        page.locator("[data-counterfeit-line]").evaluate((row) => row.remove()),
+    );
+    const total = first.locator(".receiving-total-cell");
+    const originalStyle = await total.getAttribute("style");
+    await rejects(
+      "actual line total shifted by four pixels",
+      () =>
+        total.evaluate((node) => {
+          node.style.transform = "translateX(4px)";
+        }),
+      () =>
+        total.evaluate((node, style) => {
+          if (style === null) node.removeAttribute("style");
+          else node.setAttribute("style", style);
+        }, originalStyle),
+      true,
+    );
+    const restored = await inspectTableAlignment(page);
+    expect(restored.failures).toEqual([]);
+    expect(restored.receivingCards).toBe(6);
+    expect((await readCanonicalBusinessEvidence(page)).invoice).toEqual(
+      before.invoice,
+    );
+
+    // Ordinary record lists retain their existing separate record chevron;
+    // qualifying B4's editor disclosure must not waive their old contract.
+    await page.goto("/#products");
+    const chevron = page.locator(".phone-list-chevron .table-row-link").first();
+    await expect(chevron).toBeVisible();
+    const parent = page.locator(".phone-list-chevron").first();
+    const html = await parent.innerHTML();
+    await chevron.evaluate((node) => node.remove());
+    expect(
+      (await inspectTableAlignment(page)).failures.some((failure) =>
+        failure.includes("expected one record chevron"),
+      ),
+    ).toBe(true);
+    await parent.evaluate((node, original) => {
+      node.innerHTML = original;
+    }, html);
+    expect((await inspectTableAlignment(page)).failures).toEqual([]);
+    await info.attach(`receiving-card-contract-${language}.json`, {
+      body: JSON.stringify({ clean, failures, restored }, null, 2),
+      contentType: "application/json",
+    });
+  });
 
 for (const language of ["en", "fa"] as const)
   test(`qualified Dashboard decisions retain genuine destinations and reject copied contracts (${language})`, async ({
