@@ -169,6 +169,16 @@ async function phoneOriginalKeepsItsToolbar(
     exact: true,
   });
   await expect(dialog).toBeVisible();
+  const original = page.locator("aside#invoice-original-field.original-viewer");
+  const invoiceId = new URLSearchParams(
+    new URL(page.url()).hash.split("?")[1],
+  ).get("id");
+  expect(invoiceId).toBeTruthy();
+  await expect(original).toHaveAttribute(
+    "data-original-invoice-id",
+    invoiceId!,
+  );
+  await expect(original).not.toHaveAttribute("data-invoice-id");
   const bounds = await box(dialog);
   expect(Math.abs(bounds.x)).toBeLessThanOrEqual(1);
   expect(Math.abs(bounds.y)).toBeLessThanOrEqual(1);
@@ -200,6 +210,27 @@ async function phoneOriginalKeepsItsToolbar(
       });
   }
   if (language === "en") {
+    await original.evaluate((element) => {
+      element.setAttribute(
+        "data-original-invoice-id",
+        "r2g-fictional-unrelated-original",
+      );
+    });
+    try {
+      const wrongSource = await inspect(
+        page,
+        "Wrong original invoice identity",
+        "negative",
+        "owner",
+      );
+      expect(wrongSource.failures).toContain(
+        "Invalid original invoice fullscreen composition",
+      );
+    } finally {
+      await original.evaluate((element, id) => {
+        element.setAttribute("data-original-invoice-id", id);
+      }, invoiceId!);
+    }
     const originalStyle = await dialog.getAttribute("style");
     await dialog.evaluate((element) => {
       element.style.transform = "translateY(4px)";

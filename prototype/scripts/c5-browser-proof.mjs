@@ -2321,7 +2321,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         )) {
           if (!visible(dialog)) continue;
           const source = dialog.parentElement;
-          const invoiceId = source?.getAttribute("data-invoice-id");
+          const invoiceId = source?.getAttribute("data-original-invoice-id");
           const workspace = source?.closest(
             "[data-testid='invoice-review'],.posted-invoice-document[data-invoice-id]",
           );

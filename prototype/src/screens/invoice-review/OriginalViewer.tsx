@@ -124,7 +124,7 @@ export function OriginalViewer({
       tabIndex={-1}
       className="original-viewer"
       data-hidden={hidden}
-      data-invoice-id={invoice.id}
+      data-original-invoice-id={invoice.id}
     >
       <div className="original-viewer-header">
         <div className="original-viewer-title">

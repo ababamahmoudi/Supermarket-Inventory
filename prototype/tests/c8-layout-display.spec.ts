@@ -527,7 +527,12 @@ for (const language of ["en", "fa"] as const) {
         await row.locator(".table-row-link").click();
         await expect(page).toHaveURL((url) => url.hash === href);
         const id = new URLSearchParams(href!.split("?")[1]).get("id");
-        await expect(page.locator(`[data-invoice-id="${id}"]`)).toBeVisible();
+        const workspace = page.locator(`[data-invoice-id="${id}"]`);
+        await expect(workspace).toHaveCount(1);
+        await expect(workspace).toBeVisible();
+        await expect(
+          workspace.locator("aside#invoice-original-field.original-viewer"),
+        ).toHaveAttribute("data-original-invoice-id", id!);
       }
     }
     await page.setViewportSize({ width: 1920, height: 1080 });
