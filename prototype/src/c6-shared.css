@@ -748,7 +748,7 @@ div.ui-kpi:hover {
     justify-content: flex-start;
   }
 }
-@media (max-width: 759px) {
+@media (max-width: 760px) {
   :root .sidebar {
     display: none;
     inline-size: 248px;
