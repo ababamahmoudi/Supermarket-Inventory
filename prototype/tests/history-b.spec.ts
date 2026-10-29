@@ -197,7 +197,7 @@ test("quiet product Save retains append-only History and can be explicitly rever
   ).toBe(true);
 });
 
-test("Undo stays above a native modal and keyboard focus pauses its own timer", async ({
+test("page Undo pauses outside an unrelated native modal and keyboard focus preserves its remaining timer", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -213,8 +213,26 @@ test("Undo stays above a native modal and keyboard focus pauses its own timer", 
     name: "Edit product",
     exact: true,
   });
-  const undo = dialog.getByRole("button", { name: "Undo", exact: true });
+  await expect(dialog).toBeVisible();
+  await expect(
+    dialog.getByRole("button", { name: "Undo", exact: true }),
+  ).toHaveCount(0);
+  await expect(dialog.getByTestId("dialog-action-status")).toHaveCount(0);
+  await expect(page.getByTestId("undo-toast")).toHaveCount(0);
+  // The earlier page command retains its eight-second display budget while
+  // this unrelated editor is open, without being adopted into its footer.
+  await page.clock.runFor(15000);
+  await expect(
+    dialog.getByRole("button", { name: "Undo", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByTestId("undo-toast")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  const pageUndo = page.getByTestId("undo-toast");
+  const undo = pageUndo.getByRole("button", { name: "Undo", exact: true });
   await expect(undo).toBeVisible();
+  await page.mouse.move(0, 0);
+  await page.clock.runFor(1000);
   await undo.focus();
   await expect(undo).toBeFocused();
   await page.clock.runFor(15000);
@@ -238,7 +256,6 @@ test("Undo stays above a native modal and keyboard focus pauses its own timer", 
   expect(stopped).toHaveLength(1);
   await undo.click();
   await expect(page.locator(".undo-toast-stack")).not.toBeVisible();
-  await page.keyboard.press("Escape");
   await expect(
     page.locator(".lookup-approved-price .offer-pill"),
   ).toContainText("2 for $5");

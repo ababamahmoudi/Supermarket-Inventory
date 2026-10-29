@@ -27,8 +27,41 @@ async function correctionGeometry(dialog: Locator) {
     const product = editor?.querySelector(".receiving-product-section");
     const quantity = editor?.querySelector(".receiving-quantity-section");
     const table = element.querySelector(".receiving-lines-table")!;
+    const title = header.querySelector("h2");
+    const titleId = element.getAttribute("aria-labelledby");
+    const close = header.querySelector(
+      "button.ui-icon-button[data-control-kind='icon']",
+    );
+    const css = getComputedStyle(element);
     return {
+      genuine:
+        element instanceof HTMLDialogElement &&
+        element.open &&
+        element.matches(
+          ".ui-dialog.ui-dialog-structured.invoice-correction-dialog",
+        ) &&
+        Boolean(element.getAttribute("data-dialog-feedback-scope")) &&
+        Boolean(titleId && document.getElementById(titleId) === title) &&
+        ["Correct invoice", "اصلاح فاکتور"].includes(
+          title?.textContent?.trim() ?? "",
+        ) &&
+        ["Close dialog", "بستن پنجره"].includes(
+          close?.getAttribute("aria-label") ?? "",
+        ) &&
+        Boolean(close?.querySelector("svg.lucide-x")) &&
+        Boolean(body.querySelector(":scope > .invoice-correction-form")) &&
+        Boolean(body.querySelector("#invoice-correction-reason")) &&
+        footer.querySelectorAll(
+          ":scope > button.ui-button[data-control-kind='action']",
+        ).length === 2,
       dialog: bounds(element),
+      radii: [
+        css.borderTopLeftRadius,
+        css.borderTopRightRadius,
+        css.borderBottomLeftRadius,
+        css.borderBottomRightRadius,
+      ].map(parseFloat),
+      dialogRadius: parseFloat(css.getPropertyValue("--radius-dialog")),
       header: { ...bounds(header), display: getComputedStyle(header).display },
       body: { ...bounds(body), overflow: getComputedStyle(body).overflowY },
       footer: { ...bounds(footer), display: getComputedStyle(footer).display },
@@ -50,12 +83,12 @@ function correctionGeometryFailures(
   open: boolean,
 ) {
   const failures: string[] = [];
-  const phone = width < 760;
-  const expectedWidth = phone
-    ? open
-      ? width
-      : width - 24
-    : Math.min(1100, width - 32);
+  const phone = width <= 760;
+  if (!geometry.genuine)
+    failures.push(
+      "The correction frame must belong to the actual managed native correction dialog",
+    );
+  const expectedWidth = phone ? width : Math.min(1100, width - 32);
   if (Math.abs(geometry.dialog.width - expectedWidth) > 1)
     failures.push(
       "The correction dialog must use its bounded composition width",
@@ -64,6 +97,26 @@ function correctionGeometryFailures(
     failures.push("The correction dialog must stay inside the viewport");
   if (geometry.documentOverflow > 1 || geometry.tableOverflow > 1)
     failures.push("The correction page and table must not scroll horizontally");
+  if (phone) {
+    if (
+      Math.abs(geometry.dialog.x) > 1 ||
+      Math.abs(geometry.dialog.bottom - geometry.viewport.height) > 1 ||
+      geometry.dialog.top < -1 ||
+      geometry.dialog.height > geometry.viewport.height + 1
+    )
+      failures.push("The phone correction sheet must meet the viewport edges");
+    const expectedRadii = open
+      ? [0, 0, 0, 0]
+      : [geometry.dialogRadius, geometry.dialogRadius, 0, 0];
+    if (
+      geometry.radii.some(
+        (radius, index) => Math.abs(radius - expectedRadii[index]) > 1,
+      )
+    )
+      failures.push(
+        "The phone correction sheet must retain its actual frame corners",
+      );
+  }
   if (phone && open) {
     if (
       Math.abs(geometry.dialog.top) > 1 ||
@@ -160,6 +213,75 @@ for (const language of ["en", "fa"] as const)
             false,
           ),
         ).toEqual([]);
+        if (width <= 760) {
+          const originalStyle = await dialog.getAttribute("style");
+          try {
+            await dialog.evaluate((element, frameWidth) => {
+              element.style.inlineSize = `${frameWidth - 4}px`;
+            }, width);
+            expect(
+              correctionGeometryFailures(
+                await correctionGeometry(dialog),
+                width,
+                false,
+              ),
+            ).toContain(
+              "The correction dialog must use its bounded composition width",
+            );
+          } finally {
+            await dialog.evaluate((element, style) => {
+              if (style === null) element.removeAttribute("style");
+              else element.setAttribute("style", style);
+            }, originalStyle);
+          }
+          try {
+            await dialog.evaluate((element) => {
+              element.style.translate = "0 -4px";
+            });
+            expect(
+              correctionGeometryFailures(
+                await correctionGeometry(dialog),
+                width,
+                false,
+              ),
+            ).toContain(
+              "The phone correction sheet must meet the viewport edges",
+            );
+          } finally {
+            await dialog.evaluate((element, style) => {
+              if (style === null) element.removeAttribute("style");
+              else element.setAttribute("style", style);
+            }, originalStyle);
+          }
+          const close = dialog.locator(
+            ":scope > .ui-dialog-header button.ui-icon-button",
+          );
+          try {
+            await close.evaluate((button) =>
+              button.setAttribute("data-control-kind", "counterfeit"),
+            );
+            expect(
+              correctionGeometryFailures(
+                await correctionGeometry(dialog),
+                width,
+                false,
+              ),
+            ).toContain(
+              "The correction frame must belong to the actual managed native correction dialog",
+            );
+          } finally {
+            await close.evaluate((button) =>
+              button.setAttribute("data-control-kind", "icon"),
+            );
+          }
+          expect(
+            correctionGeometryFailures(
+              await correctionGeometry(dialog),
+              width,
+              false,
+            ),
+          ).toEqual([]);
+        }
         if (language === "en" && width === 1440 && theme === "light") {
           const originalStyle = await dialog.getAttribute("style");
           try {

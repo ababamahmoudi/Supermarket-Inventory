@@ -144,7 +144,7 @@ test("Persian lookup preserves unit order and makes the Persian name primary", a
   await expect(page.locator(".lookup-detail .price")).toHaveText("$2.99");
 });
 
-test("re-check dialog is centered and the top bar remains visible while Settings scrolls", async ({
+test("re-check dialog uses its responsive frame and the top bar remains visible while Settings scrolls", async ({
   page,
 }) => {
   await page.clock.install({ time: new Date() });
@@ -179,9 +179,30 @@ test("re-check dialog is centered and the top bar remains visible while Settings
   expect(
     Math.abs(bounds!.x + bounds!.width / 2 - viewport.width / 2),
   ).toBeLessThan(3);
-  expect(
-    Math.abs(bounds!.y + bounds!.height / 2 - viewport.height / 2),
-  ).toBeLessThan(3);
+  if (viewport.width <= 760) {
+    expect(Math.abs(bounds!.x)).toBeLessThan(3);
+    expect(Math.abs(bounds!.width - viewport.width)).toBeLessThan(3);
+    expect(Math.abs(bounds!.y + bounds!.height - viewport.height)).toBeLessThan(
+      3,
+    );
+    expect(bounds!.y).toBeGreaterThanOrEqual(0);
+    expect(bounds!.height).toBeLessThanOrEqual(viewport.height);
+    expect(
+      await dialog.evaluate((element) => {
+        const css = getComputedStyle(element);
+        return [
+          css.borderTopLeftRadius,
+          css.borderTopRightRadius,
+          css.borderBottomLeftRadius,
+          css.borderBottomRightRadius,
+        ];
+      }),
+    ).toEqual(["24px", "24px", "0px", "0px"]);
+  } else {
+    expect(
+      Math.abs(bounds!.y + bounds!.height / 2 - viewport.height / 2),
+    ).toBeLessThan(3);
+  }
   await expect(dialog.getByLabel("Password", { exact: true })).toBeFocused();
   await dialog.getByLabel("Password", { exact: true }).fill("demo1234");
   await dialog.getByRole("button", { name: "Continue", exact: true }).click();
