@@ -1660,6 +1660,18 @@
       .dialog-actions,
       .c3-dialog-actions,
       .product-editor-actions
+    ) {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+  :root
+    dialog.ui-dialog
+    :is(
+      .ui-dialog-actions,
+      .dialog-actions,
+      .c3-dialog-actions,
+      .product-editor-actions
     )
     > .ui-button.button:not(.ui-icon-button) {
     flex: 1 1 0;
