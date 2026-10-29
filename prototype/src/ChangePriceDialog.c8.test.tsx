@@ -1,5 +1,7 @@
 import { useState } from "react";
 import {
+  act,
+  fireEvent,
   configure,
   getConfig,
   cleanup,
@@ -16,6 +18,7 @@ import { effectivePrice, regularPrice } from "./catalog";
 import i18n from "./i18n";
 import { configSeed } from "./config";
 import { branchLabel, savePricingSettings } from "./settings";
+import { recordManualProductCost } from "./product-costs";
 import { initialState } from "./e1-bootstrap";
 import { authenticatedProviderFixture } from "./authority-provider-test-fixture";
 import { authenticatedTestActor } from "./authority-test-fixture";
@@ -692,4 +695,172 @@ it("R2g B2 disables an unavailable rounded discount without inventing a price", 
   expect(
     within(dialog).getByRole("textbox", { name: "Sale price" }),
   ).toHaveValue("");
+});
+
+it.each(["1 week", "2 weeks", "End of month"])(
+  "R2g B2 retains the %s duration when Starts changes and saves the actual new dates",
+  async (preset) => {
+    const state = initialState();
+    const user = await show("0009", "manager", false, state);
+    const dialog = screen.getByRole("dialog");
+    const evidence = await financialEvidence();
+    const ends = within(dialog).getByRole("group", { name: "Ends" });
+    const starts = within(dialog).getByRole("group", { name: "Starts" });
+    await user.click(within(ends).getByRole("button", { name: preset }));
+    await user.click(within(starts).getByRole("button", { name: "Tomorrow" }));
+    expect(within(ends).getByRole("button", { name: preset })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(
+      within(dialog).queryByRole("button", { name: "Last day" }),
+    ).not.toBeInTheDocument();
+    await user.type(
+      within(dialog).getByRole("textbox", { name: "Sale price" }),
+      "2.79",
+    );
+    await clickSubmit(user, dialog, "Schedule sale");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    const tomorrow = saleDateAfter(saleStoreDate(state.config, "Branch 1"), 1);
+    const month = new Date(`${tomorrow}T12:00:00Z`);
+    month.setUTCMonth(month.getUTCMonth() + 1, 0);
+    const expectedLast =
+      preset === "1 week"
+        ? saleDateAfter(tomorrow, 6)
+        : preset === "2 weeks"
+          ? saleDateAfter(tomorrow, 13)
+          : month.toISOString().slice(0, 10);
+    const saved = await fixture.readCanonical();
+    const sales = saved.sales!.filter((sale) => sale.product_code === "0009");
+    expect(sales).toHaveLength(3);
+    for (const sale of sales)
+      expect(sale).toMatchObject({
+        starts_on: tomorrow,
+        last_day: expectedLast,
+        status: "scheduled",
+      });
+    expect(await financialEvidence()).toBe(evidence);
+  },
+);
+
+it("R2g B2 preserves an explicit end date and No end while Starts changes", async () => {
+  const user = await show();
+  const dialog = screen.getByRole("dialog");
+  const ends = within(dialog).getByRole("group", { name: "Ends" });
+  const starts = within(dialog).getByRole("group", { name: "Starts" });
+  await user.click(within(ends).getByRole("button", { name: "Date…" }));
+  const date = within(dialog).getByRole("button", {
+    name: "Last day",
+  });
+  const retainedDate = date.textContent;
+  await user.click(within(starts).getByRole("button", { name: "Tomorrow" }));
+  expect(within(ends).getByRole("button", { name: "Date…" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(date).toHaveTextContent(retainedDate!);
+  await user.click(within(ends).getByRole("button", { name: "No end" }));
+  await user.click(within(starts).getByRole("button", { name: "Today" }));
+  expect(within(ends).getByRole("button", { name: "No end" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(
+    within(dialog).queryByRole("button", { name: "Last day" }),
+  ).not.toBeInTheDocument();
+  expect(dialog.querySelector(".change-price-until")).not.toBeInTheDocument();
+});
+
+it("R2g B2 scopes heterogeneous store facts and never calculates a negative loss from another store's cost", async () => {
+  const state = initialState();
+  const product = state.products.find((item) => item.code === "0002")!;
+  const ny = authenticatedTestActor(state, "manager", {
+    selection: { kind: "location", location_id: "Branch 1" },
+  });
+  recordManualProductCost(state, ny, product, "0.98");
+  const rh = authenticatedTestActor(state, "manager", {
+    selection: { kind: "location", location_id: "Branch 2" },
+  });
+  recordManualProductCost(state, rh, product, "2.00");
+  const user = await show("0002", "manager", false, state);
+  const dialog = screen.getByRole("dialog");
+  await user.type(
+    within(dialog).getByRole("textbox", { name: "Sale price" }),
+    "1.39",
+  );
+  await waitFor(() =>
+    expect(dialog.querySelector(".change-price-warning")).toHaveTextContent(
+      "Richmond Hill",
+    ),
+  );
+  const facts = dialog.querySelector(".change-price-facts")!;
+  expect(facts).toHaveTextContent("At North York");
+  expect(facts).toHaveTextContent("Margin 29%");
+  expect(facts).toHaveTextContent("Cost $0.98");
+  expect(dialog.querySelector(".change-price-warning")).not.toHaveTextContent(
+    /loses.*-\$|loses.*\$-|-\$0\.41/,
+  );
+  expect(dialog.querySelector(".change-price-warning")).not.toHaveTextContent(
+    "Each one sold loses",
+  );
+  expect(dialog.querySelectorAll(".change-price-warning")).toHaveLength(1);
+});
+
+it("R2g B2 hides old financial warnings while a genuine changed-price preview is pending", async () => {
+  const user = await show("0002");
+  const dialog = screen.getByRole("dialog");
+  const price = within(dialog).getByRole("textbox", { name: "Sale price" });
+  await user.type(price, "0.89");
+  await waitFor(() =>
+    expect(dialog.querySelector(".change-price-warning")).toHaveTextContent(
+      "Each one sold loses $0.09",
+    ),
+  );
+  let entered!: () => void, release!: () => void;
+  const waiting = new Promise<void>((resolve) => {
+    entered = resolve;
+  });
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let hold = true;
+  const original = fixture.repository.queryBusiness.bind(fixture.repository);
+  const delayed = vi
+    .spyOn(fixture.repository, "queryBusiness")
+    .mockImplementation(async (...args) => {
+      if (
+        hold &&
+        args[2]?.capability === "sales.manage" &&
+        args[2].resource.entity_id === "0002"
+      ) {
+        hold = false;
+        entered();
+        await gate;
+      }
+      return original(...args);
+    });
+  fireEvent.change(price, { target: { value: "1.39" } });
+  await waiting;
+  try {
+    expect(price).toHaveValue("1.39");
+    expect(
+      dialog.querySelector(".change-price-warning"),
+    ).not.toBeInTheDocument();
+    expect(dialog.querySelector(".change-price-facts")).not.toHaveTextContent(
+      /Margin|Cost/,
+    );
+  } finally {
+    await act(async () => {
+      release();
+    });
+    delayed.mockRestore();
+  }
+  await waitFor(() =>
+    expect(dialog.querySelector(".change-price-facts")).toHaveTextContent(
+      "Margin 29%",
+    ),
+  );
+  expect(dialog.querySelector(".change-price-warning")).not.toBeInTheDocument();
 });

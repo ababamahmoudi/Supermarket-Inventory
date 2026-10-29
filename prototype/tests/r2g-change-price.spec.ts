@@ -72,6 +72,22 @@ for (const width of [360, 390, 509, 760, 1440]) {
         (element) => element.getBoundingClientRect().height,
       );
       expect(Math.abs(height - 52)).toBeLessThanOrEqual(1.5);
+      const currencyGeometry = await price.evaluate((input) => {
+        const symbol = input
+          .parentElement!.querySelector(":scope > span")!
+          .getBoundingClientRect();
+        const style = getComputedStyle(input);
+        return {
+          direction: style.direction,
+          gap:
+            input.getBoundingClientRect().left +
+            parseFloat(style.paddingLeft) +
+            parseFloat(style.borderLeftWidth) -
+            symbol.right,
+        };
+      });
+      expect(currencyGeometry.direction).toBe("ltr");
+      expect(currencyGeometry.gap).toBeGreaterThanOrEqual(2);
       const picks = dialog.locator(".change-price-quick-picks > button");
       await expect(picks).toHaveCount(4);
       const pickBoxes = await picks.evaluateAll((elements) =>
@@ -85,6 +101,15 @@ for (const width of [360, 390, 509, 760, 1440]) {
       await price.fill("1.39");
       await expect(dialog.locator(".change-price-facts")).toBeVisible();
       await expect(dialog.locator(".change-price-warning")).toHaveCount(0);
+      if (width === 1440) {
+        const normalBody = await dialog
+          .locator(".change-price-body")
+          .evaluate((element) => ({
+            content: element.scrollHeight,
+            visible: element.clientHeight,
+          }));
+        expect(normalBody.content - normalBody.visible).toBeLessThanOrEqual(1);
+      }
       await dialog.screenshot({
         path: testInfo.outputPath(
           `change-price-normal-${width}-${theme}-${lang}.png`,
@@ -143,6 +168,28 @@ for (const width of [360, 390, 509, 760, 1440]) {
           exact: true,
         }),
       ).toHaveAttribute("aria-pressed", "true");
+      const starts = dialog.getByRole("group", {
+        name: lang === "en" ? "Starts" : "شروع",
+        exact: true,
+      });
+      const startChangeStability = await stableClick(
+        starts.getByRole("button", {
+          name: lang === "en" ? "Tomorrow" : "فردا",
+          exact: true,
+        }),
+      );
+      await expect(
+        ends.getByRole("button", {
+          name: lang === "en" ? "2 weeks" : "۲ هفته",
+          exact: true,
+        }),
+      ).toHaveAttribute("aria-pressed", "true");
+      await expect(
+        dialog.getByRole("button", {
+          name: lang === "en" ? "Last day" : "آخرین روز",
+          exact: true,
+        }),
+      ).toHaveCount(0);
       const dateRevealStability = await stableClick(
         ends.getByRole("button", {
           name: lang === "en" ? "Date…" : "تاریخ…",
@@ -210,10 +257,12 @@ for (const width of [360, 390, 509, 760, 1440]) {
       await testInfo.attach("stability", {
         body: JSON.stringify(
           {
+            currencyGeometry,
             emptyPriceTop,
             normalPriceTop: originalTop,
             reasonBefore: reasonTop,
             acknowledgementStability,
+            startChangeStability,
             dateRevealStability,
             noEndStability,
           },
@@ -287,6 +336,13 @@ for (const lang of ["en", "fa"] as const) {
       ),
     ).toBe(true);
     await pick.evaluate((element) => element.removeAttribute("style"));
+    await price.evaluate((element) => {
+      element.style.paddingInlineStart = "0px";
+    });
+    expect(await audit()).toContain(
+      "R2g currency adornment must not overlap price text",
+    );
+    await price.evaluate((element) => element.removeAttribute("style"));
     await price.evaluate((element) => {
       element.dataset.savedLabel = element.getAttribute("aria-labelledby")!;
       element.removeAttribute("aria-labelledby");

@@ -6,6 +6,8 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
+  useLayoutEffect,
   useState,
   type ComponentProps,
 } from "react";
@@ -100,9 +102,26 @@ function PriceAmountInput({
     })
       .formatToParts(0)
       .find((part) => part.type === "currency")?.value ?? currency;
+  const wrapper = useRef<HTMLDivElement>(null);
+  const prefix = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (wrapper.current && prefix.current)
+        wrapper.current.style.setProperty(
+          "--price-currency-width",
+          `${prefix.current.getBoundingClientRect().width}px`,
+        );
+    };
+    const observer = new ResizeObserver(measure);
+    if (prefix.current) observer.observe(prefix.current);
+    measure();
+    return () => observer.disconnect();
+  }, [symbol]);
   return (
-    <div className="change-price-money">
-      <span aria-hidden="true">{symbol}</span>
+    <div ref={wrapper} className="change-price-money" dir="ltr">
+      <span ref={prefix} aria-hidden="true">
+        {symbol}
+      </span>
       <NumberField {...props} />
     </div>
   );
@@ -140,7 +159,17 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
       "dialog.change-price-dialog",
     );
     if (dialog) {
-      dialog.style.blockSize = `${dialog.getBoundingClientRect().height}px`;
+      const box = dialog.getBoundingClientRect();
+      if (window.innerWidth <= 760) {
+        dialog.style.blockSize = `${box.height}px`;
+      } else {
+        dialog.style.removeProperty("block-size");
+        dialog.style.setProperty("--price-desktop-frame-top", `${box.top}px`);
+        dialog.style.setProperty(
+          "--price-desktop-frame-max",
+          `calc(100dvh - ${box.top}px - 16px)`,
+        );
+      }
       const content = dialog.querySelector<HTMLElement>(
         ".change-price-content",
       );
@@ -293,6 +322,7 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
   );
   const monthEnd = (start: string) => {
     const date = new Date(`${start}T12:00:00Z`);
+    if (!Number.isFinite(date.getTime())) return "";
     date.setUTCMonth(date.getUTCMonth() + 1, 0);
     return date.toISOString().slice(0, 10);
   };
@@ -321,6 +351,21 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     setInput((previous) => ({
       ...previous,
       [field]: value,
+      ...(field === "starts_on" &&
+      typeof value === "string" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+      saleDateAfter(value, 0) === value
+        ? {
+            last_day:
+              endChoice === "week"
+                ? saleDateAfter(value, 6)
+                : endChoice === "fortnight"
+                  ? saleDateAfter(value, 13)
+                  : endChoice === "month"
+                    ? monthEnd(value)
+                    : previous.last_day,
+          }
+        : {}),
       ...(field === "price" || field === "branches"
         ? { accept_below_margin: false }
         : {}),
@@ -732,17 +777,18 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     issues.find((issue) => issue.fieldId === fieldId(field))?.message;
   const belowMargin =
     mayManageRegular &&
-    displayedEffects.some((effect) => effect.below_minimum_margin);
+    moneyPreview?.effects.some((effect) => effect.below_minimum_margin);
   const belowCost =
-    mayManageRegular && displayedEffects.some((effect) => effect.below_cost);
+    mayManageRegular &&
+    moneyPreview?.effects.some((effect) => effect.below_cost);
   const uniformRegular =
-    preview?.effects.length &&
-    preview.effects.every(
+    moneyPreview?.effects.length &&
+    moneyPreview.effects.every(
       (effect) =>
         effect.regular_display_price ===
-        preview.effects[0].regular_display_price,
+        moneyPreview.effects[0].regular_display_price,
     )
-      ? preview.effects[0].regular_display_price
+      ? moneyPreview.effects[0].regular_display_price
       : null;
   const regularWaitsForSale =
     !isSale &&
@@ -784,6 +830,35 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     price && current?.margin != null
       ? new Decimal(current.margin).times(100).toDecimalPlaces(0).toFixed(0)
       : null;
+  const factsNeedLocation = Boolean(
+    current &&
+    (current.branch !== location ||
+      moneyPreview?.effects.some(
+        (effect) =>
+          effect.cost !== current.cost ||
+          effect.margin !== current.margin ||
+          effect.savings !== current.savings ||
+          effect.percentage_off !== current.percentage_off,
+      )),
+  );
+  const uniformCost = Boolean(
+    current?.cost != null &&
+    moneyPreview?.effects.length &&
+    moneyPreview.effects.every((effect) => effect.cost === current.cost),
+  );
+  const warningLoss =
+    price &&
+    current?.below_cost &&
+    uniformCost &&
+    displayedCost &&
+    new Decimal(displayedCost).gt(price)
+      ? new Decimal(displayedCost).minus(price).toFixed(4)
+      : null;
+  const belowCostStores =
+    moneyPreview?.effects
+      .filter((effect) => effect.below_cost)
+      .map((effect) => branchLabel(state.config, effect.branch, lang))
+      .join(" · ") ?? "";
   const summaryPrice =
     !isSale && current?.proposed_price
       ? product.sold_by === "weight"
@@ -1081,6 +1156,14 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                 })}
               {price && (
                 <div className="change-price-facts">
+                  {factsNeedLocation && current && (
+                    <span>
+                      {t(
+                        `At ${branchLabel(state.config, current.branch, "en")}`,
+                        `در ${branchLabel(state.config, current.branch, "fa")}`,
+                      )}
+                    </span>
+                  )}
                   {current?.savings && new Decimal(current.savings).gt(0) && (
                     <span>
                       {t("Customers save", "صرفه‌جویی مشتریان")}{" "}
@@ -1134,13 +1217,11 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                               "این قیمت کمتر از حداقل حاشیهٔ سود است.",
                             )}
                       </strong>
-                      {belowCost && displayedCost && (
+                      {belowCost && warningLoss && (
                         <span>
                           {t("Each one sold loses", "زیان هر فروش")}{" "}
                           <Money
-                            value={new Decimal(displayedCost)
-                              .minus(price)
-                              .toFixed(4)}
+                            value={warningLoss}
                             currency={state.config.company.currency}
                           />
                           {belowMargin && current?.minimum_margin != null
@@ -1149,6 +1230,12 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                                 `، و کمتر از حداقل حاشیهٔ سود ${new Decimal(current.minimum_margin).times(100).toFixed(0)}٪ است.`,
                               )
                             : "."}
+                        </span>
+                      )}
+                      {belowCost && !warningLoss && belowCostStores && (
+                        <span>
+                          {t("Below cost in", "زیر هزینه در")}{" "}
+                          <bdi dir="auto">{belowCostStores}</bdi>.
                         </span>
                       )}
                     </div>

@@ -2188,6 +2188,20 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         if (genuine) {
           if (Math.abs(input.getBoundingClientRect().height - 52) > 1)
             failures.push("R2g price entry must be 52px");
+          const currency = input.parentElement.querySelector(
+            ":scope > span[aria-hidden='true']",
+          );
+          const inputStyle = getComputedStyle(input);
+          const textStart =
+            input.getBoundingClientRect().left +
+            parseFloat(inputStyle.borderLeftWidth) +
+            parseFloat(inputStyle.paddingLeft);
+          if (
+            !currency ||
+            inputStyle.direction !== "ltr" ||
+            textStart < currency.getBoundingClientRect().right + 2
+          )
+            failures.push("R2g currency adornment must not overlap price text");
           const boxes = tiles.map((tile) => tile.getBoundingClientRect());
           for (const [index, tile] of tiles.entries()) {
             const rect = boxes[index];
