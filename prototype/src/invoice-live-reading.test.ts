@@ -138,6 +138,7 @@ describe("R3 protected live reading domain", () => {
     expect(invoice.live_reading?.phase).toBe("ready");
     expect(invoice.live_reading?.attempt_id).toBeTruthy();
     expect(invoice.lines).toEqual([]);
+    expect(invoice.short_lines).toEqual([]);
     expect(invoice.supplier).toBe("");
     expect(invoice.supplier_invoice_number).toBe("");
     const sha = data.attached.original_sha256s[0];
@@ -148,6 +149,18 @@ describe("R3 protected live reading domain", () => {
     expect(data.state.invoices?.find((item) => item.id === invoice.id)).toEqual(
       invoice,
     );
+  });
+
+  it("the empty upload factory contains no fictional shortage evidence", () => {
+    const state = initialState();
+    const actor = authenticatedTestActor(state, "manager");
+    const ordinary = createInvoice(state, actor, "Branch 1");
+    const empty = createInvoice(state, actor, "Branch 1", false, {
+      empty: true,
+    });
+    expect(empty.lines).toEqual([]);
+    expect(empty.short_lines).toEqual([]);
+    expect(ordinary.short_lines).toEqual(state.invoice.short_lines);
   });
 
   it.each(["owner", "manager", "floor_worker"] as const)(

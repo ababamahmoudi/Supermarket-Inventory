@@ -332,6 +332,7 @@ export function createInvoice(
     receiving_employee: actor.actor,
     due_date: dateAfter(today, 14),
     short_receipt_keys: [],
+    ...(options?.empty ? { short_lines: [] } : {}),
     lines:
       manual || options?.empty
         ? []
