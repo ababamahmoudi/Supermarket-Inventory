@@ -8,7 +8,7 @@ import {
   setReceivingCategory,
 } from "./r2-receiving-helpers";
 
-/** Inspect the painted prefix, rather than the retained full tooltip value. */
+/** B4 shows complete names: inspect the actual text and every painted glyph. */
 async function fittedNameEvidence(row: Locator, fullName: string) {
   return row.locator(".receiving-product-name").evaluate((element, full) => {
     const box = element.getBoundingClientRect();
@@ -19,11 +19,7 @@ async function fittedNameEvidence(row: Locator, fullName: string) {
     return {
       title: element.getAttribute("title"),
       visible,
-      exactPrefix:
-        visible === full ||
-        (visible.length > 1 &&
-          visible.endsWith("…") &&
-          full.startsWith(visible.slice(0, -1))),
+      exactPrefix: visible === full,
       fragments: glyphs.length,
       fits:
         glyphs.length > 0 &&
@@ -31,7 +27,8 @@ async function fittedNameEvidence(row: Locator, fullName: string) {
           (glyph) =>
             glyph.left >= box.left - 1.5 &&
             glyph.right <= box.right + 1.5 &&
-            glyph.height <= box.height + 1.5,
+            glyph.top >= box.top - 1.5 &&
+            glyph.bottom <= box.bottom + 1.5,
         ),
       box: box.toJSON(),
       glyphs: glyphs.map((glyph) => glyph.toJSON()),

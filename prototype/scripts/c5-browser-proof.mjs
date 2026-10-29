@@ -279,9 +279,14 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         ".notebook-tabs",
       ].join(",");
       const invoiceSourceTiles = new Set();
+      const receivingOriginalOpeners = new Set();
       const notificationHeaderActions = new Set();
       const kindOf = (element) => {
         if (invoiceSourceTiles.has(element)) return "source-tile";
+        if (element.matches(".original-viewer-phone-trigger"))
+          return receivingOriginalOpeners.has(element)
+            ? "disclosure"
+            : "action";
         // Category choices are actual pressed-state chips; their menu trigger
         // belongs to the same pill group. Keep them measured, with their own
         // fully-round shape rule, rather than treating them as ordinary actions.
@@ -331,7 +336,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
       // Measure those exact slots instead of treating a full-width action as
       // an accidentally stretched ordinary button.
       const phoneReceivingWidths = new Map();
-      const phone = document.documentElement.clientWidth < 760;
+      const phone = document.documentElement.clientWidth <= 760;
       const contentBounds = (element) => {
         const bounds = element.getBoundingClientRect();
         const style = getComputedStyle(element);
@@ -1040,47 +1045,178 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         else
           controls.forEach((control) => r2fOriginalHeaderActions.add(control));
       }
+      // R2g B4: only the genuine receiving footer earns its full-width/select
+      // and two half-width action slots. A copied class remains intrinsic.
       const r2fAddLineControls = new Set();
-      for (const group of document.querySelectorAll(
-        '.receiving-review[data-testid="invoice-review"] .receiving-add-line > .actions.ui-control-row[data-control-row]',
+      for (const footer of document.querySelectorAll(
+        '.receiving-review[data-testid="invoice-review"] .receiving-lines > .receiving-add-line',
       )) {
-        if (!visible(group)) continue;
-        const select = group.querySelector(
+        if (!visible(footer)) continue;
+        const group = footer.querySelector(
+          ":scope > .actions.ui-control-row[data-control-row]",
+        );
+        const select = group?.querySelector(
           ':scope > #invoice-add-product[role="combobox"]',
         );
         const controls = [
-          ...group.querySelectorAll(":scope > .ui-button.button"),
+          ...(group?.querySelectorAll(":scope > .ui-button.button") ?? []),
+          ...footer.querySelectorAll(":scope > .ui-button.button"),
         ].filter(visible);
         const boxes = [select, ...controls]
           .filter(Boolean)
           .map((control) => control.getBoundingClientRect());
-        const valid =
+        const semantic =
           select &&
-          controls.length === 2 &&
+          controls.length === 3 &&
+          footer.parentElement.querySelector(
+            ":scope > .receiving-lines-table > .receiving-table",
+          ) &&
           /^(Add line|افزودن ردیف)$/.test(tidy(controls[0].textContent)) &&
           /^(\+ Add new product|\+ افزودن کالای جدید)$/.test(
             tidy(controls[1].textContent),
           ) &&
+          /^(\+ Add charge or credit|\+ افزودن هزینه یا اعتبار)$/.test(
+            tidy(controls[2].textContent),
+          ) &&
           controls[0].classList.contains("button-secondary") &&
           controls[1].classList.contains("button-plain") &&
-          boxes.every(
-            (box) =>
-              Math.abs(box.height - 44) <= 1 &&
-              boxes.every(
-                (peer) =>
-                  Math.abs(
-                    box.top + box.height / 2 - peer.top - peer.height / 2,
-                  ) <= 1.5 ||
-                  box.bottom + 7 <= peer.top ||
-                  peer.bottom + 7 <= box.top,
-              ),
-          );
-        if (!valid)
+          controls[2].matches(".receiving-add-charge.button-plain");
+        const peers = boxes.every(
+          (box) =>
+            Math.abs(box.height - 44) <= 1 &&
+            boxes.every(
+              (peer) =>
+                Math.abs(
+                  box.top + box.height / 2 - peer.top - peer.height / 2,
+                ) <= 1.5 ||
+                box.bottom + 7 <= peer.top ||
+                peer.bottom + 7 <= box.top,
+            ),
+        );
+        if (!semantic || !peers) {
           failures.push(
-            "Add line needs its exact field-aligned Select and two actions",
+            "Add line needs its exact field-aligned Select and three actions",
           );
-        else controls.forEach((control) => r2fAddLineControls.add(control));
+          continue;
+        }
+        controls.forEach((control) => r2fAddLineControls.add(control));
+        if (phone) {
+          const style = getComputedStyle(footer);
+          const bounds = contentBounds(footer);
+          const half = (bounds.width - 8) / 2;
+          const full = [select, controls[0]];
+          const halves = controls
+            .slice(1)
+            .map((control) => ({
+              control,
+              box: control.getBoundingClientRect(),
+            }))
+            .sort((a, b) => a.box.left - b.box.left);
+          let correct =
+            style.display === "grid" &&
+            style.gridTemplateColumns.split(/\s+/).length === 2 &&
+            Math.abs(parseFloat(style.columnGap) - 8) <= 0.1 &&
+            Math.abs(parseFloat(style.rowGap) - 8) <= 0.1;
+          for (const control of full) {
+            const box = control.getBoundingClientRect();
+            if (control !== select)
+              phoneReceivingWidths.set(control, bounds.width);
+            correct &&=
+              Math.abs(box.left - bounds.left) <= 1 &&
+              Math.abs(box.right - bounds.right) <= 1;
+          }
+          correct &&=
+            Math.abs(
+              full[1].getBoundingClientRect().top -
+                full[0].getBoundingClientRect().bottom -
+                8,
+            ) <= 1;
+          halves.forEach(({ control, box }, index) => {
+            phoneReceivingWidths.set(control, half);
+            correct &&=
+              Math.abs(box.width - half) <= 1 &&
+              Math.abs(box.left - bounds.left - index * (half + 8)) <= 1 &&
+              Math.abs(box.top - full[1].getBoundingClientRect().bottom - 8) <=
+                1;
+          });
+          if (!correct)
+            failures.push(
+              "Receiving phone add footer must fill its full and half-width slots",
+            );
+        }
       }
+      // The original opens evidence; its thumbnail is contained inside the
+      // approved 64px-minimum full-width card, rather than a stretched action.
+      if (phone)
+        for (const opener of document.querySelectorAll(
+          ".original-viewer-phone-trigger",
+        )) {
+          if (!visible(opener)) continue;
+          const viewer = opener.parentElement;
+          const review = viewer?.closest(".receiving-review");
+          const thumb = opener.querySelector(
+            ":scope > .original-viewer-thumbnail",
+          );
+          const copy = opener.querySelector(
+            ":scope > .original-viewer-phone-text",
+          );
+          const icon = opener.querySelector(
+            ":scope > .original-viewer-phone-chevron",
+          );
+          const bounds = opener.getBoundingClientRect();
+          const outer = viewer?.getBoundingClientRect();
+          const thumbnail = thumb?.getBoundingClientRect();
+          const style = getComputedStyle(opener);
+          const semantic =
+            /^#invoices(?:[?]|$)/.test(window.location.hash) &&
+            viewer?.matches("aside.original-viewer#invoice-original-field") &&
+            review?.querySelector(":scope > .receiving-header h1") &&
+            viewer.querySelector(":scope > .original-viewer-panel") &&
+            opener.matches(
+              'button.ui-button.button.button-secondary[data-control-kind="disclosure"]',
+            ) &&
+            /^(View original|Attach original|مشاهده اصل|پیوست اصل فاکتور)$/.test(
+              tidy(copy?.querySelector(":scope > strong")?.textContent),
+            ) &&
+            thumb &&
+            copy &&
+            icon;
+          const contained =
+            semantic &&
+            outer &&
+            thumbnail &&
+            style.display === "grid" &&
+            style.gridTemplateColumns.split(/\s+/).length === 3 &&
+            Math.abs(bounds.left - outer.left) <= 1 &&
+            Math.abs(bounds.right - outer.right) <= 1 &&
+            Math.abs(thumbnail.width - 48) <= 1 &&
+            Math.abs(thumbnail.height - 48) <= 1 &&
+            getComputedStyle(thumb).overflow === "hidden" &&
+            style.overflow === "hidden" &&
+            thumbnail.left >= bounds.left &&
+            thumbnail.right <= bounds.right &&
+            thumbnail.top >= bounds.top &&
+            thumbnail.bottom <= bounds.bottom &&
+            Math.abs(parseFloat(style.minHeight) - 64) <= 1 &&
+            Math.abs(
+              bounds.height -
+                Math.max(64, copy.getBoundingClientRect().height + 16),
+            ) <= 2 &&
+            [
+              style.borderTopLeftRadius,
+              style.borderTopRightRadius,
+              style.borderBottomRightRadius,
+              style.borderBottomLeftRadius,
+            ].every(
+              (radius) =>
+                radius === style.getPropertyValue("--radius-menu").trim(),
+            );
+          if (!semantic || !contained)
+            failures.push(
+              "Receiving original opener must retain its genuine full-width card and clipped thumbnail",
+            );
+          else receivingOriginalOpeners.add(opener);
+        }
       // R2f D6 keeps the previous direct-row contract below and adds its exact
       // approved footer composition. Only a fully validated composition earns
       // the 40px desktop / 44px phone controls and two-row phone action slots.
@@ -3082,15 +3218,14 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const prefix = tidy(name.textContent);
           const toggle = name.parentElement;
           const count = tidy(
-            toggle.querySelector(".receiving-line-check-count")?.textContent,
+            name
+              .closest(".receiving-product-cell")
+              ?.querySelector(".receiving-line-check-count")?.textContent,
           );
           if (
             !title ||
             !prefix ||
-            !(
-              prefix === title ||
-              (prefix.endsWith("…") && title.startsWith(prefix.slice(0, -1)))
-            ) ||
+            prefix !== title ||
             tidy(toggle.getAttribute("aria-label")) !==
               [title, count].filter(Boolean).join(" ")
           )
@@ -3112,34 +3247,10 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               parent.closest(".sr-only, .visually-hidden")
             )
               continue;
-            const ellipsis = parent.closest(
-              ".receiving-table .receiving-product-name",
-            );
-            const ellipsisStyle = ellipsis && getComputedStyle(ellipsis);
-            const ellipsisBounds = ellipsis?.getBoundingClientRect();
-            // Only the reference receiving name intentionally elides text.
-            // Its full exact title remains available and its painted box must
-            // stay wholly within this cell; no other clipped text is exempt.
-            const receivingEllipsis =
-              ellipsis &&
-              ellipsis.closest("td") === cell &&
-              ellipsisStyle.overflowX === "hidden" &&
-              ellipsisStyle.textOverflow === "ellipsis" &&
-              ellipsisStyle.whiteSpace === "nowrap" &&
-              tidy(ellipsis.getAttribute("title")) ===
-                tidy(ellipsis.textContent) &&
-              tidy(ellipsis.textContent) &&
-              ellipsisBounds.left >= bounds.left - 1 &&
-              ellipsisBounds.right <= bounds.right + 1 &&
-              ellipsisBounds.top >= bounds.top - 1 &&
-              ellipsisBounds.bottom <= bounds.bottom + 1;
             const range = document.createRange();
             range.selectNodeContents(node);
             for (const rect of range.getClientRects())
-              if (
-                !receivingEllipsis &&
-                (rect.left < bounds.left - 2 || rect.right > bounds.right + 2)
-              )
+              if (rect.left < bounds.left - 2 || rect.right > bounds.right + 2)
                 failures.push(`Clipped table text: ${tidy(node.textContent)}`);
           }
         }

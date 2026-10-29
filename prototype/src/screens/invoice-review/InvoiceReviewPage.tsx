@@ -7,8 +7,13 @@ import {
 } from "react";
 import { useDemo } from "../../store";
 import { Button, Select } from "../../ui";
-import { addManualLine, recalculateInvoice } from "../../invoice";
-import { InvoiceOtherCharges } from "../../InvoiceReadingReview";
+import { addManualLine } from "../../invoice";
+import { OtherChargesEditor } from "./OtherChargesEditor";
+import {
+  addInvoiceOtherCharge,
+  editInvoiceOtherCharge,
+  removeInvoiceOtherCharge,
+} from "../../invoice-other-charges";
 import { ReviewHeader } from "./ReviewHeader";
 import { ProgressStrip } from "./ProgressStrip";
 import { InvoiceDetailsCard } from "./InvoiceDetailsCard";
@@ -22,7 +27,6 @@ import {
 } from "./review-attention";
 import { missingGroups } from "./missing-groups";
 import { OriginalViewer } from "./OriginalViewer";
-import { acknowledgeInvoiceOtherChargeCheck } from "../../invoice-checks";
 import { invoiceLineId } from "../../invoice-line-links";
 import { useInvoiceLineHighlight } from "./useInvoiceLineHighlight";
 import { useReviewScrollAnchor } from "./useReviewScrollAnchor";
@@ -246,77 +250,88 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
                 return next;
               })
             }
-          />
-          <InvoiceOtherCharges
-            invoice={invoice}
-            onEdit={(index, field, value) => {
-              void update((draft, actor) => {
-                const charge = draft.invoice.other_charges?.[index];
-                if (!charge) return;
-                if (field === "line_total") charge.amount = value;
-                else if (field === "taxable") charge.taxable = value === "true";
-                else if (field === "description") charge.description = value;
-                acknowledgeInvoiceOtherChargeCheck(draft, actor, index, field);
-                recalculateInvoice(draft.invoice, draft.config);
-              });
-            }}
-          />
-          <section className="list-box receiving-add-line">
-            <div className="actions ui-control-row" data-control-row>
-              <Select
-                searchable
-                aria-label={t(
-                  "Add a product to the invoice",
-                  "افزودن کالا به فاکتور",
-                )}
-                id="invoice-add-product"
-                value={addProduct}
-                options={[
-                  {
-                    placeholder: true,
-                    value: "",
-                    label: t("Choose a product", "انتخاب کالا"),
-                  },
-                  ...state.products
-                    .filter(
-                      (x) =>
-                        x.company_id === invoice.company_id &&
-                        x.status !== "archived",
-                    )
-                    .map((x) => ({
-                      searchTerms: [
-                        x.name_en,
-                        x.name_fa ?? "",
-                        x.code,
-                        x.barcode ?? "",
-                      ],
-                      value: x.code,
-                      label: x.name_en,
-                    })),
-                  { value: "NEW", label: t("New product", "کالای جدید") },
-                ]}
-                onChange={setAddProduct}
-              />
+          >
+            <OtherChargesEditor
+              invoice={invoice}
+              onEdit={(index, field, value) => {
+                void update((draft, actor) =>
+                  editInvoiceOtherCharge(draft, actor, index, field, value),
+                );
+              }}
+              onRemove={(index) => {
+                void update((draft, actor) =>
+                  removeInvoiceOtherCharge(draft, actor, index),
+                );
+              }}
+            />
+            <div className="receiving-add-line">
+              <div className="actions ui-control-row" data-control-row>
+                <Select
+                  searchable
+                  aria-label={t(
+                    "Add a product to the invoice",
+                    "افزودن کالا به فاکتور",
+                  )}
+                  id="invoice-add-product"
+                  value={addProduct}
+                  options={[
+                    {
+                      placeholder: true,
+                      value: "",
+                      label: t("Choose a product", "انتخاب کالا"),
+                    },
+                    ...state.products
+                      .filter(
+                        (x) =>
+                          x.company_id === invoice.company_id &&
+                          x.status !== "archived",
+                      )
+                      .map((x) => ({
+                        searchTerms: [
+                          x.name_en,
+                          x.name_fa ?? "",
+                          x.code,
+                          x.barcode ?? "",
+                        ],
+                        value: x.code,
+                        label: x.name_en,
+                      })),
+                    { value: "NEW", label: t("New product", "کالای جدید") },
+                  ]}
+                  onChange={setAddProduct}
+                />
+                <Button
+                  variant="secondary"
+                  disabled={!addProduct}
+                  onClick={() => {
+                    if (addProduct === "NEW") {
+                      onProductAdd();
+                      return;
+                    }
+                    void update((draft, actor) =>
+                      addManualLine(draft, actor, addProduct),
+                    );
+                  }}
+                >
+                  {t("Add line", "افزودن ردیف")}
+                </Button>
+                <Button variant="plain" onClick={onProductAdd}>
+                  {t("+ Add new product", "+ افزودن کالای جدید")}
+                </Button>
+              </div>
               <Button
-                variant="secondary"
-                disabled={!addProduct}
+                variant="plain"
+                className="receiving-add-charge"
                 onClick={() => {
-                  if (addProduct === "NEW") {
-                    onProductAdd();
-                    return;
-                  }
                   void update((draft, actor) =>
-                    addManualLine(draft, actor, addProduct),
+                    addInvoiceOtherCharge(draft, actor),
                   );
                 }}
               >
-                {t("Add line", "افزودن ردیف")}
-              </Button>
-              <Button variant="plain" onClick={onProductAdd}>
-                {t("+ Add new product", "+ افزودن کالای جدید")}
+                {t("+ Add charge or credit", "+ افزودن هزینه یا اعتبار")}
               </Button>
             </div>
-          </section>
+          </LinesTable>
           {extras}
           <TotalsCard
             invoice={invoice}

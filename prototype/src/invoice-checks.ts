@@ -499,6 +499,7 @@ export function acknowledgeInvoicePaperTotal(
 
 /** Complete supported missing-paper combinations; provenance is quiet, never an invented AI question. */
 export function fillCalculatedInvoiceTotals(invoice: {
+  status?: DemoInvoice["status"];
   subtotal: string;
   tax: string;
   final_total: string;
@@ -531,61 +532,75 @@ export function fillCalculatedInvoiceTotals(invoice: {
       ...new Set([...(invoice.calculated_fields ?? []), field]),
     ];
   };
-  if (
-    !invoice.subtotal.trim() &&
-    !invoice.tax.trim() &&
-    !invoice.final_total.trim() &&
-    invoice.lines?.length
-  ) {
-    const itemAmounts = invoice.lines.map(
+  const subtotalFromLines = () => {
+    const items = (invoice.lines ?? []).map(
       (line) => line.line_total?.trim() ?? "",
     );
-    const chargeAmounts = (invoice.other_charges ?? []).map((charge) =>
+    const charges = (invoice.other_charges ?? []).map((charge) =>
       charge.amount.trim(),
     );
     if (
-      itemAmounts.every(valid) &&
-      chargeAmounts.every((amount) => /^-?\d+(?:\.\d{1,2})?$/.test(amount))
+      !items.every(valid) ||
+      !charges.every((amount) => /^-?\d+(?:\.\d{1,2})?$/.test(amount))
+    )
+      return;
+    const subtotal = [...items, ...charges].reduce(
+      (sum, amount) => sum.plus(amount),
+      new Decimal(0),
+    );
+    return subtotal.gte(0) ? subtotal : undefined;
+  };
+  const refreshFromLines =
+    ["draft", "review"].includes(invoice.status ?? "") &&
+    invoice.calculated_from_lines === true &&
+    invoice.calculated_fields?.includes("subtotal");
+  if (refreshFromLines) {
+    const subtotal = subtotalFromLines();
+    if (subtotal) fill("subtotal", subtotal);
+    else invoice.subtotal = "";
+    // This is an existing derived subtotal, not a printed or human-entered one.
+    // Missing amounts keep it unresolved; retained tax and total stay untouched.
+  } else {
+    if (
+      !invoice.subtotal.trim() &&
+      !invoice.tax.trim() &&
+      !invoice.final_total.trim() &&
+      invoice.lines?.length
     ) {
-      const subtotal = [...itemAmounts, ...chargeAmounts].reduce(
-        (sum, amount) => sum.plus(amount),
-        new Decimal(0),
-      );
-      if (subtotal.gte(0)) {
+      const subtotal = subtotalFromLines();
+      if (subtotal) {
         fill("subtotal", subtotal);
-        // A derived subtotal alone does not establish whether the supplier charged tax.
-        // Keep tax/total unresolved until a second paper amount or a person supplies it.
         invoice.calculated_from_lines = true;
       }
     }
-  }
-  if (
-    !invoice.subtotal.trim() &&
-    !invoice.tax.trim() &&
-    valid(invoice.final_total)
-  ) {
-    fill("subtotal", new Decimal(invoice.final_total));
-    fill("tax", new Decimal(0));
-  } else if (
-    !invoice.subtotal.trim() &&
-    valid(invoice.final_total) &&
-    valid(invoice.tax)
-  ) {
-    const subtotal = new Decimal(invoice.final_total).minus(invoice.tax);
-    if (subtotal.gte(0)) fill("subtotal", subtotal);
-  } else if (
-    !invoice.tax.trim() &&
-    valid(invoice.final_total) &&
-    valid(invoice.subtotal)
-  ) {
-    const tax = new Decimal(invoice.final_total).minus(invoice.subtotal);
-    if (tax.gte(0)) fill("tax", tax);
-  } else if (
-    !invoice.final_total.trim() &&
-    valid(invoice.subtotal) &&
-    valid(invoice.tax)
-  ) {
-    fill("final_total", new Decimal(invoice.subtotal).plus(invoice.tax));
+    if (
+      !invoice.subtotal.trim() &&
+      !invoice.tax.trim() &&
+      valid(invoice.final_total)
+    ) {
+      fill("subtotal", new Decimal(invoice.final_total));
+      fill("tax", new Decimal(0));
+    } else if (
+      !invoice.subtotal.trim() &&
+      valid(invoice.final_total) &&
+      valid(invoice.tax)
+    ) {
+      const subtotal = new Decimal(invoice.final_total).minus(invoice.tax);
+      if (subtotal.gte(0)) fill("subtotal", subtotal);
+    } else if (
+      !invoice.tax.trim() &&
+      valid(invoice.final_total) &&
+      valid(invoice.subtotal)
+    ) {
+      const tax = new Decimal(invoice.final_total).minus(invoice.subtotal);
+      if (tax.gte(0)) fill("tax", tax);
+    } else if (
+      !invoice.final_total.trim() &&
+      valid(invoice.subtotal) &&
+      valid(invoice.tax)
+    ) {
+      fill("final_total", new Decimal(invoice.subtotal).plus(invoice.tax));
+    }
   }
   for (const field of ["subtotal", "tax", "final_total"] as const)
     if (

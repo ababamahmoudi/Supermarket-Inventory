@@ -249,11 +249,11 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
     }),
   ).toBeVisible();
   await expect(
-    page.getByText("Returnable container deposit", { exact: true }),
-  ).toBeVisible();
+    page.locator(".receiving-charge-description input").nth(0),
+  ).toHaveValue("Returnable container deposit");
   await expect(
-    page.getByText("Fictional promotional discount", { exact: true }),
-  ).toBeVisible();
+    page.locator(".receiving-charge-description input").nth(1),
+  ).toHaveValue("Fictional promotional discount");
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeDisabled();

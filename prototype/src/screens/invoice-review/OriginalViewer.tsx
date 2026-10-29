@@ -172,6 +172,9 @@ export function OriginalViewer({
       <Button
         variant="secondary"
         className="original-viewer-phone-trigger"
+        data-control-kind="disclosure"
+        aria-haspopup={invoice.original_available ? "dialog" : undefined}
+        aria-expanded={invoice.original_available ? expanded : undefined}
         aria-label={
           invoice.original_available
             ? t(

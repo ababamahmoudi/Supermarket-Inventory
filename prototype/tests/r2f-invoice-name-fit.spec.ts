@@ -22,8 +22,10 @@ async function nameGeometry(page: Page) {
             failures.push(
               `Visible name leaves its box: ${element.textContent}`,
             );
-          if (rect.height > bounds.height + 1.5)
-            failures.push(`Visible name wraps: ${element.textContent}`);
+          if (rect.top < bounds.top - 1.5 || rect.bottom > bounds.bottom + 1.5)
+            failures.push(
+              `Visible name leaves its vertical box: ${element.textContent}`,
+            );
         }
       }
     }
@@ -51,7 +53,7 @@ for (const language of ["en", "fa"] as const) {
     );
     expect(titles[0]).toBe("Canned Fava Beans 400 g");
     const before = await readCanonicalBusinessEvidence(page);
-    for (const width of [390, 1000, 1279, 1280, 1281, 1440]) {
+    for (const width of [360, 390, 509, 760, 1000, 1279, 1280, 1281, 1440]) {
       await page.setViewportSize({ width, height: 1080 });
       await expect
         .poll(async () => (await nameGeometry(page)).failures)
@@ -68,9 +70,8 @@ for (const language of ["en", "fa"] as const) {
         );
         const visible = (await name.innerText()).trim();
         expect(
-          visible === title ||
-            (visible.endsWith("…") && title.startsWith(visible.slice(0, -1))),
-          `${width}px retains an exact prefix of ${title}`,
+          visible === title,
+          `${width}px shows the complete retained name ${title}`,
         ).toBe(true);
       }
       if (width === 1280) {
@@ -132,14 +133,24 @@ for (const language of ["en", "fa"] as const) {
       .poll(async () => (await nameGeometry(page)).failures)
       .toEqual([]);
     const first = names.first();
+    // Keep all text/title intact, then deliberately move a painted glyph 4px
+    // beyond the exact name edge. The geometry oracle must reject it.
     const original = await first.locator("bdi").evaluate((element) => {
-      const text = element.textContent!;
-      element.textContent = element.parentElement!.getAttribute("title")!;
-      return text;
+      const style = element.getAttribute("style");
+      const name = element.parentElement!.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const right = Math.max(
+        ...Array.from(range.getClientRects(), (rect) => rect.right),
+      );
+      (element as HTMLElement).style.position = "relative";
+      (element as HTMLElement).style.left = `${name.right - right + 4}px`;
+      return style;
     });
     expect((await nameGeometry(page)).failures.length).toBeGreaterThan(0);
-    await first.locator("bdi").evaluate((element, text) => {
-      element.textContent = text;
+    await first.locator("bdi").evaluate((element, style) => {
+      if (style === null) element.removeAttribute("style");
+      else element.setAttribute("style", style);
     }, original);
     expect((await nameGeometry(page)).failures).toEqual([]);
     await first.locator("..").click();

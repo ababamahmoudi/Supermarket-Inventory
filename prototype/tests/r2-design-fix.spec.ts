@@ -47,13 +47,13 @@ async function missingProductTitleIsDetected(page: Page) {
     .replace(/[\u2066-\u2069]/g, "")
     .replace(/\s+/g, " ")
     .trim();
-  expect(prefix.endsWith("…")).toBe(true);
-  expect(title.startsWith(prefix.slice(0, -1))).toBe(true);
+  expect(prefix).toBe(title);
+  expect(prefix.endsWith("…")).toBe(false);
   await name.evaluate((element) => element.removeAttribute("title"));
   try {
     const report = await inspect(
       page,
-      "Fitted receiving name without title",
+      "Complete receiving name without title",
       "desktop-en-1280-negative",
       "owner",
     );
@@ -650,7 +650,7 @@ for (const language of ["en", "fa"] as const) {
       ).toEqual([]);
       if (!phone) {
         const chargeWidths = await page
-          .locator(".invoice-other-charges")
+          .locator(".receiving-lines > .receiving-charges")
           .evaluate(async (element) => {
             const widths: { width: number; connected: boolean }[] = [];
             for (let frame = 0; frame < 8; frame++) {
@@ -821,7 +821,7 @@ for (const language of ["en", "fa"] as const) {
       for (const cell of await confirmed.locator(":scope > td").all())
         await expect(cell).toHaveCSS("background-color", clear);
       const radius = await confirmed.evaluate((element) =>
-        getComputedStyle(element).getPropertyValue("--radius-search").trim(),
+        getComputedStyle(element).getPropertyValue("--radius-menu").trim(),
       );
       expect(radius).not.toBe("");
       for (const corner of [

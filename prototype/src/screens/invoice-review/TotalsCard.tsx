@@ -14,7 +14,7 @@ import {
   invoiceCheckField,
   invoiceTotalsCheck,
 } from "../../invoice-checks";
-import { shortTotals, refusedTotals } from "../../invoice";
+import { shortTotals, refusedTotals, validMoney } from "../../invoice";
 import { setInvoiceAmount } from "../../invoice-entry";
 import { invoiceAmountIssue } from "./amount-issue";
 import type { ReviewProps } from "./types";
@@ -51,6 +51,101 @@ export function TotalsCard({
     refusedTotals(invoice).total,
   );
   const differences = invoiceTotalsCheck(invoice);
+  const amountRow = (key: "subtotal" | "tax" | "final_total") => {
+    const labels: Record<string, [string, string]> = {
+      subtotal: ["Subtotal", "جمع پیش از مالیات"],
+      tax: ["Tax", "مالیات"],
+      final_total: ["Invoice total", "جمع فاکتور"],
+    };
+    const calculated = invoice.calculated_fields?.includes(key);
+    const difference =
+      key === "subtotal"
+        ? differences.subtotalDifference
+        : key === "final_total"
+          ? differences.totalDifference
+          : undefined;
+    const hasValue = validMoney(invoice[key]);
+    const provenance = calculated
+      ? t("Calculated", "محاسبه‌شده")
+      : (invoice.reading_record || invoice.demo_original_snapshot) && hasValue
+        ? key === "final_total" &&
+          [invoice.subtotal, invoice.tax, invoice.final_total].every(
+            validMoney,
+          ) &&
+          !differences.totalDifference &&
+          !differences.subtotalDifference
+          ? t("Matches paper", "مطابق کاغذ")
+          : t("On paper", "روی کاغذ")
+        : undefined;
+    const provenanceTitle = calculated
+      ? t(
+          key === "subtotal" && invoice.calculated_from_lines
+            ? "Calculated from the lines"
+            : "Calculated · not on the paper",
+          key === "subtotal" && invoice.calculated_from_lines
+            ? "محاسبه‌شده از ردیف‌ها"
+            : "محاسبه‌شده · روی کاغذ نیست",
+        )
+      : undefined;
+    return (
+      <div className={`receiving-total-edit receiving-total-${key}`} key={key}>
+        {!showEditor ? (
+          <div className="receiving-total-row">
+            <span>
+              {t(...labels[key])}
+              {provenance && (
+                <small
+                  className="receiving-total-provenance"
+                  title={provenanceTitle}
+                >
+                  {provenance}
+                </small>
+              )}
+            </span>
+            <Money value={invoice[key]} />
+          </div>
+        ) : (
+          <Field
+            readingField={key}
+            label={t(...labels[key])}
+            labelAdornment={
+              provenance ? (
+                <small
+                  className="receiving-total-provenance"
+                  title={provenanceTitle}
+                >
+                  {provenance}
+                </small>
+              ) : undefined
+            }
+            error={invoiceAmountIssue(key, invoice[key], t)}
+          >
+            <BufferedInput
+              id={`invoice-${key.replaceAll("_", "-")}`}
+              dir="ltr"
+              inputMode="decimal"
+              value={invoice[key]}
+              onChange={(e) => {
+                const value = e.target.value;
+                update((draft, actor) => {
+                  setInvoiceAmount(draft.invoice, key, value);
+                  for (const field of draft.invoice.low_confidence_fields ?? [])
+                    if (invoiceCheckField(field) === key)
+                      acknowledgeInvoiceCheck(draft, actor, field);
+                });
+              }}
+            />
+          </Field>
+        )}
+        {difference && (
+          <span className="receiving-check-summary">
+            {t("Paper:", "کاغذ:")} <Money value={invoice[key]} /> ·{" "}
+            {t("Difference", "اختلاف")} <Money value={difference} />
+          </span>
+        )}
+      </div>
+    );
+  };
   return (
     <section
       className="list-box receiving-totals ui-form-large"
@@ -103,102 +198,28 @@ export function TotalsCard({
           tabIndex={-1}
           className="receiving-totals-rows"
         >
-          <div className="receiving-total-row">
-            <span>{t("Items", "کالاها")}</span>
-            <Money value={items.toFixed(2)} />
+          <div className="receiving-totals-group">
+            <div className="receiving-total-row">
+              <span>{t("Items", "کالاها")}</span>
+              <Money value={items.toFixed(2)} />
+            </div>
+            <div className="receiving-total-row">
+              <span>
+                {t("Other charges and credits", "هزینه‌ها و اعتبارهای دیگر")}
+              </span>
+              <Money value={charges.toFixed(2)} />
+            </div>
+            {amountRow("subtotal")}
+            {amountRow("tax")}
           </div>
-          <div className="receiving-total-row">
-            <span>
-              {t("Other charges and credits", "هزینه‌ها و اعتبارهای دیگر")}
-            </span>
-            <Money value={charges.toFixed(2)} />
+          <div className="receiving-totals-group">
+            {amountRow("final_total")}
+            <div className="receiving-total-row receiving-total-deduction">
+              <span>{t("Shorts and refused", "کسری‌ها و ردشده‌ها")}</span>
+              <Money value={deduction.negated().toFixed(2)} />
+            </div>
           </div>
-          {(["subtotal", "tax", "final_total"] as const).map((key) => {
-            const labels: Record<string, [string, string]> = {
-              subtotal: ["Subtotal", "جمع پیش از مالیات"],
-              tax: ["Tax", "مالیات"],
-              final_total: ["Invoice total", "جمع فاکتور"],
-            };
-            const calculated = invoice.calculated_fields?.includes(key);
-            const difference =
-              key === "subtotal"
-                ? differences.subtotalDifference
-                : key === "final_total"
-                  ? differences.totalDifference
-                  : undefined;
-            return (
-              <div className="receiving-total-edit" key={key}>
-                {!showEditor ? (
-                  <div className="receiving-total-row">
-                    <span>
-                      {t(...labels[key])}
-                      {calculated && (
-                        <small className="muted">
-                          {t(
-                            key === "subtotal" && invoice.calculated_from_lines
-                              ? "Calculated from the lines"
-                              : "Calculated · not on the paper",
-                            key === "subtotal" && invoice.calculated_from_lines
-                              ? "محاسبه‌شده از ردیف‌ها"
-                              : "محاسبه‌شده · روی کاغذ نیست",
-                          )}
-                        </small>
-                      )}
-                    </span>
-                    <Money value={invoice[key]} />
-                  </div>
-                ) : (
-                  <Field
-                    readingField={key}
-                    label={t(...labels[key])}
-                    error={invoiceAmountIssue(key, invoice[key], t)}
-                    hint={
-                      calculated ? (
-                        <small className="muted">
-                          {t(
-                            key === "subtotal" && invoice.calculated_from_lines
-                              ? "Calculated from the lines"
-                              : "Calculated · not on the paper",
-                            key === "subtotal" && invoice.calculated_from_lines
-                              ? "محاسبه‌شده از ردیف‌ها"
-                              : "محاسبه‌شده · روی کاغذ نیست",
-                          )}
-                        </small>
-                      ) : undefined
-                    }
-                  >
-                    <BufferedInput
-                      id={`invoice-${key.replaceAll("_", "-")}`}
-                      dir="ltr"
-                      inputMode="decimal"
-                      value={invoice[key]}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        update((draft, actor) => {
-                          setInvoiceAmount(draft.invoice, key, value);
-                          for (const field of draft.invoice
-                            .low_confidence_fields ?? [])
-                            if (invoiceCheckField(field) === key)
-                              acknowledgeInvoiceCheck(draft, actor, field);
-                        });
-                      }}
-                    />
-                  </Field>
-                )}
-                {difference && (
-                  <span className="receiving-check-summary">
-                    {t("Paper:", "کاغذ:")} <Money value={invoice[key]} /> ·{" "}
-                    {t("Difference", "اختلاف")} <Money value={difference} />
-                  </span>
-                )}
-              </div>
-            );
-          })}
-          <div className="receiving-total-row">
-            <span>{t("Shorts and refused", "کسری‌ها و ردشده‌ها")}</span>
-            <Money value={deduction.negated().toFixed(2)} />
-          </div>
-          <div className="receiving-total-row">
+          <div className="receiving-total-row receiving-total-payable">
             <strong>{t("Payable", "قابل پرداخت")}</strong>
             <strong>
               <Money

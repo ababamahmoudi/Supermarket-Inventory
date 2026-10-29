@@ -385,7 +385,7 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
   }
 });
 
-test("R2 invoice names and four-decimal cost values fit on one line", async ({
+test("R2g invoice names stay complete while four-decimal cost values fit on one line", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
@@ -404,13 +404,26 @@ test("R2 invoice names and four-decimal cost values fit on one line", async ({
         const rects = [...range.getClientRects()];
         return {
           text: element.textContent,
+          title: element.parentElement!.getAttribute("title"),
           lines: new Set(rects.map((rect) => Math.round(rect.top))).size,
+          contained: rects.every((rect) => {
+            const box = element.parentElement!.getBoundingClientRect();
+            return (
+              rect.left >= box.left - 1.5 &&
+              rect.right <= box.right + 1.5 &&
+              rect.top >= box.top - 1.5 &&
+              rect.bottom <= box.bottom + 1.5
+            );
+          }),
         };
       }),
     );
   expect(names.length).toBeGreaterThan(0);
-  for (const name of names)
-    expect(name.lines, name.text ?? "product name").toBe(1);
+  for (const name of names) {
+    expect(name.text).toBe(name.title);
+    expect(name.lines, name.text ?? "product name").toBeGreaterThanOrEqual(1);
+    expect(name.contained, name.text ?? "product name").toBe(true);
+  }
   const costs = page.locator(
     ".receiving-cost-cell > bdi:visible, .receiving-phone-cost > bdi:first-child:visible",
   );

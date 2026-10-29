@@ -6,6 +6,18 @@ import { configSeed } from "./config";
 import { configuredRoleLabel } from "./role-config";
 
 const actions: Record<string, [string, string]> = {
+  "Add invoice charge or credit": [
+    "Add invoice charge or credit",
+    "افزودن هزینه یا اعتبار فاکتور",
+  ],
+  "Edit invoice charge or credit": [
+    "Edit invoice charge or credit",
+    "ویرایش هزینه یا اعتبار فاکتور",
+  ],
+  "Remove invoice charge or credit": [
+    "Remove invoice charge or credit",
+    "حذف هزینه یا اعتبار فاکتور",
+  ],
   "Edit weight product cost": [
     "Edit weight product cost",
     "ویرایش هزینه کالای وزنی",

@@ -96,9 +96,12 @@ test("manual invoice uses local time, term dates and editable computed totals wi
   await expect(subtotal).toHaveValue("");
   await subtotal.blur();
   await expect(subtotal).toHaveValue("0.00");
-  await expect(page.getByTestId("invoice-totals-card")).toContainText(
-    "Calculated · not on the paper",
-  );
+  await expect(
+    page
+      .getByTestId("invoice-totals-card")
+      .getByTitle("Calculated · not on the paper", { exact: true })
+      .first(),
+  ).toHaveText("Calculated");
   await page.getByLabel("Subtotal", { exact: true }).fill("400.00");
   await page.getByLabel("Tax", { exact: true }).fill("52.00");
   await expect(page.getByLabel("Invoice total", { exact: true })).toHaveValue(

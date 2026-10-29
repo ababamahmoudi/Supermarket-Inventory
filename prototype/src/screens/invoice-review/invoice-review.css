@@ -244,7 +244,7 @@
   inline-size: 64px;
 }
 .receiving-col-quantity {
-  inline-size: 128px;
+  inline-size: 152px;
 }
 .receiving-col-cost {
   inline-size: 98px;
@@ -266,7 +266,7 @@
   padding: 0;
 }
 .receiving-table > tbody > .invoice-line-summary > td {
-  padding: 3px 8px;
+  padding: 12px 8px;
   vertical-align: middle;
   border: 0;
   background: var(--surface);
@@ -302,6 +302,16 @@
 .receiving-table > tbody > .invoice-line-summary > td:last-child {
   border-start-end-radius: var(--radius-control);
   border-end-end-radius: var(--radius-control);
+}
+@media (min-width: 761px) {
+  .receiving-table > tbody > .receiving-row-check > td:first-child {
+    border-start-start-radius: var(--radius-small);
+    border-end-start-radius: var(--radius-small);
+  }
+  .receiving-table > tbody > .receiving-row-check > td:last-child {
+    border-start-end-radius: var(--radius-small);
+    border-end-end-radius: var(--radius-small);
+  }
 }
 .receiving-status-number {
   display: flex;
@@ -347,9 +357,8 @@
 .receiving-product-name {
   display: block;
   min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font-weight: 700;
 }
 .receiving-product-meta {
@@ -392,8 +401,7 @@
 .receiving-quantity-cell > .receiving-short-summary {
   color: var(--danger);
   font-weight: 700;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 .receiving-cost-cell,
 .receiving-total-cell {
@@ -403,8 +411,7 @@
 .receiving-total-cell {
   font-weight: 700;
 }
-.receiving-phone-quantity,
-.receiving-table .receiving-phone-chevron {
+.receiving-phone-quantity {
   display: none;
 }
 .receiving-table > tbody > .receiving-editor-row > td {
@@ -595,7 +602,7 @@
 }
 @container receiving-lines (max-width: 580px) {
   .receiving-col-quantity {
-    inline-size: 112px;
+    inline-size: 152px;
   }
   .receiving-product-meta {
     column-gap: 4px;
@@ -608,19 +615,62 @@
   gap: 8px;
 }
 .receiving-total-row > span:first-child {
-  display: grid;
-  justify-items: start;
-  gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
 }
 .receiving-totals-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.receiving-totals-group {
   display: grid;
-  gap: 4px;
+  gap: 2px;
+  padding-block-end: 12px;
+  box-shadow: inset 0 -1px var(--row-divider);
+}
+.receiving-total-provenance {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 20px;
+  padding-inline: 8px;
+  border-radius: var(--radius-round);
+  background: var(--klead-field);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.receiving-total-subtotal {
+  font-weight: 700;
+}
+.receiving-total-final_total {
+  font-size: var(--font-size-headline);
+  font-weight: 800;
+}
+.receiving-total-deduction > .ltr-fragment {
+  color: var(--klead-red-text);
+}
+.receiving-total-payable {
+  padding: 12px 16px;
+  border-radius: var(--radius-menu);
+  background: var(--klead-accent-tint);
+  font-size: 18px;
+  font-weight: 800;
+}
+.receiving-total-payable > strong {
+  font-weight: inherit;
+}
+.receiving-total-payable > strong:last-child {
+  font-size: 22px;
 }
 .receiving-total-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
-  padding-block: 0;
+  min-block-size: 32px;
 }
 .receiving-total-edit {
   display: grid;
@@ -838,9 +888,209 @@
 .original-viewer[data-hidden="true"] {
   block-size: auto;
 }
-:root .receiving-add-line > .actions > :is(.ui-select, .ui-button.button) {
+/* B4: the dedicated receiving card owns its line, charge and add composition. */
+:root .receiving-review .receiving-table > thead > tr > th:first-child,
+:root
+  .receiving-review
+  .receiving-table
+  > tbody
+  > tr.invoice-line-summary
+  > td:first-child {
+  padding-inline-start: 12px;
+}
+:root .receiving-review .receiving-table > thead > tr > th:last-child,
+:root
+  .receiving-review
+  .receiving-table
+  > tbody
+  > tr.invoice-line-summary
+  > td:last-child {
+  padding-inline-end: 16px;
+}
+.receiving-charges {
+  --field-fill: var(--klead-field);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-block-start: 20px;
+  padding-block-start: 20px;
+  box-shadow: inset 0 1px var(--row-divider);
+}
+.receiving-charges-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+.receiving-charges-heading h3 {
+  margin: 0;
+  font-size: var(--font-size-headline);
+}
+.receiving-charges-heading > .muted {
+  font-size: var(--font-size-caption);
+}
+.receiving-charge-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.receiving-charge {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px auto 44px;
+  align-items: center;
+  gap: 8px;
+}
+.receiving-charge-field.field {
+  position: relative;
+  min-inline-size: 0;
+  margin: 0;
+  gap: 0;
+}
+.receiving-charge-field > label,
+.receiving-charge-field > .ui-field-label-row > label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.receiving-charge-field .ui-input {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+.receiving-charge-money {
+  direction: ltr;
+}
+.receiving-charge-money input.ui-input {
+  padding-inline-start: 26px;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.receiving-charge-currency {
+  position: absolute;
+  inset-inline-start: 12px;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-weight: 600;
+  pointer-events: none;
+}
+:root .receiving-charge-tax .ui-segments {
   block-size: 44px;
   min-block-size: 44px;
+  max-block-size: 44px;
+  margin: 0;
+}
+:root .receiving-charge-tax .ui-segments > button {
+  padding-inline: 12px;
+  white-space: nowrap;
+}
+:root
+  .receiving-charge-tax.please-check-field
+  .ui-segments
+  > button[aria-pressed="true"] {
+  color: var(--pending);
+}
+:root .receiving-review .receiving-charge-remove.ui-button.button {
+  inline-size: 44px;
+  block-size: 44px;
+  min-block-size: 44px;
+  padding: 0;
+  color: var(--text-muted);
+}
+.receiving-add-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-block-start: 16px;
+  padding-block-start: 16px;
+  box-shadow: inset 0 1px var(--row-divider);
+}
+.receiving-add-line > .ui-control-row {
+  flex: 1 1 400px;
+  min-inline-size: 0;
+  gap: 8px;
+  margin: 0;
+}
+.receiving-add-line > .ui-control-row > .ui-select {
+  flex: 1;
+  min-inline-size: 0;
+  max-inline-size: 360px;
+}
+:root .receiving-review .receiving-add-line :is(.ui-select, .ui-button.button) {
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: 44px;
+}
+@media (max-width: 760px) {
+  :root
+    .receiving-review
+    .receiving-table
+    > tbody
+    > tr.invoice-line-summary
+    > td:first-child,
+  :root
+    .receiving-review
+    .receiving-table
+    > tbody
+    > tr.invoice-line-summary
+    > td:last-child {
+    padding-inline: 0;
+  }
+  .receiving-charge {
+    container-type: inline-size;
+    grid-template-columns: minmax(0, 1fr) auto 44px;
+    grid-template-areas: "description description description" "amount tax remove";
+    gap: 8px;
+    padding: 12px;
+    border-radius: var(--radius-menu);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--divider);
+  }
+  /* Keep the complete amount and tax captions on the shared row at small widths.
+     The approved 390px+ composition retains its 12px button inset. */
+  :root .receiving-charge-tax .ui-segments > button {
+    padding-inline: clamp(4px, calc((100cqi - 254px) / 4), 12px);
+  }
+  .receiving-charge-description {
+    grid-area: description;
+  }
+  .receiving-charge-money {
+    grid-area: amount;
+  }
+  .receiving-charge-tax {
+    grid-area: tax;
+  }
+  .receiving-charge-remove {
+    grid-area: remove;
+  }
+  .receiving-add-line {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .receiving-add-line > .ui-control-row {
+    display: contents;
+  }
+  .receiving-add-line > .ui-control-row > .ui-select,
+  .receiving-add-line > .ui-control-row > .button-secondary {
+    grid-column: 1 / -1;
+    inline-size: 100%;
+    max-inline-size: none;
+  }
+  :root .receiving-review .receiving-add-line .ui-button.button {
+    inline-size: 100%;
+    max-inline-size: none;
+    justify-content: center;
+    padding-inline: 8px;
+    white-space: normal;
+  }
 }
 .original-viewer .invoice-original-media,
 .original-viewer-dialog .invoice-original-media {
@@ -967,6 +1217,9 @@
   }
 }
 @media (max-width: 760px) {
+  .receiving-layout > .card {
+    inline-size: 100%;
+  }
   .receiving-review {
     padding-block-end: 150px;
   }
@@ -1032,6 +1285,7 @@
     .receiving-post-control
     > .ui-button.button {
     inline-size: 100%;
+    max-inline-size: none;
   }
   .receiving-review .receiving-details,
   .receiving-review .receiving-lines,
@@ -1097,7 +1351,7 @@
     align-items: start;
     gap: 10px;
     padding: 12px;
-    border-radius: var(--radius-search);
+    border-radius: var(--radius-menu);
     background: var(--surface);
     border: 1px solid var(--divider);
   }
@@ -1147,12 +1401,6 @@
     margin-block-start: 4px;
     color: var(--text-muted);
     font-size: var(--font-size-caption);
-  }
-  .receiving-table .receiving-phone-chevron {
-    display: inline-flex;
-    margin-block-start: 6px;
-    margin-inline-start: auto;
-    color: var(--text-muted);
   }
   .receiving-total-cell {
     display: flex;
@@ -1277,20 +1525,25 @@
   .original-viewer-panel {
     display: none;
   }
-  :root .original-viewer-phone-trigger.ui-button {
-    display: flex;
+  :root .original-viewer .original-viewer-phone-trigger.ui-button.button {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) 20px;
     align-items: center;
     gap: 12px;
     inline-size: 100%;
-    min-block-size: 76px;
-    padding: 12px 16px;
+    max-inline-size: none;
+    block-size: auto;
+    min-block-size: 64px;
+    max-block-size: none;
+    padding: 8px 14px 8px 8px;
     border: 0;
-    border-radius: var(--radius-card);
+    border-radius: var(--radius-menu);
     background: var(--surface);
     color: var(--text);
     box-shadow: var(--shadow-card);
     text-align: start;
     justify-content: flex-start;
+    overflow: hidden;
   }
   .original-viewer-phone-text {
     display: flex;
@@ -1316,9 +1569,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 40px;
-    inline-size: 40px;
-    block-size: 52px;
+    flex: 0 0 48px;
+    inline-size: 48px;
+    block-size: 48px;
     border: 1px solid var(--divider);
     border-radius: var(--radius-mark);
     background: var(--neutral-fill);
@@ -1421,21 +1674,13 @@
 .receiving-product-name {
   font-family: var(--font-en-bilingual);
 }
-/* A check count remains visible without adding a third metadata line. */
-.receiving-product-cell .invoice-line-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.receiving-product-name {
-  flex: 1 1 auto;
-}
+/* A check count sits beside its category, below the complete product name. */
 .receiving-line-check-count {
   flex: 0 0 auto;
   white-space: nowrap;
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .receiving-received-provenance {

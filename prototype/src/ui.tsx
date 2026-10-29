@@ -3421,6 +3421,8 @@ type SegmentedProps = {
   onChange: (value: string) => void;
   options: SelectOption[];
   "aria-label"?: string;
+  "aria-describedby"?: string;
+  title?: string;
   className?: string;
   showZeroCounts?: boolean;
 };

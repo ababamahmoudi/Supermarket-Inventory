@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check } from "lucide-react";
 import Decimal from "decimal.js";
-import { FitText } from "../../FitText";
 import { useDemo } from "../../store";
-import { SegmentedControl, TableRowLink } from "../../ui";
+import { SegmentedControl } from "../../ui";
 import { LtrValue, QuantityText } from "../../presentation";
 import { visibleInvoiceCheckFields } from "../../invoice-checks";
 import { invoiceLineId } from "../../invoice-line-links";
@@ -29,11 +28,13 @@ export function LinesTable({
   attentionNavigationKey,
   optimisticConfirmed = new Set<string>(),
   onOptimisticConfirmation,
+  children,
 }: {
   invoice: ReviewProps["invoice"];
   workspace: ReviewProps["workspace"];
   onQuantity: ReviewProps["onQuantity"];
   attemptedPost: boolean;
+  children?: ReactNode;
   openLine: number | null;
   attentionNavigationKey?: number;
   optimisticConfirmed?: ReadonlySet<string>;
@@ -384,16 +385,9 @@ export function LinesTable({
                         toggle(document.getElementById(rowId) ?? undefined);
                       }}
                     >
-                      <FitText
-                        className="receiving-product-name"
-                        value={name}
-                        render={(visible) => <LtrValue value={visible} />}
-                      />
-                      {count > 0 && (
-                        <small className="receiving-check-summary receiving-line-check-count">
-                          {t(`${count} to check`, `${count} برای بررسی`)}
-                        </small>
-                      )}
+                      <span className="receiving-product-name" title={name}>
+                        <LtrValue value={name} />
+                      </span>
                     </a>
                     <small className="receiving-product-meta">
                       {line.pack_size && (
@@ -419,6 +413,14 @@ export function LinesTable({
                           ? categoryLabel(category.label, lang)
                           : t("Choose a category", "انتخاب دسته")}
                       </span>
+                      {count > 0 && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <small className="receiving-check-summary receiving-line-check-count">
+                            {t(`${count} to check`, `${count} برای بررسی`)}
+                          </small>
+                        </>
+                      )}
                     </small>
                     <span className="receiving-phone-quantity">
                       {quantity} ·{" "}
@@ -463,19 +465,6 @@ export function LinesTable({
                     data-column-key="total"
                   >
                     <Money value={line.line_total} />
-                    <TableRowLink
-                      className="receiving-phone-chevron"
-                      href="#invoice-line-editor"
-                      aria-label={t(
-                        `Review line ${index + 1}`,
-                        `بررسی ردیف ${index + 1}`,
-                      )}
-                      aria-expanded={expanded}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        toggle(document.getElementById(rowId) ?? undefined);
-                      }}
-                    />
                   </td>
                 </tr>
                 {failedConfirmations.has(lineId) && (
@@ -612,6 +601,7 @@ export function LinesTable({
           })}
         </table>
       </div>
+      {children}
     </section>
   );
 }

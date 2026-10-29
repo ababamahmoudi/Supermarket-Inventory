@@ -307,10 +307,8 @@ for (const language of ["en", "fa"] as const) {
           title: element.getAttribute("title"),
           style: element.getAttribute("style"),
         };
-        // The compact name is now a growing flex item beside the check count.
-        // Constrain its actual flex basis so this still creates real ellipsis.
-        (element as HTMLElement).style.flex = "0 0 16px";
-        (element as HTMLElement).style.inlineSize = "16px";
+        // B4 keeps the complete name and wraps within a bounded name track.
+        (element as HTMLElement).style.inlineSize = "96px";
         return original;
       });
       try {
@@ -331,15 +329,15 @@ for (const language of ["en", "fa"] as const) {
               };
             });
             return (
-              Math.abs(fitted.width - 16) <= 1 &&
-              fitted.prefix.endsWith("…") &&
+              Math.abs(fitted.width - 96) <= 1 &&
+              fitted.prefix === original.title &&
               fitted.contained
             );
           })
           .toBe(true);
         const ellipsis = await inspectC8Layout(
           page,
-          "receiving:full-title-ellipsis",
+          "receiving:complete-wrapped-title",
           language,
           width,
         );

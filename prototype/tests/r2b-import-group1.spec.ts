@@ -713,7 +713,7 @@ for (const language of ["en", "fa"] as const) {
         await expect(
           page
             .getByTestId("invoice-totals-card")
-            .getByText(
+            .getByTitle(
               word(
                 language,
                 "Calculated · not on the paper",
@@ -721,7 +721,10 @@ for (const language of ["en", "fa"] as const) {
               ),
               { exact: true },
             ),
-        ).toHaveCount(2);
+        ).toHaveText([
+          word(language, "Calculated", "محاسبه‌شده"),
+          word(language, "Calculated", "محاسبه‌شده"),
+        ]);
         await checkOptionalQuestions(page, language);
         if (width === 1440) await checkNamesAndSupplier(page, language);
         else if (width === 1000) await checkTerms(page, language);
