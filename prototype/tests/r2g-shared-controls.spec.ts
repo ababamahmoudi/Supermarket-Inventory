@@ -1,5 +1,8 @@
+import { guardR2gBrowserErrors } from "./r2g-browser-errors";
 import { expect, test } from "@playwright/test";
 import { signIn, setLanguage, openShellAction } from "./helpers";
+
+guardR2gBrowserErrors();
 
 for (const [language, theme] of [
   ["en", "light"],
