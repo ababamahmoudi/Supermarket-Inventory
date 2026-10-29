@@ -5,6 +5,7 @@ import { build, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { expect, type Locator, type Page, type Route } from "@playwright/test";
 import { AUTH_IDENTITY_KEY } from "../src/auth-preferences.e1.ts";
+import type { CommandIdentity } from "../src/authority-types";
 
 const prototypeRoot = fileURLToPath(new URL("..", import.meta.url));
 const entryPath = fileURLToPath(
@@ -152,15 +153,10 @@ export async function mountOwnedDialogProof(
       throw new Error(
         "Sign in normally before mounting the private dialog proof.",
       );
-    const value = JSON.parse(raw) as {
-      user_id?: string;
-      company_id?: string;
-      session_id?: string;
-    };
-    if (!value.user_id || !value.company_id || !value.session_id)
+    const value = JSON.parse(raw) as Partial<CommandIdentity>;
+    if (!value.company_id || !value.session_id)
       throw new Error("The genuine current session is incomplete.");
     return {
-      user_id: value.user_id,
       company_id: value.company_id,
       session_id: value.session_id,
     };
@@ -188,14 +184,28 @@ export async function mountOwnedDialogProof(
   await page.route(pattern, handler);
   const url = `${prefix}${bundle.entry}`;
   try {
-    await page.evaluate(async (url) => {
-      const module = (await import(url)) as { mountOwnedDialogProof(): void };
-      module.mountOwnedDialogProof();
-    }, url);
+    const principal = await page.evaluate(
+      async ({ url, identity }) => {
+        const module = (await import(url)) as {
+          mountOwnedDialogProof(): void;
+          resolveOwnedDialogPrincipal(identity: CommandIdentity): Promise<{
+            user_id: string;
+            company_id: string;
+            session_id: string;
+          }>;
+        };
+        const principal = await module.resolveOwnedDialogPrincipal(identity);
+        module.mountOwnedDialogProof();
+        return principal;
+      },
+      { url, identity },
+    );
+    expect(principal.company_id).toBe(identity.company_id);
+    expect(principal.session_id).toBe(identity.session_id);
     const dialog = page.locator("dialog.r2g-owned-dialog[open]");
     await expect(dialog).toBeVisible();
     await expect(dialog.getByTestId("owned-dialog-actor")).toHaveText(
-      identity.user_id,
+      principal.user_id,
     );
     return {
       dialog,
@@ -219,14 +229,9 @@ export async function mountOwnedDialogProof(
             await page.evaluate((key) => {
               const value = JSON.parse(
                 sessionStorage.getItem(key) ?? "null",
-              ) as {
-                user_id?: string;
-                company_id?: string;
-                session_id?: string;
-              } | null;
+              ) as Partial<CommandIdentity> | null;
               return (
                 value && {
-                  user_id: value.user_id,
                   company_id: value.company_id,
                   session_id: value.session_id,
                 }

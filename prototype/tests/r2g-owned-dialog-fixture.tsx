@@ -4,6 +4,9 @@ import { createRoot, type Root } from "react-dom/client";
 import { CalendarDays } from "lucide-react";
 import { DemoProvider, relativeDate, useDemo } from "../src/store";
 import { createBrowserProviderOptions } from "../src/e1-application-options";
+import { BrowserAuthorityRepository } from "../src/authority-repository";
+import type { CommandIdentity } from "../src/authority-types";
+import type { DemoState } from "../src/types";
 import { addTrackedDate, scopedTrackedDates } from "../src/date-tracking";
 import { clearExpiry } from "../src/operations";
 import { Button, Dialog, Field } from "../src/ui";
@@ -151,7 +154,7 @@ export function mountOwnedDialogProof(): void {
   host = document.createElement("div");
   host.dataset.r2gOwnedDialogProof = "";
   document.body.append(host);
-  root = createRoot(host);
+  root = createRoot(host, { identifierPrefix: "r2g-owned-proof-" });
   root.render(
     <DemoProvider options={createBrowserProviderOptions()}>
       <OwnedDialog />
@@ -164,4 +167,33 @@ export function unmountOwnedDialogProof(): void {
   root = null;
   host?.remove();
   host = null;
+}
+
+/** Read the real current principal through the production readonly authority query. */
+export async function resolveOwnedDialogPrincipal(identity: CommandIdentity) {
+  const repository = new BrowserAuthorityRepository();
+  try {
+    const result = await repository.queryBusiness<
+      DemoState,
+      { user_id: string; company_id: string; session_id: string }
+    >(
+      identity,
+      (_state, actor) => ({
+        user_id: actor.user_id,
+        company_id: actor.company_id,
+        session_id: actor.session_id,
+      }),
+      {
+        capability: "dates.read",
+        resource: {
+          company_id: identity.company_id,
+          kind: "location_record",
+          location_ids: ["Branch 1"],
+        },
+      },
+    );
+    return result.value;
+  } finally {
+    repository.dispose();
+  }
 }
