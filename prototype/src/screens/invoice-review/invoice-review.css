@@ -1068,6 +1068,19 @@
       12px
     );
   }
+  .receiving-charge-money input.ui-input {
+    padding-inline-end: clamp(
+      8px,
+      calc(
+        (
+            100cqi - 270px -
+              max(0px, var(--receiving-charge-prefix-width, 8px) - 8px)
+          ) /
+          2 + 14px
+      ),
+      14px
+    );
+  }
   .receiving-charge-description {
     grid-area: description;
   }

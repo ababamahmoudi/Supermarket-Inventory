@@ -14,6 +14,7 @@ async function geometry(page: Page) {
   await page.evaluate(async () => document.fonts.ready);
   return page.locator(".receiving-lines").evaluate((card) => {
     const failures: string[] = [];
+    const money: object[] = [];
     const viewport = document.documentElement.clientWidth;
     const phone = viewport <= 760;
     const cardBox = card.getBoundingClientRect();
@@ -137,6 +138,18 @@ async function geometry(page: Page) {
       const symbolRight = Math.max(
         ...Array.from(moneyRange.getClientRects(), (rect) => rect.right),
       );
+      money.push({
+        value: input.value,
+        currency: currency.textContent,
+        symbolRight,
+        valueLeft,
+        valueRight,
+        textWidth,
+        prefixWidth: currency.getBoundingClientRect().width,
+        inputWidth: box.width,
+        paddingLeft: style.paddingLeft,
+        paddingRight: style.paddingRight,
+      });
       if (input.value && symbolRight + 3 > valueLeft)
         failures.push(
           `Currency overlaps the actual amount glyphs: ${input.value}`,
@@ -202,6 +215,7 @@ async function geometry(page: Page) {
       phone,
       fields: elements.length,
       names: card.querySelectorAll(".receiving-product-name").length,
+      money,
       failures,
     };
   });
