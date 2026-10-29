@@ -127,6 +127,57 @@ function PriceAmountInput({
   );
 }
 
+/** The approved Ends track scrolls sideways; fade only the edges with more choices. */
+function PriceEndChoices(props: ComponentProps<typeof SegmentedControl>) {
+  const frame = useRef<HTMLDivElement>(null);
+  const label = props["aria-label"];
+  useLayoutEffect(() => {
+    const wrapper = frame.current;
+    const track = wrapper?.querySelector<HTMLElement>(":scope > .ui-segments");
+    if (!wrapper || !track) return;
+    const measure = () => {
+      const maximum = track.scrollWidth - track.clientWidth;
+      const position = Math.abs(track.scrollLeft);
+      wrapper.dataset.priceScrollStart = String(position > 1);
+      wrapper.dataset.priceScrollEnd = String(maximum - position > 1);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(track);
+    for (const button of track.children) observer.observe(button);
+    track.addEventListener("scroll", measure);
+    measure();
+    return () => {
+      observer.disconnect();
+      track.removeEventListener("scroll", measure);
+    };
+  }, [label]);
+  return (
+    <div
+      ref={frame}
+      className="change-price-ends-track"
+      onFocusCapture={(event) => {
+        const button = (event.target as HTMLElement).closest("button");
+        const track = button?.parentElement;
+        if (!button || !track?.classList.contains("ui-segments")) return;
+        // A masked scroll track can leave a focused button partly visible.
+        // Reveal its complete native control without scrolling the body.
+        const box = button.getBoundingClientRect();
+        const bounds = track.getBoundingClientRect();
+        const style = getComputedStyle(track);
+        const start = box.left - bounds.left - parseFloat(style.paddingLeft);
+        const end = box.right - bounds.right + parseFloat(style.paddingRight);
+        if (start < 0 || end > 0)
+          track.scrollBy({
+            left: start < 0 ? start : end,
+            behavior: "instant",
+          });
+      }}
+    >
+      <SegmentedControl {...props} />
+    </div>
+  );
+}
+
 function priceCalendarDate(
   value: string,
   language: "en" | "fa",
@@ -1403,24 +1454,9 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                   >
                     <div className="stack" id={fieldId("last_day")}>
                       <div className="change-price-ends-row">
-                        <SegmentedControl
+                        <PriceEndChoices
                           aria-label={salesText(t, "ends")}
-                          value={
-                            input.last_day === null
-                              ? "manual"
-                              : endChoice === "date"
-                                ? "date"
-                                : input.last_day ===
-                                    saleDateAfter(input.starts_on, 6)
-                                  ? "week"
-                                  : input.last_day ===
-                                      saleDateAfter(input.starts_on, 13)
-                                    ? "fortnight"
-                                    : input.last_day ===
-                                        monthEnd(input.starts_on)
-                                      ? "month"
-                                      : "date"
-                          }
+                          value={input.last_day === null ? "manual" : endChoice}
                           onChange={(value) => {
                             setEndChoice(value);
                             patch(

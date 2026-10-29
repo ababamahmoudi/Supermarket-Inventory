@@ -297,6 +297,150 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
       const overlap = (a, b) =>
         Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 &&
         Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
+      // R2g's approved phone Ends control intentionally has five full-size
+      // choices in one horizontal scroll track. Qualify the actual labelled
+      // price form and its native buttons; ordinary clipped controls retain
+      // the same 1px budget. A copied class or moved track never qualifies.
+      const priceEndButtons = new Set();
+      const priceEndTracks = [];
+      const priceDialogs = [
+        ...document.querySelectorAll("dialog.change-price-dialog[open]"),
+      ];
+      if (documentWidth <= 760 && priceDialogs.length === 1) {
+        const dialog = priceDialogs[0];
+        const form = dialog.querySelector(
+          ":scope > form.change-price-form[novalidate]",
+        );
+        const content = form?.querySelector(
+          ":scope > .change-price-body > .change-price-content",
+        );
+        const input = content?.querySelector(
+          ".change-price-pricing .change-price-amount-field > .change-price-money > input.ui-input.ui-number[type='text'][inputmode='decimal']",
+        );
+        const label = input?.closest(".field")?.querySelector(":scope > label");
+        const ends = content?.querySelector(
+          ":scope > .change-price-when > .field.change-price-ends",
+        );
+        const wrappers = ends?.querySelectorAll(
+          ".change-price-ends-row > .change-price-ends-track",
+        );
+        const wrapper = wrappers?.length === 1 ? wrappers[0] : null;
+        const track = wrapper?.querySelector(
+          ":scope > .ui-segments[role='group']",
+        );
+        const buttons = [...(track?.querySelectorAll(":scope > button") ?? [])];
+        const fa = document.documentElement.lang.startsWith("fa");
+        const captions = fa
+          ? ["۱ هفته", "۲ هفته", "پایان ماه", "تاریخ…", "بدون پایان"]
+          : ["1 week", "2 weeks", "End of month", "Date…", "No end"];
+        const titles = fa
+          ? ["تغییر قیمت", "تغییر حراج", "درخواست حراج"]
+          : ["Change price", "Change sale", "Request a sale"];
+        const tidy = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+        const heading = dialog.querySelector(":scope > .ui-dialog-header h2");
+        const footer = form?.querySelector(":scope > .ui-dialog-actions");
+        const actions = [
+          ...(footer?.querySelectorAll(":scope > button") ?? []),
+        ];
+        const rect = track?.getBoundingClientRect();
+        const wrapperRect = wrapper?.getBoundingClientRect();
+        const fieldRect = ends?.getBoundingClientRect();
+        const painted = rect && clippedBounds(track, rect);
+        const style = track && getComputedStyle(track);
+        const position = Math.abs(track?.scrollLeft ?? 0);
+        const maximum = (track?.scrollWidth ?? 0) - (track?.clientWidth ?? 0);
+        const rtl = style?.direction === "rtl";
+        const same = (a, b) => Math.abs(a - b) <= 1;
+        const genuine = Boolean(
+          form &&
+          input?.id &&
+          label?.htmlFor === input.id &&
+          input.getAttribute("aria-labelledby") === label.id &&
+          heading?.id === dialog.getAttribute("aria-labelledby") &&
+          titles.includes(tidy(heading?.textContent)) &&
+          dialog.querySelector(
+            ":scope > .dialog-description .selling-price-current",
+          ) &&
+          content.querySelector(
+            ":scope > .change-price-summary [role='checkbox']",
+          ) &&
+          actions.length === 2 &&
+          actions[0].type === "button" &&
+          tidy(actions[0].textContent) === (fa ? "انصراف" : "Cancel") &&
+          actions[1].type === "submit" &&
+          track?.getAttribute("aria-label") === (fa ? "پایان" : "Ends") &&
+          buttons.length === 5 &&
+          ["auto", "scroll"].includes(style.overflowX) &&
+          style.maskImage.startsWith(
+            `linear-gradient(to ${rtl ? "left" : "right"},`,
+          ) &&
+          same(rect.height, 44) &&
+          same(rect.left, wrapperRect.left) &&
+          same(rect.right, wrapperRect.right) &&
+          same(wrapperRect.left, fieldRect.left) &&
+          same(wrapperRect.right, fieldRect.right) &&
+          painted &&
+          same(painted.left, rect.left) &&
+          same(painted.right, rect.right) &&
+          wrapper.dataset.priceScrollStart === String(position > 1) &&
+          wrapper.dataset.priceScrollEnd === String(maximum - position > 1) &&
+          same(
+            parseFloat(style.getPropertyValue("--price-fade-start")),
+            position > 1 ? 12 : 0,
+          ) &&
+          same(
+            parseFloat(style.getPropertyValue("--price-fade-end")),
+            maximum - position > 1 ? 12 : 0,
+          ) &&
+          buttons.filter(
+            (button) => button.getAttribute("aria-pressed") === "true",
+          ).length === 1 &&
+          buttons.every((button, index) => {
+            const box = button.getBoundingClientRect();
+            const caption = button.querySelector(":scope > span:only-child");
+            const range = document.createRange();
+            if (caption) range.selectNodeContents(caption);
+            const glyph = caption && range.getBoundingClientRect();
+            const previous = buttons[index - 1]?.getBoundingClientRect();
+            const gap = parseFloat(style.columnGap);
+            return (
+              button.type === "button" &&
+              !button.disabled &&
+              button.tabIndex === 0 &&
+              button.hasAttribute("aria-pressed") &&
+              tidy(button.textContent) === captions[index] &&
+              !button.querySelector("button,a,input") &&
+              same(box.height, 40) &&
+              same(box.top + box.height / 2, rect.top + rect.height / 2) &&
+              glyph &&
+              glyph.left >= box.left - 1 &&
+              glyph.right <= box.right + 1 &&
+              (previous
+                ? same(
+                    rtl ? previous.left - box.right : box.left - previous.right,
+                    gap,
+                  )
+                : same(
+                    rtl ? rect.right - box.right : box.left - rect.left,
+                    parseFloat(rtl ? style.paddingRight : style.paddingLeft) -
+                      position,
+                  ))
+            );
+          }),
+        );
+        if (genuine) {
+          for (const button of buttons) priceEndButtons.add(button);
+          priceEndTracks.push({
+            label: track.getAttribute("aria-label"),
+            scrollWidth: track.scrollWidth,
+            clientWidth: track.clientWidth,
+            position,
+            maximum,
+            fadeStart: position > 1,
+            fadeEnd: maximum - position > 1,
+          });
+        }
+      }
       // DOM text ranges include a font's unused ascent/descent. Adjacent
       // Persian/Latin lines can have overlapping font boxes while their
       // painted glyphs remain separate. Retain DOM ranges for wrapping and
@@ -364,7 +508,9 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
             const bounds = clippedBounds(element, actual);
             if (
               bounds &&
-              (bounds.left > actual.left + 1 || bounds.right < actual.right - 1)
+              (bounds.left > actual.left + 1 ||
+                bounds.right < actual.right - 1) &&
+              !priceEndButtons.has(element)
             )
               failures.push(
                 `${scene}: form control clips sideways: ${element.getAttribute("aria-label") ?? element.textContent}`,
@@ -555,6 +701,7 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
         cells,
         tables,
         forms,
+        priceEndTracks,
         sidebar: sidebarProof,
         topbar: shellControls.map(({ element, bounds }) => ({
           className: element.className,

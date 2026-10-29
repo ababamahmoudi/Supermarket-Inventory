@@ -417,6 +417,39 @@
     gap: 8px 16px;
     align-items: center;
   }
+  .change-price-ends-track {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    --price-fade-start: 0px;
+    --price-fade-end: 0px;
+  }
+  .change-price-ends-track[data-price-scroll-start="true"] {
+    --price-fade-start: 12px;
+  }
+  .change-price-ends-track[data-price-scroll-end="true"] {
+    --price-fade-end: 12px;
+  }
+  :root .change-price-dialog .change-price-ends-track > .ui-segments {
+    mask-image: linear-gradient(
+      to right,
+      var(--color-clear),
+      var(--text) var(--price-fade-start),
+      var(--text) calc(100% - var(--price-fade-end)),
+      var(--color-clear)
+    );
+  }
+  :root[dir="rtl"]
+    .change-price-dialog
+    .change-price-ends-track
+    > .ui-segments {
+    mask-image: linear-gradient(
+      to left,
+      var(--color-clear),
+      var(--text) var(--price-fade-start),
+      var(--text) calc(100% - var(--price-fade-end)),
+      var(--color-clear)
+    );
+  }
   .change-price-until {
     font-size: var(--font-size-body);
     white-space: nowrap;
@@ -430,6 +463,8 @@
     block-size: 44px;
     min-block-size: 44px;
     max-block-size: 44px;
+    padding-block: 2px;
+    overflow-y: hidden;
   }
   .change-price-summary {
     display: flex;
@@ -683,6 +718,16 @@
   }
   :root .change-price-dialog .ui-segments button {
     flex: 1;
+  }
+  :root .change-price-dialog .change-price-stores .ui-segments > button {
+    /* Keep every configured location caption, including the full FA labels.
+     * Equal free-space growth keeps roomy geometry while min-content widths
+     * and compact padding let the three real choices fit at 360px. */
+    flex: 1 0 auto;
+    padding-inline: 4px;
+  }
+  .change-price-ends-track {
+    inline-size: 100%;
   }
   :root .change-price-dialog .change-price-ends-row .ui-segments {
     overflow-x: auto;
