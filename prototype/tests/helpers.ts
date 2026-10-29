@@ -210,7 +210,9 @@ export async function setLanguage(page: Page, language: "en" | "fa") {
       async () =>
         (await actorLocation.isVisible()) ||
         ((await auth.isVisible()) &&
-          (await auth.locator(":scope > .signin-card").isVisible()) &&
+          (await auth
+            .locator(":scope > .signin-wrap > .signin-card")
+            .isVisible()) &&
           (await auth.getByRole("heading", { level: 1 }).isVisible()) &&
           (await authToggle.isVisible())),
     )

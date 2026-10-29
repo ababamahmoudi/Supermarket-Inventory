@@ -346,14 +346,7 @@ function PasswordField({
   const [visible, setVisible] = useState(false);
   return (
     <div className={stableFeedback ? "field auth-password-feedback" : "field"}>
-      {labelAction ? (
-        <div className="auth-label-row">
-          <label htmlFor={id}>{label}</label>
-          {labelAction}
-        </div>
-      ) : (
-        <label htmlFor={id}>{label}</label>
-      )}
+      {!labelAction && <label htmlFor={id}>{label}</label>}
       <div className="password-field">
         <input
           id={id}
@@ -384,6 +377,12 @@ function PasswordField({
           )}
         </IconButton>
       </div>
+      {labelAction && (
+        <div className="auth-label-row">
+          <label htmlFor={id}>{label}</label>
+          {labelAction}
+        </div>
+      )}
       {error && (
         <p id={`${id}-error`} className="form-error" role="alert">
           {error}

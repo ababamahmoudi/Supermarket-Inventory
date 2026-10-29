@@ -90,6 +90,8 @@
   line-height: var(--line-height-caption);
 }
 .auth-label-row {
+  /* Keep the field first in the natural keyboard path, with help after it. */
+  order: -1;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
