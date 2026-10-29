@@ -65,7 +65,7 @@ export default function SecondSignInStep() {
         }
         description={t(
           `${user?.name_en ?? user?.name ?? ""} needs a second step to open ${configuredRoleLabel(state.config, user?.role ?? "manager", "en").toLowerCase()} tools.`,
-          "برای ابزارهای مدیر یک مرحلهٔ دوم لازم است.",
+          `برای ابزارهای ${configuredRoleLabel(state.config, user?.role ?? "manager", "fa")} یک مرحلهٔ دوم لازم است.`,
         )}
       />
       <form
