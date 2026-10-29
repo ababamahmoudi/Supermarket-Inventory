@@ -1,8 +1,16 @@
+## 2026-10-29 — R2g Tier 1 demo polish
+
+- Matched the approved sign-in/passkey/lock, receiving, Change price and Lookup compositions; fixed weight-product size requirements, logical form alignment, package captions and display precision. Retained configured branding, actual money, permissions and the completed R3 reader.
+- Added audited inline charge editing inside the receiving lines card. Current line-derived editable totals follow complete evidence, while paper/human amounts, unknowns, original bytes and posted records remain protected. Price-duration presets follow their start date, and warning/fact copy uses the matching scoped financial preview.
+- Replaced boolean filter checks with centred colour-only chips, scoped Undo feedback to its actual open dialog instance, removed empty footer bands, added truthful scroll fades/hidden native bars and full-width phone sheets/actions. Kept active body/footer controls anchored when owned feedback appears. Aligned existing phone DOM/styles at the inclusive 760 px boundary.
+- Retained all 47 approved PNGs and their README byte-identically. Added fictional desktop/phone and real-Firefox 509 px coverage, strict geometry/painted-text checks and effective negative controls. [Tier 1 review guide](PR_R2G_REVIEW.md) records the click paths, screenshot precedence, exact remaining tiers and freeze. Final executed results and seven-check commit are recorded on PR #29.
+
 ## 2026-10-29 — R3b F0 reader response compatibility
 
 - Accept the local kit's model objects as well as legacy model-name strings, using each nonempty `id` as the name. Extra response fields such as `checkFailures` do not block a usable reading; numeric USD cost and duration remain supported.
 - Retain valid per-model success, duration and Decimal USD cost in Owner/Manager-only live provenance without changing review or posting rules.
 - Added fictional exact-shape client and desktop/phone English/Persian browser regressions, plus provenance and protected-projection coverage.
+
 
 ## 2026-10-29 — R3 live invoice reading
 

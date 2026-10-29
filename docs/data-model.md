@@ -1,5 +1,13 @@
 # Data model
 
+## R2g Tier 1 — Existing records, explicit provenance
+
+Weight-parent `unit_size` may be blank; ordinary Each products and package children retain their size constraints. Existing stored text is preserved. This does not change canonical weight units, costs, package codes/barcodes or Decimal conversion precision.
+
+Inline invoice charges keep the existing signed amount, description, taxable and reading-check fields. Guarded draft/review mutations retain original files and audit before/after; no product receipt or posted repair record is inferred. Only a currently line-derived draft subtotal may be recomputed from complete line/charge evidence. Current printed/human provenance, unknown amounts and posted money remain authoritative; a legacy `calculated_from_lines` marker alone cannot overwrite a subsequent human subtotal.
+
+Dialog feedback identity and `UndoToast.dialog_scope` are transient UI state for one open dialog instance. They never enter canonical business JSON, History, requests, exports or stored invoice reading provenance. They do not grant authority or extend Undo eligibility.
+
 ## R2c Groups 2–6 — Read contracts and atomic decisions (2026-10-26)
 
 - Shared `SelectOption` derives public `searchTerms`, optional short selected text and explicit `placeholder` metadata. Placeholder is semantic, independent of stored empty values. Normalized matching/highlight ranges, local search text, popup placement and `DataTable.recordDetails` are presentation state, not new price/stock/business records. Record-details mode leaves omitted facts on the authorized full record. Product search allowlists names/code/barcode; supplier search adds retained public name aliases.

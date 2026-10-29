@@ -39,6 +39,18 @@ export default defineConfig({
         launchOptions: {},
       },
     },
+    {
+      name: "firefox-r2g-509",
+      testMatch: "r2g-*.spec.ts",
+      grep: /@r2g-509/,
+      use: {
+        ...devices["Desktop Firefox"],
+        browserName: "firefox",
+        viewport: { width: 509, height: 1000 },
+        // Ali's responsive-review width uses real Firefox in CI.
+        launchOptions: {},
+      },
+    },
   ],
   webServer: {
     command: "npm run preview",

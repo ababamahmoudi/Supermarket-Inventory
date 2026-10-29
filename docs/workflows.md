@@ -1,5 +1,13 @@
 # Workflows and state machines
 
+## R2g Tier 1 — Review edits and dialog feedback
+
+Invoice review edits charges once, inline inside the lines card. Add, signed-amount/description/tax edit and remove recheck current company, location and draft/review authority, keep the raw original and record actual before/after audit evidence. Charges never become product receipts. Reconcile each change through the existing Decimal totals rules. A draft subtotal currently derived from complete lines/charges updates with those amounts; incomplete evidence remains unresolved. Preserve printed or explicitly entered headers, unknown tax/total and every posted financial record. A later human subtotal edit is authoritative, rather than a historical calculated-from-lines flag.
+
+Change price keeps one verified warning/facts composition. A duration preset follows a changed start date; explicit Date and No end retain their chosen meanings. Pending financial queries cannot display an old warning against a new price or store selection. If selected stores have different costs/margins, identify the actual location rather than presenting one store's facts as universal.
+
+Dialog Undo feedback belongs to the open instance in which its command began. Opening a different dialog, or closing/reopening the same title, cannot adopt an earlier page/dialog message. Defer page Undo while a dialog is open and retain its remaining display budget and actual guarded eligibility. Own feedback does not become an action column or move the active control/footer actions. Scroll long bodies within the existing frame, with hidden native scrollbars and truthful edge fades; do not reserve an empty feedback band.
+
 ## R3 — Live reading, saved original first
 
 1. Owner/Manager chooses Settings → Receiving → AI reading → Live, saves the reader address (Reset uses this page's hostname at port 5191) and may Test connection. The Demo Simulated reading switch changes this same protected setting. JSON-file import stays available in both modes.
