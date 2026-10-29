@@ -127,13 +127,31 @@ for (const language of ["en", "fa"] as const) {
         exact: true,
       })
       .click();
+    await expect(
+      page.locator("#invoice-check-header-delivery_reference"),
+    ).toHaveCount(0);
+    const beforePackReview = await readCanonicalBusinessEvidence(page);
     await next.click();
-    const pack = page.locator("#invoice-check-line-0-input-pack_size");
+    const pack = page.locator("#invoice-line-0-pack_size");
     await expect(pack).toBeFocused();
     await expect(pack).toHaveValue("12 × 454 g");
+    await expect(pack).toHaveAttribute("readonly", "");
+    const packField = page.locator("#invoice-check-line-0-pack_size");
+    await expect(packField).toHaveClass(/please-check-field/);
+    await expect(
+      packField.getByRole("img", {
+        name: word(
+          language,
+          "Check this against the original",
+          "با اصل فاکتور بررسی کنید",
+        ),
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect(pack.locator("xpath=ancestor::details[1]")).toHaveAttribute(
       "open",
       "",
     );
+    expect(await readCanonicalBusinessEvidence(page)).toEqual(beforePackReview);
   });
 }

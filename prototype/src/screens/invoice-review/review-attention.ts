@@ -36,6 +36,7 @@ export function invoiceCheckTarget(field: string, line?: number): string {
           qty_received_at_posting: "delivered",
           quantity_unit: "unit",
           units_per_case: "pack",
+          pack_size: "pack_size",
           unit_cost_before_tax: "cost",
           case_cost_before_tax: "case-cost",
           line_total: "line-total",

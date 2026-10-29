@@ -151,6 +151,17 @@ describe("R2b persisted check receipts", () => {
       target: "invoice-line-0-name-en",
       line: 0,
     });
+    line.low_confidence_fields = ["pack_size"];
+    line.pack_size = "12 × 454 g";
+    const beforePackNavigation = structuredClone(state.invoice);
+    expect(invoiceCheckCount(state.invoice)).toBe(2);
+    expect(
+      nextInvoiceAttention(invoiceView(state, actor, state.invoice.id)),
+    ).toEqual({
+      target: "invoice-line-0-pack_size",
+      line: 0,
+    });
+    expect(state.invoice).toEqual(beforePackNavigation);
     state.invoice.lines.forEach((entry) => {
       entry.low_confidence_fields = [];
       entry.review_confirmed = true;
