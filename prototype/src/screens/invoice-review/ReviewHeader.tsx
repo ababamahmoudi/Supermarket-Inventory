@@ -2,7 +2,7 @@ import { useId, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useDemo } from "../../store";
 import { Badge, Button } from "../../ui";
-import { DateText, LtrValue } from "../../presentation";
+import { DateText, LtrValue, NotAdded } from "../../presentation";
 import { branchLabel } from "../../settings";
 import type { InvoiceReadDTO } from "../../invoice-projections";
 export function ReviewHeader({
@@ -40,11 +40,21 @@ export function ReviewHeader({
             </span>
           </h1>
           <div className="receiving-meta">
-            <a href={`#suppliers?name=${encodeURIComponent(invoice.supplier)}`}>
-              <LtrValue value={invoice.supplier} />
-            </a>
+            {invoice.supplier || !invoice.live_reading ? (
+              <a
+                href={`#suppliers?name=${encodeURIComponent(invoice.supplier)}`}
+              >
+                <LtrValue value={invoice.supplier} />
+              </a>
+            ) : (
+              <NotAdded />
+            )}
             <span>{branchLabel(state.config, invoice.branch, lang)}</span>
-            <DateText value={invoice.invoice_date ?? ""} />
+            {invoice.invoice_date || !invoice.live_reading ? (
+              <DateText value={invoice.invoice_date ?? ""} />
+            ) : (
+              <NotAdded />
+            )}
             <Badge tone={invoice.status === "posted" ? "approved" : "neutral"}>
               {invoice.status === "posted"
                 ? t("Posted", "ثبت‌شده")
