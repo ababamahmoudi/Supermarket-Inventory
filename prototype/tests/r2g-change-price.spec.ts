@@ -17,6 +17,8 @@ async function stableClick(control: Locator) {
   await expect
     .poll(async () => Math.abs((await top(control)) - before))
     .toBeLessThanOrEqual(2);
+  const after = await top(control);
+  return { before, after, delta: after - before };
 }
 
 for (const width of [360, 390, 509, 760, 1440]) {
@@ -79,7 +81,17 @@ for (const width of [360, 390, 509, 760, 1440]) {
         expect(Math.abs(box.y - pickBoxes[0].y)).toBeLessThanOrEqual(1.5);
         expect(Math.abs(box.height - 52)).toBeLessThanOrEqual(1.5);
       }
+      const emptyPriceTop = await top(price);
+      await price.fill("1.39");
+      await expect(dialog.locator(".change-price-facts")).toBeVisible();
+      await expect(dialog.locator(".change-price-warning")).toHaveCount(0);
+      await dialog.screenshot({
+        path: testInfo.outputPath(
+          `change-price-normal-${width}-${theme}-${lang}.png`,
+        ),
+      });
       const originalTop = await top(price);
+      expect(Math.abs(originalTop - emptyPriceTop)).toBeLessThanOrEqual(2);
       await price.fill("0.89");
       const warning = dialog.locator(".change-price-warning");
       await expect(warning).toHaveCount(1);
@@ -117,7 +129,7 @@ for (const width of [360, 390, 509, 760, 1440]) {
         .poll(async () => Math.abs((await top(reason)) - reasonTop))
         .toBeLessThanOrEqual(2);
       const acknowledgement = warning.getByRole("checkbox");
-      await stableClick(acknowledgement);
+      const acknowledgementStability = await stableClick(acknowledgement);
       await expect(acknowledgement).toBeChecked();
       await expect(warning).toHaveCount(1);
       const ends = dialog.getByRole("group", {
@@ -131,7 +143,7 @@ for (const width of [360, 390, 509, 760, 1440]) {
           exact: true,
         }),
       ).toHaveAttribute("aria-pressed", "true");
-      await stableClick(
+      const dateRevealStability = await stableClick(
         ends.getByRole("button", {
           name: lang === "en" ? "Date…" : "تاریخ…",
           exact: true,
@@ -143,7 +155,7 @@ for (const width of [360, 390, 509, 760, 1440]) {
           exact: true,
         }),
       ).toBeVisible();
-      await stableClick(
+      const noEndStability = await stableClick(
         ends.getByRole("button", {
           name: lang === "en" ? "No end" : "بدون پایان",
           exact: true,
@@ -177,6 +189,8 @@ for (const width of [360, 390, 509, 760, 1440]) {
       expect(geometry.bodyScrollbar).toBe("none");
       expect(geometry.overflow).toBe(false);
       if (width <= 760) {
+        for (const button of geometry.buttons)
+          expect(Math.abs(button.height - 44)).toBeLessThanOrEqual(1.5);
         expect(Math.abs(geometry.width - width)).toBeLessThanOrEqual(1.5);
         expect(
           Math.abs(geometry.buttons[0].width - geometry.buttons[1].width),
@@ -185,10 +199,28 @@ for (const width of [360, 390, 509, 760, 1440]) {
           Math.abs(geometry.buttons[0].y - geometry.buttons[1].y),
         ).toBeLessThanOrEqual(1.5);
       } else expect(Math.abs(geometry.width - 720)).toBeLessThanOrEqual(1.5);
+      await dialog.locator(".change-price-body").evaluate((element) => {
+        element.scrollTop = 0;
+      });
       await dialog.screenshot({
         path: testInfo.outputPath(
           `change-price-warning-${width}-${theme}-${lang}.png`,
         ),
+      });
+      await testInfo.attach("stability", {
+        body: JSON.stringify(
+          {
+            emptyPriceTop,
+            normalPriceTop: originalTop,
+            reasonBefore: reasonTop,
+            acknowledgementStability,
+            dateRevealStability,
+            noEndStability,
+          },
+          null,
+          2,
+        ),
+        contentType: "application/json",
       });
       await testInfo.attach("geometry", {
         body: JSON.stringify(geometry, null, 2),
@@ -267,6 +299,19 @@ for (const lang of ["en", "fa"] as const) {
       element.setAttribute("aria-labelledby", element.dataset.savedLabel!);
       delete element.dataset.savedLabel;
     });
+    await dialog.locator(".change-price-content").evaluate((content) => {
+      const copy = content
+        .querySelector(".change-price-quick-picks")!
+        .cloneNode(true) as HTMLElement;
+      copy.dataset.counterfeitPricePicks = "";
+      content.append(copy);
+    });
+    expect(await audit()).toContain(
+      "R2g price quick pick outside the validated form",
+    );
+    await dialog
+      .locator("[data-counterfeit-price-picks]")
+      .evaluate((element) => element.remove());
     await pick.evaluate((element) => {
       element.style.transform = "translateY(4px)";
     });

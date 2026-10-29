@@ -2172,10 +2172,15 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               ) &&
               tile.type === "button" &&
               tidy(tile.textContent).startsWith(`${match[1]}%`) &&
-              tile.querySelector(":scope > bdi[dir='ltr']") &&
-              /\d/.test(
-                tile.querySelector(":scope > bdi[dir='ltr']").textContent,
-              ) &&
+              ((tile.querySelector(":scope > bdi[dir='ltr']") &&
+                /\d/.test(
+                  tile.querySelector(":scope > bdi[dir='ltr']").textContent,
+                )) ||
+                (tile.disabled &&
+                  tile.title ===
+                    (fa
+                      ? "با رقم‌های پایانی تنظیم‌شده، قیمت پایین‌تری موجود نیست."
+                      : "No lower price is available with the configured price endings."))) &&
               !tile.querySelector("button,a,input"),
             );
           }),

@@ -660,6 +660,9 @@
   }
   :root .change-price-form > .ui-dialog-actions > .ui-button {
     inline-size: 100%;
+    block-size: 44px;
+    min-block-size: 44px;
+    max-block-size: 44px;
   }
   :root .change-price-choices {
     grid-template-columns: repeat(2, minmax(0, 1fr));

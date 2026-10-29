@@ -16,7 +16,7 @@ import { useDemo } from "./store";
 import { lookupBranch, regularPrice } from "./catalog";
 import { branchLabel } from "./settings";
 import { productEditSnapshot } from "./product-editor";
-import { ProductName, DateText, LtrText, Money } from "./presentation";
+import { UnitText, DateText, LtrText, Money } from "./presentation";
 import {
   weightPriceDisplay,
   weightConversionFactor,
@@ -43,7 +43,7 @@ import {
   type RegularSaleConflict,
   type RegularSaleResolution,
 } from "./sales";
-import { salesText, saleCalendarDate } from "./sales-locale";
+import { salesText } from "./sales-locale";
 import { SalePrice } from "./sales-presentation";
 import {
   WhatsMissing,
@@ -106,6 +106,28 @@ function PriceAmountInput({
       <NumberField {...props} />
     </div>
   );
+}
+
+function priceCalendarDate(
+  value: string,
+  language: "en" | "fa",
+  style: "short" | "long" | "weekday" = "short",
+) {
+  const date = new Date(`${value}T12:00:00Z`);
+  if (!Number.isFinite(date.getTime())) return value;
+  return new Intl.DateTimeFormat(
+    language === "fa" ? "fa-IR-u-ca-gregory-nu-latn" : "en-CA",
+    {
+      timeZone: "UTC",
+      weekday: style === "short" ? "short" : "long",
+      ...(style !== "weekday"
+        ? {
+            month: style === "short" ? ("short" as const) : ("long" as const),
+            day: "numeric" as const,
+          }
+        : {}),
+    },
+  ).format(date);
 }
 
 const changePriceScrollParent = (control: HTMLElement) =>
@@ -794,8 +816,14 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
       className="change-price-dialog"
       description={
         <>
-          <ProductName product={product} language={lang} /> ·{" "}
-          {t("now", "اکنون")}{" "}
+          <UnitText
+            dir={lang === "fa" && product.name_fa.trim() ? "rtl" : "ltr"}
+          >
+            {lang === "fa" && product.name_fa.trim()
+              ? product.name_fa
+              : product.name_en}
+          </UnitText>{" "}
+          · {t("now", "اکنون")}{" "}
           <strong>
             <SalePrice product={product} branch={location} comparison={false} />
           </strong>{" "}
@@ -919,6 +947,15 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                         key={pick.percentage}
                         variant="neutral"
                         size="sm"
+                        disabled={!pick.price}
+                        title={
+                          !pick.price
+                            ? t(
+                                "No lower price is available with the configured price endings.",
+                                "با رقم‌های پایانی تنظیم‌شده، قیمت پایین‌تری موجود نیست.",
+                              )
+                            : undefined
+                        }
                         onClick={() => {
                           if (pick.price) {
                             patch("price", pick.price);
@@ -1337,7 +1374,7 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                           <span className="muted change-price-until">
                             {t("until", "تا")}{" "}
                             <bdi dir="auto">
-                              {saleCalendarDate(input.last_day, lang)}
+                              {priceCalendarDate(input.last_day, lang)}
                             </bdi>
                           </span>
                         )}
@@ -1401,14 +1438,14 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                     <>
                       ,{" "}
                       {input.starts_on === today
-                        ? salesText(t, "today")
-                        : saleCalendarDate(input.starts_on, lang, true)}
+                        ? t("today", "امروز")
+                        : priceCalendarDate(input.starts_on, lang, "long")}
                       {input.last_day && (
                         <>
                           {" "}
                           {t("until", "تا")}{" "}
                           <bdi dir="auto" className="sale-calendar-date">
-                            {saleCalendarDate(input.last_day, lang, true)}
+                            {priceCalendarDate(input.last_day, lang, "long")}
                           </bdi>
                         </>
                       )}
@@ -1420,10 +1457,10 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
                       {" "}
                       {t("On", "در")}{" "}
                       <bdi dir="auto" className="sale-calendar-date">
-                        {saleCalendarDate(
+                        {priceCalendarDate(
                           saleDateAfter(input.last_day, 1),
                           lang,
-                          true,
+                          "weekday",
                         )}
                       </bdi>
                       {t(", it goes back to", "، قیمت برمی‌گردد به")}{" "}

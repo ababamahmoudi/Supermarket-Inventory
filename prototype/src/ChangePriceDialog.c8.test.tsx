@@ -649,3 +649,47 @@ it("R2g B2 rounds a tiny negative margin to honest zero rather than negative zer
   );
   expect(dialog).not.toHaveTextContent(/−0%|-0%/);
 });
+
+it("R2g B2 marks only the chosen discount tile when rounded prices coincide", async () => {
+  const user = await show("0002");
+  const dialog = screen.getByRole("dialog");
+  const picks = within(dialog).getByRole("group", { name: "Quick picks" });
+  const ten = within(picks).getByRole("button", { name: "10% off" });
+  const twentyFive = within(picks).getByRole("button", { name: "25% off" });
+  await user.click(ten);
+  expect(ten).toHaveAttribute("aria-pressed", "true");
+  expect(picks.querySelectorAll('[aria-pressed="true"]')).toHaveLength(1);
+  await user.click(twentyFive);
+  expect(twentyFive).toHaveAttribute("aria-pressed", "true");
+  expect(ten).toHaveAttribute("aria-pressed", "false");
+  expect(picks.querySelectorAll('[aria-pressed="true"]')).toHaveLength(1);
+  const price = within(dialog).getByRole("textbox", { name: "Sale price" });
+  await user.clear(price);
+  await user.type(price, "1.29");
+  expect(picks.querySelectorAll('[aria-pressed="true"]')).toHaveLength(0);
+});
+
+it("R2g B2 disables an unavailable rounded discount without inventing a price", async () => {
+  const state = initialState();
+  const product = state.products.find((item) => item.code === "0002")!;
+  product.selling_price = "0.49";
+  product.branch_prices = {
+    "Branch 1": "0.49",
+    "Branch 2": "0.49",
+    "Branch 3": "0.49",
+  };
+  await show("0002", "manager", false, state);
+  const dialog = screen.getByRole("dialog");
+  const picks = within(dialog).getByRole("group", { name: "Quick picks" });
+  for (const button of within(picks).getAllByRole("button")) {
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute(
+      "title",
+      "No lower price is available with the configured price endings.",
+    );
+    expect(button.querySelector("bdi")).not.toBeInTheDocument();
+  }
+  expect(
+    within(dialog).getByRole("textbox", { name: "Sale price" }),
+  ).toHaveValue("");
+});
