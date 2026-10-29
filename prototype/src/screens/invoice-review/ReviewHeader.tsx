@@ -48,7 +48,9 @@ export function ReviewHeader({
             <Badge tone={invoice.status === "posted" ? "approved" : "neutral"}>
               {invoice.status === "posted"
                 ? t("Posted", "ثبت‌شده")
-                : t("In review", "در حال بررسی")}
+                : invoice.status === "reading" && invoice.live_reading
+                  ? t("Processing", "در حال پردازش")
+                  : t("In review", "در حال بررسی")}
             </Badge>
           </div>
           {(invoice.reading_record ||
@@ -61,6 +63,11 @@ export function ReviewHeader({
                     "Read by AI · imported file",
                     "خوانده‌شده با هوش مصنوعی · فایل واردشده",
                   )}
+            </Badge>
+          )}
+          {invoice.simulated_reading && (
+            <Badge tone="neutral">
+              {t("Simulated reading", "خوانش شبیه‌سازی‌شده")}
             </Badge>
           )}
         </div>

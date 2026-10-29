@@ -30,7 +30,7 @@ import {
 import type { InvoiceReadDTO } from "../invoice-projections";
 import { FitText } from "../FitText";
 import { useDemo } from "../store";
-import { Button, Card, IconButton } from "../ui";
+import { Button, Card, CardHeader, IconButton } from "../ui";
 import "./live-invoice-reading.css";
 
 type Translate = (en: string, fa: string) => string;
@@ -626,15 +626,19 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
   const recovered = invoice.live_reading?.phase !== "ready";
   return (
     <Card className="live-reading-card" data-testid="live-reading-progress">
-      <h2>
-        {busy
-          ? stepText(stage, t)
-          : t("Read this invoice", "خواندن این فاکتور")}
-      </h2>
+      <CardHeader
+        title={
+          busy
+            ? stepText(stage, t)
+            : t("Read this invoice", "خواندن این فاکتور")
+        }
+      />
       {busy ? (
         <>
           <p role="status" className="live-reading-time">
-            {t("Reading with AI…", "در حال خواندن با هوش مصنوعی…")}{" "}
+            {stage === "preparing"
+              ? t("Preparing pages…", "در حال آماده‌سازی صفحه‌ها…")
+              : t("Reading with AI…", "در حال خواندن با هوش مصنوعی…")}{" "}
             <bdi>{activity.elapsed}</bdi>
           </p>
           <p className="helper">

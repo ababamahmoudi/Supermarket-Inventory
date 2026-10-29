@@ -284,6 +284,11 @@ export function PostedInvoice({
                     )}
               </small>
             )}
+            {invoice.simulated_reading && (
+              <small className="muted">
+                {t("Simulated reading", "خوانش شبیه‌سازی‌شده")}
+              </small>
+            )}
           </div>
           <div className="actions">
             {current &&
