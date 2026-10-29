@@ -475,19 +475,25 @@ export function DemoProvider({
       mutate: (draft: DemoState, actor: AuthenticatedActor) => T,
     ) => {
       const dialogScope = currentDialogFeedbackScope();
+      const originIds = new Set<string>();
       return requireRuntime()
         .controller.command(capability, scope, (draft, actor) => {
           const prior = new Set(draft.activity.map((entry) => entry.id));
           const result = mutate(draft, actor);
           if (dialogScope)
             for (const entry of draft.activity)
-              if (!prior.has(entry.id))
+              if (!prior.has(entry.id)) {
                 undoDialogOrigins.current.set(entry.id, dialogScope);
+                originIds.add(entry.id);
+              }
           return result;
         })
         .catch((error: unknown) => {
           reportStorageFailure(error);
           throw error;
+        })
+        .finally(() => {
+          for (const id of originIds) undoDialogOrigins.current.delete(id);
         });
     },
     [requireRuntime, reportStorageFailure],

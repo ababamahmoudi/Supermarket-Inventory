@@ -1609,6 +1609,8 @@
 /* R2g A5 — bounded dialogs have quiet scrolling and no empty footer track. */
 .ui-dialog[data-dialog-scroll],
 .ui-dialog [data-dialog-scroll] {
+  --dialog-fade-start: 0px;
+  --dialog-fade-end: 0px;
   scrollbar-width: none;
   overscroll-behavior: contain;
 }
@@ -1641,7 +1643,7 @@
   );
 }
 @media screen and (max-width: 760px) {
-  :root dialog.ui-dialog.confirm-dialog {
+  :root dialog.ui-dialog.confirm-dialog[open] {
     inset: auto 0 0;
     inline-size: 100vw;
     max-inline-size: 100vw;
@@ -1663,6 +1665,9 @@
     flex: 1 1 0;
     min-inline-size: 0;
     inline-size: 100%;
+    block-size: 44px;
+    min-block-size: 44px;
+    max-block-size: 44px;
   }
   :root .ui-dialog.timesheet-manage-staff > .ui-dialog-footer {
     grid-template-columns: minmax(0, 1fr);

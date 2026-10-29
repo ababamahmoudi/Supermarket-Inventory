@@ -2311,6 +2311,105 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         if (visible(tile) && !r2gPriceShapes.has(tile))
           failures.push("R2g price quick pick outside the validated form");
 
+      // R2g A5: only a real managed, named native dialog footer receives
+      // the phone fill contract. Its slot edges are measured, not waived.
+      const phoneDialogFooterWidths = new Map();
+      if (phone) {
+        for (const dialog of document.querySelectorAll(
+          "dialog[open].ui-dialog[data-dialog-feedback-scope]",
+        )) {
+          if (!visible(dialog)) continue;
+          const header = dialog.querySelector(":scope > .ui-dialog-header");
+          const title = header?.querySelector("h2");
+          const titleId = dialog.getAttribute("aria-labelledby");
+          const named = Boolean(
+            title &&
+            tidy(title.textContent) &&
+            (tidy(dialog.getAttribute("aria-label")) ||
+              (titleId && document.getElementById(titleId) === title)),
+          );
+          const close = header?.querySelector(
+            "button.ui-icon-button[data-control-kind='action']",
+          );
+          const footer = [
+            ...dialog.querySelectorAll(
+              ".ui-dialog-actions, .dialog-actions, .c3-dialog-actions, .product-editor-actions",
+            ),
+          ].find(
+            (node) =>
+              node.closest("dialog") === dialog &&
+              (node.parentElement === dialog ||
+                node.parentElement?.matches("form")),
+          );
+          const actions = [
+            ...(footer?.querySelectorAll(
+              ":scope > button.ui-button.button:not(.ui-icon-button)",
+            ) ?? []),
+          ].filter(visible);
+          const valid =
+            named &&
+            close &&
+            ["Close dialog", "بستن پنجره"].includes(
+              tidy(close.getAttribute("aria-label")),
+            ) &&
+            close.querySelector("svg.lucide-x") &&
+            footer &&
+            actions.length > 0 &&
+            actions.every(
+              (button) =>
+                button.getAttribute("data-control-kind") === "action" &&
+                tidy(button.textContent),
+            );
+          if (!valid) continue;
+          const bounds = dialog.getBoundingClientRect();
+          if (
+            Math.abs(bounds.width - document.documentElement.clientWidth) >
+              1.5 ||
+            Math.abs(bounds.bottom - window.innerHeight) > 1.5
+          )
+            failures.push(
+              "Phone dialog must fill the viewport edge as a bottom sheet",
+            );
+          const content = contentBounds(footer);
+          const gap = parseFloat(getComputedStyle(footer).columnGap) || 0;
+          const feedback = footer.querySelector(
+            ":scope > [data-dialog-feedback-host]",
+          );
+          const feedbackWidth = feedback?.childElementCount
+            ? feedback.getBoundingClientRect().width
+            : 0;
+          const expected =
+            (content.width -
+              feedbackWidth -
+              gap * (actions.length - 1 + (feedbackWidth > 0 ? 1 : 0))) /
+            actions.length;
+          for (const action of actions) {
+            phoneDialogFooterWidths.set(action, expected);
+            if (Math.abs(action.getBoundingClientRect().width - expected) > 1.5)
+              failures.push(
+                `Phone dialog footer must fill its action slot: ${tidy(action.textContent)}`,
+              );
+          }
+          const boxes = actions.map((action) => action.getBoundingClientRect());
+          if (
+            Math.max(...boxes.map((box) => box.y + box.height / 2)) -
+              Math.min(...boxes.map((box) => box.y + box.height / 2)) >
+            1.5
+          )
+            failures.push("Phone dialog footer actions must share one row");
+          const left = Math.min(...boxes.map((box) => box.left));
+          const right = Math.max(...boxes.map((box) => box.right));
+          if (
+            !feedbackWidth &&
+            (Math.abs(left - content.left) > 1.5 ||
+              Math.abs(right - content.right) > 1.5)
+          )
+            failures.push(
+              "Phone dialog footer actions must meet the inner edges",
+            );
+        }
+      }
+
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
       )) {
@@ -2693,6 +2792,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           if (
             !lookupWideActions.has(element) &&
             !phoneReceivingWidths.has(element) &&
+            !phoneDialogFooterWidths.has(element) &&
             !r2fApprovalWidths.has(element) &&
             !dashboardWideActions.has(element) &&
             !authenticationShape?.fullWidth &&
