@@ -198,6 +198,15 @@ export function consumeInvoiceUpload(
   actor: AuthenticatedActor,
   handle: InvoiceUploadHandle,
 ) {
+  const access = verifiedUpload(state, actor, handle);
+  uploads.delete(handle);
+  return uploadedFields(access);
+}
+function verifiedUpload(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  handle: InvoiceUploadHandle,
+) {
   const access = uploads.get(handle);
   if (!access?.stored) throw new Error("Original access changed.");
   const source = uploadSource(state, actor, access.invoice_id);
@@ -207,11 +216,37 @@ export function consumeInvoiceUpload(
     source.snapshot !== access.snapshot
   )
     throw new Error("The invoice changed while the original was saving.");
-  uploads.delete(handle);
+  return access as UploadAccess & {
+    stored: { reference: string; size: number };
+  };
+}
+function uploadedFields(
+  access: UploadAccess & { stored: { reference: string; size: number } },
+) {
   return {
     file_name: access.name,
     file_type: access.type,
     file_data: access.stored.reference,
     file_size: access.stored.size,
   };
+}
+
+/** Validate the whole saved batch before consuming even its first handle. */
+export function consumeInvoiceUploadBatch(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  handles: InvoiceUploadHandle[],
+) {
+  if (!handles.length || new Set(handles).size !== handles.length)
+    throw new Error("Choose each saved original once.");
+  const sources = handles.map((handle) => verifiedUpload(state, actor, handle));
+  const originals = sources.map((source) => {
+    const fields = uploadedFields(source);
+    const sha = fields.file_data.split(":").at(-1) ?? "";
+    if (!/^[a-f\d]{64}$/i.test(sha))
+      throw new Error("The saved original could not be verified.");
+    return { ...fields, original_sha256: sha };
+  });
+  for (const handle of handles) uploads.delete(handle);
+  return originals;
 }

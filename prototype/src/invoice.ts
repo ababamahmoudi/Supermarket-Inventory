@@ -40,6 +40,7 @@ import { manualPrice } from "./manual-prices";
 import { recordSaleReceiptCost, type SaleReceiptCostInput } from "./sales";
 import { effectiveInvoiceLocation } from "./received";
 import { effectiveInvoiceVersion } from "./invoice-version";
+import { requireLiveManualInvoice } from "./invoice-live-reading-state";
 import { trackingChoiceForProduct } from "./date-tracking";
 import {
   initializeInvoiceWeight,
@@ -301,6 +302,7 @@ export function createInvoice(
   actor: AuthenticatedActor,
   branch: Branch,
   manual = false,
+  options?: { empty?: boolean },
 ): DemoInvoice {
   const company = state.config.company.seed_key;
   actor = requirePurchase(
@@ -330,60 +332,65 @@ export function createInvoice(
     receiving_employee: actor.actor,
     due_date: dateAfter(today, 14),
     short_receipt_keys: [],
-    lines: manual
-      ? []
-      : seed.lines.map((line) =>
-          initializeInvoiceWeight(
-            rememberInvoiceSupplierItem(
-              state,
-              actor,
-              {
-                company_id: company,
-                supplier: seed.supplier,
-                branch,
-              },
-              {
-                ...line,
-                id: createId("invoice-line"),
-                company_id: company,
-                // Let the receiver explicitly mark the four chips missing, rather than inventing a shortage.
-                qty_received_at_posting: line.qty_invoiced,
-                qty_later_received: 0,
-                pricing_category:
-                  state.products.find(
-                    (product) => product.code === line.product_code,
-                  )?.pricing_category ?? "grocery",
-                review_confirmed: false,
-                sold_by:
-                  line.sold_by === "weight"
-                    ? "weight"
-                    : (state.products.find(
-                        (product) => product.code === line.product_code,
-                      )?.sold_by ?? "each"),
-                quantity_unit:
-                  line.quantity_unit === "cases" ? "cases" : "units",
-                date_tracking:
-                  trackingChoiceForProduct(
+    lines:
+      manual || options?.empty
+        ? []
+        : seed.lines.map((line) =>
+            initializeInvoiceWeight(
+              rememberInvoiceSupplierItem(
+                state,
+                actor,
+                {
+                  company_id: company,
+                  supplier: seed.supplier,
+                  branch,
+                },
+                {
+                  ...line,
+                  id: createId("invoice-line"),
+                  company_id: company,
+                  // Let the receiver explicitly mark the four chips missing, rather than inventing a shortage.
+                  qty_received_at_posting: line.qty_invoiced,
+                  qty_later_received: 0,
+                  pricing_category:
                     state.products.find(
                       (product) => product.code === line.product_code,
-                    ),
-                  ) === "yes",
-                date_confirmed: true,
-                new_name_en:
-                  line.product_code === "NEW" ? line.description : undefined,
-                new_name_fa:
-                  line.product_code === "NEW" ? "زرشک خشک ۱۰۰ گرمی" : undefined,
-                line_tax: line.taxable
-                  ? cents(
-                      new Decimal(line.line_total).times(state.config.tax.rate),
-                    )
-                  : "0.00",
-              },
+                    )?.pricing_category ?? "grocery",
+                  review_confirmed: false,
+                  sold_by:
+                    line.sold_by === "weight"
+                      ? "weight"
+                      : (state.products.find(
+                          (product) => product.code === line.product_code,
+                        )?.sold_by ?? "each"),
+                  quantity_unit:
+                    line.quantity_unit === "cases" ? "cases" : "units",
+                  date_tracking:
+                    trackingChoiceForProduct(
+                      state.products.find(
+                        (product) => product.code === line.product_code,
+                      ),
+                    ) === "yes",
+                  date_confirmed: true,
+                  new_name_en:
+                    line.product_code === "NEW" ? line.description : undefined,
+                  new_name_fa:
+                    line.product_code === "NEW"
+                      ? "زرشک خشک ۱۰۰ گرمی"
+                      : undefined,
+                  line_tax: line.taxable
+                    ? cents(
+                        new Decimal(line.line_total).times(
+                          state.config.tax.rate,
+                        ),
+                      )
+                    : "0.00",
+                },
+              ),
+              state.config,
             ),
-            state.config,
           ),
-        ),
-    ...(manual
+    ...(manual || options?.empty
       ? {
           supplier: "",
           supplier_confirmed: false,
@@ -417,13 +424,16 @@ export function addManualLine(
     state.invoice.id,
     true,
   );
-  requireInvoiceAuthority(
-    state,
-    actor,
-    "invoices.enter_manual",
-    state.invoice.id,
-    true,
-  );
+  if (state.invoice.live_reading?.phase === "manual")
+    actor = requireLiveManualInvoice(state, actor, state.invoice.id);
+  else
+    requireInvoiceAuthority(
+      state,
+      actor,
+      "invoices.enter_manual",
+      state.invoice.id,
+      true,
+    );
   const product = state.products.find(
     (item) =>
       item.code === code && item.company_id === state.invoice.company_id,

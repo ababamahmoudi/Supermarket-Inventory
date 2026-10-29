@@ -1,6 +1,7 @@
 import { isTimesheetActivity, timesheetScope } from "./timesheets";
 import { canApplyNotebookHistoryActivity } from "./notebooks";
 import { businessAuditRead } from "./business-audit-read";
+import { redactLiveReadingProvenance } from "./invoice-live-reading-projection";
 import { clearOfferStoreSuppression, offerVersion } from "./offer-store-scopes";
 import type {
   AuthenticatedActor,
@@ -1615,8 +1616,11 @@ export function projectHistoryEntry(
     throw new HistoryError("permission");
   entry = canonical;
   const privateMoney = canDomain(state, actor, "history.read_all");
-  if (privateMoney) return businessAuditRead(entry);
-  return businessAuditRead(projectHistoryValue(entry)) as Activity;
+  const visible = ["owner", "manager"].includes(actor.role)
+    ? entry
+    : redactLiveReadingProvenance(entry);
+  if (privateMoney) return businessAuditRead(visible);
+  return businessAuditRead(projectHistoryValue(visible)) as Activity;
 }
 
 function privateHistoryField(key: string): boolean {

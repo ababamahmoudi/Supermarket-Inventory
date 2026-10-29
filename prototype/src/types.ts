@@ -37,6 +37,7 @@ import type {
 } from "./price-updates";
 import type { MakerBranding } from "./maker-branding";
 import type { RoleDefinition } from "./role-config";
+import type { LiveInvoiceReading } from "./invoice-live-reading-types";
 import type { NoteEngagement } from "./note-engagement";
 export type Role = RoleId;
 /** Old serialized input only; never a current authority role. */
@@ -459,6 +460,7 @@ export type DemoInvoice = Omit<
     reviewer_origin_location_id?: string;
     version?: number;
     status: "empty" | "reading" | "draft" | "review" | "posted";
+    live_reading?: LiveInvoiceReading;
     lines: InvoiceLine[];
     file_name?: string;
     file_type?: string;
@@ -478,13 +480,14 @@ export type DemoInvoice = Omit<
     import_currency_inferred?: boolean;
     checked_fields?: InvoiceCheckReceipts;
     reading_record?: {
-      source: "imported";
+      source: "imported" | "live";
       file_name: string;
       page_sha256s: string[];
       models: string[];
       reading_cost_usd: string;
       exported_at: string;
       ai_source: string;
+      seconds?: number;
       supplier_name_as_printed?: string;
     };
     import_currency?: string;

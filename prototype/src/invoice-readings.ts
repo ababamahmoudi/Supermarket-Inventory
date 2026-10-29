@@ -34,6 +34,11 @@ import {
 } from "./invoice-checks";
 import { storeUploadedFile, type FileRepository } from "./file-database";
 import { createId } from "./ids";
+import {
+  liveOriginalPages,
+  requireLiveReadingTarget,
+} from "./invoice-live-reading-state";
+import type { LiveReadingProvenance } from "./invoice-live-reading-types";
 import type {
   DemoInvoice,
   DemoState,
@@ -655,7 +660,17 @@ export function readingDuplicateReason(
   entry: ExportedInvoiceReading,
   value: InvoiceReading,
 ): "invoice_number" | "page_sha256" | undefined {
-  const invoices = allInvoices(state);
+  return readingDuplicateReasonIgnoring(state, entry, value);
+}
+function readingDuplicateReasonIgnoring(
+  state: DemoState,
+  entry: ExportedInvoiceReading,
+  value: InvoiceReading,
+  excludedInvoiceId?: string,
+): "invoice_number" | "page_sha256" | undefined {
+  const invoices = allInvoices(state).filter(
+    (invoice) => invoice.id !== excludedInvoiceId,
+  );
   if (
     invoices.some(
       (invoice) =>
@@ -821,6 +836,20 @@ export function previewInvoiceReadings(
   currentLocation: string,
 ): ImportPreviewRow[] {
   requireImport(state, actor);
+  return previewInvoiceReadingsAuthorized(
+    state,
+    exported,
+    mode,
+    currentLocation,
+  );
+}
+function previewInvoiceReadingsAuthorized(
+  state: DemoState,
+  exported: InvoiceReadingsExport,
+  mode: ImportMode,
+  currentLocation: string,
+  excludedInvoiceId?: string,
+): ImportPreviewRow[] {
   const rows = exported.invoices.map((entry): ImportPreviewRow => {
     const effective = effectiveInvoiceReading(entry, mode),
       value = effective.reading;
@@ -844,7 +873,7 @@ export function previewInvoiceReadings(
       using_checked: effective.using_checked,
       check_count: checked ? invoiceCheckCount(checked) : 0,
       duplicate_reason: value
-        ? readingDuplicateReason(state, entry, value)
+        ? readingDuplicateReasonIgnoring(state, entry, value, excludedInvoiceId)
         : undefined,
       in_file_duplicate_group: value
         ? readingInvoiceIdentity(state, value)
@@ -1337,6 +1366,14 @@ const preparedPages = new WeakMap<
     invoices: Record<string, NonNullable<DemoInvoice["original_pages"]>>;
   }
 >();
+const liveImportTargets = new WeakMap<
+  object,
+  {
+    invoice_id: string;
+    attempt_id: string;
+    provenance: LiveReadingProvenance;
+  }
+>();
 export async function prepareInvoiceReadingPages(
   exported: InvoiceReadingsExport,
   selectedIds: string[],
@@ -1452,8 +1489,14 @@ export function importInvoiceReadings(
   actor: AuthenticatedActor,
   input: ImportReadingsInput,
   now = new Date(),
+  liveContext?: object,
 ): ImportSummary {
-  actor = requireImport(state, actor);
+  const live = liveContext ? liveImportTargets.get(liveContext) : undefined;
+  if (liveContext && !live) throw new Error("Live reading access changed.");
+  const target = live
+    ? requireLiveReadingTarget(state, actor, live)
+    : undefined;
+  actor = target?.actor ?? requireImport(state, actor);
   const prepared = preparedPages.get(input.pages);
   if (!prepared || prepared.company_id !== actor.company_id)
     throw new Error("Original pages must be saved before importing.");
@@ -1464,7 +1507,7 @@ export function importInvoiceReadings(
     needs_location: [],
     other_locations: 0,
   };
-  const existingCurrent = state.invoice;
+  let existingCurrent = state.invoice;
   state.invoices ??= [];
   if (existingCurrent.status !== "empty") {
     const index = state.invoices.findIndex(
@@ -1473,12 +1516,12 @@ export function importInvoiceReadings(
     if (index < 0) state.invoices.push(existingCurrent);
     else state.invoices[index] = existingCurrent;
   }
-  const preview = previewInvoiceReadings(
+  const preview = previewInvoiceReadingsAuthorized(
     state,
-    actor,
     input.exported,
     input.mode,
     "all",
+    live?.invoice_id,
   );
   const selected = new Set(input.selectedIds);
   for (const row of preview)
@@ -1498,7 +1541,9 @@ export function importInvoiceReadings(
   for (const entry of input.exported.invoices) {
     const effective = effectiveInvoiceReading(entry, input.mode),
       value = effective.reading;
-    const duplicate = value && readingDuplicateReason(state, entry, value);
+    const duplicate =
+      value &&
+      readingDuplicateReasonIgnoring(state, entry, value, live?.invoice_id);
     if (duplicate) {
       summary.skipped.push({ id: entry.id, reason: duplicate });
       continue;
@@ -1529,9 +1574,12 @@ export function importInvoiceReadings(
       )
     )
       throw new Error("Original pages changed. Choose the file again.");
-    const invoice = createInvoice(state, actor, location, true);
+    const invoice = target
+      ? structuredClone(target.invoice)
+      : createInvoice(state, actor, location, true);
     invoice.entry_mode = "upload";
     invoice.status = "review";
+    invoice.lines = [];
     state.invoice = invoice;
     let supplier = matchReadingSupplier(state, value);
     const printedAddress = text(value.supplier_address);
@@ -1638,15 +1686,21 @@ export function importInvoiceReadings(
     invoice.payable_after_open_shorts = invoice.final_total;
     invoice.short_lines = [];
     const received = importedReadingReceived(state.config, value);
-    invoice.received_at = received.received_at;
-    invoice.imported_received_source = received.source;
-    invoice.imported_received_alternative = received.alternative_received_at;
-    invoice.receiving_employee = actor.actor;
+    invoice.received_at = target
+      ? target.invoice.received_at
+      : received.received_at;
+    if (!target) {
+      invoice.imported_received_source = received.source;
+      invoice.imported_received_alternative = received.alternative_received_at;
+    }
+    invoice.receiving_employee = target
+      ? target.invoice.receiving_employee
+      : actor.actor;
     invoice.import_warnings = list(value.warnings);
     invoice.import_handwritten_notes = list(value.handwritten_notes);
     invoice.low_confidence_fields = [
       ...checks.header,
-      ...(received.source !== "invoice_date" ? ["received_at"] : []),
+      ...(!target && received.source !== "invoice_date" ? ["received_at"] : []),
     ];
     for (const field of [
       "supplier",
@@ -1714,7 +1768,7 @@ export function importInvoiceReadings(
     invoice.file_data = pages[0].file_data;
     invoice.file_size = pages[0].file_size;
     invoice.reading_record = {
-      source: "imported",
+      source: live ? "live" : "imported",
       file_name: input.fileName,
       page_sha256s: [...entry.original_sha256],
       models: [...entry.ai_models],
@@ -1722,8 +1776,23 @@ export function importInvoiceReadings(
       exported_at: input.exported.exported_at,
       ai_source: entry.ai_source,
       supplier_name_as_printed: text(value.supplier_name),
+      ...(live ? { seconds: live.provenance.seconds } : {}),
     };
-    state.invoices.push(invoice);
+    if (live && target) {
+      const originals = structuredClone(liveOriginalPages(target.invoice));
+      invoice.original_pages = originals;
+      Object.assign(invoice, originals[0]);
+      invoice.reading_record.models = [...live.provenance.models];
+      invoice.reading_record.reading_cost_usd = live.provenance.costUSD;
+      invoice.live_reading!.phase = "complete";
+      invoice.live_reading!.completed_at = now.toISOString();
+      const index = state.invoices.findIndex(
+        (record) => record.id === invoice.id,
+      );
+      if (index >= 0) state.invoices[index] = invoice;
+      else state.invoices.push(invoice);
+      if (existingCurrent.id === invoice.id) existingCurrent = invoice;
+    } else state.invoices.push(invoice);
     summary.imported.push(invoice.id);
     if (
       input.currentLocation &&
@@ -1735,7 +1804,7 @@ export function importInvoiceReadings(
       id: createId("invoice-import-draft"),
       company_id: actor.company_id,
       branch: location,
-      action: "Create invoice draft",
+      action: live ? "Read invoice with AI" : "Create invoice draft",
       by: actor.actor,
       actor_user_id: actor.user_id,
       actor_username: actor.username,
@@ -1744,7 +1813,13 @@ export function importInvoiceReadings(
       reversible: false,
       entity_type: "invoice",
       entity_id: invoice.id,
-      after: structuredClone(invoice),
+      after: live
+        ? {
+            invoice_id: invoice.id,
+            line_count: invoice.lines.length,
+            source: "live",
+          }
+        : structuredClone(invoice),
     });
   }
   state.invoice = existingCurrent;
@@ -1769,4 +1844,72 @@ export function importInvoiceReadings(
     },
   });
   return summary;
+}
+
+/** A verified pre-saved live draft enters the exact JSON-import mapping above. */
+export function importLiveInvoiceReading(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  input: {
+    invoice_id: string;
+    attempt_id: string;
+    exported: InvoiceReadingsExport;
+    provenance: LiveReadingProvenance;
+  },
+  now = new Date(),
+) {
+  const { invoice } = requireLiveReadingTarget(state, actor, input);
+  const exported = parseInvoiceReadings(JSON.stringify(input.exported));
+  if (exported.invoices.length !== 1)
+    throw new Error("One live reading must describe one invoice.");
+  const entry = exported.invoices[0];
+  if (
+    !entry.ai_reading?.lines?.some(
+      (line) => !line.line_type || line.line_type === "item",
+    )
+  )
+    throw new Error("The live reading contains no usable lines.");
+  const originals = liveOriginalPages(invoice);
+  const pdf =
+    originals.length === 1 && originals[0].file_type === "application/pdf";
+  if (
+    (pdf && entry.pages.length > 10) ||
+    (!pdf && entry.pages.length !== originals.length)
+  )
+    throw new Error("The live reading pages changed.");
+  const pages = entry.pages.map((_, index) =>
+    structuredClone(originals[pdf ? 0 : index]),
+  );
+  if (
+    pages.some(
+      (page, index) => page.original_sha256 !== entry.original_sha256[index],
+    )
+  )
+    throw new Error("The live reading originals changed.");
+  const handle = Object.freeze({ count: pages.length });
+  preparedPages.set(handle, {
+    company_id: invoice.company_id,
+    invoices: { [entry.id]: pages },
+  });
+  const context = Object.freeze({});
+  liveImportTargets.set(context, {
+    invoice_id: input.invoice_id,
+    attempt_id: input.attempt_id,
+    provenance: structuredClone(input.provenance),
+  });
+  return importInvoiceReadings(
+    state,
+    actor,
+    {
+      exported,
+      fileName: invoice.file_name ?? "",
+      mode: "ai",
+      locations: { [entry.id]: invoice.branch },
+      selectedIds: [entry.id],
+      pages: handle,
+      currentLocation: invoice.branch,
+    },
+    now,
+    context,
+  );
 }

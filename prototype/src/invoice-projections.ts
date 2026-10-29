@@ -21,6 +21,11 @@ import {
   normalizeInvoiceReceivingReview,
 } from "./invoice-checks";
 import { invoiceRecords } from "./invoice-records";
+import {
+  projectLiveInvoiceReading,
+  redactLiveReadingProvenance,
+} from "./invoice-live-reading-projection";
+import type { LiveInvoiceReadingView } from "./invoice-live-reading-types";
 
 type InvoiceLineMoney =
   | "paper_line_total"
@@ -54,6 +59,7 @@ export type InvoiceView = Omit<
   | "file_data"
   | "original_pages"
   | "reading_record"
+  | "live_reading"
   | "other_charges"
   | "legacy_demo_original"
   | "lines"
@@ -69,6 +75,7 @@ export type InvoiceView = Omit<
     original_available: boolean;
     original_page_count: number;
     reading_record?: DemoInvoice["reading_record"];
+    live_reading?: LiveInvoiceReadingView;
     other_charges?: DemoInvoice["other_charges"];
     purchase_cost_allowed: boolean;
     margin_allowed: boolean;
@@ -316,6 +323,9 @@ export function invoiceView(
   );
   const view = {
     ...select(invoice, invoiceKeys),
+    ...(invoice.live_reading
+      ? { live_reading: projectLiveInvoiceReading(invoice.live_reading) }
+      : {}),
     received_at: effectiveInvoiceReceivedAt(state, invoice),
     ...(costs
       ? {
@@ -436,7 +446,11 @@ export function invoiceView(
       invoiceAuthorityScope(state, original.id, true, true),
     ).allowed,
   };
-  return businessAuditRead(view);
+  return businessAuditRead(
+    ["owner", "manager"].includes(current.role)
+      ? view
+      : redactLiveReadingProvenance(view),
+  );
 }
 
 export type InvoiceReadDTO = InvoiceView;
