@@ -41,7 +41,7 @@ import {
 import { useDemo } from "../store";
 import { LookupLocations } from "../LookupLocations";
 import { SupplierItemError } from "../supplier-items";
-import { FitText } from "../FitText";
+import { LookupFilters as LookupFilterBar } from "../LookupFilters";
 import {
   lookupBranchCatalog,
   type LookupBranchProduct,
@@ -157,7 +157,6 @@ import {
   Card,
   Checkbox,
   FilterChip,
-  Disclosure,
   DataTable,
   EmptyState,
   Field,
@@ -2754,15 +2753,6 @@ function ProductPrice({ product }: { product: Product }) {
   );
 }
 
-function ProductDates({ product }: { product: Product }) {
-  return (
-    <ProductDatesSection
-      product={product}
-      hideEmptyDates={product.sold_by === "weight"}
-    />
-  );
-}
-
 function ProductDetail({ product }: { product: Product }) {
   const { state, branch, actor, can, setBranch, lang, t, navigate } = useDemo();
   const location = lookupBranch(branch);
@@ -3362,17 +3352,20 @@ function ProductDetail({ product }: { product: Product }) {
 function LookupOtherPrices({
   product,
   facts,
+  pricesOnly = false,
 }: {
   product: Product;
   facts?: LookupBranchProduct;
+  pricesOnly?: boolean;
 }) {
   const { state, lang, t } = useDemo();
   return (
     <span className="lookup-other-prices">
-      <span>{t("Not approved here yet", "هنوز در این مکان تأیید نشده")}</span>
+      {!pricesOnly && (
+        <span>{t("Not approved here yet", "هنوز در این مکان تأیید نشده")}</span>
+      )}
       {facts?.other_prices.map((row) => (
-        <span key={row.location}>
-          <span aria-hidden="true"> · </span>
+        <span className="lookup-other-price-tag" key={row.location}>
           {configuredBranchLabel(state.config, row.location, lang)}{" "}
           <SellingPrice
             value={row.price}
@@ -3439,6 +3432,7 @@ function LookupProductDetail({
               {t(state.config.terminology.product_code, "کد محصول")}{" "}
               <LtrText>{product.code}</LtrText>
             </span>
+            <span aria-hidden="true">·</span>
             {product.sold_by === "weight" ? (
               <span>{t("Sold by weight", "فروش وزنی")}</span>
             ) : (
@@ -3493,9 +3487,16 @@ function LookupProductDetail({
                   </Badge>
                 )}
                 {approved && !sale && offer && (
-                  <Badge tone="info" className="offer-pill">
-                    <OfferLabel label={offer.label} language={lang} />
-                  </Badge>
+                  <span className="lookup-offer-context">
+                    <Badge tone="info" className="offer-pill">
+                      <OfferLabel label={offer.label} language={lang} />
+                    </Badge>
+                    {offer.mix_and_match && offer.pool && (
+                      <span className="lookup-mix-tag">
+                        {t("Mix & match", "ترکیبی")}
+                      </span>
+                    )}
+                  </span>
                 )}
                 {(product.sold_by !== "weight" ||
                   state.config.weighed_items?.show_second_unit === false) && (
@@ -3579,7 +3580,7 @@ function LookupProductDetail({
               onOpen={onOpenPackage}
             />
           )}
-          <ProductDates product={product} />
+          <ProductDatesSection product={product} lookup />
           {pending && (
             <p className="helper" role="status">
               {approved
@@ -3627,9 +3628,6 @@ export function Lookup() {
     "lookup.filters",
     emptyLookupFilters,
   );
-  const { category } = filters;
-  const setCategory = (value: string) =>
-    setFilters((current) => ({ ...current, category: value }));
   const branchFacts = useCatalogQuery(
     "lookup.read",
     { company_id: state.config.company.seed_key, kind: "company_shared" },
@@ -3824,157 +3822,25 @@ export function Lookup() {
             <ScanLine size={20} strokeWidth={1.5} aria-hidden="true" />
           </button>
         </div>
-        <div className="lookup-filterbar filter-toolbar">
-          <div className="lookup-pricing-filters">
-            <Select
-              aria-label={t("Pricing category", "دستهٔ قیمت‌گذاری")}
-              value={filters.pricingCategory}
-              onChange={(value) => {
-                setFilters((current) => ({
-                  ...current,
-                  pricingCategory: value,
-                }));
-                setSelectedCode("");
-                setOpenedPackage(null);
-                setActiveCode("");
-              }}
-              options={[
-                {
-                  value: "",
-                  label: `${t("All pricing categories", "همهٔ دسته‌های قیمت‌گذاری")} (${availableProducts.length})`,
-                },
-                ...activePricingCategories(state.config).map((item) => ({
-                  value: item.key,
-                  label: `${lang === "fa" && item.label_fa ? item.label_fa : categoryLabel(item.label, lang)} (${availableProducts.filter((product) => product.pricing_category === item.key).length})`,
-                })),
-              ]}
-            />
-            {(
-              [
-                ["onOffer", t("On offer", "دارای پیشنهاد")],
-                ["expiringSoon", t("Expiring soon", "به‌زودی منقضی")],
-                ["arrivedToday", t("Arrived today", "رسیده امروز")],
-                [
-                  "priceChangedRecently",
-                  t("Price changed recently", "قیمت به‌تازگی تغییر کرده"),
-                ],
-              ] as const
-            ).map(([key, label]) => (
-              <FilterChip
-                appearance="neutral"
-                key={key}
-                checked={Boolean(filters[key])}
-                onChange={(value) => {
-                  setFilters((current) => ({ ...current, [key]: value }));
-                  setSelectedCode("");
-                  setOpenedPackage(null);
-                  setActiveCode("");
-                }}
-              >
-                {label}
-              </FilterChip>
-            ))}
-            <FilterChip
-              appearance="neutral"
-              checked={filters.taxable}
-              onChange={(value) => {
-                setFilters((current) => ({ ...current, taxable: value }));
-                setSelectedCode("");
-                setOpenedPackage(null);
-                setActiveCode("");
-              }}
-            >
-              {t("Taxable", "مشمول مالیات")}
-            </FilterChip>
-            <FilterChip
-              appearance="neutral"
-              checked={filters.unapproved}
-              onChange={(value) => {
-                setFilters((current) => ({ ...current, unapproved: value }));
-                setSelectedCode("");
-                setOpenedPackage(null);
-                setActiveCode("");
-              }}
-            >
-              {t("Not approved here yet", "هنوز در این مکان تأیید نشده")}
-            </FilterChip>
-          </div>
-          <Disclosure
-            className="lookup-more-filters"
-            summary={
-              category
-                ? `${t("More filters", "فیلترهای بیشتر")} · ${categoryLabel(category, lang)}`
-                : t("More filters", "فیلترهای بیشتر")
-            }
-          >
-            <div
-              className="lookup-category-chips ui-control-row"
-              role="group"
-              aria-label={t("AI category", "دستهٔ هوش مصنوعی")}
-            >
-              {["", ...categories.slice(0, 3)].map((value) => (
-                <Button
-                  key={value}
-                  variant="neutral"
-                  className={`filter-chip${category === value ? " is-selected" : ""}`}
-                  aria-pressed={category === value}
-                  onClick={() => {
-                    setCategory(value);
-                    setSelectedCode("");
-                    setOpenedPackage(null);
-                    setActiveCode("");
-                  }}
-                >
-                  {value ? categoryLabel(value, lang) : t("All", "همه")}
-                </Button>
-              ))}
-              {categories.length > 3 && (
-                <Menu
-                  label={
-                    categories.slice(3).includes(category)
-                      ? categoryLabel(category, lang)
-                      : t("More", "بیشتر")
-                  }
-                  aria-label={t("More categories", "دسته‌های بیشتر")}
-                  className={`lookup-category-more${categories.slice(3).includes(category) ? " is-selected" : ""}`}
-                >
-                  {categories.slice(3).map((value) => (
-                    <MenuItem
-                      key={value}
-                      onClick={() => {
-                        setCategory(value);
-                        setSelectedCode("");
-                        setOpenedPackage(null);
-                        setActiveCode("");
-                      }}
-                    >
-                      {categoryLabel(value, lang)}
-                    </MenuItem>
-                  ))}
-                </Menu>
-              )}
-            </div>
-          </Disclosure>
-          <p id={searchHintId} className="sr-only lookup-keyboard-hint">
-            {t(
-              "Use ↑ ↓ and Enter to select a product.",
-              "برای انتخاب محصول از ↑ ↓ و Enter استفاده کنید.",
-            )}
-          </p>
-          {(search ||
-            category ||
-            filters.pricingCategory ||
-            filters.taxable ||
-            filters.unapproved ||
-            filters.onOffer ||
-            filters.expiringSoon ||
-            filters.arrivedToday ||
-            filters.priceChangedRecently) && (
-            <Button variant="ghost" onClick={clearSearch}>
-              {t("Clear filters", "پاک کردن فیلترها")}
-            </Button>
+        <LookupFilterBar
+          filters={filters}
+          products={availableProducts}
+          categories={categories}
+          searchActive={Boolean(search)}
+          onChange={(next) => {
+            setFilters(next);
+            setSelectedCode("");
+            setOpenedPackage(null);
+            setActiveCode("");
+          }}
+          onClear={clearSearch}
+        />
+        <p id={searchHintId} className="sr-only lookup-keyboard-hint">
+          {t(
+            "Use ↑ ↓ and Enter to select a product.",
+            "برای انتخاب محصول از ↑ ↓ و Enter استفاده کنید.",
           )}
-        </div>
+        </p>
       </div>
       {(branch !== "all" && !branchFacts.ready) || !signalQuery.ready ? (
         <p className="muted" role="status">
@@ -4083,6 +3949,12 @@ export function Lookup() {
                     {group.rows.map((product) => {
                       const price = factsByCode.get(product.code)?.price;
                       const pending = pendingPrice(state, product, branch);
+                      const offer = price
+                        ? effectiveOffer(state, product, branch)
+                        : null;
+                      const sizeCount = products.filter(
+                        (child) => child.package_of_product_id === product.code,
+                      ).length;
                       const taxable = state.config.tax.profiles.find(
                         (item) => item.key === product.tax_profile,
                       )?.taxable;
@@ -4130,17 +4002,20 @@ export function Lookup() {
                                     : "ltr"
                                 }
                               >
-                                <FitText
+                                <span
                                   className="lookup-fitted-name"
-                                  value={
+                                  title={
                                     lang === "fa"
                                       ? product.name_fa || product.name_en
                                       : product.name_en
                                   }
-                                  render={(visible) => (
-                                    <UnitText>{visible}</UnitText>
-                                  )}
-                                />
+                                >
+                                  <UnitText>
+                                    {lang === "fa"
+                                      ? product.name_fa || product.name_en
+                                      : product.name_en}
+                                  </UnitText>
+                                </span>
                               </bdi>
                             </strong>
                             <span className="lookup-result-secondary muted">
@@ -4179,34 +4054,37 @@ export function Lookup() {
                                 />
                               ) : (
                                 <span className="muted">
-                                  <LookupOtherPrices
-                                    product={product}
-                                    facts={factsByCode.get(product.code)}
-                                  />
-                                </span>
-                              )}
-                              {product.sold_by === "weight" && (
-                                <span className="lookup-size-count muted">
-                                  {translateCount(
-                                    "{{count}} size",
-                                    "{{count}} sizes",
-                                    "{{count}} اندازه",
-                                    "{{count}} اندازه",
-                                    products.filter(
-                                      (child) =>
-                                        child.package_of_product_id ===
-                                        product.code,
-                                    ).length,
-                                    lang,
+                                  {t(
+                                    "Not approved here yet",
+                                    "هنوز در این مکان تأیید نشده",
                                   )}
                                 </span>
                               )}
                               <span className="lookup-result-pills actions">
+                                {price && product.sold_by === "weight" && (
+                                  <SalePrice
+                                    product={product}
+                                    className="lookup-result-secondary-price"
+                                    unitLanguage={lang}
+                                  />
+                                )}
+                                {!price && (
+                                  <LookupOtherPrices
+                                    product={product}
+                                    facts={factsByCode.get(product.code)}
+                                    pricesOnly
+                                  />
+                                )}
                                 {price && (
                                   <ProductOfferStatus
                                     product={product}
                                     empty={false}
                                   />
+                                )}
+                                {offer?.mix_and_match && offer.pool && (
+                                  <span className="lookup-mix-tag">
+                                    {t("Mix & match", "ترکیبی")}
+                                  </span>
                                 )}
                                 {signalsByCode.get(product.code)
                                   ?.expiringSoon && (
@@ -4227,6 +4105,19 @@ export function Lookup() {
                                     {t("Pending", "در انتظار تأیید")}
                                   </small>
                                 )}
+                                {product.sold_by === "weight" &&
+                                  sizeCount > 0 && (
+                                    <small className="lookup-size-count">
+                                      {translateCount(
+                                        "{{count}} size",
+                                        "{{count}} sizes",
+                                        "{{count}} اندازه",
+                                        "{{count}} اندازه",
+                                        sizeCount,
+                                        lang,
+                                      )}
+                                    </small>
+                                  )}
                               </span>
                             </span>
                           )}

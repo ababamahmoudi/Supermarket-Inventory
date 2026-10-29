@@ -250,10 +250,10 @@ test("Lookup columns mirror in Persian, with selected row distinct from offer do
   const row = page.locator(".lookup-result-row.is-selected");
   let geometry = await row.evaluate((element) => {
     const name = element
-      .querySelector(".lookup-result-name")!
+      .querySelector(".lookup-result-name > strong")!
       .getBoundingClientRect();
     const price = element
-      .querySelector(".lookup-result-price")!
+      .querySelector(".lookup-result-price > .selling-price-value")!
       .getBoundingClientRect();
     return { nameX: name.x, priceX: price.x, width: price.width };
   });
@@ -261,10 +261,10 @@ test("Lookup columns mirror in Persian, with selected row distinct from offer do
   await setLanguage(page, "fa");
   geometry = await row.evaluate((element) => {
     const name = element
-      .querySelector(".lookup-result-name")!
+      .querySelector(".lookup-result-name > strong")!
       .getBoundingClientRect();
     const price = element
-      .querySelector(".lookup-result-price")!
+      .querySelector(".lookup-result-price > .selling-price-value")!
       .getBoundingClientRect();
     return { nameX: name.x, priceX: price.x, width: price.width };
   });

@@ -94,6 +94,13 @@ for (const width of widths)
         )!;
         const amount = price.getBoundingClientRect(),
           pill = offer.getBoundingClientRect();
+        const group = offer
+          .closest(".lookup-offer-context")!
+          .getBoundingClientRect();
+        const priceRow = element.querySelector(".lookup-approved-price")!;
+        const mix = offer
+          .parentElement!.querySelector(".lookup-mix-tag")
+          ?.getBoundingClientRect();
         return {
           searchHeight: search.getBoundingClientRect().height,
           searchRadius: getComputedStyle(search).borderRadius,
@@ -101,29 +108,73 @@ for (const width of widths)
           lineHeight: getComputedStyle(price).lineHeight,
           price: amount.toJSON(),
           offer: pill.toJSON(),
+          group: group.toJSON(),
+          rowWidth: priceRow.getBoundingClientRect().width,
+          rowGap: parseFloat(getComputedStyle(priceRow).columnGap),
+          mix: mix?.toJSON() ?? null,
         };
       });
       expect(shapes.searchHeight).toBe(56);
       expect(shapes.searchRadius).toBe("16px");
       expect(shapes.font).toBe("60px");
       expect(shapes.lineHeight).toBe("60px");
-      expect(
-        Math.min(shapes.price.bottom, shapes.offer.bottom) -
-          Math.max(shapes.price.top, shapes.offer.top),
-      ).toBeGreaterThan(0);
+      // R2g keeps the complete offer/Mix pair together. A narrow phone wraps
+      // that pair below the unchanged 60px price when both cannot fit beside it.
+      if (
+        width <= 760 &&
+        shapes.price.width + shapes.group.width + shapes.rowGap >
+          shapes.rowWidth + 1
+      )
+        expect(shapes.group.top).toBeGreaterThanOrEqual(
+          shapes.price.bottom - 1,
+        );
+      else
+        expect(
+          Math.min(shapes.price.bottom, shapes.offer.bottom) -
+            Math.max(shapes.price.top, shapes.offer.top),
+        ).toBeGreaterThan(0);
+      expect(shapes.group.width).toBeLessThanOrEqual(shapes.rowWidth + 1);
+      if (shapes.mix) {
+        expect(
+          Math.abs(
+            (shapes.offer.top +
+              shapes.offer.bottom -
+              shapes.mix.top -
+              shapes.mix.bottom) /
+              2,
+          ),
+        ).toBeLessThanOrEqual(1.5);
+        expect(
+          shapes.offer.left < shapes.mix.right &&
+            shapes.offer.right > shapes.mix.left,
+        ).toBe(false);
+      }
       await measure(page, "c7-lookup", language, width, info);
       await search.clear();
-      await lookup.locator(".lookup-more-filters > summary").click();
-      const chips = lookup.locator(".lookup-category-chips");
-      await expect(chips.getByRole("combobox")).toHaveCount(0);
-      await expect(
-        chips.getByRole("button", { name: exact("All", "همه") }),
-      ).toHaveAttribute("aria-pressed", "true");
-      await chips.locator(".filter-chip").nth(1).click();
-      await expect(chips.locator(".filter-chip").nth(1)).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
+      await lookup
+        .getByRole("button", { name: exact("Filters", "فیلترها") })
+        .click();
+      const filters = page.getByRole("dialog", {
+        name: exact("Filters", "فیلترها"),
+      });
+      await expect(filters.getByRole("combobox")).toHaveCount(2);
+      const category = filters.getByRole("combobox", {
+        name: exact("AI category", "دستهٔ هوش مصنوعی"),
+      });
+      await expect(category).toHaveText(language === "en" ? "All" : "همه");
+      await category.click();
+      const choice = page
+        .getByRole("listbox", {
+          name: exact("AI category", "دستهٔ هوش مصنوعی"),
+        })
+        .getByRole("option")
+        .nth(1);
+      const chosenLabel = await choice.innerText();
+      await choice.click();
+      await expect(category).toContainText(chosenLabel);
+      await filters
+        .getByRole("button", { name: exact("Done", "تمام") })
+        .click();
       const codes = await lookup
         .locator(".lookup-result-row")
         .evaluateAll((rows) => rows.map((row) => row.id.split("-").at(-1)));

@@ -1946,6 +1946,8 @@ export async function inspect(page, screen, variant, role = "supervisor") {
       // A copied row class or a button with a different product name cannot
       // obtain this contract on another page or in an unrelated fragment.
       const lookupRowControls = new Set();
+      const lookupWideActions = new Set();
+      const lookupCompactActions = new Set();
       const lookupRoots = [
         ...document.querySelectorAll("main#main-content > .lookup-page"),
       ];
@@ -1957,13 +1959,16 @@ export async function inspect(page, screen, variant, role = "supervisor") {
       const lookupResults = lookupSearch?.getAttribute("aria-controls");
       const lookupHint = lookupSearch?.getAttribute("aria-describedby");
       const lookupPricing = lookupHero?.querySelector(
-        ":scope > .lookup-filterbar > .lookup-pricing-filters",
+        ":scope > .lookup-filterbar > .lookup-filters-row > .lookup-pricing-filters",
       );
       const lookupChips = [
         ...(lookupPricing?.querySelectorAll(
           ":scope > button.filter-chip[data-ui-component='filter-chip'][aria-pressed]",
         ) ?? []),
       ];
+      const lookupFilterTrigger = lookupHero?.querySelector(
+        ":scope > .lookup-filterbar > .lookup-filters-row > button.lookup-filters-trigger[aria-haspopup='dialog'][aria-controls][aria-expanded]",
+      );
       const genuineLookup = Boolean(
         window.location.hash.split("?")[0] === "#lookup" &&
         ["Cashier lookup", "جست‌وجوی صندوق‌دار"].includes(
@@ -1982,7 +1987,14 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         lookupHero?.querySelector(
           `.lookup-keyboard-hint[id='${lookupHint}']`,
         ) &&
-        lookupPricing?.querySelector(":scope > .ui-select[role='combobox']") &&
+        lookupFilterTrigger &&
+        ["Filters", "فیلترها"].includes(
+          lookupFilterTrigger.getAttribute("aria-label"),
+        ) &&
+        lookupFilterTrigger.querySelector(
+          ":scope > svg.lucide-sliders-horizontal",
+        ) &&
+        lookupFilterTrigger.querySelector(":scope > .lookup-filters-label") &&
         lookupChips.length === 6 &&
         lookupChips.every((chip) =>
           chip.querySelector(
@@ -1991,47 +2003,22 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         ),
       );
       if (genuineLookup) {
-        const disclosure = lookupHero.querySelector(
-          ":scope > .lookup-filterbar > details.lookup-more-filters",
+        lookupRowControls.add(lookupFilterTrigger);
+        const activeLine = lookupHero.querySelector(
+          ":scope > .lookup-filterbar > .lookup-active-filters[aria-live='polite']",
         );
-        const categories = disclosure?.querySelector(
-          ":scope > .lookup-category-chips.ui-control-row[role='group']",
+        const clear = activeLine?.querySelector(
+          ":scope > button.ui-button.button-plain",
         );
-        const choices = [
-          ...(categories?.querySelectorAll(
-            ":scope > button.filter-chip[aria-pressed]",
-          ) ?? []),
-        ];
-        const more = categories?.querySelector(
-          ":scope > button.lookup-category-more.ui-menu-trigger[aria-haspopup='menu']",
-        );
-        const selected =
-          choices.filter(
-            (choice) => choice.getAttribute("aria-pressed") === "true",
-          ).length + Number(Boolean(more?.classList.contains("is-selected")));
         if (
-          ["AI category", "دستهٔ هوش مصنوعی"].includes(
-            categories?.getAttribute("aria-label"),
+          clear &&
+          ["Clear filters", "پاک کردن فیلترها"].includes(
+            tidy(clear.textContent),
           ) &&
-          /^(More filters|فیلترهای بیشتر)(?:$|\s*·)/.test(
-            tidy(disclosure?.querySelector(":scope > summary")?.textContent),
-          ) &&
-          choices.length >= 1 &&
-          choices.length <= 4 &&
-          ["All", "همه"].includes(tidy(choices[0]?.textContent)) &&
-          choices.every((choice) =>
-            ["true", "false"].includes(choice.getAttribute("aria-pressed")),
-          ) &&
-          selected === 1 &&
-          categories.children.length ===
-            choices.length + Number(Boolean(more)) &&
-          (!more ||
-            ["More categories", "دسته‌های بیشتر"].includes(
-              more.getAttribute("aria-label"),
-            ))
+          !clear.querySelector("svg") &&
+          activeLine.children.length <= 2
         )
-          for (const control of [...choices, ...(more ? [more] : [])])
-            lookupRowControls.add(control);
+          lookupCompactActions.add(clear);
 
         const detail = lookupRoot.querySelector(":scope > .lookup-detail");
         const heading = detail?.querySelector(":scope > .lookup-detail-header");
@@ -2094,8 +2081,34 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           actionButtons.length <= 3 &&
           new Set(captions).size === captions.length &&
           actionButtons.every(validAction)
-        )
+        ) {
           for (const control of actionButtons) lookupRowControls.add(control);
+          const menuButton = actions.querySelector(
+            ":scope > button.ui-icon-button[aria-haspopup='menu']",
+          );
+          const menuBox = menuButton?.getBoundingClientRect();
+          const buttonWidths = actionButtons.map(
+            (control) => control.getBoundingClientRect().width,
+          );
+          const equalPhoneActions =
+            actionButtons.length === 1 ||
+            (actionButtons.length === 2 &&
+              Math.abs(buttonWidths[0] - buttonWidths[1]) <= 1.5);
+          const rowGap = parseFloat(getComputedStyle(actions).columnGap) || 0;
+          if (
+            phone &&
+            menuBox &&
+            Math.abs(menuBox.width - 44) <= 1 &&
+            equalPhoneActions &&
+            Math.abs(
+              buttonWidths.reduce((sum, width) => sum + width, 0) +
+                menuBox.width +
+                rowGap * actionButtons.length -
+                actions.getBoundingClientRect().width,
+            ) <= 1.5
+          )
+            for (const control of actionButtons) lookupWideActions.add(control);
+        }
       }
       for (const control of document.querySelectorAll(
         ".lookup-category-chips.ui-control-row > button, .product-header-actions.ui-control-row > button:not(.ui-icon-button)",
@@ -2409,7 +2422,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         const gaps = style.display.includes("flex")
           ? Math.max(0, flexItems - 1) * (parseFloat(style.columnGap) || 0)
           : 0;
-        const intrinsicWidth =
+        let intrinsicWidth =
           textWidth +
           icons +
           parseFloat(style.paddingLeft) +
@@ -2417,6 +2430,34 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           parseFloat(style.borderLeftWidth) +
           parseFloat(style.borderRightWidth) +
           gaps;
+        if (genuineLookup && element === lookupFilterTrigger) {
+          const badge = element.querySelector(":scope > .tab-count");
+          const badgeBox = badge?.getBoundingClientRect();
+          const hiddenBadge =
+            badge && getComputedStyle(badge).visibility === "hidden";
+          if (
+            !badge ||
+            !badgeBox ||
+            Math.abs(badgeBox.width - 20) > 1 ||
+            Math.abs(badgeBox.height - 20) > 1 ||
+            !/^[012]$/.test(tidy(badge.textContent)) ||
+            hiddenBadge !== (tidy(badge.textContent) === "0")
+          )
+            failures.push(
+              "Lookup filter count must retain its real 20px active-count slot",
+            );
+          if (badge && badgeBox) {
+            const text = document.createRange();
+            text.selectNodeContents(badge);
+            const painted = hiddenBadge
+              ? 0
+              : text.getBoundingClientRect().width;
+            intrinsicWidth +=
+              Math.min(20, badgeBox.width) -
+              painted +
+              (hiddenBadge ? parseFloat(style.columnGap) || 0 : 0);
+          }
+        }
         const entry = {
           screen,
           variant,
@@ -2499,35 +2540,37 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             authenticationShape?.height ??
             r2gPriceShape?.height ??
             requestShape?.height ??
-            (labelAction
-              ? 32
-              : r2fOriginalHeaderActions.has(element)
+            (lookupCompactActions.has(element)
+              ? 22
+              : labelAction
                 ? 32
-                : r2fApprovalActions.has(element)
-                  ? phone
-                    ? 44
-                    : 40
-                  : newReturnControl ||
-                      r2fAddLineControls.has(element) ||
-                      r2cControl ||
-                      dashboardAction ||
-                      structuredFooter ||
-                      approvalDecisionButtons.has(element) ||
-                      approvalEditorFooters.has(element) ||
-                      notificationHeaderActions.has(element) ||
-                      modalFooterFeedback ||
-                      lookupRowControls.has(element) ||
-                      sharedFilterChip
-                    ? 44
-                    : genuineFilterToolbar
-                      ? element.closest(".ui-segments")
-                        ? 36
-                        : 44
-                      : phone || fieldAlignedAdd
-                        ? 44
-                        : small
-                          ? 32
-                          : 40);
+                : r2fOriginalHeaderActions.has(element)
+                  ? 32
+                  : r2fApprovalActions.has(element)
+                    ? phone
+                      ? 44
+                      : 40
+                    : newReturnControl ||
+                        r2fAddLineControls.has(element) ||
+                        r2cControl ||
+                        dashboardAction ||
+                        structuredFooter ||
+                        approvalDecisionButtons.has(element) ||
+                        approvalEditorFooters.has(element) ||
+                        notificationHeaderActions.has(element) ||
+                        modalFooterFeedback ||
+                        lookupRowControls.has(element) ||
+                        sharedFilterChip
+                      ? 44
+                      : genuineFilterToolbar
+                        ? element.closest(".ui-segments")
+                          ? 36
+                          : 44
+                        : phone || fieldAlignedAdd
+                          ? 44
+                          : small
+                            ? 32
+                            : 40);
           if (kind === "choice") {
             const requiredRadius = Math.min(rect.width, rect.height) / 2;
             const fullyRound = entry.radii.every((radius) => {
@@ -2604,6 +2647,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               `Table action wider than 200px: ${label} (${round(rect.width)}px)`,
             );
           if (
+            !lookupWideActions.has(element) &&
             !phoneReceivingWidths.has(element) &&
             !r2fApprovalWidths.has(element) &&
             !dashboardWideActions.has(element) &&

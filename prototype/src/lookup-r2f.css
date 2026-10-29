@@ -1,24 +1,4 @@
-/* R2f Lookup composition: shared controls/tables retain their foundation styles. */
-:root .lookup-page .lookup-filterbar {
-  gap: 12px;
-}
-:root .lookup-page .lookup-more-filters {
-  inline-size: 100%;
-}
-:root .lookup-page .lookup-more-filters > summary {
-  min-block-size: 44px;
-  margin: 0;
-}
-:root .lookup-page .lookup-more-filters .lookup-category-chips {
-  padding-block-start: 8px;
-}
-.lookup-results-heading {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
+/* Lookup composition: R2f packages and current R2g filters/results/facts. */
 .lookup-results-heading .filter-count {
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-body);
@@ -86,11 +66,6 @@
   font-size: inherit;
   font-weight: inherit;
   margin: 0;
-}
-:root .lookup-page .lookup-detail.is-weight-lookup .product-dates-readonly {
-  margin-block-start: 0;
-  padding-block-start: 0;
-  border-block-start: 0;
 }
 .lookup-packages {
   display: grid;
@@ -180,14 +155,6 @@
   .lookup-package-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-  :root .lookup-page .lookup-detail-header {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  :root .lookup-page .lookup-detail-header .product-header-actions {
-    inline-size: 100%;
-  }
   :root .lookup-page .lookup-detail.is-weight-lookup .lookup-price-block {
     margin-block-start: 16px;
   }
@@ -222,4 +189,396 @@
   block-size: 1px;
   inset-inline-start: 0;
   clip-path: inset(50%);
+}
+
+/* R2g B3: one result grid and compact, scrollable filter choices. */
+:root .lookup-page .lookup-filterbar.filter-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 8px;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.lookup-filters-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+}
+:root .lookup-page .lookup-filters-trigger.ui-button.button {
+  flex: none;
+  gap: 8px;
+  block-size: 44px;
+  min-block-size: 44px;
+  padding-inline: 14px;
+}
+:root .lookup-page .lookup-filters-trigger .tab-count {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 20px;
+  block-size: 20px;
+  padding-inline: 6px;
+  border-radius: var(--radius-round);
+  background: var(--accent-fill);
+  color: var(--klead-white);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+}
+.lookup-filters-trigger .tab-count.is-empty {
+  visibility: hidden;
+}
+:root .lookup-page .lookup-pricing-filters {
+  flex: 1 1 0;
+  display: flex;
+  flex-wrap: nowrap;
+  min-inline-size: 0;
+  inline-size: auto;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, black calc(100% - 32px), transparent);
+}
+:root[dir="rtl"] .lookup-page .lookup-pricing-filters {
+  mask-image: linear-gradient(to left, black calc(100% - 32px), transparent);
+}
+.lookup-pricing-filters::-webkit-scrollbar {
+  display: none;
+}
+:root .lookup-page .lookup-pricing-filters > .filter-chip {
+  flex: none;
+}
+.lookup-active-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-block-size: 22px;
+  font-size: var(--font-size-caption);
+}
+:root
+  .lookup-page
+  .lookup-filterbar
+  .lookup-active-filters
+  > .ui-button.button {
+  padding: 0;
+  min-block-size: 22px;
+  block-size: auto;
+  font-size: inherit;
+  color: var(--link-text);
+}
+.lookup-filters-popover {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+.lookup-filters-popover > .field {
+  inline-size: 100%;
+}
+.lookup-filters-popover > .ui-button {
+  justify-self: end;
+}
+:root .lookup-page .lookup-results-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+:root .lookup-page .lookup-results-heading > * {
+  margin: 0;
+  align-self: center;
+}
+:root .lookup-page .lookup-result-row:nth-child(n) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) fit-content(50%);
+  grid-template-areas: "title price" "sub pills";
+  align-items: start;
+  column-gap: 16px;
+  row-gap: 4px;
+  text-align: start;
+}
+:root .lookup-page .lookup-result-name,
+:root .lookup-page .lookup-result-price {
+  display: contents;
+}
+:root .lookup-page .lookup-result-name > strong {
+  grid-area: title;
+  min-inline-size: 0;
+  align-self: center;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+:root .lookup-page .lookup-secondary-name {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+:root .lookup-page .lookup-result-name .lookup-fitted-name {
+  display: inline;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+:root .lookup-page .lookup-result-secondary {
+  grid-area: sub;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: start;
+  min-inline-size: 0;
+  min-block-size: 22px;
+  gap: 2px 8px;
+}
+:root .lookup-page .lookup-result-price > .selling-price-value,
+:root .lookup-page .lookup-result-price > .muted {
+  grid-area: price;
+  align-self: center;
+  justify-self: end;
+  text-align: end;
+}
+:root .lookup-page .lookup-result-price > .muted {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-body);
+}
+:root
+  .lookup-page
+  .lookup-result-price
+  > .selling-price-value
+  > .selling-price-secondary {
+  display: none;
+}
+:root .lookup-page .lookup-result-pills.actions {
+  grid-area: pills;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: start;
+  justify-content: flex-end;
+  gap: 6px 8px;
+  inline-size: auto;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0;
+}
+:root .lookup-page .lookup-result-pills.actions:empty {
+  display: none;
+}
+.lookup-result-pills > small,
+.lookup-other-price-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  block-size: 22px;
+  padding-inline: 8px;
+  border-radius: var(--radius-round);
+  background: var(--field-fill);
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+  white-space: nowrap;
+}
+.lookup-other-price-tag .selling-price-current {
+  color: var(--text);
+}
+:root .lookup-page .lookup-result-pills > .lookup-result-secondary-price {
+  display: inline-grid;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-body);
+}
+.lookup-result-secondary-price > .selling-price-line {
+  display: none;
+}
+:root .lookup-page .lookup-result-secondary-price .selling-price-secondary {
+  font-size: inherit;
+}
+:root .lookup-page .lookup-result-secondary-price .selling-price-current {
+  font-weight: var(--font-weight-body);
+}
+:root .lookup-page .lookup-result-pills .lookup-other-prices,
+:root .lookup-page .lookup-result-pills .product-offer-lines {
+  display: contents;
+}
+:root .lookup-page .lookup-result-pills .product-offer-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.lookup-mix-tag {
+  display: inline-flex;
+  align-items: center;
+  block-size: 20px;
+  padding-inline: 8px;
+  border-radius: var(--radius-round);
+  background: var(--accent-soft);
+  color: var(--accent-tint-text);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-caption);
+  white-space: nowrap;
+}
+/* The selected result already uses accent tint; keep the tag distinguishable. */
+:root
+  .lookup-page
+  .lookup-result-row:is(.is-selected, .is-active)
+  .lookup-mix-tag {
+  background: var(--surface);
+}
+:root .lookup-page .lookup-price-context:has(.lookup-offer-context) {
+  flex-shrink: 0;
+}
+.lookup-offer-context {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+}
+.lookup-product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+}
+:root .lookup-page .lookup-detail .product-dates-readonly {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding-block-start: 16px;
+  margin-block-start: 4px;
+  border: 0;
+  box-shadow: inset 0 1px var(--row-divider);
+}
+:root .lookup-page .lookup-detail .product-open-dates {
+  grid-column: 1 / -1;
+}
+:root .lookup-page .lookup-detail .lookup-fact-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+}
+.lookup-fact-copy {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  gap: 2px;
+}
+.lookup-fact-copy > span:first-child {
+  color: var(--text);
+  font-weight: var(--font-weight-caption);
+}
+.lookup-fact-copy .muted {
+  font-size: var(--font-size-caption);
+}
+:root .lookup-page .lookup-detail .product-quiet-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  background: var(--field-fill);
+  border-radius: var(--radius-small);
+  color: var(--text-muted);
+}
+@media (max-width: 760px) {
+  :root .lookup-page .lookup-detail {
+    display: flex;
+    flex-direction: column;
+  }
+  :root .lookup-page .lookup-detail .lookup-detail-header {
+    display: contents;
+  }
+  :root .lookup-page .lookup-detail .lookup-price-block {
+    order: 1;
+  }
+  :root .lookup-page .lookup-detail .product-header-actions {
+    order: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr 44px;
+    inline-size: 100%;
+    gap: 8px;
+    margin: 0;
+  }
+  :root
+    .lookup-page
+    .lookup-detail
+    .product-header-actions:not(
+      :has(> .ui-button:not(.ui-icon-button) ~ .ui-button:not(.ui-icon-button))
+    ) {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+  :root
+    .lookup-page
+    .lookup-detail
+    .product-header-actions
+    > .ui-button:not(.ui-icon-button) {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: none;
+    justify-content: center;
+  }
+  :root .lookup-page .lookup-detail .product-header-actions > .ui-icon-button {
+    inline-size: 44px;
+    block-size: 44px;
+    min-block-size: 44px;
+    grid-column: -2;
+    background: var(--field-fill);
+  }
+  :root
+    .lookup-page
+    .lookup-detail
+    > :not(.lookup-detail-header):not(.lookup-price-block):not(
+      .product-dates-readonly
+    ) {
+    order: 3;
+  }
+  :root .lookup-page .lookup-detail .product-dates-readonly {
+    order: 4;
+    grid-template-columns: minmax(0, 1fr);
+    margin-block-start: 16px;
+    gap: 12px;
+  }
+  :root .lookup-page .lookup-result-row:nth-child(n) {
+    grid-template-areas: "title price" "sub price" "pills pills";
+    column-gap: 12px;
+  }
+  :root .lookup-page .lookup-result-name > strong,
+  :root .lookup-page .lookup-result-price > .selling-price-value,
+  :root .lookup-page .lookup-result-price > .muted {
+    align-self: start;
+  }
+  :root .lookup-page .lookup-result-secondary > .lookup-result-meta {
+    display: none;
+  }
+  :root .lookup-page .lookup-result-pills.actions {
+    justify-content: flex-start;
+    padding-block-start: 4px;
+  }
+  :root .lookup-page .lookup-result-pills > .lookup-result-secondary-price {
+    display: none;
+  }
+  :root
+    .lookup-page
+    .lookup-result-price
+    > .selling-price-value
+    > .selling-price-secondary {
+    display: block;
+  }
+  :root
+    .lookup-page
+    .lookup-result-pills.actions:has(
+      > .lookup-result-secondary-price:only-child
+    ) {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .lookup-filters-trigger .lookup-filters-label {
+    display: none;
+  }
 }

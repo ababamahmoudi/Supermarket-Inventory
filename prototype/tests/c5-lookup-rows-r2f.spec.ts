@@ -20,8 +20,11 @@ for (const width of [1440, 1000, 390])
       );
       const audit = () =>
         inspect(page, "genuine Lookup rows", `${language}-${width}`, "manager");
-      const disclosure = page.locator("details.lookup-more-filters");
-      await expect(disclosure).not.toHaveAttribute("open", "");
+      const filters = page.getByRole("button", {
+        name: language === "en" ? "Filters" : "فیلترها",
+        exact: true,
+      });
+      await expect(filters).toHaveAttribute("aria-expanded", "false");
       const closed = await audit();
       expect(closed.failures).toEqual([]);
       expect(
@@ -29,11 +32,21 @@ for (const width of [1440, 1000, 390])
           entry.className.includes("lookup-category-more"),
         ),
       ).toBe(false);
-      await disclosure.locator(":scope > summary").click();
-      await expect(disclosure).toHaveAttribute("open", "");
-      const category = disclosure
-        .locator(".lookup-category-chips > button.filter-chip")
-        .first();
+      await filters.click();
+      await expect(filters).toHaveAttribute("aria-expanded", "true");
+      const popup = page.getByRole("dialog", {
+        name: language === "en" ? "Filters" : "فیلترها",
+        exact: true,
+      });
+      for (const select of await popup.getByRole("combobox").all())
+        expect((await select.boundingBox())!.height).toBe(44);
+      await popup
+        .getByRole("button", {
+          name: language === "en" ? "Done" : "تمام",
+          exact: true,
+        })
+        .click();
+      const category = filters;
       const edit = detail
         .locator(".product-header-actions > button[aria-label]")
         .filter({ hasText: language === "en" ? "Edit" : "ویرایش" })

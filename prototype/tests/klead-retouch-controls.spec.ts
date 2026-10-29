@@ -168,6 +168,8 @@ async function appearance(control: Locator) {
         dangerFill: token("--danger-bg"),
         neutral: token("--neutral-fill"),
         accent: token("--accent"),
+        accentFill: token("--accent-fill"),
+        white: token("--klead-white"),
         tint: token("--accent-soft"),
         tintInk: token("--accent-tint-text"),
         hairline: token("--page-control-border"),
@@ -302,15 +304,13 @@ for (const language of ["en", "fa"] as const) {
     expect.soft(geometry.contained).toBe(true);
   });
 
-  test(`Klead retouch: Lookup category choices are pills with normal and selected token surfaces (${language})`, async ({
+  test(`Klead retouch: Lookup quick choices are colour-only pills with normal and selected token surfaces (${language})`, async ({
     page,
   }, info) => {
     await start(page, language);
     await page.goto("/#lookup");
-    const disclosure = page.locator("details.lookup-more-filters");
-    await disclosure.locator(":scope > summary").click();
-    await expect(disclosure).toHaveAttribute("open", "");
-    const chips = disclosure.locator(":scope > .lookup-category-chips");
+    const chips = page.locator(".lookup-pricing-filters");
+    await expect(chips.locator("button.filter-chip")).toHaveCount(6);
     const reports = [];
     for (const theme of ["light", "dark"] as const) {
       if (theme === "dark") await dark(page, language);
@@ -328,35 +328,37 @@ for (const language of ["en", "fa"] as const) {
         });
         for (const radius of style.radii)
           expect
-            .soft(radius, "category chip has a fully round cap")
+            .soft(radius, "quick chip has a fully round cap")
             .toBeGreaterThanOrEqual(Math.min(style.height, style.width) / 2);
         expect
           .soft(style.background)
-          .toBe(selected ? style.tokens.tint : style.tokens.surface);
+          .toBe(selected ? style.tokens.accentFill : style.tokens.surface);
         expect
           .soft(style.colour)
-          .toBe(selected ? style.tokens.tintInk : style.tokens.text);
+          .toBe(selected ? style.tokens.white : style.tokens.text);
         if (!selected) {
           expect
-            .soft(style.borderVisible, "normal category choice has a hairline")
+            .soft(style.borderVisible, "normal quick choice has a hairline")
             .toBe(true);
-          expect.soft(style.borderColour).toBe(style.tokens.hairline);
+          expect.soft(style.borderColour).toBe(style.tokens.fieldBorder);
         }
         expect.soft(style.shadow).toBe("none");
         expect.soft(style.contrast).toBeGreaterThanOrEqual(4.5);
       }
-      const choice = chips.locator(".filter-chip").nth(1);
+      await expect(chips.locator("svg, .filter-chip-check")).toHaveCount(0);
+      const choice = chips.locator(".filter-chip").first();
       await choice.click();
       await expect(choice).toHaveAttribute("aria-pressed", "true");
       await page.locator("main h1").click();
       await page.mouse.move(0, 0);
       await settled(page);
       const selected = await appearance(choice);
-      expect.soft(selected.background).toBe(selected.tokens.tint);
-      expect.soft(selected.colour).toBe(selected.tokens.tintInk);
-      await chips.locator(".filter-chip").first().click();
+      expect.soft(selected.background).toBe(selected.tokens.accentFill);
+      expect.soft(selected.colour).toBe(selected.tokens.white);
+      await choice.click();
+      await expect(choice).toHaveAttribute("aria-pressed", "false");
     }
-    await info.attach("Rendered category choices", {
+    await info.attach("Rendered quick choices", {
       body: JSON.stringify(reports, null, 2),
       contentType: "application/json",
     });

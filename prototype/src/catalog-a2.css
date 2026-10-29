@@ -80,20 +80,6 @@
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
 }
-:root
-  .lookup-page
-  .lookup-results-list
-  .lookup-result-row.has-other-prices:nth-child(n) {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 260px);
-}
-@media (max-width: 760px) {
-  :root
-    .lookup-page
-    .lookup-results-list
-    .lookup-result-row.has-other-prices:nth-child(n) {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 132px);
-  }
-}
 .lookup-page .lookup-filterbar .lookup-category {
   max-inline-size: min(340px, 100%);
   inline-size: max-content;

@@ -21,10 +21,12 @@ export function ProductDatesSection({
   product,
   showReceived = true,
   hideEmptyDates = false,
+  lookup = false,
 }: {
   product: ProductReadDTO;
   showReceived?: boolean;
   hideEmptyDates?: boolean;
+  lookup?: boolean;
 }) {
   const {
     state,
@@ -152,32 +154,65 @@ export function ProductDatesSection({
           })}
         </ul>
       ) : !hideEmptyDates ? (
-        <p className="muted product-no-dates">
-          {t(
-            "No open dates in this location.",
-            "در این مکان تاریخ بازی وجود ندارد.",
-          )}
-        </p>
+        lookup ? (
+          <div className="product-quiet-row product-no-dates lookup-fact-row">
+            <span className="product-quiet-icon">
+              <CalendarClock size={20} aria-hidden="true" />
+            </span>
+            <span className="lookup-fact-copy">
+              <span>
+                {t(
+                  "No open dates in this location.",
+                  "در این مکان تاریخ بازی وجود ندارد.",
+                )}
+              </span>
+            </span>
+          </div>
+        ) : (
+          <p className="muted product-no-dates">
+            {t(
+              "No open dates in this location.",
+              "در این مکان تاریخ بازی وجود ندارد.",
+            )}
+          </p>
+        )
       ) : null}
       {readsReceipt && (
-        <div className="product-quiet-row product-last-delivery-row">
+        <div
+          className={`product-quiet-row product-last-delivery-row${lookup ? " lookup-fact-row" : ""}`}
+        >
           <span className="product-quiet-icon">
             <Truck size={20} aria-hidden="true" />
           </span>
-          <span>
-            {t("Last received", "آخرین دریافت")}{" "}
-            {received ? (
-              <DateText value={received.date} />
-            ) : (
-              t("No deliveries yet", "هنوز تحویلی ثبت نشده است")
-            )}
-          </span>
-          {received && (received.supplier || received.invoice_number) && (
-            <span className="muted">
-              <LtrText>{received.supplier}</LtrText> ·{" "}
-              <LtrText>{received.invoice_number}</LtrText>
+          <span className={lookup ? "lookup-fact-copy" : undefined}>
+            <span>
+              {received ? (
+                <>
+                  {t("Last received", "آخرین دریافت")}{" "}
+                  <DateText value={received.date} />
+                </>
+              ) : (
+                t("No deliveries yet", "هنوز تحویلی ثبت نشده است")
+              )}
             </span>
-          )}
+            {lookup &&
+              received &&
+              (received.supplier || received.invoice_number) && (
+                <span className="muted">
+                  <LtrText>{received.supplier}</LtrText>
+                  {received.supplier && received.invoice_number && " · "}
+                  <LtrText>{received.invoice_number}</LtrText>
+                </span>
+              )}
+          </span>
+          {!lookup &&
+            received &&
+            (received.supplier || received.invoice_number) && (
+              <span className="muted">
+                <LtrText>{received.supplier}</LtrText> ·{" "}
+                <LtrText>{received.invoice_number}</LtrText>
+              </span>
+            )}
         </div>
       )}
     </section>
