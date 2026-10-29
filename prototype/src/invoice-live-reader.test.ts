@@ -229,6 +229,26 @@ describe("one live request", () => {
     { reading: { lines: [] }, checksPassed: false },
     { reading: { lines: [{}] }, checksPassed: false },
     {
+      reading: { lines: [{ unknown_reader_metadata: "not an item" }] },
+      checksPassed: false,
+    },
+    {
+      reading: {
+        lines: [
+          {
+            line_type: "fee",
+            description: "Fictional fee",
+            line_total: "1.00",
+          },
+        ],
+      },
+      checksPassed: false,
+    },
+    {
+      reading: { lines: [{ line_type: "item", pack_size: "12 × 500 g" }] },
+      checksPassed: false,
+    },
+    {
       reading: { lines: [{ line_no: 1, line_type: "item" }] },
       checksPassed: false,
     },
@@ -279,6 +299,65 @@ describe("one live request", () => {
     expect(
       buildLiveInvoiceReadingsExport(result, options()).invoices[0].ai_reading,
     ).toMatchObject({ lines: [{ description: null, quantity: "1" }] });
+  });
+
+  it("retains a genuine partial barcode item and its checks without requiring readable money", async () => {
+    const partial = {
+      line_type: "item",
+      barcode: "0000000000000",
+      description: null,
+      quantity: null,
+      unit_cost_before_tax: null,
+    };
+    const statuses = {
+      "lines[0].quantity": "check",
+      "lines[0].unit_cost_before_tax": "check",
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(
+          json({
+            ...response(),
+            checksPassed: false,
+            reading: { lines: [partial] },
+            statuses,
+          }),
+        ),
+    );
+    const result = await requestLiveInvoiceReading(
+      "http://localhost:5191",
+      images,
+    );
+    const exported = buildLiveInvoiceReadingsExport(result, options())
+      .invoices[0];
+    expect(exported.ai_reading!.lines).toEqual([partial]);
+    expect(exported.ai_statuses).toEqual(statuses);
+    expect(exported.checked_answer).toBeNull();
+  });
+
+  it("keeps a measured zero as item evidence for ordinary review", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(
+          json({
+            ...response(),
+            checksPassed: false,
+            reading: { lines: [{ line_type: "item", quantity: 0 }] },
+          }),
+        ),
+    );
+    const result = await requestLiveInvoiceReading(
+      "http://localhost:5191",
+      images,
+    );
+    expect(
+      buildLiveInvoiceReadingsExport(result, options()).invoices[0].ai_reading!
+        .lines![0].quantity,
+    ).toBe("0");
   });
 
   it.each([

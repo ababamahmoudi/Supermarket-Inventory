@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { createId } from "./ids";
 import type { LiveReaderImage } from "./invoice-live-images";
 import { readerEndpoint } from "./live-reader-settings";
+import { isUsableLiveReadingItem } from "./live-reading-content";
 import {
   parseInvoiceReadings,
   type InvoiceReading,
@@ -76,22 +77,9 @@ function hasUsableReading(value: unknown): value is InvoiceReading {
     )
   )
     return false;
-  // Incomplete names/quantities still belong in the ordinary review. A list
-  // containing only empty objects or confidence metadata is not an extraction.
-  return value.lines.some((line) =>
-    Object.entries(line).some(
-      ([key, item]) =>
-        ![
-          "line_type",
-          "line_no",
-          "confidence",
-          "unclear_fields",
-          "low_confidence_fields",
-        ].includes(key) &&
-        ((typeof item === "string" && Boolean(item.trim())) ||
-          (typeof item === "number" && Number.isFinite(item))),
-    ),
-  );
+  // Core import and transport agree on genuine v2 item evidence. Missing
+  // names/quantities/costs still belong in ordinary review, not a second mapper.
+  return value.lines.some(isUsableLiveReadingItem);
 }
 
 function readResponse(value: unknown): LiveReaderResponse {
