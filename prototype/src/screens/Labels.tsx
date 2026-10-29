@@ -922,9 +922,9 @@ function TemplateDesigner({
         <Button variant="neutral" onClick={() => choose("")}>
           {t("New template", "قالب جدید")}
         </Button>
-        <Checkbox checked={showArchived} onChange={setShowArchived}>
+        <FilterChip checked={showArchived} onChange={setShowArchived}>
           {t("Show archived", "نمایش بایگانی‌شده‌ها")}
-        </Checkbox>
+        </FilterChip>
       </div>
       {draft.built_in && (
         <p className="muted label-template-kind">

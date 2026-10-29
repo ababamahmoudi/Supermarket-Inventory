@@ -306,8 +306,8 @@ test("Payables filters supplier totals and keeps its own statement in the same b
     "$0.00",
   );
   await filters
-    .getByRole("checkbox", { name: "With balance", exact: true })
-    .check();
+    .getByRole("button", { name: "With balance", exact: true })
+    .click();
   await expect(report).toHaveCount(0);
   await expect(overview).toContainText("No suppliers match these filters");
   await filters
@@ -319,11 +319,11 @@ test("Payables filters supplier totals and keeps its own statement in the same b
     "North York",
   );
   await filters
-    .getByRole("checkbox", { name: "Overdue only", exact: true })
-    .check();
+    .getByRole("button", { name: "Overdue only", exact: true })
+    .click();
   await filters
-    .getByRole("checkbox", { name: "With balance", exact: true })
-    .check();
+    .getByRole("button", { name: "With balance", exact: true })
+    .click();
   const rows = overview.locator("tbody tr");
   await expect(rows).toHaveCount(2);
   await expect(

@@ -152,13 +152,13 @@ it.each(["en", "fa"] as const)(
       { timeout: 10000 },
     );
     const card = title.closest("section")!;
-    const toggle = within(card).getByRole("switch", {
+    const toggle = within(card).getByRole("button", {
       name: language === "fa" ? "نمایش حل‌شده‌ها" : "Show resolved",
     });
-    expect(toggle).not.toBeChecked();
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
     expect(card.querySelector(`[data-alert-id="${resolved.id}"]`)).toBeNull();
     await userEvent.setup().click(toggle);
-    expect(toggle).toBeChecked();
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
     expect(
       card.querySelector(`[data-alert-id="${resolved.id}"]`),
     ).not.toBeNull();

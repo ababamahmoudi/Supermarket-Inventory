@@ -1273,30 +1273,26 @@
   }
 }
 
-/* R2e B2 — one reversible boolean chip, including outside list toolbars. */
-:root .filter-chip.ui-button.button {
-  gap: 6px;
+/* R2g A2 — colour alone changes a boolean filter; text stays centred. */
+:root .filter-chip.ui-button.button[data-ui-component="filter-chip"] {
+  justify-content: center;
+  gap: 0;
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: 44px;
   border-radius: var(--radius-round);
   background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--divider);
+  border: 1px solid var(--field-border);
+  box-shadow: var(--shadow-none);
+  text-align: center;
   white-space: nowrap;
 }
-:root .filter-chip.ui-button.button[aria-pressed="true"] {
-  background: var(--accent-soft);
-  color: var(--accent-tint-text);
-  border-color: var(--accent-soft);
-}
-.filter-chip-check {
-  display: inline-flex;
-  flex: 0 0 14px;
-  inline-size: 14px;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-}
-.filter-chip[aria-pressed="true"] .filter-chip-check {
-  opacity: 1;
+:root
+  .filter-chip.ui-button.button[data-ui-component="filter-chip"][aria-pressed="true"] {
+  background: var(--accent-fill);
+  color: var(--klead-white);
+  border-color: var(--accent-fill);
 }
 
 /* R2e B3 — an Off switch retains a visible neutral track and white thumb. */
@@ -1451,11 +1447,6 @@
   max-block-size: var(--control-row-segment-height);
   margin-block: 0;
   padding-block: 0;
-}
-:root .filter-chip.ui-button.button:has(> .filter-chip-check) {
-  block-size: 44px;
-  min-block-size: 44px;
-  max-block-size: 44px;
 }
 
 /* R2f R0.2 — tables and row rules meet their card's content edges. */
@@ -1613,11 +1604,4 @@
   inline-size: var(--control-row-height);
   min-inline-size: var(--control-row-height);
   max-inline-size: var(--control-row-height);
-}
-
-/* The approved Lookup row uses neutral idle chips; other lists retain surface. */
-:root
-  .filter-chip.ui-button.button[data-chip-appearance="neutral"][aria-pressed="false"] {
-  background: var(--neutral-fill);
-  border-color: var(--color-clear);
 }

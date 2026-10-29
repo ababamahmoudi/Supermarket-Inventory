@@ -1996,10 +1996,11 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         ) &&
         lookupFilterTrigger.querySelector(":scope > .lookup-filters-label") &&
         lookupChips.length === 6 &&
-        lookupChips.every((chip) =>
-          chip.querySelector(
-            ":scope > .filter-chip-check[aria-hidden='true'] > svg.lucide-check",
-          ),
+        lookupChips.every(
+          (chip) =>
+            chip.matches("[data-ui-component='filter-chip'][aria-pressed]") &&
+            tidy(chip.textContent) &&
+            !chip.querySelector("svg, .filter-chip-check"),
         ),
       );
       if (genuineLookup) {
@@ -2557,9 +2558,8 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             element.matches(
               "button.filter-chip[data-ui-component='filter-chip'][aria-pressed]",
             ) &&
-            element.querySelector(
-              ":scope > .filter-chip-check[aria-hidden='true'] > svg.lucide-check",
-            ),
+            tidy(element.textContent) &&
+            !element.querySelector("svg, .filter-chip-check"),
           );
           const toolbar = element.closest(
             ".filter-toolbar.c9-filter-toolbar[data-ui-component='filter-toolbar']",

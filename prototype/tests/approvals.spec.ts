@@ -109,11 +109,11 @@ test("intentional tea conflicts stay quiet, and applying a selected price clears
     page.getByRole("button", { name: "Mark as intentional", exact: true }),
   ).toHaveCount(0);
   await page
-    .getByRole("switch", {
+    .getByRole("button", {
       name: "Show resolved",
       exact: true,
     })
-    .check();
+    .click();
   await expect(page.getByText("Intentional", { exact: true })).toBeVisible();
   await resetDemo(page);
   await openAlert(page, "Black Tea");

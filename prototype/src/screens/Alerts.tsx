@@ -33,7 +33,7 @@ import {
   EmptyState,
   Field,
   PageHeader,
-  Switch,
+  FilterChip,
 } from "../ui";
 
 export function Alerts() {
@@ -241,9 +241,9 @@ export function Alerts() {
       <Card className="alerts-card">
         <div className="alerts-card-heading">
           <h2>{t("All alerts", "همه هشدارها")}</h2>
-          <Switch checked={showResolved} onChange={setShowResolved}>
+          <FilterChip checked={showResolved} onChange={setShowResolved}>
             {t("Show resolved", "نمایش حل‌شده‌ها")}
-          </Switch>
+          </FilterChip>
         </div>
         {alerts.length === 0 && (
           <EmptyState>

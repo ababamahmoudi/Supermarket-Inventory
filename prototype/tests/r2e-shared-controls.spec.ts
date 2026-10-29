@@ -29,10 +29,8 @@ for (const [language, theme] of [
       );
       await chip.click();
       await expect(chip).toHaveAttribute("aria-pressed", "true");
-      await expect(chip.locator(".filter-chip-check")).toHaveCSS(
-        "opacity",
-        "1",
-      );
+      await expect(chip.locator(".filter-chip-check, svg")).toHaveCount(0);
+      await expect(chip).toHaveCSS("color", "rgb(255, 255, 255)");
       const selected = await chip.evaluate(
         (el) => getComputedStyle(el).backgroundColor,
       );
@@ -42,10 +40,7 @@ for (const [language, theme] of [
       expect(Math.abs(after!.y - before!.y)).toBeLessThanOrEqual(2);
       await chip.press("Space");
       await expect(chip).toHaveAttribute("aria-pressed", "false");
-      await expect(chip.locator(".filter-chip-check")).toHaveCSS(
-        "opacity",
-        "0",
-      );
+      await expect(chip.locator(".filter-chip-check, svg")).toHaveCount(0);
       await chip.press("Enter");
       await expect(chip).toHaveAttribute("aria-pressed", "true");
       await chip.click();

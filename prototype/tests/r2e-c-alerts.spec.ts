@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signIn, setBranch, setLanguage, openShellAction } from "./helpers";
 import { word } from "./r2-receiving-helpers";
 for (const language of ["en", "fa"] as const) {
-  test(`R2e C7 resolved switch lives in the alert card header in ${language}`, async ({
+  test(`R2e C7 resolved chip lives in the alert card header in ${language}`, async ({
     page,
   }, info) => {
     await signIn(page, "Manager");
@@ -14,7 +14,7 @@ for (const language of ["en", "fa"] as const) {
       name: word(language, "All alerts", "همه هشدارها"),
       exact: true,
     });
-    const toggle = card.getByRole("switch", {
+    const toggle = card.getByRole("button", {
       name: word(language, "Show resolved", "نمایش حل‌شده‌ها"),
       exact: true,
     });
@@ -33,16 +33,16 @@ for (const language of ["en", "fa"] as const) {
             )
           ).click();
         await expect(toggle).toBeVisible();
-        await expect(toggle).toHaveAttribute("aria-checked", "false");
+        await expect(toggle).toHaveAttribute("aria-pressed", "false");
         const h = await heading.boundingBox();
         const control = await toggle.boundingBox();
         expect(
           Math.abs(h!.y + h!.height / 2 - control!.y - control!.height / 2),
         ).toBeLessThanOrEqual(1.5);
         await toggle.click();
-        await expect(toggle).toHaveAttribute("aria-checked", "true");
+        await expect(toggle).toHaveAttribute("aria-pressed", "true");
         await toggle.click();
-        await expect(toggle).toHaveAttribute("aria-checked", "false");
+        await expect(toggle).toHaveAttribute("aria-pressed", "false");
       }
     }
   });

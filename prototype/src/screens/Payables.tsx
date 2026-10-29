@@ -34,12 +34,12 @@ import {
   Badge,
   Button,
   Card,
-  Checkbox,
   DataTable,
   DialogActions,
   EmptyState,
   Field,
   FilterToolbar,
+  FilterChip,
   PageHeader,
   Select,
   DateField,
@@ -832,12 +832,12 @@ function PayablesContent({
               ]}
             />
             <FieldError>{validationError("payables-branch")}</FieldError>
-            <Checkbox checked={overdueOnly} onChange={setOverdueOnly}>
+            <FilterChip checked={overdueOnly} onChange={setOverdueOnly}>
               {t("Overdue only", "فقط سررسید گذشته")}
-            </Checkbox>
-            <Checkbox checked={withBalance} onChange={setWithBalance}>
+            </FilterChip>
+            <FilterChip checked={withBalance} onChange={setWithBalance}>
               {t("With balance", "دارای مانده")}
-            </Checkbox>
+            </FilterChip>
             {(search ||
               overdueOnly ||
               withBalance ||

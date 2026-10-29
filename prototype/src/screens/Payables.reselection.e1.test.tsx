@@ -168,7 +168,7 @@ it("Clear filters still clears an aggregate Payables search and balance filters 
   fireEvent.change(screen.getByRole("textbox", { name: "Search suppliers" }), {
     target: { value: "fresh" },
   });
-  fireEvent.click(screen.getByRole("checkbox", { name: "With balance" }));
+  fireEvent.click(screen.getByRole("button", { name: "With balance" }));
   expect(screen.getByRole("textbox", { name: "Search suppliers" })).toHaveValue(
     "fresh",
   );
@@ -178,12 +178,14 @@ it("Clear filters still clears an aggregate Payables search and balance filters 
       screen.getByRole("textbox", { name: "Search suppliers" }),
     ).toHaveValue(""),
   );
-  expect(
-    screen.getByRole("checkbox", { name: "With balance" }),
-  ).not.toBeChecked();
-  expect(
-    screen.getByRole("checkbox", { name: "Overdue only" }),
-  ).not.toBeChecked();
+  expect(screen.getByRole("button", { name: "With balance" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  expect(screen.getByRole("button", { name: "Overdue only" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
   expect(screen.getByTestId("actual-location")).toHaveTextContent("all");
   expect((await actual.readCanonical()).ledger).toEqual(before.ledger);
 });
