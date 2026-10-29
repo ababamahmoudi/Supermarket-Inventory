@@ -10,6 +10,7 @@ import { auditR2fAlignment, type R2fScene } from "./r2f-alignment";
 import { prepareR2fTimesheet } from "./r2f-timesheet-fixture";
 import { addActualPackageSizes } from "./r2f-package-service-proof";
 import { installLocationReturnScene } from "./r2f-location-return-fixture";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
 
 type Appearance = { language: "en" | "fa"; theme: "light" | "dark" };
 const appearances: readonly Appearance[] = [
@@ -435,6 +436,7 @@ async function prepareScene(
   if (scene === "D6") {
     await page.goto("/#approvals");
     await expect(page.locator(".approval-detail-row")).toHaveCount(3);
+    const canonicalBefore = await readCanonicalBusinessEvidence(page);
     await expect(
       page.locator(".sale-request-card .approval-numbers"),
     ).toBeVisible();
@@ -452,6 +454,13 @@ async function prepareScene(
       for (const action of await actions.all())
         await expect(action).toBeVisible();
     }
+    if (width === 390)
+      // The initial viewport clips the first secondary row below half its
+      // height. Audit real painted peers, rather than offscreen rectangles.
+      await page
+        .locator(".approval-card-footer .actions")
+        .first()
+        .evaluate((node) => node.scrollIntoView({ block: "center" }));
     const report = await measure(
       page,
       info,
@@ -461,6 +470,59 @@ async function prepareScene(
     );
     expect(report.numberGroups).toBe(3);
     expect(report.numberAssociations).toBeGreaterThanOrEqual(9);
+    if (width === 390) {
+      const footers = page.locator(".approval-card-footer .actions");
+      await expect(footers).toHaveCount(3);
+      for (let index = 0; index < 3; index++) {
+        const footer = footers.nth(index);
+        await footer.evaluate((node) =>
+          node.scrollIntoView({ block: "center" }),
+        );
+        const peers = footer.locator("button:not(.button-primary)");
+        await expect(peers).toHaveCount(2);
+        for (const peer of await peers.all()) {
+          await expect(peer).toBeInViewport({ ratio: 1 });
+          await expect(peer).toHaveCSS("height", "44px");
+        }
+        const clean = await auditR2fAlignment(page, {
+          scene,
+          exceptionIds: [],
+        });
+        expect(clean.failures).toEqual([]);
+        expect(clean.pairs).toBeGreaterThan(0);
+        const peer = peers.first();
+        const originalStyle = await peer.getAttribute("style");
+        await peer.evaluate((node) => {
+          node.style.transform = "translateY(4px)";
+        });
+        const shifted = await auditR2fAlignment(page, {
+          scene,
+          exceptionIds: [],
+        });
+        expect(
+          shifted.failures.some(
+            (failure) =>
+              failure.startsWith("row:") && failure.includes("centre Δ4.00"),
+          ),
+          `D6 actual footer ${index}: visible shifted peer must fail`,
+        ).toBe(true);
+        await peer.evaluate((node, style) => {
+          if (style === null) node.removeAttribute("style");
+          else node.setAttribute("style", style);
+        }, originalStyle);
+        const restored = await auditR2fAlignment(page, {
+          scene,
+          exceptionIds: [],
+        });
+        expect(restored.failures).toEqual([]);
+        expect(restored.pairs).toBeGreaterThan(0);
+        await info.attach(`D6-painted-footer-${index}-negative-control`, {
+          body: JSON.stringify({ clean, shifted, restored }, null, 2),
+          contentType: "application/json",
+        });
+      }
+    }
+    expect(await readCanonicalBusinessEvidence(page)).toEqual(canonicalBefore);
   } else if (scene === "D7") {
     await page.goto("/#dashboard");
     await expect(

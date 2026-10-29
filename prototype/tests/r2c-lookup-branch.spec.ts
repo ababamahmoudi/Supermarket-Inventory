@@ -72,7 +72,7 @@ test("a genuine sale returns to its reviewed local regular basis after End", asy
   await dialog
     .getByRole("button", { name: "Only North York", exact: true })
     .click();
-  await dialog.getByLabel("Price", { exact: true }).fill("7.99");
+  await dialog.getByLabel("Sale price", { exact: true }).fill("7.99");
   await dialog.getByRole("button", { name: "Start sale", exact: true }).click();
   await expect(dialog).not.toBeVisible();
   await expect(detail.locator(".sale-price")).toContainText("$7.99");

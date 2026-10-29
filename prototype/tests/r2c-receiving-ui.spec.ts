@@ -167,8 +167,9 @@ for (const language of ["en", "fa"] as const) {
       });
       if (info.project.name !== "phone") {
         expect(geometry.rowFill).toBe("rgba(0, 0, 0, 0)");
-        expect(geometry.firstRadius).toBe("12px");
-        expect(geometry.lastRadius).toBe("12px");
+        // R2g B4's approved attention-row corners use --radius-small.
+        expect(geometry.firstRadius).toBe("10px");
+        expect(geometry.lastRadius).toBe("10px");
         for (const cell of geometry.centers)
           expect(Math.abs(cell.center - geometry.center)).toBeLessThanOrEqual(
             2,
