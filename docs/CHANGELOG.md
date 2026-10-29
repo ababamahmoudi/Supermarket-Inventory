@@ -638,3 +638,8 @@ Updated the legacy simulated-reading copy assertion to follow the approved entry
 - R2f D9 follow-up: bound the original filename separately from its visible page count; retain the full native/accessible filename in embedded and fullscreen views. Prove the actual two-page C1 import across desktop/phone EN/FA, both retained source hashes, native downloads and existing toolbar guards.
 
 - CI205 C8 driver: identify the single active original filename widget through its semantic viewer/header/description, preserving both readable/decorative copies, exact title/prefix bounds, negative identity checks and retained-source evidence.
+
+## R3 — Local live invoice reading
+
+- Define the local-kit mode/address/health setting, original-first Processing flow, four-minute limit, shared-importer target identity/duplicate safeguards, explicit recovery and Owner/Manager-only reading provenance.
+- Defer schema v3 until after the demo. Keep keys and real invoice/media data outside this repository; automated reader calls are intercepted with fictional fixtures.

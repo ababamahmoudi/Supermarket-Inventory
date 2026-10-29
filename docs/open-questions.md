@@ -1,5 +1,10 @@
 # Open questions (build with the default; make each one configurable)
 
+## After the prototype demo
+
+- Reading schema v3: separate item name from pack text; add supplier phone/email/representative fields, sold-by-weight mathematics and an AI pricing-category suggestion that a person confirms. These are deferred and are not part of R3.
+- Questions 15 and 29 are resolved for this prototype: R3 uses Ali's existing local kit. Provider selection, credentials, account spending controls and any CORS configuration stay in that external kit; this app adds no provider integration or key field. Broader production AI/server architecture remains a later phase.
+
 ## R2d timesheet defaults recorded (2026-10-26)
 
 These are the requested build defaults, with no new blocking question:
@@ -28,7 +33,6 @@ When Ali answers one, update the requirement it affects, record the date here, a
 | 11  | Units per case: who enters it for a new supplier product?                              | AI proposes from the invoice; worker confirms on first receipt; remembered afterwards                           |
 | 12  | Expiring-soon entries with no sales data                                               | Manual **Remove** with reason and Undo; removed history retained                                                |
 | 13  | Raw price below $0.23 (no "previous .99" exists)                                       | Result 0.49                                                                                                     |
-| 15  | Which AI provider reads invoices?                                                      | Decide at Phase 5 with cost per invoice; provider-agnostic interface                                            |
 | 16  | When exactly is an offer suggestion created?                                           | When the price becomes effective at 1.99/2.99/3.99 with no offer                                                |
 | 17  | Automatic supplier invoice number scheme                                               | Sequential per supplier, flagged system-assigned                                                                |
 | 18  | Idle-lock time and password re-prompt window                                           | 5 minutes and 15 minutes (settings)                                                                             |
@@ -41,7 +45,6 @@ When Ali answers one, update the requirement it affects, record the date here, a
 | 25  | Label waitlist auto-add on price approval                                              | Off by default (setting)                                                                                        |
 | 26  | "Price changed recently" window for labels                                             | 3 days (setting)                                                                                                |
 | 28  | Persian wording for offers ("2 for $5")                                                | "۲ عدد $5" style; Ali reviews                                                                                   |
-| 29  | AI provider for real invoice reading                                                   | Decide at step 0.3 with cost per invoice                                                                        |
 
 ## Resolved by the A2 request (2026-10-07)
 
