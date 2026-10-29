@@ -2076,6 +2076,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           ].includes(text);
         };
         if (
+          actions &&
           code &&
           names.length &&
           actionButtons.length <= 3 &&
@@ -2083,31 +2084,74 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           actionButtons.every(validAction)
         ) {
           for (const control of actionButtons) lookupRowControls.add(control);
-          const menuButton = actions.querySelector(
-            ":scope > button.ui-icon-button[aria-haspopup='menu']",
-          );
-          const menuBox = menuButton?.getBoundingClientRect();
-          const buttonWidths = actionButtons.map(
-            (control) => control.getBoundingClientRect().width,
-          );
-          const equalPhoneActions =
-            actionButtons.length === 1 ||
-            (actionButtons.length === 2 &&
-              Math.abs(buttonWidths[0] - buttonWidths[1]) <= 1.5);
-          const rowGap = parseFloat(getComputedStyle(actions).columnGap) || 0;
-          if (
-            phone &&
-            menuBox &&
-            Math.abs(menuBox.width - 44) <= 1 &&
-            equalPhoneActions &&
-            Math.abs(
-              buttonWidths.reduce((sum, width) => sum + width, 0) +
-                menuBox.width +
-                rowGap * actionButtons.length -
-                actions.getBoundingClientRect().width,
-            ) <= 1.5
-          )
-            for (const control of actionButtons) lookupWideActions.add(control);
+          if (document.documentElement.clientWidth <= 760) {
+            const menus = actions.querySelectorAll(
+              ":scope > button.ui-icon-button[aria-haspopup='menu']",
+            );
+            const menu = menus.length === 1 ? menus[0] : null;
+            const menuBox = menu?.getBoundingClientRect();
+            const rowBox = actions.getBoundingClientRect();
+            const rowStyle = getComputedStyle(actions);
+            const rtl = rowStyle.direction === "rtl";
+            const direction = rtl ? -1 : 1;
+            const start = rtl
+              ? rowBox.right -
+                parseFloat(rowStyle.paddingRight) -
+                parseFloat(rowStyle.borderRightWidth)
+              : rowBox.left +
+                parseFloat(rowStyle.paddingLeft) +
+                parseFloat(rowStyle.borderLeftWidth);
+            const end = rtl
+              ? rowBox.left +
+                parseFloat(rowStyle.paddingLeft) +
+                parseFloat(rowStyle.borderLeftWidth)
+              : rowBox.right -
+                parseFloat(rowStyle.paddingRight) -
+                parseFloat(rowStyle.borderRightWidth);
+            const rowGap = parseFloat(rowStyle.columnGap) || 0;
+            const centre = (rowBox.top + rowBox.bottom) / 2;
+            const validMore = Boolean(
+              menuBox &&
+              ["Product actions", "اقدامات کالا"].includes(
+                menu.getAttribute("aria-label"),
+              ) &&
+              Math.abs(menuBox.width - 44) <= 1 &&
+              Math.abs(menuBox.height - 44) <= 1 &&
+              Math.abs((rtl ? menuBox.left : menuBox.right) - end) <= 1.5 &&
+              Math.abs((menuBox.top + menuBox.bottom) / 2 - centre) <= 1.5,
+            );
+            // No text action is a real Cashier composition. Its More control
+            // still has an exact size/end edge; empty space need not be filled.
+            const expectedWidth = actionButtons.length
+              ? (Math.abs(end - start) - 44 - rowGap * actionButtons.length) /
+                actionButtons.length
+              : null;
+            const validTextActions =
+              actionButtons.length <= 2 &&
+              (actionButtons.length === 0 ||
+                (Math.abs(rowGap - 8) <= 1 &&
+                  expectedWidth > 0 &&
+                  actionButtons.every((control, index) => {
+                    const box = control.getBoundingClientRect();
+                    return (
+                      Math.abs(box.width - expectedWidth) <= 1.5 &&
+                      Math.abs(box.height - 44) <= 1 &&
+                      Math.abs(
+                        (rtl ? box.right : box.left) -
+                          (start +
+                            direction * index * (expectedWidth + rowGap)),
+                      ) <= 1.5 &&
+                      Math.abs((box.top + box.bottom) / 2 - centre) <= 1.5
+                    );
+                  })));
+            if (!validMore || !validTextActions)
+              failures.push(
+                `Lookup phone action row: ${actionButtons.length === 0 ? "More must be 44px at the inner end edge" : "real actions must equally fill the row beside a 44px More control"}`,
+              );
+            else
+              for (const control of actionButtons)
+                lookupWideActions.add(control);
+          }
         }
       }
       for (const control of document.querySelectorAll(

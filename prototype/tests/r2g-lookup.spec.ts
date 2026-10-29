@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signIn, setBranch, setLanguage, openShellAction } from "./helpers";
 import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { inspect } from "../scripts/c5-browser-proof.mjs";
 
 async function installLookupExample(page: Page) {
   await runCanonicalBusinessFixture(
@@ -392,3 +393,111 @@ test("B3 genuine Cashier phone actions keep the real public price and no private
     }),
   ).toHaveCount(0);
 });
+
+for (const width of [390, 509])
+  for (const language of ["en", "fa"] as const)
+    test(`B3 C5 phone action geometry rejects intrinsic text widths and misplaced More ${width} ${language}${width === 509 ? " @r2g-509" : ""}`, async ({
+      page,
+    }, info) => {
+      await page.setViewportSize({ width, height: 1000 });
+      await signIn(page, "Manager");
+      await setBranch(page, "Branch 1");
+      await setLanguage(page, language);
+      if (language === "fa")
+        await (await openShellAction(page, "تغییر به تم تیره")).click();
+      await page.goto("/#lookup?search=0001");
+      const before = await readCanonicalBusinessEvidence(page);
+      const actions = page.locator(".lookup-detail .product-header-actions");
+      const audit = (role: string) =>
+        inspect(
+          page,
+          "B3 exact phone action row",
+          `${language}-${width}`,
+          role,
+        );
+      for (const [role, expected] of [
+        ["Manager", 2],
+        ["Floor Worker", 1],
+      ] as const) {
+        if (role !== "Manager") {
+          await signIn(page, role);
+          await setBranch(page, "Branch 1");
+          await setLanguage(page, language);
+          await page.goto("/#lookup?search=0001");
+        }
+        const buttons = actions.locator(":scope > button:not(.ui-icon-button)");
+        await expect(buttons).toHaveCount(expected);
+        expect((await audit(role)).failures).toEqual([]);
+        const originalWidths = await buttons.evaluateAll((nodes) =>
+          nodes.map((node) => node.getBoundingClientRect().width),
+        );
+        const originalStyles = await buttons.evaluateAll((nodes) =>
+          nodes.map((node) => node.getAttribute("style")),
+        );
+        await buttons.evaluateAll((nodes) => {
+          for (const node of nodes)
+            Object.assign((node as HTMLElement).style, {
+              inlineSize: "max-content",
+              minInlineSize: "0",
+              maxInlineSize: "none",
+              justifySelf: "start",
+            });
+        });
+        const mutatedWidths = await buttons.evaluateAll((nodes) =>
+          nodes.map((node) => node.getBoundingClientRect().width),
+        );
+        expect(
+          mutatedWidths.some(
+            (value, index) => value < originalWidths[index] - 2,
+          ),
+        ).toBe(true);
+        const invalid = await audit(role);
+        await info.attach(`${role} intrinsic-width mutation`, {
+          body: JSON.stringify(invalid),
+          contentType: "application/json",
+        });
+        expect(
+          invalid.failures.some((failure) =>
+            failure.startsWith("Lookup phone action row:"),
+          ),
+        ).toBe(true);
+        await buttons.evaluateAll((nodes, styles) => {
+          for (const [index, node] of nodes.entries()) {
+            const style = styles[index];
+            if (style === null) node.removeAttribute("style");
+            else node.setAttribute("style", style);
+          }
+        }, originalStyles);
+        expect((await audit(role)).failures).toEqual([]);
+      }
+      await signIn(page, "Cashier");
+      await setBranch(page, "Branch 1");
+      await setLanguage(page, language);
+      await page.goto("/#lookup?search=0001");
+      await expect(
+        actions.locator(":scope > button:not(.ui-icon-button)"),
+      ).toHaveCount(0);
+      expect((await audit("cashier")).failures).toEqual([]);
+      const more = actions.locator(":scope > button.ui-icon-button");
+      const originalMoreStyle = await more.getAttribute("style");
+      await more.evaluate((node) => {
+        (node as HTMLElement).style.transform = "translateX(8px)";
+      });
+      const misplaced = await audit("cashier");
+      expect(
+        misplaced.failures.some((failure) =>
+          failure.startsWith("Lookup phone action row:"),
+        ),
+      ).toBe(true);
+      await more.evaluate((node, style) => {
+        if (style === null) node.removeAttribute("style");
+        else node.setAttribute("style", style);
+      }, originalMoreStyle);
+      expect((await audit("cashier")).failures).toEqual([]);
+      await signIn(page, "Manager");
+      const after = await readCanonicalBusinessEvidence(page);
+      expect(after.products).toEqual(before.products);
+      expect(after.invoices).toEqual(before.invoices);
+      expect(after.ledger).toEqual(before.ledger);
+      expect(after.stock_movements).toEqual(before.stock_movements);
+    });
