@@ -2105,6 +2105,135 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             `Lookup 44px row outside validated search/product composition: ${tidy(control.getAttribute("aria-label") || control.textContent)}`,
           );
 
+      // R2g B2 grants the approved 52px two-line tiles only inside the actual
+      // price-change form. A copied class, missing price label or extra tile
+      // never gains a control-shape exemption.
+      const r2gPriceShapes = new Map();
+      const priceDialogs = [
+        ...document.querySelectorAll("dialog.change-price-dialog[open]"),
+      ];
+      if (priceDialogs.length === 1) {
+        const dialog = priceDialogs[0];
+        const form = dialog.querySelector(
+          ":scope > form.change-price-form[novalidate]",
+        );
+        const content = form?.querySelector(
+          ":scope > .change-price-body > .change-price-content",
+        );
+        const pricing = content?.querySelector(
+          ":scope > .change-price-pricing",
+        );
+        const input = pricing?.querySelector(
+          ".change-price-price-row > .change-price-amount-field > .change-price-money > input.ui-input.ui-number[type='text'][inputmode='decimal']",
+        );
+        const label = pricing?.querySelector(
+          ".change-price-amount-field > label",
+        );
+        const picks = pricing?.querySelector(
+          ".change-price-price-row > .change-price-quick-picks[role='group']",
+        );
+        const tiles = [...(picks?.querySelectorAll(":scope > button") ?? [])];
+        const footer = form?.querySelector(":scope > .ui-dialog-actions");
+        const footerButtons = [
+          ...(footer?.querySelectorAll(":scope > button") ?? []),
+        ];
+        const fa = document.documentElement.lang.startsWith("fa");
+        const title = tidy(
+          dialog.querySelector(":scope > .ui-dialog-header h2")?.textContent,
+        );
+        const knownTitles = fa
+          ? ["تغییر قیمت", "تغییر حراج", "درخواست حراج"]
+          : ["Change price", "Change sale", "Request a sale"];
+        const genuine = Boolean(
+          form &&
+          content &&
+          input?.id &&
+          label?.htmlFor === input.id &&
+          input.getAttribute("aria-labelledby") === label.id &&
+          knownTitles.includes(title) &&
+          dialog.querySelector(
+            ":scope > .dialog-description .selling-price-current",
+          ) &&
+          picks?.getAttribute("aria-label") ===
+            (fa ? "انتخاب سریع" : "Quick picks") &&
+          footerButtons.length === 2 &&
+          footerButtons[0].type === "button" &&
+          tidy(footerButtons[0].textContent) === (fa ? "انصراف" : "Cancel") &&
+          footerButtons[1].type === "submit" &&
+          input.closest("dialog") === dialog &&
+          picks.closest("dialog") === dialog &&
+          tiles.every((tile) => {
+            const caption = tile.getAttribute("aria-label") || "";
+            const match = caption.match(/^(\d+(?:\.\d+)?)% (?:off|تخفیف)$/);
+            return Boolean(
+              match &&
+              tile.matches(
+                "button.ui-button.button.button-neutral.button-sm[data-control-kind='action'][aria-pressed]",
+              ) &&
+              tile.type === "button" &&
+              tidy(tile.textContent).startsWith(`${match[1]}%`) &&
+              tile.querySelector(":scope > bdi[dir='ltr']") &&
+              /\d/.test(
+                tile.querySelector(":scope > bdi[dir='ltr']").textContent,
+              ) &&
+              !tile.querySelector("button,a,input"),
+            );
+          }),
+        );
+        if (genuine) {
+          if (Math.abs(input.getBoundingClientRect().height - 52) > 1)
+            failures.push("R2g price entry must be 52px");
+          const boxes = tiles.map((tile) => tile.getBoundingClientRect());
+          for (const [index, tile] of tiles.entries()) {
+            const rect = boxes[index];
+            if (
+              Math.abs(rect.top - boxes[0].top) > 1.5 ||
+              Math.abs(rect.width - boxes[0].width) > 1.5
+            )
+              failures.push(
+                "R2g price quick picks must share one level equal-width row",
+              );
+            const style = getComputedStyle(tile);
+            const selected = tile.getAttribute("aria-pressed") === "true";
+            const border = canonicalColor(
+              style
+                .getPropertyValue(
+                  selected ? "--klead-accent" : "--klead-field-border",
+                )
+                .trim(),
+            );
+            if (
+              ["Top", "Right", "Bottom", "Left"].some(
+                (side) =>
+                  Math.abs(parseFloat(style[`border${side}Width`]) - 1) >
+                    0.01 ||
+                  style[`border${side}Style`] !== "solid" ||
+                  canonicalColor(style[`border${side}Color`]) !== border,
+              )
+            )
+              failures.push(
+                "R2g price quick picks need their 1px field/accent border",
+              );
+            r2gPriceShapes.set(tile, {
+              height: 52,
+              radii: ["12px", "12px", "12px", "12px"],
+              fullWidth: true,
+            });
+          }
+          for (const segments of content.querySelectorAll(
+            ".change-price-when .ui-segments",
+          )) {
+            if (Math.abs(segments.getBoundingClientRect().height - 44) > 1)
+              failures.push("R2g price date/store segments must be 44px");
+          }
+        } else failures.push("Invalid R2g price-change composition");
+      }
+      for (const tile of document.querySelectorAll(
+        ".change-price-quick-picks > button",
+      ))
+        if (visible(tile) && !r2gPriceShapes.has(tile))
+          failures.push("R2g price quick pick outside the validated form");
+
       for (const element of document.querySelectorAll(
         'button, a.ui-button, [role="button"]',
       )) {
@@ -2305,6 +2434,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const expectedRadius = small ? "10px" : "12px";
           const requestShape = requestActionShapes.get(element);
           const authenticationShape = authenticationShapes.get(element);
+          const r2gPriceShape = r2gPriceShapes.get(element);
           // C8 requires field-aligned Add controls to be 44px at every width.
           const fieldAlignedAdd = element.matches(
             ".date-quick-actions > button[type='submit'], .product-editor-date-add > button",
@@ -2348,6 +2478,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           );
           const expectedHeight =
             authenticationShape?.height ??
+            r2gPriceShape?.height ??
             requestShape?.height ??
             (labelAction
               ? 32
@@ -2408,6 +2539,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               (radius, index) =>
                 radius !==
                 (authenticationShape?.radii?.[index] ??
+                  r2gPriceShape?.radii?.[index] ??
                   requestShape?.radii?.[index] ??
                   expectedRadius),
             )
@@ -2440,6 +2572,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           if (
             kind === "action" &&
             !structuredSecondary &&
+            !r2gPriceShape &&
             element.closest(".card, .ui-card, dialog") &&
             parseFloat(style.borderTopWidth) > 0.5 &&
             style.borderTopStyle !== "none"
@@ -2457,6 +2590,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             !dashboardWideActions.has(element) &&
             !authenticationShape?.fullWidth &&
             !requestShape?.fullWidth &&
+            !r2gPriceShape?.fullWidth &&
             rect.width > Math.max(40, intrinsicWidth) + 5
           )
             failures.push(

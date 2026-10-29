@@ -148,8 +148,8 @@ for (const language of ["en", "fa"] as const) {
     await expect(
       button(
         dialog.getByRole("group", { name: exact("Ends", "پایان") }),
-        "Last day",
-        "آخرین روز",
+        "2 weeks",
+        "۲ هفته",
       ),
     ).toHaveAttribute("aria-pressed", "true");
     await expect(

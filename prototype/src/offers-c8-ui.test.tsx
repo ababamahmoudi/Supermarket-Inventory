@@ -180,7 +180,7 @@ it("creates a sale for a price outside the multi-buy mapping through the actual 
   await user.click(within(picker).getByRole("button", { name: "Continue" }));
   const dialog = screen.getByRole("dialog", { name: "Change price" });
   await user.type(
-    within(dialog).getByRole("textbox", { name: "Price" }),
+    within(dialog).getByRole("textbox", { name: "Sale price" }),
     "49.99",
   );
   const startSale = within(dialog).getByRole("button", { name: "Start sale" });
@@ -269,7 +269,7 @@ it("lets the requester edit the pending sale through the same request dialog whi
   expect(
     within(dialog).queryByRole("radio", { name: /^New regular price/ }),
   ).not.toBeInTheDocument();
-  const price = within(dialog).getByRole("textbox", { name: "Price" });
+  const price = within(dialog).getByRole("textbox", { name: "Sale price" });
   await user.clear(price);
   await user.type(price, "7.49");
   const sendRequest = within(dialog).getByRole("button", {
@@ -371,7 +371,7 @@ it("pauses a retained multi-buy at the sale store, removes it from that pool, an
   await user.click(within(picker).getByRole("button", { name: "Continue" }));
   const dialog = screen.getByRole("dialog", { name: "Change price" });
   await user.type(
-    within(dialog).getByRole("textbox", { name: "Price" }),
+    within(dialog).getByRole("textbox", { name: "Sale price" }),
     "2.89",
   );
   await user.click(within(dialog).getByRole("button", { name: "Start sale" }));
