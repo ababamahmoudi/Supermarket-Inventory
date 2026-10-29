@@ -98,12 +98,12 @@ for (const language of ["en", "fa"] as const)
           .click();
         await expect(
           page.getByRole("heading", {
-            name: language === "en" ? "Screen locked" : "صفحه قفل شده است",
+            name: language === "en" ? "Locked" : "قفل شده",
           }),
         ).toBeVisible();
         const powered = page.locator(".maker-powered");
         await expect(powered).toContainText(
-          language === "en" ? "Powered by Klead" : "با پشتیبانی Klead",
+          language === "en" ? "Powered by Klead" : "ساخته‌شده با Klead",
         );
         const lockLogo = powered.locator(
           theme === "dark" ? ".maker-logo-dark" : ".maker-logo-light",
@@ -111,7 +111,7 @@ for (const language of ["en", "fa"] as const)
         await expect(lockLogo).toBeVisible();
         await expect(lockLogo).toHaveAttribute(
           "src",
-          theme === "dark" ? /klead-logo-white.svg$/ : /klead-mark.svg$/,
+          theme === "dark" ? /klead-logo-white.svg$/ : /klead-logo.svg$/,
         );
         expect(errors).toEqual([]);
       });

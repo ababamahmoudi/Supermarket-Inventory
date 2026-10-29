@@ -1,0 +1,201 @@
+.signin-page {
+  display: grid;
+  place-items: center;
+  min-block-size: 100dvh;
+  padding: 24px 16px;
+}
+.signin-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  inline-size: min(400px, 100%);
+}
+:root .signin-wrap .signin-card {
+  inline-size: 100%;
+  max-inline-size: none;
+  margin: 0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.auth-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+.signin-card .signin-logo-tile {
+  display: grid;
+  place-items: center;
+  inline-size: 128px;
+  block-size: 84px;
+  padding: 0;
+}
+.signin-card .signin-logo-tile .signin-logo {
+  position: static;
+  display: block;
+  inline-size: 128px;
+  block-size: 84px;
+  max-inline-size: none;
+  object-fit: contain;
+  transform: none;
+  margin: 0;
+}
+:root[data-theme="dark"] .signin-card .signin-logo-tile {
+  inline-size: 140px;
+  block-size: 96px;
+  padding: 6px;
+  border-radius: var(--radius-search);
+  background: var(--klead-white);
+}
+.signin-card .auth-header h1 {
+  margin: 8px 0 0;
+  font-size: 26px;
+  line-height: 1.2;
+}
+.auth-header p {
+  margin: 0;
+  font-size: var(--font-size-body);
+}
+.signin-wrap .signin-card form,
+.auth-second-step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.auth-second-step {
+  gap: 20px;
+}
+.signin-wrap .signin-card .auth-second-step > form {
+  gap: 20px;
+}
+.signin-card form .field {
+  margin: 0;
+}
+.signin-card form input {
+  inline-size: 100%;
+}
+.auth-password-feedback {
+  position: relative;
+}
+.auth-password-feedback > .form-error {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  margin: 2px 0 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.auth-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.auth-label-row label {
+  margin: 0;
+}
+:root .signin-card .auth-help-link.ui-button {
+  border: 0;
+  border-radius: var(--radius-none);
+  background: none;
+  block-size: 20px;
+  min-block-size: 20px;
+  inline-size: auto;
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  color: var(--klead-accent-text);
+  cursor: pointer;
+}
+:root .signin-wrap .signin-card .signin-submit.ui-button {
+  inline-size: 100%;
+  block-size: 48px;
+  min-block-size: 48px;
+  font-size: var(--font-size-headline);
+  margin: 4px 0 0;
+}
+.signin-card .demo-account-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: var(--radius-small);
+  background: var(--klead-field);
+  font-size: var(--font-size-caption);
+  color: var(--text-muted);
+}
+.demo-account-hint strong {
+  color: var(--text);
+}
+.auth-step-explanation {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--radius-menu);
+  background: var(--klead-field);
+}
+.auth-step-explanation > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.auth-step-explanation .muted {
+  font-size: var(--font-size-caption);
+}
+.auth-step-icon {
+  inline-size: 52px;
+  block-size: 52px;
+  flex: none;
+  border-radius: var(--radius-round);
+  display: grid;
+  place-items: center;
+  background: var(--klead-accent-tint);
+  color: var(--klead-accent-text);
+}
+.auth-simulated-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: -6px 0 0;
+  font-size: var(--font-size-caption);
+  color: var(--text-muted);
+}
+.auth-simulated-note .badge {
+  flex: none;
+}
+:root .signin-card .auth-secondary.ui-button {
+  align-self: center;
+  margin-block-start: -6px;
+}
+.auth-header .user-avatar {
+  inline-size: 72px;
+  block-size: 72px;
+  border-radius: var(--radius-round);
+  background: var(--klead-accent-tint);
+  color: var(--klead-accent-text);
+  font-size: 24px;
+  font-weight: 800;
+}
+.signin-wrap .maker-powered-full {
+  flex-wrap: nowrap;
+  margin: 0;
+}
+.signin-wrap .maker-powered-full .maker-logo-space {
+  padding: 0;
+}
+.signin-wrap .maker-powered-full .maker-logo-space img {
+  inline-size: auto;
+  block-size: 18px;
+}
+@media (max-width: 480px) {
+  :root .signin-wrap .signin-card {
+    padding: 24px 20px;
+  }
+}

@@ -1,4 +1,5 @@
 import { PoweredByMaker } from "./MakerBrand";
+import { AuthHeader } from "./AuthHeader";
 import PwaMenu from "./PwaMenu";
 import DemoReadingMode from "./DemoReadingMode";
 import { CollapsedNavTooltip } from "./CollapsedNavTooltip";
@@ -87,6 +88,7 @@ import {
   Card,
   ConfirmDialog,
   Dialog,
+  DialogActions,
   Field,
   IconButton,
   Menu,
@@ -98,6 +100,7 @@ import "./klead-tokens.css";
 import "./c6-shared.css";
 import "./c7-shared.css";
 import "./c8-catalog.css";
+import "./auth-presentation.css";
 
 function CashierPublicProductLookup({ code }: { code: string }) {
   useEffect(() => {
@@ -325,6 +328,8 @@ function PasswordField({
   autoComplete = "current-password",
   autoFocus = false,
   inputRef,
+  labelAction,
+  stableFeedback = false,
 }: {
   label: string;
   value: string;
@@ -333,13 +338,22 @@ function PasswordField({
   autoComplete?: string;
   autoFocus?: boolean;
   inputRef?: Ref<HTMLInputElement>;
+  labelAction?: ReactNode;
+  stableFeedback?: boolean;
 }) {
   const { t } = useDemo();
   const id = useId();
   const [visible, setVisible] = useState(false);
   return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
+    <div className={stableFeedback ? "field auth-password-feedback" : "field"}>
+      {labelAction ? (
+        <div className="auth-label-row">
+          <label htmlFor={id}>{label}</label>
+          {labelAction}
+        </div>
+      ) : (
+        <label htmlFor={id}>{label}</label>
+      )}
       <div className="password-field">
         <input
           id={id}
@@ -387,8 +401,8 @@ function authErrorCopy(
   switch (error) {
     case "invalid":
       return t(
-        "The username or password is incorrect. Try again.",
-        "نام کاربری یا گذرواژه درست نیست. دوباره تلاش کنید.",
+        "Username or password is incorrect.",
+        "نام کاربری یا رمز عبور درست نیست.",
       );
     case "locked":
       return t(
@@ -439,10 +453,18 @@ function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [forgotPassword, setForgotPassword] = useState(false);
+  const [failureNotice, setFailureNotice] = useState("");
   const passwordRef = useRef<HTMLInputElement>(null);
   return (
-    <AuthLayout>
-      <h1>{t("Sign in", "ورود")}</h1>
+    <AuthLayout showLogo={false}>
+      <AuthHeader
+        title={t("Sign in", "ورود")}
+        description={t(
+          `${state.config.company.name_en} back office`,
+          `بخش مدیریت ${state.config.company.name_fa}`,
+        )}
+      />
       {state.config.session.registered_device_shows_recent_users &&
         recentUsers.length > 0 && (
           <div className="recent-users">
@@ -482,12 +504,12 @@ function SignIn() {
           event.preventDefault();
           void signIn(username, password).then((result) => {
             if (!result) return;
-            setError(authError(result));
             if (result === "invalid") {
+              setError(authError(result));
               // A wrong password is cleared so it can be retyped at once.
               setPassword("");
               window.requestAnimationFrame(() => passwordRef.current?.focus());
-            }
+            } else setFailureNotice(authError(result));
           });
         }}
       >
@@ -507,7 +529,7 @@ function SignIn() {
           />
         </Field>
         <PasswordField
-          label={t("Password", "گذرواژه")}
+          label={t("Password", "رمز عبور")}
           value={password}
           onChange={(value) => {
             setPassword(value);
@@ -515,54 +537,114 @@ function SignIn() {
           }}
           error={error}
           inputRef={passwordRef}
+          stableFeedback
+          labelAction={
+            <Button
+              variant="plain"
+              className="auth-help-link"
+              onClick={() => setForgotPassword(true)}
+            >
+              {t("Forgot password?", "رمز را فراموش کرده‌اید؟")}
+            </Button>
+          }
         />
         <Button type="submit" className="signin-submit">
           {t("Sign in", "ورود")}
         </Button>
       </form>
-      <p className="helper signin-help">
-        {t(
-          "Forgot your password? Ask a person who manages accounts to reset it.",
-          "گذرواژه را فراموش کرده‌اید؟ از مسئول حساب‌ها بخواهید آن را بازنشانی کند.",
-        )}
-      </p>
       {demoUsers.length > 0 && (
-        <p className="helper demo-account-hint">
-          {t("Demo accounts:", "حساب‌های دمو:")}{" "}
-          <LtrText>{demoUsers.map((user) => user.username).join(", ")}</LtrText>
-          {" / "}
-          {t("Fresh demo password", "گذرواژهٔ دموی تازه")}{" "}
-          <LtrText>demo1234</LtrText>
-        </p>
+        <div className="demo-account-hint">
+          <strong>{t("Demo accounts", "حساب‌های نمایشی")}</strong>
+          <span>
+            <LtrText>
+              {demoUsers.map((user) => user.username).join(" · ")}
+            </LtrText>
+          </span>
+          <span>
+            {t("Password", "رمز")} <LtrText>demo1234</LtrText>
+          </span>
+        </div>
       )}
+      <Dialog
+        open={forgotPassword}
+        onOpenChange={setForgotPassword}
+        title={t("Forgot password?", "رمز را فراموش کرده‌اید؟")}
+      >
+        <p>
+          {t(
+            "Ask a person who manages accounts to reset your password.",
+            "از مسئول حساب‌ها بخواهید گذرواژهٔ شما را بازنشانی کند.",
+          )}
+        </p>
+        <DialogActions>
+          <Button onClick={() => setForgotPassword(false)}>
+            {t("Close", "بستن")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <AuthFailureNotice
+        message={failureNotice}
+        onClose={() => setFailureNotice("")}
+      />
     </AuthLayout>
   );
 }
-function AuthLayout({ children }: { children: ReactNode }) {
+function AuthLayout({
+  children,
+  showLogo = true,
+}: {
+  children: ReactNode;
+  showLogo?: boolean;
+}) {
   const { state, t, lang } = useDemo();
   return (
     <div className="signin-page">
       <div className="signin-language">
         <LanguageToggle />
       </div>
-      <Card className="signin-card">
-        <span className="signin-logo-tile">
-          <span className="brand-logo-window signin-logo-window">
-            <StoredFileImage
-              className="signin-logo"
-              value={state.config.company.logo_data ?? logo}
-              companyId={state.config.company.seed_key}
-              alt={t(
-                state.config.company.name_en,
-                state.config.company.name_fa,
-              )}
-            />
-          </span>
-        </span>
-        {children}
-        <PoweredByMaker config={state.config} language={lang} />
-      </Card>
+      <div className="signin-wrap">
+        <Card className="signin-card">
+          {showLogo && (
+            <span className="signin-logo-tile">
+              <StoredFileImage
+                className="signin-logo"
+                value={state.config.company.logo_data ?? logo}
+                companyId={state.config.company.seed_key}
+                alt={t(
+                  state.config.company.name_en,
+                  state.config.company.name_fa,
+                )}
+              />
+            </span>
+          )}
+          {children}
+        </Card>
+        <PoweredByMaker config={state.config} language={lang} fullLogo />
+      </div>
     </div>
+  );
+}
+function AuthFailureNotice({
+  message,
+  onClose,
+}: {
+  message: string;
+  onClose(): void;
+}) {
+  const { t } = useDemo();
+  return (
+    <Dialog
+      open={Boolean(message)}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      title={t("Sign-in could not be completed", "ورود کامل نشد")}
+    >
+      <p role="alert">{message}</p>
+      <DialogActions>
+        <Button onClick={onClose}>{t("Close", "بستن")}</Button>
+      </DialogActions>
+    </Dialog>
   );
 }
 /** Only public company chrome survives a session transition; no cached actor. */
@@ -690,37 +772,61 @@ function ChoosePassword() {
     </AuthLayout>
   );
 }
-function LockScreen() {
+function LockScreen({ location = "" }: { location?: string }) {
   const authError = useAuthErrorCopy();
   const { user, unlock, signOut, t, lang } = useDemo();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [failureNotice, setFailureNotice] = useState("");
+  const passwordRef = useRef<HTMLInputElement>(null);
   return (
-    <AuthLayout>
-      <Initials name={personName(user!, lang)} />
-      <h1>{t("Screen locked", "صفحه قفل شده است")}</h1>
-      <p>{personName(user!, lang)}</p>
+    <AuthLayout showLogo={false}>
+      <AuthHeader
+        title={t("Locked", "قفل شده")}
+        description={
+          <>
+            {personName(user!, lang)}
+            {location && <> · {location}</>}
+          </>
+        }
+        avatar={<Initials name={personName(user!, lang)} />}
+      />
       <form
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          void unlock(password).then((error) => setError(authError(error)));
+          void unlock(password).then((result) => {
+            if (result === "invalid") {
+              setError(authError(result));
+              setPassword("");
+              window.requestAnimationFrame(() => passwordRef.current?.focus());
+            } else if (result) setFailureNotice(authError(result));
+          });
         }}
       >
         <PasswordField
-          label={t("Password", "گذرواژه")}
+          label={t("Password", "رمز عبور")}
           value={password}
-          onChange={setPassword}
+          onChange={(value) => {
+            setPassword(value);
+            setError("");
+          }}
           error={error}
           autoFocus
+          inputRef={passwordRef}
+          stableFeedback
         />
         <Button type="submit" className="signin-submit">
           {t("Unlock", "باز کردن قفل")}
         </Button>
       </form>
-      <Button variant="secondary" onClick={signOut}>
-        {t("Sign in as someone else", "ورود به‌عنوان کاربر دیگر")}
+      <Button variant="plain" className="auth-secondary" onClick={signOut}>
+        {t("Sign in as someone else", "ورود با حساب دیگر")}
       </Button>
+      <AuthFailureNotice
+        message={failureNotice}
+        onClose={() => setFailureNotice("")}
+      />
     </AuthLayout>
   );
 }
@@ -835,6 +941,37 @@ export default function App() {
     t,
   } = useDemo();
   const [hash, setHash] = useState(() => window.location.hash.slice(1));
+  // Public lock-screen copy only: neither an actor nor a location selection.
+  // A reload without this hint honestly omits the previous location.
+  const [lockLocation, setLockLocation] = useState<{
+    company: string;
+    username: string;
+    en: string;
+    fa: string;
+  } | null>(null);
+  if (actor && user && authStage === "complete") {
+    const publicLocation = {
+      company: state.config.company.seed_key,
+      username: user.username,
+      en: branchLabel(state.config, branch, "en"),
+      fa: branchLabel(state.config, branch, "fa"),
+    };
+    if (
+      !lockLocation ||
+      Object.entries(publicLocation).some(
+        ([key, value]) =>
+          lockLocation[key as keyof typeof publicLocation] !== value,
+      )
+    )
+      setLockLocation(publicLocation);
+  } else if (
+    lockLocation &&
+    (authStage !== "locked" ||
+      user?.username !== lockLocation.username ||
+      state.config.company.seed_key !== lockLocation.company)
+  ) {
+    setLockLocation(null);
+  }
   useNavigationRestoration();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -971,11 +1108,18 @@ export default function App() {
     authStage === "second_step_challenge"
   )
     return (
-      <AuthLayout>
+      <AuthLayout showLogo={false}>
         <SecondSignInStep />
       </AuthLayout>
     );
-  if (authStage === "locked") return <LockScreen />;
+  if (authStage === "locked")
+    return (
+      <LockScreen
+        location={
+          lockLocation?.username === user?.username ? lockLocation?.[lang] : ""
+        }
+      />
+    );
   if (authStage === "location") return <LocationUnavailable />;
   if (!actor || !role || !user) return <SignIn />;
   const allowed = pages.filter(

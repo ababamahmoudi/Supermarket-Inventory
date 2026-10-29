@@ -866,6 +866,126 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         element.matches(
           'button:not(.ui-icon-button):not(.table-details-toggle):not(.ui-summary-tile):not(.ui-kpi):not([data-control-kind="disclosure"]):not([data-control-kind="label-action"])',
         );
+      // R2g B1's approved authentication action is 48px and exactly fills its
+      // real form. A copied class cannot opt an unrelated action into it.
+      const authenticationShapes = new Map();
+      const authenticationCards = [
+        ...document.querySelectorAll(
+          "#root > .signin-page > .signin-wrap > .signin-card.ui-card.card",
+        ),
+      ];
+      const authenticationCard =
+        authenticationCards.length === 1 ? authenticationCards[0] : null;
+      const authenticationForm = authenticationCard?.querySelector("form");
+      const authenticationSubmit = authenticationForm?.querySelector(
+        ":scope > button.signin-submit.ui-button.button-primary[type='submit']",
+      );
+      const authenticationHeading = tidy(
+        authenticationCard?.querySelector("h1")?.textContent,
+      );
+      const passwordControls = [
+        ...(authenticationForm?.querySelectorAll(
+          "input[autocomplete='current-password'], input[autocomplete='new-password']",
+        ) ?? []),
+      ];
+      const passwordLabelsValid = passwordControls.every(
+        (control) =>
+          control.id &&
+          [...authenticationForm.querySelectorAll("label")].some(
+            (label) => label.htmlFor === control.id && tidy(label.textContent),
+          ),
+      );
+      const authenticationSecondStep = authenticationCard?.querySelector(
+        ":scope > .auth-second-step > form",
+      );
+      const genuineAuthentication = Boolean(
+        authenticationCard &&
+        authenticationForm &&
+        authenticationSubmit &&
+        authenticationCard.querySelectorAll("form").length === 1 &&
+        authenticationForm.querySelectorAll("button[type='submit']").length ===
+          1 &&
+        [
+          "Sign in",
+          "ورود",
+          "Locked",
+          "قفل شده",
+          "Choose a new password",
+          "انتخاب گذرواژهٔ جدید",
+          "Confirm it's you",
+          "تأیید هویت",
+          "Choose a second sign-in step",
+          "انتخاب مرحلهٔ دوم ورود",
+        ].includes(authenticationHeading) &&
+        [
+          "Sign in",
+          "ورود",
+          "Unlock",
+          "باز کردن قفل",
+          "Save password",
+          "ذخیرهٔ گذرواژه",
+          "Continue",
+          "ادامه",
+          "Continue with passkey",
+          "ادامه با کلید ورود",
+        ].includes(tidy(authenticationSubmit.textContent)) &&
+        ((passwordControls.length > 0 && passwordLabelsValid) ||
+          (authenticationSecondStep === authenticationForm &&
+            authenticationForm.querySelector(
+              ":scope > .auth-step-explanation",
+            ) &&
+            authenticationForm.querySelector(":scope > .auth-simulated-note"))),
+      );
+      if (genuineAuthentication) {
+        const cardBox = authenticationCard.getBoundingClientRect();
+        const formBox = authenticationForm.getBoundingClientRect();
+        const submitBox = authenticationSubmit.getBoundingClientRect();
+        if (
+          Math.abs(cardBox.width - Math.min(400, window.innerWidth - 32)) > 1 ||
+          Math.abs(submitBox.width - formBox.width) > 1 ||
+          Math.abs(submitBox.left - formBox.left) > 1 ||
+          Math.abs(submitBox.right - formBox.right) > 1
+        )
+          failures.push(
+            "Authentication primary does not fill the approved bounded form",
+          );
+        authenticationShapes.set(authenticationSubmit, {
+          height: 48,
+          fullWidth: true,
+        });
+        const help = authenticationForm.querySelector(
+          ".auth-label-row > button.auth-help-link.ui-button.button-plain",
+        );
+        if (help) {
+          const label = help.parentElement.querySelector(":scope > label");
+          const linkedPassword = passwordControls.find(
+            (control) => control.id === label?.htmlFor,
+          );
+          if (
+            linkedPassword &&
+            ["Forgot password?", "رمز را فراموش کرده‌اید؟"].includes(
+              tidy(help.textContent),
+            )
+          )
+            authenticationShapes.set(help, {
+              height: 20,
+              radii: ["0px", "0px", "0px", "0px"],
+            });
+          else
+            failures.push(
+              "Authentication password help is not linked to its password field",
+            );
+        }
+      }
+      for (const control of document.querySelectorAll(
+        "button.signin-submit, button.auth-help-link",
+      )) {
+        if (visible(control) && !authenticationShapes.has(control))
+          failures.push(
+            `Authentication action outside its validated form: ${tidy(control.textContent)}`,
+          );
+      }
+
       for (const element of document.querySelectorAll(
         '.r2c-screen input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),.r2c-screen select',
       )) {
@@ -2048,6 +2168,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             element.closest(".table-actions, .catalog-row-actions");
           const expectedRadius = small ? "10px" : "12px";
           const requestShape = requestActionShapes.get(element);
+          const authenticationShape = authenticationShapes.get(element);
           // C8 requires field-aligned Add controls to be 44px at every width.
           const fieldAlignedAdd = element.matches(
             ".date-quick-actions > button[type='submit'], .product-editor-date-add > button",
@@ -2090,6 +2211,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               .length === 1,
           );
           const expectedHeight =
+            authenticationShape?.height ??
             requestShape?.height ??
             (labelAction
               ? 32
@@ -2148,7 +2270,10 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           } else if (
             entry.radii.some(
               (radius, index) =>
-                radius !== (requestShape?.radii?.[index] ?? expectedRadius),
+                radius !==
+                (authenticationShape?.radii?.[index] ??
+                  requestShape?.radii?.[index] ??
+                  expectedRadius),
             )
           )
             failures.push(
@@ -2194,6 +2319,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             !phoneReceivingWidths.has(element) &&
             !r2fApprovalWidths.has(element) &&
             !dashboardWideActions.has(element) &&
+            !authenticationShape?.fullWidth &&
             !requestShape?.fullWidth &&
             rect.width > Math.max(40, intrinsicWidth) + 5
           )

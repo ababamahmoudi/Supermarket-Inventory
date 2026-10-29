@@ -117,7 +117,7 @@ export async function signIn(page: Page, role: DemoRole) {
       .getByLabel(fa ? "نام کاربری" : "Username", { exact: true })
       .fill(account.username);
     await page
-      .getByLabel(fa ? "گذرواژه" : "Password", { exact: true })
+      .getByLabel(fa ? "رمز عبور" : "Password", { exact: true })
       .fill(account.password ?? "demo1234");
     await page
       .getByRole("button", { name: fa ? "ورود" : "Sign in", exact: true })
@@ -137,9 +137,7 @@ export async function signIn(page: Page, role: DemoRole) {
       } else {
         await page
           .getByRole("button", {
-            name: fa
-              ? "استفاده از کلید ورود شبیه‌سازی‌شده"
-              : "Use simulated passkey",
+            name: fa ? "ادامه با کلید ورود" : "Continue with passkey",
             exact: true,
           })
           .click();

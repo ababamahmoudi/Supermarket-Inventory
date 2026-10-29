@@ -22,6 +22,38 @@ afterEach(() => {
 });
 
 describe("R2e E configured maker presentation", () => {
+  it("uses the configured full wordmark for R2g authentication while preserving compact callers", () => {
+    const state = initialState();
+    const { container, rerender } = render(
+      <PoweredByMaker config={state.config} language="en" fullLogo />,
+    );
+    expect(container.querySelector(".maker-powered-full")).toHaveTextContent(
+      "Powered by Klead",
+    );
+    expect(container.querySelector(".maker-logo-light")).toHaveAttribute(
+      "src",
+      "/demo/brand/klead/klead-logo.svg",
+    );
+    expect(container.querySelector(".maker-logo-dark")).toHaveAttribute(
+      "src",
+      "/demo/brand/klead/klead-logo-white.svg",
+    );
+    expect(container.querySelector(".maker-logo-space")).not.toHaveClass(
+      "is-compact",
+    );
+    rerender(<PoweredByMaker config={state.config} language="en" />);
+    expect(container.querySelector(".maker-logo-light")).toHaveAttribute(
+      "src",
+      "/demo/brand/klead/klead-mark.svg",
+    );
+    expect(container.querySelector(".maker-logo-space")).toHaveClass(
+      "is-compact",
+    );
+    state.config.branding = { maker: null };
+    rerender(<PoweredByMaker config={state.config} language="en" fullLogo />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it("shows the store title and maker without rewriting a saved company's records", () => {
     const state = initialState();
     delete state.config.branding;

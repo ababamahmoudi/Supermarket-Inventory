@@ -154,7 +154,7 @@ test("keyboard sign-in explains a wrong password and opens the cashier's approve
   await page.keyboard.type("incorrect-password");
   await page.keyboard.press("Enter");
   await expect(page.getByRole("alert")).toHaveText(
-    "The username or password is incorrect. Try again.",
+    "Username or password is incorrect.",
   );
   await expect(username).toHaveValue("cashier");
   await page.getByLabel("Password", { exact: true }).fill("demo1234");
@@ -236,7 +236,7 @@ test("locking hides the app, and recent users fill a username without retaining 
   await userAction(page, "Lock");
   await page.goto("/#payables");
   await expect(
-    page.getByRole("heading", { name: "Screen locked", exact: true }),
+    page.getByRole("heading", { name: "Locked", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Pages", exact: true }),

@@ -54,7 +54,7 @@ async function signInManager(page: Page, origin: string) {
     await page.getByRole("button", { name: "Continue", exact: true }).click();
   } else {
     await page
-      .getByRole("button", { name: "Use simulated passkey", exact: true })
+      .getByRole("button", { name: "Continue with passkey", exact: true })
       .click();
   }
   await expect(page.locator(".topbar")).toBeVisible();

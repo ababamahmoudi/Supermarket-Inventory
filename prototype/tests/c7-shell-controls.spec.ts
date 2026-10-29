@@ -97,12 +97,12 @@ for (const language of ["en", "fa"] as const) {
       .click();
     await expect(
       page.getByRole("heading", {
-        name: en ? "Screen locked" : "صفحه قفل شده است",
+        name: en ? "Locked" : "قفل شده",
         exact: true,
       }),
     ).toBeVisible();
     await page
-      .getByLabel(en ? "Password" : "گذرواژه", { exact: true })
+      .getByLabel(en ? "Password" : "رمز عبور", { exact: true })
       .fill("demo1234");
     await page
       .getByRole("button", {

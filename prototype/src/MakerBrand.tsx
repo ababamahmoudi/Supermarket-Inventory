@@ -37,19 +37,29 @@ export function MakerLogo({
 export function PoweredByMaker({
   config,
   language,
+  fullLogo = false,
 }: {
   config: MakerConfig;
   language: Language;
+  fullLogo?: boolean;
 }) {
   const maker = configuredMaker(config);
   if (!maker) return null;
   return (
-    <p className="maker-powered">
+    <p className={`maker-powered${fullLogo ? " maker-powered-full" : ""}`}>
       <span>
-        {language === "fa" ? "با پشتیبانی" : "Powered by"}{" "}
-        <bdi>{maker.name}</bdi>
+        {language === "fa"
+          ? fullLogo
+            ? "ساخته‌شده با"
+            : "با پشتیبانی"
+          : "Powered by"}{" "}
+        <bdi className={fullLogo && maker.logo_file ? "sr-only" : undefined}>
+          {maker.name}
+        </bdi>
       </span>
-      <MakerLogo config={config} compact />
+      <span aria-hidden={fullLogo || undefined}>
+        <MakerLogo config={config} compact={!fullLogo} />
+      </span>
     </p>
   );
 }

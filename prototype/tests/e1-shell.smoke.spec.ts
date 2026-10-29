@@ -165,7 +165,7 @@ for (const language of ["en", "fa"] as const) {
       .getByLabel(words(language, "Username", "نام کاربری"), { exact: true })
       .fill("e1-smoke-employee");
     await page
-      .getByLabel(words(language, "Password", "گذرواژه"), { exact: true })
+      .getByLabel(words(language, "Password", "رمز عبور"), { exact: true })
       .fill(code);
     await page
       .getByRole("button", {
@@ -276,7 +276,7 @@ for (const language of ["en", "fa"] as const) {
       .getByLabel(words(language, "Username", "نام کاربری"), { exact: true })
       .fill("ny-floor");
     await worker
-      .getByLabel(words(language, "Password", "گذرواژه"), { exact: true })
+      .getByLabel(words(language, "Password", "رمز عبور"), { exact: true })
       .fill("demo1234");
     await worker
       .getByRole("button", {
