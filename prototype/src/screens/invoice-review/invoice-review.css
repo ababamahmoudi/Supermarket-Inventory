@@ -967,7 +967,7 @@
   direction: ltr;
 }
 .receiving-charge-money input.ui-input {
-  padding-inline-start: 26px;
+  padding-inline-start: calc(18px + var(--receiving-charge-prefix-width, 8px));
   text-align: end;
   font-variant-numeric: tabular-nums;
 }
@@ -1056,7 +1056,17 @@
   /* Keep the complete amount and tax captions on the shared row at small widths.
      The approved 390px+ composition retains its 12px button inset. */
   :root .receiving-charge-tax .ui-segments > button {
-    padding-inline: clamp(4px, calc((100cqi - 254px) / 4), 12px);
+    padding-inline: clamp(
+      2px,
+      calc(
+        (
+            100cqi - 254px -
+              max(0px, var(--receiving-charge-prefix-width, 8px) - 8px)
+          ) /
+          4
+      ),
+      12px
+    );
   }
   .receiving-charge-description {
     grid-area: description;
@@ -1351,7 +1361,7 @@
     align-items: start;
     gap: 10px;
     padding: 12px;
-    border-radius: var(--radius-menu);
+    border-radius: var(--radius-search);
     background: var(--surface);
     border: 1px solid var(--divider);
   }

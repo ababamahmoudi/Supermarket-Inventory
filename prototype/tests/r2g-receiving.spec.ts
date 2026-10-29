@@ -105,12 +105,13 @@ async function geometry(page: Page) {
           "borderBottomLeftRadius",
         ] as const)
           if (
-            lineStyle[corner] !== chargeStyle[corner] ||
             lineStyle[corner] !==
-              lineStyle.getPropertyValue("--radius-menu").trim()
+              lineStyle.getPropertyValue("--radius-search").trim() ||
+            chargeStyle[corner] !==
+              chargeStyle.getPropertyValue("--radius-menu").trim()
           )
             failures.push(
-              "Line and charge cards do not share their approved corners",
+              "Line and charge cards do not retain their distinct approved corners",
             );
       }
     }
@@ -544,5 +545,34 @@ for (const language of ["en", "fa"] as const) {
       contentType: "application/json",
     });
     expect(errors).toEqual([]);
+  });
+  test(`B4 CHF currency prefix and amount remain fully visible at360 in ${language}`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: 360, height: 960 });
+    const readings = structuredClone(readingsFixture);
+    for (const entry of readings.invoices) entry.ai_reading.currency = "CHF";
+    await importReceivingFixture(page, language, undefined, undefined, {
+      name: "fictional-b4-chf.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(readings)),
+    });
+    await appearance(page, language);
+    const before = await readCanonicalBusinessEvidence(page);
+    await expect(page.locator(".receiving-charge-currency")).toHaveText([
+      "CHF",
+      "CHF",
+    ]);
+    const proof = await geometry(page);
+    expect(proof.failures).toEqual([]);
+    expect(await readCanonicalBusinessEvidence(page)).toEqual(before);
+    await info.attach(`B4-CHF-${language}-360`, {
+      body: JSON.stringify(proof),
+      contentType: "application/json",
+    });
+    await page.screenshot({
+      path: info.outputPath(`B4-CHF-${language}-360.png`),
+      fullPage: true,
+    });
   });
 }

@@ -1,9 +1,49 @@
 import { Trash2 } from "lucide-react";
+import { useLayoutEffect, useRef, type ComponentProps } from "react";
 import { invoiceCheckField } from "../../invoice-checks";
 import type { InvoiceReadDTO } from "../../invoice-projections";
 import type { InvoiceChargeField } from "../../invoice-other-charges";
 import { BufferedInput, Button, Field, SegmentedControl } from "../../ui";
 import { useDemo } from "../../store";
+
+/** Reserve the rendered prefix, including a multi-letter ISO code, before paint. */
+function ChargeAmountInput({
+  currency,
+  ...props
+}: ComponentProps<typeof BufferedInput> & { currency: string }) {
+  const input = useRef<HTMLInputElement>(null);
+  useLayoutEffect(() => {
+    const field = input.current?.parentElement;
+    const prefix = field?.querySelector<HTMLElement>(
+      ":scope > .receiving-charge-currency",
+    );
+    const row = field?.closest<HTMLElement>(".receiving-charge");
+    if (!prefix || !row) return;
+    let active = true;
+    let previous = -1;
+    const measure = () => {
+      if (!active || !prefix.isConnected) return;
+      const width = prefix.getBoundingClientRect().width;
+      if (Math.abs(width - previous) <= 0.01) return;
+      previous = width;
+      row.style.setProperty("--receiving-charge-prefix-width", `${width}px`);
+    };
+    measure();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? undefined
+        : new ResizeObserver(measure);
+    observer?.observe(prefix);
+    document.fonts?.ready.then(measure);
+    document.fonts?.addEventListener("loadingdone", measure);
+    return () => {
+      active = false;
+      observer?.disconnect();
+      document.fonts?.removeEventListener("loadingdone", measure);
+    };
+  }, [currency]);
+  return <BufferedInput {...props} ref={input} />;
+}
 
 /** The actual editable fields live once, beside each other inside the lines card. */
 export function OtherChargesEditor({
@@ -103,7 +143,8 @@ export function OtherChargesEditor({
                   </span>
                 }
               >
-                <BufferedInput
+                <ChargeAmountInput
+                  currency={currency}
                   id={`${id}-input-line_total`}
                   className="ui-input"
                   dir="ltr"

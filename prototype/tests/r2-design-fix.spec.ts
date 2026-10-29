@@ -821,7 +821,7 @@ for (const language of ["en", "fa"] as const) {
       for (const cell of await confirmed.locator(":scope > td").all())
         await expect(cell).toHaveCSS("background-color", clear);
       const radius = await confirmed.evaluate((element) =>
-        getComputedStyle(element).getPropertyValue("--radius-menu").trim(),
+        getComputedStyle(element).getPropertyValue("--radius-search").trim(),
       );
       expect(radius).not.toBe("");
       for (const corner of [

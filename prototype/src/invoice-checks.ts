@@ -558,49 +558,74 @@ export function fillCalculatedInvoiceTotals(invoice: {
     const subtotal = subtotalFromLines();
     if (subtotal) fill("subtotal", subtotal);
     else invoice.subtotal = "";
-    // This is an existing derived subtotal, not a printed or human-entered one.
-    // Missing amounts keep it unresolved; retained tax and total stay untouched.
-  } else {
-    if (
-      !invoice.subtotal.trim() &&
-      !invoice.tax.trim() &&
-      !invoice.final_total.trim() &&
-      invoice.lines?.length
-    ) {
-      const subtotal = subtotalFromLines();
-      if (subtotal) {
-        fill("subtotal", subtotal);
-        invoice.calculated_from_lines = true;
-      }
+    const calculatedTax = invoice.calculated_fields?.includes("tax");
+    const calculatedFinal = invoice.calculated_fields?.includes("final_total");
+    const unresolved = (field: "tax" | "final_total") => {
+      invoice[field] = "";
+      invoice.calculated_fields = invoice.calculated_fields?.filter(
+        (key) => key !== field,
+      );
+    };
+    // Only a CURRENT calculated dependent may change; printed and human values
+    // remain independent reconciliation evidence. Two calculated dependents
+    // cannot supply each other's missing source amount.
+    if (calculatedTax && calculatedFinal) {
+      unresolved("tax");
+      unresolved("final_total");
+    } else if (calculatedFinal) {
+      if (valid(invoice.subtotal) && valid(invoice.tax))
+        fill("final_total", new Decimal(invoice.subtotal).plus(invoice.tax));
+      else unresolved("final_total");
+    } else if (calculatedTax) {
+      if (valid(invoice.subtotal) && valid(invoice.final_total)) {
+        const tax = new Decimal(invoice.final_total).minus(invoice.subtotal);
+        if (tax.gte(0)) fill("tax", tax);
+        else unresolved("tax");
+      } else unresolved("tax");
     }
-    if (
-      !invoice.subtotal.trim() &&
-      !invoice.tax.trim() &&
-      valid(invoice.final_total)
-    ) {
-      fill("subtotal", new Decimal(invoice.final_total));
-      fill("tax", new Decimal(0));
-    } else if (
-      !invoice.subtotal.trim() &&
-      valid(invoice.final_total) &&
-      valid(invoice.tax)
-    ) {
-      const subtotal = new Decimal(invoice.final_total).minus(invoice.tax);
-      if (subtotal.gte(0)) fill("subtotal", subtotal);
-    } else if (
-      !invoice.tax.trim() &&
-      valid(invoice.final_total) &&
-      valid(invoice.subtotal)
-    ) {
-      const tax = new Decimal(invoice.final_total).minus(invoice.subtotal);
-      if (tax.gte(0)) fill("tax", tax);
-    } else if (
-      !invoice.final_total.trim() &&
-      valid(invoice.subtotal) &&
-      valid(invoice.tax)
-    ) {
-      fill("final_total", new Decimal(invoice.subtotal).plus(invoice.tax));
+  } else if (
+    !invoice.subtotal.trim() &&
+    !invoice.tax.trim() &&
+    !invoice.final_total.trim() &&
+    invoice.lines?.length
+  ) {
+    const subtotal = subtotalFromLines();
+    if (subtotal) {
+      fill("subtotal", subtotal);
+      invoice.calculated_from_lines = true;
     }
+  }
+  // Keep the existing supported two-amount completion. An incomplete line-derived
+  // subtotal must never be reconstructed from retained tax/total headers.
+  if (
+    !refreshFromLines &&
+    !invoice.subtotal.trim() &&
+    !invoice.tax.trim() &&
+    valid(invoice.final_total)
+  ) {
+    fill("subtotal", new Decimal(invoice.final_total));
+    fill("tax", new Decimal(0));
+  } else if (
+    !refreshFromLines &&
+    !invoice.subtotal.trim() &&
+    valid(invoice.final_total) &&
+    valid(invoice.tax)
+  ) {
+    const subtotal = new Decimal(invoice.final_total).minus(invoice.tax);
+    if (subtotal.gte(0)) fill("subtotal", subtotal);
+  } else if (
+    !invoice.tax.trim() &&
+    valid(invoice.final_total) &&
+    valid(invoice.subtotal)
+  ) {
+    const tax = new Decimal(invoice.final_total).minus(invoice.subtotal);
+    if (tax.gte(0)) fill("tax", tax);
+  } else if (
+    !invoice.final_total.trim() &&
+    valid(invoice.subtotal) &&
+    valid(invoice.tax)
+  ) {
+    fill("final_total", new Decimal(invoice.subtotal).plus(invoice.tax));
   }
   for (const field of ["subtotal", "tax", "final_total"] as const)
     if (

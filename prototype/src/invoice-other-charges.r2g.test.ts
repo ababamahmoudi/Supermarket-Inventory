@@ -276,3 +276,77 @@ it("never refreshes a retained posted subtotal while normalizing its reading", (
     state.invoice.final_total,
   ]).toEqual(printed);
 });
+
+it.each(["tax", "final_total"] as const)(
+  "completes a missing dependent header from the refreshed subtotal and supplied %s",
+  (field) => {
+    const { state } = lineDerivedDraft();
+    state.invoice[field] = field === "tax" ? "0.43" : "3.73";
+    normalizeInvoiceReceivingReview(state.invoice);
+    expect([
+      state.invoice.subtotal,
+      state.invoice.tax,
+      state.invoice.final_total,
+    ]).toEqual(["3.30", "0.43", "3.73"]);
+    expect(state.invoice.calculated_fields).toContain(
+      field === "tax" ? "final_total" : "tax",
+    );
+  },
+);
+
+it.each(["tax", "final_total"] as const)(
+  "refreshes a currently calculated %s and preserves its independent paper amount",
+  (field) => {
+    const { state, actor } = lineDerivedDraft();
+    Object.assign(state.invoice, {
+      tax: "0.43",
+      final_total: "3.73",
+      calculated_fields: ["subtotal", field],
+    });
+    editInvoiceOtherCharge(state, actor, 0, "line_total", "1.23");
+    expect(state.invoice.subtotal).toBe("3.40");
+    expect(state.invoice.tax).toBe(field === "tax" ? "0.33" : "0.43");
+    expect(state.invoice.final_total).toBe(
+      field === "final_total" ? "3.83" : "3.73",
+    );
+  },
+);
+
+it.each(["tax", "final_total"] as const)(
+  "leaves a calculated %s unresolved when its subtotal becomes incomplete, then completes it from real amounts",
+  (field) => {
+    const { state, actor } = lineDerivedDraft();
+    Object.assign(state.invoice, {
+      tax: "0.43",
+      final_total: "3.73",
+      calculated_fields: ["subtotal", field],
+    });
+    editInvoiceOtherCharge(state, actor, 0, "line_total", "");
+    expect(state.invoice.subtotal).toBe("");
+    expect(state.invoice[field]).toBe("");
+    expect(state.invoice.calculated_fields).not.toContain(field);
+    expect(state.invoice[field === "tax" ? "final_total" : "tax"]).toBe(
+      field === "tax" ? "3.73" : "0.43",
+    );
+    editInvoiceOtherCharge(state, actor, 0, "line_total", "1.23");
+    expect(state.invoice[field]).toBe(field === "tax" ? "0.33" : "3.83");
+    expect(state.invoice.calculated_fields).toContain(field);
+  },
+);
+
+it("does not replace an explicitly human-entered dependent final with a former calculated value", () => {
+  const { state, actor } = lineDerivedDraft();
+  Object.assign(state.invoice, {
+    tax: "0.43",
+    final_total: "3.73",
+    calculated_fields: ["subtotal", "final_total"],
+  });
+  setInvoiceAmount(state.invoice, "final_total", "9.99");
+  editInvoiceOtherCharge(state, actor, 0, "line_total", "1.23");
+  expect([
+    state.invoice.subtotal,
+    state.invoice.tax,
+    state.invoice.final_total,
+  ]).toEqual(["3.40", "0.43", "9.99"]);
+  expect(state.invoice.calculated_fields).not.toContain("final_total");
+});
