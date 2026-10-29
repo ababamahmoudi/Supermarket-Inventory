@@ -649,7 +649,7 @@ test("R3 Floor Worker can read an own draft but live model, cost and seconds pro
   ).toEqual([sourceHash(photo)]);
 });
 
-test("R3 Floor Worker failure can enter an own retained draft by hand and Add line without a global manual grant", async ({
+test("R3 Floor Worker failure can enter an own retained draft by hand and Add line after an authorized Warehouse move without a global manual grant", async ({
   page,
 }) => {
   const reader = await mockReader(page, [{ kind: "http" }]);
@@ -665,6 +665,35 @@ test("R3 Floor Worker failure can enter an own retained draft by hand and Add li
     .getByRole("button", { name: "Enter by hand", exact: true })
     .click();
   await expectReview(page, original.id);
+  await openInvoiceDetails(page);
+  await page
+    .getByRole("button", { name: "Change location", exact: true })
+    .click();
+  const locationDialog = page.getByRole("dialog", {
+    name: "Change receiving location",
+    exact: true,
+  });
+  await chooseOption(
+    page,
+    locationDialog.getByLabel("Location", { exact: true }),
+    "Warehouse",
+    "Warehouse",
+  );
+  await locationDialog
+    .getByRole("button", { name: "Save location", exact: true })
+    .click();
+  await expect(locationDialog).toHaveCount(0);
+  await expect
+    .poll(async () => (await readCanonicalBusinessEvidence(page)).invoice)
+    .toMatchObject({
+      id: original.id,
+      branch: "Warehouse",
+      handling_branch: "Branch 1",
+      reviewer_origin_location_id: "Branch 1",
+    });
+  await expect(page.locator(".topbar .branch-pill")).toContainText(
+    "North York",
+  );
   await chooseOption(
     page,
     page.getByRole("combobox", {
@@ -683,6 +712,7 @@ test("R3 Floor Worker failure can enter an own retained draft by hand and Add li
     .toBe(1);
   const after = await readCanonicalBusinessEvidence(page);
   expect(after.invoice.id).toBe(original.id);
+  expect(after.invoice.branch).toBe("Warehouse");
   expect(after.invoice.lines[0].product_code).toBe("0002");
   expect(await retainedSourceHashes(page, after.invoice)).toEqual([
     sourceHash(photo),
