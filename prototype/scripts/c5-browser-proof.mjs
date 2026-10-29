@@ -2329,7 +2329,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               (titleId && document.getElementById(titleId) === title)),
           );
           const close = header?.querySelector(
-            "button.ui-icon-button[data-control-kind='action']",
+            "button.ui-icon-button[data-control-kind='icon']",
           );
           const footer = [
             ...dialog.querySelectorAll(
