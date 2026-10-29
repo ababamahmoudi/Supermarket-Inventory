@@ -369,6 +369,30 @@ for (const [language, theme] of [
             )
           ).failures,
         ).toEqual([]);
+        if (width === 509 && language === "en") {
+          const stableStyle = await proof.dialog.getAttribute("style");
+          await proof.dialog.evaluate((node) => {
+            node.style.setProperty("inset-block-start", "auto");
+            node.style.setProperty("inset-block-end", "0px");
+            node.style.setProperty("block-size", "auto");
+            node.style.setProperty("max-block-size", "100dvh");
+          });
+          const bottomOnly = await capture();
+          expect(
+            Math.abs(bottomOnly[1]!.y - before[1]!.y),
+            "A bottom-only anchor must be rejected for moving the real body trigger",
+          ).toBeGreaterThan(2);
+          await proof.dialog.evaluate((node, style) => {
+            if (style === null) node.removeAttribute("style");
+            else node.setAttribute("style", style);
+          }, stableStyle);
+          const restored = await capture();
+          for (let index = 0; index < controls.length; index++)
+            for (const key of ["x", "y", "width", "height"] as const)
+              expect(
+                Math.abs(restored[index]![key] - before[index]![key]),
+              ).toBeLessThanOrEqual(2);
+        }
         await page.screenshot({
           path: info.outputPath(`A5-owned-${width}-${language}-${theme}.png`),
         });
