@@ -65,9 +65,18 @@ export async function inspectResponsiveLayout(page, scene, language, width) {
         );
       for (const fragment of document.querySelectorAll(".unit-fragment")) {
         if (!visible(fragment)) continue;
-        const range = document.createRange();
-        range.selectNodeContents(fragment);
-        const rects = [...range.getClientRects()].filter(
+        // Gecko can include a nested BDI element's line box in an element
+        // Range alongside its text glyphs. Measure only actual text nodes,
+        // just as for unmarked units below; wrapper ascent is not a new line.
+        const text = document.createTreeWalker(fragment, NodeFilter.SHOW_TEXT);
+        const rectangles = [];
+        while (text.nextNode()) {
+          if (!text.currentNode.textContent?.trim()) continue;
+          const range = document.createRange();
+          range.selectNodeContents(text.currentNode);
+          rectangles.push(...range.getClientRects());
+        }
+        const rects = rectangles.filter(
           (rect) => rect.width > 0.1 && rect.height > 0.1,
         );
         const lines = new Set(rects.map((rect) => Math.round(rect.top)));
