@@ -285,6 +285,7 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
   const activity = useLiveReadingActivity(invoice);
   const sourceKey = JSON.stringify([
     invoice.id,
+    invoice.version,
     invoice.file_name,
     invoice.file_type,
     invoice.file_size,
@@ -326,6 +327,7 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
     query,
     invoice.company_id,
     invoice.id,
+    invoice.version,
     invoice.file_type,
     invoice.original_page_count,
     t,

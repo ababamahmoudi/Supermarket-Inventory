@@ -244,3 +244,51 @@ it("aborts when another accepted attempt supersedes this one", async () => {
   expect(ports.request).not.toHaveBeenCalled();
   expect(screen.getByRole("button", { name: "Read again" })).toBeVisible();
 });
+it("refreshes the protected page preview when an external reorder changes only the public invoice version", async () => {
+  let order = ["fictional-A.png", "fictional-B.png", "fictional-C.png"];
+  ports.load.mockImplementation(
+    async (_query: unknown, input: { page?: number }) => {
+      const name = order[input.page ?? 0];
+      return {
+        source: new Blob([name], { type: "image/png" }),
+        type: "image/png",
+        name,
+      };
+    },
+  );
+  const invoice = {
+    ...draft(),
+    version: 1,
+    file_name: "fictional-A.png",
+    original_page_count: 3,
+  };
+  const view = render(<LiveInvoiceReading invoice={invoice} />);
+  const shownOrder = () =>
+    Array.from(
+      screen
+        .getByTestId("live-reading-pages")
+        .querySelectorAll(".live-reading-page-name"),
+    ).map((name) => name.getAttribute("title"));
+  await waitFor(() =>
+    expect(shownOrder()).toEqual([
+      "fictional-A.png",
+      "fictional-B.png",
+      "fictional-C.png",
+    ]),
+  );
+  expect(ports.load).toHaveBeenCalledTimes(3);
+  order = ["fictional-A.png", "fictional-C.png", "fictional-B.png"];
+  view.rerender(<LiveInvoiceReading invoice={{ ...invoice, version: 2 }} />);
+  await waitFor(() =>
+    expect(shownOrder()).toEqual([
+      "fictional-A.png",
+      "fictional-C.png",
+      "fictional-B.png",
+    ]),
+  );
+  expect(ports.load).toHaveBeenCalledTimes(6);
+  expect(ports.load.mock.calls.map((call) => call[1].page)).toEqual([
+    0, 1, 2, 0, 1, 2,
+  ]);
+  expect(ports.request).not.toHaveBeenCalled();
+});
