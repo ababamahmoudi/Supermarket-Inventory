@@ -1,3 +1,9 @@
+## 2026-10-29 — R3b F0 reader response compatibility
+
+- Accept the local kit's model objects as well as legacy model-name strings, using each nonempty `id` as the name. Extra response fields such as `checkFailures` do not block a usable reading; numeric USD cost and duration remain supported.
+- Retain valid per-model success, duration and Decimal USD cost in Owner/Manager-only live provenance without changing review or posting rules.
+- Added fictional exact-shape client and desktop/phone English/Persian browser regressions, plus provenance and protected-projection coverage.
+
 ## 2026-10-29 — R3 live invoice reading
 
 - Connected the existing local reader kit to ordered photos/PDFs through the existing AI-mode importer. Saved raw originals and the Processing draft survive failures, cancellation, reload and explicit manual/demo recovery; one press makes one request with a four-minute limit.

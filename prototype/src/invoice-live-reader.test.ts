@@ -172,6 +172,7 @@ describe("one live request", () => {
       seconds: 84,
       models: ["Fictional model A", "Fictional model B"],
     });
+    expect(result).not.toHaveProperty("modelDetails");
   });
 
   it("accepts numeric kit cost and a failed cross-check when usable lines remain", async () => {
@@ -190,6 +191,116 @@ describe("one live request", () => {
     expect(result.costUSD).toBe("0.11");
     expect(result.checksPassed).toBe(false);
     expect(result.statuses).toEqual(source.ai_statuses);
+  });
+
+  it("accepts the kit's object-model response with numeric totals and extra checkFailures", async () => {
+    const kitReply = {
+      ...response(),
+      models: [
+        {
+          id: "fictional-model-argon",
+          ok: true,
+          seconds: 71.25,
+          costUSD: 0.0825,
+          error: null,
+        },
+        {
+          id: "fictional-model-luna",
+          ok: true,
+          seconds: 30.5,
+          costUSD: 0.0025,
+          error: null,
+        },
+      ],
+      checkFailures: [],
+      costUSD: 0.085,
+      seconds: 84.5,
+    };
+    const before = structuredClone(kitReply);
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(json(kitReply));
+    vi.stubGlobal("fetch", fetcher);
+
+    const result = await requestLiveInvoiceReading(
+      "http://localhost:5191",
+      images,
+    );
+
+    expect(result).toMatchObject({
+      models: ["fictional-model-argon", "fictional-model-luna"],
+      modelDetails: [
+        {
+          id: "fictional-model-argon",
+          ok: true,
+          seconds: 71.25,
+          costUSD: "0.0825",
+        },
+        {
+          id: "fictional-model-luna",
+          ok: true,
+          seconds: 30.5,
+          costUSD: "0.0025",
+        },
+      ],
+      costUSD: "0.085",
+      seconds: 84.5,
+      checksPassed: true,
+      reading: source.ai_reading,
+      statuses: source.ai_statuses,
+    });
+    expect(result).not.toHaveProperty("checkFailures");
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(String(fetcher.mock.calls[0][1]?.body))).toEqual({
+      images,
+    });
+    expect(kitReply).toEqual(before);
+    expect(
+      buildLiveInvoiceReadingsExport(result, options()).invoices[0],
+    ).toMatchObject({
+      ai_models: ["fictional-model-argon", "fictional-model-luna"],
+      reading_cost_usd: "0.0850",
+      checked_answer: null,
+    });
+  });
+
+  it("normalizes mixed model IDs and retains valid zero or false metadata", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>().mockResolvedValue(
+        json({
+          ...response(),
+          models: [
+            " Fictional string model ",
+            {
+              id: " Fictional object model ",
+              ok: false,
+              seconds: 0,
+              costUSD: 0,
+              error: "fictional failure",
+            },
+            {
+              id: "Fictional model with optional metadata",
+              ok: "unknown",
+              seconds: -1,
+              costUSD: "0x10",
+              futureField: { ignored: true },
+            },
+          ],
+        }),
+      ),
+    );
+    const result = await requestLiveInvoiceReading(
+      "http://localhost:5191",
+      images,
+    );
+    expect(result.models).toEqual([
+      "Fictional string model",
+      "Fictional object model",
+      "Fictional model with optional metadata",
+    ]);
+    expect(result.modelDetails).toEqual([
+      { id: "Fictional object model", ok: false, seconds: 0, costUSD: "0" },
+      { id: "Fictional model with optional metadata" },
+    ]);
   });
 
   it.each([
@@ -264,6 +375,16 @@ describe("one live request", () => {
     },
     { statuses: { "lines[0].quantity": "not-a-status" } },
     { models: ["Fictional model", 42] },
+    { models: [""] },
+    { models: ["  "] },
+    { models: [null] },
+    { models: [[]] },
+    { models: [{}] },
+    { models: [{ id: "" }] },
+    { models: [{ id: "  " }] },
+    { models: [{ id: 42 }] },
+    { models: [{ id: null }] },
+    { models: [{ id: ["Fictional model"] }] },
     { seconds: -1 },
     { seconds: "84" },
     { costUSD: "NaN" },

@@ -470,6 +470,9 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
                 seconds: response.seconds,
                 costUSD: String(response.costUSD),
                 models: response.models,
+                ...(response.modelDetails
+                  ? { modelDetails: response.modelDetails }
+                  : {}),
               },
             });
           },

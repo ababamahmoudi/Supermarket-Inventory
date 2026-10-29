@@ -75,15 +75,25 @@ export function fictionalResponse(number = "R3-FICTIONAL-001") {
     seconds: 84,
   };
 }
+type FictionalReaderResponse = Omit<
+  ReturnType<typeof fictionalResponse>,
+  "models"
+> & {
+  models: (
+    | string
+    | { id: string; ok: boolean; seconds: number; costUSD: number; error: null }
+  )[];
+  checkFailures?: unknown[];
+};
 export type ReaderOutcome =
-  | { kind: "success"; response?: ReturnType<typeof fictionalResponse> }
+  | { kind: "success"; response?: FictionalReaderResponse }
   | { kind: "http" }
   | { kind: "network" }
   | { kind: "invalid-json" }
   | {
       kind: "held";
       wait: Promise<void>;
-      response?: ReturnType<typeof fictionalResponse>;
+      response?: FictionalReaderResponse;
     };
 export function deferred() {
   let resolve!: () => void;

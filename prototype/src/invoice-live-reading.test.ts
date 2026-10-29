@@ -31,6 +31,7 @@ import {
   useSimulatedLiveInvoiceReading,
 } from "./invoice-live-reading";
 import type { DemoState } from "./types";
+import type { LiveReadingProvenance } from "./invoice-live-reading-types";
 
 const retained = vi.hoisted(() => new Map<string, Uint8Array>());
 vi.mock("./file-database", async (original) => ({
@@ -124,11 +125,32 @@ const provenance = {
   costUSD: "0.1100",
   models: ["Fictional Reader A", "Fictional Reader B"],
 };
-function accept(data: Awaited<ReturnType<typeof processing>>, count?: number) {
+const detailedProvenance: LiveReadingProvenance = {
+  ...provenance,
+  modelDetails: [
+    {
+      id: "Fictional Reader A",
+      ok: true,
+      seconds: 71.596,
+      costUSD: "0.083576",
+    },
+    {
+      id: "Fictional Reader B",
+      ok: false,
+      seconds: 0,
+      costUSD: "0.0022153",
+    },
+  ],
+};
+function accept(
+  data: Awaited<ReturnType<typeof processing>>,
+  count?: number,
+  readingProvenance: LiveReadingProvenance = provenance,
+) {
   return applyLiveInvoiceReading(data.state, data.actor, {
     ...data.attempt,
     exported: envelope(data.attempt, count),
-    provenance,
+    provenance: readingProvenance,
   });
 }
 const snapshot = (state: DemoState) => JSON.stringify(state);
@@ -207,9 +229,59 @@ describe("R3 protected live reading domain", () => {
         data.attached.original_sha256s[0],
         data.attached.original_sha256s[0],
       ]);
+      expect(invoice.reading_record).not.toHaveProperty("model_details");
       expect(
         data.state.invoices?.filter((item) => item.id === before.id),
       ).toHaveLength(1);
+    },
+  );
+
+  it("retains per-model outcomes, timing and exact Decimal costs through the protected importer", async () => {
+    const data = await processing();
+    const original = structuredClone(data.state.invoice.original_pages);
+    const detailInput = structuredClone(detailedProvenance);
+    Object.assign(detailInput.modelDetails![0], { extraKitField: "ignored" });
+    accept(data, undefined, detailInput);
+    const invoice = data.state.invoice;
+    expect(invoice.reading_record?.model_details).toEqual(
+      detailedProvenance.modelDetails,
+    );
+    expect(invoice.reading_record?.model_details?.[1]).toEqual({
+      id: "Fictional Reader B",
+      ok: false,
+      seconds: 0,
+      costUSD: "0.0022153",
+    });
+    expect(invoice.reading_record?.models).toEqual(provenance.models);
+    expect(invoice.original_pages).toEqual(original);
+    expect(invoice.status).toBe("review");
+    detailInput.modelDetails![0].costUSD = "999";
+    expect(invoice.reading_record?.model_details?.[0].costUSD).toBe("0.083576");
+  });
+
+  it.each([
+    null,
+    { id: " " },
+    { id: 42 },
+    { id: "Fictional Reader A", ok: "true" },
+    { id: "Fictional Reader A", seconds: -1 },
+    { id: "Fictional Reader A", seconds: NaN },
+    { id: "Fictional Reader A", seconds: "71.596" },
+    { id: "Fictional Reader A", costUSD: 0.083576 },
+    { id: "Fictional Reader A", costUSD: "-0.083576" },
+    { id: "Fictional Reader A", costUSD: "invalid" },
+  ])(
+    "rejects invalid command model detail %j without writes",
+    async (detail) => {
+      const data = await processing();
+      const before = snapshot(data.state);
+      expect(() =>
+        accept(data, undefined, {
+          ...provenance,
+          modelDetails: [detail] as LiveReadingProvenance["modelDetails"],
+        }),
+      ).toThrow("The reading provenance is invalid.");
+      expect(snapshot(data.state)).toBe(before);
     },
   );
 
@@ -564,7 +636,7 @@ describe("R3 protected live reading domain", () => {
     "%s gets only the permitted live provenance in actual invoice and History projections",
     async (role) => {
       const data = await processing(role);
-      accept(data);
+      accept(data, undefined, detailedProvenance);
       const view = invoiceView(data.state, data.actor, data.attempt.invoice_id);
       const json = JSON.stringify(view);
       expect(view.live_reading?.phase).toBe("complete");
@@ -573,6 +645,7 @@ describe("R3 protected live reading domain", () => {
         expect(view.reading_record).toBeUndefined();
         expect(json).not.toContain("Fictional Reader A");
         expect(json).not.toContain("0.1100");
+        expect(json).not.toContain("0.0022153");
         const history = data.state.activity.find(
           (entry) => entry.entity_id === data.attempt.invoice_id,
         )!;
@@ -582,6 +655,7 @@ describe("R3 protected live reading domain", () => {
         );
         expect(visible).not.toContain("Fictional Reader A");
         expect(visible).not.toContain("0.1100");
+        expect(visible).not.toContain("0.0022153");
         expect(visible).not.toContain(data.actor.session_id);
       } else
         expect(view.reading_record).toMatchObject(
@@ -590,6 +664,7 @@ describe("R3 protected live reading domain", () => {
                 models: provenance.models,
                 seconds: 84,
                 reading_cost_usd: "0.1100",
+                model_details: detailedProvenance.modelDetails,
               }
             : {},
         );
@@ -600,7 +675,7 @@ describe("R3 protected live reading domain", () => {
     "%s History respects whole-record and leaf-path live provenance privacy",
     async (role) => {
       const data = await processing(role);
-      accept(data);
+      accept(data, undefined, detailedProvenance);
       const entry = data.state.activity.find(
         (record) => record.entity_id === data.attempt.invoice_id,
       )!;
@@ -629,6 +704,12 @@ describe("R3 protected live reading domain", () => {
           after_exists: true,
           after: provenance.models,
         },
+        {
+          path: ["invoice", "reading_record", "model_details"],
+          before_exists: false,
+          after_exists: true,
+          after: detailedProvenance.modelDetails,
+        },
       ];
       const before = snapshot(data.state);
       const visible = JSON.stringify(
@@ -637,9 +718,11 @@ describe("R3 protected live reading domain", () => {
       if (role === "manager") {
         expect(visible).toContain("Fictional Reader A");
         expect(visible).toContain("0.1100");
+        expect(visible).toContain("0.0022153");
       } else {
         expect(visible).not.toContain("Fictional Reader A");
         expect(visible).not.toContain("0.1100");
+        expect(visible).not.toContain("0.0022153");
       }
       expect(snapshot(data.state)).toBe(before);
     },

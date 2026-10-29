@@ -18,9 +18,49 @@ import {
   requireLiveRecoveryTransition,
   requireLiveReadingTarget,
 } from "./invoice-live-reading-state";
-import type { LiveReadingProvenance } from "./invoice-live-reading-types";
+import type {
+  LiveReadingModelDetail,
+  LiveReadingProvenance,
+} from "./invoice-live-reading-types";
 import type { DemoInvoice, DemoState } from "./types";
 export { canUseLiveManualInvoice } from "./invoice-live-reading-state";
+
+function normalizeModelDetails(
+  value: LiveReadingProvenance["modelDetails"],
+): LiveReadingModelDetail[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value))
+    throw new Error("The reading provenance is invalid.");
+  return value.map((model) => {
+    if (
+      !model ||
+      typeof model !== "object" ||
+      typeof model.id !== "string" ||
+      !model.id.trim() ||
+      (model.ok !== undefined && typeof model.ok !== "boolean") ||
+      (model.seconds !== undefined &&
+        (typeof model.seconds !== "number" ||
+          !Number.isFinite(model.seconds) ||
+          model.seconds < 0))
+    )
+      throw new Error("The reading provenance is invalid.");
+    const detail: LiveReadingModelDetail = { id: model.id.trim() };
+    if (model.ok !== undefined) detail.ok = model.ok;
+    if (model.seconds !== undefined) detail.seconds = model.seconds;
+    if (model.costUSD !== undefined) {
+      if (
+        typeof model.costUSD !== "string" ||
+        !/^\d+(?:\.\d+)?$/.test(model.costUSD)
+      )
+        throw new Error("The reading provenance is invalid.");
+      const cost = new Decimal(model.costUSD);
+      if (!cost.isFinite() || cost.isNegative())
+        throw new Error("The reading provenance is invalid.");
+      detail.costUSD = cost.toFixed();
+    }
+    return detail;
+  });
+}
 
 function publish(state: DemoState, invoice: DemoInvoice) {
   const index =
@@ -232,12 +272,17 @@ export function applyLiveInvoiceReading(
     input.provenance.models.some((model) => typeof model !== "string")
   )
     throw new Error("The reading provenance is invalid.");
+  const modelDetails = normalizeModelDetails(input.provenance.modelDetails);
   return importLiveInvoiceReading(
     state,
     actor,
     {
       ...input,
-      provenance: { ...input.provenance, costUSD: cost.toFixed(4) },
+      provenance: {
+        ...input.provenance,
+        costUSD: cost.toFixed(4),
+        ...(modelDetails ? { modelDetails } : {}),
+      },
     },
     now,
   );

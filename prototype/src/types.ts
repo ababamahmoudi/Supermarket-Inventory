@@ -37,7 +37,10 @@ import type {
 } from "./price-updates";
 import type { MakerBranding } from "./maker-branding";
 import type { RoleDefinition } from "./role-config";
-import type { LiveInvoiceReading } from "./invoice-live-reading-types";
+import type {
+  LiveInvoiceReading,
+  LiveReadingModelDetail,
+} from "./invoice-live-reading-types";
 import type { NoteEngagement } from "./note-engagement";
 export type Role = RoleId;
 /** Old serialized input only; never a current authority role. */
@@ -485,6 +488,7 @@ export type DemoInvoice = Omit<
       file_name: string;
       page_sha256s: string[];
       models: string[];
+      model_details?: LiveReadingModelDetail[];
       reading_cost_usd: string;
       exported_at: string;
       ai_source: string;

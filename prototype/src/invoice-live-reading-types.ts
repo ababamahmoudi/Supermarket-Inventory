@@ -24,8 +24,16 @@ export type LiveInvoiceReadingView = Pick<
   "phase" | "attempt_id" | "started_at" | "completed_at"
 >;
 
+export interface LiveReadingModelDetail {
+  id: string;
+  ok?: boolean;
+  seconds?: number;
+  costUSD?: string;
+}
+
 export interface LiveReadingProvenance {
   seconds: number;
   costUSD: string;
   models: string[];
+  modelDetails?: LiveReadingModelDetail[];
 }

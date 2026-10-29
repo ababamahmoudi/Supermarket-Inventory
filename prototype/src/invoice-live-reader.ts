@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { createId } from "./ids";
 import type { LiveReaderImage } from "./invoice-live-images";
+import type { LiveReadingModelDetail } from "./invoice-live-reading-types";
 import { readerEndpoint } from "./live-reader-settings";
 import { isUsableLiveReadingItem } from "./live-reading-content";
 import {
@@ -12,12 +13,15 @@ export type { LiveReaderImage } from "./invoice-live-images";
 
 export const LIVE_READING_TIMEOUT_MS = 4 * 60 * 1000;
 
+export type LiveReaderModelDetail = LiveReadingModelDetail;
+
 export interface LiveReaderResponse {
   reading: InvoiceReading;
   statuses: Record<string, "auto" | "check">;
   alternatives?: unknown;
   checksPassed: boolean;
   models: string[];
+  modelDetails?: LiveReaderModelDetail[];
   /** Decimal text, independent of the company's invoice currency. */
   costUSD: string;
   seconds: number;
@@ -62,6 +66,25 @@ const scalar = (value: unknown) =>
   (typeof value === "number" && Number.isFinite(value)) ||
   (Array.isArray(value) && value.every((item) => typeof item === "string"));
 
+function modelId(value: unknown): string | undefined {
+  const id =
+    typeof value === "string" ? value : object(value) ? value.id : undefined;
+  return typeof id === "string" && id.trim() ? id.trim() : undefined;
+}
+
+function decimalCostUSD(value: unknown): string | undefined {
+  if (typeof value !== "string" && typeof value !== "number") return undefined;
+  try {
+    const text = String(value).trim();
+    if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(text))
+      return undefined;
+    const cost = new Decimal(text);
+    return cost.isFinite() && !cost.isNegative() ? cost.toFixed() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function hasUsableReading(value: unknown): value is InvoiceReading {
   if (
     !object(value) ||
@@ -92,33 +115,41 @@ function readResponse(value: unknown): LiveReaderResponse {
     ) ||
     typeof value.checksPassed !== "boolean" ||
     !Array.isArray(value.models) ||
-    !value.models.every(
-      (model) => typeof model === "string" && Boolean(model.trim()),
-    ) ||
+    !value.models.every((model) => modelId(model) !== undefined) ||
     typeof value.seconds !== "number" ||
     !Number.isFinite(value.seconds) ||
     value.seconds < 0 ||
     !["string", "number"].includes(typeof value.costUSD)
   )
     throw new LiveReaderError("invalid_response");
-  let costUSD: string;
-  try {
-    const text = String(value.costUSD).trim();
-    if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(text))
-      throw new LiveReaderError("invalid_response");
-    const cost = new Decimal(text);
-    if (!cost.isFinite() || cost.isNegative())
-      throw new LiveReaderError("invalid_response");
-    costUSD = cost.toFixed();
-  } catch {
-    throw new LiveReaderError("invalid_response");
+  const costUSD = decimalCostUSD(value.costUSD);
+  if (costUSD === undefined) throw new LiveReaderError("invalid_response");
+  const models: string[] = [];
+  const modelDetails: LiveReaderModelDetail[] = [];
+  for (const model of value.models) {
+    const id = modelId(model);
+    if (id === undefined) throw new LiveReaderError("invalid_response");
+    models.push(id);
+    if (!object(model)) continue;
+    const detail: LiveReaderModelDetail = { id };
+    if (typeof model.ok === "boolean") detail.ok = model.ok;
+    if (
+      typeof model.seconds === "number" &&
+      Number.isFinite(model.seconds) &&
+      model.seconds >= 0
+    )
+      detail.seconds = model.seconds;
+    const modelCostUSD = decimalCostUSD(model.costUSD);
+    if (modelCostUSD !== undefined) detail.costUSD = modelCostUSD;
+    modelDetails.push(detail);
   }
   return {
     reading: value.reading,
     statuses: value.statuses as LiveReaderResponse["statuses"],
     alternatives: value.alternatives,
     checksPassed: value.checksPassed,
-    models: value.models.map((model) => model.trim()),
+    models,
+    ...(modelDetails.length ? { modelDetails } : {}),
     costUSD,
     seconds: value.seconds,
   };

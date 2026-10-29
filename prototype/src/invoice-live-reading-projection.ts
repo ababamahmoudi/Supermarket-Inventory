@@ -42,7 +42,9 @@ export function redactLiveReadingProvenance<T>(value: T): T {
     path.includes("reading_record") &&
     (wholeLiveRecord ||
       path.some((part) =>
-        ["models", "reading_cost_usd", "seconds"].includes(String(part)),
+        ["models", "model_details", "reading_cost_usd", "seconds"].includes(
+          String(part),
+        ),
       ));
   return Object.fromEntries(
     Object.entries(record)

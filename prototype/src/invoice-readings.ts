@@ -1788,6 +1788,10 @@ export function importInvoiceReadings(
       Object.assign(invoice, originals[0]);
       invoice.reading_record.models = [...live.provenance.models];
       invoice.reading_record.reading_cost_usd = live.provenance.costUSD;
+      if (live.provenance.modelDetails)
+        invoice.reading_record.model_details = structuredClone(
+          live.provenance.modelDetails,
+        );
       invoice.live_reading!.phase = "complete";
       invoice.live_reading!.completed_at = now.toISOString();
       const index = state.invoices.findIndex(
