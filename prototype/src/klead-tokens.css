@@ -39,11 +39,14 @@
   --surface-kpi-icon: rgba(255, 255, 255, 0.12);
   --color-clear: transparent;
   --color-current: currentColor;
+  --mask-opaque: #000000;
   --radius-none: 0;
   --radius-card: 20px;
   --radius-control: 12px;
   --radius-small: 10px;
   --radius-dialog: 24px;
+  --radius-dialog-top: var(--radius-dialog) var(--radius-dialog)
+    var(--radius-none) var(--radius-none);
   --radius-menu: 14px;
   --radius-search: 16px;
   --radius-toast: 14px;
@@ -63,6 +66,8 @@
   --shadow-dialog: 0 24px 64px rgba(20, 26, 43, 0.24);
   --shadow-menu: 0 16px 40px rgba(20, 26, 43, 0.16);
   --shadow-row-divider: inset 0 -1px var(--row-divider);
+  --shadow-row-divider-top: inset 0 1px var(--row-divider);
+  --shadow-divider-outline: inset 0 0 0 1px var(--divider);
   --table-row-rule: linear-gradient(var(--row-divider), var(--row-divider));
   --shadow-selected: inset 0 0 0 1px var(--accent);
   --shadow-thumb: 0 1px 3px rgba(20, 26, 43, 0.1);

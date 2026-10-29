@@ -239,10 +239,18 @@
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
-  mask-image: linear-gradient(to right, black calc(100% - 32px), transparent);
+  mask-image: linear-gradient(
+    to right,
+    var(--mask-opaque) calc(100% - 32px),
+    var(--color-clear)
+  );
 }
 :root[dir="rtl"] .lookup-page .lookup-pricing-filters {
-  mask-image: linear-gradient(to left, black calc(100% - 32px), transparent);
+  mask-image: linear-gradient(
+    to left,
+    var(--mask-opaque) calc(100% - 32px),
+    var(--color-clear)
+  );
 }
 .lookup-pricing-filters::-webkit-scrollbar {
   display: none;
@@ -450,7 +458,7 @@
   padding-block-start: 16px;
   margin-block-start: 4px;
   border: 0;
-  box-shadow: inset 0 1px var(--row-divider);
+  box-shadow: var(--shadow-row-divider-top);
 }
 :root .lookup-page .lookup-detail .product-open-dates {
   grid-column: 1 / -1;

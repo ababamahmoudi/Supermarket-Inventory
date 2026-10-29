@@ -245,7 +245,7 @@
     text-align: start;
     padding: 14px 16px;
     gap: 12px;
-    border: 1px solid transparent;
+    border: 1px solid var(--color-clear);
     border-radius: var(--radius-menu);
     background: var(--klead-field);
     min-block-size: 0;
@@ -637,7 +637,7 @@
     inline-size: 100vw;
     max-inline-size: 100vw;
     max-block-size: 100dvh;
-    border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+    border-radius: var(--radius-dialog-top);
     margin: auto 0 0;
   }
   :root .ui-dialog.change-price-dialog > .ui-dialog-header {
