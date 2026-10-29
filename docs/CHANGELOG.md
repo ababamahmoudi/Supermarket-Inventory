@@ -3,6 +3,7 @@
 - Connected the existing local reader kit to ordered photos/PDFs through the existing AI-mode importer. Saved raw originals and the Processing draft survive failures, cancellation, reload and explicit manual/demo recovery; one press makes one request with a four-minute limit.
 - Added protected Simulated/Live settings, dynamic reader addresses, five-second connection checks and the shared Demo switch. Live duration, USD fee and actual models remain Owner/Manager-only; explicit simulated fallback stays visibly labelled.
 - Added fictional preparation, client, authority/privacy, importer and desktop/phone browser coverage without changing the existing simulated/JSON tests. Updated the canonical R3 docs and [Mac/Ubuntu/phone rehearsal guide](PR_R3_REVIEW.md). Exact final commit and complete seven-check CI results are recorded on PR #29.
+- Kept the C7 shell keyboard proof aligned with the actual first Demo checkbox: assert its checked state and focus, then retain directional, Home/End, Escape, search, theme, lock and sign-out coverage. The earlier plain-menu-item selector excluded that new semantic role.
 
 ## 2026-10-28 — CI205 Lookup query retention
 

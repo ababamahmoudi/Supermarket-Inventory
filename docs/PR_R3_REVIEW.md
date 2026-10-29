@@ -88,10 +88,11 @@ The browser may not reveal whether a failed fetch was an unreachable server or C
 
 ## Executed verification
 
-The final task report and PR description identify the exact checked commit and its complete seven-check CI result. Local integrated verification passed:
+The final task report and PR description identify the exact checked commit and its complete seven-check CI result. Executed verification includes:
 
-- 262 unit-test files / 2,565 tests, followed by 68 targeted tests after the final manual-recovery change; the latter include the added receiving-location regression and all 11 existing origin cases.
+- 262 unit-test files / 2,566 current tests in CI. Local final manual-recovery verification also passed 68 targeted tests, including the added receiving-location regression and all 11 existing origin cases.
 - All 75 SDK tests across six files.
+- Foundation/service checks: 57 Python tests, five frontend tests, three browser smoke cases, authenticated local file-store checks and zero runtime dependency vulnerabilities.
 - All 38 new live-reader browser cases: 19 desktop and 19 phone, with no skips, failures, flakes or retries. After the final receiving-location change, both desktop/phone instances of the extended manual-recovery case passed again.
 - Four actual Settings visual variants: English/light and Persian/dark, each at 1440 and 390 px. Their 16 retained screenshots and geometry checks cover connection feedback, address wrapping, checked-menu focus and card alignment.
 - Production build, TypeScript, ESLint and formatting. All media in these proofs are fictional; HTTP responses are intercepted.
