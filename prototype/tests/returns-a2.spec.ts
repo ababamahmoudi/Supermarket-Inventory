@@ -361,7 +361,7 @@ test("Returns starts with all suppliers and Open records, and opens each return 
   );
 });
 
-test("Return policy dialog centers, closes with Escape and backdrop, and restores trigger focus", async ({
+test("Return policy uses its responsive frame, genuine dismissal controls and restored trigger focus", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
@@ -376,22 +376,123 @@ test("Return policy dialog centers, closes with Escape and backdrop, and restore
     exact: true,
   });
   await expect(dialog).toBeVisible();
-  const centered = await dialog.evaluate((node) => {
-    const box = node.getBoundingClientRect();
-    return {
-      x: Math.abs(box.x + box.width / 2 - innerWidth / 2),
-      y: Math.abs(box.y + box.height / 2 - innerHeight / 2),
-      focusInside: node.contains(document.activeElement),
-    };
-  });
+  const frame = () =>
+    dialog.evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      const css = getComputedStyle(node);
+      const title = node.querySelector(":scope > .ui-dialog-header h2");
+      const titleId = node.getAttribute("aria-labelledby");
+      return {
+        genuine:
+          node instanceof HTMLDialogElement &&
+          node.open &&
+          node.matches(".ui-dialog.return-policy-dialog") &&
+          Boolean(node.getAttribute("data-dialog-feedback-scope")) &&
+          Boolean(titleId && document.getElementById(titleId) === title) &&
+          title?.textContent?.trim() === "Return policy",
+        x: Math.abs(box.x + box.width / 2 - innerWidth / 2),
+        y: Math.abs(box.y + box.height / 2 - innerHeight / 2),
+        left: box.left,
+        right: box.right,
+        top: box.top,
+        bottom: box.bottom,
+        width: box.width,
+        height: box.height,
+        viewport: { width: innerWidth, height: innerHeight },
+        corners: [
+          css.borderTopLeftRadius,
+          css.borderTopRightRadius,
+          css.borderBottomLeftRadius,
+          css.borderBottomRightRadius,
+        ],
+        focusInside: node.contains(document.activeElement),
+      };
+    });
+  const phoneFrameFailures = (value: Awaited<ReturnType<typeof frame>>) => {
+    const failures: string[] = [];
+    if (!value.genuine)
+      failures.push("Not the actual managed native policy dialog");
+    if (
+      Math.abs(value.left) > 2 ||
+      Math.abs(value.width - value.viewport.width) > 2
+    )
+      failures.push("The policy sheet must fill the viewport width");
+    if (
+      Math.abs(value.bottom - value.viewport.height) > 2 ||
+      value.top < 0 ||
+      value.height > value.viewport.height
+    )
+      failures.push(
+        "The policy sheet must meet the viewport bottom within its height",
+      );
+    if (value.corners.join() !== ["24px", "24px", "0px", "0px"].join())
+      failures.push(
+        "The policy sheet must keep its rounded top and square bottom corners",
+      );
+    return failures;
+  };
+  const centered = await frame();
+  expect(centered.genuine).toBe(true);
   expect(centered.x).toBeLessThanOrEqual(2);
-  expect(centered.y).toBeLessThanOrEqual(2);
+  if (centered.viewport.width <= 760) {
+    expect(phoneFrameFailures(centered)).toEqual([]);
+    const originalStyle = await dialog.getAttribute("style");
+    try {
+      await dialog.evaluate((node) => {
+        node.style.inlineSize = `${node.getBoundingClientRect().width - 4}px`;
+      });
+      expect(phoneFrameFailures(await frame())).toContain(
+        "The policy sheet must fill the viewport width",
+      );
+    } finally {
+      await dialog.evaluate((node, style) => {
+        if (style === null) node.removeAttribute("style");
+        else node.setAttribute("style", style);
+      }, originalStyle);
+    }
+    expect(phoneFrameFailures(await frame())).toEqual([]);
+  } else expect(centered.y).toBeLessThanOrEqual(2);
   expect(centered.focusInside).toBe(true);
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
   await trigger.click();
-  await page.mouse.click(2, 2);
+  const reopened = await frame();
+  const outside =
+    reopened.left > 2
+      ? { x: reopened.left / 2, y: reopened.viewport.height / 2 }
+      : reopened.top > 2
+        ? { x: reopened.viewport.width / 2, y: reopened.top / 2 }
+        : reopened.viewport.width - reopened.right > 2
+          ? {
+              x: (reopened.right + reopened.viewport.width) / 2,
+              y: reopened.viewport.height / 2,
+            }
+          : reopened.viewport.height - reopened.bottom > 2
+            ? {
+                x: reopened.viewport.width / 2,
+                y: (reopened.bottom + reopened.viewport.height) / 2,
+              }
+            : null;
+  if (outside) {
+    expect(
+      outside.x < reopened.left ||
+        outside.x > reopened.right ||
+        outside.y < reopened.top ||
+        outside.y > reopened.bottom,
+    ).toBe(true);
+    await page.mouse.click(outside.x, outside.y);
+  } else {
+    expect(reopened.viewport.width).toBeLessThanOrEqual(760);
+    expect(phoneFrameFailures(reopened)).toEqual([]);
+    expect(Math.abs(reopened.top)).toBeLessThanOrEqual(2);
+    expect(
+      Math.abs(reopened.height - reopened.viewport.height),
+    ).toBeLessThanOrEqual(2);
+    await dialog
+      .getByRole("button", { name: "Close dialog", exact: true })
+      .click();
+  }
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
 });
