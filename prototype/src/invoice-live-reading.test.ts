@@ -12,6 +12,9 @@ import {
   type ProtectedInvoiceQuery,
 } from "./invoice-file-access";
 import { invoiceView } from "./invoice-projections";
+import { canInvoiceAuthority } from "./invoice-authority";
+import { setInvoiceLocation } from "./received";
+import { invoiceMoveRead } from "./invoice-workspace-read";
 import { projectHistoryEntry } from "./history";
 import {
   importInvoiceReadings,
@@ -642,7 +645,13 @@ describe("R3 protected live reading domain", () => {
     },
   );
 
-  it.each(["original", "branch", "posted", "origin", "company"] as const)(
+  it.each([
+    "original",
+    "inactive-destination",
+    "posted",
+    "origin",
+    "company",
+  ] as const)(
     "manual fallback rejects a changed %s without writes",
     async (change) => {
       const data = await processing("floor_worker");
@@ -654,7 +663,12 @@ describe("R3 protected live reading domain", () => {
         delete data.state.invoice.file_data;
         delete data.state.invoice.original_pages;
       }
-      if (change === "branch") data.state.invoice.branch = "Branch 2";
+      if (change === "inactive-destination") {
+        data.state.config.branches.find(
+          (location) => location.id === "Branch 2",
+        )!.active = false;
+        data.state.invoice.branch = "Branch 2";
+      }
       if (change === "company")
         data.state.invoice.company_id = "fictional-other-company";
       if (change === "posted") data.state.invoice.status = "posted";
@@ -1011,5 +1025,50 @@ describe("R3 protected live reading domain", () => {
           record.company_id === data.actor.company_id,
       ),
     ).toHaveLength(1);
+  });
+
+  it("the own Floor Worker can continue manual entry after the existing authorized pre-post receiving move", async () => {
+    const data = await processing("floor_worker");
+    settleLiveInvoiceReading(data.state, data.actor, {
+      ...data.attempt,
+      outcome: "manual",
+    });
+    expect(data.actor.allowed_branches).toEqual(["Branch 1"]);
+    expect(() =>
+      invoiceMoveRead(
+        data.state,
+        data.actor,
+        data.attempt.invoice_id,
+        "Warehouse",
+      ),
+    ).toThrow("posted invoice");
+    const originals = structuredClone(data.state.invoice.original_pages);
+    const money = JSON.stringify([
+      data.state.ledger,
+      data.state.approvals,
+      data.state.stock_movements,
+    ]);
+    setInvoiceLocation(data.state, data.actor, "Warehouse");
+    expect(data.state.invoice.branch).toBe("Warehouse");
+    expect(data.state.invoice.reviewer_origin_location_id).toBe("Branch 1");
+    expect(
+      canInvoiceAuthority(
+        data.state,
+        data.actor,
+        "invoices.edit",
+        data.attempt.invoice_id,
+        true,
+      ),
+    ).toBe(true);
+    expect(() => addManualLine(data.state, data.actor, "0002")).not.toThrow();
+    expect(data.state.invoice.lines).toHaveLength(1);
+    expect(data.state.invoice.original_pages).toEqual(originals);
+    expect(
+      JSON.stringify([
+        data.state.ledger,
+        data.state.approvals,
+        data.state.stock_movements,
+      ]),
+    ).toBe(money);
   });
 });

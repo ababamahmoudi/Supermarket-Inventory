@@ -106,7 +106,7 @@ export function requireLiveManualInvoice(
   actor: AuthenticatedActor,
   id: string,
 ) {
-  const current = requireLiveManualOrigin(state, actor, id);
+  const current = requireLiveManualOrigin(state, actor, id, true);
   if (
     current.invoice.live_reading?.phase !== "manual" ||
     current.invoice.entry_mode !== "manual"
@@ -119,6 +119,7 @@ function requireLiveManualOrigin(
   state: DemoState,
   actor: AuthenticatedActor,
   id: string,
+  continuedManual = false,
 ) {
   const current = requireLiveInvoice(state, actor, id);
   const live = current.invoice.live_reading;
@@ -134,7 +135,7 @@ function requireLiveManualOrigin(
     !live?.attempt_id ||
     !guard ||
     guard.origin !== "local-reader-v1" ||
-    guard.branch !== current.invoice.branch ||
+    (!continuedManual && guard.branch !== current.invoice.branch) ||
     guard.original_signature !== liveOriginalSignature(current.invoice) ||
     (!ordinaryManual && guard.user_id !== current.actor.user_id)
   )
