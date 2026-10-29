@@ -39,6 +39,7 @@ import {
   requireLiveReadingTarget,
 } from "./invoice-live-reading-state";
 import type { LiveReadingProvenance } from "./invoice-live-reading-types";
+import { isUsableLiveReadingItem } from "./live-reading-content";
 import type {
   DemoInvoice,
   DemoState,
@@ -1864,11 +1865,7 @@ export function importLiveInvoiceReading(
   if (exported.invoices.length !== 1)
     throw new Error("One live reading must describe one invoice.");
   const entry = exported.invoices[0];
-  if (
-    !entry.ai_reading?.lines?.some(
-      (line) => !line.line_type || line.line_type === "item",
-    )
-  )
+  if (!entry.ai_reading?.lines?.some(isUsableLiveReadingItem))
     throw new Error("The live reading contains no usable lines.");
   const originals = liveOriginalPages(invoice);
   const pdf =
