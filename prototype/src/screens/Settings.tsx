@@ -7,6 +7,7 @@ import TimesheetSettings from "./TimesheetSettings";
 import NotificationSettings from "./NotificationSettings";
 import RegisteredComputers from "./RegisteredComputers";
 import InvoiceReadingsImport from "./InvoiceReadingsImport";
+import LiveReaderSettings from "./LiveReaderSettings";
 import { useEffect, useRef, useState, type SetStateAction } from "react";
 import companyLogo from "../../../assets/arzon-logo.png?inline";
 import { MoreHorizontal, Plus } from "lucide-react";
@@ -161,7 +162,6 @@ const groups: {
       ["Required invoice fields", "فیلدهای الزامی فاکتور"],
       ["Automatic invoice numbering", "شماره‌گذاری خودکار فاکتور"],
       ["Tax-mismatch tolerance", "تلورانس اختلاف مالیات"],
-      ["AI reading and confidence", "خواندن هوش مصنوعی و اطمینان"],
       [
         "Same-supplier lower-price questions",
         "پرسش‌های کاهش قیمت همان تأمین‌کننده",
@@ -1437,6 +1437,11 @@ function SettingsContent() {
             />
           ) : selected === "data" ? (
             <InvoiceReadingsImport />
+          ) : selected === "receiving" ? (
+            <>
+              <LiveReaderSettings />
+              <PlannedSettings group={group} />
+            </>
           ) : selected === "about" ? (
             <Card>
               <MakerAbout

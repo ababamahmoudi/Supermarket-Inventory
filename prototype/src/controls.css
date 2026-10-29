@@ -319,6 +319,7 @@ input.ui-number[type="text"] {
   background: var(--surface-soft);
 }
 .ui-checked-control[aria-checked="true"] .ui-checkbox-box,
+.ui-menu-item[aria-checked="true"] .ui-checkbox-box,
 .ui-checked-control[aria-checked="true"] .ui-radio-box {
   border-color: var(--accent);
   background: var(--accent);

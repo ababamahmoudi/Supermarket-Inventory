@@ -1,5 +1,6 @@
 import { PoweredByMaker } from "./MakerBrand";
 import PwaMenu from "./PwaMenu";
+import DemoReadingMode from "./DemoReadingMode";
 import { CollapsedNavTooltip } from "./CollapsedNavTooltip";
 import { InitialSessionLoading, SessionProgress } from "./SessionProgress.c9";
 import { AUTH_IDENTITY_KEY } from "./auth-preferences.e1";
@@ -1234,6 +1235,16 @@ export default function App() {
       <p className="helper">
         {t("Demo with fictional data", "دمو با داده‌های ساختگی")}
       </p>
+      <DemoReadingMode
+        key={JSON.stringify([
+          actor?.company_id,
+          actor?.user_id,
+          actor?.session_id,
+          actor?.role,
+          actor?.authority_epoch,
+          actor?.person_version,
+        ])}
+      />
       {demoUsers.map((candidate) => (
         <MenuItem
           key={candidate.username}

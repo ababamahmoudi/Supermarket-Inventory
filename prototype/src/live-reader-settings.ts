@@ -51,7 +51,16 @@ export function getLiveReaderSettings(
   receiving: CompanyConfig["receiving"],
   hostname?: string,
 ): { mode: LiveReadingMode; readerAddress: string } {
-  const custom = receiving.ai_reader_address?.trim();
+  const retained: unknown = receiving.ai_reader_address;
+  let custom = "";
+  if (typeof retained === "string") custom = retained.trim();
+  else if (retained !== null && retained !== undefined) {
+    try {
+      custom = JSON.stringify(retained) ?? "Invalid reader address";
+    } catch {
+      custom = "Invalid reader address";
+    }
+  }
   let readerAddress = custom || defaultReaderAddress(hostname);
   try {
     readerAddress = normalizeReaderAddress(readerAddress);

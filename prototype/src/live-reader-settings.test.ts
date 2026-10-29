@@ -73,6 +73,24 @@ describe("R3 local reader settings", () => {
     ).toBe("http://reader.local:5191/base/api/v1/invoice-readings");
   });
 
+  it("keeps a malformed restored non-string address visible and rejects it before network", async () => {
+    const receiving = initialState().config.receiving;
+    Object.assign(receiving, {
+      ai_reader_address: { invalid: "retained-address" },
+    });
+    const before = structuredClone(receiving);
+    const result = getLiveReaderSettings(receiving, "default-mac.local");
+    expect(result.readerAddress).toBe('{"invalid":"retained-address"}');
+    expect(result.readerAddress).not.toBe("http://default-mac.local:5191");
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    await expect(
+      testReaderConnection(result.readerAddress),
+    ).rejects.toBeInstanceOf(ReaderAddressError);
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(receiving).toEqual(before);
+  });
+
   it.each([
     "ftp://reader.local",
     "javascript:alert(1)",

@@ -125,3 +125,6 @@
     }
   }
 }
+.settings-reader-status {
+  overflow-wrap: anywhere;
+}

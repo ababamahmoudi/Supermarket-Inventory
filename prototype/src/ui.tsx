@@ -3095,7 +3095,7 @@ export function Menu({
   const itemsWithin = (menu: HTMLElement | null) =>
     Array.from(
       menu?.querySelectorAll<HTMLButtonElement>(
-        '[role="menuitem"]:not(:disabled)',
+        ':is([role="menuitem"], [role="menuitemcheckbox"]):not(:disabled)',
       ) ?? [],
     ).filter((item) => item.closest('[role="menu"]') === menu);
   const focusItem = (edge: "first" | "last") =>
@@ -3199,6 +3199,7 @@ export function MenuItem({
   children,
   onClick,
   disabled,
+  checked,
   className,
   closeOnSelect = true,
   ...props
@@ -3206,6 +3207,7 @@ export function MenuItem({
   children: ReactNode;
   onClick: () => void;
   disabled?: boolean;
+  checked?: boolean;
   className?: string;
   closeOnSelect?: boolean;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">) {
@@ -3214,7 +3216,8 @@ export function MenuItem({
     <button
       {...props}
       type="button"
-      role="menuitem"
+      role={checked === undefined ? "menuitem" : "menuitemcheckbox"}
+      aria-checked={checked}
       disabled={disabled}
       className={cn("ui-menu-item", className)}
       onClick={() => {
@@ -3222,6 +3225,11 @@ export function MenuItem({
         if (closeOnSelect) close?.();
       }}
     >
+      {checked !== undefined && (
+        <span className="ui-checkbox-box" aria-hidden="true">
+          {checked && <Check size={14} strokeWidth={2} />}
+        </span>
+      )}
       {children}
     </button>
   );
@@ -3260,7 +3268,9 @@ export function MenuSubmenu({
       focusFrame.current = null;
       if (!opening.current) return;
       menu.current
-        ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
+        ?.querySelector<HTMLButtonElement>(
+          ':is([role="menuitem"], [role="menuitemcheckbox"]):not(:disabled)',
+        )
         ?.focus();
     });
   };
@@ -3324,7 +3334,7 @@ export function MenuSubmenu({
               event.stopPropagation();
               const items = Array.from(
                 event.currentTarget.querySelectorAll<HTMLButtonElement>(
-                  '[role="menuitem"]:not(:disabled)',
+                  ':is([role="menuitem"], [role="menuitemcheckbox"]):not(:disabled)',
                 ),
               );
               const current = items.findIndex(
