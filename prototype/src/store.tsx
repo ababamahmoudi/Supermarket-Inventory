@@ -1,3 +1,4 @@
+import { currentDialogFeedbackScope } from "./dialog-feedback";
 import { makerPageTitle, synchronizeMakerIcons } from "./maker-branding";
 import {
   createContext,
@@ -156,6 +157,7 @@ export function DemoProvider({
   );
   const [resetGeneration, setResetGeneration] = useState(0);
   const [undoToasts, setUndoToasts] = useState<UndoToast[]>([]);
+  const undoDialogOrigins = useRef(new Map<string, string>());
   const runtimeRef = useRef<Runtime | null>(null);
   const optionsRef = useRef(options);
   const requireRuntime = useCallback(() => {
@@ -257,6 +259,9 @@ export function DemoProvider({
             value.reversible &&
             shouldShowUndoNotification(value.action),
         );
+        const dialogScope = entry
+          ? undoDialogOrigins.current.get(entry.id)
+          : undefined;
         if (entry)
           setUndoToasts((queue) =>
             addUndoToast(
@@ -265,10 +270,13 @@ export function DemoProvider({
                 id: entry.id,
                 action: entry.action,
                 actor_username: actor.username,
+                dialog_scope: dialogScope,
               },
               Date.now(),
             ),
           );
+        for (const value of after.activity)
+          if (!prior.has(value.id)) undoDialogOrigins.current.delete(value.id);
       },
     })
       .then((runtime) => {
@@ -465,13 +473,23 @@ export function DemoProvider({
       capability: Capability,
       scope: ResourceScope,
       mutate: (draft: DemoState, actor: AuthenticatedActor) => T,
-    ) =>
-      requireRuntime()
-        .controller.command(capability, scope, mutate)
+    ) => {
+      const dialogScope = currentDialogFeedbackScope();
+      return requireRuntime()
+        .controller.command(capability, scope, (draft, actor) => {
+          const prior = new Set(draft.activity.map((entry) => entry.id));
+          const result = mutate(draft, actor);
+          if (dialogScope)
+            for (const entry of draft.activity)
+              if (!prior.has(entry.id))
+                undoDialogOrigins.current.set(entry.id, dialogScope);
+          return result;
+        })
         .catch((error: unknown) => {
           reportStorageFailure(error);
           throw error;
-        }),
+        });
+    },
     [requireRuntime, reportStorageFailure],
   );
   const query = useCallback(

@@ -46,6 +46,11 @@ import {
 } from "lucide-react";
 import { useDemo } from "./store";
 import {
+  beginDialogFeedbackScope,
+  endDialogFeedbackScope,
+} from "./dialog-feedback";
+import { useDialogScrollEdges } from "./use-dialog-scroll-edges";
+import {
   matchesSelectOption,
   matchingSelectTerms,
   normalizeSelectSearch,
@@ -1617,6 +1622,7 @@ export function Dialog({
   const titleId = useId();
   const descriptionId = useId();
   const structured = icon !== undefined || footer !== undefined;
+  useDialogScrollEdges(ref, open);
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -1625,6 +1631,7 @@ export function Dialog({
         document.activeElement instanceof HTMLElement
           ? document.activeElement
           : null;
+      beginDialogFeedbackScope(dialog);
       dialog.showModal();
       (
         dialog.querySelector<HTMLElement>("[autofocus]") ??
@@ -1637,10 +1644,12 @@ export function Dialog({
       )?.focus();
     } else if (!open && dialog.open) {
       dialog.close();
+      endDialogFeedbackScope(dialog);
       trigger.current?.focus({ preventScroll: true });
     }
     return () => {
       if (dialog.open) dialog.close();
+      endDialogFeedbackScope(dialog);
       trigger.current?.focus({ preventScroll: true });
     };
   }, [open]);

@@ -918,23 +918,6 @@ export function Notes() {
                 {error}
               </div>
             )}
-            <DialogActions>
-              <Button
-                variant="neutral"
-                onClick={() => {
-                  setEntryOpen(false);
-                  clearEntryForm();
-                  setError("");
-                }}
-              >
-                {t("Cancel", "لغو")}
-              </Button>
-              <Button type="submit">
-                {editing
-                  ? t("Save changes", "ذخیره تغییرات")
-                  : t("Save note", "ذخیره یادداشت")}
-              </Button>
-            </DialogActions>
             {editing && !canSaveEdit && (
               <p className="muted" role="status">
                 {t(
@@ -953,6 +936,23 @@ export function Notes() {
                     )}
               </p>
             )}
+            <DialogActions>
+              <Button
+                variant="neutral"
+                onClick={() => {
+                  setEntryOpen(false);
+                  clearEntryForm();
+                  setError("");
+                }}
+              >
+                {t("Cancel", "لغو")}
+              </Button>
+              <Button type="submit">
+                {editing
+                  ? t("Save changes", "ذخیره تغییرات")
+                  : t("Save note", "ذخیره یادداشت")}
+              </Button>
+            </DialogActions>
           </form>
         </Dialog>
       )}

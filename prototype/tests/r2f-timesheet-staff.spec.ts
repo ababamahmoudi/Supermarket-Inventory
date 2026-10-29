@@ -105,8 +105,8 @@ for (const language of ["en", "fa"] as const)
             viewportOverflow: document.documentElement.scrollWidth > innerWidth,
           };
         });
-        expect(geometry.width).toBe(width === 390 ? 358 : 880);
-        expect(geometry.x).toBeGreaterThanOrEqual(16);
+        expect(geometry.width).toBe(width === 390 ? 390 : 880);
+        expect(geometry.x).toBeGreaterThanOrEqual(width === 390 ? 0 : 16);
         expect(geometry.menu).toEqual({ width: 36, height: 36 });
         expect(geometry.overflow).toBe(false);
         expect(geometry.viewportOverflow).toBe(false);
@@ -320,7 +320,7 @@ test("R2f D2 a failed archive retains its confirmation and history for Retry", a
 });
 
 for (const width of [1440, 390])
-  test(`R2f D2 modal Undo keeps Done stable and restores the approved footer note at ${width}`, async ({
+  test(`R2g A5 page Undo stays outside Manage staff while Done and its footer note stay stable at ${width}`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
@@ -346,16 +346,18 @@ for (const width of [1440, 390])
       .click();
     const dialog = page.locator("dialog.timesheet-manage-staff[open]");
     const feedback = dialog.getByTestId("dialog-action-status");
-    await expect(feedback).toBeVisible();
-    await expect(dialog.locator(".timesheet-staff-footnote")).toBeHidden();
+    await expect(feedback).toHaveCount(0);
+    await expect(dialog.locator(".timesheet-staff-footnote")).toBeVisible();
     const done = dialog.getByRole("button", { name: "Done", exact: true });
     const withFeedback = await done.boundingBox();
     const footerWithFeedback = await dialog
       .locator(".ui-dialog-footer")
       .boundingBox();
-    await feedback.getByRole("button", { name: "Undo", exact: true }).click();
-    await expect(feedback).toHaveCount(0);
-    await expect(dialog.locator(".timesheet-staff-footnote")).toBeVisible();
+    await expect(
+      dialog.getByRole("button", { name: "Undo", exact: true }),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("undo-toast")).toHaveCount(0);
+    await dialog.getByRole("heading").click();
     const withoutFeedback = await done.boundingBox();
     const footerWithoutFeedback = await dialog
       .locator(".ui-dialog-footer")
@@ -369,6 +371,11 @@ for (const width of [1440, 390])
     expect(
       Math.abs(footerWithFeedback!.height - footerWithoutFeedback!.height),
     ).toBeLessThanOrEqual(2);
+    await done.click();
+    const pageUndo = page.getByTestId("undo-toast");
+    await expect(pageUndo).toBeVisible();
+    await pageUndo.getByRole("button", { name: "Undo", exact: true }).click();
+    await expect(pageUndo).toHaveCount(0);
     const after = await readCanonicalBusinessEvidence(page);
     expect(after.timesheet_rows).toEqual(before.timesheet_rows);
     expect(after.timesheet_staff).toEqual(before.timesheet_staff);

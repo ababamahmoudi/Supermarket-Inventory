@@ -49,21 +49,12 @@
   flex: 1 1 0;
   order: -1;
   min-inline-size: 0;
-  min-block-size: 44px;
+  min-block-size: 0;
+  align-self: center;
   margin-inline-end: auto;
 }
 .dialog-action-feedback {
   min-inline-size: 0;
-}
-.dialog-feedback-only {
-  display: flex;
-  align-items: center;
-  min-block-size: 44px;
-}
-@media (max-width: 759px) {
-  .dialog-action-feedback-host {
-    flex-basis: 100%;
-  }
 }
 .dialog-action-status {
   display: flex;

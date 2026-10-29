@@ -861,12 +861,12 @@ function Reauthenticate() {
           error={error}
           autoFocus
         />
-        <div className="actions">
+        <DialogActions>
           <Button variant="secondary" onClick={() => navigate("dashboard")}>
             {t("Cancel", "انصراف")}
           </Button>
           <Button type="submit">{t("Continue", "ادامه")}</Button>
-        </div>
+        </DialogActions>
       </form>
     </Dialog>
   );

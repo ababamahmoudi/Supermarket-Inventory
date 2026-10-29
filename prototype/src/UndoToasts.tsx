@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useDemo } from "./store";
 import { historyActionLabel, historyErrorMessage } from "./history-copy";
 import type { UndoToast } from "./undo-queue";
+import { dialogFeedbackScope } from "./dialog-feedback";
 import { Button, IconButton } from "./ui";
 import "./undo-toasts.css";
 
@@ -88,42 +89,42 @@ export default function UndoToasts() {
   const stackRef = useRef<HTMLElement>(null);
   const [destination, setDestination] = useState<{
     host: HTMLElement;
-    modal: boolean;
-  }>(() => ({ host: document.body, modal: false }));
-  const { host, modal } = destination;
+    dialog: HTMLDialogElement | null;
+    scope: string | null;
+  }>(() => ({ host: document.body, dialog: null, scope: null }));
+  const { host, dialog, scope } = destination;
+  const modal = dialog !== null;
   useEffect(() => {
     const chooseHost = () => {
       const dialogs =
         document.querySelectorAll<HTMLDialogElement>("dialog[open]");
       const dialog = dialogs.item(dialogs.length - 1);
       let host = document.body;
+      const scope = dialog ? dialogFeedbackScope(dialog) : null;
       if (dialog) {
-        let footer = dialog.querySelector<HTMLElement>(
+        const footer = dialog.querySelector<HTMLElement>(
           ".ui-dialog-actions, .dialog-actions, .c3-dialog-actions, .product-editor-actions",
         );
-        // Legacy dialogs reserve their feedback track when opened, before any
-        // action finishes. Shared DialogActions renders this same host itself.
-        if (!footer) {
-          footer = document.createElement("div");
-          footer.className = "ui-dialog-actions dialog-feedback-only";
-          dialog.append(footer);
+        // A dialog without an action footer never gains an empty feedback band.
+        if (footer) {
+          let feedback = footer.querySelector<HTMLElement>(
+            "[data-dialog-feedback-host]",
+          );
+          if (!feedback) {
+            feedback = document.createElement("div");
+            feedback.className = "dialog-action-feedback-host";
+            feedback.dataset.dialogFeedbackHost = "";
+            footer.prepend(feedback);
+          }
+          host = feedback;
         }
-        let feedback = footer.querySelector<HTMLElement>(
-          "[data-dialog-feedback-host]",
-        );
-        if (!feedback) {
-          feedback = document.createElement("div");
-          feedback.className = "dialog-action-feedback-host";
-          feedback.dataset.dialogFeedbackHost = "";
-          footer.prepend(feedback);
-        }
-        host = feedback;
       }
-      const modal = Boolean(dialog);
       setDestination((previous) =>
-        previous.host === host && previous.modal === modal
+        previous.host === host &&
+        previous.dialog === dialog &&
+        previous.scope === scope
           ? previous
-          : { host, modal },
+          : { host, dialog, scope },
       );
     };
     chooseHost();
@@ -132,7 +133,7 @@ export default function UndoToasts() {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["open"],
+      attributeFilter: ["open", "data-dialog-feedback-scope"],
     });
     return () => observer.disconnect();
   }, []);
@@ -197,6 +198,8 @@ export default function UndoToasts() {
     return () => pauseUndo(visibleId, false);
   }, [modal, visibleId, pauseUndo]);
   if (!user || locked || mustChangePassword || !own.length) return null;
+  if (modal && (own[0].dialog_scope !== scope || host === document.body))
+    return null;
   if (modal)
     return createPortal(
       <div

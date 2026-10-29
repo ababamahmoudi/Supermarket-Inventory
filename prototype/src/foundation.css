@@ -1605,3 +1605,72 @@
   min-inline-size: var(--control-row-height);
   max-inline-size: var(--control-row-height);
 }
+
+/* R2g A5 — bounded dialogs have quiet scrolling and no empty footer track. */
+.ui-dialog[data-dialog-scroll],
+.ui-dialog [data-dialog-scroll] {
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+.ui-dialog[data-dialog-scroll]::-webkit-scrollbar,
+.ui-dialog [data-dialog-scroll]::-webkit-scrollbar {
+  display: none;
+}
+:is(
+  .ui-dialog[data-dialog-scroll],
+  .ui-dialog [data-dialog-scroll]
+)[data-dialog-scroll-start="true"] {
+  --dialog-fade-start: 16px;
+}
+:is(
+  .ui-dialog[data-dialog-scroll],
+  .ui-dialog [data-dialog-scroll]
+)[data-dialog-scroll-end="true"] {
+  --dialog-fade-end: 16px;
+}
+:is(.ui-dialog[data-dialog-scroll], .ui-dialog [data-dialog-scroll]):is(
+  [data-dialog-scroll-start="true"],
+  [data-dialog-scroll-end="true"]
+) {
+  mask-image: linear-gradient(
+    to bottom,
+    var(--color-clear),
+    var(--text) var(--dialog-fade-start, 0px),
+    var(--text) calc(100% - var(--dialog-fade-end, 0px)),
+    var(--color-clear)
+  );
+}
+@media screen and (max-width: 760px) {
+  :root dialog.ui-dialog.confirm-dialog {
+    inset: auto 0 0;
+    inline-size: 100vw;
+    max-inline-size: 100vw;
+    block-size: fit-content;
+    max-block-size: 100dvh;
+    margin: auto 0 0;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+  :root
+    dialog.ui-dialog
+    :is(
+      .ui-dialog-actions,
+      .dialog-actions,
+      .c3-dialog-actions,
+      .product-editor-actions
+    )
+    > .ui-button.button:not(.ui-icon-button) {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+  :root .ui-dialog.timesheet-manage-staff > .ui-dialog-footer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root .timesheet-manage-staff > .ui-dialog-footer > .ui-button {
+    grid-column: 1;
+  }
+  :root dialog.ui-dialog .dialog-action-feedback-host:empty {
+    display: none;
+  }
+}

@@ -333,9 +333,6 @@ export default function TimesheetManageStaff({
         bodyClassName="timesheet-staff-body"
         footer={
           <>
-            <span className="muted timesheet-staff-footnote">
-              {t("Changes save as you go.", "تغییرات خودکار ذخیره می‌شوند.")}
-            </span>
             <Button onClick={close} disabled={saving}>
               {t("Done", "تمام")}
             </Button>
@@ -513,6 +510,9 @@ export default function TimesheetManageStaff({
             {error}
           </p>
         )}
+        <p className="muted timesheet-staff-footnote">
+          {t("Changes save as you go.", "تغییرات خودکار ذخیره می‌شوند.")}
+        </p>
       </Dialog>
       {editing && (
         <StaffForm
