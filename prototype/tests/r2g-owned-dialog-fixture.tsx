@@ -105,15 +105,17 @@ function OwnedDialog() {
               onChange={(event) => setNote(event.target.value)}
             />
           </Field>
-          <Button
-            variant="neutral"
-            onClick={() => void clearDate()}
-            disabled={pending}
-            aria-busy={pending}
-            data-testid="owned-dialog-trigger"
-          >
-            {t("Clear fictional date", "پاک کردن تاریخ آزمایشی")}
-          </Button>
+          <div className="actions">
+            <Button
+              variant="neutral"
+              onClick={() => void clearDate()}
+              disabled={pending}
+              aria-busy={pending}
+              data-testid="owned-dialog-trigger"
+            >
+              {t("Clear fictional date", "پاک کردن تاریخ آزمایشی")}
+            </Button>
+          </div>
           <p className="muted">
             {t(
               "The original reminder remains in History. Undo restores it through the same guarded date workflow.",
