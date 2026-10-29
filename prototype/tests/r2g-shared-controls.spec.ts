@@ -6,7 +6,7 @@ for (const [language, theme] of [
   ["fa", "dark"],
 ] as const) {
   for (const width of [360, 390, 509, 760]) {
-    test(`R2g A2 colour-only filters retain centred copy at ${width}px (${language}/${theme})`, async ({
+    test(`R2g A2 colour-only filters retain centred copy at ${width}px (${language}/${theme})${width === 509 ? " @r2g-509" : ""}`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height: 1000 });
