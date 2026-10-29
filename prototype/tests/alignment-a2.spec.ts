@@ -509,7 +509,77 @@ test("product editor is centered with focus trapped, Escape and backdrop restore
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
   await trigger.click();
-  await page.mouse.click(2, 2);
+  const frame = () =>
+    dialog.evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      const style = getComputedStyle(node);
+      const strips = [
+        box.left > 2 ? { x: box.left / 2, y: innerHeight / 2 } : null,
+        box.right < innerWidth - 2
+          ? { x: (box.right + innerWidth) / 2, y: innerHeight / 2 }
+          : null,
+        box.top > 2 ? { x: innerWidth / 2, y: box.top / 2 } : null,
+        box.bottom < innerHeight - 2
+          ? { x: innerWidth / 2, y: (box.bottom + innerHeight) / 2 }
+          : null,
+      ];
+      return {
+        outside: strips.find((point) => point !== null),
+        phone: innerWidth <= 760,
+        width: Math.abs(box.width - innerWidth),
+        start: Math.abs(box.left),
+        end: Math.abs(box.right - innerWidth),
+        top: Math.abs(box.top),
+        bottom: Math.abs(box.bottom - innerHeight),
+        corners: [
+          Math.abs(
+            parseFloat(style.borderTopLeftRadius) -
+              parseFloat(style.getPropertyValue("--radius-dialog")),
+          ),
+          Math.abs(
+            parseFloat(style.borderTopRightRadius) -
+              parseFloat(style.getPropertyValue("--radius-dialog")),
+          ),
+          parseFloat(style.borderBottomLeftRadius),
+          parseFloat(style.borderBottomRightRadius),
+        ],
+      };
+    });
+  const actual = await frame();
+  if (actual.outside)
+    await page.mouse.click(actual.outside.x, actual.outside.y);
+  else {
+    expect(actual.phone).toBe(true);
+    for (const error of [
+      actual.width,
+      actual.start,
+      actual.end,
+      actual.top,
+      actual.bottom,
+      ...actual.corners,
+    ])
+      expect(error).toBeLessThanOrEqual(2);
+    // An actual fullscreen sheet has no backdrop hit area. A narrower sheet
+    // must fail the very same width contract before its native Close is used.
+    const original = await dialog.getAttribute("style");
+    await dialog.evaluate((node) => {
+      for (const property of [
+        "inline-size",
+        "min-inline-size",
+        "max-inline-size",
+      ])
+        node.style.setProperty(property, "calc(100dvw - 4px)", "important");
+    });
+    expect((await frame()).width).toBeGreaterThan(2);
+    await dialog.evaluate((node, style) => {
+      if (style === null) node.removeAttribute("style");
+      else node.setAttribute("style", style);
+    }, original);
+    expect((await frame()).width).toBeLessThanOrEqual(2);
+    await dialog
+      .getByRole("button", { name: "Close dialog", exact: true })
+      .click();
+  }
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
 });
