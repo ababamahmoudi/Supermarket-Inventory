@@ -1,3 +1,9 @@
+## 2026-10-29 — R3 live invoice reading
+
+- Connected the existing local reader kit to ordered photos/PDFs through the existing AI-mode importer. Saved raw originals and the Processing draft survive failures, cancellation, reload and explicit manual/demo recovery; one press makes one request with a four-minute limit.
+- Added protected Simulated/Live settings, dynamic reader addresses, five-second connection checks and the shared Demo switch. Live duration, USD fee and actual models remain Owner/Manager-only; explicit simulated fallback stays visibly labelled.
+- Added fictional preparation, client, authority/privacy, importer and desktop/phone browser coverage without changing the existing simulated/JSON tests. Updated the canonical R3 docs and [Mac/Ubuntu/phone rehearsal guide](PR_R3_REVIEW.md). Exact final commit and complete seven-check CI results are recorded on PR #29.
+
 ## 2026-10-28 — CI205 Lookup query retention
 
 - Preserved only the scoped typed query through a transient protected Lookup remount during an actual location change. Fresh branch facts/prices and authority masking remain; no product, package, cost or money DTO is cached. Kept Clear/route/identity boundaries and genuine search deep links. Added a real accepted-location regression with the original-source negative control and canonical no-write/privacy checks. See [cause and review steps](PR_R2F_CI205_LOOKUP.md).

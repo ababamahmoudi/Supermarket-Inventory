@@ -315,16 +315,14 @@ describe("one live request", () => {
     };
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn<typeof fetch>()
-        .mockResolvedValue(
-          json({
-            ...response(),
-            checksPassed: false,
-            reading: { lines: [partial] },
-            statuses,
-          }),
-        ),
+      vi.fn<typeof fetch>().mockResolvedValue(
+        json({
+          ...response(),
+          checksPassed: false,
+          reading: { lines: [partial] },
+          statuses,
+        }),
+      ),
     );
     const result = await requestLiveInvoiceReading(
       "http://localhost:5191",
@@ -340,15 +338,13 @@ describe("one live request", () => {
   it("keeps a measured zero as item evidence for ordinary review", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn<typeof fetch>()
-        .mockResolvedValue(
-          json({
-            ...response(),
-            checksPassed: false,
-            reading: { lines: [{ line_type: "item", quantity: 0 }] },
-          }),
-        ),
+      vi.fn<typeof fetch>().mockResolvedValue(
+        json({
+          ...response(),
+          checksPassed: false,
+          reading: { lines: [{ line_type: "item", quantity: 0 }] },
+        }),
+      ),
     );
     const result = await requestLiveInvoiceReading(
       "http://localhost:5191",
