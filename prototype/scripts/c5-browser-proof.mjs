@@ -2311,6 +2311,128 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         if (visible(tile) && !r2gPriceShapes.has(tile))
           failures.push("R2g price quick pick outside the validated form");
 
+      // The original invoice is a native fullscreen evidence viewer on phones,
+      // rather than a content-sized action sheet. Bind its frame to the actual
+      // selected record/source/toolbar; copied dialog classes obtain no waiver.
+      const originalFullscreenFrames = [];
+      if (phone) {
+        for (const dialog of document.querySelectorAll(
+          "dialog[open].original-viewer-dialog.dialog-phone-fullscreen",
+        )) {
+          if (!visible(dialog)) continue;
+          const source = dialog.parentElement;
+          const invoiceId = source?.getAttribute("data-invoice-id");
+          const workspace = source?.closest(
+            "[data-testid='invoice-review'],.posted-invoice-document[data-invoice-id]",
+          );
+          const routeId = new window.URLSearchParams(
+            window.location.hash.split("?")[1],
+          ).get("id");
+          const title = dialog.querySelector(":scope > .ui-dialog-header h2");
+          const titleId = dialog.getAttribute("aria-labelledby");
+          const description = dialog.querySelector(
+            ":scope > .dialog-description",
+          );
+          const caption = description?.querySelector(
+            ":scope > .original-viewer-file-caption",
+          );
+          const sourceCaption = source?.querySelector(
+            ":scope > .original-viewer-header .original-viewer-file-caption",
+          );
+          const trigger = source?.querySelector(
+            ":scope > button.original-viewer-phone-trigger[aria-haspopup='dialog'][aria-expanded='true']",
+          );
+          const toolbar = dialog.querySelector(
+            ":scope > .invoice-original-toolbar-container > .invoice-original-controls[role='toolbar']",
+          );
+          const close = dialog.querySelector(
+            ":scope > .ui-dialog-header > button.ui-icon-button[data-control-kind='icon']",
+          );
+          const genuine = Boolean(
+            dialog.matches(
+              "dialog.ui-dialog:modal[data-dialog-feedback-scope]",
+            ) &&
+            source?.matches("aside#invoice-original-field.original-viewer") &&
+            document.querySelectorAll(
+              "aside#invoice-original-field.original-viewer",
+            ).length === 1 &&
+            invoiceId &&
+            (!routeId || routeId === invoiceId) &&
+            workspace &&
+            (!workspace.hasAttribute("data-invoice-id") ||
+              workspace.getAttribute("data-invoice-id") === invoiceId) &&
+            trigger &&
+            title &&
+            document.getElementById(titleId) === title &&
+            ["Original invoice", "فاکتور اصلی"].includes(
+              tidy(title.textContent),
+            ) &&
+            source.getAttribute("aria-label") === tidy(title.textContent) &&
+            close &&
+            ["Close dialog", "بستن پنجره"].includes(
+              close.getAttribute("aria-label"),
+            ) &&
+            close.querySelector("svg.lucide-x") &&
+            caption &&
+            sourceCaption &&
+            caption
+              .querySelector(".original-viewer-file-name")
+              ?.getAttribute("title") &&
+            caption
+              .querySelector(".original-viewer-file-name")
+              ?.getAttribute("title") ===
+              sourceCaption
+                .querySelector(".original-viewer-file-name")
+                ?.getAttribute("title") &&
+            tidy(
+              caption.querySelector(".original-viewer-page-count")?.textContent,
+            ) ===
+              tidy(
+                sourceCaption.querySelector(".original-viewer-page-count")
+                  ?.textContent,
+              ) &&
+            description.id === dialog.getAttribute("aria-describedby") &&
+            toolbar?.getAttribute("aria-label") === tidy(title.textContent) &&
+            toolbar.querySelectorAll(
+              ":scope > .invoice-original-control-group[role='group']",
+            ).length === 4 &&
+            toolbar.querySelector(".invoice-original-page[aria-label]") &&
+            dialog.querySelector(
+              ":scope > .invoice-original-media[data-zoom][data-fit][data-rotation]",
+            ),
+          );
+          if (!genuine) {
+            failures.push("Invalid original invoice fullscreen composition");
+            continue;
+          }
+          const bounds = dialog.getBoundingClientRect();
+          const style = getComputedStyle(dialog);
+          originalFullscreenFrames.push({
+            invoiceId,
+            x: round(bounds.x),
+            y: round(bounds.y),
+            width: round(bounds.width),
+            height: round(bounds.height),
+          });
+          if (
+            Math.abs(bounds.x) > 1.5 ||
+            Math.abs(bounds.y) > 1.5 ||
+            Math.abs(bounds.width - document.documentElement.clientWidth) >
+              1.5 ||
+            Math.abs(bounds.height - window.innerHeight) > 1.5 ||
+            [
+              style.borderTopLeftRadius,
+              style.borderTopRightRadius,
+              style.borderBottomLeftRadius,
+              style.borderBottomRightRadius,
+            ].some((radius) => parseFloat(radius) > 0.5)
+          )
+            failures.push(
+              "Original invoice viewer must fill the complete phone viewport",
+            );
+        }
+      }
+
       // R2g A7: only an actual named page header owns this full-row slot.
       // Its parent row must fill the header too, catching the original 3/4 gap.
       const phonePagePrimaryWidths = new Map();
@@ -3716,6 +3838,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         },
         buttons,
         toolbarGroups,
+        originalFullscreenFrames,
         topbar,
         statuses,
         failures,

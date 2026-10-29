@@ -34,6 +34,13 @@ export type C5Inspection = {
     visualWidth: number | null;
   };
   buttons: C5Button[];
+  originalFullscreenFrames: {
+    invoiceId: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }[];
   toolbarGroups: {
     count: string;
     columns: string;

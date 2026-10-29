@@ -174,6 +174,82 @@ async function phoneOriginalKeepsItsToolbar(
   expect(Math.abs(bounds.y)).toBeLessThanOrEqual(1);
   expect(Math.abs(bounds.width - 390)).toBeLessThanOrEqual(1);
   expect(Math.abs(bounds.height - 900)).toBeLessThanOrEqual(1);
+  for (const width of [360, 390, 509, 760]) {
+    await page.setViewportSize({ width, height: 900 });
+    const report = await inspect(
+      page,
+      "Original native fullscreen frame",
+      `phone-${language}-${width}`,
+      "owner",
+    );
+    expect(report.failures).toEqual([]);
+    expect(report.originalFullscreenFrames).toHaveLength(1);
+    expect(report.originalFullscreenFrames[0]).toMatchObject({
+      x: 0,
+      y: 0,
+      width,
+      height: 900,
+    });
+    await test.info().attach(`Original fullscreen ${language} ${width}`, {
+      body: JSON.stringify(report.originalFullscreenFrames),
+      contentType: "application/json",
+    });
+    if (width === 509)
+      await dialog.screenshot({
+        path: test.info().outputPath(`original-fullscreen-${language}-509.png`),
+      });
+  }
+  if (language === "en") {
+    const originalStyle = await dialog.getAttribute("style");
+    await dialog.evaluate((element) => {
+      element.style.transform = "translateY(4px)";
+    });
+    try {
+      const shifted = await inspect(
+        page,
+        "Shifted original frame",
+        "negative",
+        "owner",
+      );
+      expect(shifted.failures).toContain(
+        "Original invoice viewer must fill the complete phone viewport",
+      );
+    } finally {
+      await dialog.evaluate((element, style) => {
+        if (style === null) element.removeAttribute("style");
+        else element.setAttribute("style", style);
+      }, originalStyle);
+    }
+    await page.evaluate(() => {
+      const fake = document.createElement("dialog");
+      fake.className =
+        "ui-dialog confirm-dialog original-viewer-dialog dialog-phone-fullscreen";
+      fake.setAttribute("open", "");
+      fake.setAttribute("data-counterfeit-original-frame", "true");
+      document.body.append(fake);
+    });
+    try {
+      const counterfeit = await inspect(
+        page,
+        "Counterfeit original frame",
+        "negative",
+        "owner",
+      );
+      expect(counterfeit.failures).toContain(
+        "Invalid original invoice fullscreen composition",
+      );
+    } finally {
+      await page
+        .locator("[data-counterfeit-original-frame]")
+        .evaluate((element) => element.remove());
+    }
+    await auditReferenceControls(
+      page,
+      "Restored original fullscreen frame",
+      language,
+    );
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
   const toolbar = dialog.locator(".invoice-original-controls");
   await originalToolbarFits(toolbar);
   const pageLabel = await toolbar
