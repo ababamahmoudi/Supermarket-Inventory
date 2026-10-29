@@ -1,5 +1,15 @@
 # Klead design language v1
 
+## R2g Tier 1 — Approved compositions and shared corrections (2026-10-29)
+
+The [R2g reference](design-reference/r2g/README.md) wins over earlier presentation wording for the Tier 1 scenes. Re-create its measurements through actual shared primitives and scoped compositions; do not paste design-only overrides or introduce `!important`. Every phone breakpoint covers 360–760 px, including 509 px, with the existing strict alignment and 2 px interaction limits. Earlier historical contracts below remain applicable where R2g does not replace them.
+
+Auth uses a centred 400 px card and full-width 48 px primary action with the genuine full maker logo beneath. Receiving uses 12 px row insets/4 px gaps, checks in product metadata, phone wrapping names, inline charges in the same card and grouped label-adjacent totals provenance. Change price uses the approved compact type cards, price/percentage composition, one warning/reason group and five Ends segments. Lookup uses a single end-aligned result grid, complete two-line names, unbroken sizes, quiet tags and phone tag/fact/action order. Weight editor labels, captions, empty states and package New tags use logical start alignment and existing tokens.
+
+Shared boolean filter chips are centred colour-only toggles: surface plus field border when clear; solid accent and white when selected; no check mark or reserved icon gap. This supersedes R2e B2's reserved check. Preserve `aria-pressed`, keyboard activation and click-again-to-clear.
+
+Dialogs hide native scrollbars while retaining actual keyboard/touch scrolling and soft overflow-edge fades. Size to content up to the viewport; no empty footer/status band. Footer feedback is scoped to its own dialog; unrelated page Undo never appears there. Helpers stay in the body. Phone dialogs become full-width bottom sheets; the approved equal-row pairs remain paired. Page-primary actions occupy their phone row's full width. The universal A1 field restyle, other A3 filter bars and A4 phone lists belong to conditional Tier 2, not Tier 1.
+
 ## R2c Groups 2–6 — Controls, review rows and inbox (current)
 
 - Searchable product/supplier choices use public EN/FA/code/barcode metadata, highlighted keyboard options and a stable search field. Generic Select searches above eight non-placeholder options; product/supplier choices opt in for shorter lists. Placeholder text stays in the closed field; genuine All/None options remain. Use viewport/keyboard-aware placement and bounded internal scrolling for Select/menu/date/Received/shelf popovers.

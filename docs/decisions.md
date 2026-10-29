@@ -1,5 +1,13 @@
 # Decisions
 
+## R2g — Screenshot-led polish on top of live reading (2026-10-29)
+
+**Context:** Ali approved exact auth, Change price, Lookup and receiving compositions and identified shared inconsistencies, particularly at 509 px. R3 is already complete and remains the integration base.
+
+**Decision:** integrate B1, B4, B2, B3, C1, A2, A5 and A7 in that order on PR #29, with one item per commit and a coherent Tier 1 push. Approved screenshots take precedence over conflicting older prose. Use shared controls for chip/dialog/page-action rules and real components for the screen compositions, preserving original files, current permissions, audit and Decimal calculations. Check 360/390/509/760 as well as desktop, EN/FA and both themes. All seven CI checks must pass before the Tier 1 report.
+
+**Schedule/scope:** Tier 1 is due October 29 at 18:00 Toronto. Tier 2 may proceed only after green Tier 1 and before the 22:00 code freeze; nothing may be pushed after freeze without Ali's later instruction. Record post-demo requests rather than building them now. Private review images are never copied into the repository; approved fictional reference PNGs and their README are retained byte-identically.
+
 ## R2c/R2d — Final route and loaded-font integration (2026-10-26)
 
 **Context:** combined browser checks exposed actual label/reference clipping, a supplier-filtered Returns render loop and Timesheet edits that could be canceled before the autosave delay by navigation.
