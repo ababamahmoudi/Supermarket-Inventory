@@ -53,6 +53,12 @@
   align-self: center;
   margin-inline-end: auto;
 }
+.dialog-action-feedback-host:not(:empty) {
+  flex: 0 0 100%;
+  grid-column: 1 / -1;
+  inline-size: 100%;
+  margin-inline-end: 0;
+}
 .dialog-action-feedback {
   min-inline-size: 0;
 }

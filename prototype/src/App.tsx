@@ -1857,12 +1857,12 @@ export default function App() {
                 onChange={(event) => setSearch(event.target.value)}
               />
             </Field>
-            <div className="actions">
+            <DialogActions>
               <Button variant="neutral" onClick={() => setSearchOpen(false)}>
                 {t("Cancel", "لغو")}
               </Button>
               <Button type="submit">{t("Search", "جست‌وجو")}</Button>
-            </div>
+            </DialogActions>
           </form>
         )}
       </Dialog>

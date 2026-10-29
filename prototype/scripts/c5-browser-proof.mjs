@@ -2375,14 +2375,15 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const feedback = footer.querySelector(
             ":scope > [data-dialog-feedback-host]",
           );
-          const feedbackWidth = feedback?.childElementCount
-            ? feedback.getBoundingClientRect().width
-            : 0;
+          const ownedFeedback = Boolean(feedback?.childElementCount);
+          if (
+            ownedFeedback &&
+            Math.abs(feedback.getBoundingClientRect().width - content.width) >
+              1.5
+          )
+            failures.push("Owned dialog feedback must span its own full row");
           const expected =
-            (content.width -
-              feedbackWidth -
-              gap * (actions.length - 1 + (feedbackWidth > 0 ? 1 : 0))) /
-            actions.length;
+            (content.width - gap * (actions.length - 1)) / actions.length;
           for (const action of actions) {
             phoneDialogFooterWidths.set(action, expected);
             if (Math.abs(action.getBoundingClientRect().width - expected) > 1.5)
@@ -2400,9 +2401,8 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const left = Math.min(...boxes.map((box) => box.left));
           const right = Math.max(...boxes.map((box) => box.right));
           if (
-            !feedbackWidth &&
-            (Math.abs(left - content.left) > 1.5 ||
-              Math.abs(right - content.right) > 1.5)
+            Math.abs(left - content.left) > 1.5 ||
+            Math.abs(right - content.right) > 1.5
           )
             failures.push(
               "Phone dialog footer actions must meet the inner edges",

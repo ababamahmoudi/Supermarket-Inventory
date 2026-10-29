@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useDemo } from "./store";
@@ -79,6 +85,39 @@ function UndoToastItem({
           {error}
         </span>
       )}
+    </div>
+  );
+}
+
+function OwnedDialogFeedback({
+  dialog,
+  children,
+}: {
+  dialog: HTMLDialogElement;
+  children: ReactNode;
+}) {
+  // This read precedes the portal commit, while the footer still has no status.
+  const [frame] = useState(() => {
+    const bounds = dialog.getBoundingClientRect();
+    return { top: bounds.top, height: bounds.height };
+  });
+  useLayoutEffect(() => {
+    if (dialog.dataset.dialogFeedbackFrame !== undefined) return;
+    dialog.style.setProperty("--dialog-feedback-frame-top", `${frame.top}px`);
+    dialog.style.setProperty(
+      "--dialog-feedback-frame-height",
+      `${frame.height}px`,
+    );
+    dialog.setAttribute("data-dialog-feedback-frame", "");
+  }, [dialog, frame]);
+  return (
+    <div
+      className="dialog-action-feedback"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {children}
     </div>
   );
 }
@@ -202,14 +241,9 @@ export default function UndoToasts() {
     return null;
   if (modal)
     return createPortal(
-      <div
-        className="dialog-action-feedback"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
+      <OwnedDialogFeedback key={`${scope}:${own[0].id}`} dialog={dialog}>
         <UndoToastItem key={own[0].id} toast={own[0]} inline />
-      </div>,
+      </OwnedDialogFeedback>,
       host,
     );
   return createPortal(

@@ -9,6 +9,9 @@ export function beginDialogFeedbackScope(dialog: HTMLDialogElement): string {
 
 export function endDialogFeedbackScope(dialog: HTMLDialogElement): void {
   delete dialog.dataset.dialogFeedbackScope;
+  delete dialog.dataset.dialogFeedbackFrame;
+  dialog.style.removeProperty("--dialog-feedback-frame-top");
+  dialog.style.removeProperty("--dialog-feedback-frame-height");
 }
 
 export function dialogFeedbackScope(dialog: HTMLDialogElement): string {

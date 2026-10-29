@@ -1,6 +1,6 @@
 import { useLayoutEffect, type RefObject } from "react";
 
-/** Fade only the edge that has more body content, without changing geometry. */
+/** Keep footer action tracks and scroll-edge fades tied to the actual dialog. */
 export function useDialogScrollEdges(
   ref: RefObject<HTMLDialogElement | null>,
   open: boolean,
@@ -12,6 +12,25 @@ export function useDialogScrollEdges(
     const observed = new Set<HTMLElement>();
     const resize = new ResizeObserver(() => schedule());
     const measure = () => {
+      for (const footer of dialog.querySelectorAll<HTMLElement>(
+        ".ui-dialog-actions, .dialog-actions, .c3-dialog-actions, .product-editor-actions",
+      )) {
+        if (footer.closest("dialog") !== dialog) continue;
+        const count = [
+          ...footer.querySelectorAll<HTMLElement>(
+            ":scope > .ui-button.button:not(.ui-icon-button)",
+          ),
+        ].filter(
+          (button) =>
+            !button.hidden && getComputedStyle(button).display !== "none",
+        ).length;
+        const value = String(Math.max(1, count));
+        if (
+          footer.style.getPropertyValue("--dialog-footer-action-count") !==
+          value
+        )
+          footer.style.setProperty("--dialog-footer-action-count", value);
+      }
       const candidates = [dialog, ...dialog.querySelectorAll<HTMLElement>("*")];
       for (const element of candidates) {
         if (
