@@ -15,7 +15,7 @@ import {
   liveOriginalPages,
   liveOriginalSignature,
   requireLiveInvoice,
-  requireLiveManualTransition,
+  requireLiveRecoveryTransition,
   requireLiveReadingTarget,
 } from "./invoice-live-reading-state";
 import type { LiveReadingProvenance } from "./invoice-live-reading-types";
@@ -24,10 +24,17 @@ export { canUseLiveManualInvoice } from "./invoice-live-reading-state";
 
 function publish(state: DemoState, invoice: DemoInvoice) {
   const index =
-    state.invoices?.findIndex((item) => item.id === invoice.id) ?? -1;
+    state.invoices?.findIndex(
+      (item) =>
+        item.id === invoice.id && item.company_id === invoice.company_id,
+    ) ?? -1;
   if (index >= 0) state.invoices![index] = structuredClone(invoice);
   else (state.invoices ??= []).push(structuredClone(invoice));
-  if (state.invoice.id === invoice.id) state.invoice = invoice;
+  if (
+    state.invoice.id === invoice.id &&
+    state.invoice.company_id === invoice.company_id
+  )
+    state.invoice = invoice;
 }
 
 function identity(invoice: DemoInvoice) {
@@ -113,15 +120,10 @@ export function reorderLiveInvoiceOriginals(
     actor,
     input.invoice_id,
   );
-  requireLiveReadingTarget(
-    state,
-    actor,
-    {
-      invoice_id: input.invoice_id,
-      attempt_id: invoice.live_reading?.attempt_id ?? "",
-    },
-    "settle",
-  );
+  requireLiveRecoveryTransition(state, actor, {
+    invoice_id: input.invoice_id,
+    attempt_id: invoice.live_reading?.attempt_id ?? "",
+  });
   const pages = liveOriginalPages(invoice);
   if (
     !["ready", "failed", "cancelled"].includes(
@@ -190,7 +192,7 @@ export function settleLiveInvoiceReading(
 ) {
   const { invoice } =
     input.outcome === "manual"
-      ? requireLiveManualTransition(state, actor, input)
+      ? requireLiveRecoveryTransition(state, actor, input)
       : requireLiveReadingTarget(state, actor, input, "settle");
   if (
     input.outcome !== "manual" &&
@@ -247,15 +249,10 @@ export function useSimulatedLiveInvoiceReading(
   id: string,
 ) {
   const current = requireLiveInvoice(state, actor, id);
-  requireLiveReadingTarget(
-    state,
-    actor,
-    {
-      invoice_id: id,
-      attempt_id: current.invoice.live_reading?.attempt_id ?? "",
-    },
-    "settle",
-  );
+  requireLiveRecoveryTransition(state, actor, {
+    invoice_id: id,
+    attempt_id: current.invoice.live_reading?.attempt_id ?? "",
+  });
   if (!current.invoice.live_reading || current.invoice.status === "review")
     throw new Error("The live reading draft changed.");
   const pages = structuredClone(liveOriginalPages(current.invoice));

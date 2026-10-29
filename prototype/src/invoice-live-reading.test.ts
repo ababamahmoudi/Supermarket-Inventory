@@ -859,4 +859,144 @@ describe("R3 protected live reading domain", () => {
       attempt.original_sha256s,
     );
   });
+
+  it.each(["same-worker", "other-manager"] as const)(
+    "a fresh %s can explicitly recover with simulated reading",
+    async (kind) => {
+      const data = await processing(
+        kind === "same-worker" ? "floor_worker" : "manager",
+      );
+      settleLiveInvoiceReading(data.state, data.actor, {
+        ...data.attempt,
+        outcome: "failed",
+      });
+      const actor = authenticatedTestActor(
+        data.state,
+        kind === "same-worker" ? "floor_worker" : "manager",
+        kind === "other-manager"
+          ? {
+              user_id: "fictional-sim-manager",
+              username: "fictional-sim-manager",
+            }
+          : {},
+      );
+      const original = structuredClone(data.state.invoice.original_pages);
+      expect(() =>
+        useSimulatedLiveInvoiceReading(
+          data.state,
+          actor,
+          data.attempt.invoice_id,
+        ),
+      ).not.toThrow();
+      expect(data.state.invoice.original_pages).toEqual(original);
+      expect(data.state.invoice.simulated_reading).toBe(true);
+      expect(data.state.invoice.live_reading).toBeUndefined();
+    },
+  );
+
+  it.each([
+    ["same-worker", "ready"],
+    ["same-worker", "failed"],
+    ["same-worker", "cancelled"],
+    ["other-manager", "ready"],
+    ["other-manager", "failed"],
+    ["other-manager", "cancelled"],
+  ] as const)(
+    "a fresh %s can reorder the recoverable %s originals",
+    async (kind, phase) => {
+      const data = await draft(
+        kind === "same-worker" ? "floor_worker" : "manager",
+        [
+          source("a.jpg", "fictional A", "image/jpeg"),
+          source("b.jpg", "fictional B", "image/jpeg"),
+          source("c.jpg", "fictional C", "image/jpeg"),
+        ],
+      );
+      if (phase !== "ready") {
+        const attempt = beginLiveInvoiceReading(
+          data.state,
+          data.actor,
+          data.state.invoice.id,
+        );
+        settleLiveInvoiceReading(data.state, data.actor, {
+          ...attempt,
+          outcome: phase,
+        });
+      }
+      const actor = authenticatedTestActor(
+        data.state,
+        kind === "same-worker" ? "floor_worker" : "manager",
+        kind === "other-manager"
+          ? {
+              user_id: "fictional-order-manager",
+              username: "fictional-order-manager",
+            }
+          : {},
+      );
+      const before = structuredClone(data.state.invoice);
+      expect(() =>
+        reorderLiveInvoiceOriginals(data.state, actor, {
+          invoice_id: before.id,
+          order: [0, 2, 1],
+        }),
+      ).not.toThrow();
+      expect(data.state.invoice.original_pages).toEqual([
+        before.original_pages![0],
+        before.original_pages![2],
+        before.original_pages![1],
+      ]);
+      expect(data.state.invoice.version).toBe((before.version ?? 1) + 1);
+      const next = beginLiveInvoiceReading(data.state, actor, before.id);
+      applyLiveInvoiceReading(data.state, actor, {
+        ...next,
+        exported: envelope(next),
+        provenance,
+      });
+      expect(data.state.invoice.status).toBe("review");
+    },
+  );
+
+  it("automatic failed or cancelled settlement remains bound to the original request session", async () => {
+    const data = await processing("floor_worker");
+    const actor = authenticatedTestActor(data.state, "floor_worker");
+    const before = snapshot(data.state);
+    for (const outcome of ["failed", "cancelled"] as const)
+      expect(() =>
+        settleLiveInvoiceReading(data.state, actor, {
+          ...data.attempt,
+          outcome,
+        }),
+      ).toThrow();
+    expect(() =>
+      applyLiveInvoiceReading(data.state, actor, {
+        ...data.attempt,
+        exported: envelope(data.attempt),
+        provenance,
+      }),
+    ).toThrow();
+    expect(snapshot(data.state)).toBe(before);
+  });
+
+  it("a foreign-company record with the same invoice ID is never replaced by live adoption", async () => {
+    const data = await processing();
+    const foreign = {
+      ...structuredClone(data.state.invoice),
+      company_id: "fictional-other-company",
+    };
+    data.state.invoices!.unshift(foreign);
+    const before = structuredClone(foreign);
+    accept(data);
+    expect(
+      data.state.invoices?.find(
+        (record) => record.company_id === "fictional-other-company",
+      ),
+    ).toEqual(before);
+    expect(
+      data.state.invoices?.filter(
+        (record) =>
+          record.id === data.attempt.invoice_id &&
+          record.company_id === data.actor.company_id,
+      ),
+    ).toHaveLength(1);
+  });
 });

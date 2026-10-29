@@ -1512,7 +1512,9 @@ export function importInvoiceReadings(
   state.invoices ??= [];
   if (existingCurrent.status !== "empty") {
     const index = state.invoices.findIndex(
-      (invoice) => invoice.id === existingCurrent.id,
+      (invoice) =>
+        invoice.id === existingCurrent.id &&
+        invoice.company_id === existingCurrent.company_id,
     );
     if (index < 0) state.invoices.push(existingCurrent);
     else state.invoices[index] = existingCurrent;
@@ -1789,7 +1791,8 @@ export function importInvoiceReadings(
       invoice.live_reading!.phase = "complete";
       invoice.live_reading!.completed_at = now.toISOString();
       const index = state.invoices.findIndex(
-        (record) => record.id === invoice.id,
+        (record) =>
+          record.id === invoice.id && record.company_id === invoice.company_id,
       );
       if (index >= 0) state.invoices[index] = invoice;
       else state.invoices.push(invoice);

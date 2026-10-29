@@ -142,7 +142,8 @@ function requireLiveManualOrigin(
   return current;
 }
 
-export function requireLiveManualTransition(
+/** An explicit recovery press uses current authority, not a dead network SID. */
+export function requireLiveRecoveryTransition(
   state: DemoState,
   actor: AuthenticatedActor,
   input: { invoice_id: string; attempt_id: string },
