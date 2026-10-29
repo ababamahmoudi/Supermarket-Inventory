@@ -40,6 +40,7 @@ export function useDialogScrollEdges(
     const mutation = new MutationObserver(schedule);
     mutation.observe(dialog, {
       childList: true,
+      characterData: true,
       subtree: true,
       attributes: true,
       attributeFilter: ["open", "class", "style"],

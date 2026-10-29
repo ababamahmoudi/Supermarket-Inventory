@@ -17,6 +17,7 @@ function ScrollableDialog() {
   return (
     <dialog ref={ref} open>
       <div data-testid="body" style={{ overflowY: "auto" }}>
+        <p data-testid="message">Short helper</p>
         <label>
           Notes
           <textarea style={{ overflowY: "auto" }} />
@@ -63,4 +64,24 @@ it("removes edge decoration when the dialog closes", () => {
   expect(body).not.toHaveAttribute("data-dialog-scroll");
   expect(body).not.toHaveAttribute("data-dialog-scroll-start");
   expect(body).not.toHaveAttribute("data-dialog-scroll-end");
+});
+
+it("updates the fade when existing helper text grows inside a fixed body", async () => {
+  render(<ScrollableDialog />);
+  const body = screen.getByTestId("body");
+  let contentHeight = 100;
+  Object.defineProperties(body, {
+    scrollHeight: { configurable: true, get: () => contentHeight },
+    clientHeight: { configurable: true, value: 100 },
+  });
+  fireEvent(window, new Event("resize"));
+  await waitFor(() =>
+    expect(body).toHaveAttribute("data-dialog-scroll-end", "false"),
+  );
+  contentHeight = 300;
+  screen.getByTestId("message").firstChild!.nodeValue =
+    "A longer fictional helper that wraps inside the same body.";
+  await waitFor(() =>
+    expect(body).toHaveAttribute("data-dialog-scroll-end", "true"),
+  );
 });
