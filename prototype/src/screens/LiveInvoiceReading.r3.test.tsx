@@ -292,3 +292,48 @@ it("refreshes the protected page preview when an external reorder changes only t
   ]);
   expect(ports.request).not.toHaveBeenCalled();
 });
+it("keeps interrupted Processing recovery available while disabling impossible page-order actions", async () => {
+  ports.load.mockImplementation(
+    async (_query: unknown, input: { page?: number }) => ({
+      source: new Blob(["fictional original"], { type: "image/png" }),
+      type: "image/png",
+      name: ["fictional-A.png", "fictional-B.png", "fictional-C.png"][
+        input.page ?? 0
+      ],
+    }),
+  );
+  const invoice: InvoiceReadDTO = {
+    ...draft(),
+    original_page_count: 3,
+    live_reading: {
+      phase: "processing",
+      attempt_id: "interrupted-processing-attempt",
+    },
+  };
+  const view = render(<LiveInvoiceReading invoice={invoice} />);
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Read again" })).toBeEnabled(),
+  );
+  expect(screen.getByRole("button", { name: "Enter by hand" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Move page 2 up" })).toBeDisabled();
+  expect(
+    screen.getByRole("button", { name: "Move page 2 down" }),
+  ).toBeDisabled();
+  expect(ports.command).not.toHaveBeenCalled();
+  await act(async () =>
+    view.rerender(
+      <LiveInvoiceReading
+        invoice={{
+          ...invoice,
+          live_reading: { phase: "ready", attempt_id: "ready-attempt" },
+        }}
+      />,
+    ),
+  );
+  expect(screen.getByRole("button", { name: "Read invoice" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Move page 2 up" })).toBeEnabled();
+  expect(
+    screen.getByRole("button", { name: "Move page 2 down" }),
+  ).toBeEnabled();
+  expect(ports.request).not.toHaveBeenCalled();
+});

@@ -282,6 +282,9 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
   const [failure, setFailure] = useState(false);
   const [detail, setDetail] = useState("");
   const [changingOrder, setChangingOrder] = useState(false);
+  const orderEditable = ["ready", "failed", "cancelled"].includes(
+    invoice.live_reading?.phase ?? "",
+  );
   const activity = useLiveReadingActivity(invoice);
   const sourceKey = JSON.stringify([
     invoice.id,
@@ -592,7 +595,14 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
   }
   async function move(index: number, delta: number) {
     const next = index + delta;
-    if (busy || changingOrder || next < 0 || next >= files.length) return;
+    if (
+      !orderEditable ||
+      busy ||
+      changingOrder ||
+      next < 0 ||
+      next >= files.length
+    )
+      return;
     const order = files.map((_, position) => position);
     [order[index], order[next]] = [order[next], order[index]];
     setChangingOrder(true);
@@ -716,7 +726,9 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
                     <span className="actions">
                       <IconButton
                         variant="secondary"
-                        disabled={changingOrder || index === 0}
+                        disabled={
+                          !orderEditable || changingOrder || index === 0
+                        }
                         aria-label={t(
                           "Move page " + (index + 1) + " up",
                           "انتقال صفحهٔ " + (index + 1) + " به بالا",
@@ -727,7 +739,11 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
                       </IconButton>
                       <IconButton
                         variant="secondary"
-                        disabled={changingOrder || index === files.length - 1}
+                        disabled={
+                          !orderEditable ||
+                          changingOrder ||
+                          index === files.length - 1
+                        }
                         aria-label={t(
                           "Move page " + (index + 1) + " down",
                           "انتقال صفحهٔ " + (index + 1) + " به پایین",
