@@ -124,7 +124,10 @@ function ReadingSettingsForm() {
     }
   }
   return (
-    <Card title={t("AI reading", "خواندن با هوش مصنوعی")}>
+    <Card
+      className="settings-form-card"
+      title={t("AI reading", "خواندن با هوش مصنوعی")}
+    >
       <div className="form-grid">
         <Field label={t("Reading mode", "حالت خواندن")}>
           <Select

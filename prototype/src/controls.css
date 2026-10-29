@@ -51,7 +51,8 @@
 .ui-checked-control:disabled,
 .ui-segments button:disabled,
 .ui-option:disabled,
-.ui-menu-item:disabled {
+.ui-menu-item:disabled,
+.ui-menu-item[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
 }

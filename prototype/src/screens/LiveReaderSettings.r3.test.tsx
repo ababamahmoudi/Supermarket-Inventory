@@ -151,7 +151,11 @@ it("the genuine Manager Demo toggle changes the same saved mode and retains its 
     name: "Simulated reading",
   });
   expect(toggle).toBeChecked();
+  toggle.focus();
   fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute("aria-disabled", "true");
+  expect(toggle).toHaveAttribute("aria-busy", "true");
+  expect(toggle).toHaveFocus();
   await waitFor(async () =>
     expect(
       (await fixture.readCanonical()).config.receiving.ai_reading_mode,
@@ -165,7 +169,7 @@ it("the genuine Manager Demo toggle changes the same saved mode and retains its 
   await waitFor(() =>
     expect(
       screen.getByRole("menuitemcheckbox", { name: "Simulated reading" }),
-    ).toBeEnabled(),
+    ).toHaveAttribute("aria-busy", "false"),
   );
   fireEvent.click(
     screen.getByRole("menuitemcheckbox", { name: "Simulated reading" }),

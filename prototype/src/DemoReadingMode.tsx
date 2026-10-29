@@ -12,6 +12,7 @@ export default function DemoReadingMode() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const currentRequest = useRef(0);
+  const requestPending = useRef(false);
   useEffect(
     () => () => {
       currentRequest.current += 1;
@@ -31,9 +32,11 @@ export default function DemoReadingMode() {
           getLiveReaderSettings(state.config.receiving).mode === "simulated"
         }
         closeOnSelect={false}
-        disabled={pending}
+        aria-disabled={pending}
+        aria-busy={pending}
         onClick={() => {
-          if (pending) return;
+          if (requestPending.current) return;
+          requestPending.current = true;
           const mode =
             getLiveReaderSettings(state.config.receiving).mode === "simulated"
               ? "live"
@@ -61,7 +64,10 @@ export default function DemoReadingMode() {
               );
             })
             .finally(() => {
-              if (request === currentRequest.current) setPending(false);
+              if (request === currentRequest.current) {
+                requestPending.current = false;
+                setPending(false);
+              }
             });
         }}
       >
