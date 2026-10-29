@@ -81,7 +81,7 @@ At 509 px, open **Dashboard** and inspect Review approvals. The page's primary a
 
 ## Verification record
 
-Final executed results, exact commit and all seven CI conclusions are recorded in the task report and PR #29. Focused proofs use fictional data and actual rendered components. They cover the four phone widths, both language directions, both themes, control/glyph containment, negative controls and the existing 2 px interaction limit. A narrow Firefox project executes the tagged real 509 px cases in CI; existing Chromium, Firefox receiving and WebKit projects remain required.
+Final executed results, exact commit and all seven CI conclusions are recorded in the task report and PR #29. Focused proofs use fictional data and actual rendered components. They cover the four phone widths, both language directions, both themes, control/glyph containment, negative controls and the existing 2 px interaction limit. A narrow Firefox project executes the tagged real 509 px cases in CI; existing Chromium, Firefox receiving and WebKit projects remain required. The 25-line density fixture measures 3213 px in both languages against a 3216 px bound derived from its individual parts; extra row padding, row gaps, metadata wrapping and empty fixed sections each fail independently.
 
 No real reader/provider call or physical-phone claim follows from intercepted browser tests. The R3 real-kit rehearsal remains available separately.
 
@@ -93,6 +93,7 @@ No real reader/provider call or physical-phone claim follows from intercepted br
 - The receiving PNG retains 16 px phone line corners and inserts 14 px charge-card corners. That drawn pair takes precedence over the prose's “same radius”; desktop attention rows use the approved 10 px corner. The broader A4 phone-list redesign remains Tier 2.
 - Actual configured sale duration, eligible offers, permissions, names, prices, costs, dates and counts remain real data. The illustrative numbers in a mock do not replace the pricing engine or invent an eligible pooled offer. At narrow widths the complete offer/Mix pair may wrap below the unchanged large price, staying adjacent and above the actions.
 - The actual receiving progress bar remains fixed to the viewport bottom. As the reference README explains, the approved full-page illustration draws that bar at the page end instead.
+- The receiving reference contains six rows. The earlier 25-line/2700 px test used 3 px cell padding; the approved 12 px padding adds 450 px for 25 rows by itself. The current density proof therefore checks exact row spacing, complete canonical content and tight component-derived page bounds, with padding/wrapping/empty-section negative controls. It does not trim records, shrink text or substitute a larger arbitrary page cap. Closed Category/check metadata stays compact; source SKU and printed pack remain in the real expanded line.
 
 ## Remaining scope
 

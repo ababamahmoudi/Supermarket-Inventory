@@ -9,6 +9,8 @@ Use the byte-identical [approved R2g screenshots](design-reference/r2g/README.md
 - **Weight editor (C1):** no required Unit size for weight parents; packages provide sizes. Labels/sections/empty rows align to the logical start, caption has its own line, Details has the standard gap and unassigned codes/barcodes show New. Currency retains 2–4 places; converted per-kg display uses two while exact Decimal values are preserved.
 - **Shared A2/A5/A7:** colour-only reversible chips, content-sized dialogs without empty bands or visible scrollbars, scroll-edge fades and dialog-owned feedback, phone bottom sheets and full-row page-primary actions. Unrelated page Undo remains at page scope.
 
+Receiving's current density checks keep all 25 fixture lines closed and complete, with Category/check count on one metadata row and source SKU/printed pack available through the real expanded line. Exact 12 px cell insets, 4 px gaps and bounded component heights replace the old 3 px-padding/2700 px whole-page assumption; the padding change alone adds 450 px for 25 rows. Full names, unit atoms, normal type, 44 px controls, actual financial facts and the 2 px interaction limit remain required. The original's phone Expand mode fills the viewport; it is distinct from ordinary content-sized A5 sheets.
+
 The remaining all-screen field/filter/phone-list redesign is conditional Tier 2. Deferred table, notebook, name-cleaning, weight-repair and request features are recorded in [open questions](open-questions.md#after-the-prototype-demo).
 
 ## R2c Manager dashboard (2026-10-26)
@@ -43,7 +45,7 @@ Lookup shows the catalog immediately with an aggregate selection. Select a resul
 
 ## R2b invoices end to end (2026-10-25)
 
-Use the [fictional R2b guide](PR_R2B_REVIEW.md) for every item and staged import/rename check. Ordinary blank optional evidence stays quiet; explicit AI-flagged empty fields keep their question and a shared 32px Not on the invoice label action. More details auto-opens only for nonempty hidden evidence. Edited receiving/correction forms opt in to shared surface-fill fields; Bill to/Ship to are buffered two-line textareas. Preserve 44px controls, compact status counts, 25-line/2700px review and 2px stability.
+Use the [fictional R2b guide](PR_R2B_REVIEW.md) for every item and staged import/rename check. Ordinary blank optional evidence stays quiet; explicit AI-flagged empty fields keep their question and a shared 32px Not on the invoice label action. More details auto-opens only for nonempty hidden evidence. Edited receiving/correction forms opt in to shared surface-fill fields; Bill to/Ship to are buffered two-line textareas. Preserve 44px controls, compact status counts, the current R2g per-part density contract and 2px stability.
 
 Import defaults retain printed evidence and explain Received, calculated amounts, earlier-supplier terms and inferred names/packs/codes/contacts. Preview uses one readiness/check status, normal location fields and stable thumbnails/frame. New invoice JSON is additive, separately from explicit empty-store removal.
 
@@ -65,7 +67,7 @@ AI uncertainty throughout receiving is a 2px amber field border with a small amb
 
 Inside the fixed phone editor, collapsing Track dates preserves the control's position by temporarily retaining the body's height. Wheel/touch scrolling, close and navigation release that space; the existing 2px movement limit remains unchanged.
 
-Confirm/Close return to the same row without opening another line; receiving actions retain the 2px stability contract. Long lists use compact 48px closed rows and 8px work gaps without shrinking normal fonts, card tokens or field heights. With 25 closed rows, the full review fits within three 900px desktop viewports (2700px) at 1440px wide. Other charges remain separate and Totals follows the lines as read-only label/amount rows with an amber Calculated · not on the paper tag on derived amounts. Edit opens 44px input fields; actual non-calculated questions or invalid totals after a posting attempt open the inputs automatically. One Looks right still acknowledges the whole totals card. Delivery date/invoice links open the exact draft/posted line, center it and fade a token-based accent over two seconds. Persian labels are translated; amounts/codes use LtrValue with tabular amounts aligned to the same edge in both themes.
+Confirm/Close return to the same row without opening another line; receiving actions retain the 2px stability contract. The historical R2 composition used compact 48px closed rows, 8px work gaps and a 25-line/2700px full-review limit, separate charges and ungrouped totals. R2g's current row spacing, inline charges, grouped totals and per-part density contract above supersede those presentation details. Edit still opens 44px input fields; actual non-calculated questions or invalid totals after a posting attempt open the inputs automatically. One Looks right still acknowledges the whole totals card. Delivery date/invoice links open the exact draft/posted line, center it and fade a token-based accent over two seconds. Persian labels are translated; amounts/codes use LtrValue with tabular amounts aligned to the same edge in both themes.
 
 ## Settings → Data and imported invoice review
 
