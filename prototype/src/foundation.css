@@ -1698,6 +1698,9 @@
 /* R2g A7 — the page's primary action occupies its phone row. */
 @media screen and (max-width: 760px) {
   :root .main-content [data-ui-component="page-header"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
     align-items: stretch;
   }
   :root .main-content [data-ui-component="page-header"] > .actions {
