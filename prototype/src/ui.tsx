@@ -582,7 +582,7 @@ export function DataTable({
   const tableRef = useRef<HTMLTableElement>(null);
   const [actionWidths, setActionWidths] = useState<Record<string, number>>({});
   const [availableWidth, setAvailableWidth] = useState(0);
-  const [screenMobile, setMobile] = useState(() => window.innerWidth < 760);
+  const [screenMobile, setMobile] = useState(() => window.innerWidth <= 760);
   const [printing, setPrinting] = useState(
     () => window.matchMedia?.("print").matches ?? false,
   );
@@ -592,7 +592,7 @@ export function DataTable({
   const expandedRows = expandedRowKeys ?? localExpandedRows;
   const detailsId = useId();
   useEffect(() => {
-    const resize = () => setMobile(window.innerWidth < 760);
+    const resize = () => setMobile(window.innerWidth <= 760);
     const printMedia = window.matchMedia?.("print");
     // Native print captures the DOM immediately after beforeprint returns.
     // Commit the full permitted table before the browser takes that snapshot.

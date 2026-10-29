@@ -74,7 +74,7 @@ function Presentation({
     </DataTable>
   );
 }
-for (const width of [390, 430]) {
+for (const width of [390, 430, 760]) {
   it(`renders one compact row with bilingual identity, right-side price and single route chevron at ${width}`, () => {
     Object.defineProperty(window, "innerWidth", {
       configurable: true,

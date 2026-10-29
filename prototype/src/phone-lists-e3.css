@@ -1,5 +1,5 @@
 /* E3 list rows use the same already-authorized cells as their desktop table. */
-@media screen and (max-width: 759px) {
+@media screen and (max-width: 760px) {
   :root .price-update-detail .ltr-fragment {
     display: inline-block;
     white-space: nowrap;
