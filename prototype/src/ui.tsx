@@ -1694,6 +1694,7 @@ export function Dialog({
         onOpenChange(false);
       }}
       onClick={(event) => {
+        event.stopPropagation();
         if (event.target !== event.currentTarget) return;
         const box = event.currentTarget.getBoundingClientRect();
         if (
