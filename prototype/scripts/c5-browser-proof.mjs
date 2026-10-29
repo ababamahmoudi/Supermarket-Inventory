@@ -2363,16 +2363,89 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           const close = header?.querySelector(
             "button.ui-icon-button[data-control-kind='icon']",
           );
-          const footer = [
-            ...dialog.querySelectorAll(
-              ".ui-dialog-actions, .dialog-actions, .c3-dialog-actions, .product-editor-actions",
-            ),
-          ].find(
-            (node) =>
-              node.closest("dialog") === dialog &&
-              (node.parentElement === dialog ||
-                node.parentElement?.matches("form")),
+          // These retained read-only dialogs put their actual final action
+          // footer inside one direct body wrapper. Qualify each complete
+          // composition; a copied footer class or arbitrary body action is
+          // still subject to the ordinary intrinsic-width contract.
+          const historyDialog = dialog.matches(".supplier-item-history-dialog");
+          const policyDialog = dialog.matches(".return-policy-dialog");
+          const nestedBody = dialog.querySelector(
+            historyDialog
+              ? ":scope > .stack"
+              : ":scope > .return-policy-content",
           );
+          const nestedFooter = nestedBody?.querySelector(
+            ":scope > .ui-dialog-actions:last-child",
+          );
+          const nestedActions = [
+            ...(nestedFooter?.querySelectorAll(":scope > button") ?? []),
+          ];
+          const exactNestedAction = (button, caption, variant) =>
+            button?.matches(
+              `button.ui-button.button.button-${variant}[data-control-kind='action'][type='button']`,
+            ) && caption.includes(tidy(button.textContent));
+          const validNestedFooter = Boolean(
+            nestedBody &&
+            nestedFooter &&
+            !nestedBody.querySelector(
+              "input,textarea,select,[role='combobox'],form",
+            ) &&
+            nestedBody.querySelectorAll(".ui-dialog-actions").length === 1 &&
+            (historyDialog
+              ? ["Price history", "تاریخچه قیمت"].includes(
+                  tidy(title?.textContent),
+                ) &&
+                nestedActions.length === 1 &&
+                exactNestedAction(
+                  nestedActions[0],
+                  ["Close", "بستن"],
+                  "neutral",
+                ) &&
+                ["Before tax", "پیش از مالیات"].includes(
+                  tidy(
+                    nestedBody.querySelector(":scope > p.muted")?.textContent,
+                  ),
+                ) &&
+                nestedBody.querySelector(
+                  ".supplier-item-price-history table, .empty-state",
+                )
+              : policyDialog &&
+                ["Return policy", "سیاست مرجوعی"].includes(
+                  tidy(title?.textContent),
+                ) &&
+                nestedActions.length === 2 &&
+                exactNestedAction(
+                  nestedActions[0],
+                  ["Close", "بستن"],
+                  "neutral",
+                ) &&
+                exactNestedAction(
+                  nestedActions[1],
+                  ["Download full policy", "دانلود سیاست کامل"],
+                  "tinted",
+                ) &&
+                nestedBody.querySelectorAll(":scope > ol > li").length === 5 &&
+                [...nestedBody.querySelectorAll(":scope > ol > li")].every(
+                  (item) =>
+                    item.querySelector(":scope > strong") &&
+                    item.querySelector(":scope > p"),
+                )),
+          );
+          if ((historyDialog || policyDialog) && !validNestedFooter)
+            failures.push(
+              "Invalid retained read-only dialog footer composition",
+            );
+          const footer =
+            [
+              ...dialog.querySelectorAll(
+                ".ui-dialog-actions, .dialog-actions, .c3-dialog-actions, .product-editor-actions",
+              ),
+            ].find(
+              (node) =>
+                node.closest("dialog") === dialog &&
+                (node.parentElement === dialog ||
+                  node.parentElement?.matches("form")),
+            ) ?? (validNestedFooter ? nestedFooter : null);
           const actions = [
             ...(footer?.querySelectorAll(
               ":scope > button.ui-button.button:not(.ui-icon-button)",

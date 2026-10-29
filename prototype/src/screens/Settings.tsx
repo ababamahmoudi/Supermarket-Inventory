@@ -965,8 +965,10 @@ function BranchSettings() {
                 {error}
               </p>
             )}
+            <p className="helper settings-dialog-state">
+              {t("Unsaved changes", "تغییرات ذخیره‌نشده")}
+            </p>
             <DialogActions className="settings-save-bar">
-              <span>{t("Unsaved changes", "تغییرات ذخیره‌نشده")}</span>
               <Button variant="neutral" onClick={() => setEditing(null)}>
                 {t("Cancel", "لغو")}
               </Button>
