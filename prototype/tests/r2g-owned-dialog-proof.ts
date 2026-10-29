@@ -16,10 +16,14 @@ const sourceFiles = [
   "src/UndoToasts.tsx",
   "src/undo-queue.ts",
   "src/dialog-feedback.ts",
+  "src/use-dialog-scroll-edges.ts",
+  "src/foundation.css",
+  "src/undo-toasts.css",
   "src/authority-repository.ts",
   "src/e1-application-options.ts",
   "src/operations.ts",
   "src/date-tracking.ts",
+  "tests/r2g-owned-dialog-fixture.tsx",
 ];
 const hash = (bytes: string | Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
@@ -64,6 +68,7 @@ export async function compileOwnedDialogProof(): Promise<Bundle> {
       root: prototypeRoot,
       publicDir: false,
       logLevel: "silent",
+      define: { "process.env.NODE_ENV": JSON.stringify("production") },
       plugins: [noDuplicateStyles, react()],
       build: {
         write: false,
