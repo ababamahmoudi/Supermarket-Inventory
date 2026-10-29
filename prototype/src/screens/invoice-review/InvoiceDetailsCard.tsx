@@ -41,6 +41,7 @@ import { clearInvoiceOrder, setInvoiceOrder } from "../../invoice-orders";
 import { PaymentTermsControl } from "../PaymentTermsControl";
 import type { ReviewProps } from "./types";
 import { ReceivedField } from "./ReceivedField";
+import { LiveReadingProvenance } from "../../LiveReadingProvenance";
 export function InvoiceDetailsCard({
   invoice,
   update,
@@ -148,6 +149,7 @@ export function InvoiceDetailsCard({
           <ChevronDown size={18} aria-hidden="true" />
         </Button>
       </div>
+      <LiveReadingProvenance invoice={invoice} />
       <div className="receiving-details-phone-summary">
         <LtrValue value={invoice.supplier} />
         {" · "}
@@ -419,7 +421,7 @@ export function InvoiceDetailsCard({
                   </Field>
                 );
               })}
-              {invoice.reading_record && (
+              {invoice.reading_record?.source === "imported" && (
                 <div className="receiving-reading-evidence">
                   <h3>{t("Reading", "خوانش")}</h3>
                   <p className="muted">

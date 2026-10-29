@@ -51,12 +51,16 @@ export function ReviewHeader({
                 : t("In review", "در حال بررسی")}
             </Badge>
           </div>
-          {invoice.reading_record && (
+          {(invoice.reading_record ||
+            invoice.live_reading?.phase === "complete") && (
             <Badge tone="neutral" wrap>
-              {t(
-                "Read by AI · imported file",
-                "خوانده‌شده با هوش مصنوعی · فایل واردشده",
-              )}
+              {invoice.reading_record?.source === "live" ||
+              invoice.live_reading?.phase === "complete"
+                ? t("Read by AI", "خوانده‌شده با هوش مصنوعی")
+                : t(
+                    "Read by AI · imported file",
+                    "خوانده‌شده با هوش مصنوعی · فایل واردشده",
+                  )}
             </Badge>
           )}
         </div>

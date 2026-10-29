@@ -28,7 +28,7 @@ export function ImportedReadingNote({ invoice }: { invoice: InvoiceReadDTO }) {
   ];
   return (
     <>
-      {invoice.reading_record && (
+      {invoice.reading_record?.source === "imported" && (
         <p className="muted">
           {t(
             "Reading imported from the invoice-reader kit (not live)",

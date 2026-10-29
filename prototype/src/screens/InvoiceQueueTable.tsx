@@ -5,6 +5,22 @@ import { DateText, LtrText, LtrValue, NotAdded } from "../presentation";
 import { ReadingMoney } from "../InvoiceReadingReview";
 import { effectiveInvoiceLocation } from "../received";
 import { branchLabel as configuredBranchLabel } from "../settings";
+import { useLiveReadingActivity } from "../live-reading-activity";
+
+function LiveQueueProgress({ invoice }: { invoice: InvoiceReadDTO }) {
+  const { t } = useDemo();
+  const reading = useLiveReadingActivity(invoice);
+  return reading.active ? (
+    <span>
+      {t("Reading with AI…", "در حال خواندن با هوش مصنوعی…")}{" "}
+      <bdi>{reading.elapsed}</bdi>
+    </span>
+  ) : (
+    <span>
+      {t("Original saved · ready to read", "اصل فایل ذخیره شد · آمادهٔ خواندن")}
+    </span>
+  );
+}
 
 export function InvoiceQueueTable({
   invoices,
@@ -171,9 +187,13 @@ export function InvoiceQueueTable({
               </td>
               <td>
                 <span className="invoice-queue-progress">
-                  {t(
-                    `${confirmed}/${saved.lines.length} confirmed · ${checks} to check`,
-                    `${confirmed}/${saved.lines.length} تأیید شده · ${checks} نیاز به بررسی`,
+                  {saved.live_reading && saved.status === "reading" ? (
+                    <LiveQueueProgress invoice={saved} />
+                  ) : (
+                    t(
+                      `${confirmed}/${saved.lines.length} confirmed · ${checks} to check`,
+                      `${confirmed}/${saved.lines.length} تأیید شده · ${checks} نیاز به بررسی`,
+                    )
                   )}
                 </span>
               </td>
@@ -187,7 +207,9 @@ export function InvoiceQueueTable({
                     ? t("Review", "بررسی")
                     : unreadOriginal(saved)
                       ? t("Continue", "ادامه")
-                      : t("Resume draft", "ادامه پیش‌نویس")}
+                      : saved.live_reading && saved.status === "reading"
+                        ? t("Read again", "خواندن دوباره")
+                        : t("Resume draft", "ادامه پیش‌نویس")}
                 </Button>
               </td>
             </tr>

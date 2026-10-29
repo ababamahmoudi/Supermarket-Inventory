@@ -38,6 +38,7 @@ import type {
 } from "../invoice-projections";
 import type { InvoiceEditableLine } from "../invoice-edit-types";
 import { useProtectedQuery } from "../use-protected-query";
+import { LiveReadingProvenance } from "../LiveReadingProvenance";
 import {
   requireInvoiceAuthority,
   canInvoiceAuthority,
@@ -271,12 +272,16 @@ export function PostedInvoice({
               {" · "}
               <Badge tone="approved">{t("Posted", "ثبت‌شده")}</Badge>
             </p>
-            {invoice.reading_record && (
+            {(invoice.reading_record ||
+              invoice.live_reading?.phase === "complete") && (
               <small className="muted">
-                {t(
-                  "Read by AI · imported file",
-                  "خوانده‌شده با هوش مصنوعی · فایل واردشده",
-                )}
+                {invoice.reading_record?.source === "live" ||
+                invoice.live_reading?.phase === "complete"
+                  ? t("Read by AI", "خوانده‌شده با هوش مصنوعی")
+                  : t(
+                      "Read by AI · imported file",
+                      "خوانده‌شده با هوش مصنوعی · فایل واردشده",
+                    )}
               </small>
             )}
           </div>
@@ -331,6 +336,7 @@ export function PostedInvoice({
             <div className="receiving-card-title">
               <h2>{t("Invoice details", "جزئیات فاکتور")}</h2>
             </div>
+            <LiveReadingProvenance invoice={invoice} />
             {notes.length > 0 && (
               <Disclosure
                 className="posted-reading-notes"
@@ -467,7 +473,7 @@ export function PostedInvoice({
                 </div>
               )}
             </dl>
-            {invoice.reading_record && (
+            {invoice.reading_record?.source === "imported" && (
               <Disclosure
                 className="receiving-more"
                 summary={t("More details", "جزئیات بیشتر")}

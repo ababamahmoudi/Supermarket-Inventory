@@ -116,6 +116,8 @@ import { InvoiceReviewPage } from "./invoice-review/InvoiceReviewPage";
 import { ReviewHeader } from "./invoice-review/ReviewHeader";
 import { InvoiceJsonImport } from "./InvoiceJsonImport";
 import { OriginalViewer } from "./invoice-review/OriginalViewer";
+import { LiveInvoiceReading, LiveInvoiceUpload } from "./LiveInvoiceReading";
+import { getLiveReaderSettings } from "../live-reader-settings";
 import "./invoice-settings-labels.css";
 import "./invoices-c7.css";
 import "./manual-entry.css";
@@ -304,7 +306,9 @@ function InvoiceEntryChoices({
   onSelect(manual: boolean, source?: "photo" | "pdf"): void;
   disabled: boolean;
 }) {
-  const { t, can, actor } = useDemo();
+  const { state, t, can, actor } = useDemo();
+  const liveMode =
+    getLiveReaderSettings(state.config.receiving).mode === "live";
   const jsonInput = useRef<HTMLInputElement>(null);
   const hasLocation = actor?.selection.kind === "location";
   const canEnter = hasLocation && can("invoices.enter");
@@ -416,12 +420,14 @@ function InvoiceEntryChoices({
               )}
             </p>
           )}
-          <p className="helper">
-            {t(
-              "AI reading is simulated in this demo",
-              "خوانش هوش مصنوعی در این دمو شبیه‌سازی شده است",
-            )}
-          </p>
+          {!liveMode && (
+            <p className="helper">
+              {t(
+                "AI reading is simulated in this demo",
+                "خوانش هوش مصنوعی در این دمو شبیه‌سازی شده است",
+              )}
+            </p>
+          )}
         </Dialog>
       )}
       <InvoiceJsonImport
@@ -649,6 +655,8 @@ function InvoiceWorkspace({
   const [, setReceivedError] = useState<CompanyLocalTimeError["code"]>();
   const [productEditorOpen, setProductEditorOpen] = useState(false);
   const invoice = workspace.invoice;
+  const liveMode =
+    getLiveReaderSettings(state.config.receiving).mode === "live";
   const scope = {
     company_id: invoice.company_id,
     kind: "company_shared" as const,
@@ -883,7 +891,7 @@ function InvoiceWorkspace({
   }
   // Refreshing a processing draft resumes the honest simulated reading state.
   useEffect(() => {
-    if (invoice.status !== "reading") return;
+    if (invoice.status !== "reading" || invoice.live_reading) return;
     const id = invoice.id;
     const timer = window.setTimeout(
       () =>
@@ -894,7 +902,7 @@ function InvoiceWorkspace({
       2500,
     );
     return () => window.clearTimeout(timer);
-  }, [invoice.id, invoice.status, updateInvoice]);
+  }, [invoice.id, invoice.status, invoice.live_reading, updateInvoice]);
 
   useEffect(() => {
     const applyDemoAnswer = () => {
@@ -1843,25 +1851,35 @@ function InvoiceWorkspace({
               label={t("Upload a PDF or photo", "بارگذاری PDF یا عکس")}
               error={uploadError}
             >
-              <Dropzone
-                id="invoice-original"
-                accept={
-                  uploadSource === "photo"
-                    ? "image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
-                    : uploadSource === "pdf"
-                      ? "application/pdf"
-                      : "application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
-                }
-                onChange={(file) => void attachFile(file)}
-                disabled={uploadPending || entryPending}
-              />
-            </Field>
-            <p className="helper">
-              {t(
-                "AI invoice reading is simulated",
-                "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
+              {liveMode ? (
+                <LiveInvoiceUpload
+                  invoice={invoice}
+                  source={uploadSource}
+                  disabled={uploadPending || entryPending}
+                />
+              ) : (
+                <Dropzone
+                  id="invoice-original"
+                  accept={
+                    uploadSource === "photo"
+                      ? "image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                      : uploadSource === "pdf"
+                        ? "application/pdf"
+                        : "application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                  }
+                  onChange={(file) => void attachFile(file)}
+                  disabled={uploadPending || entryPending}
+                />
               )}
-            </p>
+            </Field>
+            {!liveMode && (
+              <p className="helper">
+                {t(
+                  "AI invoice reading is simulated",
+                  "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
+                )}
+              </p>
+            )}
           </Card>
         </div>
       ) : routeId &&
@@ -1885,23 +1903,27 @@ function InvoiceWorkspace({
             </p>
           )}
           <div className="receiving-layout">
-            <Card>
-              {invoice.status === "reading" ? (
-                <p role="status">
-                  {t("Reading invoice…", "در حال خواندن فاکتور…")}
-                </p>
-              ) : (
-                <Button
-                  onClick={() =>
-                    updateInvoice((draft) => {
-                      draft.invoice.status = "reading";
-                    })
-                  }
-                >
-                  {t("Read invoice", "خواندن فاکتور")}
-                </Button>
-              )}
-            </Card>
+            {invoice.live_reading ? (
+              <LiveInvoiceReading invoice={invoice} />
+            ) : (
+              <Card>
+                {invoice.status === "reading" ? (
+                  <p role="status">
+                    {t("Reading invoice…", "در حال خواندن فاکتور…")}
+                  </p>
+                ) : (
+                  <Button
+                    onClick={() =>
+                      updateInvoice((draft) => {
+                        draft.invoice.status = "reading";
+                      })
+                    }
+                  >
+                    {t("Read invoice", "خواندن فاکتور")}
+                  </Button>
+                )}
+              </Card>
+            )}
             <OriginalViewer
               invoice={invoice}
               onAttach={() => originalInput.current?.click()}
