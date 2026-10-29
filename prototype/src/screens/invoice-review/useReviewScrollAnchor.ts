@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 /** Keep the used control in place while its receiving layout changes. */
 export function useReviewScrollAnchor(
   scrollParent?: (element: HTMLElement) => HTMLElement | null,
+  prepareRestore?: (element: HTMLElement, parent: HTMLElement | null) => void,
 ) {
   const position = useRef<{
     element: HTMLElement;
@@ -73,6 +74,7 @@ export function useReviewScrollAnchor(
       clear();
       return;
     }
+    prepareRestore?.(saved.element, saved.parent);
     const delta = saved.element.getBoundingClientRect().top - saved.top;
     if (Math.abs(delta) > 0.25) {
       const before = saved.parent ? saved.parent.scrollTop : window.scrollY;

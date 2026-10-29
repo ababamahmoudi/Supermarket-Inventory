@@ -22,7 +22,7 @@
 }
 .weight-product-soldby {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   flex-wrap: wrap;
 }
@@ -30,6 +30,9 @@
   margin: 0;
   flex: 1;
   min-inline-size: 220px;
+  min-block-size: 44px;
+  display: flex;
+  align-items: center;
 }
 .weight-product-dialog .weight-product-cost {
   display: flex;

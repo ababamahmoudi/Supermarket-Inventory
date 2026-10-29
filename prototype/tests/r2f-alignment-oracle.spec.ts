@@ -1,6 +1,37 @@
 import { expect, test } from "@playwright/test";
 import { auditR2fAlignment } from "./r2f-alignment";
 
+for (const direction of ["ltr", "rtl"] as const)
+  test(`R0.7 measures painted scroll peers and still rejects a visible 4px shift (${direction})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 509, height: 600 });
+    await page.setContent(`<!doctype html><html dir="${direction}"><style>
+      *{box-sizing:border-box}body{margin:0}main{position:relative;width:260px;height:200px}
+      .scroll-body{position:relative;width:260px;height:100px;overflow:auto}
+      input,button{position:absolute;width:100px;height:44px;border:0}
+      #first{top:10px;left:0}#peer{top:10px;left:112px}
+      #clipped{top:90px;left:0}#save{top:105px;left:112px}
+      </style><main><div class="scroll-body"><input id="first" aria-label="First" value="A"><input id="peer" aria-label="Peer" value="B"><input id="clipped" aria-label="Clipped" value="C"></div><button id="save">Save</button></main></html>`);
+    const audit = () => auditR2fAlignment(page, { scene: "D3" });
+    const clean = await audit();
+    expect(clean.pairs).toBeGreaterThan(0);
+    expect(clean.failures).toEqual([]);
+    const peer = page.locator("#peer");
+    await expect(peer).toBeInViewport({ ratio: 1 });
+    await peer.evaluate(
+      (element) => (element.style.transform = "translateY(4px)"),
+    );
+    expect(
+      (await audit()).failures.some(
+        (failure) =>
+          failure.startsWith("row:") && failure.includes("centre Δ4.00"),
+      ),
+    ).toBe(true);
+    await peer.evaluate((element) => element.style.removeProperty("transform"));
+    expect((await audit()).failures).toEqual([]);
+  });
+
 for (const direction of ["ltr", "rtl"] as const) {
   test(`R0.7 rejects shifted controls, glyphs, baselines and two-line icons (${direction})`, async ({
     page,

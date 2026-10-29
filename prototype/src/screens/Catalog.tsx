@@ -1311,22 +1311,24 @@ export function ProductEditor({
                   <h3 className="product-editor-section-title">
                     {t("How it's sold", "نحوه فروش")}
                   </h3>
-                  <div className="weight-product-soldby ui-control-row">
-                    <SegmentedControl
-                      aria-label={t("Sold by", "روش فروش")}
-                      value={values.sold_by ?? "each"}
-                      onChange={(value) => {
-                        patch("sold_by", value as "each" | "weight");
-                        if (value === "weight" && !values.unit_size.trim())
-                          patch("unit_size", "lb");
-                        setManualPrice(false);
-                        setMarginConfirmed(false);
-                      }}
-                      options={[
-                        { value: "each", label: t("Each", "عددی") },
-                        { value: "weight", label: t("By weight", "وزنی") },
-                      ]}
-                    />
+                  <div className="weight-product-soldby">
+                    <div className="ui-control-row">
+                      <SegmentedControl
+                        aria-label={t("Sold by", "روش فروش")}
+                        value={values.sold_by ?? "each"}
+                        onChange={(value) => {
+                          patch("sold_by", value as "each" | "weight");
+                          if (value === "weight" && !values.unit_size.trim())
+                            patch("unit_size", "lb");
+                          setManualPrice(false);
+                          setMarginConfirmed(false);
+                        }}
+                        options={[
+                          { value: "each", label: t("Each", "عددی") },
+                          { value: "weight", label: t("By weight", "وزنی") },
+                        ]}
+                      />
+                    </div>
                     <p className="helper">
                       {values.sold_by === "weight"
                         ? t(

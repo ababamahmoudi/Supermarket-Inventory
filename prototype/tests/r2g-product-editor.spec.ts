@@ -56,9 +56,21 @@ async function stable(control: Locator, action: () => Promise<void>) {
   await control.scrollIntoViewIfNeeded();
   const before = await control.boundingBox();
   expect(before).not.toBeNull();
+  const scrollBefore = await control.evaluate((element) => {
+    const body = element.closest(".product-editor-body")!;
+    const content = body.querySelector<HTMLElement>(".weight-product-content")!;
+    return {
+      scrollTop: body.scrollTop,
+      scrollHeight: body.scrollHeight,
+      clientHeight: body.clientHeight,
+      contentHeight: content.getBoundingClientRect().height,
+      floor: content.style.minBlockSize,
+    };
+  });
   await action();
   const movement = await control.evaluate(async (element, original) => {
     let maximum = 0;
+    const frames = [];
     for (let frame = 0; frame < 6; frame++) {
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => resolve()),
@@ -69,10 +81,26 @@ async function stable(control: Locator, action: () => Promise<void>) {
         Math.abs(original!.x - current.x),
         Math.abs(original!.y - current.y),
       );
+      const body = element.closest(".product-editor-body")!;
+      const content = body.querySelector<HTMLElement>(
+        ".weight-product-content",
+      )!;
+      frames.push({
+        x: current.x,
+        y: current.y,
+        scrollTop: body.scrollTop,
+        scrollHeight: body.scrollHeight,
+        clientHeight: body.clientHeight,
+        contentHeight: content.getBoundingClientRect().height,
+        floor: content.style.minBlockSize,
+      });
     }
-    return maximum;
+    return { maximum, frames };
   }, before);
-  expect(movement).toBeLessThanOrEqual(2);
+  expect(
+    movement.maximum,
+    JSON.stringify({ before, scrollBefore, movement }, null, 2),
+  ).toBeLessThanOrEqual(2);
 }
 
 for (const width of [360, 390, 509, 760, 1440]) {
@@ -252,4 +280,96 @@ test("R2g C1 saving a real weight draft does not demand hidden Unit size", async
   expect(child.barcode).toMatch(/^20\d{11}$/);
   expect(saved.invoices).toEqual(before.invoices);
   expect(saved.ledger).toEqual(before.ledger);
+});
+
+test("R2g C1 keeps real visible field peers strict beside a clipped dialog footer @r2g-509", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 509, height: 1000 });
+  await fixture(page);
+  const dialog = await openEditor(page, "en");
+  await dialog.locator(".weight-product-optional-details > summary").click();
+  const audit = () => auditR2fAlignment(page, { scene: "D3" });
+  expect((await audit()).failures).toEqual([]);
+  await dialog
+    .getByRole("region", { name: "Names", exact: true })
+    .evaluate((element) => element.scrollIntoView({ block: "start" }));
+  const peer = dialog.getByRole("textbox", {
+    name: "Persian name (optional)",
+    exact: true,
+  });
+  await expect(peer).toBeInViewport({ ratio: 1 });
+  expect((await audit()).failures).toEqual([]);
+  await peer.evaluate(
+    (element) => (element.style.transform = "translateY(4px)"),
+  );
+  expect(
+    (await audit()).failures.some(
+      (failure) =>
+        failure.startsWith("row:") && failure.includes("centre Δ4.00"),
+    ),
+  ).toBe(true);
+  await peer.evaluate((element) => element.style.removeProperty("transform"));
+  expect((await audit()).failures).toEqual([]);
+});
+
+test("R2g C1 rebases repeated package frames and releases them for real user scrolling and reopening", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 1000 });
+  await fixture(page);
+  await setLanguage(page, "fa");
+  const before = await readCanonicalBusinessEvidence(page);
+  let dialog = await openEditor(page, "fa");
+  for (const size of ["250", "500"]) {
+    const input = dialog.getByRole("textbox", {
+      name: "اندازه جدید",
+      exact: true,
+    });
+    await stable(input, () => input.fill(size));
+    const add = dialog.getByRole("button", {
+      name: "افزودن اندازه",
+      exact: true,
+    });
+    await stable(add, () => add.click());
+  }
+  await expect(dialog.locator('[data-package-code="staged"]')).toHaveCount(2);
+  const each = dialog
+    .getByRole("group", { name: "روش فروش", exact: true })
+    .getByRole("button", { name: "عددی", exact: true });
+  await stable(each, () => each.click());
+  await expect(dialog.locator(".weight-package-section")).toHaveCount(0);
+  const body = dialog.locator(".product-editor-body");
+  const content = dialog.locator(".weight-product-content");
+  const box = await body.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + 50);
+  await page.mouse.wheel(0, -80);
+  await expect
+    .poll(() => content.evaluate((element) => element.style.minBlockSize))
+    .toBe("");
+  await expect
+    .poll(() => dialog.evaluate((element) => element.style.blockSize))
+    .toBe("");
+  const trailing = await content.evaluate((element) => {
+    const last = [...element.children]
+      .filter((child) => child.getBoundingClientRect().height > 0)
+      .at(-1)!;
+    return (
+      element.getBoundingClientRect().bottom -
+      last.getBoundingClientRect().bottom
+    );
+  });
+  expect(Math.abs(trailing)).toBeLessThanOrEqual(1);
+  await dialog.getByRole("button", { name: "انصراف", exact: true }).click();
+  expect((await readCanonicalBusinessEvidence(page)).products).toEqual(
+    before.products,
+  );
+  dialog = await openEditor(page, "fa");
+  expect(
+    await dialog
+      .locator(".weight-product-content")
+      .evaluate((element) => element.style.minBlockSize),
+  ).toBe("");
+  expect(await dialog.evaluate((element) => element.style.blockSize)).toBe("");
 });

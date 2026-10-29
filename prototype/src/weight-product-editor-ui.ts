@@ -6,6 +6,7 @@ import {
 import type { ProductReadDTO } from "./catalog-read-model";
 import type { CompanyConfig } from "./types";
 import type { PricingConfig } from "./pricing";
+import { useCallback, useEffect, useRef } from "react";
 
 const productScrollParent = (element: HTMLElement) =>
   element.closest<HTMLElement>(".product-editor-body") ??
@@ -13,9 +14,55 @@ const productScrollParent = (element: HTMLElement) =>
     .closest("dialog")
     ?.querySelector<HTMLElement>(".product-editor-body") ??
   null;
+/** A later package quote must not shrink the frame and clamp a restored scroll. */
+function holdWeightContentFrame(
+  _control: HTMLElement,
+  parent: HTMLElement | null,
+) {
+  const content = parent?.querySelector<HTMLElement>(".weight-product-content");
+  if (content)
+    content.style.minBlockSize = `${Math.max(parseFloat(content.style.minBlockSize) || 0, content.getBoundingClientRect().height)}px`;
+}
 /** Reuse receiving's guarded anchor while keeping a dialog frame and shrinkable content stable. */
 export function useWeightEditorScrollAnchor() {
-  const { anchor } = useReviewScrollAnchor(productScrollParent);
+  const { anchor, clear } = useReviewScrollAnchor(
+    productScrollParent,
+    holdWeightContentFrame,
+  );
+  const held = useRef<{
+    dialog: HTMLDialogElement;
+    content: HTMLElement;
+  } | null>(null);
+  const release = useCallback(() => {
+    const frame = held.current;
+    frame?.content.style.removeProperty("min-block-size");
+    frame?.dialog.style.removeProperty("block-size");
+    held.current = null;
+    clear();
+  }, [clear]);
+  useEffect(() => {
+    const scrollIntent = (event: Event) => {
+      if (
+        event.target instanceof Node &&
+        held.current?.dialog.contains(event.target)
+      )
+        release();
+    };
+    window.addEventListener("wheel", scrollIntent, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("touchmove", scrollIntent, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("resize", release);
+    return () => {
+      window.removeEventListener("wheel", scrollIntent, true);
+      window.removeEventListener("touchmove", scrollIntent, true);
+      window.removeEventListener("resize", release);
+    };
+  }, [release]);
   return (control: HTMLElement) => {
     const dialog = control.closest<HTMLDialogElement>(
       "dialog.weight-product-dialog",
@@ -25,8 +72,20 @@ export function useWeightEditorScrollAnchor() {
       const content = dialog.querySelector<HTMLElement>(
         ".weight-product-content",
       );
-      if (content)
-        content.style.minBlockSize = `${Math.max(parseFloat(content.style.minBlockSize) || 0, content.getBoundingClientRect().height)}px`;
+      if (content) {
+        // Rebase the prior hold to natural content on each explicit action,
+        // retaining only the tail needed to keep the current viewport in place.
+        const parent = productScrollParent(control);
+        const scrollTop = parent?.scrollTop ?? 0;
+        content.style.removeProperty("min-block-size");
+        const natural = content.getBoundingClientRect().height;
+        const tail = parent
+          ? Math.max(0, scrollTop - (parent.scrollHeight - parent.clientHeight))
+          : 0;
+        content.style.minBlockSize = `${natural + Math.ceil(tail)}px`;
+        if (parent) parent.scrollTop = scrollTop;
+        held.current = { dialog, content };
+      }
     }
     anchor(control);
   };

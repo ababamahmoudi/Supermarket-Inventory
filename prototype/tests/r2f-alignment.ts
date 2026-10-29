@@ -227,9 +227,44 @@ export async function auditR2fAlignment(
         .filter((element) => !element.closest(".lookup-search-pill"));
       let pairs = 0,
         separateOverlayPairs = 0;
+      // A scrolled control can have a raw rectangle behind a fixed footer.
+      // Classify peers by their painted intersection, then retain the original
+      // full-control centre and height measurements for genuine visible peers.
+      const paintedRect = (element: HTMLElement) => {
+        const rect = element.getBoundingClientRect();
+        let left = Math.max(0, rect.left),
+          right = Math.min(innerWidth, rect.right),
+          top = Math.max(0, rect.top),
+          bottom = Math.min(innerHeight, rect.bottom);
+        for (
+          let ancestor = element.parentElement;
+          ancestor;
+          ancestor = ancestor.parentElement
+        ) {
+          const css = getComputedStyle(ancestor);
+          const clipX = /^(auto|scroll|hidden|clip)$/.test(css.overflowX);
+          const clipY = /^(auto|scroll|hidden|clip)$/.test(css.overflowY);
+          if (!clipX && !clipY) continue;
+          const bounds = ancestor.getBoundingClientRect();
+          if (clipX) {
+            const start = bounds.left + ancestor.clientLeft;
+            left = Math.max(left, start);
+            right = Math.min(right, start + ancestor.clientWidth);
+          }
+          if (clipY) {
+            const start = bounds.top + ancestor.clientTop;
+            top = Math.max(top, start);
+            bottom = Math.min(bottom, start + ancestor.clientHeight);
+          }
+        }
+        return right > left && bottom > top
+          ? { left, right, top, bottom }
+          : null;
+      };
       const rects = controls.map((element) => ({
         element,
         rect: element.getBoundingClientRect(),
+        painted: paintedRect(element),
         plane:
           [...scopes].reverse().find((scope) => scope.contains(element)) ??
           primary,
@@ -282,13 +317,14 @@ export async function auditR2fAlignment(
             b = rects[j];
           if (a.element.contains(b.element) || b.element.contains(a.element))
             continue;
+          if (!a.painted || !b.painted) continue;
           const overlap =
-            Math.min(a.rect.bottom, b.rect.bottom) -
-            Math.max(a.rect.top, b.rect.top);
+            Math.min(a.painted.bottom, b.painted.bottom) -
+            Math.max(a.painted.top, b.painted.top);
           if (overlap < Math.min(a.rect.height, b.rect.height) * 0.5) continue;
           const gap =
-            Math.max(a.rect.left, b.rect.left) -
-            Math.min(a.rect.right, b.rect.right);
+            Math.max(a.painted.left, b.painted.left) -
+            Math.min(a.painted.right, b.painted.right);
           if (gap > 48 || gap < -2) continue;
           // source/align.js audits one main/dialog render root. Registered
           // portals add their own audit plane, not peers behind that overlay.
