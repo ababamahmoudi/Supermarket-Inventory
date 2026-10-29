@@ -536,7 +536,7 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="page-header">
+    <header className="page-header" data-ui-component="page-header">
       <div>
         <h1>{title}</h1>
         {description && <p className="muted">{description}</p>}

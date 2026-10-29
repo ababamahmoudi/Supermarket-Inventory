@@ -1695,6 +1695,31 @@
   }
 }
 
+/* R2g A7 — the page's primary action occupies its phone row. */
+@media screen and (max-width: 760px) {
+  :root .main-content [data-ui-component="page-header"] {
+    align-items: stretch;
+  }
+  :root .main-content [data-ui-component="page-header"] > .actions {
+    align-self: stretch;
+    inline-size: 100%;
+    min-inline-size: 0;
+    flex-wrap: wrap;
+  }
+  :root
+    .main-content
+    [data-ui-component="page-header"]
+    > .actions
+    > .ui-button.button-primary {
+    flex: 1 0 100%;
+    inline-size: 100%;
+    min-inline-size: 0;
+    block-size: 44px;
+    min-block-size: 44px;
+    max-block-size: 44px;
+  }
+}
+
 /* Owned feedback uses body space inside the already-open frame. */
 :root dialog.ui-dialog.confirm-dialog[data-dialog-feedback-frame] {
   --dialog-feedback-visible-top: min(

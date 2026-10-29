@@ -2311,6 +2311,38 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         if (visible(tile) && !r2gPriceShapes.has(tile))
           failures.push("R2g price quick pick outside the validated form");
 
+      // R2g A7: only an actual named page header owns this full-row slot.
+      // Its parent row must fill the header too, catching the original 3/4 gap.
+      const phonePagePrimaryWidths = new Map();
+      if (phone) {
+        for (const header of document.querySelectorAll(
+          "main#main-content [data-ui-component='page-header']",
+        )) {
+          if (!visible(header) || header.closest("dialog, .ui-card")) continue;
+          const heading = header.querySelector(":scope > div > h1");
+          const actions = header.querySelector(":scope > .actions");
+          const primary = actions?.querySelectorAll(
+            ":scope > .ui-button.button-primary[data-control-kind='action']",
+          );
+          if (!tidy(heading?.textContent) || !actions || primary?.length !== 1)
+            continue;
+          const control = primary[0];
+          const expected = contentBounds(header).width;
+          const controlBounds = control.getBoundingClientRect();
+          const actionBounds = actions.getBoundingClientRect();
+          phonePagePrimaryWidths.set(control, expected);
+          if (
+            Math.abs(actionBounds.width - expected) > 1.5 ||
+            Math.abs(controlBounds.width - expected) > 1.5 ||
+            Math.abs(controlBounds.left - actionBounds.left) > 1.5 ||
+            Math.abs(controlBounds.right - actionBounds.right) > 1.5
+          )
+            failures.push(
+              `Phone page primary must fill its complete row: ${tidy(control.textContent)}`,
+            );
+        }
+      }
+
       // R2g A5: only a real managed, named native dialog footer receives
       // the phone fill contract. Its slot edges are measured, not waived.
       const phoneDialogFooterWidths = new Map();
@@ -2793,6 +2825,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             !lookupWideActions.has(element) &&
             !phoneReceivingWidths.has(element) &&
             !phoneDialogFooterWidths.has(element) &&
+            !phonePagePrimaryWidths.has(element) &&
             !r2fApprovalWidths.has(element) &&
             !dashboardWideActions.has(element) &&
             !authenticationShape?.fullWidth &&
