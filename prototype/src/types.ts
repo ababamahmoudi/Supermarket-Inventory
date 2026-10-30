@@ -404,6 +404,8 @@ export type InvoiceLine = Omit<
   handwritten_note?: string;
   expiry_as_printed?: string;
   pack_size?: string;
+  /** Exact AI/source description, separate from checked or edited clean names. */
+  printed_description?: string;
   import_line_index?: number;
   pricing_category?: string;
   date_tracking?: boolean;
@@ -421,6 +423,8 @@ export type InvoiceLine = Omit<
   new_name_suggestion?: string;
   new_name_swap?: { name: string; supplier_item_code: string };
   new_name_fa?: string;
+  new_description_en?: string;
+  new_description_fa?: string;
   units_per_case?: number;
   units_per_case_inferred?: boolean;
   imported_unit_cost_basis?: {

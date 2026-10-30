@@ -55,6 +55,20 @@ export function privateAuthorityField(key: string): boolean {
     .some((part) => privateAuthorityKeys.has(normalized(part)));
 }
 
+/** Matching source references stay internal in every audit/export projection. */
+const privateMatchingKeys = new Set([
+  "printeddescriptionkeys",
+  "sourceinvoiceids",
+]);
+function privateAuditField(key: string): boolean {
+  return (
+    privateAuthorityField(key) ||
+    key
+      .split(/[.[\]·]/)
+      .some((part) => privateMatchingKeys.has(normalized(part)))
+  );
+}
+
 function publicValue(value: unknown, parentKey?: string): unknown {
   if (Array.isArray(value))
     return value.map((item) => publicValue(item, parentKey));
@@ -71,11 +85,11 @@ function publicValue(value: unknown, parentKey?: string): unknown {
     Array.isArray(path) &&
     path.some((part) =>
       typeof part === "string"
-        ? privateAuthorityField(part)
+        ? privateAuditField(part)
         : part &&
           typeof part === "object" &&
           "key" in part &&
-          privateAuthorityField(String(part.key)),
+          privateAuditField(String(part.key)),
     );
   const privatePath =
     pathIsPrivate(record.path) ||
@@ -87,7 +101,7 @@ function publicValue(value: unknown, parentKey?: string): unknown {
     Object.entries(record)
       .filter(
         ([key]) =>
-          !privateAuthorityField(key) &&
+          !privateAuditField(key) &&
           (!decision || decisionSnapshotKeys.has(key)) &&
           !(authorityObject && ["phone", "email"].includes(key)) &&
           !(

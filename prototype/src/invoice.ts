@@ -42,6 +42,8 @@ import { effectiveInvoiceLocation } from "./received";
 import { effectiveInvoiceVersion } from "./invoice-version";
 import { requireLiveManualInvoice } from "./invoice-live-reading-state";
 import { trackingChoiceForProduct } from "./date-tracking";
+import { normalizedPrintedItem } from "./invoice-printed-item";
+import { readingProductUnitSize } from "./invoice-reading-products";
 import {
   initializeInvoiceWeight,
   invoiceLineCalculation,
@@ -295,6 +297,116 @@ export function rememberInvoiceSupplierItem(
       : {}),
     units_per_case: line.units_per_case ?? item.units_per_case,
   };
+}
+
+/** Posting alone learns a printed key; importing or renaming a draft never does. */
+function learnPostedInvoiceDescriptions(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  invoice: DemoInvoice,
+  now: string,
+): void {
+  if (invoice.status !== "posted" || invoice.company_id !== actor.company_id)
+    return;
+  const supplier = supplierRecords(state).find(
+    (record) =>
+      record.company_id === invoice.company_id &&
+      supplierMatches(record, invoice.supplier),
+  );
+  if (!supplier) return;
+  for (const line of invoice.lines) {
+    const raw = line.printed_description ?? "";
+    const key = normalizedPrintedItem(raw);
+    if (
+      !key ||
+      acceptedInvoiceUnits(line) <= 0 ||
+      !state.products.some(
+        (product) =>
+          product.company_id === invoice.company_id &&
+          product.code === line.product_code &&
+          product.status !== "archived",
+      )
+    )
+      continue;
+    const candidates = (state.supplier_items ?? []).filter(
+      (record) =>
+        record.company_id === invoice.company_id &&
+        record.supplier_id === supplier.id &&
+        record.product_code === line.product_code &&
+        !record.archived &&
+        (line.supplier_item_id
+          ? record.id === line.supplier_item_id
+          : line.supplier_item_code_inferred ||
+            !line.supplier_item_code ||
+            record.supplier_item_code === line.supplier_item_code),
+    );
+    if (
+      candidates.length > 1 ||
+      (line.supplier_item_id && candidates.length === 0)
+    )
+      continue;
+    let binding = candidates[0];
+    if (!binding) {
+      binding = {
+        id: createId("supplier-item"),
+        company_id: invoice.company_id,
+        supplier_id: supplier.id,
+        supplier_name: supplier.name,
+        product_code: line.product_code,
+        supplier_item_code: line.supplier_item_code ?? "",
+        ...(line.supplier_item_code_inferred
+          ? { supplier_item_code_inferred: true }
+          : {}),
+        units_per_case: line.units_per_case ?? 1,
+        created_at: now,
+        created_by: actor.actor,
+        created_by_user_id: actor.user_id,
+      };
+      state.supplier_items ??= [];
+      state.supplier_items.push(binding);
+    }
+    line.supplier_item_id = binding.id;
+    const learned = binding.printed_description_keys?.find(
+      (entry) => entry.key === key && entry.product_code === line.product_code,
+    );
+    if (!learned) {
+      binding.printed_description_keys = [
+        ...(binding.printed_description_keys ?? []),
+        {
+          key,
+          product_code: line.product_code,
+          source_invoice_ids: [invoice.id],
+        },
+      ];
+      binding.updated_at = now;
+      binding.updated_by = actor.actor;
+      binding.updated_by_user_id = actor.user_id;
+    } else if (!learned.source_invoice_ids?.includes(invoice.id)) {
+      learned.source_invoice_ids = [
+        ...(learned.source_invoice_ids ?? []),
+        invoice.id,
+      ];
+      binding.updated_at = now;
+      binding.updated_by = actor.actor;
+      binding.updated_by_user_id = actor.user_id;
+    }
+    if (
+      line.supplier_item_code &&
+      line.supplier_item_code !== binding.supplier_item_code &&
+      !binding.source_keys?.some(
+        (entry) =>
+          entry.product_code === line.product_code &&
+          entry.supplier_item_code === line.supplier_item_code,
+      )
+    )
+      binding.source_keys = [
+        ...(binding.source_keys ?? []),
+        {
+          product_code: line.product_code,
+          supplier_item_code: line.supplier_item_code,
+        },
+      ];
+  }
 }
 
 export function createInvoice(
@@ -1285,12 +1397,15 @@ export function postInvoice(
           code: line.product_code,
           name_en: line.new_name_en!,
           name_fa: line.new_name_fa?.trim() ?? "",
+          description_en: line.new_description_en?.trim() ?? "",
+          description_fa: line.new_description_fa?.trim() ?? "",
           first_added_branch: invoice.branch,
           pricing_category: line.pricing_category ?? "grocery",
           unit_size:
             line.sold_by === "weight"
               ? ""
-              : (line.pack_size ?? (invoice.reading_record ? "" : "100 g")),
+              : readingProductUnitSize(line.pack_size ?? "") ||
+                readingProductUnitSize(line.new_name_en ?? ""),
           sold_by: line.sold_by ?? "each",
           last_cost_before_tax: line.unit_cost_before_tax,
           selling_price: "",
@@ -1619,6 +1734,7 @@ export function postInvoice(
       new Decimal(invoice.final_total).minus(totals.total).minus(refused.total),
     );
     invoice.status = "posted";
+    learnPostedInvoiceDescriptions(state, actor, invoice, now);
     recordInvoiceReceiptLots(state, invoice);
     invoice.posted_at = now;
     if (orderComparison) {

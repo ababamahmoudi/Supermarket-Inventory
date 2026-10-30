@@ -35,6 +35,12 @@ export interface SupplierItemDefinition {
   case_weight_unit?: "kg" | "lb";
   weight_conversion_factor?: string;
   source_keys?: { product_code: string; supplier_item_code: string }[];
+  /** Learned printed keys stay bound to the Product that actually received them. */
+  printed_description_keys?: {
+    key: string;
+    product_code: string;
+    source_invoice_ids?: string[];
+  }[];
   quoted_unit_cost_before_tax?: string;
   quoted_by?: string;
   quoted_at?: string;

@@ -44,11 +44,11 @@ describe("R2e B7 readable names retain supplier evidence", () => {
     ],
     [
       "Fictional Roasted Seed - Cumin - 5lb / Bag",
-      "Fictional Roasted Seed - Cumin",
+      "Fictional Roasted Seed - Cumin 5 lb",
       "1 × 5 lb",
       1,
     ],
-    ["Fictional Rice - 5LB/CASE", "Fictional Rice", "1 × 5 lb", 1],
+    ["Fictional Rice - 5LB/CASE", "Fictional Rice 5 lb", "1 × 5 lb", 1],
   ])("moves the pack out of %s", (description, name, pack, count) => {
     expect(splitInvoiceProductDescription({ description })).toMatchObject({
       name,

@@ -1,5 +1,11 @@
 # Workflows and state machines
 
+## R3c K2 — Checked import followed by a raw printed reading
+
+Settings → Data → My checked values overlays supplied corrections without replacing the original AI line evidence. The clean checked description becomes the product proposal; original printed text remains separately viewable. Confirm and post normally. Only genuine accepted posting learns normalized printed keys on the exact supplier/Product association, retaining its source evidence and prior keys.
+
+Read a later delivery from that supplier with the same printed text and a distinct invoice number. Its scoped learned key identifies the cleanly named Product, then K1 compares actual known fields. The preview and final import use the same original/checked/source-index evidence and report the same checks. Original files, raw text, pack/quantity/cost basis and paper totals remain retained. Description edits on known lines stay with the delivery; Edit product remains the catalog path.
+
 ## R3c K1 — First delivery, then repeat delivery
 
 Read/import a first fictional delivery, review its new product and post through ordinary authority. The Product's approval may remain pending. Read another invoice from the same supplier: trusted unchanged name/pack/cost/category values become a green Same as last delivery line automatically, with no line-confirmation click or fabricated checker receipt. Only real changed fields stay amber with before/after and earlier-delivery date; unresolved independent evidence is retained. The progress strip counts same/changed/new and includes automatic confirmations.

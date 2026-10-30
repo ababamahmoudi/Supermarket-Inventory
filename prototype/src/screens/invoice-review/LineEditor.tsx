@@ -7,6 +7,7 @@ import { useDemo } from "../../store";
 import {
   Badge,
   BufferedInput,
+  BufferedTextarea,
   Button,
   ConfirmDialog,
   DateField,
@@ -1461,6 +1462,55 @@ export function LineEditor({
             onToggle={(e) => setMore(e.currentTarget.open)}
           >
             <div className="detail-grid ui-fields-align-labels">
+              <Field
+                label={t("Description (optional)", "توضیحات (اختیاری)")}
+                hint={
+                  product
+                    ? t(
+                        "Saved with this delivery. Use Edit product to change its catalog description.",
+                        "با این تحویل ذخیره می‌شود. برای تغییر توضیحات کالا، ویرایش کالا را باز کنید.",
+                      )
+                    : undefined
+                }
+              >
+                <BufferedTextarea
+                  id={id("description-en")}
+                  rows={2}
+                  dir="ltr"
+                  readOnly={Boolean(correction)}
+                  value={
+                    line.new_description_en ?? product?.description_en ?? ""
+                  }
+                  onChange={(event) => {
+                    const value = event.currentTarget.value;
+                    edit("new_description_en", (item) => {
+                      item.new_description_en = value;
+                    });
+                  }}
+                />
+              </Field>
+              <Field
+                label={t(
+                  "Persian description (optional)",
+                  "توضیحات فارسی (اختیاری)",
+                )}
+              >
+                <BufferedTextarea
+                  id={id("description-fa")}
+                  rows={2}
+                  dir="rtl"
+                  readOnly={Boolean(correction)}
+                  value={
+                    line.new_description_fa ?? product?.description_fa ?? ""
+                  }
+                  onChange={(event) => {
+                    const value = event.currentTarget.value;
+                    edit("new_description_fa", (item) => {
+                      item.new_description_fa = value;
+                    });
+                  }}
+                />
+              </Field>
               {moreKeys.map((key) => {
                 const labels: Record<string, [string, string]> = {
                   barcode: ["Barcode on the invoice", "بارکد روی فاکتور"],
@@ -1479,11 +1529,17 @@ export function LineEditor({
                       id={id(key)}
                       readOnly={
                         key === "pack_size" ||
+                        (key === "description" &&
+                          line.printed_description !== undefined) ||
                         (!!correction && key !== "lot_number")
                       }
                       dir="ltr"
                       value={String(
-                        (line as unknown as Record<string, unknown>)[key] ?? "",
+                        key === "description"
+                          ? (line.printed_description ?? line.description)
+                          : ((line as unknown as Record<string, unknown>)[
+                              key
+                            ] ?? ""),
                       )}
                       onChange={
                         key === "pack_size"

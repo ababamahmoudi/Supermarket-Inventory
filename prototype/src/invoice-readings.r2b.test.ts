@@ -419,19 +419,19 @@ describe("R2b 1.5 product names and packs", () => {
   it("separates clean names/pack text and infers missing packs without replacing printed evidence", async () => {
     const { state } = await importFictional();
     expect(state.invoices![1].lines[0]).toMatchObject({
-      new_name_en: "Highground Rice",
+      new_name_en: "Highground Rice 5 lb",
       pack_size: "4 × 5 lb",
       units_per_case: 4,
       description: "71011 HIGHGROUND RICE - 4 x 5 lb / Case",
     });
     expect(state.invoices![2].lines[0]).toMatchObject({
-      new_name_en: "Plum Preserve",
+      new_name_en: "Plum Preserve 330 g",
       pack_size: "6 × 330 g",
       units_per_case: 6,
       description: "Box of 6 x 330g Plum Preserve",
     });
     expect(state.invoices![2].lines[1]).toMatchObject({
-      new_name_suggestion: "Orchard Fig Preserve",
+      new_name_suggestion: "Orchard Fig Preserve 150 g",
       description: "Box of 5 x 150g",
       pack_size: "5 × 150 g",
     });
@@ -474,7 +474,7 @@ describe("R2b 1.6 supplier code fallback", () => {
     postInvoice(state, actor);
     const supplier = state.invoice.supplier;
     const fact = supplierItemFacts(state, actor, supplier, "all").find(
-      (i) => i.supplier_item_code === "Plum Preserve",
+      (i) => i.supplier_item_code === "Plum Preserve 330 g",
     )!;
     expect(fact.supplier_item_code_inferred).toBe(true);
     expect(fact.history[0].supplier_item_code_inferred).toBe(true);
@@ -487,7 +487,7 @@ describe("R2b 1.6 supplier code fallback", () => {
   it("fills missing codes from clean names with quiet provenance and preserves every printed code", async () => {
     const { state } = await importFictional();
     expect(state.invoices![2].lines[0]).toMatchObject({
-      supplier_item_code: "Plum Preserve",
+      supplier_item_code: "Plum Preserve 330 g",
       supplier_item_code_inferred: true,
     });
     expect(state.invoices![0].lines[0].supplier_item_code).toBe("BF-HZ8");

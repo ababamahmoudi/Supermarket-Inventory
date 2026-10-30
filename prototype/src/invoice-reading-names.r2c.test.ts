@@ -5,13 +5,13 @@ import { splitInvoiceProductDescription } from "./invoice-reading-products";
 
 describe("R2c 0.9 clean product names with printed evidence", () => {
   it.each([
-    ["CEDAR JAM 24x500 gr", "Cedar Jam"],
+    ["CEDAR JAM 24x500 gr", "Cedar Jam 500 g"],
     ["CEDAR JAM X 12", "Cedar Jam"],
-    ["CEDAR JAM 20 X 300gr", "Cedar Jam"],
+    ["CEDAR JAM 20 X 300gr", "Cedar Jam 300 g"],
     ["CEDAR JAM Pieces in Carton: 32", "Cedar Jam"],
-    ["CEDAR OIL Box of 6*2 lit Bottles", "Cedar Oil"],
-    ["CEDAR JAM (12x640 gr)", "Cedar Jam"],
-    ["CEDAR JAM 700g-RiverBrand UA", "CEDAR JAM RiverBrand"],
+    ["CEDAR OIL Box of 6*2 lit Bottles", "Cedar Oil 2 l"],
+    ["CEDAR JAM (12x640 gr)", "Cedar Jam 640 g"],
+    ["CEDAR JAM 700g-RiverBrand UA", "CEDAR JAM RiverBrand 700 g"],
     ["CEDAR JAM 01-08-1405", "Cedar Jam"],
   ])("cleans %s", (description, name) => {
     const line = mapReadingLine(
@@ -46,7 +46,7 @@ describe("R2c 0.9 clean product names with printed evidence", () => {
       0,
     );
     expect(line).toMatchObject({
-      new_name_en: "Cedar Dry Beans",
+      new_name_en: "Cedar Dry Beans 1 kg",
       supplier_item_code: "Box of 20 x 1kg",
       new_name_swap: {
         name: "Box of 20 x 1kg",
@@ -61,7 +61,7 @@ describe("R2c 0.9 clean product names with printed evidence", () => {
       splitInvoiceProductDescription({
         description: "RiverBrand Jam 12x640 gr",
       }).name,
-    ).toBe("RiverBrand Jam");
+    ).toBe("RiverBrand Jam 640 g");
     const line = mapReadingLine(
       initialState(),
       undefined,

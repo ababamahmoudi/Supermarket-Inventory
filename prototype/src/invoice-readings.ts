@@ -16,6 +16,7 @@ import { importedReadingReceived } from "./invoice-reading-dates";
 import { extractSupplierContactText } from "./invoice-reading-supplier-contacts";
 import {
   splitInvoiceProductDescription,
+  readingProductUnitSize,
   suggestInvoiceEnglishName,
   suggestInvoiceSupplierName,
 } from "./invoice-reading-products";
@@ -41,6 +42,7 @@ import {
 import type { LiveReadingProvenance } from "./invoice-live-reading-types";
 import { isUsableLiveReadingItem } from "./live-reading-content";
 import { compareKnownDelivery } from "./invoice-known-delivery";
+import { normalizedPrintedItem } from "./invoice-printed-item";
 import type {
   DemoInvoice,
   DemoState,
@@ -70,6 +72,26 @@ export interface ExportedInvoiceReading {
   ai_models: string[];
   checked_answer: InvoiceReading | null;
   reading_cost_usd: string;
+}
+interface ReadingLineEvidence {
+  printedDescription?: string;
+  checkedName?: string;
+}
+function lineReadingEvidence(
+  entry: ExportedInvoiceReading,
+  index: number,
+  usingChecked: boolean,
+): ReadingLineEvidence {
+  return {
+    printedDescription: printedReadingDescription(
+      entry.ai_reading?.lines?.[index]?.description,
+    ),
+    checkedName:
+      usingChecked &&
+      Object.hasOwn(entry.checked_answer?.lines?.[index] ?? {}, "description")
+        ? text(entry.checked_answer!.lines![index].description)
+        : undefined,
+  };
 }
 export interface InvoiceReadingsExport {
   format: "super-arzon-invoice-readings";
@@ -116,6 +138,12 @@ const text = (value: unknown): string =>
   typeof value === "string" || typeof value === "number"
     ? String(value).trim()
     : "";
+const printedReadingDescription = (value: unknown): string | undefined =>
+  typeof value === "string"
+    ? value
+    : typeof value === "number"
+      ? String(value)
+      : undefined;
 const list = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.filter((v): v is string => typeof v === "string")
@@ -440,12 +468,20 @@ export function resolveReadingProductMatch(
     packSize: text(line.pack_size),
     unit: text(line.unit),
   });
-  const printedName = normalizeReadingName(text(line.description));
+  const printedName = normalizedPrintedItem(text(line.description));
   const names = new Set(
-    [printedName, normalizeReadingName(split.name)].filter(Boolean),
+    [
+      normalizeReadingName(text(line.description)),
+      normalizeReadingName(split.name),
+    ].filter(Boolean),
   );
   const code = text(line.supplier_sku),
     barcode = text(line.barcode);
+  const individualSize = readingProductUnitSize(split.name);
+  if (individualSize && split.name.endsWith(individualSize))
+    names.add(
+      normalizeReadingName(split.name.slice(0, -individualSize.length).trim()),
+    );
   const inferredCode = (value: {
     supplier_item_code?: string;
     supplier_item_code_inferred?: boolean;
@@ -459,7 +495,7 @@ export function resolveReadingProductMatch(
       ? `${new Decimal(last[1]).toString()}${last[2].toLowerCase()}`
       : "";
   };
-  const sourceSize = size(split.pack_size);
+  const sourceSize = size(split.pack_size) || size(split.name);
   const sourceCount =
     /^(case|cases|cs|ctn|box)$/i.test(text(line.unit)) || split.pack_size
       ? split.units_per_case
@@ -584,9 +620,39 @@ export function resolveReadingProductMatch(
     if (prior) return prior;
   }
   if (printedName) {
+    const learned = bindings.flatMap((binding) =>
+      binding.printed_description_keys?.some(
+        (key) =>
+          key.product_code === binding.product_code &&
+          key.key === printedName &&
+          key.source_invoice_ids?.some((id) =>
+            ownHistory.some(
+              (entry) =>
+                entry.invoice.status === "posted" &&
+                entry.invoice.id === id &&
+                entry.product.code === binding.product_code &&
+                normalizedPrintedItem(
+                  entry.line.printed_description ?? entry.line.description,
+                ) === key.key,
+            ),
+          ),
+      )
+        ? products.filter((product) => product.code === binding.product_code)
+        : [],
+    );
+    if (learned.length)
+      return match(
+        learned[0],
+        "supplier_description",
+        undefined,
+        new Set(learned.map((product) => product.code)).size > 1,
+      );
     const prior = fromHistory(
       ownHistory.filter(
-        (entry) => normalizeReadingName(entry.line.description) === printedName,
+        (entry) =>
+          normalizedPrintedItem(
+            entry.line.printed_description ?? entry.line.description,
+          ) === printedName,
       ),
       "supplier_description",
     );
@@ -625,7 +691,9 @@ export function resolveReadingProductMatch(
     ? fromHistory(
         history.filter(
           (entry) =>
-            normalizeReadingName(entry.line.description) === printedName,
+            normalizedPrintedItem(
+              entry.line.printed_description ?? entry.line.description,
+            ) === printedName,
         ),
         "other_supplier_description",
       )
@@ -762,7 +830,12 @@ export function actionableReadingChecks(
   state: DemoState,
   value: InvoiceReading,
   statuses: Record<string, "auto" | "check">,
-  context?: { actor: AuthenticatedActor; branch: string; invoiceId?: string },
+  context?: {
+    actor: AuthenticatedActor;
+    branch: string;
+    invoiceId?: string;
+    lineEvidence?: ReadingLineEvidence[];
+  },
 ) {
   const checks = readingCheckFields(statuses, value);
   const received = importedReadingReceived(state.config, value);
@@ -809,6 +882,7 @@ export function actionableReadingChecks(
         index,
         checks.lines[index],
         context?.actor,
+        context?.lineEvidence?.[index],
       );
       if (context && context.branch !== "all")
         compareKnownDelivery(
@@ -889,6 +963,9 @@ function previewInvoiceReadingsAuthorized(
             suggestReadingLocation(state, value, currentLocation) ??
             currentLocation,
           invoiceId: excludedInvoiceId,
+          lineEvidence: (value.lines ?? []).map((_, index) =>
+            lineReadingEvidence(entry, index, effective.using_checked),
+          ),
         })
       : undefined;
     return {
@@ -1105,8 +1182,16 @@ export function mapReadingLine(
   index: number,
   statuses: string[] = [],
   actor?: AuthenticatedActor,
+  evidence?: ReadingLineEvidence,
 ): InvoiceLine {
-  const matched = resolveReadingProductMatch(state, supplier, source, actor);
+  const matched = resolveReadingProductMatch(
+    state,
+    supplier,
+    evidence?.printedDescription
+      ? { ...source, description: evidence.printedDescription }
+      : source,
+    actor,
+  );
   const product = matched?.product,
     company = state.config.company.seed_key;
   const category = product?.pricing_category ?? "",
@@ -1135,23 +1220,29 @@ export function mapReadingLine(
             new Decimal(profile.rate).gt(0),
           )?.key ?? defaultProfile)
         : "non_taxable";
-  const printedDescription =
+  const effectiveDescription =
     typeof source.description === "string"
       ? source.description
       : text(source.description);
+  const printedDescription = evidence
+    ? evidence.printedDescription
+    : effectiveDescription;
   const split = splitInvoiceProductDescription({
-    description: printedDescription,
+    description: effectiveDescription,
     supplierCode: text(source.supplier_sku),
     unitsPerCase: text(source.units_per_case),
     packSize: text(source.pack_size),
     unit: text(source.unit),
   });
   const swappedName =
-    !product && !split.name && split.suggested_name
+    !product &&
+    evidence?.checkedName === undefined &&
+    !split.name &&
+    split.suggested_name
       ? split.suggested_name
       : undefined;
   const inferredCode = !text(source.supplier_sku)
-    ? split.name || product?.name_en || ""
+    ? (evidence?.checkedName ?? (split.name || product?.name_en || ""))
     : "";
   const inferredPack =
     !text(source.units_per_case) && split.units_per_case !== undefined;
@@ -1235,7 +1326,10 @@ export function mapReadingLine(
     ...(matched ? { reading_product_match: matched.provenance } : {}),
     company_id: company,
     product_code: product?.code ?? "NEW",
-    description: printedDescription,
+    description: printedDescription ?? effectiveDescription,
+    ...(printedDescription !== undefined
+      ? { printed_description: printedDescription }
+      : {}),
     qty_invoiced: quantity
       ? new Decimal(quantity).times(unit === "case" ? pack : 1).toNumber()
       : 0,
@@ -1264,21 +1358,25 @@ export function mapReadingLine(
     review_confirmed: false,
     new_name_en: product
       ? undefined
-      : swappedName ||
-        split.name ||
-        suggestInvoiceEnglishName(printedDescription),
+      : (evidence?.checkedName ??
+        (swappedName ||
+          split.name ||
+          suggestInvoiceEnglishName(effectiveDescription))),
     ...(swappedName
       ? {
           new_name_swap: {
-            name: printedDescription,
+            name: printedDescription ?? effectiveDescription,
             supplier_item_code: text(source.supplier_sku),
           },
         }
       : {}),
-    new_name_suggestion: product ? undefined : split.suggested_name,
+    new_name_suggestion:
+      product || evidence?.checkedName !== undefined
+        ? undefined
+        : split.suggested_name,
     new_name_fa: product ? undefined : "",
     supplier_item_code: swappedName
-      ? printedDescription
+      ? (printedDescription ?? effectiveDescription)
       : text(source.supplier_sku) || inferredCode,
     ...(inferredCode ? { supplier_item_code_inferred: true } : {}),
     barcode: text(source.barcode),
@@ -1363,7 +1461,9 @@ export function mapReadingLine(
   }
   const measuredCase =
     text(source.cost_basis).toLowerCase() === "case"
-      ? invoicePackWeight(text(source.pack_size) || printedDescription)
+      ? invoicePackWeight(
+          text(source.pack_size) || printedDescription || effectiveDescription,
+        )
       : undefined;
   if (measuredCase) {
     line.case_weight = measuredCase.weight;
@@ -1772,6 +1872,7 @@ export function importInvoiceReadings(
             index,
             checks.lines[index],
             actor,
+            lineReadingEvidence(entry, index, effective.using_checked),
           ),
         );
         mapped.current_selling_price = regularPrice(

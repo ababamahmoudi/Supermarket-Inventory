@@ -1,3 +1,10 @@
+## 2026-10-30 — R3c K2 printed-name matching
+
+- Retain original printed descriptions separately from clean checked/edited names, using shared per-index evidence in preview and import. Preserve individual size and move carton wording into pack data; checked-only extra rows do not invent printed keys.
+- Learn normalized same-supplier printed keys only from actual accepted posting and actor-readable Product/source associations, preserving old keys and ambiguity. Add optional receiving Description through existing Product fields; known-Product extra text is explicitly delivery-only.
+- Protect internal matching keys/source invoice IDs in actual History snapshots and nested/flattened patch paths without changing canonical matching or inverse evidence.
+- Owner verification passed 267 unit tests and 18 real browser cases; the focused audit hardening passed another 27 tests. Integrated verification and independent full CI are recorded with the separate delivery.
+
 ## 2026-10-30 — R3c K1 known deliveries
 
 - Confirm unchanged same-supplier lines automatically from real effective posted evidence, including corrected purchases and pending-approval Products. Show Same as last delivery with a green check and same/changed/new counts; preserve genuine changed fields, uncertainty and paper arithmetic.

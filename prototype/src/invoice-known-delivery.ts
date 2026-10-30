@@ -21,27 +21,14 @@ import type {
   InvoiceLine,
 } from "./types";
 
-/** Separate from supplier/invoice identity normalization: these are printed item keys. */
-export function normalizedPrintedItem(value: string): string {
-  return value
-    .normalize("NFKD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[يى]/g, "ی")
-    .replace(/ك/g, "ک")
-    .replace(/[۰-۹٠-٩]/g, (digit) =>
-      String(
-        Math.max("۰۱۲۳۴۵۶۷۸۹".indexOf(digit), "٠١٢٣٤٥٦٧٨٩".indexOf(digit)),
-      ),
-    )
-    .toLocaleLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .trim();
-}
+import { normalizedPrintedItem } from "./invoice-printed-item";
+export { normalizedPrintedItem } from "./invoice-printed-item";
+
 const money = (value: string) => new Decimal(value).toFixed(4);
 const itemName = (line: InvoiceLine) =>
   normalizedPrintedItem(
     splitInvoiceProductDescription({
-      description: line.description,
+      description: line.printed_description ?? line.description,
       supplierCode: line.supplier_item_code_inferred
         ? ""
         : (line.supplier_item_code ?? ""),
@@ -69,6 +56,7 @@ export function knownDeliveryFingerprint(
   return JSON.stringify([
     line.product_code,
     line.description,
+    line.printed_description,
     line.new_name_en,
     line.supplier_item_code,
     line.supplier_item_code_inferred,
@@ -250,7 +238,7 @@ export function compareKnownDelivery(
     "pricing_category",
   ]);
   const uncertainPack = splitInvoiceProductDescription({
-    description: line.description,
+    description: line.printed_description ?? line.description,
     supplierCode: line.supplier_item_code_inferred
       ? ""
       : line.supplier_item_code,

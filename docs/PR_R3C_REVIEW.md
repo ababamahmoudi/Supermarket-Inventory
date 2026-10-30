@@ -4,19 +4,19 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 
 ## Delivery order
 
-| Order | Item                                                 | Status                   |
-| ----- | ---------------------------------------------------- | ------------------------ |
-| 1     | K0 — final approvals and page error recovery         | Verified; first delivery |
-| 2     | K1 — unchanged known products green                  | Verified; next delivery  |
-| 3     | K2 — printed-name matching and checked-values import | In implementation        |
-| 4     | K6 — missing-paper payment default                   | In implementation        |
-| 5     | F4 — retained Discard / Cancelled / Undo             | In implementation        |
-| 6     | F7 — truthful processing header                      | In implementation        |
-| 7     | F3 — native picker before draft creation             | In implementation        |
-| 8     | K3 — configurable .49 → .99                          | In implementation        |
-| 9     | K4 — selling-price proposal in the line editor       | In implementation        |
-| 10    | K5 — reading survives navigation                     | In implementation        |
-| 11    | K7 — compact truthful reading progress               | In implementation        |
+| Order | Item                                                 | Status            |
+| ----- | ---------------------------------------------------- | ----------------- |
+| 1     | K0 — final approvals and page error recovery         | Delivered         |
+| 2     | K1 — unchanged known products green                  | Delivered         |
+| 3     | K2 — printed-name matching and checked-values import | Delivered         |
+| 4     | K6 — missing-paper payment default                   | In implementation |
+| 5     | F4 — retained Discard / Cancelled / Undo             | In implementation |
+| 6     | F7 — truthful processing header                      | In implementation |
+| 7     | F3 — native picker before draft creation             | In implementation |
+| 8     | K3 — configurable .49 → .99                          | In implementation |
+| 9     | K4 — selling-price proposal in the line editor       | In implementation |
+| 10    | K5 — reading survives navigation                     | In implementation |
+| 11    | K7 — compact truthful reading progress               | In implementation |
 
 P1 remains after green P0. No pending row in this table is a claim of delivered behavior.
 
@@ -64,6 +64,16 @@ K0 verification passed 33 targeted unit tests across four files, including App, 
 K1 owner verification passed 236 tests across 18 importer/check/matching files, full lint/build and six actual browser cases (four new English/Persian desktop/phone plus two retained rename/cross-supplier cases), with no skips or retries. The unchanged baseline causally failed the second-delivery automatic-confirmation assertion. Real Each→lb and Weight→Each regressions retain incomparable cost questions. Combined K0+K1 verification then passed 42 units, four desktop/phone English/Persian browser cases and a fresh build. Full CI results are recorded with delivery on the PR.
 
 CI213 verified K0's 2,652 unit tests, 75 SDK tests, foundation and three browser shards, but the remaining progressing shard reached the 40-minute job cap. Subsequent runs allow 50 minutes with all individual tests unchanged. Each separately pushed item retains its own full CI run instead of being canceled by the next push. One older notification case recovered on retry in CI213; it is recorded rather than described as a first-attempt pass.
+
+## K2 — clean checked names still match supplier print
+
+1. In a separate practice browser profile, open Settings → Data → Choose file and select your cleaned invoice-readings export. Choose **My checked values**, review the actual destinations and preview, then import additively. Duplicate originals/numbers remain protected; this does not remove existing business records.
+2. Open an imported invoice and inspect a new line. The product name uses the clean checked brand/item/individual size; carton count belongs in pack. More details retains the original printed description separately and has optional English/Persian Description fields. Confirm required first-time checks and post normally.
+3. Read a later delivery from the same supplier with the same printed descriptions and a new invoice number. It matches the cleanly named Product and uses K1's green comparison when known facts agree. Product approval may still be pending; another supplier or ambiguous source still requires review.
+4. Open More details for an existing Product. Extra Description is saved with this delivery, as the visible hint says; use Edit product for guarded catalog changes. First-time new-Product descriptions are copied at posting.
+5. Compare checked-mode preview with final review: supplied corrections and original printed evidence produce the same check counts. Raw originals, amounts and source pack/quantity remain unchanged.
+
+Owner verification passed 267 tests across 19 files, full lint/build and 18 actual browser cases with no skips/retries: four checked-import → post → fictional raw live-response cases, four retained K1 cases, two matching cases and eight legacy import/name-layout cases. The independent audit follow-up passed 27 tests for real History projection, nested/path redaction, preserved supplier fields and unchanged canonical evidence. Integrated final-source checks and full CI are recorded on the PR. Automated reader responses and invoice papers are fictional; the real-kit rehearsal remains on the Mac.
 
 ## After the demo — record only
 

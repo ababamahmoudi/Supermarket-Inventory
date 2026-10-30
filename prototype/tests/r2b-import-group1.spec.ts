@@ -355,10 +355,10 @@ async function checkNamesAndSupplier(page: Page, language: ReceivingLanguage) {
   await openImported(page, "BFP-0818");
   let editor = await openInvoiceLine(page, 0);
   await expect(editor.locator("#invoice-line-0-name-en")).toHaveValue(
-    "Plum Preserve",
+    "Plum Preserve 330 g",
   );
   await expect(editor.locator("#invoice-line-0-supplier-code")).toHaveValue(
-    "Plum Preserve",
+    "Plum Preserve 330 g",
   );
   await expect(
     editor.getByText(
@@ -373,7 +373,7 @@ async function checkNamesAndSupplier(page: Page, language: ReceivingLanguage) {
   await closeLine(editor, language);
   editor = await openInvoiceLine(page, 1);
   await expect(editor.locator("#invoice-line-1-name-en")).toHaveValue(
-    "Orchard Fig Preserve",
+    "Orchard Fig Preserve 150 g",
   );
   const swapped = (await currentInvoice(page, "BFP-0818")).lines[1]
     .new_name_swap;
@@ -401,20 +401,20 @@ async function checkNamesAndSupplier(page: Page, language: ReceivingLanguage) {
     .getByRole("button", {
       name: word(
         language,
-        "Use 'Orchard Fig Preserve' as the name",
-        "استفاده از «Orchard Fig Preserve» به‌عنوان نام",
+        "Use 'Orchard Fig Preserve 150 g' as the name",
+        "استفاده از «Orchard Fig Preserve 150 g» به‌عنوان نام",
       ),
       exact: true,
     })
     .click();
   await expect(editor.locator("#invoice-line-1-name-en")).toHaveValue(
-    "Orchard Fig Preserve",
+    "Orchard Fig Preserve 150 g",
   );
   await expect
     .poll(
       async () => (await currentInvoice(page, "BFP-0818")).lines[1].new_name_en,
     )
-    .toBe("Orchard Fig Preserve");
+    .toBe("Orchard Fig Preserve 150 g");
   await closeLine(editor, language);
   await page
     .locator(".receiving-meta")
@@ -687,7 +687,7 @@ for (const language of ["en", "fa"] as const) {
         expect(receivedLocal(baseline, fractional)).toBe("2026-08-11 12:00");
         expect(fractional.import_currency).toBe("USD");
         expect(fractional.lines[0]).toMatchObject({
-          new_name_en: "Highground Rice",
+          new_name_en: "Highground Rice 5 lb",
           quantity_unit: "units",
           quantity_entered: "2",
           qty_invoiced: 2,

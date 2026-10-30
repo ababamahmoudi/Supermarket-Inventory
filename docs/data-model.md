@@ -1,5 +1,13 @@
 # Data model
 
+## R3c K2 — Curated names and retained printed matching keys
+
+`InvoiceLine.printed_description` retains the exact original AI/source description separately from a checked or edited clean product name. Shared per-source-index evidence feeds preview and import; checked-only extra rows cannot fabricate original printed text. Product names retain the individual size while carton counts remain pack data; new Each Products derive their unit size from the individual leaf rather than the whole carton.
+
+Optional receiving `new_description_en/fa` reuses the existing Product description fields at genuine new-Product posting. For an existing Product, the line editor clearly retains extra text with this delivery and directs catalog changes through guarded Edit product.
+
+A genuine accepted posted line can add `SupplierItemDefinition.printed_description_keys` entries `{ key, product_code, source_invoice_ids }` to its same-company, same-supplier binding. Old associations remain, ambiguous or archived identities do not become matches, and using a key requires readable posted source evidence. Importing or renaming a draft creates no Product or learned binding. Explicit purchase DTOs omit these internal keys; audit projections also remove recursive, selector, primitive and flattened-path matching provenance while retaining canonical inverse evidence and normal supplier fields.
+
 ## R3c K1 — Automatic repeat-delivery evidence
 
 `InvoiceLine.known_delivery` retains a same/changed status, actual earlier-delivery date, precise field changes and internal source invoice/line identities plus a content fingerprint. Compare only a uniquely identified same-supplier Product against authorized effective posted purchase evidence, including corrections; a Product may still be pending approval. Canonical Decimal costs use the actual case/unit/per-lb basis. Changed printed codes, packs, conflicting paper costs and independent quantity/date/arithmetic questions remain review evidence.
