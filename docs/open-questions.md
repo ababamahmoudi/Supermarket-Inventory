@@ -2,6 +2,7 @@
 
 ## After the prototype demo
 
+- **R3c location/startup performance (Ali, October 30):** with about 25 imported invoices, switching location takes about 10 seconds and a reload about 5 seconds (user-reported). After the demo, profile both flows with a comparable retained dataset and record before/after timings. Improve responsiveness while preserving data, pending readings, unsaved-work guards and company/location access checks. Record only; do not optimize before the demo.
 - **R3c supplier PDF order reading:** upload an order confirmation or pre-invoice PDF in Orders, read an expected order with prices, compare the delivery, then create the invoice with Use the order's reading. Record only; design and implementation wait until after the demo.
 - **R3c branch-request additions:** allow the sender to add also-sending items that the receiver sees as expected in the delivery. This is additional to the Loaded ticks and Mark all as being sent below; record only.
 - **R3c offers:** edit terms, dates and joining/leaving a mix-and-match pool in place, instead of stopping and recreating an offer. Record only.

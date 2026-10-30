@@ -65,6 +65,8 @@ async function nextDelivery(
           "unit_cost_before_tax",
           "cost_per_case_before_tax",
           "pricing_category",
+          "unit",
+          "cost_basis",
         ].map((field) => [`lines[0].${field}`, "check"]),
       )
     : {};
@@ -94,7 +96,294 @@ async function nextDelivery(
   return { invoice: state.invoice, exported, preview };
 }
 
+async function postedUnitDelivery(unit: "each" | "kg" | "lb") {
+  const state = matchingBusiness();
+  const actor = authenticatedTestActor(state, "owner");
+  const exported = matchingReading(0, undefined, "CAR-24");
+  const entry = exported.invoices[0];
+  Object.assign(entry.ai_reading!.lines![0], {
+    unit,
+    cost_basis: unit,
+    quantity: unit === "each" ? "24" : "1",
+    units_received: unit === "each" ? "24" : "1",
+    unit_cost_before_tax: unit === "each" ? "1.2500" : "30.0000",
+    cost_per_unit_before_tax: unit === "each" ? "1.2500" : "30.0000",
+  });
+  const pages = await prepareInvoiceReadingPages(
+    exported,
+    [entry.id],
+    state.config.company.seed_key,
+  );
+  const result = importInvoiceReadings(state, actor, {
+    exported,
+    pages,
+    selectedIds: [entry.id],
+    locations: { [entry.id]: "Branch 1" },
+    mode: "ai",
+    fileName: "fictional-known-unit.json",
+  });
+  selectInvoiceWorkspace(state, actor, result.imported[0]);
+  setInvoiceLineCategory(state.invoice.lines[0], "grocery", state.config);
+  confirmInvoiceLineChecks(state, actor, 0);
+  postInvoice(state, actor);
+  return { state, actor };
+}
+
 describe("R3c K1 repeat-delivery confirmation", () => {
+  it.each(["", "other", "crate", undefined, null])(
+    "keeps an unknown raw unit %s checked instead of trusting the units fallback",
+    async (unit) => {
+      const { state, actor } = await postedUnitDelivery("each");
+      const { invoice, preview } = await nextDelivery(
+        state,
+        actor,
+        (reading) => {
+          Object.assign(reading.lines![0], {
+            unit,
+            quantity: "24",
+            units_received: "24",
+          });
+        },
+      );
+      expect(invoice.lines[0].quantity_unit).toBe("units");
+      expect(invoice.lines[0].known_delivery?.status).toBe("same");
+      expect(invoice.lines[0].low_confidence_fields).toEqual(["quantity_unit"]);
+      expect(invoice.lines[0].review_confirmed).toBe(false);
+      expect(preview[0].check_count).toBe(1);
+    },
+  );
+
+  it.each(["", "other", "box", "cs24", undefined])(
+    "does not clear a flagged unit using an unknown raw cost basis %s",
+    async (cost_basis) => {
+      const { state, actor } = await postedMatchingProduct("CAR-24");
+      const { invoice } = await nextDelivery(state, actor, (reading) => {
+        Object.assign(reading.lines![0], { cost_basis });
+      });
+      expect(invoice.lines[0].low_confidence_fields).toEqual(["quantity_unit"]);
+      expect(invoice.lines[0].review_confirmed).toBe(false);
+    },
+  );
+
+  it("keeps the existing unflagged legacy missing-basis behavior", async () => {
+    const { state, actor } = await postedMatchingProduct("CAR-24");
+    const { invoice } = await nextDelivery(
+      state,
+      actor,
+      (reading) => {
+        delete reading.lines![0].cost_basis;
+      },
+      false,
+    );
+    expect(invoice.lines[0].low_confidence_fields).toEqual([]);
+    expect(invoice.lines[0].review_confirmed).toBe(true);
+  });
+
+  it.each(["kg", "lb"] as const)(
+    "clears matching %s quantity and cost-basis checks without changing source values",
+    async (unit) => {
+      const { state, actor } = await postedUnitDelivery(unit);
+      const { invoice } = await nextDelivery(state, actor, (reading) => {
+        Object.assign(reading.lines![0], {
+          unit,
+          cost_basis: unit,
+          quantity: "1",
+          units_received: "1",
+          unit_cost_before_tax: "30.0000",
+          cost_per_unit_before_tax: "30.0000",
+        });
+      });
+      expect(invoice.lines[0]).toMatchObject({
+        source_quantity_unit: unit,
+        source_cost_unit: unit,
+        source_cost_before_tax: "30.0000",
+        low_confidence_fields: [],
+        review_confirmed: true,
+      });
+      expect(invoice.lines[0].checked_fields).toBeUndefined();
+    },
+  );
+
+  it.each([true, false])(
+    "keeps a changed weighted cost basis checked with AI flags=%s",
+    async (flags) => {
+      const { state, actor } = await postedUnitDelivery("kg");
+      const { invoice } = await nextDelivery(
+        state,
+        actor,
+        (reading) => {
+          Object.assign(reading.lines![0], {
+            unit: "kg",
+            cost_basis: "lb",
+            quantity: "1",
+            units_received: "1",
+            unit_cost_before_tax: "13.6078",
+            cost_per_unit_before_tax: "13.6078",
+          });
+        },
+        flags,
+      );
+      expect(invoice.lines[0].known_delivery?.status).toBe("same");
+      expect(invoice.lines[0].unit_cost_before_tax).toBe("13.6078");
+      expect(invoice.lines[0].low_confidence_fields).toEqual(["quantity_unit"]);
+      expect(invoice.lines[0].review_confirmed).toBe(false);
+    },
+  );
+
+  it("uses explicit per-unit cost evidence when the paper also includes a case cost", async () => {
+    const { state, actor } = await postedMatchingProduct("CAR-24");
+    const { invoice } = await nextDelivery(state, actor, (reading) => {
+      Object.assign(reading.lines![0], {
+        cost_basis: "case",
+        unit_cost_before_tax: "30.0000",
+        cost_per_unit_before_tax: "1.2500",
+        cost_per_case_before_tax: "30.0000",
+      });
+    });
+    expect(invoice.lines[0].imported_unit_cost_basis).toMatchObject({
+      printed_cost_basis: "unit",
+      printed_unit_cost_before_tax: "1.2500",
+      printed_case_cost_before_tax: "30.0000",
+    });
+    expect(invoice.lines[0].review_confirmed).toBe(true);
+    expect(invoice.lines[0].low_confidence_fields).toEqual([]);
+  });
+
+  it("does not promote an unflagged normalized fractional case into a proven same unit", async () => {
+    const { state, actor } = await postedMatchingProduct("CAR-24");
+    const { invoice } = await nextDelivery(
+      state,
+      actor,
+      (reading) => {
+        reading.subtotal = reading.final_total = "15.00";
+        Object.assign(reading.lines![0], {
+          quantity: "0.5",
+          units_received: "12",
+          line_total: "15.00",
+        });
+      },
+      false,
+    );
+    expect(invoice.lines[0].quantity_unit).toBe("units");
+    expect(invoice.lines[0].low_confidence_fields).toEqual(["quantity_unit"]);
+    expect(invoice.lines[0].review_confirmed).toBe(false);
+  });
+
+  it("clears the unchanged weighted unit independently of a real changed cost", async () => {
+    const { state, actor } = await postedUnitDelivery("kg");
+    const { invoice } = await nextDelivery(state, actor, (reading) => {
+      reading.subtotal = reading.final_total = "33.00";
+      Object.assign(reading.lines![0], {
+        unit: "kg",
+        cost_basis: "kg",
+        quantity: "1",
+        units_received: "1",
+        unit_cost_before_tax: "33.0000",
+        cost_per_unit_before_tax: "33.0000",
+        line_total: "33.00",
+      });
+    });
+    expect(invoice.lines[0].low_confidence_fields).toEqual([
+      "unit_cost_before_tax",
+    ]);
+    expect(invoice.lines[0].review_confirmed).toBe(false);
+  });
+
+  it("keeps a recognized kg/lb quantity change checked even without an AI unit flag", async () => {
+    const { state, actor } = await postedUnitDelivery("lb");
+    const { invoice } = await nextDelivery(
+      state,
+      actor,
+      (reading) => {
+        reading.subtotal = reading.final_total = "66.14";
+        Object.assign(reading.lines![0], {
+          unit: "kg",
+          cost_basis: "lb",
+          quantity: "1",
+          units_received: "1",
+          unit_cost_before_tax: "30.0000",
+          cost_per_unit_before_tax: "30.0000",
+          line_total: "66.14",
+        });
+      },
+      false,
+    );
+    expect(invoice.lines[0].known_delivery?.status).toBe("same");
+    expect(invoice.lines[0].unit_cost_before_tax).toBe("30.0000");
+    expect(invoice.lines[0].low_confidence_fields).toEqual(["quantity_unit"]);
+    expect(invoice.lines[0].review_confirmed).toBe(false);
+  });
+
+  it.each(["case", "cases", "cs24", "carton", "box"])(
+    "clears the reader unit check for a proven same %s delivery",
+    async (unit) => {
+      const { state, actor } = await postedMatchingProduct("CAR-24");
+      const { invoice, preview } = await nextDelivery(
+        state,
+        actor,
+        (reading) => {
+          reading.lines![0].unit = unit;
+        },
+      );
+      expect(invoice.lines[0]).toMatchObject({
+        quantity_unit: "cases",
+        low_confidence_fields: [],
+        review_confirmed: true,
+        known_delivery: { status: "same", changes: [] },
+      });
+      expect(invoice.lines[0].checked_fields).toBeUndefined();
+      expect(invoiceCheckCount(invoice)).toBe(0);
+      expect(preview[0].check_count).toBe(0);
+      expect(invoiceBlockers(state, actor)).toEqual([]);
+    },
+  );
+
+  it.each([true, false])(
+    "keeps a recognized changed quantity unit unresolved with AI flags=%s",
+    async (flags) => {
+      const { state, actor } = await postedMatchingProduct("CAR-24");
+      const { invoice } = await nextDelivery(
+        state,
+        actor,
+        (reading) => {
+          Object.assign(reading.lines![0], {
+            unit: "each",
+            quantity: "24",
+            units_received: "24",
+          });
+        },
+        flags,
+      );
+      expect(invoice.lines[0].quantity_unit).toBe("units");
+      expect(invoice.lines[0].low_confidence_fields).toEqual(["quantity_unit"]);
+      expect(invoice.lines[0].review_confirmed).toBe(false);
+      expect(invoiceBlockers(state, actor)).toContain("review");
+    },
+  );
+
+  it.each([true, false])(
+    "keeps a changed printed cost basis unresolved with AI flags=%s",
+    async (flags) => {
+      const { state, actor } = await postedMatchingProduct("CAR-24");
+      const { invoice } = await nextDelivery(
+        state,
+        actor,
+        (reading) => {
+          Object.assign(reading.lines![0], {
+            cost_basis: "case",
+            unit_cost_before_tax: "30.0000",
+          });
+          delete reading.lines![0].cost_per_unit_before_tax;
+        },
+        flags,
+      );
+      expect(invoice.lines[0].unit_cost_before_tax).toBe("1.2500");
+      expect(invoice.lines[0].low_confidence_fields).toEqual(["quantity_unit"]);
+      expect(invoice.lines[0].review_confirmed).toBe(false);
+      expect(invoiceBlockers(state, actor)).toContain("review");
+    },
+  );
+
   it("never treats coincident per-Each and per-lb costs as the same delivery basis", async () => {
     const { state, actor } = await postedMatchingProduct("CAR-24");
     const { invoice } = await nextDelivery(state, actor, (reading) => {

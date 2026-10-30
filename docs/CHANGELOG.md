@@ -1,3 +1,9 @@
+## 2026-10-30 — R3c K1 — clear the known unit check
+
+An unchanged repeat delivery could say Same as last delivery while staying amber with one unit check. Compare the recognized reading unit and effective cost-basis evidence in both preview and import, then clear the proven matching unit question and confirm the complete line automatically. Keep unknown/fallback units, actual unit/basis differences, paper arithmetic and unrelated questions for review. Cost-only changes retain only their real cost question; existing qualified-price precedence and corrected historical prices remain intact. No persisted schema or fabricated human confirmation is added.
+
+The stronger browser fixture reproduces the old Ready-to-post failure and retains every existing green-row, zero-check, cost-only, original-hash and financial assertion. Final validation passed 40 K1 tests, 310 related tests across 16 files, and all eight K1/K2 English/Persian desktop/phone browser cases in 1.1 minutes without retries/skips. Integrated build/types and full lint/format pass. The reported location/reload slowdown with about 25 imported invoices is recorded in Open questions for after the demo; no performance change is included.
+
 ## 2026-10-30 — R3c fixed category fit and controlled pending proofs
 
 The full category action now has a fixed 48 px height and enough text room at the original 640 px grid boundary. Scoped existing 4 px gap/inset tokens keep its complete 13 px label within two lines, including the reproduced classic-scrollbar width. The original 1.7:1 panes, full label, filters and all card/density limits remain. No style oracle is relaxed.

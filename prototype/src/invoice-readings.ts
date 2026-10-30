@@ -44,6 +44,7 @@ import {
 import type { LiveReadingProvenance } from "./invoice-live-reading-types";
 import { isUsableLiveReadingItem } from "./live-reading-content";
 import { compareKnownDelivery } from "./invoice-known-delivery";
+import { readingUnit } from "./invoice-reading-units";
 import { normalizedPrintedItem } from "./invoice-printed-item";
 import type {
   DemoInvoice,
@@ -923,6 +924,7 @@ export function actionableReadingChecks(
           context.invoiceId
             ? { invoiceId: context.invoiceId }
             : { previewBranch: context.branch },
+          { unit: line.unit, cost_basis: line.cost_basis },
         );
       return mapped;
     }
@@ -1281,14 +1283,7 @@ export function mapReadingLine(
     : "";
   const inferredPack =
     !text(source.units_per_case) && split.units_per_case !== undefined;
-  const printedUnit = text(source.unit).toLocaleLowerCase();
-  const unit = /^(?:case|cases|cs\d*|ctn\d*|carton|cartons|box|boxes)$/.test(
-    printedUnit,
-  )
-    ? "case"
-    : /^(?:each|ea|unit|units|piece|pieces|pcs)$/.test(printedUnit)
-      ? "each"
-      : printedUnit;
+  const unit = readingUnit(source.unit);
   const printedPack = decimal(source.units_per_case ?? split.units_per_case);
   const validPack =
     printedPack &&
@@ -1859,9 +1854,14 @@ export function importInvoiceReadings(
           mapped.product_code,
           location,
         );
-        compareKnownDelivery(state, actor, mapped, invoice.supplier, {
-          invoiceId: invoice.id,
-        });
+        compareKnownDelivery(
+          state,
+          actor,
+          mapped,
+          invoice.supplier,
+          { invoiceId: invoice.id },
+          { unit: line.unit, cost_basis: line.cost_basis },
+        );
         invoice.lines.push(mapped);
       } else {
         const amount = decimal(line.line_total, 2);

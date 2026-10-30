@@ -743,3 +743,7 @@ The simulation's unnecessary wait must not become a test dependency. Use Playwri
 ## 2026-10-30 — R3c category fit includes the narrow grid edge
 
 A 48 px minimum with automatic height permitted the full English category label to form three lines and grow to 54.5625 px. The actual original grid can give it less text room when the page has a classic scrollbar. Keep the 640 px container breakpoint, fonts, panes and numerical density checks. Give only the new category-bearing heading the existing 4 px gap and action inline-inset tokens, enforce its fixed 48 px contract and verify every glyph fits. Check loaded fonts and the active grid edge, not only the wider overlay-scrollbar scene. The local supported Chromium and CI browser versions remain separately recorded; actual full CI is the final browser gate.
+
+## 2026-10-30 — R3c K1 — clear proven unit checks without trusting fallbacks
+
+The known-delivery comparison omitted the reader's unit check, leaving an otherwise unchanged line amber. Use the same recognized reading-unit normalization for mapping and comparison, and carry raw unit/basis evidence into both authorized preview and import. Clear that check only with matching real unit/basis proof. Keep unknown/fallback units and recognized differences as actual review questions, independently of cost-amount changes. Do not add persisted schema fields, fabricate a human acknowledgment or impose a new blanket missing-basis requirement on unflagged legacy records.

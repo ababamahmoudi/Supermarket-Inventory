@@ -119,6 +119,8 @@ Read a later delivery from that supplier with the same printed text and a distin
 
 Read/import a first fictional delivery, review its new product and post through ordinary authority. The Product's approval may remain pending. Read another invoice from the same supplier: trusted unchanged name/pack/cost/category values become a green Same as last delivery line automatically, with no line-confirmation click or fabricated checker receipt. Only real changed fields stay amber with before/after and earlier-delivery date; unresolved independent evidence is retained. The progress strip counts same/changed/new and includes automatic confirmations.
 
+The reader's unit check is cleared when the recognized reading unit and proven cost basis match the earlier delivery. A normalized fallback for a missing/unrecognized unit is not matching evidence. A real recognized unit/basis difference still needs review; a changed cost amount alone keeps only its cost question when the unit/basis agree. Preview and final import use the same proof. This does not add a new blanket missing-cost-basis requirement to unflagged legacy records.
+
 Import complete derives readiness from the protected imported invoices and opens the actual Ready to post or Needs review tab explicitly, so an older saved tab filter cannot hide a green delivery. No matching, preview or ready-state navigation posts an invoice or changes a Product, approval or ledger. Posting remains explicit and all genuine header/totals/source blockers still apply.
 
 ## R3c K0 — Completing the approval board

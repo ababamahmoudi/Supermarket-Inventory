@@ -73,6 +73,8 @@ async function importDelivery(page: Page, index: number, amount = "30.00") {
           "supplier_sku",
           "units_per_case",
           "pack_size",
+          "unit",
+          "cost_basis",
           "unit_cost_before_tax",
           "cost_per_case_before_tax",
           "pricing_category",

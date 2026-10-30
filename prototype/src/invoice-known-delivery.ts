@@ -23,6 +23,7 @@ import type {
 
 import { normalizedPrintedItem } from "./invoice-printed-item";
 import { freeCasePrintedDescriptions } from "./invoice-free-cases";
+import { readingUnit } from "./invoice-reading-units";
 export { normalizedPrintedItem } from "./invoice-printed-item";
 
 const money = (value: string) => new Decimal(value).toFixed(4);
@@ -97,6 +98,7 @@ export function compareKnownDelivery(
   line: InvoiceLine,
   supplier: string,
   context: { invoiceId: string } | { previewBranch: Branch },
+  source: { unit?: unknown; cost_basis?: unknown },
 ): void {
   const matched = line.reading_product_match;
   if (
@@ -159,6 +161,70 @@ export function compareKnownDelivery(
   if (!prior || prior.product_code !== line.product_code) return;
   const changes: InvoiceKnownDelivery["changes"] = [];
   const sameSoldBy = (line.sold_by ?? "each") === (prior.sold_by ?? "each");
+  // The importer falls back to units for unknown raw units; that fallback is
+  // not evidence that an AI unit question agrees with the posted delivery.
+  const sourceUnit = readingUnit(source.unit);
+  const sourceQuantityUnit =
+    sourceUnit === "case"
+      ? "cases"
+      : sourceUnit === "each"
+        ? "units"
+        : sourceUnit === "kg" || sourceUnit === "lb"
+          ? sourceUnit
+          : undefined;
+  const provenQuantityUnit =
+    sourceQuantityUnit !== undefined &&
+    sourceQuantityUnit === line.quantity_unit;
+  const printedCostBasis =
+    typeof source.cost_basis === "string"
+      ? source.cost_basis.trim().toLocaleLowerCase()
+      : "";
+  const rawCostBasis = printedCostBasis === "unit" ? "each" : printedCostBasis;
+  const recognizedCostBasis = ["case", "each", "kg", "lb"].includes(
+    rawCostBasis,
+  );
+  const weight = line.sold_by === "weight";
+  const compatibleCostBasis = weight
+    ? rawCostBasis === "kg" || rawCostBasis === "lb"
+    : rawCostBasis === "case" || rawCostBasis === "each";
+  // Explicit qualified prices retain the importer's existing precedence.
+  const costBasis = weight
+    ? line.source_cost_unit
+    : line.imported_unit_cost_basis?.printed_cost_basis === "case"
+      ? "case"
+      : "each";
+  const originalPrior = original.lines[latest.line_index];
+  const priorPrintedCostBasis =
+    prior.imported_unit_cost_basis?.printed_cost_basis ??
+    (originalPrior?.id === prior.id &&
+    originalPrior?.product_code === prior.product_code &&
+    originalPrior?.quantity_unit === prior.quantity_unit &&
+    originalPrior?.sold_by === prior.sold_by
+      ? originalPrior?.imported_unit_cost_basis?.printed_cost_basis
+      : undefined);
+  const priorCostBasis =
+    prior.sold_by === "weight"
+      ? (prior.source_cost_unit ??
+        prior.source_quantity_unit ??
+        prior.quantity_unit)
+      : priorPrintedCostBasis === "case" ||
+          (!priorPrintedCostBasis && prior.quantity_unit === "cases")
+        ? "case"
+        : "each";
+  const sameCostBasis =
+    compatibleCostBasis &&
+    costBasis === priorCostBasis &&
+    (!weight || rawCostBasis === costBasis);
+  const sameQuantityBasis =
+    provenQuantityUnit &&
+    line.quantity_unit === prior.quantity_unit &&
+    sameSoldBy &&
+    sameCostBasis;
+  const changedQuantityBasis =
+    (sourceQuantityUnit !== undefined &&
+      sameSoldBy &&
+      (!provenQuantityUnit || line.quantity_unit !== prior.quantity_unit)) ||
+    (recognizedCostBasis && !sameCostBasis);
   if (!sameSoldBy)
     changes.push({
       field: "quantity_unit",
@@ -243,6 +309,7 @@ export function compareKnownDelivery(
     "unit_cost_before_tax",
     "case_cost_before_tax",
     "pricing_category",
+    "quantity_unit",
   ]);
   const uncertainPack = splitInvoiceProductDescription({
     description: line.printed_description ?? line.description,
@@ -286,6 +353,7 @@ export function compareKnownDelivery(
       const key = invoiceCheckField(field);
       return (
         !comparable.has(key) ||
+        (key === "quantity_unit" && !sameQuantityBasis) ||
         (!sameSoldBy &&
           ["unit_cost_before_tax", "case_cost_before_tax"].includes(key)) ||
         (uncertainPack &&
@@ -300,6 +368,7 @@ export function compareKnownDelivery(
         ? "case_cost_before_tax"
         : change.field,
     );
+  if (changedQuantityBasis) line.low_confidence_fields.push("quantity_unit");
   if (sourceCostQuestion)
     line.low_confidence_fields.push(
       line.quantity_unit === "cases"
