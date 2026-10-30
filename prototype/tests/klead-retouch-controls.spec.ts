@@ -1,6 +1,12 @@
+import { openInvoiceDetails } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { openShellAction, setLanguage, signIn } from "./helpers";
+import {
+  openShellAction,
+  setLanguage,
+  signIn,
+  openInvoiceLine,
+} from "./helpers";
 import {
   button,
   choose,
@@ -32,23 +38,21 @@ async function manual(page: Page, language: "en" | "fa") {
   await page.goto("/#invoices");
   await button(page, "New invoice", "فاکتور جدید").click();
   await button(page, "Manual entry", "ورود دستی").click();
+  await openInvoiceDetails(page);
+  await choose(page, page.locator("#invoice-supplier"), "Fresh Valley Foods");
+  await page
+    .getByLabel(exact("Invoice number", "شماره فاکتور"))
+    .fill("DEMO-C6-MISSING");
   await choose(
     page,
-    page.locator("#invoice-supplier"),
-    "\u2066Fresh Valley Foods\u2069",
+    page.getByLabel("Add a product to the invoice", { exact: true }),
+    "Canned Fava Beans 400 g",
   );
-  await page
-    .getByLabel(
-      exact(
-        "Supplier invoice number (optional)",
-        "شماره فاکتور تأمین‌کننده (اختیاری)",
-      ),
-    )
-    .fill("DEMO-C6-MISSING");
   await button(page, "Add line", "افزودن ردیف").click();
-  await expect(page.locator(".invoice-line-detail")).toBeVisible();
   await setLanguage(page, language);
-  await page.locator("main h1").click();
+  await openInvoiceLine(page, 0);
+  await expect(page.locator(".invoice-line-detail")).toBeVisible();
+  await page.locator(".receiving-line-editor h3").first().click();
   await page.mouse.move(0, 0);
   await settled(page);
 }
@@ -164,6 +168,8 @@ async function appearance(control: Locator) {
         dangerFill: token("--danger-bg"),
         neutral: token("--neutral-fill"),
         accent: token("--accent"),
+        accentFill: token("--accent-fill"),
+        white: token("--klead-white"),
         tint: token("--accent-soft"),
         tintInk: token("--accent-tint-text"),
         hairline: token("--page-control-border"),
@@ -217,7 +223,7 @@ for (const language of ["en", "fa"] as const) {
       .soft(focused.shadow, "keyboard focus remains visible")
       .not.toBe("none");
     await quantity.fill("");
-    await button(page, "Post invoice", "ثبت فاکتور").click();
+    await button(page, "Confirm line", "تأیید ردیف").click();
     await expect(quantity).toHaveAttribute("aria-invalid", "true");
     const invalid = await appearance(quantity);
     expect.soft(invalid.borderVisible).toBe(true);
@@ -242,6 +248,12 @@ for (const language of ["en", "fa"] as const) {
     expect.soft(style.outlineVisible).toBe(false);
     expect.soft(style.contrast).toBeGreaterThanOrEqual(4.5);
     await remove.click();
+    await expect(page.locator(".invoice-line")).toHaveCount(1);
+    const confirmation = page.getByRole("dialog", {
+      name: exact("Remove line?", "ردیف حذف شود؟"),
+    });
+    await expect(confirmation).toBeVisible();
+    await button(confirmation, "Remove line", "حذف ردیف").click();
     await expect(page.locator(".invoice-line")).toHaveCount(0);
     await button(page.getByTestId("undo-toast"), "Undo", "واگرد").click();
     await expect(page.locator(".invoice-line")).toHaveCount(1);
@@ -252,14 +264,21 @@ for (const language of ["en", "fa"] as const) {
     page,
   }, info) => {
     await manual(page, language);
-    await button(page, "Post invoice", "ثبت فاکتور").click();
+    await button(
+      page.locator(".receiving-line-editor"),
+      "Close",
+      "بستن",
+    ).click();
+    await button(page, "Post invoice", "ثبت فاکتور").locator("..").click();
     await expect(
       page.getByRole("alert", { name: exact("What's missing", "موارد ناقص") }),
     ).toBeVisible();
+    await button(page, "Save and close", "ذخیره و بستن").click();
+    await page.getByRole("tab", { name: /^(Drafts|پیش‌نویس‌ها)\s/ }).click();
     await settled(page);
-    const reference = page.locator(
-      ".invoice-draft-list tbody td:first-child .ltr-fragment",
-    );
+    const reference = page
+      .locator(".invoice-saved-table tbody td:first-child .ltr-fragment")
+      .filter({ hasText: "DEMO-C6-MISSING" });
     await expect(reference).toHaveText("DEMO-C6-MISSING");
     const geometry = await reference.evaluate((element) => {
       const range = document.createRange();
@@ -285,12 +304,13 @@ for (const language of ["en", "fa"] as const) {
     expect.soft(geometry.contained).toBe(true);
   });
 
-  test(`Klead retouch: Lookup category choices are pills with normal and selected token surfaces (${language})`, async ({
+  test(`Klead retouch: Lookup quick choices are colour-only pills with normal and selected token surfaces (${language})`, async ({
     page,
   }, info) => {
     await start(page, language);
     await page.goto("/#lookup");
-    const chips = page.locator(".lookup-category-chips");
+    const chips = page.locator(".lookup-pricing-filters");
+    await expect(chips.locator("button.filter-chip")).toHaveCount(6);
     const reports = [];
     for (const theme of ["light", "dark"] as const) {
       if (theme === "dark") await dark(page, language);
@@ -308,41 +328,43 @@ for (const language of ["en", "fa"] as const) {
         });
         for (const radius of style.radii)
           expect
-            .soft(radius, "category chip has a fully round cap")
+            .soft(radius, "quick chip has a fully round cap")
             .toBeGreaterThanOrEqual(Math.min(style.height, style.width) / 2);
         expect
           .soft(style.background)
-          .toBe(selected ? style.tokens.tint : style.tokens.surface);
+          .toBe(selected ? style.tokens.accentFill : style.tokens.surface);
         expect
           .soft(style.colour)
-          .toBe(selected ? style.tokens.tintInk : style.tokens.text);
+          .toBe(selected ? style.tokens.white : style.tokens.text);
         if (!selected) {
           expect
-            .soft(style.borderVisible, "normal category choice has a hairline")
+            .soft(style.borderVisible, "normal quick choice has a hairline")
             .toBe(true);
-          expect.soft(style.borderColour).toBe(style.tokens.hairline);
+          expect.soft(style.borderColour).toBe(style.tokens.fieldBorder);
         }
         expect.soft(style.shadow).toBe("none");
         expect.soft(style.contrast).toBeGreaterThanOrEqual(4.5);
       }
-      const choice = chips.locator(".filter-chip").nth(1);
+      await expect(chips.locator("svg, .filter-chip-check")).toHaveCount(0);
+      const choice = chips.locator(".filter-chip").first();
       await choice.click();
       await expect(choice).toHaveAttribute("aria-pressed", "true");
       await page.locator("main h1").click();
       await page.mouse.move(0, 0);
       await settled(page);
       const selected = await appearance(choice);
-      expect.soft(selected.background).toBe(selected.tokens.tint);
-      expect.soft(selected.colour).toBe(selected.tokens.tintInk);
-      await chips.locator(".filter-chip").first().click();
+      expect.soft(selected.background).toBe(selected.tokens.accentFill);
+      expect.soft(selected.colour).toBe(selected.tokens.white);
+      await choice.click();
+      await expect(choice).toHaveAttribute("aria-pressed", "false");
     }
-    await info.attach("Rendered category choices", {
+    await info.attach("Rendered quick choices", {
       body: JSON.stringify(reports, null, 2),
       contentType: "application/json",
     });
   });
 
-  test(`Klead retouch: tables paint one inset row divider without cell underlines (${language})`, async ({
+  test(`Klead retouch: tables paint one row divider at their content edges without cell underlines (${language})`, async ({
     page,
   }, info) => {
     await start(page, language);
@@ -391,7 +413,11 @@ for (const language of ["en", "fa"] as const) {
     expect.soft(geometry.rowRule).not.toBe("none");
     expect.soft(geometry.repeat).toBe("no-repeat");
     expect.soft(geometry.position).toBe("50% 100%");
-    expect.soft(geometry.inset).toBeCloseTo(16, 0);
+    // R0.2 desktop rules reach the table edges. Existing phone record boxes
+    // retain the 16px inset matching their padded content.
+    expect
+      .soft(geometry.inset)
+      .toBeCloseTo((page.viewportSize()?.width ?? 1280) <= 760 ? 16 : 0, 0);
     expect.soft(geometry.lineHeight).toBe(1);
     expect(geometry.cells.length).toBeGreaterThan(1);
     for (const cell of geometry.cells) {
@@ -656,9 +682,9 @@ for (const language of ["en", "fa"] as const) {
     await button(page, "Manual entry").click();
     await setLanguage(page, language);
     const newInvoice = button(
-      page.locator(".page-header"),
-      "New invoice",
-      "فاکتور جدید",
+      page.locator(".receiving-header"),
+      "Save and close",
+      "ذخیره و بستن",
     );
     await expect(newInvoice).toHaveClass(/button-neutral/);
     expect(
@@ -704,9 +730,7 @@ for (const language of ["en", "fa"] as const) {
     await field(form, "Supplier representative name").fill(
       "Fictional Representative",
     );
-    await field(form, "Signed paper pickup slip reference").fill(
-      "C7-SIGNED-PAPER-001",
-    );
+    await field(form, "Reference (optional)").fill("C7-SIGNED-PAPER-001");
     await button(form, "Record pickup").click();
     await expect(page.locator(".return-detail-title")).toContainText(
       "Waiting for credit",

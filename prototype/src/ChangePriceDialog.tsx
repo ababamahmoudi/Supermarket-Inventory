@@ -1,11 +1,24 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import {
+  weightPriceCandidate,
+  type WeightPriceCandidateInput,
+} from "./weight-product-editor";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useLayoutEffect,
+  useState,
+  type ComponentProps,
+} from "react";
+import { TriangleAlert } from "lucide-react";
+import { useReviewScrollAnchor } from "./screens/invoice-review/useReviewScrollAnchor";
 import Decimal from "decimal.js";
 import { useDemo } from "./store";
 import { lookupBranch, regularPrice } from "./catalog";
 import { branchLabel } from "./settings";
 import { productEditSnapshot } from "./product-editor";
-import { ProductName, DateText, LtrText, Money } from "./presentation";
-import { ProductPrice } from "./weight-price-presentation";
+import { UnitText, DateText, LtrText, Money } from "./presentation";
 import {
   weightPriceDisplay,
   weightConversionFactor,
@@ -32,8 +45,8 @@ import {
   type RegularSaleConflict,
   type RegularSaleResolution,
 } from "./sales";
-import { salesText, saleCalendarDate } from "./sales-locale";
-import { SalePrice, SaleStatus } from "./sales-presentation";
+import { salesText } from "./sales-locale";
+import { SalePrice } from "./sales-presentation";
 import {
   WhatsMissing,
   focusValidationField,
@@ -61,6 +74,9 @@ import {
 export interface ChangePriceDialogProps {
   product_code: string;
   onClose: () => void;
+  onStage?: (input: ChangePriceInput) => void;
+  weightCandidate?: WeightPriceCandidateInput;
+  stagedInput?: ChangePriceInput;
   branch?: Branch;
   mode?: "sale" | "regular";
   existing_sale_id?: string;
@@ -74,7 +90,145 @@ export interface ChangePriceDialogProps {
   }) => void;
 }
 
+function PriceAmountInput({
+  currency,
+  ...props
+}: ComponentProps<typeof NumberField> & { currency: string }) {
+  const symbol =
+    new Intl.NumberFormat("en-CA", {
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+    })
+      .formatToParts(0)
+      .find((part) => part.type === "currency")?.value ?? currency;
+  const wrapper = useRef<HTMLDivElement>(null);
+  const prefix = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (wrapper.current && prefix.current)
+        wrapper.current.style.setProperty(
+          "--price-currency-width",
+          `${prefix.current.getBoundingClientRect().width}px`,
+        );
+    };
+    const observer = new ResizeObserver(measure);
+    if (prefix.current) observer.observe(prefix.current);
+    measure();
+    return () => observer.disconnect();
+  }, [symbol]);
+  return (
+    <div ref={wrapper} className="change-price-money" dir="ltr">
+      <span ref={prefix} aria-hidden="true">
+        {symbol}
+      </span>
+      <NumberField {...props} />
+    </div>
+  );
+}
+
+/** The approved Ends track scrolls sideways; fade only the edges with more choices. */
+function PriceEndChoices(props: ComponentProps<typeof SegmentedControl>) {
+  const frame = useRef<HTMLDivElement>(null);
+  const label = props["aria-label"];
+  useLayoutEffect(() => {
+    const wrapper = frame.current;
+    const track = wrapper?.querySelector<HTMLElement>(":scope > .ui-segments");
+    if (!wrapper || !track) return;
+    const measure = () => {
+      const maximum = track.scrollWidth - track.clientWidth;
+      const position = Math.abs(track.scrollLeft);
+      wrapper.dataset.priceScrollStart = String(position > 1);
+      wrapper.dataset.priceScrollEnd = String(maximum - position > 1);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(track);
+    for (const button of track.children) observer.observe(button);
+    track.addEventListener("scroll", measure);
+    measure();
+    return () => {
+      observer.disconnect();
+      track.removeEventListener("scroll", measure);
+    };
+  }, [label]);
+  return (
+    <div
+      ref={frame}
+      className="change-price-ends-track"
+      onFocusCapture={(event) => {
+        const button = (event.target as HTMLElement).closest("button");
+        const track = button?.parentElement;
+        if (!button || !track?.classList.contains("ui-segments")) return;
+        // A masked scroll track can leave a focused button partly visible.
+        // Reveal its complete native control without scrolling the body.
+        const box = button.getBoundingClientRect();
+        const bounds = track.getBoundingClientRect();
+        const style = getComputedStyle(track);
+        const start = box.left - bounds.left - parseFloat(style.paddingLeft);
+        const end = box.right - bounds.right + parseFloat(style.paddingRight);
+        if (start < 0 || end > 0)
+          track.scrollBy({
+            left: start < 0 ? start : end,
+            behavior: "instant",
+          });
+      }}
+    >
+      <SegmentedControl {...props} />
+    </div>
+  );
+}
+
+function priceCalendarDate(
+  value: string,
+  language: "en" | "fa",
+  style: "short" | "long" | "weekday" = "short",
+) {
+  const date = new Date(`${value}T12:00:00Z`);
+  if (!Number.isFinite(date.getTime())) return value;
+  return new Intl.DateTimeFormat(
+    language === "fa" ? "fa-IR-u-ca-gregory-nu-latn" : "en-CA",
+    {
+      timeZone: "UTC",
+      weekday: style === "short" ? "short" : "long",
+      ...(style !== "weekday"
+        ? {
+            month: style === "short" ? ("short" as const) : ("long" as const),
+            day: "numeric" as const,
+          }
+        : {}),
+    },
+  ).format(date);
+}
+
+const changePriceScrollParent = (control: HTMLElement) =>
+  control.closest<HTMLElement>(".change-price-body");
+
 export function ChangePriceDialog(props: ChangePriceDialogProps) {
+  const { anchor } = useReviewScrollAnchor(changePriceScrollParent);
+  const retainControl = (control: HTMLElement) => {
+    const dialog = control.closest<HTMLDialogElement>(
+      "dialog.change-price-dialog",
+    );
+    if (dialog) {
+      const box = dialog.getBoundingClientRect();
+      if (window.innerWidth <= 760) {
+        dialog.style.blockSize = `${box.height}px`;
+      } else {
+        dialog.style.removeProperty("block-size");
+        dialog.style.setProperty("--price-desktop-frame-top", `${box.top}px`);
+        dialog.style.setProperty(
+          "--price-desktop-frame-max",
+          `calc(100dvh - ${box.top}px - 16px)`,
+        );
+      }
+      const content = dialog.querySelector<HTMLElement>(
+        ".change-price-content",
+      );
+      if (content)
+        content.style.minBlockSize = `${Math.max(parseFloat(content.style.minBlockSize) || 0, content.getBoundingClientRect().height)}px`;
+    }
+    anchor(control);
+  };
   const {
     state,
     branch,
@@ -91,7 +245,13 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
   const mayManageSale = can("sales.manage");
   const mayManageRegular = can("pricing.regular_manage");
   const mayProposeRegular = can("pricing.propose_manual");
-  const allowRegular = mayManageRegular || mayProposeRegular;
+  const allowRegular =
+    (mayManageRegular || mayProposeRegular) &&
+    !state.products.find(
+      (item) =>
+        item.company_id === state.config.company.seed_key &&
+        item.code === props.product_code,
+    )?.package_of_product_id;
   const worker = !mayManageSale;
   const product = state.products.find(
     (item) =>
@@ -149,6 +309,8 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     originalSale ? saleGroup(state, originalSale) : [],
   );
   const [input, setInput] = useState<ChangePriceInput>(() => {
+    if (props.onStage && props.stagedInput?.product_code === props.product_code)
+      return structuredClone(props.stagedInput);
     const existingBranches = originalRequest
       ? [originalRequest.branch]
       : originalGroup.map((item) => item.branch);
@@ -209,6 +371,26 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
         ? "tomorrow"
         : "date",
   );
+  const monthEnd = (start: string) => {
+    const date = new Date(`${start}T12:00:00Z`);
+    if (!Number.isFinite(date.getTime())) return "";
+    date.setUTCMonth(date.getUTCMonth() + 1, 0);
+    return date.toISOString().slice(0, 10);
+  };
+  const [endChoice, setEndChoice] = useState(() =>
+    input.last_day === null
+      ? "manual"
+      : input.last_day === saleDateAfter(input.starts_on, 6)
+        ? "week"
+        : input.last_day === saleDateAfter(input.starts_on, 13)
+          ? "fortnight"
+          : input.last_day === monthEnd(input.starts_on)
+            ? "month"
+            : "date",
+  );
+  const [selectedQuickPick, setSelectedQuickPick] = useState<number | null>(
+    null,
+  );
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [transactionError, setTransactionError] = useState("");
   const fieldId = (field: string) => `${id}-${field}`;
@@ -216,9 +398,25 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     field: K,
     value: ChangePriceInput[K],
   ) => {
+    if (field === "price") setSelectedQuickPick(null);
     setInput((previous) => ({
       ...previous,
       [field]: value,
+      ...(field === "starts_on" &&
+      typeof value === "string" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+      saleDateAfter(value, 0) === value
+        ? {
+            last_day:
+              endChoice === "week"
+                ? saleDateAfter(value, 6)
+                : endChoice === "fortnight"
+                  ? saleDateAfter(value, 13)
+                  : endChoice === "month"
+                    ? monthEnd(value)
+                    : previous.last_day,
+          }
+        : {}),
       ...(field === "price" || field === "branches"
         ? { accept_below_margin: false }
         : {}),
@@ -228,15 +426,28 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     );
     setTransactionError("");
   };
+  const moneyKey = JSON.stringify([
+    input.price,
+    input.price_unit,
+    input.mode,
+    input.branches,
+    input.regular_sale_resolutions,
+    props.weightCandidate,
+    context?.user_id,
+    context?.authority_epoch,
+    businessRevision,
+  ]);
   const inputKey = JSON.stringify([
     input,
     context?.user_id,
     context?.authority_epoch,
     businessRevision,
     location,
+    props.weightCandidate,
   ]);
   const [previewRecord, setPreviewRecord] = useState<{
     key: string;
+    moneyKey: string;
     value: PriceChangePreviewDTO;
   } | null>(null);
   const capability = (): Capability => {
@@ -271,11 +482,18 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     let current = true;
     if (!context) return;
     void query(writeCapability, queryScope, (freshState, freshActor) =>
-      queryPriceChangePreview(freshState, freshActor, input, location),
+      queryPriceChangePreview(
+        props.weightCandidate
+          ? weightPriceCandidate(freshState, freshActor, props.weightCandidate)
+          : freshState,
+        freshActor,
+        input,
+        location,
+      ),
     )
       .then((value) => {
         if (!current) return;
-        setPreviewRecord({ key: inputKey, value });
+        setPreviewRecord({ key: inputKey, moneyKey, value });
         if (input.mode === "regular") {
           const missing = value.effects.flatMap((effect) => {
             const conflict = effect.regular_sale_conflict;
@@ -309,12 +527,14 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
   }, [
     input,
     inputKey,
+    moneyKey,
     writeCapability,
     context,
     queryScope,
     businessRevision,
     location,
     query,
+    props.weightCandidate,
   ]);
   const preview = previewRecord?.key === inputKey ? previewRecord.value : null;
   // Retain the controls while their next protected preview is being checked.
@@ -354,9 +574,14 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     );
     setTransactionError("");
   };
+  // Non-monetary edits keep their verified facts, so typing a reason cannot
+  // remove and recreate its warning fields while the next query completes.
+  const moneyPreview =
+    preview ??
+    (previewRecord?.moneyKey === moneyKey ? previewRecord.value : null);
   const current =
-    preview?.effects.find((effect) => effect.branch === location) ??
-    preview?.effects[0];
+    moneyPreview?.effects.find((effect) => effect.branch === location) ??
+    moneyPreview?.effects[0];
   const regular = product ? regularPrice(state, product, location) : null;
   const regularDisplay =
     regular && product?.sold_by === "weight"
@@ -483,7 +708,18 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
         writeCapability,
         queryScope,
         (freshState, freshActor) =>
-          queryPriceChangePreview(freshState, freshActor, input, location),
+          queryPriceChangePreview(
+            props.weightCandidate
+              ? weightPriceCandidate(
+                  freshState,
+                  freshActor,
+                  props.weightCandidate,
+                )
+              : freshState,
+            freshActor,
+            input,
+            location,
+          ),
       );
       const currentMissing = validation(checked.issues);
       if (currentMissing.length) {
@@ -491,6 +727,11 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
         requestAnimationFrame(() =>
           focusValidationField(currentMissing[0].fieldId),
         );
+        return;
+      }
+      if (props.onStage) {
+        props.onStage(structuredClone(input));
+        props.onClose();
         return;
       }
       await command(
@@ -587,17 +828,18 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
     issues.find((issue) => issue.fieldId === fieldId(field))?.message;
   const belowMargin =
     mayManageRegular &&
-    preview?.effects.some((effect) => effect.below_minimum_margin);
+    moneyPreview?.effects.some((effect) => effect.below_minimum_margin);
   const belowCost =
-    mayManageRegular && preview?.effects.some((effect) => effect.below_cost);
+    mayManageRegular &&
+    moneyPreview?.effects.some((effect) => effect.below_cost);
   const uniformRegular =
-    preview?.effects.length &&
-    preview.effects.every(
+    moneyPreview?.effects.length &&
+    moneyPreview.effects.every(
       (effect) =>
         effect.regular_display_price ===
-        preview.effects[0].regular_display_price,
+        moneyPreview.effects[0].regular_display_price,
     )
-      ? preview.effects[0].regular_display_price
+      ? moneyPreview.effects[0].regular_display_price
       : null;
   const regularWaitsForSale =
     !isSale &&
@@ -621,7 +863,53 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
   const storeNames = input.branches
     .map((item) => branchLabel(state.config, item, lang))
     .join(" · ");
-  const price = /^\d+(?:\.\d{1,2})?$/.test(input.price) ? input.price : null;
+  const price =
+    /^\d+(?:\.\d{1,2})?$/.test(input.price) && new Decimal(input.price).gt(0)
+      ? input.price
+      : null;
+  const displayedCost =
+    price && current?.cost != null
+      ? new Decimal(current.cost)
+          .times(
+            input.price_unit === "kg"
+              ? weightConversionFactor(state.config)
+              : 1,
+          )
+          .toFixed(4)
+      : null;
+  const marginPercent =
+    price && current?.margin != null
+      ? new Decimal(current.margin).times(100).toDecimalPlaces(0).toFixed(0)
+      : null;
+  const factsNeedLocation = Boolean(
+    current &&
+    (current.branch !== location ||
+      moneyPreview?.effects.some(
+        (effect) =>
+          effect.cost !== current.cost ||
+          effect.margin !== current.margin ||
+          effect.savings !== current.savings ||
+          effect.percentage_off !== current.percentage_off,
+      )),
+  );
+  const uniformCost = Boolean(
+    current?.cost != null &&
+    moneyPreview?.effects.length &&
+    moneyPreview.effects.every((effect) => effect.cost === current.cost),
+  );
+  const warningLoss =
+    price &&
+    current?.below_cost &&
+    uniformCost &&
+    displayedCost &&
+    new Decimal(displayedCost).gt(price)
+      ? new Decimal(displayedCost).minus(price).toFixed(4)
+      : null;
+  const belowCostStores =
+    moneyPreview?.effects
+      .filter((effect) => effect.below_cost)
+      .map((effect) => branchLabel(state.config, effect.branch, lang))
+      .join(" · ") ?? "";
   const summaryPrice =
     !isSale && current?.proposed_price
       ? product.sold_by === "weight"
@@ -652,7 +940,22 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
       }}
       title={title}
       className="change-price-dialog"
-      description={<ProductName product={product} language={lang} />}
+      description={
+        <>
+          <UnitText
+            dir={lang === "fa" && product.name_fa.trim() ? "rtl" : "ltr"}
+          >
+            {lang === "fa" && product.name_fa.trim()
+              ? product.name_fa
+              : product.name_en}
+          </UnitText>{" "}
+          · {t("now", "اکنون")}{" "}
+          <strong>
+            <SalePrice product={product} branch={location} comparison={false} />
+          </strong>{" "}
+          {t("at", "در")} {branchLabel(state.config, location, lang)}
+        </>
+      }
     >
       <form
         className="stack change-price-form"
@@ -662,586 +965,691 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
           submit();
         }}
       >
-        <div className="change-price-body stack">
-          <WhatsMissing issues={issues} />
-          {transactionError && (
-            <p className="form-error" role="alert">
-              {transactionError}
-            </p>
-          )}
-          <section
-            className="change-price-current"
-            aria-label={t("Current price", "قیمت فعلی")}
-          >
-            <p className="muted">
-              {t("Current price at", "قیمت فعلی در")}{" "}
-              {branchLabel(state.config, location, lang)}
-            </p>
-            <strong>
-              <SalePrice product={product} branch={location} />
-            </strong>
-            <SaleStatus product={product} branch={location} />
-            {preview?.provenance?.invoice_number && (
-              <p className="helper">
-                {t("Calculated from invoice", "محاسبه‌شده از فاکتور")}{" "}
-                <LtrText>{preview.provenance.invoice_number}</LtrText>:{" "}
-                <ProductPrice
-                  value={preview.provenance.calculated_price}
-                  product={product}
-                  config={state.config}
-                />
+        <div
+          className="change-price-body stack"
+          onPointerDownCapture={(event) => {
+            const control = (event.target as HTMLElement).closest<HTMLElement>(
+              "input,textarea,button",
+            );
+            if (control) retainControl(control);
+          }}
+          onFocusCapture={(event) => retainControl(event.target as HTMLElement)}
+          onKeyDownCapture={(event) =>
+            retainControl(event.target as HTMLElement)
+          }
+        >
+          <div className="change-price-content stack">
+            <WhatsMissing issues={issues} />
+            {transactionError && (
+              <p className="form-error" role="alert">
+                {transactionError}
               </p>
             )}
-          </section>
-          {allowRegular && !props.approve_request_id && (
-            <div
-              className="change-price-choices"
-              role="radiogroup"
-              aria-label={t("Price change", "تغییر قیمت")}
-            >
-              {(["sale", "regular"] as const).map((mode) => (
-                <Radio
-                  key={mode}
-                  checked={input.mode === mode}
-                  onChange={() =>
-                    setInput((previous) => ({
-                      ...previous,
-                      mode,
-                      existing_sale_id:
-                        mode === "sale" ? originalSale?.id : undefined,
-                      expected_revision:
-                        mode === "sale" ? originalSale?.revision : undefined,
-                      expected_revisions:
-                        mode === "sale"
-                          ? Object.fromEntries(
-                              originalGroup.map((sale) => [
-                                sale.id,
-                                sale.revision,
-                              ]),
-                            )
-                          : undefined,
-                      regular_sale_resolutions: [],
-                      add_labels:
-                        mode === "regular" ||
-                        settings.add_promo_labels_on_start,
-                      accept_below_margin: false,
-                    }))
-                  }
-                >
-                  <strong>
-                    {salesText(
-                      t,
-                      mode === "sale" ? "saleChoice" : "newRegular",
-                    )}
-                  </strong>
-                  <span className="muted">
-                    {salesText(t, mode === "sale" ? "saleHint" : "regularHint")}
-                  </span>
-                </Radio>
-              ))}
-            </div>
-          )}
-          <Field
-            label={
-              input.price_unit === "each"
-                ? salesText(t, "price")
-                : t(
-                    `Price (per ${input.price_unit})`,
-                    `قیمت (هر ${input.price_unit === "kg" ? "کیلوگرم" : "پوند"})`,
-                  )
-            }
-            error={error("price")}
-            className="change-price-amount-field"
-          >
-            <NumberField
-              id={fieldId("price")}
-              value={input.price}
-              onChange={(value) => patch("price", value)}
-              min="0"
-              step="0.01"
-              autoFocus
-            />
-          </Field>
-          {!isSale &&
-            displayedEffects.map((effect) => {
-              const conflict = effect.regular_sale_conflict;
-              if (!conflict) return null;
-              const resolution = input.regular_sale_resolutions?.find(
-                (item) => item.sale_id === conflict.sale_id,
-              );
-              const regularAmount = effect.proposed_price
-                ? new Decimal(effect.proposed_price)
-                    .times(
-                      input.price_unit === "kg"
-                        ? weightConversionFactor(state.config)
-                        : 1,
-                    )
-                    .toFixed(2)
-                : input.price;
-              const saleAmount = formatMoney(conflict.display_price, {
-                currency: state.config.company.currency,
-              });
-              const newRegular = formatMoney(regularAmount, {
-                currency: state.config.company.currency,
-              });
-              return (
-                <section
-                  key={conflict.sale_id}
-                  className="stack"
-                  aria-label={t("Sale and regular price", "قیمت حراج و عادی")}
-                >
-                  {input.branches.length > 1 && (
-                    <strong>
-                      {branchLabel(state.config, effect.branch, lang)}
-                    </strong>
-                  )}
-                  <p>
-                    {t("The sale price", "قیمت حراج")}{" "}
-                    <LtrText>{saleAmount}</LtrText>{" "}
-                    {t(
-                      "isn't lower than the new regular price",
-                      "کمتر از قیمت عادی جدید",
-                    )}{" "}
-                    <LtrText>{newRegular}</LtrText>
-                    {t(".", " نیست.")}
-                  </p>
-                  <div
-                    role="radiogroup"
-                    aria-label={t(
-                      "Update the running sale",
-                      "تغییر حراج در حال اجرا",
-                    )}
-                    className="stack"
+            {allowRegular && !props.approve_request_id && (
+              <div
+                className="change-price-choices"
+                role="radiogroup"
+                aria-label={t("Price change", "تغییر قیمت")}
+              >
+                {(["sale", "regular"] as const).map((mode) => (
+                  <Radio
+                    key={mode}
+                    checked={input.mode === mode}
+                    onChange={() =>
+                      setInput((previous) => ({
+                        ...previous,
+                        mode,
+                        existing_sale_id:
+                          mode === "sale" ? originalSale?.id : undefined,
+                        expected_revision:
+                          mode === "sale" ? originalSale?.revision : undefined,
+                        expected_revisions:
+                          mode === "sale"
+                            ? Object.fromEntries(
+                                originalGroup.map((sale) => [
+                                  sale.id,
+                                  sale.revision,
+                                ]),
+                              )
+                            : undefined,
+                        regular_sale_resolutions: [],
+                        add_labels:
+                          mode === "regular" ||
+                          settings.add_promo_labels_on_start,
+                        accept_below_margin: false,
+                      }))
+                    }
                   >
-                    <Radio
-                      checked={resolution?.action !== "change"}
-                      onChange={() =>
-                        changeRegularResolution(conflict, { action: "end" })
-                      }
+                    <strong>
+                      {salesText(
+                        t,
+                        mode === "sale" ? "saleChoice" : "newRegular",
+                      )}
+                    </strong>
+                    <span className="muted">
+                      {salesText(
+                        t,
+                        mode === "sale" ? "saleHint" : "regularHint",
+                      )}
+                    </span>
+                  </Radio>
+                ))}
+              </div>
+            )}
+            <section className="change-price-pricing">
+              <div className="change-price-price-row">
+                <Field
+                  label={
+                    input.price_unit === "each"
+                      ? isSale
+                        ? t("Sale price", "قیمت حراج")
+                        : salesText(t, "price")
+                      : t(
+                          `Price (per ${input.price_unit})`,
+                          `قیمت (هر ${input.price_unit === "kg" ? "کیلوگرم" : "پوند"})`,
+                        )
+                  }
+                  error={error("price")}
+                  className="change-price-amount-field"
+                >
+                  <PriceAmountInput
+                    currency={state.config.company.currency}
+                    id={fieldId("price")}
+                    value={input.price}
+                    onChange={(value) => patch("price", value)}
+                    min="0"
+                    step="0.01"
+                    autoFocus
+                  />
+                </Field>
+                <div
+                  className="change-price-quick-picks"
+                  role="group"
+                  aria-label={t("Quick picks", "انتخاب سریع")}
+                >
+                  {regularDisplay &&
+                    quickSalePrices(regularDisplay, state).map((pick) => (
+                      <Button
+                        key={pick.percentage}
+                        variant="neutral"
+                        size="sm"
+                        disabled={!pick.price}
+                        title={
+                          !pick.price
+                            ? t(
+                                "No lower price is available with the configured price endings.",
+                                "با رقم‌های پایانی تنظیم‌شده، قیمت پایین‌تری موجود نیست.",
+                              )
+                            : undefined
+                        }
+                        onClick={() => {
+                          if (pick.price) {
+                            patch("price", pick.price);
+                            setSelectedQuickPick(pick.percentage);
+                          }
+                        }}
+                        aria-pressed={Boolean(
+                          selectedQuickPick === pick.percentage &&
+                          pick.price &&
+                          price &&
+                          new Decimal(pick.price).eq(price),
+                        )}
+                        aria-label={t(
+                          `${pick.percentage}% off`,
+                          `${pick.percentage}% تخفیف`,
+                        )}
+                      >
+                        {pick.percentage}% {t("off", "تخفیف")}
+                        {pick.price && (
+                          <Money
+                            value={pick.price}
+                            currency={state.config.company.currency}
+                          />
+                        )}
+                      </Button>
+                    ))}
+                </div>
+              </div>
+              {!isSale &&
+                displayedEffects.map((effect) => {
+                  const conflict = effect.regular_sale_conflict;
+                  if (!conflict) return null;
+                  const resolution = input.regular_sale_resolutions?.find(
+                    (item) => item.sale_id === conflict.sale_id,
+                  );
+                  const regularAmount = effect.proposed_price
+                    ? new Decimal(effect.proposed_price)
+                        .times(
+                          input.price_unit === "kg"
+                            ? weightConversionFactor(state.config)
+                            : 1,
+                        )
+                        .toFixed(2)
+                    : input.price;
+                  const saleAmount = formatMoney(conflict.display_price, {
+                    currency: state.config.company.currency,
+                  });
+                  const newRegular = formatMoney(regularAmount, {
+                    currency: state.config.company.currency,
+                  });
+                  return (
+                    <section
+                      key={conflict.sale_id}
+                      className="stack"
+                      aria-label={t(
+                        "Sale and regular price",
+                        "قیمت حراج و عادی",
+                      )}
                     >
-                      {t("End the sale now", "حراج را اکنون پایان بده")}
-                    </Radio>
-                    <Radio
-                      checked={resolution?.action === "change"}
-                      onChange={() =>
-                        changeRegularResolution(conflict, { action: "change" })
-                      }
-                    >
-                      {t("Change the sale price", "تغییر قیمت حراج")}
-                    </Radio>
+                      {input.branches.length > 1 && (
+                        <strong>
+                          {branchLabel(state.config, effect.branch, lang)}
+                        </strong>
+                      )}
+                      <p>
+                        {t("The sale price", "قیمت حراج")}{" "}
+                        <LtrText>{saleAmount}</LtrText>{" "}
+                        {t(
+                          "isn't lower than the new regular price",
+                          "کمتر از قیمت عادی جدید",
+                        )}{" "}
+                        <LtrText>{newRegular}</LtrText>
+                        {t(".", " نیست.")}
+                      </p>
+                      <div
+                        role="radiogroup"
+                        aria-label={t(
+                          "Update the running sale",
+                          "تغییر حراج در حال اجرا",
+                        )}
+                        className="stack"
+                      >
+                        <Radio
+                          checked={resolution?.action !== "change"}
+                          onChange={() =>
+                            changeRegularResolution(conflict, { action: "end" })
+                          }
+                        >
+                          {t("End the sale now", "حراج را اکنون پایان بده")}
+                        </Radio>
+                        <Radio
+                          checked={resolution?.action === "change"}
+                          onChange={() =>
+                            changeRegularResolution(conflict, {
+                              action: "change",
+                            })
+                          }
+                        >
+                          {t("Change the sale price", "تغییر قیمت حراج")}
+                        </Radio>
+                      </div>
+                      {resolution?.action === "change" && (
+                        <Field
+                          label={t("New sale price", "قیمت جدید حراج")}
+                          error={error(`sale_price_${conflict.sale_id}`)}
+                        >
+                          <NumberField
+                            id={fieldId(`sale_price_${conflict.sale_id}`)}
+                            value={resolution.sale_price ?? ""}
+                            min="0"
+                            step="0.01"
+                            onChange={(value) =>
+                              changeRegularResolution(conflict, {
+                                sale_price: value,
+                                price_unit: input.price_unit,
+                              })
+                            }
+                          />
+                        </Field>
+                      )}
+                    </section>
+                  );
+                })}
+              {price && (
+                <div className="change-price-facts">
+                  {factsNeedLocation && current && (
+                    <span>
+                      {t(
+                        `At ${branchLabel(state.config, current.branch, "en")}`,
+                        `در ${branchLabel(state.config, current.branch, "fa")}`,
+                      )}
+                    </span>
+                  )}
+                  {current?.savings && new Decimal(current.savings).gt(0) && (
+                    <span>
+                      {t("Customers save", "صرفه‌جویی مشتریان")}{" "}
+                      <strong>
+                        <Money
+                          value={current.savings}
+                          currency={state.config.company.currency}
+                        />{" "}
+                        (<LtrText>{current.percentage_off}%</LtrText>)
+                      </strong>
+                    </span>
+                  )}
+                  {mayManageRegular && marginPercent !== null && (
+                    <span className={belowMargin ? "is-bad" : undefined}>
+                      {t("Margin", "حاشیهٔ سود")}{" "}
+                      <strong>
+                        <LtrText>{marginPercent}%</LtrText>
+                      </strong>
+                    </span>
+                  )}
+                  {mayManageRegular && displayedCost !== null && (
+                    <span>
+                      {t("Cost", "هزینه")}{" "}
+                      <strong>
+                        <Money
+                          value={displayedCost}
+                          currency={state.config.company.currency}
+                          decimals={4}
+                        />
+                      </strong>
+                    </span>
+                  )}
+                </div>
+              )}
+              {(belowMargin || belowCost) && price && (
+                <section
+                  className={`change-price-warning${belowMargin ? " change-price-margin-warning" : ""}${belowCost ? " change-price-cost-warning" : ""}`}
+                  role="alert"
+                >
+                  <div className="change-price-warning-heading">
+                    <TriangleAlert size={18} aria-hidden="true" />
+                    <div>
+                      <strong>
+                        {belowCost
+                          ? t(
+                              "This price is below cost.",
+                              "این قیمت کمتر از هزینه است.",
+                            )
+                          : t(
+                              "This price is below the minimum margin.",
+                              "این قیمت کمتر از حداقل حاشیهٔ سود است.",
+                            )}
+                      </strong>
+                      {belowCost && warningLoss && (
+                        <span>
+                          {t("Each one sold loses", "زیان هر فروش")}{" "}
+                          <Money
+                            value={warningLoss}
+                            currency={state.config.company.currency}
+                          />
+                          {belowMargin && current?.minimum_margin != null
+                            ? t(
+                                `, and it's below the ${new Decimal(current.minimum_margin).times(100).toFixed(0)}% minimum margin.`,
+                                `، و کمتر از حداقل حاشیهٔ سود ${new Decimal(current.minimum_margin).times(100).toFixed(0)}٪ است.`,
+                              )
+                            : "."}
+                        </span>
+                      )}
+                      {belowCost && !warningLoss && belowCostStores && (
+                        <span>
+                          {t("Below cost in", "زیر هزینه در")}{" "}
+                          <bdi dir="auto">{belowCostStores}</bdi>.
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  {resolution?.action === "change" && (
+                  {(belowCost || belowMargin) && (
                     <Field
-                      label={t("New sale price", "قیمت جدید حراج")}
-                      error={error(`sale_price_${conflict.sale_id}`)}
+                      label={
+                        belowCost
+                          ? salesText(t, "reason")
+                          : t("Reason (optional)", "دلیل (اختیاری)")
+                      }
+                      error={error("below_cost_reason")}
                     >
-                      <NumberField
-                        id={fieldId(`sale_price_${conflict.sale_id}`)}
-                        value={resolution.sale_price ?? ""}
-                        min="0"
-                        step="0.01"
-                        onChange={(value) =>
-                          changeRegularResolution(conflict, {
-                            sale_price: value,
-                            price_unit: input.price_unit,
-                          })
+                      <input
+                        className="ui-input"
+                        id={fieldId("below_cost_reason")}
+                        value={input.below_cost_reason}
+                        onChange={(event) =>
+                          patch("below_cost_reason", event.target.value)
                         }
                       />
                     </Field>
                   )}
-                </section>
-              );
-            })}
-          <div className="change-price-quick-picks actions">
-            {regularDisplay &&
-              quickSalePrices(regularDisplay, state).map((pick) => (
-                <Button
-                  key={pick.percentage}
-                  variant="neutral"
-                  size="sm"
-                  onClick={() => {
-                    if (pick.price) patch("price", pick.price);
-                  }}
-                  aria-label={t(
-                    `${pick.percentage}% off`,
-                    `${pick.percentage}% تخفیف`,
-                  )}
-                >
-                  {pick.percentage}% {t("off", "تخفیف")}
-                  {pick.price && (
-                    <Money
-                      value={pick.price}
-                      currency={state.config.company.currency}
-                    />
-                  )}
-                </Button>
-              ))}
-          </div>
-          {current?.savings && price && new Decimal(current.savings).gt(0) && (
-            <p className="helper">
-              {t("Customers save", "صرفه‌جویی مشتریان")}{" "}
-              <Money
-                value={current.savings}
-                currency={state.config.company.currency}
-              />{" "}
-              (<LtrText>{current.percentage_off}%</LtrText> {t("off", "تخفیف")})
-            </p>
-          )}
-          {mayManageRegular &&
-            current?.margin !== null &&
-            current?.margin !== undefined && (
-              <p className="helper">
-                {t("Margin at this price", "حاشیهٔ سود با این قیمت")}{" "}
-                <LtrText>
-                  {new Decimal(current.margin).times(100).toFixed(0)}%
-                </LtrText>
-              </p>
-            )}
-          <Field label={salesText(t, "stores")} error={error("stores")}>
-            <div
-              id={fieldId("stores")}
-              className="change-price-stores stack"
-              tabIndex={-1}
-            >
-              {!worker && !props.approve_request_id && (
-                <SegmentedControl
-                  value={input.scope}
-                  onChange={(value) =>
-                    chooseScope(value as ChangePriceInput["scope"])
-                  }
-                  aria-label={salesText(t, "stores")}
-                  options={[
-                    { value: "all", label: salesText(t, "allStores") },
-                    {
-                      value: "current",
-                      label: t(
-                        `Only ${branchLabel(state.config, location, "en")}`,
-                        `فقط ${branchLabel(state.config, location, "fa")}`,
-                      ),
-                    },
-                    { value: "selected", label: salesText(t, "chooseStores") },
-                  ]}
-                />
-              )}
-              {worker || props.approve_request_id ? (
-                <p>
-                  {branchLabel(
-                    state.config,
-                    originalRequest?.branch ?? location,
-                    lang,
-                  )}
-                </p>
-              ) : (
-                input.scope === "selected" && (
-                  <div className="actions">
-                    {eligible.map((store) => (
+                  {belowMargin && (
+                    <>
                       <Checkbox
-                        key={store}
-                        checked={input.branches.includes(store)}
-                        onChange={(checked) =>
-                          patch(
-                            "branches",
-                            checked
-                              ? [...input.branches, store]
-                              : input.branches.filter((item) => item !== store),
-                          )
+                        id={fieldId("accept_below_margin")}
+                        checked={input.accept_below_margin}
+                        onChange={(value) =>
+                          patch("accept_below_margin", value)
                         }
                       >
-                        {branchLabel(state.config, store, lang)}
+                        {salesText(t, "useAnyway")}
                       </Checkbox>
-                    ))}
-                  </div>
-                )
-              )}
-              {!eligible.length && (
-                <p className="form-error">
-                  {t(
-                    "Choose a store that sells to customers.",
-                    "فروشگاهی انتخاب کنید که به مشتریان می‌فروشد.",
-                  )}
-                </p>
-              )}
-            </div>
-          </Field>
-          {isSale && (
-            <section className="change-price-dates stack">
-              <Field label={salesText(t, "starts")} error={error("starts_on")}>
-                <div id={fieldId("starts_on")} className="stack">
-                  {originalSale?.status === "active" && !worker ? (
-                    <DateText value={input.starts_on} />
-                  ) : (
-                    <>
-                      <SegmentedControl
-                        aria-label={salesText(t, "starts")}
-                        value={startChoice}
-                        onChange={(value) => {
-                          setStartChoice(value);
-                          if (value !== "date")
-                            patch(
-                              "starts_on",
-                              saleDateAfter(
-                                today,
-                                value === "tomorrow" ? 1 : 0,
-                              ),
-                            );
-                        }}
-                        options={[
-                          { value: "today", label: salesText(t, "today") },
-                          {
-                            value: "tomorrow",
-                            label: salesText(t, "tomorrow"),
-                          },
-                          { value: "date", label: salesText(t, "date") },
-                        ]}
-                      />
-                      {startChoice === "date" && (
-                        <DateField
-                          value={input.starts_on}
-                          onChange={(value) => patch("starts_on", value)}
-                        />
+                      {error("accept_below_margin") && (
+                        <p className="form-error">
+                          {error("accept_below_margin")}
+                        </p>
                       )}
                     </>
                   )}
-                </div>
-              </Field>
-              <Field label={salesText(t, "ends")} error={error("last_day")}>
-                <div className="stack" id={fieldId("last_day")}>
-                  <SegmentedControl
-                    aria-label={salesText(t, "ends")}
-                    value={input.last_day === null ? "manual" : "date"}
-                    onChange={(value) =>
-                      patch(
-                        "last_day",
-                        value === "manual"
-                          ? null
-                          : saleDateAfter(
-                              input.starts_on,
-                              Math.max(0, settings.default_length_days - 1),
-                            ),
-                      )
-                    }
-                    options={[
-                      { value: "date", label: salesText(t, "lastDay") },
-                      { value: "manual", label: salesText(t, "whenEnded") },
-                    ]}
-                  />
-                  {input.last_day !== null && (
-                    <>
-                      <DateField
-                        aria-label={salesText(t, "lastDay")}
-                        value={input.last_day}
-                        onChange={(value) => patch("last_day", value)}
-                      />
+                </section>
+              )}
+            </section>
+            <section className="change-price-when">
+              <Field label={salesText(t, "stores")} error={error("stores")}>
+                <div
+                  id={fieldId("stores")}
+                  className="change-price-stores stack"
+                  tabIndex={-1}
+                >
+                  {!worker && !props.approve_request_id && (
+                    <SegmentedControl
+                      value={input.scope}
+                      onChange={(value) =>
+                        chooseScope(value as ChangePriceInput["scope"])
+                      }
+                      aria-label={salesText(t, "stores")}
+                      options={[
+                        { value: "all", label: salesText(t, "allStores") },
+                        {
+                          value: "current",
+                          label: t(
+                            `Only ${branchLabel(state.config, location, "en")}`,
+                            `فقط ${branchLabel(state.config, location, "fa")}`,
+                          ),
+                        },
+                        {
+                          value: "selected",
+                          label: salesText(t, "chooseStores"),
+                        },
+                      ]}
+                    />
+                  )}
+                  {worker || props.approve_request_id ? (
+                    <p>
+                      {branchLabel(
+                        state.config,
+                        originalRequest?.branch ?? location,
+                        lang,
+                      )}
+                    </p>
+                  ) : (
+                    input.scope === "selected" && (
                       <div className="actions">
-                        {[7, 14].map((days) => (
-                          <Button
-                            key={days}
-                            variant="neutral"
-                            size="sm"
-                            onClick={() =>
+                        {eligible.map((store) => (
+                          <Checkbox
+                            key={store}
+                            checked={input.branches.includes(store)}
+                            onChange={(checked) =>
                               patch(
-                                "last_day",
-                                saleDateAfter(input.starts_on, days - 1),
+                                "branches",
+                                checked
+                                  ? [...input.branches, store]
+                                  : input.branches.filter(
+                                      (item) => item !== store,
+                                    ),
                               )
                             }
                           >
-                            {salesText(t, days === 7 ? "oneWeek" : "twoWeeks")}
-                          </Button>
+                            {branchLabel(state.config, store, lang)}
+                          </Checkbox>
                         ))}
-                        <Button
-                          variant="neutral"
-                          size="sm"
-                          onClick={() => {
-                            const date = new Date(
-                              `${input.starts_on}T12:00:00Z`,
-                            );
-                            date.setUTCMonth(date.getUTCMonth() + 1, 0);
-                            patch("last_day", date.toISOString().slice(0, 10));
-                          }}
-                        >
-                          {salesText(t, "endMonth")}
-                        </Button>
                       </div>
-                    </>
+                    )
+                  )}
+                  {!eligible.length && (
+                    <p className="form-error">
+                      {t(
+                        "Choose a store that sells to customers.",
+                        "فروشگاهی انتخاب کنید که به مشتریان می‌فروشد.",
+                      )}
+                    </p>
                   )}
                 </div>
               </Field>
-            </section>
-          )}
-          {belowMargin && (
-            <section className="banner pending change-price-margin-warning">
-              <p>
-                {t(
-                  "This price is below the minimum margin.",
-                  "این قیمت کمتر از حداقل حاشیهٔ سود است.",
-                )}
-              </p>
-              <Checkbox
-                id={fieldId("accept_below_margin")}
-                checked={input.accept_below_margin}
-                onChange={(value) => patch("accept_below_margin", value)}
-              >
-                {salesText(t, "useAnyway")}
-              </Checkbox>
-              {error("accept_below_margin") && (
-                <p className="form-error">{error("accept_below_margin")}</p>
+              {isSale && (
+                <>
+                  <Field
+                    label={salesText(t, "starts")}
+                    error={error("starts_on")}
+                  >
+                    <div id={fieldId("starts_on")} className="stack">
+                      {originalSale?.status === "active" && !worker ? (
+                        <DateText value={input.starts_on} />
+                      ) : (
+                        <>
+                          <SegmentedControl
+                            aria-label={salesText(t, "starts")}
+                            value={startChoice}
+                            onChange={(value) => {
+                              setStartChoice(value);
+                              if (value !== "date")
+                                patch(
+                                  "starts_on",
+                                  saleDateAfter(
+                                    today,
+                                    value === "tomorrow" ? 1 : 0,
+                                  ),
+                                );
+                            }}
+                            options={[
+                              { value: "today", label: salesText(t, "today") },
+                              {
+                                value: "tomorrow",
+                                label: salesText(t, "tomorrow"),
+                              },
+                              { value: "date", label: salesText(t, "date") },
+                            ]}
+                          />
+                          {startChoice === "date" && (
+                            <DateField
+                              value={input.starts_on}
+                              onChange={(value) => patch("starts_on", value)}
+                            />
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </Field>
+                  <Field
+                    className="change-price-ends"
+                    label={salesText(t, "ends")}
+                    error={error("last_day")}
+                  >
+                    <div className="stack" id={fieldId("last_day")}>
+                      <div className="change-price-ends-row">
+                        <PriceEndChoices
+                          aria-label={salesText(t, "ends")}
+                          value={input.last_day === null ? "manual" : endChoice}
+                          onChange={(value) => {
+                            setEndChoice(value);
+                            patch(
+                              "last_day",
+                              value === "manual"
+                                ? null
+                                : value === "week"
+                                  ? saleDateAfter(input.starts_on, 6)
+                                  : value === "fortnight"
+                                    ? saleDateAfter(input.starts_on, 13)
+                                    : value === "month"
+                                      ? monthEnd(input.starts_on)
+                                      : (input.last_day ??
+                                        saleDateAfter(
+                                          input.starts_on,
+                                          Math.max(
+                                            0,
+                                            settings.default_length_days - 1,
+                                          ),
+                                        )),
+                            );
+                          }}
+                          options={[
+                            { value: "week", label: salesText(t, "oneWeek") },
+                            {
+                              value: "fortnight",
+                              label: salesText(t, "twoWeeks"),
+                            },
+                            { value: "month", label: salesText(t, "endMonth") },
+                            { value: "date", label: t("Date…", "تاریخ…") },
+                            {
+                              value: "manual",
+                              label: t("No end", "بدون پایان"),
+                            },
+                          ]}
+                        />
+                        {input.last_day && (
+                          <span className="muted change-price-until">
+                            {t("until", "تا")}{" "}
+                            <bdi dir="auto">
+                              {priceCalendarDate(input.last_day, lang)}
+                            </bdi>
+                          </span>
+                        )}
+                      </div>
+                      {endChoice === "date" && input.last_day !== null && (
+                        <DateField
+                          aria-label={salesText(t, "lastDay")}
+                          value={input.last_day}
+                          onChange={(value) => patch("last_day", value)}
+                        />
+                      )}
+                    </div>
+                  </Field>
+                </>
               )}
             </section>
-          )}
-          {belowCost && (
-            <section className="banner danger change-price-cost-warning">
-              <p>
-                {t("This price is below cost.", "این قیمت کمتر از هزینه است.")}
-              </p>
-              <Field
-                label={salesText(t, "reason")}
-                error={error("below_cost_reason")}
-              >
+            {worker && isSale && (
+              <Field label={salesText(t, "why")}>
                 <textarea
-                  id={fieldId("below_cost_reason")}
-                  value={input.below_cost_reason}
-                  onChange={(event) =>
-                    patch("below_cost_reason", event.target.value)
-                  }
+                  id={fieldId("why")}
+                  value={input.why}
+                  onChange={(event) => patch("why", event.target.value)}
                   rows={2}
                 />
               </Field>
-            </section>
-          )}
-          {worker && isSale && (
-            <Field label={salesText(t, "why")}>
-              <textarea
-                id={fieldId("why")}
-                value={input.why}
-                onChange={(event) => patch("why", event.target.value)}
-                rows={2}
-              />
-            </Field>
-          )}
-          {(!worker || isSale) && (
-            <Checkbox
-              checked={input.add_labels}
-              onChange={(value) => patch("add_labels", value)}
-            >
-              {salesText(t, isSale ? "promoLabels" : "regularLabels")}
-            </Checkbox>
-          )}
-          <section className="change-price-summary" aria-live="polite">
-            <p>
-              {isSale && (
-                <>
-                  {t("From", "از")}{" "}
-                  <bdi dir="auto" className="sale-calendar-date">
-                    {input.starts_on === today
-                      ? salesText(t, "today")
-                      : saleCalendarDate(input.starts_on, lang, true)}
-                  </bdi>
-                  {input.last_day && (
+            )}
+            <section className="change-price-summary" aria-live="polite">
+              {price && (
+                <p>
+                  <strong>
+                    {input.branches.length === eligible.length && !worker ? (
+                      t(
+                        `All ${eligible.length} stores`,
+                        `همهٔ ${eligible.length} فروشگاه`,
+                      )
+                    ) : (
+                      <bdi dir="auto">{storeNames}</bdi>
+                    )}{" "}
+                    {isSale
+                      ? t("sell it for", "می‌فروشند به")
+                      : salesText(t, "newRegular")}{" "}
+                    <LtrText>
+                      <Money
+                        value={summaryPrice ?? price}
+                        currency={state.config.company.currency}
+                      />
+                      {input.price_unit !== "each" && `/${input.price_unit}`}
+                    </LtrText>
+                  </strong>
+                  {uniformRegular && (
                     <>
                       {" "}
-                      {t("until", "تا")}{" "}
-                      <bdi dir="auto" className="sale-calendar-date">
-                        {saleCalendarDate(input.last_day, lang, true)}
-                      </bdi>
+                      {t("instead of", "به‌جای")}{" "}
+                      <Money
+                        value={uniformRegular}
+                        currency={state.config.company.currency}
+                      />
                     </>
                   )}
-                </>
-              )}{" "}
-              {input.branches.length === eligible.length && !worker ? (
-                t(
-                  `all ${eligible.length} stores`,
-                  `همهٔ ${eligible.length} فروشگاه`,
-                )
-              ) : (
-                <bdi dir="auto">{storeNames}</bdi>
-              )}{" "}
-              {!isSale ? salesText(t, "newRegular") : t("sell", "می‌فروشند")}{" "}
-              <ProductName product={product} language={lang} />{" "}
-              {t("at", "به قیمت")}{" "}
-              {price ? (
-                <LtrText>
-                  <Money
-                    value={summaryPrice ?? price}
-                    currency={state.config.company.currency}
-                  />
-                  {input.price_unit !== "each" && `/${input.price_unit}`}
-                </LtrText>
-              ) : (
-                "—"
-              )}
-              {uniformRegular && (
-                <>
-                  {" "}
-                  {t("instead of", "به‌جای")}{" "}
-                  <Money
-                    value={uniformRegular}
-                    currency={state.config.company.currency}
-                  />
-                </>
-              )}
-              .
-            </p>
-            {isSale && input.last_day && uniformRegular && (
-              <p>
-                {t("On", "در")}{" "}
-                <bdi dir="auto" className="sale-calendar-date">
-                  {saleCalendarDate(
-                    saleDateAfter(input.last_day, 1),
-                    lang,
-                    true,
+                  {isSale && (
+                    <>
+                      ,{" "}
+                      {input.starts_on === today
+                        ? t("today", "امروز")
+                        : priceCalendarDate(input.starts_on, lang, "long")}
+                      {input.last_day && (
+                        <>
+                          {" "}
+                          {t("until", "تا")}{" "}
+                          <bdi dir="auto" className="sale-calendar-date">
+                            {priceCalendarDate(input.last_day, lang, "long")}
+                          </bdi>
+                        </>
+                      )}
+                    </>
                   )}
-                </bdi>
-                {t(", it goes back to", "، قیمت برمی‌گردد به")}{" "}
-                <Money
-                  value={uniformRegular}
-                  currency={state.config.company.currency}
-                />{" "}
-                {t("by itself.", "به‌صورت خودکار.")}
-              </p>
-            )}
-            {isSale && input.last_day === null && (
-              <p>{salesText(t, "whenEnded")}</p>
-            )}
-            {!isSale && (
-              <>
-                <p>{salesText(t, "regularHint")}</p>
-                {endingSale && (
-                  <p>
-                    {t(
-                      "The sale ends now. Customers pay the new regular price.",
-                      "حراج اکنون پایان می‌یابد. مشتریان قیمت عادی جدید را پرداخت می‌کنند.",
-                    )}
-                  </p>
-                )}
-                {regularWaitsForSale && (
-                  <p>
-                    {salesText(t, "afterSale")} ·{" "}
-                    {salesText(t, "saleChargeStays")}
-                  </p>
-                )}
-                {regularWaitsForSale && input.add_labels && !worker && (
-                  <p>{salesText(t, "deferredLabels")}</p>
-                )}
-              </>
-            )}
-            {worker && <p>{salesText(t, "approvalHint")}</p>}
-          </section>
+                  .
+                  {isSale && input.last_day && uniformRegular && (
+                    <>
+                      {" "}
+                      {t("On", "در")}{" "}
+                      <bdi dir="auto" className="sale-calendar-date">
+                        {priceCalendarDate(
+                          saleDateAfter(input.last_day, 1),
+                          lang,
+                          "weekday",
+                        )}
+                      </bdi>
+                      {t(", it goes back to", "، قیمت برمی‌گردد به")}{" "}
+                      <Money
+                        value={uniformRegular}
+                        currency={state.config.company.currency}
+                      />{" "}
+                      {t("by itself.", "به‌صورت خودکار.")}
+                    </>
+                  )}
+                </p>
+              )}
+              {price && isSale && input.last_day === null && (
+                <p>{salesText(t, "whenEnded")}</p>
+              )}
+              {price && !isSale && (
+                <>
+                  <p>{salesText(t, "regularHint")}</p>
+                  {endingSale && (
+                    <p>
+                      {t(
+                        "The sale ends now. Customers pay the new regular price.",
+                        "حراج اکنون پایان می‌یابد. مشتریان قیمت عادی جدید را پرداخت می‌کنند.",
+                      )}
+                    </p>
+                  )}
+                  {regularWaitsForSale && (
+                    <p>
+                      {salesText(t, "afterSale")} ·{" "}
+                      {salesText(t, "saleChargeStays")}
+                    </p>
+                  )}
+                  {regularWaitsForSale && input.add_labels && !worker && (
+                    <p>{salesText(t, "deferredLabels")}</p>
+                  )}
+                </>
+              )}
+              {worker && <p>{salesText(t, "approvalHint")}</p>}
+              {(!worker || isSale) && (
+                <Checkbox
+                  checked={input.add_labels}
+                  onChange={(value) => patch("add_labels", value)}
+                >
+                  {salesText(t, isSale ? "promoLabels" : "regularLabels")}
+                </Checkbox>
+              )}
+            </section>
+          </div>
         </div>
         <DialogActions>
           <Button variant="neutral" onClick={props.onClose}>
             {t("Cancel", "انصراف")}
           </Button>
           <Button type="submit" disabled={!preview}>
-            {worker
-              ? salesText(t, "sendRequest")
-              : props.approve_request_id
-                ? salesText(t, "changeApprove")
-                : isSale
-                  ? salesText(
-                      t,
-                      input.starts_on > today ? "scheduleSale" : "startSale",
-                    )
-                  : salesText(t, "saveRegular")}
+            {props.onStage
+              ? t("Apply to draft", "اعمال در پیش‌نویس")
+              : worker
+                ? salesText(t, "sendRequest")
+                : props.approve_request_id
+                  ? salesText(t, "changeApprove")
+                  : isSale
+                    ? salesText(
+                        t,
+                        input.starts_on > today ? "scheduleSale" : "startSale",
+                      )
+                    : salesText(t, "saveRegular")}
           </Button>
         </DialogActions>
       </form>

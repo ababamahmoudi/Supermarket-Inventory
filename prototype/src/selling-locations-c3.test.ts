@@ -74,6 +74,9 @@ describe("C3 selling locations and approval consequences", () => {
 
   it("groups identical retail consequences and does not invent override-removal rows or warehouse effects", () => {
     const state = initialState();
+    // Explicitly exercise a company-default-only product; actual overrides have their own case below.
+    state.products.find((product) => product.code === "0006")!.branch_prices =
+      {};
     const actor = catalogTestActor(state, "manager", "all");
     const effects = approvalLocationEffects(
       state,

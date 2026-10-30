@@ -35,13 +35,41 @@ export async function openAlert(scope: Page | Locator, name?: string | RegExp) {
     await head.click();
 }
 
+async function waitForShellActions(page: Page) {
+  // Public loading chrome has no LocationPicker. Its branch-pill only mounts
+  // with the restored actor; presence is independent of switching permission.
+  const shell = page.locator(".topbar");
+  await expect(shell).toBeVisible();
+  await expect(shell.locator(".branch-pill[role=combobox]")).toBeVisible();
+  return shell;
+}
+
 export async function openShellAction(page: Page, name: string) {
-  const direct = page.getByRole("button", { name, exact: true });
-  if (await direct.isVisible()) return direct;
+  const shell = await waitForShellActions(page);
+  const direct = shell.getByRole("button", { name, exact: true });
   const item = page.getByRole("menuitem", { name, exact: true });
-  if (!(await item.isVisible()))
-    await page.locator(".mobile-more-menu").click();
+  const more = shell.locator("button.mobile-more-menu");
+  await expect
+    .poll(
+      async () =>
+        (await direct.isVisible()) ||
+        (await item.isVisible()) ||
+        (await more.isVisible()),
+    )
+    .toBe(true);
+  if (await direct.isVisible()) {
+    await expect(direct).toBeEnabled();
+    return direct;
+  }
+  if (!(await item.isVisible())) {
+    await expect(more).toBeVisible();
+    await expect(more).toBeEnabled();
+    if ((await more.getAttribute("aria-expanded")) !== "true")
+      await more.click();
+    await expect(more).toHaveAttribute("aria-expanded", "true");
+  }
   await expect(item).toBeVisible();
+  await expect(item).toBeEnabled();
   return item;
 }
 
@@ -89,7 +117,7 @@ export async function signIn(page: Page, role: DemoRole) {
       .getByLabel(fa ? "نام کاربری" : "Username", { exact: true })
       .fill(account.username);
     await page
-      .getByLabel(fa ? "گذرواژه" : "Password", { exact: true })
+      .getByLabel(fa ? "رمز عبور" : "Password", { exact: true })
       .fill(account.password ?? "demo1234");
     await page
       .getByRole("button", { name: fa ? "ورود" : "Sign in", exact: true })
@@ -109,9 +137,7 @@ export async function signIn(page: Page, role: DemoRole) {
       } else {
         await page
           .getByRole("button", {
-            name: fa
-              ? "استفاده از کلید ورود شبیه‌سازی‌شده"
-              : "Use simulated passkey",
+            name: fa ? "ادامه با کلید ورود" : "Continue with passkey",
             exact: true,
           })
           .click();
@@ -171,6 +197,46 @@ export async function setBranch(page: Page, branch: string) {
 }
 
 export async function setLanguage(page: Page, language: "en" | "fa") {
+  // Language is also available on the actual signed-out/setup/lock surface.
+  // Wait for either completed actor chrome or that root auth form; the public
+  // loading shell's default English is never evidence of restored preferences.
+  const auth = page.locator("#root > .signin-page");
+  const authToggle = auth.locator(
+    ":scope > .signin-language > button.language-toggle[lang]",
+  );
+  const actorLocation = page.locator(".topbar .branch-pill[role=combobox]");
+  await expect
+    .poll(
+      async () =>
+        (await actorLocation.isVisible()) ||
+        ((await auth.isVisible()) &&
+          (await auth
+            .locator(":scope > .signin-wrap > .signin-card")
+            .isVisible()) &&
+          (await auth.getByRole("heading", { level: 1 }).isVisible()) &&
+          (await authToggle.isVisible())),
+    )
+    .toBe(true);
+  if (await auth.isVisible()) {
+    await expect(actorLocation).toHaveCount(0);
+    await expect(authToggle).toBeEnabled();
+    if ((await page.locator("html").getAttribute("lang")) !== language) {
+      await expect(authToggle).toHaveAttribute("lang", language);
+      await authToggle.click();
+    }
+    await expect(page.locator("html")).toHaveAttribute("lang", language);
+    await expect(authToggle).toHaveAttribute(
+      "lang",
+      language === "fa" ? "en" : "fa",
+    );
+    await expect(authToggle).toHaveAccessibleName(
+      language === "fa" ? "تغییر به انگلیسی" : "Switch to Persian",
+    );
+    await expect(auth.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(actorLocation).toHaveCount(0);
+    return;
+  }
+  await waitForShellActions(page);
   if ((await page.locator("html").getAttribute("lang")) === language) return;
   await (
     await openShellAction(
@@ -178,6 +244,13 @@ export async function setLanguage(page: Page, language: "en" | "fa") {
       language === "fa" ? "Switch to Persian" : "تغییر به انگلیسی",
     )
   ).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", language);
+  await expect(
+    page.locator(".topbar").getByRole("combobox", {
+      name: language === "fa" ? "مکان" : "Location",
+      exact: true,
+    }),
+  ).toBeVisible();
 }
 
 export async function resetDemo(page: Page) {
@@ -238,8 +311,17 @@ export async function resetDemo(page: Page) {
 }
 
 export async function visitPage(page: Page, label: string) {
-  // Wait for the real route projection before choosing a compact sidebar group.
-  await expect(page.locator("main h1")).toBeVisible();
+  const main = page.getByRole("main");
+  // Settings retains its previous subtree in a hidden Activity while fetching
+  // fresh configuration. Its live group controls, not the placeholder header,
+  // establish readiness; role queries also exclude that retained hidden h1.
+  if (new URL(page.url()).hash.split("?")[0] === "#settings")
+    await expect(
+      main.getByRole("navigation", {
+        name: /^(Settings groups|گروه‌های تنظیمات)$/,
+      }),
+    ).toBeVisible();
+  await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
   if (await page.evaluate(() => window.innerWidth <= 760))
     await page.locator("#menu-toggle").click();
   const link = page
@@ -269,21 +351,47 @@ export const invoiceImage = {
   ),
 };
 
-export async function openInvoiceUpload(page: Page) {
-  const input = page.getByLabel("Upload a PDF or photo", { exact: true });
-  // A retained unread original now has a real list row. Start the upload
-  // workspace through its action rather than replacing a browser record.
-  if ((await input.count()) === 0) {
+export async function openInvoiceSourcePicker(
+  page: Page,
+  source: "photo" | "pdf" = "photo",
+  language: "en" | "fa" = "en",
+) {
+  const copy = (en: string, fa: string) => (language === "fa" ? fa : en);
+  const chooser = page.getByRole("dialog", {
+    name: copy("New invoice", "فاکتور جدید"),
+    exact: true,
+  });
+  if (!(await chooser.isVisible()))
     await page
-      .getByRole("button", { name: "New invoice", exact: true })
+      .getByRole("button", {
+        name: copy("New invoice", "فاکتور جدید"),
+        exact: true,
+      })
       .click();
-  }
-  await expect(input).toBeAttached();
-  return input;
+  await expect(chooser).toBeVisible();
+  const nativePicker = page.waitForEvent("filechooser");
+  await chooser
+    .getByRole("button", {
+      name:
+        source === "pdf"
+          ? copy("PDF (AI reading)", "PDF (خوانش هوش مصنوعی)")
+          : copy("Photo (AI reading)", "عکس (خوانش هوش مصنوعی)"),
+      exact: true,
+    })
+    .click();
+  const selected = await nativePicker;
+  expect(await selected.element().getAttribute("data-testid")).toBe(
+    "invoice-entry-original",
+  );
+  await expect(chooser).toHaveCount(0);
+  return selected;
+}
+export async function openInvoiceUpload(page: Page) {
+  return openInvoiceSourcePicker(page);
 }
 
 export async function uploadInvoice(page: Page) {
-  await (await openInvoiceUpload(page)).setInputFiles(invoiceImage);
+  await (await openInvoiceUpload(page)).setFiles(invoiceImage);
   const deadline = Date.now() + 8000;
   const remaining = () => Math.max(1, deadline - Date.now());
   // The heading mounts before the native original retention/read transaction.
@@ -309,26 +417,51 @@ export async function uploadInvoice(page: Page) {
       status: "review",
     });
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: remaining() });
-  await expect(page.locator(".invoice-line")).toHaveCount(6, {
-    timeout: remaining(),
-  });
+  await expect(page.locator('[data-testid^="invoice-line-row-"]')).toHaveCount(
+    6,
+    {
+      timeout: remaining(),
+    },
+  );
+  await openInvoiceDetails(page);
 }
 
-/** R1 asks a person before confirming all remaining AI checks on a line. */
+/** Phone receiving keeps the details card compact until its fields are needed. */
+export async function openInvoiceDetails(page: Page) {
+  await expect(page.getByTestId("invoice-details-card")).toBeVisible();
+  const toggle = page.locator(
+    '.receiving-details-phone-toggle[aria-expanded="false"]',
+  );
+  if (await toggle.isVisible()) await toggle.click();
+}
+
+/** Open one R2 line editor and retain its scoped locator. */
+export async function openInvoiceLine(page: Page, index: number) {
+  const editor = page.locator(`#invoice-line-${index}-detail`);
+  if (!(await editor.isVisible())) {
+    if ((page.viewportSize()?.width ?? 1440) <= 760) {
+      const previous = page.locator(".receiving-line-editor:visible");
+      if (await previous.count())
+        await previous
+          .getByRole("button", { name: /^(Close|بستن)$/, exact: true })
+          .click();
+    }
+    await page.getByTestId(`invoice-line-row-${index}`).click();
+  }
+  await expect(editor).toBeVisible();
+  return editor;
+}
+
+/** R2 confirms the whole line, including its highlighted fields, in one action. */
 export async function confirmInvoiceLine(page: Page, line: Locator) {
-  const hasChecks = (await line.locator(".reading-check-chip").count()) > 0;
+  const fa = (await page.locator("html").getAttribute("lang")) === "fa";
   await line
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+    .getByRole("button", {
+      name: fa ? "تأیید ردیف" : "Confirm line",
+      exact: true,
+    })
     .click();
-  if (!hasChecks) return;
-  const confirmation = page.getByRole("dialog", {
-    name: "This line has fields to check. Confirm all of them?",
-    exact: true,
-  });
-  await expect(confirmation).toBeVisible();
-  await confirmation
-    .getByRole("button", { name: "Confirm all fields", exact: true })
-    .click();
+  await expect(line).toBeHidden();
 }

@@ -56,3 +56,12 @@ describe("C8 retained monetary and pack presentation", () => {
     expect(formatCasesAndUnits(12, "2.5", "en")).toBe("12 units");
   });
 });
+
+it("R2 receiving keeps four cost decimals in the configured currency without changing other money", () => {
+  const source = new Decimal("1.2500");
+  expect(
+    formatMoney(source, { currency: "EUR", decimals: 4, fixedDecimals: true }),
+  ).toBe("€1.2500");
+  expect(formatMoney(source, { currency: "EUR" })).toBe("€1.25");
+  expect(source.toFixed(4)).toBe("1.2500");
+});

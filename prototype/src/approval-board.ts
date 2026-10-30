@@ -15,6 +15,50 @@ import {
 import { effectiveApprovalLocation } from "./received";
 import { regularPrice } from "./catalog";
 import type { DemoState, Branch } from "./types";
+import { calculatePrice } from "./pricing";
+import { calculateWeighedPrice } from "./weighed";
+
+export function approvalCategoryPreview(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  id: string,
+  category: string,
+): string {
+  actor = freshActor(state, actor);
+  const approval = state.approvals.find(
+    (item) => item.id === id && item.company_id === actor.company_id,
+  );
+  if (!approval) throw new Error("Approval changed. Refresh the preview");
+  requireCapability(
+    state,
+    actor,
+    "approvals.decide",
+    domainScope(state, approval),
+  );
+  const product = state.products.find(
+    (item) =>
+      item.company_id === actor.company_id &&
+      item.code === approval.product_code,
+  );
+  if (!product) throw new Error("Product changed. Refresh the price preview");
+  const cost = approval.source_manual_request
+    ? productStoreCost(
+        state,
+        actorAtLocation(
+          state,
+          actor,
+          effectiveApprovalLocation(state, approval),
+        ),
+        product,
+      )
+    : (approval.unit_cost ?? product.last_cost_before_tax);
+  if (!cost) throw new Error("A current unit cost is required");
+  return (
+    product.sold_by === "weight"
+      ? calculateWeighedPrice(cost, "lb", category, state.config)
+      : calculatePrice(cost, category, state.config)
+  ).selling_price;
+}
 
 export function approvalBoard(state: DemoState, actor: AuthenticatedActor) {
   actor = freshActor(state, actor);
@@ -57,15 +101,25 @@ export function approvalBoard(state: DemoState, actor: AuthenticatedActor) {
               .toFixed(4)
           : null))
       : null;
-    const invoice = [state.invoice, ...(state.invoices ?? [])].find(
-      (item) =>
-        item.company_id === actor.company_id &&
-        actual.invoice_ids?.includes(item.id),
+    const invoices = [state.invoice, ...(state.invoices ?? [])].filter(
+      (item) => item.company_id === actor.company_id,
     );
+    const invoice =
+      invoices.find((item) => item.id === actual.source_invoice_id) ??
+      invoices.find((item) => actual.invoice_ids?.includes(item.id));
     return {
       approval: { ...approval, branch },
       unitCost: cost,
       margin,
+      minimumMargin: financial
+        ? (actual.threshold ??
+          state.config.pricing_categories.find(
+            (category) =>
+              category.key ===
+              (actual.pricing_category ?? product?.pricing_category),
+          )?.minimum_margin ??
+          null)
+        : null,
       triggeredBy:
         actual.triggered_by ??
         (financial
@@ -81,7 +135,10 @@ export function approvalBoard(state: DemoState, actor: AuthenticatedActor) {
                 )?.by
             : invoice?.receiving_employee
           : undefined),
-      invoiceNumber: actual.invoice_number ?? invoice?.supplier_invoice_number,
+      invoiceNumber: invoice?.supplier_invoice_number ?? actual.invoice_number,
+      invoiceId: actual.source_invoice_id ?? invoice?.id,
+      supplierName: invoice?.supplier ?? actual.supplier_name,
+      category: actual.pricing_category ?? product?.pricing_category,
     };
   });
 }
@@ -124,7 +181,9 @@ export function approvalPanelRead(
       : (approval.unit_cost ?? product.last_cost_before_tax)) || null;
   const manualReview =
     showEffects &&
-    (approval.manual_price_review || approval.source_manual_request)
+    (approval.manual_price_review ||
+      approval.source_manual_request ||
+      approval.receiving_price)
       ? manualRegularApprovalPreview(state, actor, approval, regularDecision)
       : null;
   const proposedPrice = manualReview?.price ?? approval.proposed_price;

@@ -5,13 +5,20 @@ implement the application engine, while this file remains its independent refere
 """
 
 import json
+import runpy
 from decimal import ROUND_FLOOR, ROUND_HALF_UP
 from decimal import Decimal as D
 from pathlib import Path
 
 
 def load_configuration():
-    return json.loads(Path(__file__).with_name("arzon-config.json").read_text(encoding="utf-8"))
+    config = json.loads(Path(__file__).with_name("arzon-config.json").read_text(encoding="utf-8"))
+    if "bands" not in config["rounding_bands"]:
+        root = Path(__file__).resolve().parent.parent
+        adapter = runpy.run_path(str(root / "scripts/prepare-local-seed.py"))
+        retained = json.loads((root / "prototype/src/compat/configuration.json").read_text())
+        config = adapter["prepare_configuration"](config, retained)
+    return config
 
 
 def to_cents(value):
@@ -67,7 +74,36 @@ def pricing_details(unit_cost_before_tax, category_key, configuration=None):
                     break
     else:
         raise ValueError("Unknown configured rounding mode.")
+    adjustment = config["rounding_bands"].get(
+        "final_ending_adjustment",
+        load_configuration()["rounding_bands"].get("final_ending_adjustment"),
+    )
+    rounded_up_from = None
+    if adjustment:
+        target = D(adjustment["target_ending"])
+        sources = [D(value) for value in adjustment["source_endings"]]
+        if (
+            not target.is_finite()
+            or target < 0
+            or target >= 1
+            or to_cents(target) != target
+            or len(set(sources)) != len(sources)
+            or any(
+                not value.is_finite() or value < 0 or value >= target or to_cents(value) != value
+                for value in sources
+            )
+        ):
+            raise ValueError("Invalid final price ending adjustment.")
+        dollars = price.to_integral_value(rounding=ROUND_FLOOR)
+        if price - dollars in sources:
+            rounded_up_from = price
+            price = dollars + target
+        elif correction_applied and after_bands is not None:
+            band_dollars = after_bands.to_integral_value(rounding=ROUND_FLOOR)
+            if after_bands - band_dollars in sources and price == band_dollars + target:
+                rounded_up_from = after_bands
     return {
+        "rounded_up_from": rounded_up_from,
         "raw_price": to_cents(raw),
         "after_band_rounding": after_bands,
         "special_correction_applied": correction_applied,

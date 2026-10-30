@@ -1,3 +1,4 @@
+import { invalidateCorrectionCaseBasis } from "./invoice-correction-fields";
 import Decimal from "decimal.js";
 import { createId } from "./ids";
 import { regularPrice } from "./catalog";
@@ -62,6 +63,8 @@ export interface InvoiceContentCorrection {
 export interface InvoiceCorrectionInput {
   lines: import("./invoice-edit-types").InvoiceEditableLine[];
   reason: string;
+  /** Explicit editor intent; no client-supplied conversion basis is accepted. */
+  unit_cost_reentered?: readonly number[];
 }
 
 export interface InvoiceCorrectionPreview {
@@ -276,6 +279,23 @@ export function invoiceContentCorrectionPreview(
         "lines",
         "Keep each original invoice line in the correction.",
       );
+    const costIntent = input.unit_cost_reentered;
+    if (
+      costIntent !== undefined &&
+      (!Array.isArray(costIntent) ||
+        Array.from(costIntent).some(
+          (index) =>
+            typeof index !== "number" ||
+            !Number.isSafeInteger(index) ||
+            index < 0 ||
+            index >= before.lines.length,
+        ))
+    )
+      throw new InvoiceCorrectionError(
+        "cost",
+        "Review the corrected unit-cost line selection.",
+      );
+    const reenteredCosts = new Set(costIntent ?? []);
     const after = structuredClone(before);
     const changed = new Set<number>();
     const physicalChanged = new Set<number>();
@@ -284,6 +304,34 @@ export function invoiceContentCorrectionPreview(
     after.lines = input.lines.map((incoming, index) => {
       const old = before.lines[index];
       const line = { ...old };
+      if (
+        old.free_case_group &&
+        [
+          "product_code",
+          "qty_invoiced",
+          "qty_received_at_posting",
+          "unit_cost_before_tax",
+          "units_per_case",
+          "quantity_unit",
+          "quantity_entered",
+          "case_cost_before_tax",
+          "sold_by",
+          "date_tracking",
+          "date_type",
+          "date_value",
+          "lot_number",
+        ].some(
+          (field) =>
+            JSON.stringify(
+              (incoming as unknown as Record<string, unknown>)[field],
+            ) !==
+            JSON.stringify((old as unknown as Record<string, unknown>)[field]),
+        )
+      )
+        throw new InvoiceCorrectionError(
+          "lines",
+          "Paid/free quantity and cost corrections require reviewing the original grouped source. Other correction fields remain available.",
+        );
       const fields = [
         "product_code",
         "qty_invoiced",
@@ -312,6 +360,7 @@ export function invoiceContentCorrectionPreview(
         // Only editor fields can change; company/supplier/order/receipt evidence stays retained.
         (line as unknown as Record<string, unknown>)[field] = incoming[field];
       }
+      invalidateCorrectionCaseBasis(old, line, reenteredCosts.has(index));
       line.company_id = before.company_id;
       const product = state.products.find(
         (product) =>
@@ -328,14 +377,22 @@ export function invoiceContentCorrectionPreview(
         );
       if (line.product_code !== old.product_code) {
         line.description = product.name_en;
+        line.new_name_en = product.name_en;
+        line.new_name_fa = product.name_fa;
         line.pricing_category = product.pricing_category;
         line.tax_profile = product.tax_profile;
         line.taxable = product.taxable;
         line.sold_by = product.sold_by ?? "each";
         line.supplier_item_id = undefined;
         line.supplier_item_code = undefined;
+        line.supplier_item_code_inferred = undefined;
         line.order_new_item_match = undefined;
       }
+      if (product.sold_by === "weight" && line.sold_by !== "weight")
+        throw new InvoiceCorrectionError(
+          "quantity",
+          `Product on line ${index + 1} is sold by weight. Retain a weight quantity and cost basis.`,
+        );
       if (
         !/^\d+(?:\.\d{1,4})?$/.test(
           line.sold_by === "weight"
@@ -349,6 +406,11 @@ export function invoiceContentCorrectionPreview(
         );
       if (line.sold_by !== "weight") {
         if (line.quantity_unit === "cases") {
+          if (!/^\d+(?:\.\d{1,4})?$/.test(line.case_cost_before_tax ?? ""))
+            throw new InvoiceCorrectionError(
+              "cost",
+              `Enter a case cost with up to four decimal places on line ${index + 1}.`,
+            );
           try {
             const entered = new Decimal(
               line.quantity_entered ??
@@ -360,12 +422,24 @@ export function invoiceContentCorrectionPreview(
               !entered.times(line.units_per_case!).eq(line.qty_invoiced)
             )
               throw new Error("pack");
-            if (
-              line.unit_cost_before_tax !== old.unit_cost_before_tax ||
-              line.units_per_case !== old.units_per_case
-            )
+            const explicitCaseCost =
+              line.case_cost_before_tax !== old.case_cost_before_tax;
+            const unitCostChanged =
+              line.unit_cost_before_tax !== old.unit_cost_before_tax;
+            const unitBasis =
+              reenteredCosts.has(index) ||
+              (unitCostChanged &&
+                !explicitCaseCost &&
+                line.units_per_case === old.units_per_case);
+            if (unitBasis)
               line.case_cost_before_tax = new Decimal(line.unit_cost_before_tax)
                 .times(line.units_per_case!)
+                .toFixed(4, Decimal.ROUND_HALF_UP);
+            else
+              line.unit_cost_before_tax = new Decimal(
+                line.case_cost_before_tax!,
+              )
+                .div(line.units_per_case!)
                 .toFixed(4, Decimal.ROUND_HALF_UP);
           } catch {
             throw new InvoiceCorrectionError(
@@ -439,8 +513,12 @@ export function invoiceContentCorrectionPreview(
       if (
         physicalChanged.has(index) ||
         line.unit_cost_before_tax !== old.unit_cost_before_tax ||
+        line.case_cost_before_tax !== old.case_cost_before_tax ||
         line.source_cost_before_tax !== old.source_cost_before_tax ||
-        line.source_cost_unit !== old.source_cost_unit
+        line.source_cost_unit !== old.source_cost_unit ||
+        line.converted_case_cost_before_tax !==
+          old.converted_case_cost_before_tax ||
+        line.converted_case_units_per_case !== old.converted_case_units_per_case
       )
         pricingChanged.add(index);
       if (
@@ -935,6 +1013,7 @@ export function correctPostedInvoice(
           product.company_id === context.company_id &&
           product.code === change.product_code,
       )!;
+      if (product.package_of_product_id) continue;
       const contributorIds = new Set<string>([id]);
       for (const approval of correctionPendingApprovals(
         state,

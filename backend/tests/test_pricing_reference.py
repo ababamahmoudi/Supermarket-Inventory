@@ -59,3 +59,22 @@ def test_money_does_not_enter_reference_as_float():
 def test_reference_rejects_invalid_cost(cost):
     with pytest.raises(ValueError, match="finite and nonnegative"):
         REFERENCE.selling_price(cost, "grocery")
+
+
+def test_configured_final_endings_and_original_special_correction_are_explicit():
+    details = REFERENCE.pricing_details("1.00", "grocery")
+    assert details["selling_price"] == Decimal("1.99")
+    assert details["after_band_rounding"] == Decimal("1.49")
+    assert details["rounded_up_from"] == Decimal("1.49")
+    special = REFERENCE.pricing_details("1.60", "grocery")
+    assert special["rounded_up_from"] == Decimal("2.49")
+    assert special["special_correction_applied"] is True
+    config = deepcopy(REFERENCE.load_configuration())
+    config["rounding_bands"]["final_ending_adjustment"] = None
+    assert REFERENCE.selling_price("1.00", "grocery", config) == Decimal("1.49")
+    config["rounding_bands"]["final_ending_adjustment"] = {
+        "source_endings": [".49"],
+        "target_ending": ".89",
+    }
+    assert REFERENCE.selling_price("1.00", "grocery", config) == Decimal("1.89")
+    assert REFERENCE.selling_price("1.60", "grocery", config) == Decimal("2.99")

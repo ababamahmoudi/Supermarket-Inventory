@@ -1,7 +1,15 @@
+import { effectiveRoundingBands } from "./pricing-ending-rule";
 import { offerVersion, stopCompanyOfferAtStore } from "./offer-store-scopes";
 import { businessFingerprint } from "./business-fingerprint";
-import type { AuthenticatedActor } from "./authority-types";
-import { actorAtLocation, freshActor, decisionAttribution } from "./authority";
+import type { AuthenticatedActor, SystemAttribution } from "./authority-types";
+import { requireSystemReconciliation } from "./authority-repository";
+import {
+  actorAtLocation,
+  freshActor,
+  decisionAttribution,
+  authoritySnapshot,
+  bindAuthoritySnapshot,
+} from "./authority";
 import { requireCapability } from "./permissions";
 import { actorAudit, domainScope } from "./domain-authority";
 import Decimal from "decimal.js";
@@ -23,6 +31,8 @@ import {
 } from "./manual-prices";
 import { productStoreCost } from "./product-costs";
 import { effectiveApprovalLocation } from "./received";
+import { calculatePrice } from "./pricing";
+import { calculateWeighedPrice } from "./weighed";
 export { isOfferScheduledNow } from "./catalog";
 import type {
   Approval,
@@ -129,6 +139,10 @@ export function approvalSnapshot(
         approval.margin,
         approval.threshold,
         approval.manual_price_review,
+        approval.receiving_price,
+        approval.free_case_answer,
+        approval.manual_override,
+        approval.pricing_category,
         (state.invoice_location_corrections ?? [])
           .filter(
             (correction) =>
@@ -255,6 +269,7 @@ function reconcileOffersDraft(
   state: DemoState,
   productCode: string,
   companyId = state.config.company.seed_key,
+  now = new Date(),
 ): void {
   if (companyId !== state.config.company.seed_key) return;
   const product = currentProduct(state, productCode);
@@ -286,7 +301,7 @@ function reconcileOffersDraft(
     ) {
       offer.status = "stopped";
       offer.version = offerVersion(offer) + 1;
-      offer.stopped_at = new Date().toISOString();
+      offer.stopped_at = now.toISOString();
     }
   }
   const scopes: { scope: PriceScope; branch: Branch; price: string | null }[] =
@@ -348,6 +363,65 @@ function reconcileOffersDraft(
   }
 }
 
+/** Canonical derived-product maintenance; no caller-supplied prices or offer terms. */
+export function reconcileDerivedPackageOffers(
+  state: DemoState,
+  actor: AuthenticatedActor | null,
+  productCode: string,
+  now: Date,
+  system?: {
+    attribution: SystemAttribution;
+    source: "price_updates" | "sales_clock";
+  },
+): void {
+  if (actor) actor = freshActor(state, actor);
+  else if (system)
+    requireSystemReconciliation(state, system.attribution, system.source);
+  else throw new Error("Package reconciliation requires current authority");
+  const product = currentProduct(state, productCode);
+  const parent = state.products.find(
+    (item) =>
+      item.company_id === product.company_id &&
+      item.code === product.package_of_product_id &&
+      item.sold_by === "weight" &&
+      !item.package_of_product_id &&
+      item.status !== "archived",
+  );
+  if (!parent || product.status === "archived")
+    throw new Error("Package parent is unavailable");
+  const before = structuredClone(
+    state.offers.filter(
+      (item) =>
+        item.company_id === product.company_id &&
+        item.product_code === product.code,
+    ),
+  );
+  reconcileOffersDraft(state, productCode, product.company_id, now);
+  const after = structuredClone(
+    state.offers.filter(
+      (item) =>
+        item.company_id === product.company_id &&
+        item.product_code === product.code,
+    ),
+  );
+  if (JSON.stringify(before) === JSON.stringify(after)) return;
+  state.activity.push({
+    id: createId("package-offers"),
+    company_id: product.company_id,
+    branch: "all",
+    product_code: product.code,
+    entity_type: "product",
+    entity_id: product.code,
+    action: "Package offers reconciled",
+    by: actor?.actor ?? "System",
+    ...(actor ? actorAudit(state, actor, now) : {}),
+    at: now.toISOString(),
+    reversible: false,
+    before,
+    after,
+  });
+}
+
 /** Intentional conflicts acknowledge an exact set of effective prices, never future changes. */
 function syncPriceConflictsDraft(
   state: DemoState,
@@ -400,6 +474,8 @@ export function applyApprovedPrice(
 ): void {
   actor = freshActor(state, actor);
   const product = currentProduct(state, productCode);
+  if (product.package_of_product_id)
+    throw new Error("Package prices follow the parent product");
   requireCapability(state, actor, "pricing.regular_manage", {
     ...domainScope(state, product, true),
     location_ids: scope === "all" ? sellingBranches(state.config) : [branch],
@@ -499,7 +575,10 @@ export function manualRegularApprovalPreview(
     price,
     has_current_cost: validCost,
     regular_price: review?.kept_price ?? approval.current_price ?? null,
-    calculated_price: review?.calculated_price ?? approval.proposed_price,
+    calculated_price:
+      review?.calculated_price ??
+      approval.receiving_price?.calculated_price ??
+      approval.proposed_price,
     margin,
     threshold,
     below_minimum_margin: Boolean(
@@ -545,6 +624,15 @@ export function resolveApproval(
   if (approval.type === "new_supplier")
     throw new Error("Review this supplier with supplier confirmation");
   const product = currentProduct(state, approval.product_code);
+  if (product.package_of_product_id && decision === "approve")
+    throw new Error("Package prices follow the parent product");
+  const proposedCategory = approval.pricing_category
+    ? state.config.pricing_categories.find(
+        (category) => category.key === approval.pricing_category,
+      )
+    : undefined;
+  if (approval.pricing_category && !proposedCategory)
+    throw new Error("Choose a pricing category");
   if (
     decision === "approve" &&
     approval.type === "new_product" &&
@@ -590,6 +678,15 @@ export function resolveApproval(
   )
     throw new Error(
       "Add a reason for keeping or approving this price below the minimum margin",
+    );
+  if (
+    decision === "approve" &&
+    approval.receiving_price &&
+    (regularPreview?.below_minimum_margin || regularPreview?.below_cost) &&
+    !reason?.trim()
+  )
+    throw new Error(
+      "Add a reason for approving this price below the minimum margin",
     );
   if (decision === "approve" && sourceRequest) {
     approval.unit_cost =
@@ -696,6 +793,10 @@ export function resolveApproval(
   approval.decided_at = new Date().toISOString();
   approval.decision_attribution = decisionAttribution(state, actor);
   approval.scope = scope;
+  if (decision === "approve" && proposedCategory) {
+    product.pricing_category = proposedCategory.key;
+    product.tax_profile = proposedCategory.default_tax_profile;
+  }
   if (decision === "reject")
     recordDemoActivity(state, actor, "Reject proposal", product.code, origin);
   if (reason?.trim()) approval.acknowledgment_reason = reason.trim();
@@ -717,6 +818,238 @@ export function resolveApproval(
     !Object.keys(product.branch_prices ?? {}).length
   )
     product.status = "archived";
+}
+
+/** Category corrections remain proposals until the normal Owner/Manager decision. */
+export function changeApprovalCategory(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  id: string,
+  categoryKey: string,
+): Approval {
+  actor = freshActor(state, actor);
+  const approval = state.approvals.find(
+    (item) => item.company_id === actor.company_id && item.id === id,
+  );
+  if (
+    !approval ||
+    approval.status !== "pending" ||
+    approval.type === "new_supplier" ||
+    approval.type === "barcode_conflict"
+  )
+    throw new Error("Approval is no longer pending");
+  const origin = effectiveApprovalLocation(state, approval);
+  requireCapability(
+    state,
+    actor,
+    "approvals.decide",
+    domainScope(state, { ...approval, branch: origin }, true),
+  );
+  const product = currentProduct(state, approval.product_code);
+  if (product.package_of_product_id)
+    throw new Error("Package prices follow the parent product");
+  const category = state.config.pricing_categories.find(
+    (item) => item.key === categoryKey,
+  );
+  if (!category) throw new Error("Choose a pricing category");
+  const cost = approval.source_manual_request
+    ? productStoreCost(state, actorAtLocation(state, actor, origin), product)
+    : (approval.unit_cost ?? product.last_cost_before_tax);
+  if (!cost) throw new Error("A current unit cost is required");
+  const calculation =
+    product.sold_by === "weight"
+      ? calculateWeighedPrice(cost, "lb", categoryKey, state.config)
+      : calculatePrice(cost, categoryKey, state.config);
+  if (approval.pricing_category === categoryKey) return approval;
+  approval.pricing_category = categoryKey;
+  approval.proposed_price = calculation.selling_price;
+  if (approval.receiving_price)
+    approval.receiving_price.calculated_price = calculation.selling_price;
+  approval.margin = calculation.margin;
+  approval.unit_cost = cost;
+  approval.threshold = category.minimum_margin;
+  approval.config_version = businessFingerprint({
+    cost,
+    category,
+    pricing: effectiveRoundingBands(state.config),
+    corrections: state.config.special_corrections,
+  });
+  approval.manual_override = false;
+  approval.clear_manual_price = true;
+  // A category correction explicitly replaces the earlier pricing recommendation.
+  approval.manual_price_review = undefined;
+  if (approval.type === "margin_review") approval.type = "price_change";
+  product.pending_price = approval.proposed_price;
+  product.pending_branch = origin;
+  recordDemoActivity(
+    state,
+    actor,
+    "Change approval category",
+    product.code,
+    origin,
+  );
+  return approval;
+}
+
+/** A rejection is retained; a corrected request receives a new identity. */
+export function resubmitApproval(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  id: string,
+  edits: { category?: string; price?: string; reason?: string },
+): Approval {
+  actor = freshActor(state, actor);
+  const rejected = state.approvals.find(
+    (item) => item.company_id === actor.company_id && item.id === id,
+  );
+  if (
+    !rejected ||
+    rejected.status !== "rejected" ||
+    rejected.type === "new_supplier" ||
+    rejected.type === "barcode_conflict"
+  )
+    throw new Error("Choose a rejected product or price request");
+  if (rejected.resubmitted_as_id)
+    throw new Error("This request has already been resubmitted");
+  const origin = effectiveApprovalLocation(state, rejected);
+  requireCapability(
+    state,
+    actor,
+    "approvals.decide",
+    domainScope(state, { ...rejected, branch: origin }, true),
+  );
+  const product = currentProduct(state, rejected.product_code);
+  if (
+    state.approvals.some(
+      (item) =>
+        item.company_id === actor.company_id &&
+        item.product_code === product.code &&
+        item.status === "pending" &&
+        item.type !== "barcode_conflict",
+    )
+  )
+    throw new Error("Review the pending request for this product first");
+  const categoryKey =
+    edits.category ?? rejected.pricing_category ?? product.pricing_category;
+  const category = state.config.pricing_categories.find(
+    (item) => item.key === categoryKey,
+  );
+  if (!category) throw new Error("Choose a pricing category");
+  const cost = rejected.source_manual_request
+    ? productStoreCost(state, actorAtLocation(state, actor, origin), product)
+    : (rejected.unit_cost ?? product.last_cost_before_tax);
+  if (!cost) throw new Error("A current unit cost is required");
+  const calculation =
+    product.sold_by === "weight"
+      ? calculateWeighedPrice(cost, "lb", categoryKey, state.config)
+      : calculatePrice(cost, categoryKey, state.config);
+  const price = edits.price?.trim()
+    ? priceAmount(edits.price.trim())
+    : calculation.selling_price;
+  const margin = new Decimal(price).gt(0)
+    ? new Decimal(price).minus(cost).div(price).toString()
+    : null;
+  const belowMinimum =
+    margin === null ||
+    (category.minimum_margin !== null &&
+      new Decimal(margin).lt(category.minimum_margin));
+  if ((belowMinimum || new Decimal(price).lt(cost)) && !edits.reason?.trim())
+    throw new Error("Add a reason for a price below the minimum margin");
+  const now = new Date();
+  const request: Approval = {
+    ...structuredClone(rejected),
+    id: createId("approval"),
+    status: "pending",
+    pricing_category: categoryKey,
+    proposed_price: price,
+    unit_cost: cost,
+    current_price: regularPrice(state, product, origin),
+    margin,
+    threshold: category.minimum_margin,
+    manual_override: price !== calculation.selling_price,
+    manual_price_review: undefined,
+    source_manual_request: rejected.source_manual_request
+      ? {
+          requester_user_id: actor.user_id,
+          requester_name_snapshot: actor.actor,
+          requester_role_snapshot: actor.role,
+          requested_at: now.toISOString(),
+          entered_price: price,
+          price_unit: product.sold_by === "weight" ? "lb" : "each",
+          regular_price_snapshot: regularPrice(state, product, origin),
+        }
+      : undefined,
+    clear_manual_price: price === calculation.selling_price,
+    created_at: now.toISOString(),
+    ...actorAudit(state, actor, now),
+    decided_at: undefined,
+    decided_by_user_id: undefined,
+    decision_attribution: undefined,
+    acknowledgment_reason: undefined,
+    reason: edits.reason?.trim() || undefined,
+    resubmitted_from_id: rejected.id,
+    resubmitted_as_id: undefined,
+    triggered_by: actor.actor,
+    triggered_by_user_id: actor.user_id,
+  };
+  if (request.type === "margin_review") request.type = "price_change";
+  state.approvals.push(request);
+  rejected.resubmitted_as_id = request.id;
+  product.pending_price = price;
+  product.pending_branch = origin;
+  if (rejected.type === "new_product") product.status = "pending_approval";
+  recordDemoActivity(state, actor, "Resubmit approval", product.code, origin);
+  return request;
+}
+
+/** These requests need the separate price choice or acknowledgment controls. */
+export function requiresIndividualApprovalReview(approval: Approval): boolean {
+  return Boolean(
+    approval.type === "margin_review" ||
+    approval.manual_price_review ||
+    approval.source_manual_request ||
+    approval.receiving_price,
+  );
+}
+
+/** The review dialog submits only checked rows; validate the complete batch atomically. */
+export function approveInvoiceApprovals(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  ids: readonly string[],
+  scope: PriceScope = "all",
+  target: Branch = actor.branch,
+): void {
+  actor = freshActor(state, actor);
+  requireCapability(
+    state,
+    actor,
+    "approvals.decide",
+    domainScope(state, undefined, true),
+  );
+  const unique = [...new Set(ids)];
+  if (!unique.length) throw new Error("Select at least one product");
+  const candidate = structuredClone(state);
+  bindAuthoritySnapshot(candidate, authoritySnapshot(state));
+  let invoiceId: string | undefined;
+  for (const id of unique) {
+    const approval = candidate.approvals.find(
+      (item) => item.company_id === actor.company_id && item.id === id,
+    );
+    const source = approval?.source_invoice_id ?? approval?.invoice_ids?.[0];
+    if (
+      !approval ||
+      approval.status !== "pending" ||
+      !source ||
+      (invoiceId && source !== invoiceId)
+    )
+      throw new Error("Select pending products from one invoice");
+    if (requiresIndividualApprovalReview(approval))
+      throw new Error("Review this request individually");
+    invoiceId = source;
+    resolveApproval(candidate, actor, id, "approve", scope, target);
+  }
+  Object.assign(state, candidate);
 }
 
 export function keepApprovedPrice(
@@ -780,6 +1113,8 @@ export function proposeManualOverride(
   );
   const origin = effectiveApprovalLocation(state, review);
   const product = currentProduct(state, review.product_code);
+  if (product.package_of_product_id)
+    throw new Error("Package prices follow the parent product");
   const amount = priceAmount(price);
   if (!reason.trim()) throw new Error("Add a reason for the manual override");
   const approval: Approval = {
@@ -1161,6 +1496,8 @@ export function proposeRegularPrice(
 ): Approval {
   actor = freshActor(state, actor);
   const product = currentProduct(state, productCode);
+  if (product.package_of_product_id)
+    throw new Error("Package prices follow the parent product");
   requireCapability(state, actor, "pricing.propose_manual", {
     ...domainScope(state, { ...product, branch }, true),
   });

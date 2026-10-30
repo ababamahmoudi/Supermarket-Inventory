@@ -1,3 +1,4 @@
+import { effectiveInvoiceReceivedAt } from "./invoice-received-version";
 import type { AuthenticatedActor } from "./authority-types";
 import { can } from "./permissions";
 import { businessAuditRead } from "./business-audit-read";
@@ -12,29 +13,69 @@ import { effectiveInvoiceLocation } from "./received";
 import {
   invoiceAuthorityScope,
   requireInvoiceAuthority,
+  canInvoiceAuthority,
 } from "./invoice-authority";
 import type { DemoInvoice, DemoState, InvoiceLine } from "./types";
+import {
+  invoiceCheckField,
+  normalizeInvoiceReceivingReview,
+} from "./invoice-checks";
+import { invoiceRecords } from "./invoice-records";
+import {
+  projectLiveInvoiceReading,
+  redactLiveReadingProvenance,
+} from "./invoice-live-reading-projection";
+import type { LiveInvoiceReadingView } from "./invoice-live-reading-types";
+import { freeCaseView } from "./invoice-free-cases";
+import { currentKnownDelivery } from "./invoice-known-delivery";
+import { retainedInvoiceOriginalPages } from "./invoice-original-pages";
 
 type InvoiceLineMoney =
+  | "paper_line_total"
+  | "paper_total_acknowledgement"
+  | "weight_case_cost_basis"
+  | "imported_unit_cost_basis"
   | "unit_cost_before_tax"
   | "case_cost_before_tax"
+  | "converted_case_cost_before_tax"
+  | "converted_case_units_per_case"
   | "source_cost_before_tax"
   | "line_total"
   | "line_tax"
   | "short_before_tax"
   | "short_tax";
+export type InvoiceProductMatchReadDTO = Pick<
+  NonNullable<InvoiceLine["reading_product_match"]>,
+  "product_code" | "basis" | "earlier_delivery" | "requires_check"
+>;
 export type InvoiceLineView = Omit<
   InvoiceLine,
-  "demo_note" | InvoiceLineMoney
+  | "demo_note"
+  | InvoiceLineMoney
+  | "reading_product_match"
+  | "known_delivery"
+  | "receiving_price"
+  | "free_case_group"
 > &
-  Partial<Pick<InvoiceLine, InvoiceLineMoney>>;
+  Partial<Pick<InvoiceLine, InvoiceLineMoney>> & {
+    reading_product_match?: InvoiceProductMatchReadDTO;
+    known_delivery?: Pick<
+      NonNullable<InvoiceLine["known_delivery"]>,
+      "status" | "date" | "changes"
+    >;
+    free_case?: import("./invoice-free-cases").FreeCaseView;
+    receiving_price?: import("./invoice-receiving-price").ReceivingPriceView;
+  };
 type InvoiceMoney =
   "subtotal" | "tax" | "final_total" | "payable_after_open_shorts";
 export type InvoiceView = Omit<
   DemoInvoice,
   | "file_data"
   | "original_pages"
+  | "retained_original_pages"
+  | "pdf_page_selection"
   | "reading_record"
+  | "live_reading"
   | "other_charges"
   | "legacy_demo_original"
   | "lines"
@@ -50,6 +91,7 @@ export type InvoiceView = Omit<
     original_available: boolean;
     original_page_count: number;
     reading_record?: DemoInvoice["reading_record"];
+    live_reading?: LiveInvoiceReadingView;
     other_charges?: DemoInvoice["other_charges"];
     purchase_cost_allowed: boolean;
     margin_allowed: boolean;
@@ -67,9 +109,11 @@ function select<T extends object, K extends keyof T>(
   return result;
 }
 const lineKeys = [
+  "id",
   "company_id",
   "product_code",
   "description",
+  "printed_description",
   "barcode",
   "handwritten_note",
   "expiry_as_printed",
@@ -83,6 +127,7 @@ const lineKeys = [
   "tax_profile",
   "confidence",
   "low_confidence_fields",
+  "checked_fields",
   "taxable_inferred",
   "pricing_category",
   "date_tracking",
@@ -92,13 +137,21 @@ const lineKeys = [
   "lot_number",
   "qty_later_received",
   "review_confirmed",
+  "review_changed_after_confirmation",
   "new_name_en",
+  "new_name_suggestion",
+  "new_name_swap",
   "new_name_fa",
+  "new_description_en",
+  "new_description_fa",
   "units_per_case",
+  "units_per_case_inferred",
   "manual_price_decision",
   "short_dated",
   "supplier_item_id",
   "supplier_item_code",
+  "supplier_item_code_inferred",
+  "reading_supplier_promotion",
   "quantity_unit",
   "quantity_entered",
   "order_item_id",
@@ -114,11 +167,19 @@ const lineKeys = [
   "case_weight",
   "case_weight_unit",
   "canonical_lb_quantity",
+  "weight_case_quantity",
+  "weight_case_received_quantity",
   "order_new_item_match",
 ] as const satisfies readonly (keyof InvoiceLine)[];
 const lineMoneyKeys = [
+  "paper_line_total",
+  "paper_total_acknowledgement",
+  "weight_case_cost_basis",
+  "imported_unit_cost_basis",
   "unit_cost_before_tax",
   "case_cost_before_tax",
+  "converted_case_cost_before_tax",
+  "converted_case_units_per_case",
   "source_cost_before_tax",
   "line_total",
   "line_tax",
@@ -127,15 +188,20 @@ const lineMoneyKeys = [
 ] as const satisfies readonly InvoiceLineMoney[];
 const invoiceKeys = [
   "id",
+  "simulated_reading",
   "company_id",
   "branch",
   "branch_id",
   "supplier",
   "supplier_invoice_number",
   "low_confidence_fields",
+  "checked_fields",
   "import_warnings",
   "import_handwritten_notes",
   "import_currency",
+  "import_currency_inferred",
+  "calculated_fields",
+  "calculated_from_lines",
   "order_reference",
   "invoice_date_relative_days",
   "payment_terms",
@@ -152,12 +218,16 @@ const invoiceKeys = [
   "demo_original_snapshot",
   "invoice_date",
   "received_at",
+  "imported_received_source",
+  "imported_received_alternative",
   "receiving_employee",
   "due_date",
   "posted_at",
   "supplier_confirmed",
   "entry_mode",
   "payment_term_days",
+  "payment_terms_inferred",
+  "payment_terms_defaulted",
   "due_date_manual",
   "final_total_manual",
   "supplier_review_required",
@@ -166,6 +236,8 @@ const invoiceKeys = [
   "short_receipt_keys",
   "handling_branch",
   "ship_to",
+  "bill_to",
+  "supplier_tax_number",
   "order_id",
   "order_missing_decisions",
   "order_review_version",
@@ -178,6 +250,53 @@ const invoiceMoneyKeys = [
 ] as const;
 
 /** No raw correction, approval reason, source handle or margin enters this view. */
+function projectReadingProductMatch(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  line: InvoiceLine,
+): { reading_product_match?: InvoiceProductMatchReadDTO } {
+  const match = line.reading_product_match;
+  if (
+    !match ||
+    match.product_code !== line.product_code ||
+    ![
+      "supplier_code",
+      "supplier_description",
+      "barcode",
+      "catalog_name",
+      "other_supplier_description",
+    ].includes(match.basis) ||
+    !state.products.some(
+      (product) =>
+        product.company_id === state.config.company.seed_key &&
+        product.code === line.product_code,
+    )
+  )
+    return {};
+  const prior = [state.invoice, ...(state.invoices ?? [])].find(
+    (invoice) =>
+      invoice.company_id === state.config.company.seed_key &&
+      invoice.id === match.source_invoice_id,
+  );
+  return {
+    reading_product_match: {
+      product_code: match.product_code,
+      basis: match.basis,
+      requires_check:
+        match.requires_check === true &&
+        Boolean(
+          line.low_confidence_fields?.some(
+            (field) => invoiceCheckField(field) === "product_code",
+          ),
+        ),
+      earlier_delivery:
+        match.earlier_delivery === true &&
+        prior?.status === "posted" &&
+        canInvoiceAuthority(state, actor, "invoices.read", prior.id),
+    },
+  };
+}
+
 export function invoiceView(
   state: DemoState,
   actor: AuthenticatedActor,
@@ -196,11 +315,14 @@ export function invoiceView(
       : state.invoices!.find((value) => value.id === invoiceId)!;
   if (requestedVersion)
     requireInvoiceAuthority(state, current, "invoices.correct", original.id);
-  const invoice = requestedVersion
-    ? invoiceVersion(state, original, requestedVersion).invoice
-    : original.status === "posted"
-      ? effectiveInvoiceVersion(state, original)
-      : original;
+  const invoice = structuredClone(
+    requestedVersion
+      ? invoiceVersion(state, original, requestedVersion).invoice
+      : original.status === "posted"
+        ? effectiveInvoiceVersion(state, original)
+        : original,
+  );
+  normalizeInvoiceReceivingReview(invoice);
   const scope = invoiceAuthorityScope(state, original.id);
   const costs = can(state, current, "invoices.cost_read", scope).allowed;
   const margins = can(state, current, "pricing.margin_read", scope).allowed;
@@ -222,6 +344,20 @@ export function invoiceView(
   );
   const view = {
     ...select(invoice, invoiceKeys),
+    ...(invoice.cancellation
+      ? {
+          cancellation: select(invoice.cancellation, [
+            "by_user_id",
+            "by",
+            "at",
+            "reason",
+          ]),
+        }
+      : {}),
+    ...(invoice.live_reading
+      ? { live_reading: projectLiveInvoiceReading(invoice.live_reading) }
+      : {}),
+    received_at: effectiveInvoiceReceivedAt(state, invoice),
     ...(costs
       ? {
           ...select(invoice, invoiceMoneyKeys),
@@ -234,6 +370,45 @@ export function invoiceView(
         : original.branch,
     lines: invoice.lines.map((line) => ({
       ...select(line, lineKeys),
+      ...(line.free_case_group ? { free_case: freeCaseView(line, costs) } : {}),
+      ...projectReadingProductMatch(state, current, line),
+      ...(() => {
+        const known = currentKnownDelivery(line);
+        if (
+          !known ||
+          !canInvoiceAuthority(
+            state,
+            current,
+            "invoices.read",
+            known.source_invoice_id,
+          )
+        )
+          return {};
+        return {
+          known_delivery: {
+            status: known.status,
+            date: known.date,
+            changes: known.changes
+              .filter(
+                (change) => costs || change.field !== "unit_cost_before_tax",
+              )
+              .map((change) => structuredClone(change)),
+          },
+        };
+      })(),
+      ...(line.receiving_price
+        ? {
+            receiving_price: select(line.receiving_price, [
+              "price",
+              "entered_price",
+              "price_unit",
+              "calculated_price",
+              "set_by_user_id",
+              "set_by",
+              "set_at",
+            ]),
+          }
+        : {}),
       ...(costs ? select(line, lineMoneyKeys) : {}),
       ...(line.order_new_item_match
         ? {
@@ -322,14 +497,10 @@ export function invoiceView(
           },
         }
       : {}),
-    original_available: Boolean(
-      costs &&
-      ((original.file_data && original.file_name) ||
-        original.original_pages?.length),
-    ),
+    original_available:
+      costs && retainedInvoiceOriginalPages(original).length > 0,
     original_page_count: costs
-      ? original.original_pages?.length ||
-        (original.file_data && original.file_name ? 1 : 0)
+      ? retainedInvoiceOriginalPages(original).length
       : 0,
     purchase_cost_allowed: costs,
     margin_allowed: margins,
@@ -340,7 +511,11 @@ export function invoiceView(
       invoiceAuthorityScope(state, original.id, true, true),
     ).allowed,
   };
-  return businessAuditRead(view);
+  return businessAuditRead(
+    ["owner", "manager"].includes(current.role)
+      ? view
+      : redactLiveReadingProvenance(view),
+  );
 }
 
 export type InvoiceReadDTO = InvoiceView;
@@ -354,13 +529,7 @@ export function projectInvoiceState(
   invoice_workspace: InvoiceWorkspaceRead | null;
 } {
   actor = freshActor(state, actor);
-  const records = new Map(
-    [...(state.invoices ?? []), state.invoice].map((invoice) => [
-      invoice.id,
-      invoice,
-    ]),
-  );
-  const views = [...records.values()]
+  const views = invoiceRecords(state, state.config.company.seed_key)
     .filter((invoice) => {
       try {
         return can(

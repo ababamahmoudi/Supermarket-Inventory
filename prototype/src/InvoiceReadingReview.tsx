@@ -1,19 +1,24 @@
+import Decimal from "decimal.js";
 import {
+  Fragment,
+  cloneElement,
   createContext,
+  isValidElement,
   useContext,
   useId,
   useState,
-  isValidElement,
-  cloneElement,
-  type ReactNode,
   type ComponentProps,
+  type ReactNode,
 } from "react";
-import Decimal from "decimal.js";
-import { useDemo } from "./store";
-import { Badge, Button, DataTable, Field as BaseField, Select } from "./ui";
-import { LtrValue, Money, NotAdded } from "./presentation";
-import { invoiceCheckField, invoiceTotalsCheck } from "./invoice-checks";
+import {
+  invoiceCheckField,
+  invoiceTotalsCheck,
+  isEmptyOptionalInvoiceField,
+} from "./invoice-checks";
 import type { InvoiceReadDTO } from "./invoice-projections";
+import { LtrValue, Money, NotAdded } from "./presentation";
+import { useDemo } from "./store";
+import { Field as BaseField, DataTable, Select, Button } from "./ui";
 
 export function ImportedReadingNote({ invoice }: { invoice: InvoiceReadDTO }) {
   const { state, t } = useDemo();
@@ -23,7 +28,7 @@ export function ImportedReadingNote({ invoice }: { invoice: InvoiceReadDTO }) {
   ];
   return (
     <>
-      {invoice.reading_record && (
+      {invoice.reading_record?.source === "imported" && (
         <p className="muted">
           {t(
             "Reading imported from the invoice-reader kit (not live)",
@@ -57,17 +62,27 @@ export function InvoiceOtherCharges({
   invoice,
   onAcknowledge,
   onEdit,
+  showHeading = true,
 }: {
   invoice: InvoiceReadDTO;
+  showHeading?: boolean;
   onAcknowledge?(index: number, field: string): void;
   onEdit?(index: number, field: string, value: string): void;
 }) {
   const { t } = useDemo();
+  const [openCharge, setOpenCharge] = useState<number | null>(null);
   if (!invoice.other_charges?.length) return null;
+  const hint = t(
+    "The AI wasn't sure about this. Compare it with the photo.",
+    "هوش مصنوعی از این مورد مطمئن نبود. با عکس مقایسه کنید.",
+  );
   return (
     <section className="invoice-other-charges">
-      <h3>{t("Other charges and credits", "هزینه‌ها و اعتبارهای دیگر")}</h3>
+      {showHeading && (
+        <h3>{t("Other charges and credits", "هزینه‌ها و اعتبارهای دیگر")}</h3>
+      )}
       <DataTable
+        density="compact"
         columns={[
           { key: "description" },
           { key: "amount", align: "end" },
@@ -87,30 +102,92 @@ export function InvoiceOtherCharges({
           </tr>
         </thead>
         <tbody>
-          {invoice.other_charges.map((charge, index) => (
-            <tr key={index}>
-              <td>
-                <LtrValue value={charge.description} />
-              </td>
-              <td className="numeric">
-                <ReadingMoney value={charge.amount} />
-              </td>
-              <td>{charge.taxable ? t("Yes", "بله") : t("No", "خیر")}</td>
-            </tr>
-          ))}
+          {invoice.other_charges.map((charge, index) => {
+            const checked = (field: string) =>
+              charge.low_confidence_fields?.some(
+                (key) => invoiceCheckField(key) === field,
+              );
+            return (
+              <Fragment key={index}>
+                <tr>
+                  <td>
+                    <span
+                      className={
+                        checked("description")
+                          ? "reading-check-value"
+                          : undefined
+                      }
+                      title={checked("description") ? hint : undefined}
+                    >
+                      {onEdit ? (
+                        <a
+                          href="#invoice-charge-editor"
+                          data-charge-index={index}
+                          data-control-kind="disclosure"
+                          aria-expanded={openCharge === index}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            setOpenCharge(openCharge === index ? null : index);
+                          }}
+                        >
+                          <LtrValue value={charge.description} />
+                        </a>
+                      ) : (
+                        <LtrValue value={charge.description} />
+                      )}
+                    </span>
+                  </td>
+                  <td className="numeric">
+                    <span
+                      className={
+                        checked("line_total")
+                          ? "reading-check-value"
+                          : undefined
+                      }
+                      title={checked("line_total") ? hint : undefined}
+                    >
+                      <ReadingMoney value={charge.amount} />
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      className={
+                        checked("taxable") ? "reading-check-value" : undefined
+                      }
+                      title={checked("taxable") ? hint : undefined}
+                    >
+                      {charge.taxable ? t("Yes", "بله") : t("No", "خیر")}
+                    </span>
+                  </td>
+                </tr>
+                {onEdit && openCharge === index && (
+                  <tr>
+                    <td colSpan={3}>
+                      <div
+                        role="region"
+                        aria-label={t(
+                          `Other charge ${index + 1}`,
+                          `هزینه دیگر ${index + 1}`,
+                        )}
+                      >
+                        <ReadingCheckFields
+                          fields={charge.low_confidence_fields}
+                          record={{ ...charge, line_total: charge.amount }}
+                          idPrefix={`invoice-check-charge-${index}`}
+                          onAcknowledge={(field) =>
+                            onAcknowledge?.(index, field)
+                          }
+                          onEdit={(field, value) => onEdit(index, field, value)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </DataTable>
-      {onAcknowledge &&
-        (invoice.other_charges ?? []).map((charge, index) => (
-          <ReadingCheckFields
-            key={index}
-            fields={charge.low_confidence_fields}
-            record={{ ...charge, line_total: charge.amount }}
-            idPrefix={`invoice-check-charge-${index}`}
-            onAcknowledge={(field) => onAcknowledge(index, field)}
-            onEdit={(field, value) => onEdit?.(index, field, value)}
-          />
-        ))}
     </section>
   );
 }
@@ -148,27 +225,40 @@ export function InvoiceTotalsWarnings({
 
 const CheckContext = createContext<{
   fields: readonly string[];
+  record?: object;
   idPrefix: string;
   onAcknowledge(field: string): void;
+  onNotOnInvoice?(field: string): unknown | Promise<unknown>;
   onEdit?(field: string, change: () => void): void;
 } | null>(null);
 
 export function ReadingCheckProvider({
   fields,
+  record,
   idPrefix,
   onAcknowledge,
+  onNotOnInvoice,
   onEdit,
   children,
 }: {
   fields?: readonly string[];
+  record?: object;
   idPrefix: string;
   onAcknowledge(field: string): void;
+  onNotOnInvoice?(field: string): unknown | Promise<unknown>;
   onEdit?(field: string, change: () => void): void;
   children: ReactNode;
 }) {
   return (
     <CheckContext.Provider
-      value={{ fields: fields ?? [], idPrefix, onAcknowledge, onEdit }}
+      value={{
+        fields: fields ?? [],
+        record,
+        idPrefix,
+        onAcknowledge,
+        onNotOnInvoice,
+        onEdit,
+      }}
     >
       {children}
     </CheckContext.Provider>
@@ -178,13 +268,19 @@ export function ReadingCheckProvider({
 /** Adds review affordances to the normal editable field without replacing its input. */
 export function ReadingField({
   readingField,
+  readingHint,
+  labelAdornment,
   ...props
-}: ComponentProps<typeof BaseField> & { readingField?: string }) {
+}: ComponentProps<typeof BaseField> & {
+  readingField?: string;
+  readingHint?: string;
+}) {
   const context = useContext(CheckContext);
   const { t } = useDemo();
   const helpId = useId();
   const [helpFocused, setHelpFocused] = useState(false);
   const [helpHovered, setHelpHovered] = useState(false);
+  const [absenceAcknowledged, setAbsenceAcknowledged] = useState(false);
   const childId = isValidElement<{ id?: string }>(props.children)
     ? (props.children.props.id ?? "")
     : "";
@@ -207,11 +303,19 @@ export function ReadingField({
       } as Record<string, string>
     )[suffix];
   const field = context?.fields.find(
-    (value) => invoiceCheckField(value) === key,
+    (value) => invoiceCheckField(value) === invoiceCheckField(key ?? ""),
   );
-  const hint = t(
-    "The AI wasn't sure about this. Compare it with the photo.",
-    "هوش مصنوعی از این مورد مطمئن نبود. با عکس مقایسه کنید.",
+  const hint =
+    readingHint ??
+    t(
+      "The AI wasn't sure about this. Compare it with the photo.",
+      "هوش مصنوعی از این مورد مطمئن نبود. با عکس مقایسه کنید.",
+    );
+  const canMarkAbsent = !!(
+    field &&
+    context?.record &&
+    context.onNotOnInvoice &&
+    isEmptyOptionalInvoiceField(context.record, field)
   );
   const child = isValidElement<{ onChange?: (...args: never[]) => unknown }>(
     props.children,
@@ -219,12 +323,14 @@ export function ReadingField({
     ? props.children
     : null;
   const children =
-    field && child?.props.onChange && context?.onEdit
+    child?.props.onChange && ((field && context?.onEdit) || absenceAcknowledged)
       ? cloneElement(child, {
-          onChange: (...args: never[]) =>
-            context.onEdit!(field, () => {
-              child.props.onChange?.(...args);
-            }),
+          onChange: (...args: never[]) => {
+            setAbsenceAcknowledged(false);
+            if (field && context?.onEdit)
+              context.onEdit(field, () => child.props.onChange?.(...args));
+            else child.props.onChange?.(...args);
+          },
         })
       : props.children;
   return (
@@ -235,43 +341,68 @@ export function ReadingField({
       className={[props.className, field ? "please-check-field" : ""]
         .filter(Boolean)
         .join(" ")}
-      adornment={
-        field ? (
-          <div className="reading-check-actions">
-            <span
-              className="reading-check-chip"
-              tabIndex={0}
-              aria-describedby={helpFocused || helpHovered ? helpId : undefined}
-              onFocus={() => setHelpFocused(true)}
-              onBlur={() => setHelpFocused(false)}
-              onMouseEnter={() => setHelpHovered(true)}
-              onMouseLeave={() => setHelpHovered(false)}
-            >
-              <Badge tone="pending">
-                {t("Please check", "لطفاً بررسی کنید")}
-              </Badge>
+      labelAdornment={
+        <>
+          {labelAdornment}
+          {(field || absenceAcknowledged) && (
+            <span className="reading-check-label-actions">
+              {field && (
+                <span
+                  className="reading-check-marker"
+                  role="img"
+                  aria-label={t(
+                    "Check this against the original",
+                    "با اصل فاکتور بررسی کنید",
+                  )}
+                  tabIndex={0}
+                  aria-describedby={
+                    helpFocused || helpHovered ? helpId : undefined
+                  }
+                  onFocus={() => setHelpFocused(true)}
+                  onBlur={() => setHelpFocused(false)}
+                  onMouseEnter={() => setHelpHovered(true)}
+                  onMouseLeave={() => setHelpHovered(false)}
+                >
+                  <span aria-hidden="true">!</span>
+                  {(helpFocused || helpHovered) && (
+                    <span
+                      id={helpId}
+                      role="tooltip"
+                      className="reading-check-tooltip reading-ai-tooltip"
+                    >
+                      {hint}
+                    </span>
+                  )}
+                </span>
+              )}
+              {!field && absenceAcknowledged && (
+                <span
+                  className="reading-check-marker-placeholder"
+                  aria-hidden="true"
+                />
+              )}
+              {(canMarkAbsent || absenceAcknowledged) && (
+                <Button
+                  variant="secondary"
+                  size="label"
+                  disabled={absenceAcknowledged}
+                  aria-label={t(
+                    `Not on the invoice: ${props.label}`,
+                    `در فاکتور نیست: ${props.label}`,
+                  )}
+                  onClick={async () => {
+                    if (!field || !context?.onNotOnInvoice) return;
+                    setAbsenceAcknowledged(true);
+                    const acknowledged = await context.onNotOnInvoice(field);
+                    if (!acknowledged) setAbsenceAcknowledged(false);
+                  }}
+                >
+                  {t("Not on the invoice", "در فاکتور نیست")}
+                </Button>
+              )}
             </span>
-            <Button
-              size="sm"
-              variant="secondary"
-              aria-label={`${t("Looks right", "درست است")}: ${props.label}`}
-              onClick={() => context!.onAcknowledge(field)}
-            >
-              {t("Looks right", "درست است")}
-            </Button>
-            {(helpFocused || helpHovered) && (
-              <span
-                id={helpId}
-                role="tooltip"
-                className="reading-check-tooltip"
-              >
-                {hint}
-              </span>
-            )}
-          </div>
-        ) : (
-          props.adornment
-        )
+          )}
+        </>
       }
     />
   );
@@ -308,6 +439,7 @@ function ReadingCheckFields({
           label={t("Charge description", "شرح هزینه")}
         >
           <input
+            id={`${idPrefix}-input-description`}
             value={values.description}
             onChange={(event) => onEdit("description", event.target.value)}
           />
@@ -317,6 +449,7 @@ function ReadingCheckFields({
           label={t("Charge amount", "مبلغ هزینه")}
         >
           <input
+            id={`${idPrefix}-input-line_total`}
             dir="ltr"
             inputMode="decimal"
             value={values.line_total}
@@ -328,6 +461,7 @@ function ReadingCheckFields({
           label={t("Charge taxable", "هزینه مشمول مالیات")}
         >
           <Select
+            id={`${idPrefix}-input-taxable`}
             value={String(values.taxable)}
             onChange={(value) => onEdit("taxable", value)}
             options={[
@@ -364,30 +498,49 @@ export function ReadingUnknownChecks({
   record: object;
 }) {
   const { t } = useDemo();
+  const context = useContext(CheckContext);
+  const labels: Record<string, [string, string]> = {
+    line_type: ["Line type", "نوع ردیف"],
+    pack_size: ["Pack description", "شرح بسته"],
+    import_handwritten_notes: ["Handwritten notes", "یادداشت‌های دست‌نویس"],
+    delivery_reference: ["Delivery reference", "مرجع تحویل"],
+  };
   return (
     <>
       {(fields ?? [])
-        .filter((field) => !known.includes(invoiceCheckField(field)))
-        .map((field) => (
-          <ReadingField
-            key={field}
-            readingField={invoiceCheckField(field)}
-            label={
-              field === "line_type"
-                ? t("Line type", "نوع ردیف")
-                : field.replaceAll("_", " ")
-            }
-          >
-            <input
-              readOnly
-              value={
-                field === "line_type"
-                  ? t("Item", "کالا")
-                  : String((record as Record<string, unknown>)[field] ?? "")
-              }
-            />
-          </ReadingField>
-        ))}
+        .filter(
+          (field) =>
+            !known.includes(invoiceCheckField(field)) &&
+            labels[invoiceCheckField(field)],
+        )
+        .map((field) => {
+          const key = invoiceCheckField(field);
+          return (
+            <ReadingField
+              key={field}
+              readingField={key}
+              label={t(...labels[key])}
+              hint={t(
+                "Compare this reading with the original, then confirm the line or choose Looks right.",
+                "این خوانش را با اصل فاکتور مقایسه کنید، سپس ردیف یا درست است را تأیید کنید.",
+              )}
+            >
+              <input
+                id={`${context?.idPrefix}-input-${key}`}
+                readOnly
+                value={
+                  key === "line_type"
+                    ? t("Item", "کالا")
+                    : String(
+                        (record as Record<string, unknown>)[key] ??
+                          (record as Record<string, unknown>)[field] ??
+                          "",
+                      )
+                }
+              />
+            </ReadingField>
+          );
+        })}
     </>
   );
 }

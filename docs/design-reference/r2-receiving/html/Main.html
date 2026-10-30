@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice review, desktop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f4f5f7}
+a{color:#2b59c3;text-decoration:none}a:hover{color:#1f4699;text-decoration:underline}
+button{font-family:inherit}
+label{min-width:0}input{min-width:0;width:100%}
+@media (max-width:1180px){.orig{order:-1;max-width:none !important;position:static !important}.orig-paper{height:320px !important}}
+</style>
+</head>
+<body>
+<div style="display:flex;min-height:1640px;background:#f4f5f7;color:#141a2b;font-family:Manrope, system-ui, sans-serif;font-size:14px;line-height:20px;font-weight:500">
+
+  <nav aria-label="Main" style="flex:0 0 248px;background:#ffffff;border-right:1px solid #e6e7eb;display:flex;flex-direction:column;padding:20px 16px;box-sizing:border-box;gap:2px">
+    <div style="display:flex;align-items:center;gap:12px;padding:0 4px 22px"><span aria-hidden="true" style="width:48px;height:32px;display:flex;align-items:center;justify-content:center;font-family:Georgia, serif;font-style:italic;font-weight:700;font-size:16px;color:#c8102e">arzon</span><span style="font-weight:700;font-size:16px">Super Arzon</span></div>
+    <button type="button" aria-expanded="true" style="display:flex;align-items:center;justify-content:space-between;height:34px;margin-top:6px;padding:0 12px;border:0;border-radius:10px;background:none;color:#6b7180;font-size:12px;font-weight:600">Daily<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+    <a href="#" style="display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;color:#141a2b;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4 4"></path></svg><span>Lookup</span></a>
+    <a href="#" aria-current="page" style="display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;background:#e9eef9;color:#2b59c3;font-weight:700;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M12 7v10M14.8 9.4c-.3-.9-1.4-1.4-2.8-1.4-1.7 0-2.8.8-2.8 1.9 0 2.7 5.8 1.5 5.8 4.3 0 1.1-1.2 1.9-3 1.9-1.4 0-2.6-.6-2.9-1.6"></path></svg><span style="flex-grow:1">Invoices</span><span aria-label="6 need review" style="font-size:13px;font-weight:700">6</span></a>
+    <a href="#" style="display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;color:#141a2b;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"></path><circle cx="7" cy="18" r="1.6"></circle><circle cx="17" cy="18" r="1.6"></circle></svg><span>Received</span></a>
+    <a href="#" style="display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;color:#141a2b;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"></path><path d="M3.5 3.5v5h5"></path></svg><span>Returns</span></a>
+    <a href="#" style="display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;color:#141a2b;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 3h6v3H9zM9.5 13l2 2 3.5-4"></path></svg><span>Price updates</span></a>
+    <a href="#" style="display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;color:#141a2b;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l9 9-8 8z"></path><circle cx="7.5" cy="7.5" r="1.2"></circle></svg><span>Labels</span></a>
+    <a href="#" style="display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;color:#141a2b;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1"></rect><path d="M5 9v11h14V9M10 13h4"></path></svg><span>Date tracking</span></a>
+    <a href="#" style="display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;color:#141a2b;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"></path></svg><span>Notes</span></a>
+    <a href="#" style="display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:10px;color:#141a2b;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h13M17 5l3 3-3 3M17 16H4M7 13l-3 3 3 3"></path></svg><span>Branch requests</span></a>
+    <button type="button" aria-expanded="false" style="display:flex;align-items:center;justify-content:space-between;height:34px;margin-top:6px;padding:0 12px;border:0;border-radius:10px;background:none;color:#6b7180;font-size:12px;font-weight:600">Catalog<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+    <button type="button" aria-expanded="false" style="display:flex;align-items:center;justify-content:space-between;height:34px;margin-top:6px;padding:0 12px;border:0;border-radius:10px;background:none;color:#6b7180;font-size:12px;font-weight:600">Manager<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+    <button type="button" aria-expanded="false" style="display:flex;align-items:center;justify-content:space-between;height:34px;margin-top:6px;padding:0 12px;border:0;border-radius:10px;background:none;color:#6b7180;font-size:12px;font-weight:600">Admin<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+    <div style="flex-grow:1"></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:16px;background:#f0f1f4"><span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#2b59c3">DO</span><span style="display:flex;flex-direction:column"><span style="font-weight:700">Demo Owner</span><span style="font-size:12px;line-height:16px;color:#5a6070">Owner</span></span></div>
+  </nav>
+
+  <div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column">
+    <header style="height:60px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 24px 0 28px;border-bottom:1px solid #e6e7eb;background:#f4f5f7">
+      <button type="button" aria-label="Collapse sidebar" style="width:36px;height:36px;border-radius:999px;border:0;background:transparent;color:#5a6070;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M9 4v16"></path></svg></button>
+      <div style="display:flex;align-items:center;gap:8px;color:#5a6070;flex-grow:1;min-width:0"><span>North York</span><span aria-hidden="true">›</span><a href="#" style="color:#5a6070">Invoices</a><span aria-hidden="true">›</span><span style="color:#141a2b;font-weight:600">FV-20931</span></div>
+      <div style="width:280px;height:36px;box-sizing:border-box;border-radius:16px;background:#ebedf0;display:flex;align-items:center;gap:8px;padding:0 10px 0 14px;color:#5a6070"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4 4"></path></svg><span style="flex-grow:1">Search products</span><kbd style="font-family:inherit;font-size:12px;padding:1px 7px;border-radius:4px;background:#ffffff;color:#141a2b">/</kbd></div>
+      <button type="button" style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;background:#ffffff;border:0;color:#141a2b;font-size:14px;font-weight:600"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#2b59c3" stroke-width="1.8"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>North York<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+      <button type="button" aria-label="Switch to Persian" style="width:36px;height:36px;border-radius:999px;border:0;background:transparent;color:#5a6070;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">فا</button>
+      <button type="button" aria-label="Switch to dark theme" style="width:36px;height:36px;border-radius:999px;border:0;background:transparent;color:#5a6070;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg></button>
+      <button type="button" aria-label="Text size" style="width:36px;height:36px;border-radius:999px;border:0;background:transparent;color:#5a6070;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">Aa</button>
+      <button type="button" aria-label="Notifications, 11 new" style="position:relative;width:36px;height:36px;border-radius:999px;border:0;background:transparent;color:#5a6070;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20h4"></path></svg><span style="position:absolute;top:0;right:0;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:#2b59c3;color:#ffffff;font-size:11px;line-height:18px;font-weight:700;text-align:center">11</span></button>
+      <button type="button" style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;background:#ffffff;border:0;color:#141a2b;font-size:14px;font-weight:600;background:#ebedf0">Demo<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+    </header>
+
+    <main style="padding:24px 32px 48px;display:flex;flex-direction:column;gap:16px;max-width:1600px;box-sizing:border-box;width:100%">
+      <a href="#" style="display:inline-flex;align-items:center;gap:6px;font-weight:600;align-self:flex-start">← Invoices</a>
+
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:16px">
+        <div style="flex:1 1 480px;min-width:0;display:flex;flex-direction:column;gap:8px">
+          <h1 style="margin:0;font-size:30px;line-height:36px;font-weight:800;letter-spacing:-0.02em">Invoice FV-20931</h1>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;color:#5a6070">
+            <a href="#" style="font-weight:700">Maple Test Produce Ltd.</a>
+            <span aria-hidden="true">·</span><span>North York</span>
+            <span aria-hidden="true">·</span><span>Invoice date 2026-10-14</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;background:#e9eef9;color:#2b59c3;font-size:12px;font-weight:700"><span style="width:6px;height:6px;border-radius:999px;background:#2b59c3"></span>In review</span>
+            <span style="display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;background:#eef0f3;color:#5a6070;font-size:12px;font-weight:600">AI reading · imported, not live</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button type="button" style="height:44px;padding:0 18px;border-radius:12px;border:1px solid #dcdfe5;background:#ffffff;color:#141a2b;font-size:14px;font-weight:700;cursor:pointer">Save and close</button>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <button type="button" aria-disabled="true" style="height:44px;padding:0 20px;border-radius:12px;border:0;background:#eef0f3;color:#5a6070;font-size:14px;font-weight:700;cursor:not-allowed">Post invoice</button>
+          </div>
+        </div>
+      </div>
+
+      <section aria-label="Progress" style="position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding:12px 16px;border-radius:16px;background:#ffffff;box-shadow:0 1px 2px rgba(20,26,43,0.04), 0 4px 16px rgba(20,26,43,0.06)">
+        <div style="display:flex;align-items:center;gap:12px;flex:1 1 360px;min-width:0">
+          <div role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="3" aria-label="Lines confirmed" style="flex:0 0 140px;height:8px;border-radius:999px;background:#eef0f3;overflow:hidden"><div style="width:30%;height:8px;border-radius:999px;background:#1f9d55"></div></div>
+          <span style="font-weight:700">3 of 10 lines confirmed</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;background:#fdf3e2;color:#9a5b00;font-size:12px;font-weight:700"><span style="width:6px;height:6px;border-radius:999px;background:#e08a00"></span>4 fields to check</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;background:#e6f4ec;color:#197d44;font-size:12px;font-weight:700">✓ Totals match</span>
+        </div>
+        <button type="button" style="height:36px;padding:0 14px;border-radius:12px;border:0;background:#e9eef9;color:#2b59c3;font-size:14px;font-weight:700;cursor:pointer">Next to check →</button>
+      </section>
+
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:16px">
+
+        <div style="flex:999 1 640px;min-width:0;display:flex;flex-direction:column;gap:16px">
+
+          <section aria-labelledby="details-h" style="background: #ffffff; border-radius: 20px; padding: 20px 24px 16px; box-shadow: 0 1px 2px rgba(20,26,43,0.04), 0 4px 16px rgba(20,26,43,0.04); display: flex; flex-direction: column; gap: 16px; position: relative">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <h2 id="details-h" style="margin:0;font-size:20px;line-height:26px;font-weight:800">Invoice details</h2>
+              <button type="button" style="height:36px;padding:0 14px;border-radius:12px;border:0;background:#e9eef9;color:#2b59c3;font-size:14px;font-weight:700;cursor:pointer">Looks right</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 16px; position: relative">
+              <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600">Supplier</span><span style="height:44px;box-sizing:border-box;border-radius:12px;border:1px solid #dcdfe5;background:#f0f1f4;display:flex;align-items:center;justify-content:space-between;padding:0 14px;white-space:nowrap;overflow:hidden"><span style="overflow:hidden;text-overflow:ellipsis">Maple Test Produce Ltd.</span><span aria-hidden="true" style="color:#5a6070">⌄</span></span></label>
+              <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600">Invoice number</span><input value="FV-20931" style="height:44px;box-sizing:border-box;border-radius:12px;border:1px solid #dcdfe5;background:#f0f1f4;padding:0 14px;font:inherit;color:#141a2b"></label>
+              <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600">Invoice date</span><input value="2026-10-14" style="height:44px;box-sizing:border-box;border-radius:12px;border:1px solid #dcdfe5;background:#f0f1f4;padding:0 14px;font:inherit;color:#141a2b"></label>
+              <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600">Payment terms <span style="color:#5a6070;font-weight:500">(optional)</span></span><span style="height:44px;box-sizing:border-box;border-radius:12px;border:1px solid #dcdfe5;background:#f0f1f4;display:flex;align-items:center;justify-content:space-between;padding:0 14px">Net 30<span aria-hidden="true" style="color:#5a6070">⌄</span></span></label>
+              <label style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;font-weight:600">Due date <span style="color:#5a6070;font-weight:500">(optional)</span><span tabindex="0" role="img" aria-label="Check this against the original" title="The AI wasn't sure about this value. Compare it with the original." style="display:inline-flex;flex:0 0 auto;width:18px;height:18px;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#fdf3e2" stroke="#e08a00" stroke-width="2"></circle><path d="M12 7.5v5.5" stroke="#9a5b00" stroke-width="2.4" stroke-linecap="round"></path><circle cx="12" cy="16.6" r="1.4" fill="#9a5b00"></circle></svg></span></span><input value="2026-11-13" style="height:44px;box-sizing:border-box;border-radius:12px;border:2px solid #e08a00;background:#ffffff;padding:0 13px;font:inherit;color:#141a2b"></label>
+              <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600">Location</span><span style="height: 44px; display: flex; align-items: center; gap: 10px; position: relative">North York <a href="#" style="font-weight:600">Change</a></span></div>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span style="font-size:13px;font-weight:600">Received</span><span style="min-height:44px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px">Today, 12:34 · Demo Manager <a href="#" style="font-weight:600">Change</a></span></div>
+              <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600">Order <span style="color:#5a6070;font-weight:500">(optional)</span></span><span style="height:44px;box-sizing:border-box;border-radius:12px;border:1px solid #dcdfe5;background:#f0f1f4;display:flex;align-items:center;justify-content:space-between;padding:0 14px">No linked order<span aria-hidden="true" style="color:#5a6070">⌄</span></span></label>
+            <div style="box-sizing: border-box; display: flex; flex-direction: column; width: 120px; height: 120px; background-color: transparent; border-radius: 8px; position: absolute; left: 416px; top: 157px; width: 235px; height: 114px"></div></div>
+            <button type="button" style="align-self:flex-start;height:32px;padding:0;border:0;background:none;color:#2b59c3;font-size:14px;font-weight:700;cursor:pointer">More details ⌄</button>
+          <div style="box-sizing: border-box; display: flex; flex-direction: column; width: 120px; height: 120px; background-color: transparent; border-radius: 8px; position: absolute; left: 506px; top: 290px; width: 183px; height: 91px"></div></section>
+
+          <section aria-labelledby="lines-h" style="background:#ffffff;border-radius:20px;padding:20px 24px 12px;box-shadow:0 1px 2px rgba(20,26,43,0.04), 0 4px 16px rgba(20,26,43,0.04);display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
+              <h2 id="lines-h" style="margin:0;font-size:20px;line-height:26px;font-weight:800">Invoice lines <span style="color:#5a6070;font-weight:600;font-size:15px">10</span></h2>
+              <div role="group" aria-label="Show" style="display:flex;gap:4px;padding:4px;border-radius:14px;background:#ebedf0">
+                <button type="button" aria-pressed="true" style="height:32px;padding:0 12px;border-radius:10px;border:0;background:#ffffff;color:#141a2b;font-weight:700;font-size:13px;box-shadow:0 1px 3px rgba(20,26,43,0.1)">All 10</button>
+                <button type="button" aria-pressed="false" style="height:32px;padding:0 12px;border-radius:10px;border:0;background:transparent;color:#5a6070;font-weight:600;font-size:13px">Needs attention 7</button>
+                <button type="button" aria-pressed="false" style="height:32px;padding:0 12px;border-radius:10px;border:0;background:transparent;color:#5a6070;font-weight:600;font-size:13px">Confirmed 3</button>
+              </div>
+            </div>
+            <table style="width:100%;border-collapse:separate;border-spacing:0 4px;table-layout:fixed">
+
+              <thead>
+                <tr style="font-size:12px;line-height:16px;font-weight:600;color:#6b7180;text-align:start">
+                  <th scope="col" style="width:28px;text-align:start;padding:0 8px 4px 12px;font-weight:600">#</th>
+                  <th scope="col" style="text-align:start;padding:0 8px 4px;font-weight:600">Product</th>
+                  <th scope="col" style="width:136px;text-align:start;padding:0 8px 4px;font-weight:600">Quantity</th>
+                  <th scope="col" style="width:80px;text-align:end;padding:0 8px 4px;font-weight:600">Unit cost</th>
+                  <th scope="col" style="width:76px;text-align:end;padding:0 12px 4px 8px;font-weight:600">Line total</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                  <tr style="background:#e6f4ec;cursor:pointer">
+                    <td style="padding:10px 8px 10px 12px;border-radius:12px 0 0 12px;vertical-align:top">
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Confirmed"><circle cx="12" cy="12" r="10" fill="#1f9d55"></circle><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+
+
+                        <span style="color:#5a6070;font-variant-numeric:tabular-nums">1</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;min-width:0">
+                      <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Basmati Rice Gold 10 lb</div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:2px;font-size:12px;line-height:16px;color:#5a6070">
+                        <span>MTP-RB10</span>
+                        <span style="color:#141a2b;font-weight:600">· Rice</span>
+
+                        <span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:6px;background:#e9eef9;color:#2b59c3;font-weight:700">New product</span>
+
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;font-variant-numeric:tabular-nums">
+                      <div style="white-space:nowrap">2 cases × 4</div><div style="font-size:12px;line-height:16px;color:#5a6070">8 units</div>
+
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;text-align:end;font-variant-numeric:tabular-nums">$11.2500</td>
+                    <td style="padding:10px 12px 10px 8px;border-radius:0 12px 12px 0;vertical-align:top;text-align:end;font-weight:700;font-variant-numeric:tabular-nums">$90.00</td>
+                  </tr>
+
+                  <tr style="background:#e6f4ec;cursor:pointer">
+                    <td style="padding:10px 8px 10px 12px;border-radius:12px 0 0 12px;vertical-align:top">
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Confirmed"><circle cx="12" cy="12" r="10" fill="#1f9d55"></circle><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+
+
+                        <span style="color:#5a6070;font-variant-numeric:tabular-nums">2</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;min-width:0">
+                      <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sour Cherry Jam 12 × 290 g</div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:2px;font-size:12px;line-height:16px;color:#5a6070">
+                        <span>MTP-JM29</span>
+                        <span style="color:#141a2b;font-weight:600">· Grocery</span>
+
+
+
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;font-variant-numeric:tabular-nums">
+                      <div style="white-space:nowrap">1 case × 12</div><div style="font-size:12px;line-height:16px;color:#5a6070">12 units</div>
+
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;text-align:end;font-variant-numeric:tabular-nums">$2.9000</td>
+                    <td style="padding:10px 12px 10px 8px;border-radius:0 12px 12px 0;vertical-align:top;text-align:end;font-weight:700;font-variant-numeric:tabular-nums">$34.80</td>
+                  </tr>
+
+                  <tr style="background:#fffaf1;cursor:pointer">
+                    <td style="padding:10px 8px 10px 12px;border-radius:12px 0 0 12px;vertical-align:top">
+                      <div style="display:flex;align-items:center;gap:8px">
+
+                        <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Fields to check"><circle cx="12" cy="12" r="9" fill="#fdf3e2" stroke="#e08a00" stroke-width="2"></circle><path d="M12 7.5v5.5" stroke="#9a5b00" stroke-width="2.2" stroke-linecap="round"></path><circle cx="12" cy="16.5" r="1.3" fill="#9a5b00"></circle></svg>
+
+                        <span style="color:#5a6070;font-variant-numeric:tabular-nums">3</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;min-width:0">
+                      <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Pickled Cucumbers 12 × 660 g</div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:2px;font-size:12px;line-height:16px;color:#5a6070">
+                        <span>MTP-PC66</span>
+
+                        <span style="color:#9a5b00;font-weight:700">· Choose a category</span>
+                        <span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:6px;background:#e9eef9;color:#2b59c3;font-weight:700">New product</span>
+                        <span style="color:#9a5b00;font-weight:700">· 2 to check</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;font-variant-numeric:tabular-nums">
+                      <div style="white-space:nowrap">1 case × 12</div><div style="font-size:12px;line-height:16px;color:#5a6070">12 units</div>
+
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;text-align:end;font-variant-numeric:tabular-nums">$3.1500</td>
+                    <td style="padding:10px 12px 10px 8px;border-radius:0 12px 12px 0;vertical-align:top;text-align:end;font-weight:700;font-variant-numeric:tabular-nums">$37.80</td>
+                  </tr>
+
+                  <tr style="background:#ffffff;cursor:pointer">
+                    <td style="padding:10px 8px 10px 12px;border-radius:12px 0 0 12px;vertical-align:top">
+                      <div style="display:flex;align-items:center;gap:8px">
+
+
+                        <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Not confirmed"><circle cx="12" cy="12" r="9" fill="none" stroke="#c4c8d0" stroke-width="2"></circle></svg>
+                        <span style="color:#5a6070;font-variant-numeric:tabular-nums">4</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;min-width:0">
+                      <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Green Tea Loose 6 × 450 g</div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:2px;font-size:12px;line-height:16px;color:#5a6070">
+                        <span>MTP-GT45</span>
+                        <span style="color:#141a2b;font-weight:600">· Grocery</span>
+
+
+
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;font-variant-numeric:tabular-nums">
+                      <div style="white-space:nowrap">1 case × 6</div><div style="font-size:12px;line-height:16px;color:#5a6070">6 units</div>
+
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;text-align:end;font-variant-numeric:tabular-nums">$9.5000</td>
+                    <td style="padding:10px 12px 10px 8px;border-radius:0 12px 12px 0;vertical-align:top;text-align:end;font-weight:700;font-variant-numeric:tabular-nums">$57.00</td>
+                  </tr>
+
+                  <tr style="background:#ffffff;cursor:pointer">
+                    <td style="padding:10px 8px 10px 12px;border-radius:12px 0 0 12px;vertical-align:top">
+                      <div style="display:flex;align-items:center;gap:8px">
+
+
+                        <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Not confirmed"><circle cx="12" cy="12" r="9" fill="none" stroke="#c4c8d0" stroke-width="2"></circle></svg>
+                        <span style="color:#5a6070;font-variant-numeric:tabular-nums">5</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;min-width:0">
+                      <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Dried Barberries 24 × 100 g</div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:2px;font-size:12px;line-height:16px;color:#5a6070">
+                        <span>MTP-DB10</span>
+                        <span style="color:#141a2b;font-weight:600">· Grocery</span>
+
+
+
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;font-variant-numeric:tabular-nums">
+                      <div style="white-space:nowrap">1 case × 24</div><div style="font-size:12px;line-height:16px;color:#5a6070">24 units</div>
+                      <div style="font-size:12px;line-height:16px;font-weight:700;color:#b42318;margin-top:2px;white-space:nowrap">Delivered 20 · short 4</div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;text-align:end;font-variant-numeric:tabular-nums">$2.2500</td>
+                    <td style="padding:10px 12px 10px 8px;border-radius:0 12px 12px 0;vertical-align:top;text-align:end;font-weight:700;font-variant-numeric:tabular-nums">$54.00</td>
+                  </tr>
+
+                  <tr style="background:#ffffff;cursor:pointer">
+                    <td style="padding:10px 8px 10px 12px;border-radius:12px 0 0 12px;vertical-align:top">
+                      <div style="display:flex;align-items:center;gap:8px">
+
+
+                        <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Not confirmed"><circle cx="12" cy="12" r="9" fill="none" stroke="#c4c8d0" stroke-width="2"></circle></svg>
+                        <span style="color:#5a6070;font-variant-numeric:tabular-nums">6</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;min-width:0">
+                      <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Saffron Cookies 6 × 900 g</div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:2px;font-size:12px;line-height:16px;color:#5a6070">
+                        <span>MTP-SC90</span>
+                        <span style="color:#141a2b;font-weight:600">· Grocery (Taxable)</span>
+
+                        <span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:6px;background:#e9eef9;color:#2b59c3;font-weight:700">New product</span>
+
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;font-variant-numeric:tabular-nums">
+                      <div style="white-space:nowrap">1 case × 6</div><div style="font-size:12px;line-height:16px;color:#5a6070">6 units</div>
+
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;text-align:end;font-variant-numeric:tabular-nums">$4.0000</td>
+                    <td style="padding:10px 12px 10px 8px;border-radius:0 12px 12px 0;vertical-align:top;text-align:end;font-weight:700;font-variant-numeric:tabular-nums">$24.00</td>
+                  </tr>
+
+                  <tr style="background:#e6f4ec;cursor:pointer">
+                    <td style="padding:10px 8px 10px 12px;border-radius:12px 0 0 12px;vertical-align:top">
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Confirmed"><circle cx="12" cy="12" r="10" fill="#1f9d55"></circle><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+
+
+                        <span style="color:#5a6070;font-variant-numeric:tabular-nums">7</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;min-width:0">
+                      <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Rose Water 24 × 300 ml</div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:2px;font-size:12px;line-height:16px;color:#5a6070">
+                        <span>MTP-RW30</span>
+                        <span style="color:#141a2b;font-weight:600">· Grocery</span>
+
+
+
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;font-variant-numeric:tabular-nums">
+                      <div style="white-space:nowrap">1 case × 24</div><div style="font-size:12px;line-height:16px;color:#5a6070">24 units</div>
+
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;text-align:end;font-variant-numeric:tabular-nums">$1.9600</td>
+                    <td style="padding:10px 12px 10px 8px;border-radius:0 12px 12px 0;vertical-align:top;text-align:end;font-weight:700;font-variant-numeric:tabular-nums">$47.04</td>
+                  </tr>
+
+                  <tr style="background:#fffaf1;cursor:pointer">
+                    <td style="padding:10px 8px 10px 12px;border-radius:12px 0 0 12px;vertical-align:top">
+                      <div style="display:flex;align-items:center;gap:8px">
+
+                        <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Fields to check"><circle cx="12" cy="12" r="9" fill="#fdf3e2" stroke="#e08a00" stroke-width="2"></circle><path d="M12 7.5v5.5" stroke="#9a5b00" stroke-width="2.2" stroke-linecap="round"></path><circle cx="12" cy="16.5" r="1.3" fill="#9a5b00"></circle></svg>
+
+                        <span style="color:#5a6070;font-variant-numeric:tabular-nums">8</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;min-width:0">
+                      <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Walnut Halves, bulk</div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:2px;font-size:12px;line-height:16px;color:#5a6070">
+                        <span>MTP-WH25</span>
+
+                        <span style="color:#9a5b00;font-weight:700">· Choose a category</span>
+                        <span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:6px;background:#e9eef9;color:#2b59c3;font-weight:700">New product</span>
+                        <span style="color:#9a5b00;font-weight:700">· 1 to check</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;font-variant-numeric:tabular-nums">
+                      <div style="white-space:nowrap">25 lb</div><div style="font-size:12px;line-height:16px;color:#5a6070"></div>
+
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;text-align:end;font-variant-numeric:tabular-nums">$4.1200 /lb</td>
+                    <td style="padding:10px 12px 10px 8px;border-radius:0 12px 12px 0;vertical-align:top;text-align:end;font-weight:700;font-variant-numeric:tabular-nums">$103.00</td>
+                  </tr>
+
+                  <tr style="background:#ffffff;cursor:pointer">
+                    <td style="padding:10px 8px 10px 12px;border-radius:12px 0 0 12px;vertical-align:top">
+                      <div style="display:flex;align-items:center;gap:8px">
+
+
+                        <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Not confirmed"><circle cx="12" cy="12" r="9" fill="none" stroke="#c4c8d0" stroke-width="2"></circle></svg>
+                        <span style="color:#5a6070;font-variant-numeric:tabular-nums">9</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;min-width:0">
+                      <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chickpeas 12 × 454 g</div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:2px;font-size:12px;line-height:16px;color:#5a6070">
+                        <span>MTP-CP45</span>
+                        <span style="color:#141a2b;font-weight:600">· Grocery</span>
+
+
+
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;font-variant-numeric:tabular-nums">
+                      <div style="white-space:nowrap">1 case × 12</div><div style="font-size:12px;line-height:16px;color:#5a6070">12 units</div>
+
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;text-align:end;font-variant-numeric:tabular-nums">$1.5000</td>
+                    <td style="padding:10px 12px 10px 8px;border-radius:0 12px 12px 0;vertical-align:top;text-align:end;font-weight:700;font-variant-numeric:tabular-nums">$18.00</td>
+                  </tr>
+
+                  <tr style="background:#ffffff;cursor:pointer">
+                    <td style="padding:10px 8px 10px 12px;border-radius:12px 0 0 12px;vertical-align:top">
+                      <div style="display:flex;align-items:center;gap:8px">
+
+
+                        <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Not confirmed"><circle cx="12" cy="12" r="9" fill="none" stroke="#c4c8d0" stroke-width="2"></circle></svg>
+                        <span style="color:#5a6070;font-variant-numeric:tabular-nums">10</span>
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;min-width:0">
+                      <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sunflower Seeds Roasted 20 × 200 g</div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:2px;font-size:12px;line-height:16px;color:#5a6070">
+                        <span>MTP-SS20</span>
+                        <span style="color:#141a2b;font-weight:600">· Grocery</span>
+
+                        <span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:6px;background:#e9eef9;color:#2b59c3;font-weight:700">New product</span>
+
+                      </div>
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;font-variant-numeric:tabular-nums">
+                      <div style="white-space:nowrap">1 case × 20</div><div style="font-size:12px;line-height:16px;color:#5a6070">20 units</div>
+
+                    </td>
+                    <td style="padding:10px 8px;vertical-align:top;text-align:end;font-variant-numeric:tabular-nums">$1.2000</td>
+                    <td style="padding:10px 12px 10px 8px;border-radius:0 12px 12px 0;vertical-align:top;text-align:end;font-weight:700;font-variant-numeric:tabular-nums">$24.00</td>
+                  </tr>
+
+              </tbody>
+            </table>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0 4px;border-top:1px solid #eef0f3">
+              <label style="flex:1 1 280px;display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600">Add a line</span><input placeholder="Search products by name, code or barcode" style="height:44px;box-sizing:border-box;border-radius:12px;border:1px solid #dcdfe5;background:#f0f1f4;padding:0 14px;font:inherit;color:#141a2b"></label>
+              <button type="button" style="align-self:flex-end;height:44px;padding:0 16px;border-radius:12px;border:1px solid #dcdfe5;background:#ffffff;color:#141a2b;font-size:14px;font-weight:700">Add line</button>
+              <a href="#" style="align-self:flex-end;line-height:44px;font-weight:700">+ New product</a>
+            </div>
+          </section>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+            <section aria-labelledby="other-h" style="flex:1 1 300px;background:#ffffff;border-radius:20px;padding:20px 24px;box-shadow:0 1px 2px rgba(20,26,43,0.04), 0 4px 16px rgba(20,26,43,0.04);display:flex;flex-direction:column;gap:10px">
+              <h2 id="other-h" style="margin:0;font-size:15px;line-height:20px;font-weight:700">Other charges and credits</h2>
+              <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #eef0f3"><span>Bottle deposit · 24 × $0.10</span><span style="font-variant-numeric:tabular-nums">$2.40</span></div>
+              <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0"><span>Discount on jam</span><span style="font-variant-numeric:tabular-nums">−$3.00</span></div>
+            </section>
+            <section aria-labelledby="totals-h" style="flex:1 1 340px;background:#ffffff;border-radius:20px;padding:20px 24px;box-shadow:0 1px 2px rgba(20,26,43,0.04), 0 4px 16px rgba(20,26,43,0.04);display:flex;flex-direction:column;gap:2px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+                <h2 id="totals-h" style="margin:0;font-size:15px;line-height:20px;font-weight:700">Totals</h2>
+                <button type="button" style="height:32px;padding:0 12px;border-radius:10px;border:0;background:#e9eef9;color:#2b59c3;font-size:13px;font-weight:700">Looks right</button>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;color:#5a6070"><span>Items</span><span style="font-variant-numeric:tabular-nums;color:#141a2b">$489.64</span></div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;color:#5a6070"><span>Other charges and credits</span><span style="font-variant-numeric:tabular-nums;color:#141a2b">−$0.60</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0"><span style="display:flex;align-items:center;gap:8px">Subtotal <span style="display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;background:#fdf3e2;color:#9a5b00;font-size:12px;font-weight:700">Calculated · not on the paper</span></span><span style="font-variant-numeric:tabular-nums;font-weight:700">$489.04</span></div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;color:#5a6070"><span>Tax</span><span style="font-variant-numeric:tabular-nums;color:#141a2b">$3.12</span></div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eef0f3"><span style="font-weight:700">Invoice total</span><span style="font-variant-numeric:tabular-nums;font-weight:700">$492.16</span></div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;color:#b42318"><span>Short: Dried Barberries, 4 units</span><span style="font-variant-numeric:tabular-nums">−$9.00</span></div>
+              <div style="display:flex;justify-content:space-between;padding:10px 0 0"><span style="font-size:15px;font-weight:800">Payable</span><span style="font-size:20px;line-height:26px;font-weight:800;font-variant-numeric:tabular-nums">$483.16</span></div>
+            </section>
+          </div>
+        </div>
+
+        <aside class="orig" aria-labelledby="orig-h" style="flex:1 1 380px;min-width:0;max-width:560px;position:sticky;top:76px;background:#ffffff;border-radius:20px;padding:16px;box-shadow:0 1px 2px rgba(20,26,43,0.04), 0 4px 16px rgba(20,26,43,0.04);display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <h2 id="orig-h" style="margin:0;font-size:15px;line-height:20px;font-weight:700">Original invoice</h2>
+            <button type="button" style="height:32px;padding:0 12px;border-radius:10px;border:0;background:#eef0f3;color:#141a2b;font-size:13px;font-weight:700">Hide</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:2px;padding:2px;border-radius:12px;background:#f0f1f4">
+              <button type="button" aria-label="Previous page" style="width:32px;height:32px;border-radius:10px;border:0;background:transparent;color:#5a6070">‹</button>
+              <span style="padding:0 6px;font-size:13px;font-weight:600;white-space:nowrap">Page 1 of 2</span>
+              <button type="button" aria-label="Next page" style="width:32px;height:32px;border-radius:10px;border:0;background:#ffffff;color:#141a2b">›</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:2px;padding:2px;border-radius:12px;background:#f0f1f4">
+              <button type="button" aria-label="Zoom out" style="width:32px;height:32px;border-radius:10px;border:0;background:transparent">−</button>
+              <span style="font-size:13px;font-weight:600;min-width:44px;text-align:center">100%</span>
+              <button type="button" aria-label="Zoom in" style="width:32px;height:32px;border-radius:10px;border:0;background:transparent">+</button>
+            </div>
+            <button type="button" aria-label="Fit width" title="Fit width" style="width:36px;height:36px;border-radius:12px;border:0;background:#f0f1f4"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#141a2b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"></path></svg></button>
+            <span style="flex-grow:1"></span>
+            <button type="button" aria-label="Rotate" style="width:36px;height:36px;border-radius:12px;border:0;background:#f0f1f4">⟳</button>
+            <button type="button" aria-label="More" style="width:36px;height:36px;border-radius:12px;border:0;background:#f0f1f4">⋯</button>
+          </div>
+          <div class="orig-paper" aria-label="Invoice photo" style="border-radius:12px;background:#eef0f3;padding:14px;height:820px;box-sizing:border-box;overflow:hidden">
+            <div style="background:#ffffff;height:100%;border-radius:4px;box-shadow:0 1px 3px rgba(20,26,43,0.12);padding:22px 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;font-family:Georgia, serif;color:#2b2f3a">
+              <div style="display:flex;justify-content:space-between"><span style="font-size:15px;font-weight:700">Maple Test Produce Ltd.</span><span style="font-size:15px;font-weight:700">INVOICE</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;line-height:14px;color:#5a6070"><span>12 Example Rd, Testville</span><span>No. FV-20931 · 2026-10-14</span></div>
+              <div style="height:1px;background:#c4c8d0"></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Basmati Rice Gold 10lb</span><span style="width:40px;text-align:end">2</span><span style="width:56px;text-align:end">90.00</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Sour Cherry Jam 12x290g</span><span style="width:40px;text-align:end">1</span><span style="width:56px;text-align:end">34.80</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Pickled Cucumbers 12x660g</span><span style="width:40px;text-align:end">1</span><span style="width:56px;text-align:end">37.80</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Green Tea Loose 6x450g</span><span style="width:40px;text-align:end">1</span><span style="width:56px;text-align:end">57.00</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Dried Barberries 24x100g</span><span style="width:40px;text-align:end">1</span><span style="width:56px;text-align:end">54.00</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Saffron Cookies 6x900g</span><span style="width:40px;text-align:end">1</span><span style="width:56px;text-align:end">24.00</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Rose Water 24x300ml</span><span style="width:40px;text-align:end">1</span><span style="width:56px;text-align:end">47.04</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Walnut Halves 25lb</span><span style="width:40px;text-align:end">25</span><span style="width:56px;text-align:end">103.00</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Chickpeas 12x454g</span><span style="width:40px;text-align:end">1</span><span style="width:56px;text-align:end">18.00</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Sunflower Seeds 20x200g</span><span style="width:40px;text-align:end">1</span><span style="width:56px;text-align:end">24.00</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Bottle deposit</span><span style="width:40px;text-align:end">24</span><span style="width:56px;text-align:end">2.40</span></div>
+
+                <div style="display:flex;gap:8px;font-size:10px;line-height:14px"><span style="flex:1 1 0">Discount on jam</span><span style="width:40px;text-align:end"></span><span style="width:56px;text-align:end">-3.00</span></div>
+
+              <div style="height:1px;background:#c4c8d0"></div>
+              <div style="display:flex;justify-content:flex-end;gap:24px;font-size:11px"><span>Tax $3.12</span><span style="font-weight:700">Total $492.16</span></div>
+            </div>
+          </div>
+          <span style="font-size:12px;line-height:16px;color:#5a6070;direction:ltr">fv-20931-page-1.jpeg</span>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+</body>
+</html>

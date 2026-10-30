@@ -5,6 +5,7 @@ import Decimal from "decimal.js";
 import { ArrowLeft } from "lucide-react";
 import { useDemo } from "../store";
 import { branchLabel as configuredBranchLabel } from "../settings";
+import { supplierMatchesFilters } from "../supplier-list";
 import { supplierMatches, deactivateSupplier } from "../supplier-editor";
 import { SupplierEditor } from "./SupplierEditor";
 import SupplierItems from "./SupplierItems";
@@ -23,6 +24,7 @@ import {
   LtrText,
   LtrValue,
   Money,
+  NotAdded,
   ProductName,
 } from "../presentation";
 import {
@@ -36,7 +38,6 @@ import {
   EmptyState,
   FilterToolbar,
   FilterChip,
-  KpiCard,
   PageHeader,
   Select,
   Tabs,
@@ -44,6 +45,7 @@ import {
   useTableColumns,
   useListFilterOrigin,
 } from "../ui";
+import { SummaryTile } from "../SummaryTile";
 import { useProtectedQuery } from "../use-protected-query";
 import "./suppliers-a2.css";
 import { companyDate, dateAfter } from "../invoice";
@@ -86,7 +88,13 @@ export default function Suppliers() {
     command,
   } = useDemo();
   const branches = locationIds;
-  const [editor, setEditor] = useState<"new" | "edit" | null>(null);
+  const [editor, setEditor] = useState<"new" | "edit" | null>(() =>
+    new URLSearchParams(window.location.hash.split("?")[1] ?? "").get(
+      "edit",
+    ) === "1"
+      ? "edit"
+      : null,
+  );
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
   const [query, setQuery] = useListState("suppliers.search", "");
   const { locationChanged: locationFilterChanged, resetLocation } =
@@ -105,6 +113,12 @@ export default function Suppliers() {
   );
   useEffect(() => {
     const changed = () => {
+      if (
+        new URLSearchParams(window.location.hash.split("?")[1] ?? "").get(
+          "edit",
+        ) === "1"
+      )
+        setEditor("edit");
       setName(
         new URLSearchParams(window.location.hash.split("?")[1] ?? "").get(
           "name",
@@ -157,9 +171,10 @@ export default function Suppliers() {
     {
       key: "status",
       priority: 2,
-      minWidth: 120,
+      // Reserve the full profile label, badge inset and shared cell padding.
+      minWidth: 160,
       label: t("Status", "وضعیت"),
-      width: 136,
+      width: 160,
     },
     {
       key: "last_delivery",
@@ -221,9 +236,10 @@ export default function Suppliers() {
           {
             key: "overdue",
             priority: 8,
-            minWidth: 100,
+            // Keep the full sortable caption inside the shared cell padding.
+            minWidth: 128,
             label: t("Overdue", "سررسید گذشته"),
-            width: 120,
+            width: 128,
             align: "end" as const,
           },
           {
@@ -267,34 +283,28 @@ export default function Suppliers() {
   );
   const branchName = (value: string) =>
     configuredBranchLabel(state.config, value, lang);
-  const supplierStatus = (value: string) =>
-    value === "proposed"
-      ? t("Proposed", "پیشنهادی")
-      : t("Confirmed", "تأییدشده");
+  const supplierStatus = (supplier: SupplierOverviewRow) =>
+    supplier.active === false
+      ? t("Archived", "بایگانی‌شده")
+      : supplier.profile_missing.length
+        ? t("Profile incomplete", "مشخصات ناقص")
+        : t("Active", "فعال");
   const invoiceStatus = (value: string) =>
     value === "posted" ? t("Posted", "ثبت‌شده") : t("Draft", "پیش‌نویس");
   const compareValue = (supplier: SupplierOverviewRow, key: SortKey) => {
+    if (key === "status")
+      return supplier.active === false
+        ? "archived"
+        : supplier.profile_missing.length
+          ? "profile_incomplete"
+          : "active";
     if (key === "balance" || key === "overdue")
       return supplier.financial?.[key] ?? "";
     if (key === "next_due_date") return supplier.financial?.next_due_date ?? "";
     return supplier[key] ?? "";
   };
   const rows = overview
-    .filter((supplier) =>
-      supplier.name.toLowerCase().includes(query.toLowerCase().trim()),
-    )
-    .filter((supplier) =>
-      filters.every((filter) =>
-        filter === "overdue"
-          ? !!supplier.financial &&
-            new Decimal(supplier.financial.overdue).gt(0)
-          : filter === "returns"
-            ? supplier.open_returns > 0
-            : filter === "shorts"
-              ? supplier.open_shorts > 0
-              : supplier.status === "proposed",
-      ),
-    )
+    .filter((supplier) => supplierMatchesFilters(supplier, query, filters))
     .sort((a, b) => {
       const left = compareValue(a, sort.key);
       const right = compareValue(b, sort.key);
@@ -312,6 +322,14 @@ export default function Suppliers() {
             : String(left).localeCompare(String(right));
       return sort.descending ? -result : result;
     });
+  const hasFilters = Boolean(
+    query.trim() || filters.length > 0 || locationFilterChanged,
+  );
+  const clearSupplierFilters = () => {
+    setQuery("");
+    setFilters([]);
+    void resetLocation({ "suppliers.search": "", "suppliers.filters": [] });
+  };
   const sortHeader = (key: SortKey, en: string, fa: string) => (
     <button
       className="supplier-sort"
@@ -331,7 +349,7 @@ export default function Suppliers() {
 
   if (!name)
     return (
-      <>
+      <div className="r2c-screen" data-r2c-screen="suppliers">
         <PageHeader
           title={t("Suppliers", "تأمین‌کنندگان")}
           description={t(
@@ -358,15 +376,22 @@ export default function Suppliers() {
             aria-label={t("Supplier filters", "فیلتر تأمین‌کنندگان")}
             count={
               <span className="filter-toolbar-end">
-                <span>
-                  {translateCount(
-                    "{{count}} supplier",
-                    "{{count}} suppliers",
-                    "{{count}} تأمین‌کننده",
-                    "{{count}} تأمین‌کننده",
-                    rows.length,
-                    lang,
-                  )}
+                <span aria-live="polite">
+                  {supplierRead.pending
+                    ? t("Loading suppliers…", "در حال بارگذاری تأمین‌کنندگان…")
+                    : supplierRead.error
+                      ? t(
+                          "Suppliers unavailable",
+                          "تأمین‌کنندگان در دسترس نیستند",
+                        )
+                      : translateCount(
+                          "{{count}} supplier",
+                          "{{count}} suppliers",
+                          "{{count}} تأمین‌کننده",
+                          "{{count}} تأمین‌کننده",
+                          rows.length,
+                          lang,
+                        )}
                 </span>
                 {tableColumns.chooser}
               </span>
@@ -402,7 +427,7 @@ export default function Suppliers() {
               ...(supervisor ? [["overdue", "Overdue", "سررسید گذشته"]] : []),
               ["returns", "Open returns", "مرجوعی‌های باز"],
               ["shorts", "Open shorts", "کسری‌های باز"],
-              ["proposed", "Waiting for confirmation", "در انتظار تأیید"],
+              ["proposed", "Profile incomplete", "مشخصات ناقص"],
             ].map(([key, en, fa]) => (
               <FilterChip
                 key={key}
@@ -419,24 +444,21 @@ export default function Suppliers() {
                 {t(en, fa)}
               </FilterChip>
             ))}
-            {(query || filters.length > 0 || locationFilterChanged) && (
-              <Button
-                variant="plain"
-                size="sm"
-                onClick={() => {
-                  setQuery("");
-                  setFilters([]);
-                  void resetLocation({
-                    "suppliers.search": "",
-                    "suppliers.filters": [],
-                  });
-                }}
-              >
-                {t("Clear filters", "پاک کردن فیلترها")}
-              </Button>
-            )}
+            {hasFilters &&
+              (rows.length > 0 ||
+                supplierRead.pending ||
+                Boolean(supplierRead.error)) && (
+                <Button
+                  variant="plain"
+                  size="sm"
+                  onClick={clearSupplierFilters}
+                >
+                  {t("Clear filters", "پاک کردن فیلترها")}
+                </Button>
+              )}
           </FilterToolbar>
           <DataTable
+            recordDetails
             className={
               supervisor ? "suppliers-table supervisor" : "suppliers-table"
             }
@@ -533,19 +555,22 @@ export default function Suppliers() {
                   <td>
                     <Badge
                       tone={
-                        supplier.status === "confirmed" ? "approved" : "pending"
+                        supplier.active === false
+                          ? "neutral"
+                          : supplier.profile_missing.length
+                            ? "pending"
+                            : "approved"
                       }
                     >
-                      {supplierStatus(supplier.status)}
+                      {supplierStatus(supplier)}
                     </Badge>
-                    {supplier.active === false && (
-                      <Badge tone="neutral">
-                        {t("Archived", "بایگانی‌شده")}
-                      </Badge>
-                    )}
                   </td>
                   <td>
-                    <DateText value={supplier.last_delivery} />
+                    {supplier.last_delivery ? (
+                      <DateText value={supplier.last_delivery} />
+                    ) : (
+                      t("No deliveries yet", "هنوز تحویلی ثبت نشده")
+                    )}
                   </td>
                   <td>{supplier.deliveries_this_month}</td>
                   <td>{supplier.open_returns}</td>
@@ -582,21 +607,44 @@ export default function Suppliers() {
               ))}
             </tbody>
           </DataTable>
-          {rows.length === 0 && !supplierRead.pending && (
-            <EmptyState>
-              {overview.length === 0
-                ? t(
-                    "No suppliers yet; import an invoice or add a supplier to get started.",
-                    "هنوز تأمین‌کننده‌ای وجود ندارد؛ برای شروع یک فاکتور وارد کنید یا تأمین‌کننده‌ای اضافه کنید.",
-                  )
-                : t(
-                    "No suppliers match these filters.",
-                    "هیچ تأمین‌کننده‌ای با این فیلترها پیدا نشد.",
-                  )}
-            </EmptyState>
+          {Boolean(supplierRead.error) && (
+            <div className="banner warning supplier-read-error" role="alert">
+              <span>
+                {t(
+                  "Couldn't load suppliers. Try again.",
+                  "تأمین‌کنندگان بارگذاری نشدند. دوباره تلاش کنید.",
+                )}
+              </span>
+              <Button variant="secondary" onClick={supplierRead.reload}>
+                {t("Try again", "تلاش دوباره")}
+              </Button>
+            </div>
           )}
+          {rows.length === 0 &&
+            !supplierRead.pending &&
+            !supplierRead.error && (
+              <EmptyState
+                action={
+                  hasFilters ? (
+                    <Button variant="plain" onClick={clearSupplierFilters}>
+                      {t("Clear filters", "پاک کردن فیلترها")}
+                    </Button>
+                  ) : undefined
+                }
+              >
+                {overview.length === 0 && !hasFilters
+                  ? t(
+                      "No suppliers yet; import an invoice or add a supplier to get started.",
+                      "هنوز تأمین‌کننده‌ای وجود ندارد؛ برای شروع یک فاکتور وارد کنید یا تأمین‌کننده‌ای اضافه کنید.",
+                    )
+                  : t(
+                      "No suppliers match these filters.",
+                      "هیچ تأمین‌کننده‌ای با این فیلترها پیدا نشد.",
+                    )}
+              </EmptyState>
+            )}
         </Card>
-      </>
+      </div>
     );
   if (supplierRead.pending && name) return null;
   if (!detail || !current)
@@ -631,7 +679,7 @@ export default function Suppliers() {
   const monthTo = dateAfter(nextMonth.toISOString().slice(0, 10), -1);
 
   return (
-    <>
+    <div className="r2c-screen" data-r2c-screen="suppliers">
       <Button
         variant="plain"
         className="supplier-back"
@@ -640,29 +688,46 @@ export default function Suppliers() {
         <ArrowLeft size={16} />
         {t("Back to Suppliers", "بازگشت به تأمین‌کنندگان")}
       </Button>
-      <PageHeader
-        title={<LtrText>{current.name}</LtrText>}
-        description={t("Supplier details", "اطلاعات تأمین‌کننده")}
-        actions={
-          canManage && current.id ? (
-            <div className="actions">
-              <Button variant="neutral" onClick={() => setEditor("edit")}>
-                {t("Edit", "ویرایش")}
-              </Button>
-              {current.active !== false && (
-                <Menu label={t("More", "بیشتر")}>
-                  <MenuItem
-                    className="supplier-destructive-action"
-                    onClick={() => setConfirmDeactivate(true)}
-                  >
-                    {t("Deactivate", "غیرفعال کردن")}
-                  </MenuItem>
-                </Menu>
-              )}
-            </div>
-          ) : undefined
-        }
-      />
+      <header className="page-header supplier-detail-header">
+        <div>
+          <div className="supplier-detail-title">
+            <h1>
+              <LtrText>{current.name}</LtrText>
+            </h1>
+            <Badge
+              tone={
+                current.active === false
+                  ? "neutral"
+                  : current.profile_missing.length
+                    ? "pending"
+                    : "approved"
+              }
+            >
+              {supplierStatus(current)}
+            </Badge>
+          </div>
+          <p className="muted">
+            {t("Supplier details", "اطلاعات تأمین‌کننده")}
+          </p>
+        </div>
+        {canManage && current.id && (
+          <div className="actions">
+            <Button variant="neutral" onClick={() => setEditor("edit")}>
+              {t("Edit", "ویرایش")}
+            </Button>
+            {current.active !== false && (
+              <Menu label={t("More", "بیشتر")}>
+                <MenuItem
+                  className="supplier-destructive-action"
+                  onClick={() => setConfirmDeactivate(true)}
+                >
+                  {t("Deactivate", "غیرفعال کردن")}
+                </MenuItem>
+              </Menu>
+            )}
+          </div>
+        )}
+      </header>
       {editor === "edit" && (
         <SupplierEditor
           supplier={state.suppliers?.find(
@@ -690,67 +755,68 @@ export default function Suppliers() {
           setConfirmDeactivate(false);
         }}
       />
-      <Card className="supplier-header-card">
-        <div className="supplier-header-line">
-          <LtrText className="supplier-header-name">{current.name}</LtrText>
-          <Badge tone={current.status === "confirmed" ? "approved" : "pending"}>
-            {supplierStatus(current.status)}
-          </Badge>
-          {current.active === false && (
-            <Badge tone="neutral">{t("Archived", "بایگانی‌شده")}</Badge>
-          )}
+      <Card className="supplier-header-card supplier-contact-card">
+        <div className="supplier-contact-heading">
+          <h2>{t("Contact details", "اطلاعات تماس")}</h2>
+          {[
+            current.phone,
+            current.email,
+            current.website,
+            current.address,
+            current.sales_rep_name,
+            current.sales_rep_phone,
+            current.payment_terms,
+          ].some((value) => !value?.trim()) &&
+            canManage && (
+              <a
+                href={`#suppliers?name=${encodeURIComponent(current.name)}&edit=1`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setEditor("edit");
+                }}
+              >
+                {t("Complete profile", "تکمیل مشخصات")}
+              </a>
+            )}
         </div>
         <dl className="supplier-contact-grid">
-          <div>
-            <dt>{t("Phone", "تلفن")}</dt>
-            <dd>
-              <LtrValue value={current.phone} />
-            </dd>
-          </div>
-          {current.address && (
-            <div>
-              <dt>{t("Address", "نشانی")}</dt>
+          {(
+            [
+              ["phone", t("Phone", "تلفن")],
+              ["email", t("Email", "ایمیل")],
+              ["website", t("Website", "وب‌سایت")],
+              ["address", t("Address", "نشانی")],
+              ["sales_rep_name", t("Sales representative", "نماینده فروش")],
+              ["sales_rep_phone", t("Sales rep phone", "تلفن نماینده فروش")],
+              ["payment_terms", t("Payment terms", "شرایط پرداخت")],
+            ] as const
+          ).map(([field, label]) => (
+            <div key={field}>
+              <dt>{label}</dt>
               <dd>
-                <bdi dir="auto">{current.address}</bdi>
+                {current[field]?.trim() ? (
+                  <LtrValue value={current[field]} />
+                ) : (
+                  <NotAdded />
+                )}
               </dd>
             </div>
-          )}
-          {current.notes && (
-            <div>
-              <dt>{t("Notes", "یادداشت‌ها")}</dt>
-              <dd>
-                <bdi dir="auto">{current.notes}</bdi>
-              </dd>
-            </div>
-          )}
-          <div>
-            <dt>{t("Email", "ایمیل")}</dt>
-            <dd>
-              <LtrValue value={current.email} />
-            </dd>
-          </div>
-          <div>
-            <dt>{t("Sales representative", "نماینده فروش")}</dt>
-            <dd>
-              <LtrValue value={current.sales_rep_name} />
-            </dd>
-          </div>
-          <div>
-            <dt>{t("Sales rep phone", "تلفن نماینده فروش")}</dt>
-            <dd>
-              <LtrValue value={current.sales_rep_phone} />
-            </dd>
-          </div>
-          <div>
-            <dt>{t("Payment terms", "شرایط پرداخت")}</dt>
-            <dd>
-              <LtrValue value={current.payment_terms} />
-            </dd>
-          </div>
+          ))}
         </dl>
+        {current.source_invoice_number && (
+          <p className="supplier-contact-source muted">
+            {t("Added from invoice", "افزوده‌شده از فاکتور")}{" "}
+            <LtrValue value={current.source_invoice_number} />
+          </p>
+        )}
+        {current.notes && (
+          <p className="supplier-contact-source">
+            <bdi dir="auto">{current.notes}</bdi>
+          </p>
+        )}
       </Card>
       <div className="stats-grid supplier-kpis">
-        <KpiCard
+        <SummaryTile
           label={t("Last delivery", "آخرین تحویل")}
           onClick={
             latestInvoice
@@ -760,10 +826,21 @@ export default function Suppliers() {
                   )
               : undefined
           }
-          value={<DateText value={current.last_delivery} />}
-          tone="accent"
+          value={
+            current.last_delivery ? (
+              <DateText value={current.last_delivery} />
+            ) : (
+              <NotAdded />
+            )
+          }
+          detail={
+            latestInvoice
+              ? t("Open latest invoice", "باز کردن آخرین فاکتور")
+              : t("No deliveries yet", "هنوز تحویلی ثبت نشده")
+          }
+          tone={latestInvoice ? "approved" : "accent"}
         />
-        <KpiCard
+        <SummaryTile
           label={t("Deliveries this month", "تحویل‌های این ماه")}
           onClick={() =>
             navigate(
@@ -771,9 +848,10 @@ export default function Suppliers() {
             )
           }
           value={current.deliveries_this_month}
-          tone="charcoal"
+          detail={t("Posted invoices this month", "فاکتورهای ثبت‌شدهٔ این ماه")}
+          tone={current.deliveries_this_month ? "accent" : "approved"}
         />
-        <KpiCard
+        <SummaryTile
           label={t("Open returns", "مرجوعی‌های باز")}
           onClick={() =>
             navigate(
@@ -781,9 +859,10 @@ export default function Suppliers() {
             )
           }
           value={current.open_returns}
-          tone="accent"
+          detail={t("Waiting for resolution", "در انتظار رسیدگی")}
+          tone={current.open_returns ? "pending" : "approved"}
         />
-        <KpiCard
+        <SummaryTile
           label={
             supervisor
               ? t("Balance", "مانده")
@@ -794,7 +873,32 @@ export default function Suppliers() {
               ? money(current.financial.balance)
               : current.open_shorts
           }
-          tone="charcoal"
+          detail={
+            supervisor
+              ? current.financial?.has_statement
+                ? t("Open supplier statement", "باز کردن صورت‌حساب تأمین‌کننده")
+                : t("No statement yet", "هنوز صورت‌حسابی ثبت نشده")
+              : t("Items waiting for delivery", "کالاهای در انتظار تحویل")
+          }
+          onClick={
+            supervisor
+              ? current.financial?.has_statement
+                ? () =>
+                    navigate(
+                      `payables?supplier=${encodeURIComponent(current.id ?? current.name)}`,
+                    )
+                : undefined
+              : () => setTab("shorts")
+          }
+          tone={
+            supervisor &&
+            current.financial &&
+            new Decimal(current.financial.overdue).gt(0)
+              ? "danger"
+              : current.open_shorts
+                ? "pending"
+                : "approved"
+          }
         />
       </div>
       <div className="supplier-tabs">
@@ -934,9 +1038,7 @@ export default function Suppliers() {
         {effectiveTab === "products" && (
           <SupplierItems
             supplier={current.name}
-            editable={
-              current.active !== false && current.status === "confirmed"
-            }
+            editable={current.active !== false}
           />
         )}
         {effectiveTab === "returns" && (
@@ -1155,6 +1257,6 @@ export default function Suppliers() {
           </EmptyState>
         )}
       </Card>
-    </>
+    </div>
   );
 }

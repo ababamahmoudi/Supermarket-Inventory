@@ -1,13 +1,15 @@
 import Decimal from "decimal.js";
+import {
+  effectiveRoundingBands,
+  type RoundingBands,
+} from "./pricing-ending-rule";
 import { configSeed as seedConfig } from "./config";
 
 // A local constructor keeps other modules from changing the engine's precision.
 const Money = Decimal.clone({ precision: 80, rounding: Decimal.ROUND_HALF_UP });
 type SeedCategory = (typeof seedConfig.pricing_categories)[number];
-export type PricingConfig = Pick<
-  typeof seedConfig,
-  "rounding_bands" | "special_corrections"
-> & {
+export type PricingConfig = Pick<typeof seedConfig, "special_corrections"> & {
+  rounding_bands: RoundingBands;
   pricing_categories: (Omit<SeedCategory, "minimum_margin"> & {
     minimum_margin: string | null;
   })[];
@@ -19,6 +21,8 @@ export type PricingResult = {
   rounded_raw: string;
   after_band_rounding: string | null;
   special_correction_applied: boolean;
+  /** Actual pre-adjustment selling amount, never the cost/divisor quotient. */
+  rounded_up_from: string | null;
   margin: string | null;
   below_minimum_margin: boolean;
 };
@@ -113,6 +117,23 @@ export function validatePricingConfig(config: PricingConfig): void {
     "invalid_minimum",
   );
 
+  const adjustment = effectiveRoundingBands(config).final_ending_adjustment;
+  if (adjustment !== null) {
+    if (
+      typeof adjustment !== "object" ||
+      !Array.isArray(adjustment.source_endings)
+    )
+      throw new PricingValidationError("invalid_ending");
+    const target = ending(adjustment.target_ending);
+    const sources = new Set<string>();
+    for (const source of adjustment.source_endings) {
+      const amount = ending(source);
+      if (amount.gte(target) || sources.has(amount.toFixed(2)))
+        throw new PricingValidationError("invalid_ending");
+      sources.add(amount.toFixed(2));
+    }
+  }
+
   const corrections = new Set<string>();
   for (const correction of config.special_corrections) {
     const from = centAmount(correction.from, "invalid_correction").toFixed(2);
@@ -123,24 +144,28 @@ export function validatePricingConfig(config: PricingConfig): void {
   }
 }
 
-/** One configuration-driven engine for live previews and invoice calculations. */
-export function calculatePrice(
-  costInput: string,
+/** Apply a category's normal rounding to an already calculated selling amount. */
+export function roundCategoryPrice(
+  rawInput: string,
   categoryKey: string,
   config: PricingConfig = seedConfig,
   options: { skip_band_rounding?: boolean } = {},
-): PricingResult {
-  const cost = decimal(costInput, "invalid_cost");
-  const fractionalDigits = costInput.trim().split(".")[1]?.length ?? 0;
-  if (cost.lt("0") || fractionalDigits > 4)
-    throw new PricingValidationError("invalid_cost");
+): Pick<
+  PricingResult,
+  | "selling_price"
+  | "raw_price"
+  | "rounded_raw"
+  | "after_band_rounding"
+  | "special_correction_applied"
+  | "rounded_up_from"
+> {
   validatePricingConfig(config);
   const category = config.pricing_categories.find(
     (entry) => entry.key === categoryKey,
   );
   if (!category) throw new PricingValidationError("unknown_category");
-
-  const raw = cost.div(decimal(category.cost_divisor, "invalid_divisor"));
+  const raw = decimal(rawInput, "invalid_cost");
+  if (raw.lt(0)) throw new PricingValidationError("invalid_cost");
   const roundedRaw = raw.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
   let price: Decimal;
   let afterBands: Decimal | null = null;
@@ -180,6 +205,60 @@ export function calculatePrice(
     }
   }
 
+  const adjustment = effectiveRoundingBands(config).final_ending_adjustment;
+  let roundedUpFrom: Decimal | null = null;
+  if (adjustment?.source_endings.length) {
+    const fraction = price.minus(price.floor());
+    if (adjustment.source_endings.some((source) => fraction.eq(source))) {
+      roundedUpFrom = price;
+      price = price.floor().plus(adjustment.target_ending);
+    } else if (correctionApplied && afterBands) {
+      // Existing Grocery corrections may already make the requested ending.
+      // Expose their genuine .49 origin without applying or chaining them again.
+      const bandFraction = afterBands.minus(afterBands.floor());
+      if (
+        adjustment.source_endings.some((source) => bandFraction.eq(source)) &&
+        price.eq(afterBands.floor().plus(adjustment.target_ending))
+      )
+        roundedUpFrom = afterBands;
+    }
+  }
+
+  return {
+    selling_price: price.toFixed(2),
+    rounded_up_from: roundedUpFrom?.toFixed(2) ?? null,
+    raw_price: raw.toString(),
+    rounded_raw: roundedRaw.toFixed(2),
+    after_band_rounding: afterBands?.toFixed(2) ?? null,
+    special_correction_applied: correctionApplied,
+  };
+}
+
+/** One configuration-driven engine for live previews and invoice calculations. */
+export function calculatePrice(
+  costInput: string,
+  categoryKey: string,
+  config: PricingConfig = seedConfig,
+  options: { skip_band_rounding?: boolean } = {},
+): PricingResult {
+  const cost = decimal(costInput, "invalid_cost");
+  const fractionalDigits = costInput.trim().split(".")[1]?.length ?? 0;
+  if (cost.lt("0") || fractionalDigits > 4)
+    throw new PricingValidationError("invalid_cost");
+  validatePricingConfig(config);
+  const category = config.pricing_categories.find(
+    (entry) => entry.key === categoryKey,
+  );
+  if (!category) throw new PricingValidationError("unknown_category");
+
+  const rounded = roundCategoryPrice(
+    cost.div(decimal(category.cost_divisor, "invalid_divisor")).toString(),
+    categoryKey,
+    config,
+    options,
+  );
+  const price = new Money(rounded.selling_price);
+
   const margin = price.isZero() ? null : price.minus(cost).div(price);
   // Cross multiplication avoids formatting or recurring-ratio precision affecting review.
   const belowMinimum =
@@ -187,11 +266,7 @@ export function calculatePrice(
     (category.minimum_margin !== null &&
       price.minus(cost).lt(price.times(category.minimum_margin)));
   return {
-    selling_price: price.toFixed(2),
-    raw_price: raw.toString(),
-    rounded_raw: roundedRaw.toFixed(2),
-    after_band_rounding: afterBands?.toFixed(2) ?? null,
-    special_correction_applied: correctionApplied,
+    ...rounded,
     margin: margin?.toString() ?? null,
     below_minimum_margin: belowMinimum,
   };

@@ -1,5 +1,49 @@
 # Decisions
 
+## R2g — Screenshot-led polish on top of live reading (2026-10-29)
+
+**Context:** Ali approved exact auth, Change price, Lookup and receiving compositions and identified shared inconsistencies, particularly at 509 px. R3 is already complete and remains the integration base.
+
+**Decision:** integrate B1, B4, B2, B3, C1, A2, A5 and A7 in that order on PR #29, with one item per commit and a coherent Tier 1 push. Approved screenshots take precedence over conflicting older prose. Use shared controls for chip/dialog/page-action rules and real components for the screen compositions, preserving original files, current permissions, audit and Decimal calculations. Check 360/390/509/760 as well as desktop, EN/FA and both themes. All seven CI checks must pass before the Tier 1 report.
+
+**Schedule/scope:** Tier 1 is due October 29 at 18:00 Toronto. Tier 2 may proceed only after green Tier 1 and before the 22:00 code freeze; nothing may be pushed after freeze without Ali's later instruction. Record post-demo requests rather than building them now. Private review images are never copied into the repository; approved fictional reference PNGs and their README are retained byte-identically.
+
+## R2c/R2d — Final route and loaded-font integration (2026-10-26)
+
+**Context:** combined browser checks exposed actual label/reference clipping, a supplier-filtered Returns render loop and Timesheet edits that could be canceled before the autosave delay by navigation.
+
+**Decision:** reserve complete Supplier status text, fit long invoice references with complete accessible names/tooltips and use one actual record action. Keep list preference setters stable and unchanged updates idempotent, rejecting delayed setters from a retired person/location. Statement presence stays inside the existing authorized financial projection; history-free zero balances are static and fully paid history remains actionable.
+
+For Timesheets, wait for actual pending saves before accepting Back/hash navigation. Keep failed entries mounted with Retry, release only the latest destination, retain original edit callbacks and recheck their actor/session/location in the canonical transaction. Native unload protection applies while dirty or saving. Synchronize implicit Today when the actual branch changes, while preserving explicit dates and an open sheet during ordinary refresh across midnight. This preserves data and current intent without relaxing table, timing, permission or financial guards.
+
+## R2c Groups 2–6 — Public choices, atomic review and personal event grouping (2026-10-26)
+
+**Shared choices:** derive explicit public search metadata and semantic placeholders; keep genuine empty-valued All/None choices. Bounded popovers and one full-record control fix presentation without expanding domain data or changing quantity/price/authority. Record-details opt-in applies only to the requested overview families.
+
+**Supplier/Payables:** retain the authoritative company directory and distinguish read failure from empty business data. Incomplete profiles derive from fields, and a dedicated stable supplier-ID statement route preserves list position and existing financial permissions. Contacts/actions/KPIs use the same foundation surfaces, with no false click target on a static balance.
+
+**Approvals:** reuse the full ProductEditor with a staged protected snapshot. Validate and perform genuine product/date/supplier/decision operations on one candidate; commit all fields and one attributed audit together. Cancel/failure saves none. Retain source cost/money/original/physical evidence, barcode/manual/margin rules and old supplier-code associations. This compound edit is nonreversible in generic History; standard decisions keep their existing Undo. Batch presentation gains select-all and complete money/margin columns while selected-only atomic guards remain.
+
+**Offers:** improve hierarchy/search/form alignment while keeping bundle quantity/price from the current approved-price mapping. Display those terms read-only; arbitrary pricing is not inferred from a design request. Savings use Decimal and existing offer evidence.
+
+**Notifications:** group only a genuine same-source decision/product/effective event across currently permitted branches; never infer identity from product/time alone. Use internal equality tokens and exact legacy record identity. Read/clear is personal; soft dismissal retains event keys and source records, and handled sources are removed by current source checks. Reconstruct related routes canonically under fresh authority and invalidate stale UI navigation intent. These remain local repository operations; production HTTP/push/email and recipient-routing behavior do not change.
+
+## R2d — Separate branch staff and audited local hours (2026-10-26)
+
+**Context:** the paper sheet records employees who often have no app login, and Cashier must enter branch hours while Floor Worker must see none.
+
+**Decision:** keep a separate branch staff list with optional safe app-person link; grant current scoped timesheet read/edit only to Owner, Manager, Branch Supervisor and Cashier. Module Off denies operational access to every role. Protect raw projections, History, print and CSV independently, without broadening Cashier financial authority. Aggregate selection always asks for a branch. Staff/row removal retains evidence, and the same four roles may edit past days with attributed before/after audit.
+
+Compute hours from normalized 24-hour wall-clock endpoints and integer minutes: earlier Out is overnight, equal endpoints zero, missing Out allowed/flagged after its day, >16 hours amber. These warnings do not fabricate an Out or prevent genuine entry. On shift now includes unique prior unclosed staff whose clock-in is not future. Departments/captions/order are configuration; historical captions survive removal. Include Monday–Sunday payroll views and four-decimal safe CSV, plus the bilingual paper print with Made with Klead.
+
+**Migration/defaults:** verify an exact private backup before additive existing-store initialization and reject/retry a concurrent revision. Existing stores receive empty arrays; preserve explicit Off/custom configuration. Only fresh demo/explicit Reset loads independent fictional sheets. Empty store keeps markers so reload stays empty. The existing browser repository is the actual enforcement boundary; a deployed server, shared-device data, wages and payment execution remain future work. These authorized defaults require no new approval gate.
+
+## R2c receiving defaults — 2026-10-26
+
+Ali requires 24-hour times throughout the app. Ambiguous handwritten delivery hours 1–6 prefer afternoon within configurable 06:00–20:00 delivery hours and always offer the retained alternate; store opening hours never infer delivery time. North York is configured Open 24 hours. Explicit am/pm and 13–23 remain literal.
+
+Imported unknown packs use one plus a question, approximate case conversion accepts a 0.01-unit distance from a whole unit, and unit cost derives from printed line total divided by actual units with exact retained money evidence. All-missing totals derive subtotal only from complete item/charge amounts. A subtotal alone does not establish tax: Tax and Total remain unresolved under R2b 1.3 until a second source amount or human entry permits the documented arithmetic; the existing printed-total-only zero-tax rule remains unchanged. Calculated/defaulted metadata stays quiet; actual reading checks, handwriting and unresolved facts stay amber. These owner-requested defaults supersede the earlier exact-only conversion and all-imported-Received-amber rules. All-locations Lookup reads separate authorized branch facts; branch writes choose their destination at action time.
+
 ## R1 — Local invoice readings before live AI (2026-10-21)
 
 Context: Ali needs real-data testing before the October 30 pitch using readings already produced by his invoice-reader kit, without paying for another AI run.
@@ -334,7 +378,6 @@ Specification first; implementation and tests require separate actual-source evi
 
 **Why:** a no-op location choice must preserve live filter input. A genuine Provider regression delays delivery of the real refreshed projection and reproduces the old empty input; the repair retains typed text, focus, matching supplier and financial records. Companion cases retain Clear filters and the actual Floor Worker Payables denial.
 
-
 ## 042 — C9 session presentation and shared display contracts (2026-10-19)
 
 **Context:** the owner found transient light/sign-in frames, missing decided sale requests, conflicting regular/sale prices, ambiguous note status and inconsistent lists. The four approved feature PRs were merged in order only after all seven checks passed, following the separate CI sharding PR.
@@ -344,7 +387,6 @@ Specification first; implementation and tests require separate actual-source evi
 **Decision:** WebKit runs only the new non-localhost dark-theme no-reload test; existing Chromium projects retain their suite, workers, retries and skip rules. C9 includes the restored device-access instructions, with no hosting resource/deployment or claimed real Safari/phone evidence.
 
 **Why:** correct the observed interactions without presenting stale private information, recalculating retained targets or implying remote synchronization. Source contracts precede code; executed evidence is recorded separately in PR_C9_REVIEW.md.
-
 
 C9 weighed-price boundary: a retained $22.02/kg sale can convert below $9.99/lb exactly while both display the same cents. Promotion markers/comparisons require a reduction in the displayed main-unit cents as well as the exact canonical amount. Keep the actual entered-unit display, effective price and history unchanged; never reconstruct a retained kg amount from rounded lb cents.
 
@@ -389,3 +431,319 @@ C9 weighed-price boundary: a retained $22.02/kg sale can convert below $9.99/lb 
 - **Note authors cannot mark their own note seen; a notebook setting chooses who may mark notes done** (Ali). Default stays "anyone who can add notes".
 - **Everyone adds dates** (Ali). Cashiers receive `dates.add` only: they can add a date at an assigned Store (recorded with who added it) but still get only the public date hint, never the full list or removal.
 - **A returning signed-in tab shows the app frame while it starts** instead of a blank page, so a browser reload (seen in Safari) no longer flashes white.
+
+## R2 receiving decisions — 2026-10-21
+
+### 2026-10-21 — Suppliers are active on creation
+
+Supplier approval and required contact fields slowed receiving. Require only the name; contacts, representative, terms and address are optional. Notify Owners/Managers once to complete a missing profile and resolve the notification when complete. Never block posting for supplier profile details.
+
+### 2026-10-21 — Track dates defaults to No
+
+Repeated Yes/No questions add no useful review. Default each line to No unless its matched product already tracks dates; Yes exposes the date and may suggest printed expiry.
+
+### 2026-10-21 — One confirmation per line
+
+Per-field buttons caused excessive controls. Confirm line acknowledges the entire validated line, highlights included; invoice details and totals each retain one Looks right.
+
+### 2026-10-21 — Highlight only actual questions
+
+Ordinary blank optional barcode, lot, printed expiry, handwritten note, order reference, bill-to and ship-to fields are quiet. R2b retains an explicit AI question even when the optional value is empty; Not on the invoice acknowledges its absence with who/when. Missing required supplier, invoice number/date/total, line description/quantity/cost remains highlighted.
+
+### 2026-10-21 — Calculate missing paper totals
+
+When total and tax exist derive subtotal as total minus tax; when subtotal and tax exist derive total as their sum. Fill it and label Calculated: compare with the paper until the totals acknowledgment.
+
+### 2026-10-21 — Rare printed evidence stays under More details
+
+Keep lot number, printed expiry, barcode and printed description out of the compact line editor by default. Only nonempty highlighted hidden barcode, lot, printed expiry or note evidence opens More details automatically; explicit Next/Show may reveal an empty flagged field; a question already visible in English name/description leaves it closed. Opening the section retains printed description and all evidence fields after acknowledgment.
+
+### 2026-10-21 — Correct and resubmit approvals
+
+A rejected product/price request can be corrected within pricing rules and permissions and resubmitted as a new pending request linked to the rejected record. A pending category can also be corrected before approval, with recalculation and History.
+
+### 2026-10-22 — Compact reference within the retained receiving layout budget
+
+**Context:** the approved receiving reference requires a compact five-column table and quiet totals while the existing 2px stability and 25-line/2700px desktop budgets remain mandatory.
+
+**Decision:** use a dedicated receiving table, compact closed rows with at least 44px targets and small work gaps, retaining normal typography, card tokens and 44px fields. Totals defaults to label/amount rows with calculated tags; Edit exposes the real fields, automatically shown for actual non-calculated questions or invalid attempted totals. Keep one whole-card Looks right and stable line identities. Phone details starts as a compact disclosure and expands through its chevron or needed-header navigation.
+
+**Scoped reference variants:** `.ui-dialog-structured` footers use 44px intrinsic actions, surface-fill/1px-field-border secondary and filled danger, preserving general 40px/borderless rules elsewhere. Phone receiving Confirm spans its footer above two equal secondary actions; phone progress Next/Post use equal columns. Those two phone layouts allow stretched 44px actions; other buttons remain intrinsic. Below a 340px toolbar-container width, Rotate moves into More rather than wrapping, fitting the retained sidebar/top-bar layout.
+
+**Phone stability:** temporarily reserve the fixed editor body's height while fields collapse so Track dates Yes → No does not clamp its internal scroll position. Release on user wheel/touch scrolling, close or navigation; retain the existing 2px guard and all business values.
+
+**Why:** match the approved composition without losing evidence, shrinking controls, moving the user's row or weakening existing guards. This changes presentation only; canonical validation, Decimal calculations, pricing decisions and authority remain unchanged.
+
+### 2026-10-22 — Boxes keep what the person types while focused
+
+**Context:** saves go through the asynchronous browser database. Inputs bound directly to the saved value were re-rendered with the older saved value between keystrokes, which dropped or repeated characters ("20" became "240").
+
+**Decision:** `BufferedInput` (and `NumberField` with `keepTyping`, used on the receiving screen) shows the person's own text while the box has focus and the saved value again on blur. A saved value that matches something they typed (including numeric forms like "7" for "007", or 0 for a blank box) is treated as an echo and ignored; any other new saved value, such as a price chip or recalculation, replaces the text at once. Changes made without focus are never buffered.
+
+**Why:** correct quantities and costs are the core of receiving; this removes a race without changing validation, Decimal maths or what is saved.
+
+**Scope:** opt-in. Screens that correct a value at once while typing (Labels copies snap back to 1 with an error) keep the plain `NumberField`.
+
+### 2026-10-25 — R2b 1.1 imported delivery dates (default pending owner confirmation)
+
+Imported historical readings use a recognizable handwritten delivery date/time in the configured company timezone, stored as UTC. Otherwise use the invoice date at local noon; live/simulated upload and manual entry keep now. Mark either imported choice as a Received question with its source explanation. Initial received stock events use that delivery instant; import/posting/audit timestamps remain the actual command time. Date-only handwriting uses noon and a missing handwritten year uses the invoice year. Multiple competing handwritten dates, expiry/phone-note dates, ambiguous numeric dates, invalid dates and nonexistent local DST times are not guessed: fall back to invoice-date noon, or leave Received unresolved when no valid invoice date exists. The reviewer can change or acknowledge the result. This is the requested migration default for Ali to confirm.
+
+### 2026-10-25 — Conservative import defaults retain evidence
+
+**Context:** historical papers omit fields and use inconsistent names, packs and terms. **Decision:** use configured currency; derive only compatible totals; infer terms from the latest strictly earlier same-supplier recognized paper; interpret Monthly as next-month first. Retain printed evidence, generated-code provenance and exact fractional-case cost basis. Extract only unambiguous contacts and never overwrite curated values. **Why:** reduce typing without manufacturing unresolved quantities, money or source evidence.
+
+### 2026-10-25 — Explicit absence and targeted review
+
+**Context:** an AI can explicitly question an empty optional field. **Decision:** keep that question until an edit, line confirmation or Not on the invoice receipt. Ordinary blanks stay quiet. Auto-open More details only for nonempty hidden questions; explicit Next/Show may reveal empty ones. Incomplete Post explains and focuses the actual fix without writing; authority/pending restrictions remain. **Why:** make review complete without unnecessary open sections or fabricated values.
+
+### 2026-10-25 — Reuse protected invoice state and correction flows
+
+**Context:** posted visibility, JSON entry and corrections must agree with receiving. **Decision:** share authorized workspace/saved selectors, retained Original viewing and receiving layout; add JSON entry without a reset. Received-date correction appends metadata; financial correction stays local until a reasoned canonical preview and confirmed append-only delta. Use shared 32px label actions and scoped surface-fill forms, keeping ordinary controls and the existing 2px/25-line stability budgets. **Why:** improve the workflow while retaining authority, source, money and physical evidence.
+
+## R2c Group 1 — Manager dashboard composition (2026-10-26)
+
+Context: the owner approved three replacement dashboard PNGs. Decision: retain the existing shell and canonical protected queries while replacing the old four colored/equal-height composition with five surface tiles and content-height 2:1 cards. Use Monday–Sunday calendar purchase weeks, exact retained invoice totals and current protected approval/sale margins. Phone keeps all five tile values in two columns; the fifth starts the next row. Notes/Activity remain below the primary phone sequence, and prior receiving/return/price-change lists remain under More operations. Why: match the approved hierarchy while keeping every existing operational destination and financial/permission rule.
+
+## R2c 7.2 — Configured Lookup categories (2026-10-26)
+
+Context: imported products may have no AI category. Decision: configured active pricing categories and counts are the stable category filter; optional AI categories remain an independent refinement. Combined filters use the existing per-person/company/location session preferences. Not approved here uses a protected public selling-price query rather than interpreting a company default as a branch decision. Why: imports stay discoverable and pricing evidence stays behind the query boundary.
+
+## R2c 7.3 — Explicit branch approval evidence (2026-10-26)
+
+Context: the general catalog helper falls back to the company default, which cannot establish a concrete store’s approval. Decision: add a protected branch Lookup projection that derives membership from retained deliveries/stock/approved prices and approval from explicit existing decision evidence; return public prices and presence only. Show assigned-store comparisons only when this store has no approved price. Keep the aggregate 0.13 query unchanged. Why: staff can discover a shared product without mistaking another store’s/default price for permission to charge it here. The requested product default remains explicit in open questions.
+
+## R2c 7.1 — Everyone creates returns; evidence precedes money (2026-10-26)
+
+**Context:** Ali explicitly permits all five roles, including Floor Worker and Cashier, to create photographed returns. **Decision:** add precise scoped read/create grants and one existing-record workflow, with genuine creator/audit, durable request/source/session-bound photos, canonical posted-receipt cost/currency snapshots and idempotent final creation. Damaged/Expired creation requires photos, superseding the older blanket optional-creation-photo statement; optional pickup photos remain separate. Cashier gains no cost, Suppliers, pickup, cancellation, replacement, settlement or Payables authority. **Why:** operational reporting must preserve evidence without granting financial powers.
+
+**Context:** setting goods aside is not supplier pickup or credit. **Decision:** create `open` → Waiting for pickup and a separate Owner/Manager informational expected-credit preview with `deducted:false`; only existing signed pickup starts the configured provisional deduction. No creation-time stock, price, approval or ledger effects. **Why:** prevent premature/double deductions while making the return immediately discoverable.
+
+**Context:** manual invoices can lack import currency and company currency can change after receipt or return creation. **Decision:** use only consistent retained original/effective invoice and canonical invoice-ledger currency evidence; block missing/conflicting/foreign currency for manager review instead of using today's setting, FX or catalog cost. Freeze source cost/currency at creation; later ambiguous receipts cannot invalidate it. Currency mismatch after creation keeps the original preview denomination and blocks new-return pickup/correction/monetary credit writes until the original currency matches. Legacy ambiguity/settlement rules remain. **Why:** never relabel historical money or manufacture a conversion. These conservative defaults require no additional owner decision to complete the authorized work.
+
+## R2c 7.3 follow-up — Preserve a reviewed sale basis after End (2026-10-26)
+
+Context: the active Sale established a local charge, but ending it could hide its unchanged regular basis when only the company default held that basis. Decision: the protected Lookup query may use the actual approved Sale’s retained canonical regular-price snapshot for that same product/company/store after End or clock expiry. Require retained Owner/Manager creation evidence, exact current basis equality and matching currency reconstructed from the genuine price-term review time and audited company-currency changes. Stopped/reverted, foreign/unassigned, unreviewed or changed-basis records do not establish approval. Read the snapshot without writing a new regular price or financial decision. Why: preserve C8’s automatic return to the regular price without treating arbitrary company defaults as local approval.
+
+If a genuine company-currency change has the exact same recorded timestamp as the price-term review, command order is not proven. Lookup withholds this Sale-basis evidence instead of guessing or relabeling the amount; the read still writes no business record.
+
+## R2e A: preserve measured-case and paper arithmetic
+
+A case cost must never become a cost per lb merely because the quantity unit changes. Preserve explicit measured case evidence and source kg/lb arithmetic; derive canonical pricing independently and round the invoice amount once. Keep paper line totals separate from recalculated amounts, with a protected, audited mismatch decision rather than implicit acceptance during Confirm. This prevents money changes from representation changes and preserves partial receipt evidence.
+
+## R2e C8/C11/C14 — Operational input and fictional seed defaults (2026-10-27)
+
+Return unit conversion keeps actual retained source cost/currency and normalizes kg/known cases to existing whole-unit/three-place-lb pickup quantities, with half-up lb rounding, a visible canonical preview and retained entered quantity/unit. Unknown packs are not choices; conversion evidence participates in stale-source checks. Lookup filters use protected public booleans scoped to current permitted locations and the existing recent-price window. Fresh/reset construction alone adds explicit fictional approved branch prices, retaining the one existing pending new-product example in North York and never populating saved-store gaps. These choices satisfy the authorized review fixes without inventing inventory availability, money authority or a migration rewrite.
+
+## R2e fixed-size package derivation
+
+Use the stable company Product Code as the parent reference; add package records to the existing Product collection so labels, offers and lookup retain normal product identities. Extract category rounding from the existing Decimal engine rather than emulate it by multiplying/dividing a cost divisor. The existing protected commit/clock adapter derives active child prices before Price update capture, preserving same-write task/label/audit effects. A narrow `catalog.package_edit` grant gives Branch Supervisor the explicitly authorized package operation without general catalog edits or price approval. Public configuration omits container cost. Archive active packages before orphaning their parent. Manufacturer GTIN formats retain their original digits while uniqueness compares zero-padded identity aliases. Additive defaults are protected by an exact verified backup and revision check.
+
+## R2e E — Separate store and maker presentation (2026-10-27)
+
+Context: the store app needs secondary maker attribution while remaining reusable for other stores/makers. Decision: public optional top-level maker config, shared theme-aware original-asset component and one staff-print attribution component; retained stores read defaults without a write. Why: preserve store palette/business evidence and existing print language while making replacement/omission a configuration choice. Native install metadata is built from configuration; live title/favicon follows the authorized public config.
+
+## R2f D1 — Separate elapsed display from completed payroll
+
+Context: the approved day sheet shows current elapsed hours, while R2d correctly keeps a missing-Out shift at zero completed hours. Decision: a pure daily display helper adds current-day elapsed minutes to presentation only; canonical week/CSV/print durations and blank Out evidence remain unchanged. Why: match the live staff view without inventing a payroll clock-out. Reuse the established save registry and original-actor/navigation bridge rather than replacing their workflow during the redesign.
+
+## R2f D2 — Preserve staff history and staged evidence
+
+Context: the approved directory moves Add into an inline form and replaces row actions with a menu. Decision: retain protected staff commands, the original signed-in actor, soft archival and existing shift identities; check the captured staff version before saving a staged edit/status change. Keep failed asynchronous archival in its confirmation dialog and retain typed edits on failure. Why: presentation changes must not erase history, overwrite newer staff details or close before the real write succeeds. An unchanged retained login link is omitted from an edit patch so a name-only correction does not clear or recreate an account that is no longer an eligible new selection.
+
+### 2026-10-28 — R2f D3 atomic weight-editor authority and cost evidence
+
+**Context:** the approved weight editor combines parent metadata, new cost, optional Change price and package rows, while receipt evidence and current branch prices must remain trustworthy.
+
+**Decision:** stage every field and package operation until a single actual protected Save. Existing cost changes create ordinary pending rule-price review; explicit Owner/Manager staged regular-price decisions reuse their existing authority and acknowledgments. A private attributed cost marker fingerprints the complete effective accepted receipt basis; a new receipt, same-line correction or later delivery supersedes it. Derive package costs independently per branch. Give Supervisors the narrow package-only dialog, without full Product editor or cost access.
+
+**Why:** Cancel/failure writes nothing, current charges remain approved, and no invoice, stock or payable is invented or rewritten. New package identities are truthfully Assigned on save and date tracking defaults Off until actual date evidence is entered. A pending unrelated invoice-price review is resolved before a new manual cost edit, avoiding silent review replacement.
+
+## 2026-10-27 — R2f D7 screenshot precedence and truthful dashboard captions
+
+The approved phone PNG places This week before Approvals; implement that order although the prose says after purchase charts. Use Reminder window rather than claiming every product expires within seven days: existing reminders are configurable. Count actual grouped deliveries rather than receipt product lines, without publishing private source identities. Prior activity dates use compact English month/day values in both interfaces to match the approved value presentation; today/full timestamps still use company-local boundaries. Neighbouring purchase cards alone stretch to equal height.
+
+D7 replacement delivery counting uses each actual replacement stock-movement identity. The existing canonical workflow emits one movement per replacement event, so distinct receipts for one return on the same day remain distinct even when the Received projection has no timestamp. It never groups those events by return/date. Invoice multi-product lines still share their actual source/timestamp group.
+**R2f D8 retained-credit read (2026-10-28):** Use a separate fresh-actor/returns.amount_read query rather than adding private money to public return DTOs. Reuse existing signed memo line cents and proportional partial-settlement rounding; value unpicked coverage only from original frozen cost/currency, rounding each line half-up. Require signed quantities and projections to agree. Missing/conflicting legacy facts remain unknown, preserving original currency without a catalog fallback or FX. This is a readonly display and creates no financial/stock evidence.
+
+### R2f D10 — Retain case evidence inside the approved item row (2026-10-27)
+
+The reference hides pack editing while the existing request command requires genuine units-per-case for catalog cases. Keep the approved Quantity/Unit/bin composition and expose the existing editor through a compact metadata disclosure; auto-open it when required evidence is missing. Retain optional unknown packs for free-text items. This preserves canonical normalization without guessing a pack or adding a permanent extra control column.
+
+**R2f mass labels (2026-10-28):** The owner's explicit screenshot precedence overrides the older Latin-unit wording for approved R2f weight presentations. Add one reusable massUnitLabel map plus opt-in shared price/size presentation instead of rewriting stored units or arbitrary product-name text. D3 and D4 use the same FA labels; ordinary UnitSize and non-opted-in price displays retain their prior behavior.
+
+**R2f numeric captions (2026-10-28):** Numeric headings describe values and therefore inherit the interface's bundled language font. Nonnumeric states inside a numeric cell opt into the shared caption class. Actual numeric data keeps Manrope. Chromium's actual platform-font evidence showed Persian heading glyphs falling back to a host Arabic face, whose width differs across Linux images; using bundled Vazirmatn removes that dependency without changing widths, padding or alignment tolerances.
+
+### 2026-10-28 — All-location cost review preserves each branch's decision
+
+**Context:** one all-scope price proposal cannot represent distinct branch manual prices and prior receipt costs.
+
+**Decision:** keep the one actual all-scope manual cost marker, but create ordinary proposals at each freshly permitted selling branch, preserving its actual prior cost, approved price and manual Keep/Rule provenance. An explicit staged regular-price decision suppresses only the branches it covers. Unknown cost remains null; unapproved branches do not borrow a company selling amount as approval evidence. Bind actor/session/location and target eligibility into the draft fingerprint.
+
+**Why:** this preserves independently approved prices and allows a genuine Keep in one branch and Use rule in another, in the same atomic workflow without new authority or invented receipt/price evidence.
+
+## 2026-10-28 — Stable retained invoice-name glyphs across interface languages
+
+The receiving summary displays the retained English product name. At 1280px, the Persian interface inherited a Vazirmatn-first order, mixing its spaces/punctuation with Manrope letters and making “Canned Fava Beans 400 g” overflow the product cell. CDP confirmed both were bundled faces; this was not a host-font substitution.
+
+Use the reusable `--font-en-bilingual` order (Manrope, Vazirmatn, system fallbacks) only for that retained-name display. Latin characters now use the same face in both interfaces; actual Persian characters still have the bundled fallback. Keep all column widths, single-line ellipsis, full title, check counts and clipping tolerances unchanged. Generic LtrValue and other screens retain their own font contracts.
+
+### 2026-10-28 — D7 intermediate tile width and genuine chart pairing
+
+Keep the approved six-column KPI row from 1000 px and two-column phone layout. Use three columns at 760–999 px so raw English/Persian captions keep complete words within two text lines. Scope purchase-card stretching to the existing actual two-column grid (1101 px and wider); stacked charts retain natural height. Browser proofs qualify the genuine grid through its exact children and actual non-overlapping same-row boxes, with negative controls for copied classes, unrelated cards and changed geometry. The old More operations disclosure is replaced by the approved visible This week card and genuine destination links.
+
+### 2026-10-28 — Retained C5 proofs follow approved R2f compositions
+
+The approved phone Returns PNG deliberately places Count and Columns at opposite ends of one row, and rich cards place the genuine record chevron beside Next action. Qualify those exact real source compositions with canonical record provenance, authorized financial declarations and unchanged edge/centre budgets; retain adjacency for every other toolbar and reject copied classes. Lookup's actual source rows use 44 px controls, while closed native details must be audited only after the actual disclosure opens. This changes proof recognition, without changing application behavior or relaxing shared limits.
+
+The final intrinsic Returns name retains its full canonical tooltip while showing a bounded visible prefix. Qualify that source composition alongside the exact separate quantity/+N. Measure the approved approximately 4 px glyph space, actual adjacent element edges and inline baselines; a truncated prefix may leave its next character's fitting remainder. Native Range font ascent/descent can exceed a CSS line box, so vertical containment uses real line boxes while horizontal containment uses actual glyphs. Existing 1/1.5/2 px budgets remain, and X/Y quantity corruption is rejected.
+
+### 2026-10-28 — Allow the expanded browser suite to complete
+
+CI204's clean second browser shard passed all 399 cases in 28.3 minutes of test execution, leaving almost no room for setup within the old 30-minute job cap. Allow 40 minutes for each existing browser job so the full suite can finish and report failures. Keep four shards, two workers, all tests, the combined gate, individual test timeouts, retries, skips and assertion limits unchanged. The separate invoice clipping and font-oracle failures still require their own fixes; a larger outer job cap does not turn failed assertions into success.
+
+## 2026-10-28 — Measure the visible receiving-name prefix
+
+The bilingual font-order correction made glyph selection stable, but the 1280px receiving cell still had less than one pixel of spare space for a full ordinary name. CSS ellipsis hid the visible overflow while the complete live text range could leave the cell on a different browser renderer. CI204 exposed that remaining failure after integration.
+
+Reuse bounded FitText in the receiving name's actual flex box. Preserve the existing English-value/bundled-Persian font contract, full native title and a complete accessible disclosure name including its check count. The fitted prefix updates on actual font readiness and ResizeObserver changes. Keep every table width, numeric gap and clipping tolerance unchanged. C5/C8 additionally require the full title, matching visible prefix and complete accessible disclosure; missing-title-only negative probes remain failures.
+
+## 2026-10-28 — Separate the retained original filename from page count
+
+The actual two-page imported/posted fixture exposed an original-viewer subtitle whose CSS ellipsis hid the page count with the long filename. Its live count glyphs also left the subtitle box and could approach the header actions.
+
+Give the title the remaining header space and fit only the filename, retaining its exact native title and complete screen-reader text. Keep the separator/count as nonshrinking groups on the same line. Reuse the caption in the fullscreen description so it still conveys the full filename and count. Preserve existing32px header actions,44px toolbar and all OriginalInvoice source/page/download logic.
+
+### 2026-10-28 — Retain only Lookup input through a protected remount
+
+An accepted location refresh can briefly remove the protected workspace while fresh authority/data is read. Keep only its typed search in an in-memory draft scoped to genuine company/person/session/role/authority version and exact route. Drop it on Lookup exit or authority change; a temporary observer handles exits while the widget is absent, retains at most one input and unsubscribes after discard. Do not cache selected packages, product/branch projections or money. The fresh protected queries remain authoritative. This preserves user input while withholding old location facts and introduces no business write or broader retained application subtree.
+
+## R3: live reading through Ali's local reader kit, same importer as JSON
+
+Ali's R3 request selects the existing local kit and its documented health/reading endpoints for the October 30 demo. Send only invoice images, save exact originals before the request, and use the current AI-mode importer to fill only the verified Processing draft. Preserve its identity/handling origin and exclude only that target from duplicate matching. Keep JSON settings import protected and unchanged. The request limit is four minutes; recovery is explicit, with no automatic retries, simulation or posting. Only Owner/Manager receives live duration/USD/model provenance. A verified live-original draft may enter manual fallback under its existing handler authority without granting New manual invoice access. Schema v3 waits until after the demo. No new provider code, credentials, paid resource or production deployment is introduced.
+
+## 2026-10-29 — Measure R2g receiving density by its approved parts
+
+The previous 25-line/2700 px test was calibrated to 3 px cell padding. R2g explicitly requires 12 px padding, 4 px gaps, full names, inline charges and grouped totals; the padding difference alone adds 450 px across 25 lines. Its reference screenshot has six rows. Keep the newer approved composition and replace the obsolete aggregate-only assumption with exact row/typography/content checks and tight per-card density limits, deriving the page bound from those parts. Negative controls must reject extra padding, metadata wrapping and empty fixed sections. Keep Category/check count together; retain source SKU/printed pack in the expanded line. No canonical data, money, permissions or 2 px interaction budget changes.
+
+## 2026-10-29 — Release completed approval-board space
+
+The retained board height and restored scroll correctly stabilize partial decisions, but keep a finished board scrolled below its empty message. Genuine posted-invoice reproductions confirm both an offscreen empty message and a completed bottom group leaving older requests entirely outside the usable viewport. After departures finish, release obsolete space when the board is authoritatively empty or no real surviving card is visible, then expose the empty state or nearest remaining card. Keep the protected retained-read and strict 2 px behavior when a real surviving card is already visible. A separate page-content error boundary catches actual render failures without removing navigation or remounting healthy pages to reset it.
+
+## 2026-10-30 — Trust actual repeat-delivery facts, preserve unknowns
+
+Compare an identified same-supplier item with its authorized effective posted purchase, rather than borrowing a current catalog cost or an unposted draft. Keep automatic evidence distinct from human check receipts and invalidate it after edits. Treat a known identity's changed pack/code/cost as precise field questions instead of repeating an uncertain Product question, while retaining genuine paper, quantity and date conflicts. Project only authorized facts, never internal evidence IDs or fingerprints. A fully ready import opens its true tab explicitly so the new automatic state remains reachable.
+
+## 2026-10-30 — Complete CI for each separately pushed item
+
+Ali requested an individually verified push for every R3c item. Include the commit SHA in the CI concurrency group so a later item does not cancel an earlier item's full run; duplicate runs of the same commit still share a group. CI213's 485-case browser shard advanced without a failed assertion until the 40-minute job cap canceled it. Allow 50 minutes for these expanded jobs, preserving all cases, individual test timeouts, worker/retry settings, conditional skips and numerical assertions. Continue local verification before each push and inspect complete full-CI results as the independently running jobs finish.
+
+## 2026-10-30 — Learn supplier print without overwriting curated names
+
+Checked answers and later human name edits are authoritative product-name proposals, while the original AI description is separate matching evidence. Carry both by original source index in preview and import; never reconstruct a missing raw key from a checked-only extra row. Learn normalized keys only at genuine scoped posting and require their actual readable posted source before using them. Keep individual size in the name/unit size and carton count in pack data. Preserve optional extra description through existing Product fields without granting receiving users direct catalog-edit authority. Treat matching-key/source-ID audit data as private evidence, including flattened patch paths, while keeping canonical History reversal data intact.
+
+## 2026-10-30 — R3c K6 — missing-paper payment default
+
+**R3c K6 — configured defaults with source precedence:** use the receiving configuration for missing-paper terms instead of guessing from a supplier's earlier invoices. Seed Monthly; keep it configurable and preserve an explicit disabled value. Share preview/import resolution so the visible count agrees with the imported draft. Preserve printed/checked source precedence, genuine due-date questions, ordinary manual creation, existing records and source bytes. A default is provenance, not a human check.
+
+## 2026-10-30 — R3c F4 — retained Discard, Cancelled and Undo
+
+**R3c F4 — retained cancellation:** Discard is an audited lifecycle change, not deletion. Retain the original and history, offer a counted read-only Cancelled stage and use the existing conflict/authority-checked Undo. Record an explicit reason for entered content while making genuinely empty-draft disposal immediate. Bind reversal to the exact retained target rather than the global workspace slot; retire old attempts on both transitions and preserve genuine manual recovery. Never reverse posted purchases or create compensating financial/stock facts for a draft discard.
+
+## 2026-10-30 — R3c F7 — truthful reading header
+
+**R3c F7 — activity must be real:** render a concise New invoice header while the reading has not established invoice identity. Derive active/recovery copy from actual request ownership and retained phase, suppress missing-value fragments and hide the processing Post control. Keep cancellation/failure/interruption distinct, original retention visible and normal review/post behavior unchanged.
+
+## 2026-10-30 — R3c F3 — native picker before draft creation
+
+Photo/PDF source selection now precedes draft creation. The native picker is opened synchronously by the actual source-tile gesture; no asynchronous business command comes before that gesture. A shared intake function validates the selection, checks the initiating actor/location/navigation witness again inside the initial protected creation transaction, then retains and attaches originals through existing private target-bound upload handles. A separate root navigation witness guards the final route change without mistaking the intake's own child remount for user navigation. This prevents empty drafts on cancellation and prevents stale asynchronous validation from creating or reopening an invoice after the person has moved elsewhere. Existing upload-draft recovery remains available when storage fails.
+
+## 2026-10-30 — R3c K3 — configured .49 to .99 and Use Lower
+
+Apply a configurable final Decimal ending adjustment only to new calculations. Resolve absent legacy configuration read-only so the requested default does not rewrite approved prices or silently discard explicit custom/disabled rules. Keep TypeScript and both Python references aligned through shared cases.
+
+Use the real receiving proposal/approval pipeline for Use Lower. Separate stable calculation evidence from mandatory fresh action evidence; immutable price Activity prevents Set → Reset ABA while exact Undo can retain a still-valid proposal and its actual editor. Preserve source/paper/stock/ledger evidence and current approved/Sale charges.
+
+## 2026-10-30 — R3c K4 — editable receiving selling price
+
+Use the existing protected receiving/approval pipeline for arbitrary typed prices, like K3's Use Lower. Retain exact entered weight amount/unit separately from canonical per-lb cents. Preserve the original receiving editor through a later poster/approver and keep actual approved charges untouched pending approval.
+
+Submit every keystroke through the existing serialized business queue, chain only the field's own successful action tokens and wait for canonical confirmation before closing an edited field. Roll back rejected tentative state to the actual committed value; require fresh current-value review before retry. Preserve stale/ABA/Discard/source guards and private numeric margin/minimum permissions. Show unit-aware approved and proposed prices so configured kg display does not imply a canonical per-lb amount is per kg.
+
+## 2026-10-30 — R3c K5 — app-level background reading
+
+Keep the accepted paid reader request in an application-level provider beneath DemoProvider and outside routed page content. Navigating, changing the selected invoice or editing reader settings must not dispose it. Fresh canonical actor/session/source/attempt/version checks still control the final write to its exact saved target. Separate transport retirement from successful Discard so no late answer or Undo can revive an old attempt.
+
+Offer a safe ready notice with explicit Open/Dismiss rather than automatic navigation. Preserve pending Timesheets save ownership and current focus. Measure actual footer/Undo geometry for page feedback rather than assuming a fixed bottom offset; retain existing dialog-owned feedback.
+
+## 2026-10-30 — R3c K7 — truthful compact reading progress
+
+Show real pipeline work rather than static future-step labels or simulated progress. Add an authorized counts-only matching preflight, and keep actual import/calculation as the final guarded write. Recheck source/attempt/version and current actor across local phases; preserve K1/K2 source-readable aliases, K6 term precedence and all cancellation rules.
+
+Use bounded browser paint opportunities to expose quick real phases without a fabricated progress percentage or arbitrary minimum duration. Hidden documents must not stall behind requestAnimationFrame. Keep the original and card beside each other at 1000/1440, three compact chips on phones, end Cancel, real elapsed time and reduced-motion behavior.
+
+## 2026-10-30 — acknowledge a foreground reading without another navigation
+
+The accepted invoice can finish without a hashchange, so acknowledge its ready notice on completion too. Bind that acknowledgement to agreement between the last accepted route and raw hash; retain the existing deferred Timesheets navigation and current reading-identity checks. This removes the redundant foreground overlay while preserving background completion and guarded Open.
+
+## 2026-10-30 — R3c K8 — exact paid/free source evidence
+
+- `freeCaseActionQuote(state, actor, index)` now binds the current genuine person/session/location/authority and whole invoice/source/config context. `invoiceWorkspaceRead` exposes it only for editable draft/review invoices with current edit authority.
+- `freeCaseView(line, costs)` provides safe decision/receiver/member-quantity facts and, only with invoice cost authority, selected `financial` arithmetic. `invoice-display-arithmetic.ts` is presentation-only and must not replace canonical domain calculation in commands.
+- F6 integration: category selection preserves an already-valid group decision. Capture `validFreeCaseGroup(line)` before the intended category/inferred-tax edit, then `refreshFreeCaseAnswer(line)` only for that previously valid group after the edit. Do not refresh an already-stale answer indiscriminately. Preserve explicit printed tax. Retain the actor-aware quote signature in the workspace merge.
+- K9 integration: preserve both `correction_of: original.id` (K8 cumulative acquisition offset) and `request_id: original.pickup_request_id` (K9 pickup identity) when correcting memos. Preserve K9 optional-reference eligibility via `pickupEvidenceKey` while retaining K8 exact `returnAcquisitionAmount` branches. Root owns this merge.
+
+## 2026-10-30 — R3c F1 — explicit retained simulation provenance
+
+Use retained invoice provenance to identify simulated output; current settings alone cannot establish how an older invoice was produced. A shared translated warning with existing warning tokens appears before the chooser's source tiles and on retained simulated records. Mark only actual simulated source transactions; preserve manual, imported, live and posted-source workflows.
+
+## 2026-10-30 — R3c F2 — exact localhost reader fallback
+
+Use the prompt's exact localhost fallback instead of deriving a reader target from the page host. Preserve explicit saved addresses and normalized custom base paths; never silently send an invoice to a different reader because retained settings are malformed. Existing safe-address validation, authority, audit and health timeout remain unchanged.
+
+## 2026-10-30 — R3c F6 — fresh atomic NEW-product categories
+
+Use a canonical actor/source/config/History fingerprint and exact current NEW-ID set rather than invoice version alone. Apply one candidate target and one attributed reversible Activity, preserving active workspace and current cost authority for retained Undo. Call the protected command directly so a category-only action does not normalize unrelated missing paper fields. Shared category changes preserve a K8 answer only when it was valid before the intentional edit; stale source evidence cannot be refreshed into validity. Keep explicit tax, other questions, existing Products and financial records untouched.
+
+## 2026-10-30 — R3c F8 — guarded active pages with retained originals
+
+Use dedicated source-edit commands rather than initial attachment, which creates an empty draft. Resolve fresh authority and exact invoice/version/attempt/source/content before atomically consuming a whole uploaded batch or changing selection. Every actual edit gets a fresh ready attempt and one attributed source-change activity; a genuine no-op creates neither. The service retires only the old attempt. Delayed storage may finish on retained A while B remains current; it never selects or rewrites B. PDF page counts come from protected decoding and opaque identity/source-bound witnesses, never an untrusted UI count. Saved unread drafts are not normalized as review data merely when navigation selects them.
+
+## 2026-10-30 — R3c F9 — phone New invoice chooser
+
+The actual New invoice chooser keeps four equal methods in a compact 2×2 grid on phones. Its entry warning explicitly says Photo/PDF use fictional values and do not read the uploaded invoice when Simulated mode is selected. The full retained review warning remains unchanged. Short method helpers, full translated labels, genuine role warnings, native picker inputs and the single Cancel footer remain available. Phone spacing is scoped to this chooser; the shared sheet and unrelated invoice details are unchanged.
+
+## 2026-10-30 — R3c F10 — compact actual reader settings
+
+Settings → Receiving → AI reading has a compact real mode Select and LTR address, adjacent Reset/Test connection controls, one section-owned Cancel/Save changes row when dirty, and the genuine health status. The helper explains that localhost means the current device and a phone needs the reader computer's reachable same-Wi-Fi address. The address/custom base path, reset/null, audit/current-authority save, pending disables, five-second timeout and honest network/CORS semantics are preserved. No key field or planned connection is added. A health result from an earlier person/navigation cannot appear under a replacement identity.
+
+A scoped Receiving layout rule resolves an existing overlap at exactly 760 px where one stylesheet made the group menu horizontal while another gave it a max-content grid column. The actual Persian menu no longer pushes the card outside the page. Other settings-card contents, width and height remain unchanged.
+
+## 2026-10-30 — R3c F11 — safe failure guidance belongs to the accepted attempt
+
+Retain a closed reason, code-chosen field and bounded HTTP status only after the exact live source/attempt is accepted as failed. Read that diagnostic through fresh actual Owner/Manager invoice-read and cost-read authority, with matching version/source/content; omit it from ordinary DTOs, History and audit/export. Retry, Cancel and page edits retire the old details. Preserve F0's supported reader envelope and all paid/free source/acquisition privacy keys. This provides actionable guidance without storing or exposing provider response/error text.
+
+### 2026-10-30 — R3c K9 — optional references require genuine pickup identity
+
+The external invoice/credit-note reference is optional, while a pickup remains actual signed evidence. Use a stable per-mounted-form request identity with retained immutable normalized payload evidence, preserving numbered-paper compatibility. Validate accepted retries against the original event and genuine retained attachment before new-write-only closed/mutable-photo checks; a replay never reverses a later correction. Blank-reference signed coverage requires coherent event+memo proof. Keep real source currency/cost, actual editor/device, shortfall dispositions, correction/claim coverage, stock movements and separate financial posting authority. Use the existing shared checkbox tokens and scoped pickup layout. Explicit desktop flex stacks satisfy the requested independent Dashboard columns while retaining tablet/phone and purchase-pair contracts.
+
+## 2026-10-30 — R3c F6 — fit the full category action rather than add a heading row
+
+The added category action made the 25-line receiving heading 92 px against its existing 48 px cap. Preserve the original 1.7:1 pane ratio and every original row/card/composed budget. Use compact 4 px spacing only in the new header composition, full 13 px text, a text-intrinsic fixed 48 px action, and narrow-card wrapping. The original viewer does not give up its approved share.
+
+The new action is a real native-button/dialog pair, not a choice widget. Its 48 px peer contract is recognized only with canonical company/invoice/NEW-count evidence, exact translated text, unique structural context and a real controlled category dialog. Preserve all generic height/width/radius/variant/type rules; counterfeits must fail. The exact pane/control failures, full-label containment and all existing density negatives are checked before publication.
+
+## 2026-10-30 — R3c simulation — complete when the real source work is ready
+
+Simulated examples already exist when their original has been verified and durably saved. Remove the cosmetic 2500 ms wait and complete on the next cancellable task using the same fresh-authority, exact-invoice/status guarded command. Keep original-first storage and all Live guards; no provider request, posting, stock or ledger change is introduced. A gated real-provider/storage component regression proves no review before the original is saved and exact-byte, attribution and business preservation afterward. Browser proof retains the existing five-second completion assertions. F1 additionally requires the actual review heading within its ordinary five-second visibility deadline before independently checking canonical status and the retained source.
+
+## 2026-10-30 — R3c pending-state proofs use controlled scheduling
+
+The simulation's unnecessary wait must not become a test dependency. Use Playwright's supported paused browser clock around the real native upload or retained-original read. File, crypto and IndexedDB work remain native; assert visible Reading, the genuine saved invoice/source and unchanged financial records while completion is held. Resume normal scheduling before the existing review deadlines and verify the same invoice reaches review. Keep every original no-post and source assertion. This proves the pending phase under controlled scheduling, rather than imposing a minimum user-visible duration or accepting review as a substitute for reading. Normal unpaused F1 tests continue to enforce prompt completion.
+
+## 2026-10-30 — R3c category fit includes the narrow grid edge
+
+A 48 px minimum with automatic height permitted the full English category label to form three lines and grow to 54.5625 px. The actual original grid can give it less text room when the page has a classic scrollbar. Keep the 640 px container breakpoint, fonts, panes and numerical density checks. Give only the new category-bearing heading the existing 4 px gap and action inline-inset tokens, enforce its fixed 48 px contract and verify every glyph fits. Check loaded fonts and the active grid edge, not only the wider overlay-scrollbar scene. The local supported Chromium and CI browser versions remain separately recorded; actual full CI is the final browser gate.
+
+## 2026-10-30 — R3c K1 — clear proven unit checks without trusting fallbacks
+
+The known-delivery comparison omitted the reader's unit check, leaving an otherwise unchanged line amber. Use the same recognized reading-unit normalization for mapping and comparison, and carry raw unit/basis evidence into both authorized preview and import. Clear that check only with matching real unit/basis proof. Keep unknown/fallback units and recognized differences as actual review questions, independently of cost-amount changes. Do not add persisted schema fields, fabricate a human acknowledgment or impose a new blanket missing-basis requirement on unflagged legacy records.

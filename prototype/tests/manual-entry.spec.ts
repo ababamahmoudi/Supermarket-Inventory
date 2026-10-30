@@ -1,10 +1,18 @@
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
-import { chooseOption, invoiceImage, setLanguage, signIn } from "./helpers";
+import { createHash } from "node:crypto";
+import {
+  chooseOption,
+  invoiceImage,
+  openInvoiceDetails,
+  openInvoiceSourcePicker,
+  setLanguage,
+  signIn,
+} from "./helpers";
 
 test.setTimeout(60000);
 
-test("Supervisor Add supplier saves Confirmed and a dated branch opening balance", async ({
+test("Supervisor Add supplier saves Active with optional profile details and a dated branch opening balance", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -30,7 +38,7 @@ test("Supervisor Add supplier saves Confirmed and a dated branch opening balance
     page,
     dialog.getByLabel("Payment terms (optional)", { exact: true }),
     "30",
-    "Monthly (30 days)",
+    "Net 30 (30 days)",
   );
   await dialog
     .getByLabel("Opening balance", { exact: true })
@@ -49,8 +57,8 @@ test("Supervisor Add supplier saves Confirmed and a dated branch opening balance
   ).toBeVisible();
   await expect(
     page
-      .locator(".supplier-header-card")
-      .getByText("Confirmed", { exact: true }),
+      .locator(".supplier-detail-header")
+      .getByText("Profile incomplete", { exact: true }),
   ).toBeVisible();
   const saved = await readCanonicalBusinessEvidence(page).then(
     (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
@@ -70,7 +78,7 @@ test("Supervisor Add supplier saves Confirmed and a dated branch opening balance
     reference: "Opening balance",
   });
   await page
-    .locator(".page-header")
+    .locator(".supplier-detail-header")
     .getByRole("button", { name: "More", exact: true })
     .click();
   await page.getByRole("menuitem", { name: "Deactivate", exact: true }).click();
@@ -80,12 +88,12 @@ test("Supervisor Add supplier saves Confirmed and a dated branch opening balance
     .click();
   await expect(
     page
-      .locator(".supplier-header-card")
+      .locator(".supplier-detail-header")
       .getByText("Archived", { exact: true }),
   ).toBeVisible();
 });
 
-test("supplier similarity warning links the existing record and requires explicit continuation", async ({
+test("supplier similarity warning offers an existing supplier and remembers distinct supplier pairs", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -99,7 +107,7 @@ test("supplier similarity warning links the existing record and requires explici
     .getByLabel("Supplier name", { exact: true })
     .fill("Fresh Valley");
   await expect(
-    dialog.getByRole("button", { name: "Fresh Valley Foods", exact: true }),
+    dialog.getByRole("button", { name: "Use Fresh Valley Foods", exact: true }),
   ).toBeVisible();
   await dialog
     .getByRole("button", { name: "Add supplier", exact: true })
@@ -111,8 +119,8 @@ test("supplier similarity warning links the existing record and requires explici
     }),
   ).toBeVisible();
   await dialog
-    .getByRole("checkbox", {
-      name: "Continue with this supplier name",
+    .getByRole("button", {
+      name: "Not the same supplier",
       exact: true,
     })
     .click();
@@ -155,7 +163,9 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
     (canonicalState) =>
       JSON.parse(JSON.stringify(canonicalState)!).products[0].barcode,
   );
-  await dialog.getByLabel("Barcode", { exact: true }).fill(conflictingBarcode);
+  await dialog
+    .getByLabel("Barcode (optional)", { exact: true })
+    .fill(conflictingBarcode);
   await expect(
     dialog.getByText("Starting stock count (optional)", { exact: true }),
   ).toHaveCount(0);
@@ -166,7 +176,7 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
   await expect(
     dialog
       .locator(".field")
-      .filter({ has: page.getByLabel("Barcode", { exact: true }) })
+      .filter({ has: page.getByLabel("Barcode (optional)", { exact: true }) })
       .getByRole("alert"),
   ).toHaveText(
     "This barcode belongs to another product. Use a different barcode.",
@@ -174,7 +184,9 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
   await expect(
     dialog.getByRole("alert", { name: "What's missing", exact: true }),
   ).toContainText("This barcode belongs to another product.");
-  await dialog.getByLabel("Barcode", { exact: true }).fill("DEMO-ORCHARD-NEW");
+  await dialog
+    .getByLabel("Barcode (optional)", { exact: true })
+    .fill("DEMO-ORCHARD-NEW");
   await dialog
     .getByRole("button", { name: "Add product", exact: true })
     .click();
@@ -199,7 +211,7 @@ test("Supervisor Add product calculates its price and blocks a barcode conflict 
   ).toHaveLength(0);
 });
 
-test("worker catalog actions stay hidden while invoice quick-add creates a Proposed supplier without balances", async ({
+test("worker catalog actions stay hidden while invoice quick-add creates an active supplier without balances", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
@@ -213,23 +225,54 @@ test("worker catalog actions stay hidden while invoice quick-add creates a Propo
   ).toHaveCount(0);
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page.getByRole("button", { name: "Upload", exact: true }).click();
+  const entryDialog = page.getByRole("dialog", {
+    name: "New invoice",
+    exact: true,
+  });
   await expect(
-    page.getByRole("button", { name: "New invoice", exact: true }),
-  ).toBeEnabled();
+    entryDialog.getByRole("button", { name: "Manual entry", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    entryDialog.getByRole("button", { name: "JSON file", exact: true }),
+  ).toBeDisabled();
+  const beforeSelection = await readCanonicalBusinessEvidence(page);
+  const picker = await openInvoiceSourcePicker(page);
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
+  await expect(page.getByTestId("invoice-upload-entry")).toHaveCount(0);
+  await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
+  await picker.setFiles(invoiceImage);
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        newId: invoice.id !== beforeSelection.invoice.id,
+        fileName: invoice.file_name,
+        sourceHash: invoice.file_data?.split(":").at(-1),
+        status: invoice.status,
+      };
+    })
+    .toEqual({
+      newId: true,
+      fileName: invoiceImage.name,
+      sourceHash: createHash("sha256")
+        .update(invoiceImage.buffer)
+        .digest("hex"),
+      status: "review",
+    });
+  await expect(
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('[data-testid^="invoice-line-row-"]')).toHaveCount(
+    6,
+  );
+  await openInvoiceDetails(page);
+  await expect(
+    page.getByRole("heading", { level: 1, name: /^Invoice/ }),
+  ).toBeVisible();
   await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Manual entry", exact: true }),
   ).toHaveCount(0);
-  // A fresh draft already opens its details. Only expand a closed section;
-  // toggling an open one hides the real Supplier control before quick-add.
-  const details = page.getByRole("button", {
-    name: "Invoice details",
-    exact: true,
-  });
-  if ((await details.getAttribute("aria-expanded")) === "false")
-    await details.click();
-  await expect(details).toHaveAttribute("aria-expanded", "true");
   await chooseOption(
     page,
     page
@@ -252,23 +295,32 @@ test("worker catalog actions stay hidden while invoice quick-add creates a Propo
     .getByRole("button", { name: "Add supplier", exact: true })
     .click();
   await expect(dialog).not.toBeVisible();
+  const beforePost = await readCanonicalBusinessEvidence(page).then((value) =>
+    JSON.parse(JSON.stringify(value)!),
+  );
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click({ force: true });
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Confirm supplier", exact: true }),
+  ).toHaveCount(0);
   const saved = await readCanonicalBusinessEvidence(page).then(
     (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!),
   );
+  expect(saved).toEqual(beforePost);
   expect(
     saved.suppliers.find(
       (supplier: { name: string }) =>
         supplier.name === "Worker Proposed Supply",
     ).status,
-  ).toBe("proposed");
-  expect(saved.invoice.supplier_confirmed).toBe(false);
+  ).toBe("confirmed");
+  expect(saved.invoice.supplier_confirmed).toBe(true);
   await signIn(page, "Cashier");
   await page.goto("/#suppliers");
   await expect(
@@ -286,7 +338,11 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
   await signIn(page, "Supervisor");
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "New invoice", exact: true })
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
+  await openInvoiceDetails(page);
   await chooseOption(
     page,
     page
@@ -306,7 +362,7 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     page,
     supplierDialog.getByLabel("Payment terms (optional)", { exact: true }),
     "30",
-    "Monthly (30 days)",
+    "Net 30 (30 days)",
   );
   await supplierDialog
     .getByLabel("Phone (optional)", { exact: true })
@@ -323,13 +379,19 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
   await supplierDialog
     .getByRole("button", { name: "Add supplier", exact: true })
     .click();
-  await expect(page.locator(".invoice-supplier-review")).toBeVisible();
+  await expect(supplierDialog).not.toBeVisible();
+  await expect(page.locator(".invoice-supplier-review")).toHaveCount(0);
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        supplier: invoice.supplier,
+        confirmed: invoice.supplier_confirmed,
+      };
+    })
+    .toEqual({ supplier: "Manual Invoice Supply", confirmed: true });
   await page
-    .locator(".invoice-supplier-review")
-    .getByRole("button", { name: "Confirm supplier", exact: true })
-    .click();
-  await page
-    .getByLabel("Supplier invoice number (optional)", { exact: true })
+    .getByLabel("Invoice number", { exact: true })
     .fill("DEMO-MANUAL-1");
   await page
     .getByRole("button", { name: "+ Add new product", exact: true })
@@ -359,23 +421,44 @@ test("manual invoice uses both shared add forms, keeps its lines on attachment a
     .click();
   await expect(productDialog).not.toBeVisible();
   await expect(page.locator(".invoice-line")).toHaveCount(1);
+  const prior = (await readCanonicalBusinessEvidence(page)).invoice;
   await page
-    .getByRole("button", { name: "Save as draft", exact: true })
+    .getByRole("button", { name: "Save and close", exact: true })
     .click();
-  await expect(
-    page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  await page.goto(`/#invoices?id=${encodeURIComponent(prior.id)}`);
+  const post = page.getByRole("button", { name: "Post invoice", exact: true });
+  await expect(post).toBeDisabled();
+  await expect(post).toHaveAttribute("aria-disabled", "true");
+  const beforePostAttempt = await readCanonicalBusinessEvidence(page);
+  const postControl = post;
+  await postControl.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(postControl).toBeFocused();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "2 items need attention. Click Post invoice for the full What's missing list.",
+  );
+  await postControl.press("Enter");
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
-  ).toBeVisible();
-  const line = page.locator(".invoice-line");
-  await line.getByRole("button", { name: "No", exact: true }).click();
-  await line
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
-    .click();
+  ).toContainText("Original invoice is missing. Attach its PDF or photo.");
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforePostAttempt);
+  await page.locator(".invoice-line-summary").click();
   await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
+    .getByRole("group", { name: "Track date", exact: true })
+    .getByRole("button", { name: "No", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm line", exact: true }).click();
+  await expect(
+    page
+      .locator(".invoice-line-summary")
+      .getByRole("img", { name: "Confirmed", exact: true }),
+  ).toBeVisible();
+  // R2c disables Post until the required original is attached, even after line confirmation.
+  await expect(post).toBeDisabled();
+  await expect(post).toHaveAttribute("aria-disabled", "true");
+  await page
+    .getByLabel(/^(Attach original|Replace file)$/)
     .setInputFiles(invoiceImage);
   await expect(page.locator(".invoice-line")).toHaveCount(1);
   await expect(

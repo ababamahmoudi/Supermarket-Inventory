@@ -15,7 +15,7 @@ Ali is not a programmer: Claude builds, tests and explains; Ali reviews and deci
 ## Rules (don't break these)
 - Never merge without Ali's test and his OK. Push branches and open pull requests only.
 - One pull request at a time; Ali tests each one before the next.
-- Real invoices, real export files, `keys.env`, answer sheets and the invoice-reader kit's work folders never go to GitHub, seed data, test fixtures or ChatGPT. API keys stay only in `keys.env` on Ali's Mac, never in browser code or the repo. Don't prefill answer sheets from your own reading. Only the kit's `sample/fictional-readings-export.json` may go into the repo or tests.
+- Real invoices, real export files and screenshots may be shared with ChatGPT and Claude in chat for private review. They must never be committed to GitHub, seed data, tests, fixtures, docs or commit messages. Use invented supplier/product names, amounts and images in repository examples. `keys.env`, answer sheets and the invoice-reader kit's work folders never go to GitHub, seed data, test fixtures or chat. API keys stay only in `keys.env` on Ali's Mac, never in browser code or the repo. Don't prefill answer sheets from your own reading. Fictional fixtures may be committed; never derive them from private invoice data.
 - No paid cloud resources without Ali's "yes".
 - Update a test only when it checks behaviour you changed on purpose. Never weaken a test to make it pass.
 - Pull request description: What changed · How Ali can test it · Tests added · Docs updated · Open questions.

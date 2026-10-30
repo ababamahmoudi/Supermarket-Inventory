@@ -92,7 +92,7 @@ async function signIn(username: string, password = "demo1234") {
     await user.click(
       await screen.findByRole(
         "button",
-        { name: "Use simulated passkey" },
+        { name: "Continue with passkey" },
         { timeout: 10000 },
       ),
     );
@@ -136,7 +136,7 @@ describe("E1 authentication and role-aware shell", () => {
     expect(screen.queryByLabelText("Demo PIN")).not.toBeInTheDocument();
     const user = await signIn("cashier", "wrong");
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The username or password is incorrect. Try again.",
+      "Username or password is incorrect.",
     );
     await user.click(screen.getByRole("button", { name: "Show password" }));
     expect(screen.getByLabelText("Password")).toHaveAttribute("type", "text");
@@ -151,9 +151,30 @@ describe("E1 authentication and role-aware shell", () => {
         { timeout: 10000 },
       ),
     );
-    // Cashiers use Lookup and may add dates (Ali, Oct 2026).
-    expect(nav.getAllByRole("link")).toHaveLength(2);
-    expect(nav.getByRole("link", { name: "Date tracking" })).toBeVisible();
+    // Cashiers retain their public Lookup/date access and their assigned-store
+    // Timesheets and Returns routes, without acquiring financial navigation.
+    expect(
+      nav.getAllByRole("link").map((link) => ({
+        name: link.getAttribute("aria-label"),
+        href: link.getAttribute("href"),
+      })),
+    ).toEqual([
+      { name: "Lookup", href: "#lookup" },
+      { name: "Timesheets", href: "#timesheets" },
+      { name: "Returns", href: "#returns" },
+      { name: "Date tracking", href: "#expiry" },
+    ]);
+    for (const name of ["Timesheets", "Returns", "Date tracking"])
+      expect(nav.getByRole("link", { name })).toBeVisible();
+    for (const name of [
+      "Dashboard",
+      "Invoices",
+      "Products",
+      "Approvals",
+      "Payables",
+      "Settings",
+    ])
+      expect(nav.queryByRole("link", { name })).not.toBeInTheDocument();
     expect(nav.getByRole("link", { name: "Lookup" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -382,7 +403,7 @@ describe("E1 authentication and role-aware shell", () => {
     await openUserMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Lock" }));
     expect(
-      await screen.findByRole("heading", { name: "Screen locked" }),
+      await screen.findByRole("heading", { name: "Locked" }),
     ).toBeVisible();
     window.location.hash = "lookup";
     fireEvent(window, new HashChangeEvent("hashchange"));
@@ -486,12 +507,8 @@ describe("E1 authentication and role-aware shell", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5 * 60000);
     });
-    await actualReady(() =>
-      screen.queryByRole("heading", { name: "Screen locked" }),
-    );
-    expect(
-      screen.getByRole("heading", { name: "Screen locked" }),
-    ).toBeVisible();
+    await actualReady(() => screen.queryByRole("heading", { name: "Locked" }));
+    expect(screen.getByRole("heading", { name: "Locked" })).toBeVisible();
   });
   it("requires a password before rendering a sensitive page after fifteen minutes", async () => {
     const fixture = await signedInFixture(

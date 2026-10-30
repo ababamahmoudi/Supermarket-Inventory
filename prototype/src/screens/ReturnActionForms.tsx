@@ -1,3 +1,5 @@
+import { Minus, Plus } from "lucide-react";
+import { createId } from "../ids";
 import { configuredRoleLabel } from "../role-config";
 import { domainScope } from "../domain-authority";
 import { useEffect, useState } from "react";
@@ -13,6 +15,7 @@ import {
   DialogActions,
   Field,
   NumberField,
+  IconButton,
   Select,
 } from "../ui";
 import { WhatsMissing, type ValidationIssue } from "../WhatsMissing";
@@ -127,6 +130,8 @@ export function ReturnActionForms({
   );
   const [representative, setRepresentative] = useState("");
   const [slip, setSlip] = useState("");
+  const [pickupRequestId] = useState(() => createId("return-pickup"));
+  const [saving, setSaving] = useState(false);
   const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
   const [photo, setPhoto] = useState<ReturnPhotoAttachment | null>(null);
@@ -266,6 +271,34 @@ export function ReturnActionForms({
       return false;
     }
   };
+  const setPickupQuantity = (line: ReturnLine, value: string) => {
+    setQuantities((current) => ({ ...current, [line.product_code]: value }));
+    clear(fieldId(line.product_code, "quantity"));
+  };
+  const stepDisabled = (line: ReturnLine, direction: -1 | 1) => {
+    const text = quantities[line.product_code];
+    if (
+      saving ||
+      (text.trim() && !validQuantity(text, remaining(line), line, true))
+    )
+      return true;
+    const value = new Decimal(text || "0");
+    return direction < 0 ? value.lte(0) : value.gte(remaining(line));
+  };
+  const stepPickup = (line: ReturnLine, direction: -1 | 1) => {
+    if (stepDisabled(line, direction)) return;
+    const step = new Decimal(weighted(line) ? "0.001" : "1").times(direction);
+    setPickupQuantity(
+      line,
+      Decimal.min(
+        remaining(line),
+        Decimal.max(
+          0,
+          new Decimal(quantities[line.product_code] || "0").plus(step),
+        ),
+      ).toString(),
+    );
+  };
   const validate = () => {
     const missing: ValidationIssue[] = [];
     const add = (id: string, message: string) =>
@@ -307,14 +340,6 @@ export function ReturnActionForms({
             t(
               "Enter the supplier representative name.",
               "نام نماینده تأمین‌کننده را وارد کنید.",
-            ),
-          );
-        if (!slip.trim())
-          add(
-            "return-pickup-slip",
-            t(
-              "Enter the signed paper pickup slip reference.",
-              "مرجع رسید کاغذی امضاشده جمع‌آوری را وارد کنید.",
             ),
           );
         if (uploading)
@@ -477,6 +502,8 @@ export function ReturnActionForms({
     return !missing.length;
   };
   const perform = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       await command(
         mode === "resolve"
@@ -540,6 +567,7 @@ export function ReturnActionForms({
                 shortfalls: decisions,
                 representative,
                 slip,
+                request_id: pickupRequestId,
                 photo: photo || undefined,
                 note,
               });
@@ -571,10 +599,13 @@ export function ReturnActionForms({
         ),
       );
     }
+    setSaving(false);
     setReview(false);
   };
   return (
-    <Card className="return-action-card form-section">
+    <Card
+      className={`return-action-card form-section${mode !== "resolve" ? " return-compact-pickup" : ""}`}
+    >
       <h3>{title}</h3>
       <p className="return-action-caption muted">
         <LtrText>{record.supplier}</LtrText> ·{" "}
@@ -597,13 +628,16 @@ export function ReturnActionForms({
         )}
         {mode !== "resolve" ? (
           <>
-            <div className="return-item-form-list">
+            <div className="return-item-form-list return-pickup-items">
               {record.lines.map((line) => (
-                <section className="return-item-form" key={line.product_code}>
-                  <h4>
+                <section
+                  className={`return-item-form return-pickup-item${Number(quantities[line.product_code]) < remaining(line) ? " has-shortfall" : ""}`}
+                  key={line.product_code}
+                >
+                  <h4 className="return-pickup-name">
                     <bdi dir="auto">{name(line.product_code)}</bdi>
                   </h4>
-                  <p className="muted">
+                  <p className="muted return-pickup-return-qty">
                     {t("Return quantity", "تعداد مرجوعی")}:{" "}
                     <bdi>
                       {line.qty}
@@ -611,9 +645,35 @@ export function ReturnActionForms({
                     </bdi>
                   </p>
                   <Field
-                    className="field-short"
+                    className="return-pickup-quantity"
                     label={t("Actual pickup quantity", "تعداد واقعی جمع‌آوری")}
                     error={fieldError(fieldId(line.product_code, "quantity"))}
+                    adornment={
+                      <>
+                        <IconButton
+                          className="return-pickup-decrease"
+                          aria-label={t(
+                            `Decrease pickup quantity for ${name(line.product_code)}`,
+                            `کاهش تعداد جمع‌آوری ${name(line.product_code)}`,
+                          )}
+                          disabled={stepDisabled(line, -1)}
+                          onClick={() => stepPickup(line, -1)}
+                        >
+                          <Minus size={16} />
+                        </IconButton>
+                        <IconButton
+                          className="return-pickup-increase"
+                          aria-label={t(
+                            `Increase pickup quantity for ${name(line.product_code)}`,
+                            `افزایش تعداد جمع‌آوری ${name(line.product_code)}`,
+                          )}
+                          disabled={stepDisabled(line, 1)}
+                          onClick={() => stepPickup(line, 1)}
+                        >
+                          <Plus size={16} />
+                        </IconButton>
+                      </>
+                    }
                   >
                     <NumberField
                       id={fieldId(line.product_code, "quantity")}
@@ -621,17 +681,12 @@ export function ReturnActionForms({
                       max={remaining(line)}
                       step={weighted(line) ? "0.001" : "1"}
                       value={quantities[line.product_code]}
-                      onChange={(value) => {
-                        setQuantities((current) => ({
-                          ...current,
-                          [line.product_code]: value,
-                        }));
-                        clear(fieldId(line.product_code, "quantity"));
-                      }}
+                      disabled={saving}
+                      onChange={(value) => setPickupQuantity(line, value)}
                     />
                   </Field>
                   {Number(quantities[line.product_code]) < remaining(line) && (
-                    <div className="form-grid">
+                    <div className="form-grid return-pickup-shortfall">
                       <Field
                         label={t("Shortfall reason", "دلیل کسری")}
                         error={fieldError(
@@ -679,6 +734,7 @@ export function ReturnActionForms({
                           }}
                           options={[
                             {
+                              placeholder: true,
                               value: "",
                               label: t("Choose an outcome", "انتخاب نتیجه"),
                             },
@@ -710,7 +766,7 @@ export function ReturnActionForms({
             </div>
             {mode === "pickup" ? (
               <>
-                <div className="form-grid">
+                <div className="form-grid return-pickup-person-row">
                   <Field
                     label={t(
                       "Supplier representative name",
@@ -728,11 +784,11 @@ export function ReturnActionForms({
                     />
                   </Field>
                   <Field
-                    label={t(
-                      "Signed paper pickup slip reference",
-                      "مرجع رسید کاغذی امضاشده جمع‌آوری",
+                    label={t("Reference (optional)", "مرجع (اختیاری)")}
+                    hint={t(
+                      "Invoice number or credit note number, if any",
+                      "شماره فاکتور یا یادداشت بستانکاری، در صورت وجود",
                     )}
-                    error={fieldError("return-pickup-slip")}
                   >
                     <input
                       id="return-pickup-slip"
@@ -974,6 +1030,7 @@ export function ReturnActionForms({
                                   }
                                   options={[
                                     {
+                                      placeholder: true,
                                       value: "",
                                       label: t(
                                         "Choose an invoice",
@@ -1002,6 +1059,7 @@ export function ReturnActionForms({
                               )}
                             >
                               <Select
+                                searchable
                                 id={fieldId(code, "replacement_product_code")}
                                 value={item.replacement_product_code}
                                 onChange={(value) =>
@@ -1019,6 +1077,12 @@ export function ReturnActionForms({
                                       product.status === "active",
                                   )
                                   .map((product) => ({
+                                    searchTerms: [
+                                      product.name_en,
+                                      product.name_fa ?? "",
+                                      product.code,
+                                      product.barcode ?? "",
+                                    ],
                                     value: product.code,
                                     label: name(product.code),
                                   }))}
@@ -1157,7 +1221,7 @@ export function ReturnActionForms({
           <Button type="button" variant="neutral" onClick={onClose}>
             {t("Close", "بستن")}
           </Button>
-          <Button type="submit">
+          <Button type="submit" disabled={saving}>
             {mode === "pickup"
               ? t("Record pickup", "ثبت جمع‌آوری")
               : mode === "correct"
@@ -1399,6 +1463,7 @@ export function ReturnCancellationForm({
                       }}
                       options={[
                         {
+                          placeholder: true,
                           value: "",
                           label: t("Choose disposition", "انتخاب وضعیت"),
                         },

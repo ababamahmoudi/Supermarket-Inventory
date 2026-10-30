@@ -69,6 +69,13 @@ export function requireInvoiceAuthority(
     capability === "invoices.correct" ||
     capability === "invoices.attach_posted_original";
   const scope = invoiceAuthorityScope(state, invoiceId, mutation, correction);
+  if (
+    scope.status === "cancelled" &&
+    (mutation || !["invoices.read", "invoices.cost_read"].includes(capability))
+  )
+    throw new Error(
+      "This invoice was discarded. Undo the discard before editing it.",
+    );
   if (["invoices.short_resolve", "invoices.short_close"].includes(capability))
     delete scope.invoice_reviewer_origin_location_id;
   requireCapability(state, actor, capability, scope);
@@ -88,6 +95,12 @@ export function canInvoiceAuthority(
       capability === "invoices.correct" ||
       capability === "invoices.attach_posted_original";
     const scope = invoiceAuthorityScope(state, invoiceId, mutation, correction);
+    if (
+      scope.status === "cancelled" &&
+      (mutation ||
+        !["invoices.read", "invoices.cost_read"].includes(capability))
+    )
+      return false;
     if (["invoices.short_resolve", "invoices.short_close"].includes(capability))
       delete scope.invoice_reviewer_origin_location_id;
     return can(state, actor, capability, scope).allowed;

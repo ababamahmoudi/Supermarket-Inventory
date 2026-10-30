@@ -90,6 +90,7 @@ import "./labels-b.css";
 import "./labels-c1.css";
 import "./c3-labels-notes-offers.css";
 import "./labels-klead.css";
+import "./labels-r2e.css";
 const defaultFields = {
   name: true,
   description: true,
@@ -907,6 +908,7 @@ function TemplateDesigner({
             onChange={choose}
             options={[
               {
+                placeholder: true,
                 value: "",
                 label: t("Choose a template", "یک قالب انتخاب کنید"),
               },
@@ -920,9 +922,9 @@ function TemplateDesigner({
         <Button variant="neutral" onClick={() => choose("")}>
           {t("New template", "قالب جدید")}
         </Button>
-        <Checkbox checked={showArchived} onChange={setShowArchived}>
+        <FilterChip checked={showArchived} onChange={setShowArchived}>
           {t("Show archived", "نمایش بایگانی‌شده‌ها")}
-        </Checkbox>
+        </FilterChip>
       </div>
       {draft.built_in && (
         <p className="muted label-template-kind">
@@ -1634,6 +1636,7 @@ export function Labels() {
                 ]}
               />
               <Select
+                searchable
                 aria-label={t("Supplier", "تأمین‌کننده")}
                 value={filters.supplier}
                 onChange={(value) =>
@@ -1692,17 +1695,28 @@ export function Labels() {
                 </Button>
               )}
             </FilterToolbar>
-            <div className="labels-selection-toolbar">
-              <Checkbox
-                checked={allFilteredSelected}
-                disabled={selectable.length === 0}
-                onChange={selectFiltered}
+            {allFilteredSelected && (
+              <div
+                className="labels-filtered-selection-summary muted"
+                role="status"
               >
-                {t("Select all filtered", "انتخاب همه نتایج فیلترشده")}
-              </Checkbox>
-            </div>
+                <span>
+                  {translateCount(
+                    "All {{count}} filtered product selected",
+                    "All {{count}} filtered products selected",
+                    "همهٔ {{count}} کالای فیلترشده انتخاب شد",
+                    "همهٔ {{count}} کالای فیلترشده انتخاب شدند",
+                    selectable.length,
+                    lang,
+                  )}
+                </span>
+                <Button variant="plain" onClick={() => selectFiltered(false)}>
+                  {t("Clear", "پاک کردن")}
+                </Button>
+              </div>
+            )}
             <DataTable
-              className="labels-product-table c9-labels-products-table"
+              className="labels-product-table c9-labels-products-table r2e-labels-products"
               phoneList={{
                 name: "product",
                 value: "price",
@@ -1753,12 +1767,17 @@ export function Labels() {
             >
               <thead>
                 <tr>
-                  <th
-                    aria-label={t(
-                      "Select all filtered",
-                      "انتخاب همه نتایج فیلترشده",
-                    )}
-                  />
+                  <th scope="col">
+                    <Checkbox
+                      checked={allFilteredSelected}
+                      disabled={selectable.length === 0}
+                      onChange={selectFiltered}
+                      aria-label={t(
+                        "Select all filtered",
+                        "انتخاب همه نتایج فیلترشده",
+                      )}
+                    />
+                  </th>
                   <th>{t("Product", "کالا")}</th>
                   <th>{t("Product Code", "کد کالا")}</th>
                   <th>{t("Offer", "پیشنهاد")}</th>
@@ -2159,6 +2178,7 @@ export function Labels() {
                     }}
                     options={[
                       {
+                        placeholder: true,
                         value: "",
                         label: t("Choose a template", "یک قالب انتخاب کنید"),
                       },

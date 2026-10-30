@@ -1,5 +1,30 @@
 # Open questions (build with the default; make each one configurable)
 
+## After the prototype demo
+
+- **R3c location/startup performance (Ali, October 30):** with about 25 imported invoices, switching location takes about 10 seconds and a reload about 5 seconds (user-reported). After the demo, profile both flows with a comparable retained dataset and record before/after timings. Improve responsiveness while preserving data, pending readings, unsaved-work guards and company/location access checks. Record only; do not optimize before the demo.
+- **R3c supplier PDF order reading:** upload an order confirmation or pre-invoice PDF in Orders, read an expected order with prices, compare the delivery, then create the invoice with Use the order's reading. Record only; design and implementation wait until after the demo.
+- **R3c branch-request additions:** allow the sender to add also-sending items that the receiver sees as expected in the delivery. This is additional to the Loaded ticks and Mark all as being sent below; record only.
+- **R3c offers:** edit terms, dates and joining/leaving a mix-and-match pool in place, instead of stopping and recreating an offer. Record only.
+- **R3c schema v3:** add AI brand/name suggestions for a person to confirm. The current clean-name and printed-key fixes use the existing reading schema and do not introduce v3.
+- **R2g branch-request picking (Ali, October 28):** retain a per-item Loaded checkbox per request and person, including who/when, across leaving and returning. Add Mark all as being sent, with individual items subsequently changeable to Short. Record only; do not build before the demo.
+- **R2g remaining post-demo polish:** A6 table/checkbox/row actions, A8 all-screen alignment expansion, C2 explicit audited Manager repair review for earlier bad posted weight costs, C4 invoice-approval checkbox alignment, remaining C5 Labels alignment, C6 notebook role/section presentation, C7 selected-only audited name-cleaning review with old-name aliases, and C8 branch-request detail composition. Shared A5 may resolve C3's empty password band and C6's scrollbar without implementing their other deferred work. Never silently repair posted money.
+- **R2g Tier 2, deferred by R3c:** B5/B6 Offers, B8 New order, B9 phone Timesheets, A1 universal fields, A3 remaining filter bars and A4/B7 shared phone lists remain outside the active work. Ali stopped R2g for R3c and explicitly lifted its earlier freeze; this does not resume Tier 2.
+- Reading schema v3: separate item name from pack text; add supplier phone/email/representative fields, sold-by-weight mathematics and an AI pricing-category suggestion that a person confirms. These are deferred and are not part of R3.
+- Questions 15 and 29 are resolved for this prototype: R3 uses Ali's existing local kit. Provider selection, credentials, account spending controls and any CORS configuration stay in that external kit; this app adds no provider integration or key field. Broader production AI/server architecture remains a later phase.
+
+## R2d timesheet defaults recorded (2026-10-26)
+
+These are the requested build defaults, with no new blocking question:
+
+- Staff are a branch staff list with an optional app-login link. A staff member need not sign in; linking does not grant access.
+- Owner, Manager, Branch Supervisor and Cashier may edit past days within current permitted branches; every meaningful change is retained in History. Floor Worker has no timesheet read/edit/export/audit access.
+- Weekly Monday–Sunday view and payroll CSV are included. CSV decimal hours have four places. Wages, deductions and payment execution are outside this work.
+- On shift now follows the literal In-without-Out rule, including unclosed prior days and excluding future clock-ins. Prior missing Out remains amber; do not invent a clock-out or choose a first branch for aggregate selection.
+- Equal In/Out means zero, earlier Out means the next day, and a shift over 16 hours is an amber check. These rules use local wall-clock endpoints rather than payroll/DST elapsed-time adjustments.
+- Existing stores gain empty timesheet arrays after exact verified backup. Fresh/Reset alone loads fictional practice sheets; Empty store stays empty after reload. Departments and the module switch are configurable, preserving explicit Off/custom settings.
+- CSV and browser print are real local outputs. Physical A4/Letter printing, cross-device synchronization, a deployed server and payroll-provider integration remain outside the executed prototype proof.
+
 When Ali answers one, update the requirement it affects, record the date here, and remove the question.
 
 | #   | Question                                                                               | Default to build with                                                                                           |
@@ -11,25 +36,23 @@ When Ali answers one, update the requirement it affects, record the date here, a
 | 5   | Is tax on a short deduction included in the deduction?                                 | Yes, proportional tax is deducted with the line                                                                 |
 | 6   | Price → offer mapping                                                                  | 1.99 → 3 for $5; 2.99 → 2 for $5; 3.99 → 2 for $7 (editable)                                                    |
 | 8   | Persian digits or Western digits in the Persian UI                                     | Western digits for prices, codes, dates; translations for text                                                  |
-| 9   | Can cashiers add notes?                                                                | Not to built-in notebooks; yes to a custom notebook if the Owner/Manager allows it                                 |
+| 9   | Can cashiers add notes?                                                                | Not to built-in notebooks; yes to a custom notebook if the Owner/Manager allows it                              |
 | 10  | Do Floor Workers see unit cost and margin?                                             | Cost on invoices they handle only; margins hidden                                                               |
 | 11  | Units per case: who enters it for a new supplier product?                              | AI proposes from the invoice; worker confirms on first receipt; remembered afterwards                           |
 | 12  | Expiring-soon entries with no sales data                                               | Manual **Remove** with reason and Undo; removed history retained                                                |
 | 13  | Raw price below $0.23 (no "previous .99" exists)                                       | Result 0.49                                                                                                     |
-| 15  | Which AI provider reads invoices?                                                      | Decide at Phase 5 with cost per invoice; provider-agnostic interface                                            |
 | 16  | When exactly is an offer suggestion created?                                           | When the price becomes effective at 1.99/2.99/3.99 with no offer                                                |
 | 17  | Automatic supplier invoice number scheme                                               | Sequential per supplier, flagged system-assigned                                                                |
 | 18  | Idle-lock time and password re-prompt window                                           | 5 minutes and 15 minutes (settings)                                                                             |
 | 19  | Product code start                                                                     | `0001`, zero-padded, five digits after 9999                                                                     |
 | 20  | Persian terminology for the English terms list                                         | AI drafts; Ali reviews before go-live                                                                           |
 | 21  | Official logo files and brand colors                                                   | Use the supplied PNG and sampled colors; replace when received                                                  |
-| 22  | Username format                                                                        | First name + last initial (e.g., `sara.k`), editable by the Owner/Manager                                          |
+| 22  | Username format                                                                        | First name + last initial (e.g., `sara.k`), editable by the Owner/Manager                                       |
 | 23  | Real Google sign-in and real second-step verification                                  | Google remains later; E1 privileged passkey/authenticator flow is simulated; real verification needs the server |
 | 24  | Lockout settings                                                                       | 5 attempts, 15 minutes (settings)                                                                               |
 | 25  | Label waitlist auto-add on price approval                                              | Off by default (setting)                                                                                        |
 | 26  | "Price changed recently" window for labels                                             | 3 days (setting)                                                                                                |
 | 28  | Persian wording for offers ("2 for $5")                                                | "۲ عدد $5" style; Ali reviews                                                                                   |
-| 29  | AI provider for real invoice reading                                                   | Decide at step 0.3 with cost per invoice                                                                        |
 
 ## Resolved by the A2 request (2026-10-07)
 
@@ -56,13 +79,13 @@ When Ali answers one, update the requirement it affects, record the date here, a
 
 | Topic                                       | Build default / decision                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Selling locations                           | Store: Sells to customers On; Warehouse: Off. Owner/Manager can configure it. Non-selling locations absent from price/offer/approval effects; warehouse receiving may still trigger a company proposal for selling stores, but warehouse-only selling target is unavailable. Preserve hidden historical warehouse overrides until explicit selling opt-in, never clear them as a side effect.      |
+| Selling locations                           | Store: Sells to customers On; Warehouse: Off. Owner/Manager can configure it. Non-selling locations absent from price/offer/approval effects; warehouse receiving may still trigger a company proposal for selling stores, but warehouse-only selling target is unavailable. Preserve hidden historical warehouse overrides until explicit selling opt-in, never clear them as a side effect.   |
 | Table columns                               | Defaults form compact useful tables (Suppliers nine practical columns); optional extra columns use desktop wrapping/grouped detail within available width, never hidden overflow. Preferences per company/user/table; name/reference mandatory, unauthorized money fields excluded; Reset columns restores defaults.                                                                            |
 | Undo                                        | Owner 10-second/right-EN/left-FA rule; scoped conflict-aware inverses, not whole-store replacement. Place order/mark source notes ordered may Undo only before receipts or later edits; keep reference/history. Request Undo retains original transfers and appends transfer_correction evidence, never claims the goods moved back.                                                            |
-| Product date preference                     | Explicit Yes/No initializes invoice choice; unset asks. Yes needs actual date; short-dated expiry mandatory. Manual dates allow optional quantity/lot/note, no stock inference. Stop tracking is Owner/Manager catalog edit, scoped date addition/removal follows existing operational permissions.                                                                                                |
+| Product date preference                     | Saved Yes initializes invoice choice to Yes; otherwise default No. Yes needs an actual date; short-dated expiry remains mandatory. Manual dates allow optional quantity/lot/note, no stock inference. Stop tracking is Owner/Manager catalog edit, scoped date addition/removal follows existing operational permissions.                                                                       |
 | Weighed display                             | Canonical approved price per lb; main display lb by default (kg allowed), secondary unit On, rounding bands On; factor 2.20462, converted cost half-up to 4 decimals, secondary selling display half-up cents. Bands Off bypasses band/special corrections for bands categories, not Rice's separate upward-ending rule or Each pricing.                                                        |
 | New item estimate                           | Temporary typed line accepts optional pack/cost without fabricating purchased history. An incomplete expected-cost estimate remains identified as incomplete; explicit quantity and invoice-line/product matching required. Only posted association creates supplier item purchase evidence.                                                                                                    |
-| Expected return credit                      | Deduct expected credit at pickup On; provisional Owner/Manager-only balance projection distinct from confirmed credit ledger. Waiting-for-credit alert defaults14 days. Actual credit note/evidence requires Owner/Manager posting and replaces expectation once.                                                                                                                                     |
+| Expected return credit                      | Deduct expected credit at pickup On; provisional Owner/Manager-only balance projection distinct from confirmed credit ledger. Waiting-for-credit alert defaults14 days. Actual credit note/evidence requires Owner/Manager posting and replaces expectation once.                                                                                                                               |
 | Replacement pending credit (owner answered) | **Return to $600**: replacing the $30 claim releases its provisional expected credit, restores projected owed from570 to600, and creates no new purchase invoice or financial credit. Preserve actual replacement/return evidence. This owner answer resolves the apparent conflict between pickup deduction and “no money changes” for replacement: no new settlement/purchase ledger posting. |
 | Notebook language                           | English name required; Persian optional; display English when Persian missing.                                                                                                                                                                                                                                                                                                                  |
 
@@ -140,3 +163,92 @@ Later options remain different roles by location, multi-product Sale editing, un
 - Hardware Android/iPhone Home Screen launch, real Safari, physical printing and real private hosting are not presumed tested. Genuine emulator evidence must say emulator. Each phone/origin stores independent demo records; real push/email, remote revocation/sync and authenticated server data remain future work.
 
 These are transparent implementation boundaries, not a new request for owner action during the already authorized build. Existing unresolved defaults continue unchanged.
+
+### R2b 1.1 — Confirm imported delivery-date inference
+
+**Question:** confirm handwriting first, otherwise invoice-date local noon for historical imports? **Build default requested by Ali:** use that order, store UTC in the configured company timezone, and mark Received for review with provenance. Date-only notes use noon, omitted handwritten years use the invoice year, and competing dates, expiry/phone-note dates, ambiguous numeric dates/invalid local times are never guessed. Missing valid source dates remain unresolved. Manual/live readings keep now. Import and posting audit time stays the actual command time; initial stock receipt time follows Received.
+
+### R2b defaults already specified
+
+No additional question blocks the numbered work. Missing currency follows company configuration. Missing compatible totals use the documented arithmetic, including total-only → subtotal equal to total and tax zero; unresolved amounts remain questions. Missing terms use the latest strictly earlier same-supplier recognized invoice, with lexical invoice-number/ID tie-break; no history stays blank and flagged. Monthly means first of the next calendar month. Fractional cases convert only to exact positive whole units; nested/conflicting packs remain unresolved. Contacts use the first unambiguous singular value and preserve curated details. Ordinary optional blanks are quiet; explicitly flagged empties require a genuine acknowledgment. The imported Received policy above remains the one requested default for Ali to confirm.
+
+## R2c 7.3 — Branch Lookup scope (2026-10-26; Ali to confirm)
+
+**Question:** should a concrete branch’s initial Lookup list contain only products delivered, stocked or priced there, adding other permitted branches’ products only after a typed search?
+
+**Default implemented from the R2c prompt:** yes. Show this branch’s own approved effective price. With none, show **Not approved here yet** and other permitted branches’ approved prices. Once this branch approves a price, show only its price. A company default without an accepted branch/all-store decision is not proof of this branch’s approval. All locations continues to list the whole company catalog with explicit public per-location facts (0.13). Existing stock data establishes presence only; no inventory count or depletion estimate is displayed. No new permission grant or other-store cost/invoice/lot disclosure is introduced. Await Ali’s product confirmation; implementation and tests use this stated default.
+
+## R2c 7.1 — Explicit return defaults; no blocking question (2026-10-26)
+
+- Everyone can read/create returns within permitted active locations; Cashier means assigned Stores and read/create only. Existing pickup/cancellation/replacement/financial grants remain independent.
+- New creation uses one received product/line per form; existing multi-line return records remain readable. Units are whole; lb permits at most three decimal places, matching the existing pickup/settlement precision. No on-hand cap is inferred because Phase 1 has no on-hand model.
+- Damaged/Expired requires a saved photo; Other requires a note. Exact request retry is one return; a separate intentional request may contain the same goods. Cancelling/failed upload can leave unlinked content-addressed files, with no business association or blind deletion of shared evidence.
+- Missing/conflicting historical currency, missing cost or ambiguous latest receipts requires manager review. Resolve manual posting currency from retained ledger evidence, never current configuration. No FX or alternate-currency settlement is invented. A changed company currency keeps an existing new return's original denomination and blocks pickup/correction/monetary credit writes until it matches; restoring that currency allows the original snapshot.
+- Before actual signed pickup, expected credit is informational and not deducted. Later unrelated receipts cannot replace frozen source cost/currency. These are conservative implementation defaults within the authorized task, not requests for another approval.
+- Browser-local authority/file storage remains the prototype boundary. No new HTTP service, cross-device sync, physical-camera/printer proof or real-photo fixture is claimed. Review the fictional [return click guide](PR_R2C_RETURNS.md); broader deployment/device work stays separate.
+
+## R2e A defaults recorded 2026-10-27
+
+- Weight display conversions retain the original kg/lb source arithmetic; displayed invoiced quantity uses three decimals and cost four. Delivered remains explicitly labelled in its retained source unit, avoiding invented precision or rounding a partial physical receipt. Cases show Delivered in cases.
+- A paper-line mismatch acknowledgment belongs to one exact paper/calculated pair and a real actor/time; an amount change requires acknowledgment again. A one-cent difference is tolerated; greater differences block both confirmation and posting.
+
+## R2e shared-control defaults (2026-10-27)
+
+These are implementation choices within the requested design fixes, with no new business or permission rule. Shared page filters are 44 px throughout, replacing C9's mixed sizes. Desktop list count/Columns reserves the first row's end; phone layouts may wrap that group. Received's selected Today/This week/This month chip clears that range when chosen again. Modal feedback reserves a 44 px footer track on opening, with the page toast deferred and its remaining eight-second Undo display budget paused until closing; the underlying guarded Undo eligibility is unchanged. Shared Product Code columns reserve 128 px for full sortable captions including comfortable text. Notes/descriptions start at two lines and grow through six; receiving addresses keep their existing four-line reservation.
+
+### R2e C8/C11/C14 — Recorded implementation defaults
+
+- Returns keep existing canonical whole units / lb up to three decimal places. Cases require a retained positive pack or case weight; cases and individual units are whole quantities. kg and weight-case conversions use the configured factor and round canonical lb half-up to the existing three-place pickup precision. The form previews that canonical quantity and History retains the entered quantity/unit. Source cost/currency remain frozen; no inferred stock cap or availability claim is added.
+- Lookup Price changed recently uses the existing label-settings recent-price window (default three days), including currently effective noncancelled price tasks and retained actual approved-price change timestamps. Future and cancelled decisions do not count. Arrived today uses the existing authorized last-receipt date. Kept dates on a product with tracking stopped remain read-only; they do not create reminder badges.
+- Fresh/reset practice data gives every active fictional product a concrete approved price at every selling location, preserving configured branch differences. The existing pending new-product example remains the sole North York unapproved product. Existing saved records and pending decisions are preserved.
+
+### R2e fixed-size package defaults
+
+Authorized default: packages use their parent's pricing category rounding (including Grocery corrections and Rice's own upward rule), after adding the same configured 0.49 container fee for every size. Container cost defaults to 0.00; restricted-circulation EAN-13 prefix defaults to 20; ounces per pound defaults to 16. Package size accepts positive Decimal values up to six fractional places. Parent Product Code is the stable company-scoped parent identity. Existing records and custom settings are retained; migrations never add fictional packages to saved stores.
+
+Package lifecycle defaults: archive active packages before archiving their parent or changing it to Each; the protected commit rejects orphaning rather than leaving stale chargeable packages. Equivalent active sizes (for example 1000 g and 1 kg) are one size and cannot be duplicated; archived sizes remain as records and may be replaced using a new code. Manufacturer barcode entry supports validated GS1 GTIN-8, UPC-A/GTIN-12, GTIN-13 and GTIN-14, retaining the printed form; zero-padded GTIN identity comparison rejects UPC/EAN aliases within the same company. Generated in-store barcodes remain EAN-13. Active approved parent sales feed the derived package base price, and sale ending restores the regular derived price; packages may retain their own independent ordinary offers.
+
+A package's independent approved sale follows the ordinary C8 conflict workflow when a new derived regular price is lower: retain the sale until Owner/Manager Keeps, Changes or Ends it, with an actual package-linked alert. Matching pending review or an authorized Keep survives startup repair. No parent price block or silent sale ending is introduced. Normal configured offer suggestions are reconciled from derived prices, with stale mappings stopped and fresh suggestions requiring their usual confirmation.
+
+## R2e E defaults recorded — 2026-10-27
+
+- Maker metadata lives in top-level company configuration `branding.maker`, separate from the existing `company.branding` store palette. Default Klead and exact asset paths come from the seed; support is empty/hidden.
+- Missing maker configuration on an existing store uses presentation defaults without writing a migration. An explicit null maker, `enabled: false` or blank name hides attribution; company icons are the fallback.
+- The app name in About is the configured store name and the version comes from the prototype package. Maker configuration has no new settings editor: changing the configuration controls the identity without application-code edits. Installable manifest/icons are generated from the build's configuration; runtime tab title/favicon follow the current saved company config. Already installed operating-system icon refresh remains browser-controlled.
+- Staff print language is unchanged: English-only supplier documents stay English, bilingual internal/timesheet documents retain both languages. Physical printer and native app installation checks remain hardware review.
+
+Maker file ownership is explicit in `maker.asset_identity` (default Klead). Replacing only `maker.name` suppresses inherited logos/icons rather than displaying another maker's lettering; supply replacement files with the matching asset identity, or a complete new maker block.
+
+## R2f D1 display defaults — 2026-10-27
+
+- “So far” is presentation-only elapsed time for the currently selected branch's today, from a valid In no later than its actual clock and no Out. Department/day captions include that elapsed display; stored duration, weekly totals and payroll CSV continue to count only completed shifts. No Out is inferred. Past missing-Out shifts stay amber/zero, and future clock-ins have no elapsed claim. The dashboard's existing prior-unclosed count is unchanged.
+- The header on-shift count deduplicates current-day people. The display refreshes at minute boundaries and when a tab becomes visible; it never changes the chosen day, saved records or actor evidence.
+- Screenshot-specific masonry cards keep compact baseline headings and independent heights. Narrow day-row menus are28px wide but44px high, as the source; ordinary operational cards retain the shared R0 header contract.
+
+## R2f D2 recorded defaults — 2026-10-28
+
+- New person initially selects the first configured department, as the existing guarded staff editor did; the operator can change it. English name is required; Persian name and app login are optional. The list remains mounted while the inline form is open. After a successful Add, clear search and select Active so the new actual person is visible. Cancel discards only the unsaved form.
+- Login display comes from the permitted current branch account query. Loading, unavailable and failed-account-query states are explicit; a missing query result is never shown as No app login when a stored link exists. Name-only edits retain an unchanged unavailable link, while changing/clearing a link still uses normal protected validation.
+- Stale staff versions keep the staged form and report that the person changed. Close/reopen loads the current evidence. Archive remains a confirmed soft status change; Restore does not remove historical rows.
+
+## R2f D3 recorded implementation defaults — 2026-10-28
+
+- Existing cost changes use current selected-location cost authority; All locations records one explicit company-wide manual cost decision with per-location receipt fingerprints. A branch with a later genuine accepted receipt uses that receipt again. A manual marker never appears in purchase history.
+- An existing unrelated pending invoice-price review blocks a new manual cost edit with an actionable Approvals message. The editor may replace its own earlier manual-cost proposal; it never silently supersedes invoice evidence.
+- Explicit Owner/Manager Change price in the draft is the actual authorized price decision and preserves normal reasons, margin acknowledgments and Sale conflict choices. A cost-only edit uses normal pending approval.
+- New package date tracking defaults Off because inheritance covers category/tax/supplier, not dates. Existing parent date requirements and ordinary package date actions remain.
+- Pending archives remain visible as struck-through rows with Undo until outer Save, keeping the acted-on area stable. New rows say Assigned on save until the actual protected allocation.
+
+A location without accepted local regular receipt/manual evidence retains the existing company-level latest-known-cost fallback. A local manual edit updates that fallback as existing regular receipt posting does; actual evidence at another location wins. Manual-cost proposal replacement is restricted to overlapping location scope; a concrete branch cannot partially replace an All locations review.
+
+## R2f D7 — Implemented defaults
+
+No new product decision is required. Approved screenshots win the phone This week order. Reminder window is a truthful configurable-horizon caption; no seven-day predicate is invented. Prior activity dates use English month/day value captions in both languages, with the complete company-local timestamp available. One actual multi-line received transaction counts once; later short/replacement receipts count separately. See [review guide](PR_R2F_DASHBOARD.md).
+
+D7 replacement delivery counting uses each actual replacement stock-movement identity. The existing canonical workflow emits one movement per replacement event, so distinct receipts for one return on the same day remain distinct even when the Received projection has no timestamp. It never groups those events by return/date. Invoice multi-product lines still share their actual source/timestamp group.
+
+### R2f D3 — Manual-cost and package-menu defaults
+
+Manual weight-cost decisions are not receipts. Existing Sale-cost alerts remain actual-receipt-bound; do not invent invoice evidence for them. Preserve the Sale and ordinary pending regular-price review, while explicit staged price changes retain normal Sale/margin validation. Standalone package row menus follow the approved 36px footprint; their New size peer controls remain 44px.
+
+An All locations manual weight-cost decision retains one all-scope cost marker and separate ordinary pending reviews per fresh permitted selling branch. Each review retains its own approved/manual price and actual prior cost (null if unknown). Exclude Warehouse/inactive/non-selling targets. Only explicitly staged regular-price-covered branches skip pending review. A retained overlapping all-scope review remains blocking if a partial replacement would lose another branch's work. Bind the genuine session/location to editor snapshots so a later location switch cannot expand an old draft's scope.

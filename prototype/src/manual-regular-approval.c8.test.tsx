@@ -17,9 +17,14 @@ import { demoSaleCostInvoice, postInvoice } from "./invoice";
 import { savePriceChange, saleStoreDate } from "./sales";
 import { Approvals } from "./screens/Approvals";
 import { DemoProvider, initialState, useDemo } from "./store";
+import {
+  clearRenderedUiReadiness,
+  renderedUiReady,
+} from "./test/rendered-ui-readiness";
 
 const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
 afterEach(() => {
+  clearRenderedUiReadiness();
   for (const fixture of fixtures.splice(0)) fixture.dispose();
 });
 beforeEach(async () => {
@@ -103,7 +108,7 @@ async function prepare() {
       item.product_code === "0012",
   )!;
   expect(approval.manual_price_review?.receiver_recommendation).toBe("keep");
-  expect(approval.proposed_price).toBe("23.49");
+  expect(approval.proposed_price).toBe("23.99");
   const fixture = await authenticatedProviderFixture({
     state,
     role: "manager",
@@ -118,22 +123,37 @@ async function prepare() {
       <Harness />
     </DemoProvider>,
   );
-  const title = await screen.findByText("Stainless Steel Pot 24 cm", {
-    selector: "h2",
-  });
-  const card = title.closest(".approval-card")!;
-  fireEvent.click(
-    within(card as HTMLElement).getByRole("button", { name: "Approve price" }),
+  await renderedUiReady(() =>
+    Boolean(
+      screen.queryByRole("heading", {
+        level: 2,
+        name: "Stainless Steel Pot 24 cm",
+      }),
+    ),
   );
-  await screen.findByRole("combobox", { name: "Selling price" });
-  return screen.getByRole("dialog", { name: "Review approval" });
+  // ProductName renders names/units inside the linked heading. Follow that
+  // actual approval row, then open its protected decision preview.
+  const title = screen.getByRole("heading", {
+    level: 2,
+    name: "Stainless Steel Pot 24 cm",
+  });
+  const card = title.closest<HTMLElement>(".approval-detail-row")!;
+  expect(card).toHaveAttribute("data-approval-id", approval.id);
+  fireEvent.click(within(card).getByRole("button", { name: "Approve price" }));
+  const dialog = await screen.findByRole("dialog", {
+    name: "Review approval",
+  });
+  await within(dialog).findByRole("combobox", {
+    name: "Selling price",
+  });
+  return dialog;
 }
 
 it("offers calculated price by default despite receiver Keep, and applies it only after the manager confirms", async () => {
   const dialog = await prepare();
   expect(
     within(dialog).getByRole("combobox", { name: "Selling price" }),
-  ).toHaveTextContent("Use the new calculated price $23.49");
+  ).toHaveTextContent("Use the new calculated price $23.99");
   expect(screen.getByLabelText("Actual regular price")).toHaveTextContent(
     "24.99",
   );
@@ -146,7 +166,7 @@ it("offers calculated price by default despite receiver Keep, and applies it onl
   );
   await waitFor(() =>
     expect(screen.getByLabelText("Actual regular price")).toHaveTextContent(
-      "23.49",
+      "23.99",
     ),
   );
   expect(screen.getByLabelText("Manual marker")).toHaveTextContent("none");

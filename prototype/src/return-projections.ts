@@ -39,6 +39,10 @@ export type OperationalReturnRead = Omit<
 };
 
 const privateKeys = new Set([
+  "acquisition_basis",
+  "source_receipt",
+  "creation_request_id",
+  "creation_fingerprint",
   "unit_cost",
   "unit_cost_before_tax",
   "cost_source",
@@ -83,6 +87,8 @@ export function returnView(
   );
   const operational = {
     ...record,
+    creation_request_id: undefined,
+    creation_fingerprint: undefined,
     closure_subtype: returnClosureSubtype(record),
     line_progress: progress,
     evidence: record.evidence?.map(({ photo, ...event }) => ({

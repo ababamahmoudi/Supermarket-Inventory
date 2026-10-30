@@ -13,8 +13,7 @@
 }
 :root .invoice-review-pane,
 :root .invoice-document-pane,
-:root .invoice-order-card,
-:root .invoice-lines-card {
+:root .invoice-order-card {
   min-inline-size: 0;
 }
 :root .invoice-workspace .invoice-preview {
@@ -25,58 +24,18 @@
   overflow-wrap: anywhere;
   max-inline-size: 100%;
 }
-:root .invoice-workspace .invoice-details-form,
-:root .invoice-workspace .invoice-line-form {
+:root .invoice-workspace .invoice-details-form {
   inline-size: 100%;
   max-inline-size: none;
 }
-:root .invoice-lines-table table.has-defined-columns,
 :root .invoice-order-table table.has-defined-columns {
   min-inline-size: 0;
   inline-size: 100%;
   table-layout: fixed;
 }
-:root .invoice-lines-table col:first-child {
-  width: 34%;
-}
-:root .invoice-lines-table th,
-:root .invoice-lines-table td,
 :root .invoice-order-table th,
 :root .invoice-order-table td {
   padding-inline: 10px;
-  overflow-wrap: break-word;
-}
-:root .invoice-line-toggle .product-name strong,
-:root .invoice-line-toggle .product-name small,
-:root .invoice-line-price > small,
-:root .invoice-line-price > p {
-  white-space: normal;
-  overflow-wrap: break-word;
-}
-:root .invoice-line-summary .control-narrow,
-:root .invoice-line-summary .ui-number {
-  max-inline-size: 100%;
-}
-:root .invoice-line-summary .ui-number input {
-  min-inline-size: 0;
-}
-:root .invoice-line-price {
-  min-inline-size: 0;
-  inline-size: 100%;
-  grid-template-columns: minmax(0, 1fr);
-}
-:root .invoice-line-price .badge,
-:root .invoice-line-price .price-display {
-  white-space: nowrap;
-}
-:root .invoice-line-price .manual-price-details {
-  min-inline-size: 0;
-  max-inline-size: 100%;
-  grid-template-columns: minmax(0, 1fr);
-  text-align: end;
-}
-:root .invoice-line-price .manual-price-comparison {
-  white-space: normal;
   overflow-wrap: break-word;
 }
 :root .invoice-order-decisions,
@@ -124,13 +83,11 @@
   }
 }
 @media (max-width: 760px) {
-  :root .invoice-lines-table table.has-defined-columns,
   :root .invoice-order-table table.has-defined-columns {
     /* A phone may scroll this operational table; desktop never needs to. */
     min-inline-size: 860px;
   }
-  :root .invoice-workspace .invoice-details-form,
-  :root .invoice-workspace .invoice-line-form {
+  :root .invoice-workspace .invoice-details-form {
     grid-template-columns: minmax(0, 1fr);
   }
 }

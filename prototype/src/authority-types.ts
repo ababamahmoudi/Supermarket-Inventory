@@ -76,6 +76,7 @@ export type Capability =
   | "lookup.read"
   | "catalog.read"
   | "catalog.edit"
+  | "catalog.package_edit"
   | "catalog.create_active"
   | "catalog.cost_read"
   | "catalog.tracking_preference_edit"
@@ -179,6 +180,8 @@ export type Capability =
   | "price_updates.register_confirm"
   | "price_updates.label_confirm"
   | "price_updates.complete"
+  | "timesheets.read"
+  | "timesheets.edit"
   | "demo.reset";
 
 export interface PersonRecord {
@@ -255,6 +258,7 @@ export interface BusinessState {
       type?: "store" | "warehouse";
       sells_to_customers?: boolean;
     }[];
+    modules?: { [key: string]: boolean | undefined; timesheets?: boolean };
     orders?: { allow_floor_worker: boolean };
     price_updates?: { allow_floor_worker_complete: boolean };
     session?: { reprompt_password_after_minutes: number };
@@ -327,7 +331,9 @@ export type SystemReconciliationSource =
   | "sales_clock"
   | "date_reminders"
   | "return_credit_reminders"
-  | "price_updates";
+  | "price_updates"
+  | "timesheets_migration"
+  | "packages_migration";
 /** Requires an active repository-minted witness bound to this exact canonical draft. */
 export declare function requireSystemReconciliation(
   state: BusinessState,

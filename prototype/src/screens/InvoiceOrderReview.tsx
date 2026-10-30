@@ -171,6 +171,8 @@ export function InvoiceOrderReview() {
                       )}
                     >
                       <Select
+                        searchable
+                        id={`invoice-order-match-${encodeURIComponent(temporary.id)}`}
                         value={matchedIndex < 0 ? "" : String(matchedIndex)}
                         disabled={!!stale}
                         onChange={async (value) => {
@@ -199,6 +201,7 @@ export function InvoiceOrderReview() {
                         }}
                         options={[
                           {
+                            placeholder: true,
                             value: "",
                             label: t(
                               "Choose invoice line",
@@ -232,6 +235,15 @@ export function InvoiceOrderReview() {
                                     line.description;
                               return {
                                 value: String(index),
+                                searchTerms: [
+                                  product?.name_en ??
+                                    line.new_name_en ??
+                                    line.description,
+                                  product?.name_fa ?? line.new_name_fa ?? "",
+                                  line.product_code,
+                                  line.supplier_item_code ?? "",
+                                  product?.barcode ?? line.barcode ?? "",
+                                ],
                                 label: `${index + 1} · ${name}${line.supplier_item_code ? ` · ${line.supplier_item_code}` : ""}`,
                               };
                             }),
@@ -281,6 +293,7 @@ export function InvoiceOrderReview() {
             )}
           </p>
           <Button
+            id="invoice-order-refresh"
             variant="secondary"
             disabled={!choices.some((candidate) => candidate.id === order.id)}
             onClick={() =>
@@ -300,8 +313,8 @@ export function InvoiceOrderReview() {
           onExpandedRowKeysChange={setExpandedRowKeys}
           columns={[
             { width: "30%" },
-            { width: 140, align: "end" },
-            { width: 140, align: "end" },
+            { width: 230, minWidth: 230, align: "end" },
+            { width: 180, minWidth: 180, align: "end" },
             { width: "40%" },
           ]}
         >
@@ -378,6 +391,7 @@ export function InvoiceOrderReview() {
                             <LtrText>{row.extra_units}</LtrText>
                           </Badge>
                           <SegmentedControl
+                            id={`invoice-order-line-${row.invoice_line_index}-extra-decision`}
                             aria-label={t(
                               "Extra delivered decision",
                               "تصمیم تحویل اضافه",
@@ -465,6 +479,7 @@ export function InvoiceOrderReview() {
                           </p>
                           {row.accepted_units > 0 && (
                             <SegmentedControl
+                              id={`invoice-order-line-${row.invoice_line_index}-price-decision`}
                               aria-label={t(
                                 "Changed cost decision",
                                 "تصمیم هزینه تغییرکرده",
@@ -568,6 +583,7 @@ export function InvoiceOrderReview() {
                           : t("Short", "کسری")}
                       </Badge>
                       <SegmentedControl
+                        id={`invoice-order-missing-${encodeURIComponent(row.order_line_id)}-decision`}
                         aria-label={t(
                           "Missing item decision",
                           "تصمیم کالای تحویل‌نشده",

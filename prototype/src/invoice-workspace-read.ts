@@ -1,3 +1,11 @@
+import { freeCaseActionQuote } from "./invoice-free-cases";
+import Decimal from "decimal.js";
+import { validReceivingPrice } from "./invoice-receiving-price";
+import {
+  receivingPriceQuote,
+  receivingPriceProblem,
+  receivingPriceEligible,
+} from "./invoice-receiving-price";
 import type { AuthenticatedActor } from "./authority-types";
 import { cloneWithAuthority, freshActor } from "./authority";
 import {
@@ -13,6 +21,7 @@ import {
   initializeInvoiceManualPriceDecisions,
   validCost,
 } from "./invoice";
+import { invoiceOrderProblems } from "./invoice-orders";
 import { invoiceLineCalculation } from "./invoice-weight";
 import { invoiceVersion, invoiceContentVersions } from "./invoice-version";
 import { manualPrice } from "./manual-prices";
@@ -26,6 +35,9 @@ import {
 } from "./received";
 import { createId } from "./ids";
 import type { DemoState, DemoInvoice } from "./types";
+import { normalizeInvoiceReceivingReview } from "./invoice-checks";
+import { invoiceRecords } from "./invoice-records";
+import { newInvoiceCategoriesRead } from "./invoice-new-categories";
 
 function canonicalInvoice(state: DemoState, id: string): DemoInvoice {
   const invoice =
@@ -65,9 +77,12 @@ export function selectInvoiceWorkspace(
     state.invoice.status = "reading";
   if (
     state.invoice.status !== "posted" &&
+    state.invoice.status !== "reading" &&
     canInvoiceAuthority(state, actor, "invoices.edit", id, true)
-  )
+  ) {
+    normalizeInvoiceReceivingReview(state.invoice);
     initializeInvoiceManualPriceDecisions(state, actor);
+  }
 }
 /** Only financial values belonging to this authorized invoice enter the workspace DTO. */
 export function invoiceWorkspaceRead(
@@ -80,6 +95,7 @@ export function invoiceWorkspaceRead(
   const canonical = canonicalInvoice(state, id);
   const working = cloneWithAuthority(state);
   working.invoice = structuredClone(canonical);
+  normalizeInvoiceReceivingReview(working.invoice);
   const invoice = purchaseInvoiceView(state, actor, id);
   const versions = invoiceContentVersions(state, canonical);
   const selected = invoiceVersion(state, canonical, version);
@@ -105,6 +121,7 @@ export function invoiceWorkspaceRead(
         row.code === line.product_code && row.company_id === line.company_id,
     );
     let price: string | null = null,
+      roundedUpFrom: string | null = null,
       costValid = true;
     try {
       // A new imported product awaits a person's category choice. Its valid
@@ -116,14 +133,17 @@ export function invoiceWorkspaceRead(
         if (line.quantity_unit === "cases" && line.sold_by !== "weight")
           costValid &&= validCost(line.case_cost_before_tax ?? "");
       } else {
-        price =
-          working.invoice.status === "posted"
-            ? line.calculated_selling_price
-            : invoiceLineCalculation(
-                line,
-                line.pricing_category ?? product?.pricing_category ?? "grocery",
-                working.config,
-              ).selling_price;
+        if (working.invoice.status === "posted")
+          price = line.calculated_selling_price;
+        else {
+          const calculation = invoiceLineCalculation(
+            line,
+            line.pricing_category ?? product?.pricing_category ?? "grocery",
+            working.config,
+          );
+          price = calculation.selling_price;
+          roundedUpFrom = calculation.rounded_up_from;
+        }
       }
     } catch {
       costValid = false;
@@ -148,9 +168,45 @@ export function invoiceWorkspaceRead(
       } catch {
         dateSuggestions = [];
       }
+    const selectedPrice = line.receiving_price?.price ?? price;
+    const actualPrice =
+      selectedPrice && validReceivingPrice(selectedPrice)
+        ? new Decimal(selectedPrice)
+        : null;
+    const selectedMargin =
+      actualPrice && costValid
+        ? actualPrice.minus(line.unit_cost_before_tax).div(actualPrice)
+        : null;
+    const threshold = working.config.pricing_categories.find(
+      (category) =>
+        category.key === (line.pricing_category ?? product?.pricing_category),
+    )?.minimum_margin;
     return {
       index,
+      freeCaseQuote:
+        line.free_case_group &&
+        ["draft", "review"].includes(working.invoice.status) &&
+        canInvoiceAuthority(working, actor, "invoices.edit", id, true)
+          ? freeCaseActionQuote(working, actor, index)
+          : undefined,
       price,
+      receivingMargin:
+        invoice.margin_allowed && selectedMargin
+          ? selectedMargin.times(100).toFixed(2)
+          : null,
+      receivingBelowCost: Boolean(
+        actualPrice && costValid && actualPrice.lt(line.unit_cost_before_tax),
+      ),
+      receivingBelowMinimum: Boolean(
+        invoice.margin_allowed &&
+        selectedMargin &&
+        threshold &&
+        selectedMargin.lt(threshold),
+      ),
+      roundedUpFrom,
+      receivingPriceQuote: receivingPriceQuote(working, index),
+      receivingPriceInvalid: receivingPriceProblem(working, index),
+      receivingPriceEligible: receivingPriceEligible(working, line),
       costValid,
       manual: marker ? { price: marker.price } : null,
       manualReplacement: replacement ? { price: replacement.price } : null,
@@ -158,13 +214,17 @@ export function invoiceWorkspaceRead(
       dateSuggestions,
     };
   });
-  const blockers = invoiceBlockers(working, actor);
+  const blockerLineIndexes: Partial<
+    Record<ReturnType<typeof invoiceBlockers>[number], number[]>
+  > = {};
+  const blockers = invoiceBlockers(working, actor, blockerLineIndexes);
   const blockersById: Record<string, ReturnType<typeof invoiceBlockers>> = {};
-  for (const row of [state.invoice, ...(state.invoices ?? [])]) {
+  for (const row of invoiceRecords(state, state.config.company.seed_key)) {
     if (!canInvoiceAuthority(state, actor, "invoices.cost_read", row.id))
       continue;
     const draft = cloneWithAuthority(state);
     draft.invoice = structuredClone(row);
+    normalizeInvoiceReceivingReview(draft.invoice);
     blockersById[row.id] = invoiceBlockers(draft, actor);
   }
   const supplierItems = supplierItemFactsForInvoice(
@@ -184,10 +244,13 @@ export function invoiceWorkspaceRead(
     displayedVersion,
     latestVersionId: versions.at(-1)!.version_id,
     blockers,
+    blockerLineIndexes,
+    orderProblems: invoiceOrderProblems(working, actor),
     blockersById,
     lowerLineIndexes: lowerPriceLineIndexes(working, actor),
     lineDetails,
     supplierItems,
+    newProductCategories: newInvoiceCategoriesRead(state, actor, id),
     locationSuggestion: suggestedInvoiceLocation(state, canonical),
   };
 }

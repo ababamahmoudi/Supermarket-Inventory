@@ -151,9 +151,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       .getByLabel("Actual pickup quantity", { exact: true })
       .fill("3");
     await field(pickup, "Supplier representative name").fill("Demo Driver");
-    await field(pickup, "Signed paper pickup slip reference").fill(
-      "SIGNED-C5-COLOR-001",
-    );
+    await field(pickup, "Reference (optional)").fill("SIGNED-C5-COLOR-001");
     await button(pickup, "Record pickup").click();
     // This existing status is published only after the actual command completes.
     await expect(page.getByRole("status")).toHaveText(
@@ -312,29 +310,33 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     const document = page.locator(".posted-invoice-document");
     await expect(document).toContainText("FV-20390");
     const displayedCosts = page.locator(
-      ".posted-invoice-lines tbody tr > td:nth-child(3)",
+      ".posted-invoice-lines .receiving-cost-cell",
     );
-    await expect(displayedCosts.first()).toHaveText("$0.98");
+    await expect(displayedCosts.first()).toHaveText("$0.9800");
     // This signed fictional document retains its exact six source costs.
-    // All have cents; the separate weighed fixture above must retain 4.9895.
+    // Posted costs keep four decimals; source amounts and weighed precision stay exact.
     await expect(displayedCosts).toHaveText([
-      "$0.98",
-      "$1.20",
-      "$1.55",
-      "$1.95",
-      "$3.40",
-      "$1.60",
+      "$0.9800",
+      "$1.2000",
+      "$1.5500",
+      "$1.9500",
+      "$3.4000",
+      "$1.6000",
     ]);
-    const title = page.locator(".posted-invoice-title");
+    const title = page.locator(".posted-receiving > header");
     expect(
       await title.evaluate((element) => {
-        const heading = element.querySelector("h2")!.getBoundingClientRect();
+        const heading = element.querySelector("h1")!.getBoundingClientRect();
         const badge = element.querySelector(".badge")!.getBoundingClientRect();
-        return Math.abs(
-          heading.top + heading.height / 2 - badge.top - badge.height / 2,
+        const bounds = element.getBoundingClientRect();
+        return (
+          badge.top >= heading.bottom - 2 &&
+          badge.left >= bounds.left - 2 &&
+          badge.right <= bounds.right + 2 &&
+          badge.bottom <= bounds.bottom + 2
         );
       }),
-    ).toBeLessThanOrEqual(2);
+    ).toBe(true);
     const totals = page.locator(".posted-invoice-totals > div");
     await expect(totals).toHaveCount(5);
     await expect(totals.locator("dt")).toHaveText(
@@ -466,6 +468,10 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
           `${totalRows[index].label}/${next.label}: total groups do not overlap`,
         ).toBe(false);
       }
+    if ((page.viewportSize()?.width ?? 1280) < 760)
+      await page
+        .getByRole("button", { name: /^(View original|مشاهده اصل)/ })
+        .click();
     const media = page.locator(".invoice-original-media");
     const image = media.locator("img");
     await expect(image).toBeVisible();
@@ -474,6 +480,15 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
         image.evaluate((element: HTMLImageElement) => element.naturalWidth),
       )
       .toBeGreaterThan(0);
+    await expect(media).toHaveAttribute("data-fit", "width");
+    const toolbar = page.locator(".invoice-original-controls");
+    await button(toolbar, "More", "بیشتر").click();
+    await page
+      .getByRole("menuitem", {
+        name: variant === "fa-light" ? "اندازه صفحه" : "Fit page",
+        exact: true,
+      })
+      .click();
     await expect(media).toHaveAttribute("data-fit", "page");
     const fits = () =>
       media.evaluate((element) => {
@@ -489,7 +504,6 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
         );
       });
     await expect.poll(fits).toBe(true);
-    const toolbar = page.locator(".invoice-original-controls");
     await button(toolbar, "Fit width", "اندازه عرض").click();
     await expect(media).toHaveAttribute("data-fit", "width");
     await expect(media).toHaveAttribute("data-zoom", "1");
@@ -501,9 +515,21 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     for (let count = 0; count < 15; count++) await zoomIn.click();
     await expect(media).toHaveAttribute("data-zoom", "4");
     await expect(zoomIn).toBeDisabled();
-    await button(toolbar, "Fit page", "اندازه صفحه").click();
+    await button(toolbar, "More", "بیشتر").click();
+    await page
+      .getByRole("menuitem", {
+        name: variant === "fa-light" ? "اندازه صفحه" : "Fit page",
+        exact: true,
+      })
+      .click();
     await expect(media).toHaveAttribute("data-fit", "page");
     await expect.poll(fits).toBe(true);
+    if ((page.viewportSize()?.width ?? 1280) < 760)
+      await page
+        .locator(
+          ".original-viewer-dialog[open] .ui-dialog-header .ui-icon-button",
+        )
+        .click();
     const posted = await assertContract(page, "Posted invoice", variant);
     await button(page, "Move invoice", "انتقال فاکتور").click();
     await assertContract(page, "Move invoice dialog", variant);
@@ -511,6 +537,14 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
     await button(page, "Correct invoice", "اصلاح فاکتور").click();
     const correction = page.locator(".invoice-correction-dialog");
     await expect(correction).toBeVisible();
+    await expect(correction.locator(".receiving-line-editor")).toHaveCount(0);
+    await correction.locator(".invoice-line-toggle").first().click();
+    // The shared editor takes focus after the collapsed list. Let the previous
+    // field finish its ordinary blur transition before checking idle glow.
+    await expect(correction.locator("#invoice-correction-reason")).toHaveCSS(
+      "box-shadow",
+      "none",
+    );
     const contrast = await fieldContrast(page, ".invoice-correction-dialog");
     expect(contrast.length).toBeGreaterThan(5);
     for (const control of contrast) {
@@ -756,6 +790,15 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
     exact: true,
   });
   await choose(page, field(dialog, "Product"), /Sour Cherry Juice 1 L.*0003/);
+  const retained = before.offers.filter(
+    (offer: { product_code: string; status: string }) =>
+      offer.product_code === "0003" && offer.status === "active",
+  );
+  expect(retained).toHaveLength(1);
+  expect(retained[0]).toMatchObject({ scope: "all", branch: "all" });
+  // Repeating an offer includes its exact scope. A new branch-only offer is a
+  // different real record even when its price/terms match the company default.
+  await choose(page, field(dialog, "Offer scope"), "Company default price");
   await assertContract(page, "Create offer dialog", "en-light");
   await button(dialog, "Create offer").click();
   await expect(dialog).not.toBeVisible();
@@ -767,9 +810,11 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
   );
   expect(repeated.offers).toEqual(before.offers);
   expect(repeated.activity).toEqual(before.activity);
-  await existing.getByRole("button", { name: "More", exact: true }).click();
-  const stopExisting = page.getByRole("menuitem", {
-    name: "Stop offer · All branches",
+  await expect(
+    existing.getByRole("button", { name: "More", exact: true }),
+  ).toHaveCount(0);
+  const stopExisting = existing.getByRole("button", {
+    name: "Stop offer",
     exact: true,
   });
   await expect(stopExisting).toBeVisible();
@@ -783,19 +828,12 @@ test("C5 repeated current offer is idempotent, stop moves retained record to Pas
     '.past-offers-table tr[data-product-code="0003"]',
   );
   await expect(pastRow).toHaveCount(1);
-  let retainedStatus = await pastRow.innerText();
-  const details = button(pastRow, "Show details");
-  if (await details.count()) {
-    const detailsId = await details.getAttribute("aria-controls");
-    expect(detailsId).toBeTruthy();
-    await details.click();
-    const omitted = page.locator(`[id="${detailsId}"]`);
-    await expect(omitted).toBeVisible();
-    expect(await omitted.locator("dl > div > dd").count()).toBeGreaterThan(0);
-    // C8 keeps Status in the phone row; only genuinely omitted values expand.
-    retainedStatus += ` ${await omitted.innerText()}`;
-  }
-  expect(retainedStatus).toContain("Stopped");
+  await expect(button(pastRow, "Show details")).toHaveCount(0);
+  await button(pastRow, "Open offer").click();
+  const record = page.getByRole("dialog", { name: "Offer", exact: true });
+  await expect(record).toContainText("Stopped");
+  await expect(record.locator("dl > div > dd")).not.toHaveCount(0);
+  await button(record, "Close").click();
   const toast = page
     .getByTestId("undo-toast")
     .filter({ hasText: "Stop offer" });
@@ -824,9 +862,7 @@ test("C5 return evidence, memo, cancellation and settlement forms retain compact
   const pickup = page.locator(".return-action-card");
   await pickup.getByLabel("Actual pickup quantity", { exact: true }).fill("3");
   await field(pickup, "Supplier representative name").fill("Demo Driver");
-  await field(pickup, "Signed paper pickup slip reference").fill(
-    "SIGNED-C5-FORMS-001",
-  );
+  await field(pickup, "Reference (optional)").fill("SIGNED-C5-FORMS-001");
   await button(pickup, "Record pickup").click();
   await expect(page.locator(".return-detail-title")).toContainText(
     "Waiting for credit",

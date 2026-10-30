@@ -1,4 +1,372 @@
+## 2026-10-30 — R3c K1 — clear the known unit check
+
+An unchanged repeat delivery could say Same as last delivery while staying amber with one unit check. Compare the recognized reading unit and effective cost-basis evidence in both preview and import, then clear the proven matching unit question and confirm the complete line automatically. Keep unknown/fallback units, actual unit/basis differences, paper arithmetic and unrelated questions for review. Cost-only changes retain only their real cost question; existing qualified-price precedence and corrected historical prices remain intact. No persisted schema or fabricated human confirmation is added.
+
+The stronger browser fixture reproduces the old Ready-to-post failure and retains every existing green-row, zero-check, cost-only, original-hash and financial assertion. Final validation passed 40 K1 tests, 310 related tests across 16 files, and all eight K1/K2 English/Persian desktop/phone browser cases in 1.1 minutes without retries/skips. Integrated build/types and full lint/format pass. The reported location/reload slowdown with about 25 imported invoices is recorded in Open questions for after the demo; no performance change is included.
+
+## 2026-10-30 — R3c fixed category fit and controlled pending proofs
+
+The full category action now has a fixed 48 px height and enough text room at the original 640 px grid boundary. Scoped existing 4 px gap/inset tokens keep its complete 13 px label within two lines, including the reproduced classic-scrollbar width. The original 1.7:1 panes, full label, filters and all card/density limits remain. No style oracle is relaxed.
+
+Pending-reading browser checks now pause supported browser scheduling around the real upload or retained-original action. They still require visible Reading, exact canonical reading identity/source and unchanged financial records; the posting guard additionally covers the phone footer. Scheduling resumes before the existing review deadlines, then verifies the same retained invoice. The four unpaused F1 tests remain unchanged. This does not restore an artificial user wait. Mac/Ubuntu and older reader/phone setup guides now point to the current branch, exact localhost fallback and background-reading rules.
+
+Verification: 55/55 receiving cases passed in 9.5 minutes with zero retries/skips, covering every one of the eight CI240 sizing failures and all 39 earlier source failures. The 420 native loaded-font boundary probes, 40 counterfeit checks, 16 original density negatives and three token audits pass. The pending-state matrix passed all 14 cases in 2.0 minutes, including every affected case and four unchanged unpaused F1 cases. The final six-case composed smoke run also passed in 1.0 minute without retries/skips. Full composed lint/format/build/types pass; overlapping batches are not summed.
+
+## 2026-10-30 — R3c final control composition and real simulated readiness
+
+This entry records the earlier intermediate verification; the fixed-category fit entry above defines the final sizing.
+
+Restored the original 1.7:1 invoice panes, kept the full category action at 48 px without stretching, and fitted its heading with scoped existing 8 px spacing. The new control has a real native dialog association. Its audit recognition is bound to canonical invoice/company/NEW count and exact real structure; generic control rules and every original pane/density number remain. All 55 actual source-regression cases passed, covering all 39 pane/control CI failures plus retained density/F6/compact flows, 40 counterfeit checks and 16 original density negative controls.
+
+Removed the cosmetic 2500 ms simulated wait after the fictional values and original were already ready. The same guarded fresh-authority transition now completes on the next task; original verification, actual attribution, human review, Live behavior and all pre-post financial protections remain. The gated storage/provider regression failed before and passed after. All 21 affected component tests and 12 unchanged F1/supplier/branch browser cases passed with no retries. F1 also adds visible review completion within its ordinary five-second deadline and a genuine-new-ID guard, retaining the canonical status/source/provenance checks.
+
+The final combined build/type check and 77 component tests passed. The composed F1 EN/FA desktop/phone run passed all four cases in 48.4 seconds with no skips or retries. Full lint/token checks and final independent CI are recorded with the release; overlapping batches are not a unique-suite total.
+
+## 2026-10-30 — R3c F9 — retained disclosure proofs match the actual chooser
+
+The retained native-picker tests now require both the exact Simulated mode title and the complete statement that photos/PDFs use fictional values and do not read the invoice. Live-mode proof first requires the actual chooser to be visible, then checks absence of the real translated warning component. All picker type/multiple/cancel, no-draft, exact canonical state, original/identity and branch-permission assertions remain.
+
+The four obsolete-copy cases failed on the unchanged application before this test-contract repair. The combined 12-case desktop/phone disclosure/F0/F1 run passed; after the final visible-chooser guard, all eight overlapping F0/F1 cases passed again with traces and zero skips/retries. Targeted lint/format and the fresh production build passed. Production source and original F0 tests are unchanged. No timeout, retry, conditional skip or numerical oracle was relaxed.
+
+## 2026-10-30 — R3c F6 — restore compact full-action receiving heading
+
+Fixed the persistent English/Persian desktop density regression exposed by CI #232. The new category action no longer creates a second heading row; its complete text, the title and all filters remain usable. The unchanged 25-line checks, heading/card/composed limits and all deliberate negative controls are retained. Verification passed build/types, targeted lint/format, all three unchanged token audits and all 16 English/Persian desktop/phone browser cases in 3.0 minutes, with zero skips or retries. Each 25-line desktop fixture now measures a 48 px heading (was 92; cap 48), a 2046 px complete lines card (was 2090; cap 2046), and a 3060.515625 px composed review (was 3104.515625; cap 3100). All four deliberate negative controls remain effective. Full counted-label/filter containment also passes at 1000, 1180, 1280 and 1440 px.
+
+## 2026-10-30 — R3c P1 K9 — pickup and shared screen fixes
+
+R3c K9: unified the existing Products-style checkbox through shared field/accent-fill tokens; compacted real pickup/correction rows with a bounded editable stepper; made the external reference optional with immutable request/event/memo evidence and exact retry protection; retained truthful blank-reference RM preview, protected money/currency/shortfall/correction/claim and genuine photo semantics; made the two desktop Dashboard columns explicit independent flex stacks. Added strict actual card-edge spacing and breakpoint/glyph negative controls without changing shared oracles. Earlier CI212 Distributors clipping did not reproduce in the strict local width matrix; no causal repair is claimed.
+
+The K8/K9 composition additionally passed 158 focused unit/component tests, including three actual checked-import → free-case choice → post → return → blank-reference pickup/correction/credit tests. They retain exact cumulative acquisition cents, original request identity, genuine photo retry and current authority. Full local lint/build and the new-base browser matrix pass. The final composition passes 99 shared-feature tests. The retained validation browser case now explicitly accepts an empty optional reference while retaining the required representative, full unchanged-state, store-use, financial-validation and console checks; its obsolete expectation failed on both sizes before the migration and both cases pass afterward. Independent full CI is recorded on PR #29.
+
+## 2026-10-30 — R3c P1 F11 — private actionable reading failures
+
+Added accepted-attempt failure classification, private safe retention and a scoped Owner/Manager-only diagnostic read/UI. Preserved F0 acceptance and F8 source/archive privacy. Verified 231 affected unit/UI cases in ten files, fresh production build and final TypeScript, full lint plus the added-case static check, and all 54 English/Persian desktop/phone browser cases in 8.2 minutes: eight new F11 cases, all 38 retained R3 live/settings/recovery/PDF/permission cases, four F0 cases and four F1 simulation cases. No retries/skips. A new integration unit proves F8 source removal retires old failure details without losing the retained original.
+
+## 2026-10-30 — R3c P1 F10 — compact actual reader settings
+
+Settings → Receiving → AI reading has a compact real mode Select and LTR address, adjacent Reset/Test connection controls, one section-owned Cancel/Save changes row when dirty, and the genuine health status. The helper explains that localhost means the current device and a phone needs the reader computer's reachable same-Wi-Fi address. The address/custom base path, reset/null, audit/current-authority save, pending disables, five-second timeout and honest network/CORS semantics are preserved. No key field or planned connection is added. A health result from an earlier person/navigation cannot appear under a replacement identity.
+
+A scoped Receiving layout rule resolves an existing overlap at exactly 760 px where one stylesheet made the group menu horizontal while another gave it a max-content grid column. The actual Persian menu no longer pushes the card outside the page. Other settings-card contents, width and height remain unchanged.
+
+Verified 37 focused domain/UI units, fresh TypeScript/build/full lint and 20 actual browser cases in 1.2 minutes: EN/FA × light/dark × 360/390/509/760/1440 px. Cases perform real protected Save/Cancel and intercepted fictional HTTP 503 health, check page/text/control containment, compact spacing, adjacent controls, phone touch targets and unchanged unrelated planned-card width/height/content. Pending actual Manager→Owner and unmount health cancellation are unit tested. No real reader/provider or physical-device test.
+
+## 2026-10-30 — R3c P1 F9 — phone New invoice chooser
+
+The actual New invoice chooser keeps four equal methods in a compact 2×2 grid on phones. Its entry warning explicitly says Photo/PDF use fictional values and do not read the uploaded invoice when Simulated mode is selected. The full retained review warning remains unchanged. Short method helpers, full translated labels, genuine role warnings, native picker inputs and the single Cancel footer remain available. Phone spacing is scoped to this chooser; the shared sheet and unrelated invoice details are unchanged.
+
+Verified six existing navigation unit tests, fresh TypeScript/build/full lint and 16 desktop/phone browser cases in 1.1 minutes. The new matrix covers EN/FA, Manager/Floor Worker, both themes, 360/390/509/760 px at 640 px height and 1440 px desktop. Body scrolling, page overflow, clipped content/glyphs, full labels, permission warnings and 2 px interaction stability are asserted. Oversized warning and tile negative controls fail the same oracle. The retained tile audit also passes after intentionally migrating the former phone one-column contract to two columns. No physical camera/library claim.
+
+## 2026-10-30 — R3c P1 F8 — guarded active pages with retained originals
+
+Added real native Add/Remove photo controls and logical saved-PDF Remove/restore. All original bytes remain available; explicit zero-page selections never fall back. Current-authority/version/attempt guards, private projections/History, backup and accepted import retention are covered. Verified 285 affected unit/UI cases in ten files, fresh TypeScript/production build and ten English/Persian desktop/phone browser cases in 1.9 minutes, with no skips or retries. The browser regression found and separately repaired unread-draft normalization during A→B→A navigation.
+
+## 2026-10-30 — R3c P1 F6 — category for current new products
+
+- Add counted Set category for N new products with real Floor attribution, one atomic guarded candidate and reversible Activity, retained-target support and stale-dialog preservation. Keep all other first-time questions, existing rows, explicit tax and source/financial evidence.
+- Shared category/inferred-tax edits refresh an already-valid K8 answer only after capturing prior validity; previously stale choices remain stale and K4 proposals require revalidation.
+- Integrated K8/F6 source passed 218 focused tests across 13 suites, full lint/build and six actual EN/FA desktop/phone apply/cancel/reload/stale browser cases, with no skips/retries. Full CI is tracked on PR #29.
+
+## 2026-10-30 — R3c P1 F2 — exact localhost reader fallback
+
+Reader default and Reset now resolve to `http://localhost:5191` on every page host. Saved custom/malformed addresses and unrelated receiving configuration are preserved. Verified 35 domain/settings UI units, fresh TypeScript/production build and two desktop/phone browser cases exercising custom save, connection outcomes, Reset, reload and the shared Demo mode control. No skips or retries.
+
+## 2026-10-30 — R3c P1 F1 — explicit retained simulation provenance
+
+Made the simulated-mode warning prominent and explicit about fictional values. Ordinary simulated uploads now retain their marker after Live is enabled. Verified 29 intake/pending/header/navigation unit tests, fresh TypeScript/production build and four English/Persian desktop/phone browser cases covering native selection/cancel, simulation, Live switch, reload and a subsequent genuine mocked Live read. No skips or retries.
+
+## 2026-10-30 — R3c P1 K8 — paid/free receiving and exact acquisition
+
+- Merge proven counted paid/free members into one review line/Product, with actual Floor choice and visible original receiver/choice in real approval. Keep exact paper totals, physical quantities, pricing cost and source acquisition budgets separate.
+- Preserve paid/free short/refused/later allocations, same-document member idempotency, source-bounded split returns and accepted printed aliases. Cost-safe projections avoid private financial leakage and false Bonus arithmetic/cost-halving actions. Unsupported grouped weight and posted monetary/date/lot corrections deny safely.
+- Frozen local verification passed 1,165 affected tests across 82 files, full lint/build and all 12 EN/FA desktop/phone import → Floor answer → Manager Post/Approve browser cases, with no skips/retries. Independent financial/privacy review is clear; integrated checks and CI are recorded on PR #29.
+
+## 2026-10-30 — R3c unread-workspace navigation repair
+
+- Opening an unread ready/processing invoice no longer normalizes its review fields or changes its source witness. Returning from another invoice preserves the active attempt and saved original until the actual reader result is accepted.
+- Two genuine baseline regressions fail on the old selector and pass with the narrow fix. All 70 live-reading units, lint/format, fresh build and 16 EN/FA desktop/phone background-reading cases pass without retries/skips, including four new held-response A → B → A cases with exact source, attempt, other-draft and no-post preservation.
+
+## 2026-10-30 — R3c foreground reading completion repair
+
+- A reading completed on the already accepted invoice route no longer leaves a redundant Open notice over its own editor. Background notices remain until accepted navigation; a raw destination hash while Timesheets saves is not treated as accepted.
+- A genuine App/IndexedDB foreground read reproduced the leftover notice before the fix. All 17 navigation/footer units and 20 EN/FA desktop/phone printed-name, background, stale-Discard/Undo and measured-footer browser cases pass, with unchanged real clicks and no skips/retries. Final build and an independent read-only race/authority review pass.
+
+## 2026-10-30 — R3c progress-bar token repair
+
+- Set the indeterminate segment radius to the same explicit radius-control token as its parent, preserving computed geometry and the standalone Klead contract. All three unchanged token-audit tests, formatting and the final build pass.
+
+## 2026-10-30 — R3c final native-picker proof repair
+
+- Update the retained C8 sale/cost proof helper to accept the native file chooser before a draft exists, matching F3. Preserve actual source SHA, posting, money, authority, stock and layout gates. All 12 affected desktop/phone scenarios pass, with build/scoped lint/format checks and no skips/retries.
+
+## 2026-10-30 — R3c K7 — truthful compact reading progress
+
+- Added actual elapsed reading time, an indeterminate bar and truthful successive matching/calculation phases. Protected matching returns counts only; exact source/attempt/current-actor and final import guards remain.
+- Place compact three-chip progress beside the original at desktop widths of 1000 and 1440, stack naturally on phones, keep Cancel at the end and respect reduced motion. Genuine geometry/word/glyph/paint/animation negatives retain strict limits.
+- Integrated verification passed 92 focused units, full lint/build; all 34 final selected browser cases passed in 4.8 minutes, without retries or skips. Independent full CI is tracked on PR #29. Final screenshots were visually reviewed at EN390 and FA1000/509.
+
+## 2026-10-30 — R3c K5 — app-level background reading
+
+- Moved live requests into an app-level guarded service, preserving accepted transport settings across route/invoice/settings changes. Completion fills only the saved target and offers safe explicit Open without stealing focus; actual Cancel, Discard/Undo, reload and fresh authority/source guards remain.
+- Ready and Undo clear actual phone Post/footer controls and RTL viewport bounds, with clean observer/listener teardown and unchanged dialog feedback ownership.
+- Integrated verification passed 95 focused service/navigation/footer units, full lint/build; all 58 final R3/F0/background/footer browser cases passed in 8.1 minutes, without retries or skips. The final composed build passed; independent full CI is tracked on PR #29.
+- Repaired three K3 domain-test fixtures to retain a genuine historical margin boundary, a default-on pending1.99/current1.49 counterpart, a truly manual price with actual requester/decider identity, and exact legitimate accepted-line proposals beside a wholly refused NEW line. All 52 relevant tests pass; no production behavior or historical price assertion was removed.
+
+## 2026-10-30 — R3c K4 — editable receiving selling price
+
+- Made receiving Selling price editable with stable buffered typing, actual receiving-person attribution, exact entered weight-unit evidence and existing margin/below-cost/minimum warnings. Pending approval shows requested/calculated prices beside the original receiver; current charged money stays unchanged.
+- Invalid/stale inputs stay linked and focused instead of collapsing the editor. Confirm waits for canonical saves; a genuine IndexedDB abort restores the committed value and supports explicit retry. Unit-factor re-review retains the visible typed amount.
+- Integrated verification passed 31 focused units, static/build checks, 18 main browser cases and two actual kg/lb comparison cases, without skips/retries. Six Price tester regressions now explicitly verify the new default, a visibly different saved divisor, and a genuine below-minimum warning; historical .49 prices stay asserted unchanged elsewhere. Independent full CI is tracked on PR #29.
+
+## 2026-10-30 — R3c K3 — configured .49 to .99 and Use Lower
+
+- Added configurable final .49 → .99 rounding, settings controls, precise pre-rule explanation and Use Lower through real attributed receiving proposals/approval. TypeScript, Python references and shared cases agree; historical/manual/Sale/approved prices stay unchanged.
+- Protect set/reset actions against stale actor/source/cost/attempt, Discard/Undo and ABA while preserving valid restored proposals. Public projections retain K1/K2 evidence and omit private quotes.
+- Owner verification passed 131 focused tests, 182 additional pricing tests (batches overlap), 24 shared fixture cases, 31 Python reference tests, lint/build and 14 actual browser cases without retries. Integrated verification passed 412 combined K1/K2 privacy/pricing/receipt tests, 14 browsers, both Python reference checks, Ruff, lint and build. Independent full CI is tracked on PR #29.
+
+## 2026-10-30 — R3c retained-suite repairs before F4
+
+- Keep whole-case weight out of individual Product size; preserve raw pack evidence and true measured item leaves. Fix strict browser targets for the actual nested name/size markup and canonical unit spacing, retaining original weighted Product identity and all geometry/stock/money assertions. All 82 parser units and 12 affected browser cases pass.
+- Make missing-terms fixtures explicitly disable the new default, and make the real density negative exceed the unchanged 434px cap while its Monthly-enabled positive remains. All 37 relevant units, eight tooltip and four density browser cases pass.
+- Reproduce a duplicate unchanged-route event moving an open Timesheets day at midnight after a real save. Ignore that duplicate date intent while preserving actual date/query/Back navigation and all actor/version keys. All 16 clock/navigation tests pass; lint, 75 SDK tests and the final build also pass. The broad pre-fix run recorded 2,757 unit passes and this one causally repaired failure; exact final totals belong to independent CI.
+
+## 2026-10-30 — R3c F3 — native picker before draft creation
+
+Photo and PDF tiles now open their real native file picker before any draft is created. Cancelled, empty, invalid and stale selections leave business state unchanged; valid selections retain the previous workspace and original bytes on the exact authorized target. Live intake saves the original ready for an explicit read. Storage errors leave a recoverable draft. Browser drivers now exercise actual `FileChooser.setFiles` through the visible source tile, retaining their original source-hash, identity, permissions, finance and stock assertions.
+
+Integrated F3 verification passed 16 focused intake/UI unit tests, a fresh build and all 12 English/Persian desktop/phone native-picker browser cases, with no skips or retries. The owner also passed 30 retained recognition, blocker and line-flow browser cases plus TypeScript, full lint and final driver lint/diff checks. Independent full CI is recorded on PR #29.
+
+## 2026-10-30 — R3c F7 — truthful reading header
+
+- Show New invoice with truthful ready/active/cancelled/failed/interrupted reading captions; remove empty header fragments and the processing Post control. Preserve actual invoice identity and posting checks once review begins.
+- Owner verification passed six header unit tests, six Chromium browser cases, full lint and production build. Four browsers cover EN/FA desktop/phone active/cancelled transitions; two retain the R2b 2.3 no-post/no-finance regression.
+
+## 2026-10-30 — R3c F4 — retained Discard, Cancelled and Undo
+
+- Add header/list Discard with immediate empty-draft disposal, reasoned confirmation for entered content, retained Cancelled records and read-only original/attribution. Undo restores only the exact authorized target, preserves manual-entry recovery and retires old reading attempts without another request.
+- Owner verification passed 110 targeted discard/History/live units, full lint/build and eight EN/FA desktop/phone browser cases. The integrated final source passed 129 targeted units, a fresh build and all eight EN/FA desktop/phone discard browser cases, with no skips or retries. Independent full CI is tracked on PR #29.
+
+## 2026-10-30 — R3c K6 — missing-paper payment default
+
+- Default absent AI-reading payment terms from receiving configuration, seeded Monthly with a quiet translated hint and correct next-month due date. Printed/checked terms take precedence; manual changes clear default provenance. Preserve genuine source/due-date questions, existing/manual invoices and originals.
+- Owner verification: 223 tests across seven files, four EN/FA desktop/phone Chromium cases, production build/typecheck and targeted ESLint/Prettier/diff checks passed. Combined final-source verification passed 85 unit tests, four browser cases and a fresh build; independent full CI is recorded on PR #29.
+
+## 2026-10-30 — R3c K2 printed-name matching
+
+- Retain original printed descriptions separately from clean checked/edited names, using shared per-index evidence in preview and import. Preserve individual size and move carton wording into pack data; checked-only extra rows do not invent printed keys.
+- Learn normalized same-supplier printed keys only from actual accepted posting and actor-readable Product/source associations, preserving old keys and ambiguity. Add optional receiving Description through existing Product fields; known-Product extra text is explicitly delivery-only.
+- Protect internal matching keys/source invoice IDs in actual History snapshots and nested/flattened patch paths without changing canonical matching or inverse evidence.
+- Owner verification passed 267 unit tests and 18 real browser cases; the focused audit hardening passed another 27 tests. Integrated verification and independent full CI are recorded with the separate delivery.
+
+## 2026-10-30 — R3c K1 known deliveries
+
+- Confirm unchanged same-supplier lines automatically from real effective posted evidence, including corrected purchases and pending-approval Products. Show Same as last delivery with a green check and same/changed/new counts; preserve genuine changed fields, uncertainty and paper arithmetic.
+- Retain separate automatic evidence instead of forged human receipts, invalidate it on edits, and explicitly protect source identities, fingerprints and cost comparisons in invoice/History/sales projections.
+- Route an all-ready import to Ready to post using protected current classification, preserving explicit no-write Post preview and existing checks.
+- Added first-post/second-read, exact changed-cost/pack/code, effective correction, authority and privacy coverage. Owner verification passed 236 unit tests and six real browser cases; integrated-source validation and per-item CI are recorded in the review guide and PR.
+- Keep unlike Each/weight bases amber without comparing their numeric costs or clearing genuine current-paper questions. Combined K0+K1 validation passed 42 targeted units, four actual browser cases and a fresh build.
+- Give each pushed item an independent full CI run and allow 50 minutes per expanded browser job after CI213 reached its 40-minute cap. All tests, individual timeouts, workers/retries, skips and numerical limits remain unchanged.
+
+## 2026-10-29 — R3c K0 approval completion
+
+- Reproduced final individual and Approve all decisions through genuine fictional import/post flows: the old empty board retained 734 px of height and left its message above the viewport. Also reproduced a completed bottom group leaving older approvals entirely outside the usable viewport. Release obsolete reserved space only for those blank-result cases; retain strict 2 px stability when a real surviving card remains visible, protected reads and existing approval/domain actions.
+- Add a translated page-content error boundary with explicit Reload this page, keeping the app shell available and healthy page state mounted through ordinary reset tokens.
+- Add genuine final-item browser and failing-child boundary regressions; retain the 25-line bulk approval, original invoice/ledger/receipt assertions and strict partial-decision scroll checks. The R3c guide records executed verification and per-item delivery.
+- Record the latest separate-item order and the four explicit after-demo ideas. R2g stays stopped; Ali lifted the earlier freeze.
+
+## 2026-10-29 — R2g Tier 1 demo polish
+
+- Preserved natural auth keyboard order, actual full-screen original viewing and source-qualified horizontal price choices. Legacy frame/Undo/layout checks now target the approved compositions with causal geometry negatives. Receiving density uses exact row/card budgets: the new 12 px cell padding supersedes the older 3 px/2700 px aggregate assumption, while all 25 canonical lines, source details, counts and money remain checked.
+- Kept original-viewer identity separate from invoice-workspace identity, restored Next to the genuine highlighted printed-pack field, and bound full-name overflow checks to the complete name fragment, including its nested atomic size.
+- Unit-wrap checks measure nonblank text glyphs rather than nested BDI line boxes. Real Gecko reproduced the one-pixel wrapper/space difference; unchanged strict line checks still reject genuine wrapping, including overlapping tall text.
+- Matched the approved sign-in/passkey/lock, receiving, Change price and Lookup compositions; fixed weight-product size requirements, logical form alignment, package captions and display precision. Retained configured branding, actual money, permissions and the completed R3 reader.
+- Added audited inline charge editing inside the receiving lines card. Current line-derived editable totals follow complete evidence, while paper/human amounts, unknowns, original bytes and posted records remain protected. Price-duration presets follow their start date, and warning/fact copy uses the matching scoped financial preview.
+- Replaced boolean filter checks with centred colour-only chips, scoped Undo feedback to its actual open dialog instance, removed empty footer bands, added truthful scroll fades/hidden native bars and full-width phone sheets/actions. Kept active body/footer controls anchored when owned feedback appears. Aligned existing phone DOM/styles at the inclusive 760 px boundary.
+- Retained all 47 approved PNGs and their README byte-identically. Added fictional desktop/phone and real-Firefox 509 px coverage, strict geometry/painted-text checks and effective negative controls. [Tier 1 review guide](PR_R2G_REVIEW.md) records the click paths, screenshot precedence, exact remaining tiers and freeze. Final executed results and seven-check commit are recorded on PR #29.
+
+## 2026-10-29 — R3b F0 reader response compatibility
+
+- Accept the local kit's model objects as well as legacy model-name strings, using each nonempty `id` as the name. Extra response fields such as `checkFailures` do not block a usable reading; numeric USD cost and duration remain supported.
+- Retain valid per-model success, duration and Decimal USD cost in Owner/Manager-only live provenance without changing review or posting rules.
+- Added fictional exact-shape client and desktop/phone English/Persian browser regressions, plus provenance and protected-projection coverage.
+
+## 2026-10-29 — R3 live invoice reading
+
+- Connected the existing local reader kit to ordered photos/PDFs through the existing AI-mode importer. Saved raw originals and the Processing draft survive failures, cancellation, reload and explicit manual/demo recovery; one press makes one request with a four-minute limit.
+- Added protected Simulated/Live settings, dynamic reader addresses, five-second connection checks and the shared Demo switch. Live duration, USD fee and actual models remain Owner/Manager-only; explicit simulated fallback stays visibly labelled.
+- Added fictional preparation, client, authority/privacy, importer and desktop/phone browser coverage without changing the existing simulated/JSON tests. Updated the canonical R3 docs and [Mac/Ubuntu/phone rehearsal guide](PR_R3_REVIEW.md). Exact final commit and complete seven-check CI results are recorded on PR #29.
+- Kept the C7 shell keyboard proof aligned with the actual first Demo checkbox: assert its checked state and focus, then retain directional, Home/End, Escape, search, theme, lock and sign-out coverage. The earlier plain-menu-item selector excluded that new semantic role.
+
+## 2026-10-28 — CI205 Lookup query retention
+
+- Preserved only the scoped typed query through a transient protected Lookup remount during an actual location change. Fresh branch facts/prices and authority masking remain; no product, package, cost or money DTO is cached. Kept Clear/route/identity boundaries and genuine search deep links. Added a real accepted-location regression with the original-source negative control and canonical no-write/privacy checks. See [cause and review steps](PR_R2F_CI205_LOOKUP.md).
+
+## 2026-10-28 — Receiving-name driver persistence proof
+
+- Align two renamed-row assertions with the intentional bounded prefix/full-title/accessibility contract; retain every existing geometry and business check.
+- Verify complete canonical names, unchanged source/pack/quantity/cost evidence and exact invoice persistence across reload; all six Chromium desktop/phone cases pass. Firefox projects remain unchanged for final CI because the local official browser download is blocked by network policy.
+
+## 2026-10-28 — Posted Other charges surface
+
+- Put nonempty posted Other charges and credits in one padded Card with a shared 44 px heading, retaining review presentation and every financial value.
+- All eight original and real-import EN/FA desktop/phone receiving cases pass with complete unfiltered C8 reports; actual source-cost, original-byte and no-write checks remain strict.
+
+## 2026-10-28 — Posted source-cost atoms
+
+- Preserve the complete four-decimal source amount and source unit with a legal break only before the whole suffix; retain existing column widths, gaps, typography and currency behavior.
+- Measure real imported EN/FA source-cost atoms at 1440/1280/1000/390 px and retain the complete original C8 reports and a split-unit negative control.
+
+## 2026-10-28 — R2e C1 posted reading provenance
+
+- Match the human imported-reading caption on posted and review headers. Retain every model identifier under initially closed More details → Reading.
+- Verify real JSON import, review, posting and correction Cancel in EN/FA on desktop/phone, including unchanged source-page bytes and canonical business evidence.
+
+## 2026-10-28 — Posted invoice reference containment
+
+- Fit the repeated Invoice details number to its actual field, preserving the full heading, native source title and invoice route.
+- Retain the original phone/desktop EN/FA C8 word and real short-posting money guards; added actual-box, deliberate-wrap-negative and canonical no-write proof.
+
+## 2026-10-28 — R2f source-bound C5 Lookup and Returns proof
+
+- Qualify the actual 44 px Lookup rows and four-region Returns phone records against their real source composition; keep strict dimensions, containment, financial privacy and corruption controls.
+- Match the approved phone Returns count/Columns opposite-edge row, including empty results, and open the real Lookup category disclosure in the retained token test. See [proof details](PR_R2F_C5_COMPOSITION.md).
+- Bind the final fitted Returns name to its complete canonical tooltip and visible prefix, with exact reserved quantity/+N text, real glyph adjacency, baseline and containment checks; reject forged titles/counts and shifted quantities.
+
+## 2026-10-28 — CI203 Dashboard destination coverage
+
+- Updated two retained dashboard drivers for the approved always-visible This week card. Kept real location receipt evidence, exact Warehouse zero, actual destinations, scoped activity, bilingual routing and canonical no-write assertions. See [repair evidence](PR_R2F_CI203_DASHBOARD_DRIVERS.md).
+
+## 2026-10-28 — R2f Persian numeric captions
+
+- Keep numeric table headings and Returns' nonnumeric credit states in the bundled interface font; actual numeric data retains Manrope/tabular figures. This fixes host-dependent Persian glyph clipping and heading/value misalignment without changing geometry budgets.
+- Added actual Chromium platform-font and strict alignment regressions with known/unknown retained credit in both themes at 1440/1000 on desktop and phone devices.
+
+## 2026-10-28 — CI203 Product/date and decided Sale regression coverage
+
+- Bound Product editor geometry to its actual Sold by segments and named Select/section/date controls, including the weight parent's real More details disclosure; retained all hairline, date-status, alignment and Cancel evidence assertions.
+- Bound the decided Sale amount to its labelled D6 slot, independently checked the regular amount, and added canonical no-write checks while retaining exact approved money, deciders and tab counts. See [repair evidence](PR_R2F_CI203_PRODUCT_SALE.md).
+
+## 2026-10-28 — R2f retained Returns columns and item counts
+
+- Keep item quantities and +N counts visible beside fitted product names, preserving the complete original name in its tooltip and full record.
+- Qualified the intentional bounded Returns selected-column scroller in the existing C3 proof without changing cell/heading glyph budgets. Added actual EN/FA scroll, keyboard, no-write and malformed-scroller negative controls; other table pages retain their no-scroll checks.
+
+## 2026-10-28 — R2f D7 responsive dashboard follow-up
+
+- Preserve complete raw bilingual KPI captions with three intermediate-width columns; retain the approved 1000 px six-column and phone two-column layouts.
+- Equalize only genuine neighbouring purchase charts. Stacked and unrelated cards retain content height, with actual-grid and deliberately invalid-layout browser proofs.
+- Follow the approved visible This week summary in the legacy action regression while retaining actual Notes navigation, canonical approval and charged-price evidence.
+
+## 2026-10-28 — R2f D3 weight Product add/edit
+
+- Matched the approved How sold, cost/unit, real rule/price card and package-size editor with responsive EN/FA/themed layout. Parent metadata, cost, explicit Change price and all package drafts save atomically; Cancel allocates/writes nothing.
+- Added the narrow Supervisor package-only dialog on Product/Lookup headers. Costs, receipt fingerprints and per-branch derived cost maps stay private.
+- Kept current approved prices until actual approval after cost-only edits, retained manual Keep/Rule and Sale conflict workflows, and used real current branch receipt/manual cost for package margins. Same-source corrections and later deliveries supersede manual markers without rewriting originals.
+- Added actual repository rollback/authority/cost-source tests and browser package lifecycle, unit conversion, alignment/stability evidence. See [D3 review guide](PR_R2F_WEIGHT_REVIEW.md); final integrated checks belong to PR #29.
+
+## 2026-10-27 — R2e C8–C14 review fixes
+
+- Centred return header actions, resolved configured location names, and replaced the overlapping unit display with a level shared select backed by retained receipt conversions. Frozen cost/currency and existing pickup precision remain; original entered quantity/unit is retained.
+- Finished field-tint offer suggestions with level desktop date/actions, paired optional product descriptions, compact Settings logo/navigation, and single-language timesheet titles with H:MM hours and mirrored Persian day arrows. Paper remains bilingual.
+- Added protected public Lookup signals and four combinable remembered filters, including current-branch expiry badges. Added fresh/reset-only approved-price coverage, preserving one deliberate pending North York example and all existing saved records.
+- Fictional unit/browser proofs cover the new behavior and existing source-money/privacy rules; exact integrated CI is recorded on PR #29. See the per-item PR_R2E_C8–C14 review guides.
+
+## 2026-10-26 — R2c and R2d final browser integration
+
+- Corrected loaded-font clipping in Supplier Status, the Persian Overdue header and long Dashboard invoice references; retained complete accessible references and one actual invoice-record control.
+- Kept history-free Supplier Balance static while preserving navigation for actual statements, including zero balances with retained history. The financial projection retains its existing authority boundary.
+- Stabilized scoped list preference setters and unchanged-value updates after a supplier-filtered Returns route exposed a parent render loop. Shared table allocation remains unchanged.
+- Preserve queued Timesheet edits before Back/hash navigation; failed saves retain the sheet, text and Retry. Native reload/close protection applies while an edit is dirty or saving. Newly selected branches use their own local Today, without moving an open sheet on an ordinary save across midnight.
+- Updated legacy browser expectations for the approved operational/On shift tiles, phone approval cards, scoped 44 px controls and full record destinations. Negative geometry controls, financial/no-write checks and all existing timing/skip budgets remain. See [integration evidence and behavior](PR_R2C_CI_FOLLOWUP.md); the exact final CI head is recorded on PR #29.
+
+## 2026-10-26 — R2c 7.3 Sale-end Lookup correction
+
+- Preserve the genuine approved Sale’s matching reviewed regular basis after End/expiry, scoped to its product/company/store and currency. The query writes no regular price or approval. Added actual-command and negative evidence tests, including canonical weighed units.
+
+## 2026-10-26 — R2c and R2d integrated review
+
+- Completed the requested published order on the existing PR #29 branch: R2c0 → R2c1 → R2d A/B/C → R2c2–7, with separate group pushes and no merge/force push. [Every item and click path](PR_R2CD_REVIEW.md) includes Ubuntu setup and the recorded defaults.
+- Integrated photographed return creation with retained receipt currency, immutable source cost, original manual-posting evidence and three-decimal weight pickup compatibility. Currency/source ambiguity remains explicit; waiting-pickup previews do not deduct.
+- Preserved strict existing financial, role/company/location, original-byte, typing, 2px and rendering guards. Updated stale test navigation for the intentionally replaced dashboard/approval/Payables views. Supplier filters retain Clear during pending/error reads; Payables has one screen supplier heading while print retains its name.
+- Added only approved fictional dashboard reference PNGs and an independently invented return-condition image. Uploaded screenshots, recordings and real reading exports remain private and are not repository fixtures. Final exact head/check runs are recorded on PR #29.
+
+## 2026-10-26 — R2c Groups 2–6
+
+- G2 (2.1–2.4): shared public bilingual picker search/highlights/keyboard support, explicit non-option placeholders, visible-viewport popover bounds and one record-details control for Suppliers/Payables/Offers/Returns. Genuine None/All choices and shelf scan/refocus remain.
+- G3 (3.1–3.3): truthful supplier pending/error/filtered/company-empty states, actual incomplete-profile filtering, padded single-header contacts/surface KPIs and stable supplier-ID top-level Payables statements with 2px Back/list restoration. A failed protected read no longer becomes a false empty company. The fictional lifecycle retained suppliers; the exact private screenshot state was not reproduced from private data.
+- G4 (4.1–4.3): compact decision rows, protected full shared ProductEditor with atomic metadata/date/supplier/approval commit and one retained audit, plus structured selected-only invoice review with select-all/cost/price/margin and amber checks. Cancel/failure preserves canonical data and original/ledger/physical evidence.
+- G5 (5.1–5.2): clearer product/offer/regular-saving hierarchy and aligned searchable Create offer with visible configured read-only quantity/total. Existing pricing, confirmation/dismissal/stop/idempotency/location/Undo behavior remains.
+- G6: bounded personal inbox with sticky controls, boxed read/unread groups, 24-hour dates, recipient-only soft Clear all, handled-source filtering and fresh canonical related navigation. Same source decisions group eligible stores; different decisions and legacy identities remain distinct. Public grouping tokens exclude raw legacy routing/recipient payloads.
+- Fictional domain/component/browser proofs cover current authority/privacy/atomicity, real search/record/statement/offer/notification operations, layout matrices and strict C5 corruption controls. G4's production matrix covers 12 width/language/theme variants with 36 captures and ≤2px editor save/cancel checks. See the per-group review guides for executed evidence; final combined CI belongs to the integrated head. No private business fixtures, production HTTP backend, external push-notification service, deployment or physical-device/printer proof is claimed.
+
+## 2026-10-26 — R2d timesheets (A1–A3, B1–B4, C)
+
+- Added fresh-authority company/location/module guards for Owner, Manager, Branch Supervisor and Cashier, with Floor Worker denied across route, projections, commands, History and export. Settings configure bilingual departments and module availability without changing other role/financial grants.
+- Added archived branch staff with optional safe app-person links, retained daily shifts/Notes and attributed before/after audit. Normalized 24-hour input, integer-minute overnight/split-shift totals and explicit missing-Out/long-shift checks support editable past days.
+- Added buffered responsive daily sheets, staff management/History, Monday–Sunday totals, actual guarded payroll CSV, bilingual A4/Letter paper print and the scoped On shift now dashboard tile. Aggregate selection asks for a branch; prior unclosed shifts remain counted without inferred clock-outs.
+- Existing-store initialization verifies an exact private backup and current revision, preserves data/custom settings and adds empty arrays. Only fresh demo/explicit Reset loads eight invented staff and three days/24 shifts; Empty store remains empty after reload.
+- Domain verification covers role/company/branch/module denial, stale actors/versions, parsing/totals/audit, real repository transactions and exact backup/concurrent migration/restore. Browser proofs exercise Cashier fast typing/reload, Floor Worker denial, week/CSV reconciliation, print media/PDF and dashboard count/module controls on desktop/phone. See [domain guide](PR_R2D_DOMAIN.md) and [UI guide](PR_R2D_REVIEW.md); final combined CI is recorded after integration. Physical printing and cross-device/server/payroll-provider behavior are not claimed.
+
+## 2026-10-26 — R2c 7.4 Settings Data
+
+- Kept one History destination on Data while retaining actual change attribution. Added desktop/phone proof that the link remains unique and opens the real History route.
+
+## 2026-10-26 — R2c 7.3 Branch Lookup
+
+- Concrete locations list delivered/stocked/priced products and group typed-search matches from permitted other locations. Show own approved effective prices, or explicit unapproved-here comparisons until approval. Bare company defaults never manufacture a branch decision.
+- Added guarded public DTO tests for branch/company/identity isolation, private evidence exclusion and actual all-store/branch decisions, plus real-command and EN/FA light/dark responsive browser proofs. Recorded Ali’s pending confirmation in open questions.
+
+## 2026-10-26 — R2c 7.2 Lookup filters
+
+- Added configured pricing categories and counts, Taxable and Not approved here yet, retaining optional AI categories. Combined choices persist within the existing per-person/company/location session boundary.
+- Added pure filter, public-price and preference isolation proofs plus a browser case for an imported product with no AI category.
+
+## 2026-10-26 — R2c Group 1 Manager dashboard
+
+- Replaced four colored KPI tiles and stretched cards with the approved five surface tiles, top-aligned 2:1 composition and phone card order; retained existing operational lists under More operations.
+- Added canonical approval/sale margins, first-price/old→new context, invoice totals, target price-task summaries, monthly supplier total/ranking, calendar-week bars and local-day 24-hour activity.
+- Recent invoice totals retain the paper currency, with an explicit foreign-currency code and no exchange conversion. Type chips use the approved scoped pill tokens; narrow tables keep Price visible.
+- Retained the three approved fictional PNG references and updated the active requirements/design/screens contracts. Test execution is recorded in the R2c dashboard review guide.
+
 # Project changelog
+
+## R2c 7.1 — Scoped photographed supplier returns (2026-10-26)
+
+- Added the complete New return form for all five roles, including assigned-Store Cashier read/create, with genuine attribution, mandatory Damaged/Expired photos, Other notes, posted-receipt supplier/product choices, source pinning, current authority/file guards and idempotent canonical creation. Shared 44 px fields, stable buffered typing, searchable picks and full-screen phone behavior retain EN/FA/theme contracts. No Cashier financial/pickup/cancellation powers are granted.
+- New Waiting for pickup returns immediately appear in Returns, supplier open returns and a separate **Expected credit · Not deducted yet** Payables preview. Freeze original cost/currency; resolve manual missing import-currency from retained actual posting, block conflicting/missing/foreign currency, and prevent later company settings or unrelated receipt ambiguity from repricing/relabeling evidence. Creation changes no stock/price/approval/ledger or owed; existing signed pickup and settlement remain independent.
+- Added wholly fictional domain/photo/role/browser/currency regressions and [the detailed click guide](PR_R2C_RETURNS.md). Source-bound verification passed 113 affected unit cases across seven suites, all five role flows on desktop and phone, 12 distinct EN/FA/theme/width visual states, and two additional actual Settings→Payables currency browser checks; build/targeted lint/format passed. The guide distinguishes the original readiness timeout/unchanged isolated pass and intentionally stopped duplicate matrix from completed proof. Final combined CI is reported on the PR's checked head; no merge, deployment or real attachment data is included.
+
+## R2c Group 0 — Receiving follow-ups (2026-10-26)
+
+Implemented IDs 0.1–0.14 on PR #29: truthful blocked Post styling/help, posted Done, optimistic line confirmation/rollback, centered rounded/plain rows, human evidence labels and growing addresses, 24-hour handwriting choices, expanded packs and exact line-cost basis, cleaner names/undo, quieter provenance, line-derived totals, four invoice-entry tiles, aggregate Lookup and lighter dark check rows. Fictional tests and review guides are included; executed final CI and full combined verification are recorded after the remaining R2c/R2d groups.
+
+## 2026-10-25 — R2b import, review and posted invoices
+
+- **1.1–1.10:** historical delivery-date provenance, configured currency, compatible total arithmetic, recognized/inferred terms, clean names/packs/codes, optional supplier contacts/title-case suggestion, exact case/weight handling, attributed absence acknowledgment and rename-safe supplier matching. Retain unresolved questions and original evidence.
+- **2.1–2.4:** stable Original viewing and buffered typing, durable alias acknowledgments and reachable checks, exact posting explanations/focus with no-write incomplete attempts, and level surface-fill details/address fields. Keep permission/pending guards, Decimal costs and existing 2px/25-line layout budgets.
+- **3.1–3.4:** consistent scoped Posted counts/lists, receiving-style posted layout and safe reading notes, append-only Received correction, staged reasoned financial corrections, and additive Photo/PDF/Manual/JSON entry. Original, financial, physical, stale-preview and authority protections remain.
+- **4.1–4.2:** clear typed empty-store confirmation and truthful stable import preview, including readiness, checked-source fallback, duplicates, destinations and thumbnails.
+- Added a [public click guide](PR_R2B_REVIEW.md) covering every item with wholly invented embedded-image papers, including staged MATCH-1/2/3 rename/fallback imports. Updated active requirements/model/workflow/design/default prose and linked the prior R2 guide. Exact-commit verification results belong to PR #29/latest checks; all seven checks remain required. No private exports, evidence images, startup/loading, service-worker, deployment or merge changes.
+
+## 2026-10-22 — R2 approved receiving design
+
+- Review fixes (Claude): number and text boxes bound to saved values now keep every keystroke while they have focus (`BufferedInput`, used in the receiving editor, invoice details and totals, and by `NumberField` there through `keepTyping`). Before, a slower browser-database save could land between keystrokes, so typing "20" into Delivered could become "240" and "1.3" in Unit cost could become "13". A cleared box stays blank while typing and shows the saved value when the person leaves it. Supplier and payment-terms boxes in invoice details stay on one line with "…" (rule 7). The phone "View original" is a full-width card with page count and chevron, and the closed phone details card shows "N to check" (reference screen 05). Persian editor numbers and codes sit on the right edge (screen 07).
+- Updated Django REST Framework to 3.18.2 and regenerated both hashed dependency locks to fix CVE-2026-114138, CVE-2026-114136 and CVE-2026-114137; retained the dependency-audit gate.
+- Browser CI selects official Ubuntu package mirrors before installing Playwright dependencies, avoiding the stalled Azure mirror while retaining signed package verification, all tests and the existing 30-minute job limits.
+
+- Receiving uses a five-column table that fits at 1440px and 1000px, visible first-column status, green confirmed rows, source-unit weight/four-decimal cost summaries and counted filters. Long-list 48px rows and 8px work gaps retain normal fonts, card/field sizes and the existing 25-line/2700px review budget. The attached white editor has distinct section headings, level 44px fields and a real Confirm line action; phone editors use a full-screen sheet with a full-width Confirm above equal secondary actions. Temporary phone body-height reservation preserves position when date fields collapse and releases on wheel/touch, close or navigation. More details stays closed for visible name questions and opens automatically only for highlighted hidden evidence, retaining printed description and other fields.
+- Details use a three-column grid and a read-only Received summary with a Change popover; phone details starts compact and expands through its chevron or needed-field navigation. Totals starts as read-only label/amount rows with amber calculated tags; Edit opens 44px fields, also exposed by actual non-calculated questions or invalid attempted totals. Whole-card Looks right remains. Original evidence is sticky on the right from 1180px, a 320px panel above work below that width, and full-screen from the phone's View original card. Its one-row toolbar moves Rotate into More below 340px container width to fit the retained app shell. Progress sits directly beneath the top bar or in a phone bottom bar with equal 44px Next/Post actions.
+- Amber field borders and label-adjacent ! markers provide stable hints with tooltips above inputs. Collapsed-sidebar labels appear above content after 300ms hover/focus. Persian labels, isolated LTR amounts/codes, aligned totals and dark-theme token use follow the same receiving contract; confirmation metadata is shown only when recorded.
+- Empty store, import preview and import complete share a dialog layout. Only structured-dialog footers use the reference's 44px intrinsic actions, surface-fill/1px-border secondary and filled danger action; other button contracts remain. Empty store has Keeps/Removes lists and a red action gated by DELETE/حذف. Import complete has four stat tiles, plain skipped reasons and other-location navigation; preview Status remains visible.
+- Added the approved fictional [reference README and eight HTML screens](design-reference/r2-receiving/README.md), the thirteen receiving rules and updated [screen](screens.md) and [manual review](PR_R2_REVIEW.md) guidance. Reference PNGs and private invoice/export data are excluded. Existing stability, financial, permission and approval-position requirements remain acceptance gates; validation results belong to the PR's checked head.
+
+## 2026-10-21 — R2 compact receiving and approval corrections
+
+- Checked all seven successful CI checks on R1 #28 at `537ab7a816724442bdd327f5452c1e8f15aefa2b`, then merged with the owner's explicit approval as `3d0aaaa3b4bf3eb73da136f385a45d07cf1605c3`. Created `feat/prototype-r2-receiving` from updated main.
+- Replaced expanded receiving forms with separate invoice-review components, closed line summaries, a single editor/phone sheet, card-level acknowledgments, calculated totals, grouped missing requirements and responsive original viewing. Kept the canonical domain, authority repository and configured Decimal pricing.
+- Suppliers are active immediately, with optional profile details and an Owner/Manager completion notification. Added distinctive-name similarity/dismissal and a versioned, verified-backup migration of legacy waiting suppliers. Supplier approvals leave active queues; historical evidence stays.
+- Added counted invoice queues/sidebar, mutually exclusive in-file duplicate selection, compact import source choices, full location names, grouped approval review with deselection, category correction and linked rejected-request resubmission. Delivery links identify and highlight the exact invoice line. Import/post History has invoice identity and useful summaries.
+- Added the invented 25-line/partial-duplicate fixture, domain regressions and desktop/phone EN/FA receiving/geometry tests; added the scoped Firefox receiving project and only the CI install line needed for it. Updated legacy UI expectations only for the intentionally replaced review/entry/confirmation behavior. Validation results are recorded in the R2 PR and review guide.
+- Removed stray `prototype/nb1.png` and `prototype/nb2.png`. Updated the private-data chat/repository rule while retaining the local-only API-key/keys.env rules. No real invoice data or screenshot evidence is committed. No startup/loading, service worker or production deployment changes.
 
 ## 2026-10-21 — R1 invoice-reading import and empty store
 
@@ -135,13 +503,11 @@
 - Restore staff Rule price / Manual price comparisons using only two public selling amounts per visible active Store; private costs, margins and decision provenance remain excluded.
 - Added current-Provider and DTO isolation regressions and retained the native read/revoke workflow. This corrects existing requirements rather than adding a new permission.
 
-
 ## 2026-10-15 — E3 source-first phone and installable-shell contract
 
 - Specified seven compact phone-row families with inherited protected data, EN/FA390/430 checks and retained wider tables/printing.
 - Defined configured company manifest/icons/standalone/theme, dedicated No connection page, exact public-only cache and explicit updates guarded by genuine active work/dirty editors.
 - Added owner-run no-Docker Ubuntu/local-Wi-Fi/private Pages+Access instructions, separate phone data and accurate scanner/HTTPS/installation limits. No account/resource/deployment or actual hardware test is performed by this specification; executed proof remains separate.
-
 
 ## 2026-10-15 — E2 source-first price work and personal-notification contract
 
@@ -375,3 +741,103 @@
 - Made pricing band thresholds/endings/corrections explicit configuration data and margin flags category-specific. Added exact `.73` and Rice exact/just-above `.99` four-decimal fixtures (24 pricing cases).
 - Clarified unchanged-price costs: no approval for ordinary changes without a margin breach; below-margin results still receive deduplicated Supervisor review without blocking receiving or changing the approved cashier price.
 - Separated Step 0.1 setup/placeholder/bootstrap records from Step 0.2 demo and Phase 1 operational business features. Added reusable development tooling and pull-request CI; see the root `CHANGELOG.md` and README for implementation/verification details.
+
+### R2e A — measured weight cases
+
+- Added explicit measured-case invoice entry, quantity/cost unit conversion without changing paper cents, importer case-mass evidence and protected paper-total reconciliation.
+- Added fictional `r2e-weight-cases.json`, unit boundary/partial/mismatch/posting regressions and EN/FA desktop/phone import-to-approval browser proof. See `PR_R2E_A_REVIEW.md`.
+- R2e B1: align sortable numeric captions with values, preserve shared column gaps and centred rows, and give invoice batch review an opaque sticky header. Actual glyph-edge browser proof covers the operational table families and real posted/approved invoice flows.
+- R2e B2: shared reversible quick-filter chips now show a reserved check and the same selected accent treatment everywhere; Received date presets also toggle off.
+- R2e B3: retain a visible neutral Off-switch track, hairline border and white thumb without changing switch geometry.
+- R2e B4: replace dark in-dialog Undo toasts with quiet footer status/Undo, preserving the guarded action and remaining display time until page feedback can resume after closing.
+- R2e B5: reserve list counts/Columns on the first desktop filter row and unify filter controls to 44 px; retained centre/overflow tests now also prove first-row placement.
+- R2e B6: shared note/description fields automatically grow from two to six lines, then scroll with no resize grip; keep buffered typing and receiving's four-line address layout.
+
+### R2e B7 — reading-name cleanup
+
+- Cleaned supplier promotion markers, unmatched brackets and leading/trailing pack text for new proposals, preserving printed evidence and existing catalog names; added fictional pattern regressions.
+
+### R2e B8 — readable new supplier names
+
+- Normalize entirely capitalized new supplier names without changing existing records or digit words; preserve the printed name in reading evidence and add creation/existing-record regressions.
+- R2e B1 follow-up: real sorted Product Code exposed a 6 px caption overflow; keep its full caption width and reserve 128 px in shared column defaults. Price updates now retains the required 24 px wide-column gap without overflowing its container. Existing C6 glyph checks and shifted-caption negative controls remain strict.
+
+- R2e D1–D6: fixed-size weight packages as ordinary company-scoped products; validated fixed-size EAN-13/standard manufacturer GTINs; Decimal formula and shared category rounding; protected derived-price/task/label/audit propagation; narrow Supervisor package authority, privacy and orphan guards; verified additive backup/restore migration; fictional fixture and canonical repository tests. Package screens follow in R2f.
+
+### R2e A2 — existing weight-product basis
+
+- R2e A2 follow-up: blocked an existing Weight product's Each/Units line mismatch at Confirm, Post and posted correction; added actual posting/approval and correction-denial proof while preserving the explicit new Each-item flow.
+
+### R2e E — Klead maker attribution
+
+Added original approved logo/icon files, optional public maker/support config, theme-aware sign-in/lock attribution, final About settings group, store/maker tab title and configured favicon/install icons. Replaced both hardcoded Timesheet print footers and added configured staff attribution to supplier orders, picking lists, return pickup memos and Payables statements. No maker identity is added to customer labels. Existing stores read defaults without business migration; explicit maker omission and replacement are tested. See `PR_R2E_BRANDING_REVIEW.md` for validation and click paths.
+
+- R2f R0.1: add the shared peer-control row/grid contract, centred margin-free segmented tracks, matching icon/control heights and universal 44 px quick filters.
+- R2f R0.2: align first/last table content and full-width row rules with card titles and filters, preserving the 24 px inner-column gap.
+- R2f R0.3: add the shared three-track number group and approved reusable approval/weight-Lookup typography tokens so labels, values and notes align consistently.
+
+- R2f R0.4: share a 44 px composed card header and equal-height paired-card layout, retaining approved independent-height Timesheet masonry cards.
+- R2f R0.5: add a shared plain column-value treatment so semantic colour does not shift dates/numbers away from their heading edge.
+- R2f R0.6: share icon/title/subtitle centring so round add/package icons align with both text lines.
+- R2f R0.1 follow-up: shared popovers accept an actual compact body height/gap so a one-option Now menu stays below when it fits; shared growing notes accept the approved minimum height without overriding their six-line cap.
+- R2f R0.7: port the approved rendered alignment audit with strict logical glyph/control edges, explicit semantic exceptions, number/icon/card probes and LTR/RTL shifted-geometry negative controls.
+- R2f R0.7 follow-up: require actual separate visual columns before the masonry/dashboard exception; prove phone/same-column overlaps fail. Exclude genuinely closed-disclosure controls using browser visibility, and retain an explicit whole status-icon/row-number probe for the Original invoice # column without exempting money/quantity glyphs.
+- R2f R0.7: measure the Dashboard's exact decision-control group edge rather than its differently sized centred captions; LTR/RTL negative controls reject a shifted group without exempting numeric columns or peer controls.
+
+- R2f D1: matched the approved compact masonry day sheet, header/toolbar, focused explicit Now choice, current-day so-far display, overnight/past-missing warnings, Notes and header History. Preserved completed payroll/CSV and all protected save/navigation/print behavior; added causal elapsed-versus-payroll and real rendered geometry proofs.
+- R2f R0.7: audit each registered actual popup as its own render plane; retain strict peer checks within it and reject static copied popup wrappers. Browser proof rejects an internal 40/44 px mismatch.
+- R2f R0.1: give shared quick-filter chips a neutral idle appearance for approved Lookup, retaining existing surface chips elsewhere and the same selected/keyboard/geometry contract.
+- R2f R0.2: add the approved shared medium table density (48 px body/32 px headings) for location comparisons, retaining default/compact/phone behavior and shared logical column edges.
+
+- R2f D2: match the approved880px Manage staff window with actual Active/Archived counts, boxed bilingual-name/avatar/department/login rows,44px peer controls and narrow contextual menus; add the inline New person form above the retained list and the three full-width phone toolbar rows. Preserve guarded staff writes and soft history, reject stale staged edits, and keep asynchronous archive failures visible in the confirmation.
+
+- R2f D4: real weight Lookup/package composition, protected child navigation, shared pricing-unit/tax presentation and preserved quick/category filters.
+
+- R2f D5: genuine approved location comparison, amber differences/plain expiry, and compact two-line phone facts with protected public reads.
+
+## 2026-10-27 — R2f D7 Dashboard corrections
+
+- Match fixed approval column widths, full record navigation and raw two-line KPI captions.
+- Replace More operations with three real This week counts/links, counting actual multi-line deliveries once before the public projection.
+- Align card headers, equalize purchase neighbours and flatten Activity with an end time/date column.
+- Follow the approved phone screenshot's This week placement and document configurable reminder/date defaults.
+- Add delivery grouping cases and actual responsive EN/FA dashboard geometry, strict alignment and destination browser proof. Executed results are recorded in the R2f review guide and final PR checks.
+
+- R2f D7 follow-up: count replacement deliveries by actual stock-movement identity; prove two canonical same-return/same-day replacement receipts remain two deliveries even without a Received timestamp.
+- R2f D8: named return items, concrete-location simplification, protected original-currency retained credit, and separated responsive record boxes with real detail links.
+
+### R2f D10 — Branch request form
+
+Rebuilt New/Edit request around the approved paired locations, thin-divider item rows, centred Quantity/Unit/bin, inline notes and full-width Add/Added/free-item search. Retained canonical scope/actor/pack/quantity guards and transfer behavior; local cancel/back do not write and repeated save activation is coalesced. Added real draft/send/cancel, note, duplicate, composition-negative and EN/FA responsive browser proof plus exact shared alignment registration. See `PR_R2F_D10_REVIEW.md` for final executed results and reference differences.
+
+- R2f R0.7: add an ordinary discovered 40-scene alignment matrix using real routes/records at both required widths and bilingual theme variants, with nonvacuous control/row/column/icon/number/card checks and JSON audit evidence; retain all strict geometry limits and shifted-geometry negative controls.
+- R2f R0.7: measure the exact approved linked app-login icon/value composite and Returns status-dot value; prove the actual stacked phone toolbar and boxed-return edges with shifted-geometry negative controls when the approved layout has no adjacent control peers.
+- R2f R0.3: make generic number-grid/slot selectors zero-specificity defaults so the approved composed approval columns retain their geometry; require all actual desktop approval number groups to stay 521 px wide.
+- R2f R0.7: audit real number label/value/note slot associations as well as baselines, with LTR/RTL wrong-column and shifted-note negative controls and nine nonvacuous approval label/value associations.
+- R2f D4: share opt-in localized mass labels for approved FA weight prices/package sizes without changing stored codes, quantities or monetary calculations.
+
+- R2f R0 token integration: reuse the existing round/none radii and row-divider shadow, plus one shared bottom-corner radius composition, in staff, package and request rows. Values and geometry stay identical; the strict token audit remains unchanged and passes.
+
+### R2f C1/C2 CI compatibility
+
+Updated the legacy simulated-reading copy assertion to follow the approved entry chooser: the Drafts queue and retained review stay clear of the old inline-card warning, while the actual chooser/Photo workspace still explain simulated reading. Preserved Demo menu and unrelated-page assertions; reproduced the old failure and verified both desktop/phone cases. See `PR_R2F_CI202_RECEIVING.md`.
+
+- R2f integration proof: fit Labels phone header/body checkbox controls to their44px selection track. Qualify the genuine C6 selection header and D8 four-slot return cards in the existing alignment oracle, binding authorized record/product identity, actual chevrons and optional credit; retain the2px checks and add displaced/hidden/copied/private-data negative probes.
+
+- Run all prototype unit files with one CI worker on the two-core runner, retaining the complete SDK/pricing suite and all native concurrent-write proofs. Command-completion tests keep their original guards and distinguish native commit from the remaining guarded reconciliation/render work.
+- Strengthen the native Timesheets unload regression with actual pre-write and accepted-result barriers, canonical/audit assertions and app-work completion observation; retain reload protection until the complete save callback settles without relying on a one-second scheduling poll.
+
+- R2f invoice integration: stabilize retained English receiving-name glyphs across EN/FA with a reusable bundled bilingual font-order token; preserve table widths, ellipsis and strict clipping budgets.
+- CI203 integration: distinguish real signed-out language controls from restored actor chrome in the browser driver, retaining authentication/session assertions. Update E3/C8 phone proof to canonical D8 four-slot records and D7’s This week destination; preserve the2px geometry, permitted-credit and real-chevron guards, with a copied-auth-form negative check.
+
+- Allow 40 minutes for the expanded browser CI jobs after a clean 399-case shard required 28.3 minutes before setup. Keep every test, individual timeout, worker/retry setting, skip and assertion unchanged; actual failures still fail the combined gate.
+- CI204 receiving integration: fit the actual visible product-name prefix to its available box with the shared measured fitter; retain full title/accessibility and numeric geometry. Strengthen full-title guards and retain title-removal-only negative coverage.
+
+- R2f D9 follow-up: bound the original filename separately from its visible page count; retain the full native/accessible filename in embedded and fullscreen views. Prove the actual two-page C1 import across desktop/phone EN/FA, both retained source hashes, native downloads and existing toolbar guards.
+
+- CI205 C8 driver: identify the single active original filename widget through its semantic viewer/header/description, preserving both readable/decorative copies, exact title/prefix bounds, negative identity checks and retained-source evidence.
+
+## R3 — Local live invoice reading
+
+- Define the local-kit mode/address/health setting, original-first Processing flow, four-minute limit, shared-importer target identity/duplicate safeguards, explicit recovery and Owner/Manager-only reading provenance.
+- Defer schema v3 until after the demo. Keep keys and real invoice/media data outside this repository; automated reader calls are intercepted with fictional fixtures.

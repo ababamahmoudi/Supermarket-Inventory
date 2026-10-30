@@ -185,6 +185,40 @@ export function returnPhotoReference(
     throw new Error("Return evidence changed.");
   return source.reference;
 }
+/** Exact accepted retries resolve the genuine retained attachment, not a changed source fingerprint. */
+export function acceptedPickupPhotoReference(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  returnId: string,
+  eventId: string,
+  attachment?: ReturnPhotoAttachment,
+): string | undefined {
+  const actual = canonicalReturn(
+    state,
+    actor,
+    returnId,
+    "returns.pickup_record",
+  );
+  const event = actual.record.evidence?.find(
+    (item) => item.id === eventId && item.kind === "pickup",
+  );
+  if (!event) throw new Error("Return evidence changed.");
+  if (!event.photo && !attachment) return undefined;
+  const source = attachment && attachments.get(attachment);
+  if (
+    !source ||
+    !event.photo ||
+    source.reference !== event.photo ||
+    source.company_id !== actual.record.company_id ||
+    source.return_id !== actual.record.id ||
+    source.capability !== "returns.pickup_record" ||
+    source.user_id !== actual.actor.user_id ||
+    source.session_id !== actual.actor.session_id ||
+    source.authority_epoch !== actual.actor.authority_epoch
+  )
+    throw new Error("Return evidence changed.");
+  return source.reference;
+}
 /** A photo is authorised by the real return evidence event, never an arbitrary file reference. */
 export async function loadReturnPhoto(
   query: ProtectedReturnQuery,

@@ -1,9 +1,13 @@
+import { MakerAbout } from "../MakerBrand";
+import packageInfo from "../../package.json";
 import { useSettingsConfiguration } from "../settings-configuration";
 import { SettingsConfigurationGate } from "../SettingsConfigurationGate";
 import People from "./People";
+import TimesheetSettings from "./TimesheetSettings";
 import NotificationSettings from "./NotificationSettings";
 import RegisteredComputers from "./RegisteredComputers";
 import InvoiceReadingsImport from "./InvoiceReadingsImport";
+import LiveReaderSettings from "./LiveReaderSettings";
 import { useEffect, useRef, useState, type SetStateAction } from "react";
 import companyLogo from "../../../assets/arzon-logo.png?inline";
 import { MoreHorizontal, Plus } from "lucide-react";
@@ -61,8 +65,10 @@ type Group =
   | "receiving"
   | "returns"
   | "notifications"
+  | "timesheets"
   | "modules"
-  | "data";
+  | "data"
+  | "about";
 type Translate = (en: string, fa: string) => string;
 const groups: {
   key: Group;
@@ -156,7 +162,6 @@ const groups: {
       ["Required invoice fields", "فیلدهای الزامی فاکتور"],
       ["Automatic invoice numbering", "شماره‌گذاری خودکار فاکتور"],
       ["Tax-mismatch tolerance", "تلورانس اختلاف مالیات"],
-      ["AI reading and confidence", "خواندن هوش مصنوعی و اطمینان"],
       [
         "Same-supplier lower-price questions",
         "پرسش‌های کاهش قیمت همان تأمین‌کننده",
@@ -164,8 +169,16 @@ const groups: {
     ],
   },
   {
+    key: "timesheets",
+    label: ["Timesheets", "کارکرد"],
+    description: [
+      "Department names and the order on daily staff sheets.",
+      "نام و ترتیب بخش‌ها در برگه روزانه کارکنان.",
+    ],
+  },
+  {
     key: "returns",
-    label: ["Returns/date tracking/labels", "مرجوعی/پیگیری تاریخ/برچسب"],
+    label: ["Returns, dates and labels", "مرجوعی، تاریخ و برچسب‌ها"],
     description: [
       "Pending return credits, reminders, label waitlist preferences and A4 templates.",
       "اعتبار مرجوعی در انتظار، یادآوری‌ها، فهرست انتظار برچسب و قالب‌های A4.",
@@ -198,6 +211,11 @@ const groups: {
       "Import invoice readings or start with an empty store.",
       "خوانش فاکتورها را وارد کنید یا با فروشگاهی خالی شروع کنید.",
     ],
+  },
+  {
+    key: "about",
+    label: ["About", "درباره"],
+    description: ["App information and support.", "اطلاعات برنامه و پشتیبانی."],
   },
 ];
 function requestedGroup(): Group | undefined {
@@ -947,8 +965,10 @@ function BranchSettings() {
                 {error}
               </p>
             )}
+            <p className="helper settings-dialog-state">
+              {t("Unsaved changes", "تغییرات ذخیره‌نشده")}
+            </p>
             <DialogActions className="settings-save-bar">
-              <span>{t("Unsaved changes", "تغییرات ذخیره‌نشده")}</span>
               <Button variant="neutral" onClick={() => setEditing(null)}>
                 {t("Cancel", "لغو")}
               </Button>
@@ -1205,6 +1225,7 @@ const moduleLabels: [keyof CompanyConfig["modules"], string, string][] = [
   ["invoices", "Invoices", "فاکتورها"],
   ["suppliers", "Suppliers", "تأمین‌کنندگان"],
   ["returns", "Returns", "مرجوعی‌ها"],
+  ["timesheets", "Timesheets", "کارکرد"],
   ["labels", "Labels", "برچسب‌ها"],
   ["date_tracking", "Date tracking", "پیگیری تاریخ"],
   ["notes", "Notes", "یادداشت‌ها"],
@@ -1310,7 +1331,7 @@ function PlannedSettings({ group }: { group: (typeof groups)[number] }) {
   );
 }
 function SettingsContent() {
-  const { state, t, can } = useDemo();
+  const { state, t, can, lang } = useDemo();
   const configuration = useSettingsConfiguration();
   const [selected, setSelected] = useState<Group>(() => {
     const requested = requestedGroup();
@@ -1395,6 +1416,8 @@ function SettingsContent() {
             </>
           ) : selected === "offers" ? (
             <OfferSettings key={JSON.stringify(configuration.promotions)} />
+          ) : selected === "timesheets" ? (
+            <TimesheetSettings />
           ) : selected === "returns" ? (
             <>
               <ReturnsSettings />
@@ -1416,14 +1439,36 @@ function SettingsContent() {
             />
           ) : selected === "data" ? (
             <InvoiceReadingsImport />
+          ) : selected === "receiving" ? (
+            <>
+              <LiveReaderSettings />
+              <PlannedSettings group={group} />
+            </>
+          ) : selected === "about" ? (
+            <Card>
+              <MakerAbout
+                config={configuration}
+                language={lang}
+                appName={t(
+                  configuration.company.name_en,
+                  configuration.company.name_fa,
+                )}
+                version={packageInfo.version}
+              />
+            </Card>
           ) : (
             <PlannedSettings group={group} />
           )}{" "}
           {changed && (
             <p className="settings-changed-line">
               {t("Changed by", "تغییر توسط")} {changed.by} {t("on", "در")}{" "}
-              <DateText value={changed.at} /> ·{" "}
-              <a href="#history">{t("History", "تاریخچه")}</a>
+              <DateText value={changed.at} />
+              {selected !== "data" && (
+                <>
+                  {" · "}
+                  <a href="#history">{t("History", "تاریخچه")}</a>
+                </>
+              )}
             </p>
           )}
         </section>

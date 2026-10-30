@@ -1,6 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
+import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
 import {
   chooseOption,
   setLanguage,
@@ -151,7 +154,7 @@ test("keyboard sign-in explains a wrong password and opens the cashier's approve
   await page.keyboard.type("incorrect-password");
   await page.keyboard.press("Enter");
   await expect(page.getByRole("alert")).toHaveText(
-    "The username or password is incorrect. Try again.",
+    "Username or password is incorrect.",
   );
   await expect(username).toHaveValue("cashier");
   await page.getByLabel("Password", { exact: true }).fill("demo1234");
@@ -233,7 +236,7 @@ test("locking hides the app, and recent users fill a username without retaining 
   await userAction(page, "Lock");
   await page.goto("/#payables");
   await expect(
-    page.getByRole("heading", { name: "Screen locked", exact: true }),
+    page.getByRole("heading", { name: "Locked", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Pages", exact: true }),
@@ -293,6 +296,11 @@ test("dark theme, comfortable text and Persian RTL persist when the page reloads
 test("lookup supports keyboard results and a second barcode without adding it to the first", async ({
   page,
 }) => {
+  const sumac = demoSeed.products.find((product) =>
+    product.name_en.includes("Sumac"),
+  )!;
+  await signIn(page, "Manager");
+  await approvedLookupPrices(page, [sumac.code]);
   await signIn(page, "Cashier");
   const search = page.getByLabel("Search products", { exact: true });
   const rows = page
@@ -305,9 +313,6 @@ test("lookup supports keyboard results and a second barcode without adding it to
   await expect(rows.nth(1)).toHaveAttribute("aria-selected", "true");
   await search.fill("0006");
   await search.press("Enter");
-  const sumac = demoSeed.products.find((product) =>
-    product.name_en.includes("Sumac"),
-  )!;
   await page.keyboard.type(sumac.barcode);
   await page.keyboard.press("Enter");
   await expect(search).toHaveValue(sumac.barcode);
@@ -315,7 +320,7 @@ test("lookup supports keyboard results and a second barcode without adding it to
   await expect(search).toBeFocused();
   await search.fill("0015");
   await expect(page.locator(".lookup-detail")).toContainText(
-    "No approved price yet",
+    "Not approved here yet",
   );
   await expect(page.locator(".lookup-pending-price")).toContainText("$5.49");
   await expect(page.locator(".price")).toHaveCount(0);
@@ -329,6 +334,10 @@ test("the topbar product search opens an encoded English or Persian lookup query
     "The phone uses the hero product search.",
   );
   await signIn(page, "Manager");
+  const sumac = demoSeed.products.find((product) =>
+    product.name_en.includes("Sumac"),
+  )!;
+  await approvedLookupPrices(page, [sumac.code]);
   await page.locator("#main-content").focus();
   await page.keyboard.press("/");
   const shellSearch = page.getByLabel("Search all products", { exact: true });
@@ -360,9 +369,9 @@ test("the four redesigned screens use styled controls and borderless cards witho
     await page.goto(`/#${route}`);
     if (route === "invoices") {
       await uploadInvoice(page);
-      await page
-        .getByRole("button", { name: "Invoice details", exact: true })
-        .click();
+      await expect(
+        page.getByRole("heading", { name: "Invoice details", exact: true }),
+      ).toBeVisible();
     }
     await expectStyledControls(page);
     await expectBorderlessCards(page);
@@ -391,13 +400,7 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
     (await page.locator(".signin-card").boundingBox())!.width,
   ).toBeLessThanOrEqual(420);
   await signIn(page, "Manager");
-  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(4);
-  await expect(page.locator(".kpi-label")).toHaveText([
-    "Approvals waiting",
-    "Open alerts",
-    "Open shorts",
-    "Expiring soon",
-  ]);
+  await assertDashboardOperationalAndShiftTiles(page);
   expect(
     await page
       .locator(".sidebar")
@@ -419,16 +422,23 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
   ).toBe(56);
   await page.goto("/#invoices");
   await uploadInvoice(page);
-  await page
-    .getByRole("button", { name: "Invoice details", exact: true })
-    .click();
+  await expect(
+    page.getByRole("heading", { name: "Invoice details", exact: true }),
+  ).toBeVisible();
+  const moreDetails = page.locator(".receiving-details details > summary");
+  await moreDetails.click();
+  await page.getByTestId("invoice-line-row-5").click();
+  await expect(page.locator("#invoice-line-5-detail")).toBeVisible();
+  await page.locator("#invoice-line-5-detail details > summary").click();
   for (const form of await page
-    .locator(".invoice-details-form, .invoice-line-form")
+    .locator(
+      ".receiving-details .detail-grid, .receiving-line-editor .detail-grid",
+    )
     .all())
     expect(
       await form.evaluate((element) => {
         const pane = element
-          .closest(".invoice-review-pane")!
+          .closest(".receiving-work")!
           .getBoundingClientRect();
         const rect = element.getBoundingClientRect();
         return (
@@ -439,16 +449,25 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
       }),
     ).toBe(true);
   for (const input of await page
-    .locator(".invoice-details-form input, .invoice-line-form input")
-    .all())
-    expect((await input.boundingBox())!.width).toBeLessThanOrEqual(640);
-  const documentPane = (await page
-    .locator(".invoice-document-pane")
-    .boundingBox())!;
-  const reviewPane = (await page
-    .locator(".invoice-review-pane")
-    .boundingBox())!;
-  expect(documentPane.x + documentPane.width).toBeLessThan(reviewPane.x);
+    .locator(".receiving-details input, .receiving-line-editor input")
+    .all()) {
+    const fullWidthName = /-name-(en|fa)$/.test(
+      (await input.getAttribute("id")) ?? "",
+    );
+    const width = (await input.boundingBox())!.width;
+    if (fullWidthName) {
+      const editor = (await page
+        .locator("#invoice-line-5-detail")
+        .boundingBox())!;
+      expect(width).toBeLessThanOrEqual(editor.width);
+    } else expect(width).toBeLessThanOrEqual(640);
+  }
+  expect(
+    (await page.locator("#invoice-line-5-name-en").boundingBox())!.width,
+  ).toBe((await page.locator("#invoice-line-5-name-fa").boundingBox())!.width);
+  const documentPane = (await page.locator(".original-viewer").boundingBox())!;
+  const reviewPane = (await page.locator(".receiving-work").boundingBox())!;
+  expect(reviewPane.x + reviewPane.width).toBeLessThan(documentPane.x);
   await page
     .getByLabel("Unit cost before tax", { exact: true })
     .last()
@@ -456,36 +475,41 @@ test("the 1080p sidebar fits while compound invoice forms use the available widt
   const post = page.getByRole("button", { name: "Post invoice", exact: true });
   await post.scrollIntoViewIfNeeded();
   await expect(post).toBeInViewport();
-  const footerProof = await page
-    .locator(".invoice-action-footer")
-    .evaluate((footer) => {
-      const box = footer.getBoundingClientRect();
+  const headerProof = await page
+    .locator(".receiving-header")
+    .evaluate((header) => {
+      const box = header.getBoundingClientRect();
+      const actions = header.querySelector(".actions")!.getBoundingClientRect();
       const content = document
-        .querySelector(".invoice-review-pane")!
+        .querySelector(".receiving-layout")!
         .getBoundingClientRect();
       return {
         top: box.top,
-        bottom: box.bottom,
-        contentBottom: content.bottom,
+        bottom: actions.bottom,
+        headerBottom: box.bottom,
+        contentTop: content.top,
         viewport: innerHeight,
         scrollable: document.documentElement.scrollHeight > innerHeight,
       };
     });
-  expect(footerProof.top).toBeGreaterThanOrEqual(0);
-  expect(footerProof.bottom).toBeLessThanOrEqual(footerProof.viewport + 2);
-  expect(footerProof.scrollable).toBe(true);
-  expect(footerProof.contentBottom).toBeLessThanOrEqual(footerProof.top + 2);
+  expect(headerProof.top).toBeGreaterThanOrEqual(0);
+  expect(headerProof.bottom).toBeLessThanOrEqual(headerProof.viewport + 2);
+  expect(headerProof.scrollable).toBe(true);
+  expect(headerProof.headerBottom).toBeLessThanOrEqual(
+    headerProof.contentTop + 2,
+  );
 });
 
 test("dashboard approvals and notes have actions that change the actual records and navigate to their lists", async ({
   page,
 }) => {
   await signIn(page, "Manager");
+  await expect(page.locator(".dashboard-this-week")).toBeVisible();
   for (const heading of [
-    "Approvals queue",
+    "Approvals waiting",
     "Alerts",
     "Recent invoices",
-    "Returns",
+    "This week",
     "Supplier balances",
     managerNotesHeading,
     "Activity",
@@ -493,6 +517,11 @@ test("dashboard approvals and notes have actions that change the actual records 
     await expect(
       page.getByRole("heading", { name: heading, exact: true }),
     ).toBeVisible();
+  await expect(
+    page
+      .locator(".dashboard-this-week")
+      .getByRole("link", { name: "Returns", exact: true }),
+  ).toHaveAttribute("href", "#returns");
   const notes = page.locator(".dashboard-aside .card").filter({
     has: page.getByRole("heading", {
       name: managerNotesHeading,
@@ -507,6 +536,13 @@ test("dashboard approvals and notes have actions that change the actual records 
   const lavash = page
     .locator(".dashboard-queue-row")
     .filter({ hasText: "Lavash Bread 500 g" });
+  const approvalId = await lavash.getAttribute("data-approval-id");
+  expect(approvalId).toBeTruthy();
+  expect(
+    (await readCanonicalBusinessEvidence(page)).approvals.find(
+      (approval) => approval.id === approvalId,
+    )?.status,
+  ).toBe("pending");
   await lavash.getByRole("button", { name: "Approve", exact: true }).click();
   const dialog = page.getByRole("dialog", {
     name: "Review approval",
@@ -522,6 +558,12 @@ test("dashboard approvals and notes have actions that change the actual records 
     .getByRole("button", { name: "Approve price", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText("Approved price");
+  await expect(dialog).not.toBeVisible();
+  expect(
+    (await readCanonicalBusinessEvidence(page)).approvals.find(
+      (approval) => approval.id === approvalId,
+    )?.status,
+  ).toBe("approved");
   await page.goto("/#lookup?search=0006");
   await expect(page.locator(".price")).toHaveText("$2.99");
   await expect(

@@ -1,5 +1,8 @@
+import { businessFingerprint } from "./business-fingerprint";
+import { validPickupRequestId } from "./return-pickup-identity";
 import {
   returnPhotoReference,
+  acceptedPickupPhotoReference,
   type ReturnPhotoAttachment,
 } from "./return-file-access";
 import {
@@ -37,6 +40,7 @@ import {
 import { projectExpiryLocation } from "./received";
 import {
   createReturnMemo,
+  requireReturnSourceCurrency,
   syncReturnCreditAlertsForReturn,
 } from "./return-workflow";
 import type {
@@ -62,6 +66,8 @@ export interface EvidenceEvent {
   device_id?: string;
   note?: string;
   document?: string;
+  pickup_request_id?: string;
+  pickup_request_fingerprint?: string;
   photo?: string;
   quantities?: Record<string, number>;
   representative?: string;
@@ -444,6 +450,7 @@ export function recordPickup(
     quantities: Record<string, number>;
     representative: string;
     slip: string;
+    request_id?: string;
     photo?: ReturnPhotoAttachment;
     note?: string;
     shortfalls?: Record<
@@ -462,44 +469,92 @@ export function recordPickup(
   }
   const record = getReturn(state, context, returnId);
   operationGuard(state, context, "returns.pickup_record", record, true);
-  const photoReference = input.photo
-    ? returnPhotoReference(
+  requireReturnSourceCurrency(state, record);
+  if (
+    typeof input.representative !== "string" ||
+    !input.representative.trim() ||
+    typeof input.slip !== "string"
+  )
+    fail("pickup_evidence");
+  if (
+    (input.request_id !== undefined &&
+      !validPickupRequestId(input.request_id)) ||
+    (!input.slip.trim() && !validPickupRequestId(input.request_id))
+  )
+    fail("pickup_request");
+  const existingPickup = record.evidence?.find(
+    (event) =>
+      event.kind === "pickup" &&
+      ((input.request_id && event.pickup_request_id === input.request_id) ||
+        (input.slip.trim() && event.document === input.slip.trim())),
+  );
+  const photoReference = existingPickup
+    ? acceptedPickupPhotoReference(
         state,
         context,
         record.id,
-        "returns.pickup_record",
+        existingPickup.id,
         input.photo,
       )
-    : undefined;
+    : input.photo
+      ? returnPhotoReference(
+          state,
+          context,
+          record.id,
+          "returns.pickup_record",
+          input.photo,
+        )
+      : undefined;
+  const requestFingerprint = businessFingerprint({
+    company: record.company_id,
+    branch: record.branch,
+    return_id: record.id,
+    actor: context.user_id,
+    quantities: input.quantities,
+    representative: input.representative.trim(),
+    document: input.slip.trim(),
+    photo: photoReference ?? null,
+    note: input.note?.trim() ?? "",
+    shortfalls: Object.fromEntries(
+      Object.entries(input.shortfalls ?? {}).map(([code, decision]) => [
+        code,
+        {
+          reason: decision.reason.trim(),
+          outcome: decision.outcome,
+        },
+      ]),
+    ),
+  });
+  if (existingPickup) {
+    if (existingPickup.pickup_request_fingerprint) {
+      if (existingPickup.pickup_request_fingerprint !== requestFingerprint)
+        fail("duplicate_document");
+    } else {
+      // Older numbered-paper events retain their existing replay contract.
+      const sameQuantities = record.lines.every(
+        (line) =>
+          (existingPickup.quantities?.[line.product_code] ?? 0) ===
+          (input.quantities[line.product_code] ?? 0),
+      );
+      if (
+        !sameQuantities ||
+        existingPickup.representative !== input.representative.trim() ||
+        Object.entries(existingPickup.shortfalls ?? {}).some(
+          ([code, decision]) =>
+            input.shortfalls?.[code]?.reason.trim() !== decision.reason ||
+            input.shortfalls?.[code]?.outcome !== decision.outcome,
+        )
+      )
+        fail("duplicate_document");
+    }
+    return;
+  }
   if (
     record.status === "cancelled" ||
     record.status === "cancellation_review" ||
     record.status === "resolved"
   )
     fail("closed");
-  if (!input.representative.trim() || !input.slip.trim())
-    fail("pickup_evidence");
-  const existingPickup = record.evidence?.find(
-    (event) => event.kind === "pickup" && event.document === input.slip.trim(),
-  );
-  if (existingPickup) {
-    const sameQuantities = record.lines.every(
-      (line) =>
-        (existingPickup.quantities?.[line.product_code] ?? 0) ===
-        (input.quantities[line.product_code] ?? 0),
-    );
-    if (
-      !sameQuantities ||
-      existingPickup.representative !== input.representative.trim() ||
-      Object.entries(existingPickup.shortfalls ?? {}).some(
-        ([code, decision]) =>
-          input.shortfalls?.[code]?.reason.trim() !== decision.reason ||
-          input.shortfalls?.[code]?.outcome !== decision.outcome,
-      )
-    )
-      fail("duplicate_document");
-    return;
-  }
   const shortfalls: NonNullable<EvidenceEvent["shortfalls"]> = {};
   let total = 0;
   for (const line of record.lines) {
@@ -600,6 +655,10 @@ export function recordPickup(
     record.status = "picked_up";
   history(state, record, context, {
     kind: "pickup",
+    pickup_request_id: input.request_id,
+    pickup_request_fingerprint: input.request_id
+      ? requestFingerprint
+      : undefined,
     document: input.slip.trim(),
     representative: input.representative.trim(),
     photo: photoReference,
@@ -761,6 +820,8 @@ export function correctReturnPickup(
         quantities: after,
         representative: original.representative,
         slip: original.signed_evidence_reference,
+        correction_of: original.id,
+        request_id: original.pickup_request_id,
       },
       evidence,
       at,
@@ -1008,6 +1069,8 @@ export function submitFinancialClaim(
     record.status === "resolved"
   )
     fail("closed");
+  if (input.type !== "no_compensation")
+    requireReturnSourceCurrency(state, record);
   if (input.type === "no_compensation") {
     operationGuard(state, context, "returns.credit_post", record, true);
     if (!input.reason?.trim()) fail("reason");
@@ -1090,6 +1153,8 @@ export function postReturnClaim(
   });
   const claim = record.claims?.find((item) => item.id === claimId);
   if (!claim) fail("claim");
+  if (claim.type !== "no_compensation")
+    requireReturnSourceCurrency(state, record);
   if (claim.status === "posted") return;
   if (
     record.status === "cancelled" ||
@@ -2027,8 +2092,12 @@ export function operationError(
       "پیش از ثبت این جابه‌جایی، تعداد واقعی را بررسی کنید.",
     ],
     pickup_evidence: [
-      "Add the representative name and signed slip reference before handing over goods.",
-      "پیش از تحویل کالا، نام نماینده و مرجع رسید امضاشده را وارد کنید.",
+      "Add the supplier representative name before recording the pickup.",
+      "پیش از ثبت جمع‌آوری، نام نماینده تأمین‌کننده را وارد کنید.",
+    ],
+    pickup_request: [
+      "Reopen the pickup form and try again.",
+      "فرم جمع‌آوری را دوباره باز و تلاش کنید.",
     ],
     pickup_cap: [
       "Pickup quantity exceeds the original units still awaiting pickup.",
@@ -2073,6 +2142,10 @@ export function operationError(
     return_changed: [
       "This return or its payable changed. Review it again before posting.",
       "این مرجوعی یا پرداختنی آن تغییر کرده است. پیش از ثبت دوباره بررسی کنید.",
+    ],
+    return_currency: [
+      "This return retains another currency. Ask a manager to review the company currency before recording pickup or credit; no currency conversion is applied.",
+      "ارز اصلی این مرجوعی متفاوت است. پیش از ثبت جمع‌آوری یا اعتبار، از مدیر بخواهید ارز شرکت را بررسی کند؛ هیچ تبدیل ارزی انجام نمی‌شود.",
     ],
     return_cost: [
       "Review the original purchase cost for this return before recording pickup.",

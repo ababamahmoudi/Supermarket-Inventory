@@ -1,0 +1,92 @@
+:root .ui-dialog.ui-dialog-structured.invoice-correction-dialog {
+  inline-size: min(1100px, calc(100vw - 32px));
+  max-inline-size: min(1100px, calc(100vw - 32px));
+  block-size: min(760px, calc(100dvh - 48px));
+  max-block-size: calc(100dvh - 48px);
+}
+.invoice-correction-dialog > .ui-dialog-body {
+  flex: 1;
+}
+.invoice-correction-content,
+.invoice-correction-form {
+  min-inline-size: 0;
+  overflow-anchor: none;
+}
+.invoice-correction-form > .receiving-lines {
+  margin-block: 16px 24px;
+}
+.invoice-correction-form .receiving-line-editor {
+  margin-block: 0;
+}
+.invoice-correction-form > .field {
+  margin-block: 16px 0;
+}
+.invoice-correction-changes {
+  display: grid;
+  gap: 12px;
+  margin-block: 20px;
+}
+.invoice-correction-changes h3,
+.invoice-correction-changes h4 {
+  margin: 0;
+}
+.invoice-correction-changes dl {
+  display: grid;
+  gap: 12px;
+  margin-block: 16px 0;
+}
+.invoice-correction-changes dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: baseline;
+  gap: 16px;
+}
+.invoice-correction-changes dt {
+  color: var(--text-muted);
+}
+.invoice-correction-changes dd {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  align-items: baseline;
+  gap: 8px;
+  min-inline-size: 0;
+  margin: 0;
+}
+@media (max-width: 759px) {
+  :root .ui-dialog.ui-dialog-structured.invoice-correction-dialog {
+    inline-size: calc(100dvw - 24px);
+    max-inline-size: calc(100dvw - 24px);
+    block-size: calc(100dvh - 24px);
+    max-block-size: calc(100dvh - 24px);
+  }
+  :root
+    .ui-dialog.ui-dialog-structured.invoice-correction-dialog.has-open-line {
+    inset: 0;
+    inline-size: 100dvw;
+    max-inline-size: 100dvw;
+    block-size: 100dvh;
+    max-block-size: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: var(--radius-none);
+  }
+  :root
+    .ui-dialog.ui-dialog-structured.invoice-correction-dialog.has-open-line
+    > .ui-dialog-header,
+  :root
+    .ui-dialog.ui-dialog-structured.invoice-correction-dialog.has-open-line
+    > .ui-dialog-footer {
+    display: none;
+  }
+  .invoice-correction-dialog.has-open-line > .ui-dialog-body {
+    padding: 0;
+  }
+  .invoice-correction-changes dl > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .invoice-correction-changes dd {
+    justify-content: start;
+  }
+}

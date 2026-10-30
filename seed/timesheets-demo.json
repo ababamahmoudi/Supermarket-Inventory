@@ -1,0 +1,98 @@
+{
+  "_comment": "Independent invented timesheet practice data. Loaded only by a fresh demo or explicit reset; never added to an existing store during upgrade.",
+  "branch_code": "B1",
+  "staff": [
+    {
+      "key": "emery-vale",
+      "name_en": "Emery Vale",
+      "name_fa": "امری ویل",
+      "department_key": "bakery"
+    },
+    {
+      "key": "rowan-pine",
+      "name_en": "Rowan Pine",
+      "name_fa": "روان پاین",
+      "department_key": "cash"
+    },
+    {
+      "key": "mira-fern",
+      "name_en": "Mira Fern",
+      "name_fa": "میرا فرن",
+      "department_key": "kitchen"
+    },
+    {
+      "key": "theo-birch",
+      "name_en": "Theo Birch",
+      "name_fa": "تئو برچ",
+      "department_key": "kebab"
+    },
+    {
+      "key": "nila-haven",
+      "name_en": "Nila Haven",
+      "name_fa": "نیلا هیون",
+      "department_key": "pastry"
+    },
+    {
+      "key": "luca-wren",
+      "name_en": "Luca Wren",
+      "name_fa": "لوکا رن",
+      "department_key": "buffet"
+    },
+    {
+      "key": "iris-cedar",
+      "name_en": "Iris Cedar",
+      "name_fa": "ایریس سیدر",
+      "department_key": "floor"
+    },
+    {
+      "key": "arlo-willow",
+      "name_en": "Arlo Willow",
+      "name_fa": "آرلو ویلو",
+      "department_key": "butchery"
+    }
+  ],
+  "days": [
+    {
+      "relative_days": -2,
+      "notes": "Fictional practice sheet. Check the cooling rack before closing.",
+      "shifts": [
+        { "staff_key": "emery-vale", "in": "06:00", "out": "14:00" },
+        { "staff_key": "rowan-pine", "in": "07:30", "out": "15:00" },
+        { "staff_key": "mira-fern", "in": "08:00", "out": "16:00" },
+        { "staff_key": "theo-birch", "in": "09:00", "out": "17:00" },
+        { "staff_key": "nila-haven", "in": "06:30", "out": "14:30" },
+        { "staff_key": "luca-wren", "in": "08:30", "out": "15:30" },
+        { "staff_key": "iris-cedar", "in": "10:00", "out": "18:00" },
+        { "staff_key": "arlo-willow", "in": "07:00", "out": "15:00" }
+      ]
+    },
+    {
+      "relative_days": -1,
+      "notes": "Fictional practice: one overnight shift and one missing Out need review.",
+      "shifts": [
+        { "staff_key": "emery-vale", "in": "06:00", "out": "14:00" },
+        { "staff_key": "rowan-pine", "in": "07:30", "out": "15:30" },
+        { "staff_key": "mira-fern", "in": "08:00", "out": "" },
+        { "staff_key": "theo-birch", "in": "09:00", "out": "17:00" },
+        { "staff_key": "nila-haven", "in": "06:30", "out": "14:30" },
+        { "staff_key": "luca-wren", "in": "08:30", "out": "15:30" },
+        { "staff_key": "iris-cedar", "in": "22:00", "out": "06:00" },
+        { "staff_key": "arlo-willow", "in": "07:00", "out": "15:00" }
+      ]
+    },
+    {
+      "relative_days": 0,
+      "notes": "Fictional practice sheet. Rowan is still on shift.",
+      "shifts": [
+        { "staff_key": "emery-vale", "in": "06:00", "out": "14:00" },
+        { "staff_key": "rowan-pine", "in": "07:00", "out": "" },
+        { "staff_key": "mira-fern", "in": "08:00", "out": "16:00" },
+        { "staff_key": "theo-birch", "in": "09:00", "out": "17:00" },
+        { "staff_key": "nila-haven", "in": "06:30", "out": "14:30" },
+        { "staff_key": "luca-wren", "in": "08:30", "out": "15:30" },
+        { "staff_key": "iris-cedar", "in": "10:00", "out": "18:00" },
+        { "staff_key": "arlo-willow", "in": "07:00", "out": "15:00" }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
@@ -45,7 +46,7 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Fictional Representative");
   await page
-    .getByLabel("Signed paper pickup slip reference", { exact: true })
+    .getByLabel("Reference (optional)", { exact: true })
     .fill("DEMO-SIGNED-001");
   await page
     .getByRole("button", { name: "Record pickup", exact: true })
@@ -259,6 +260,9 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
     .getByRole("link", { name: "Fresh Valley Foods", exact: true })
     .click();
   await expect(
+    page.getByRole("heading", { name: "Fresh Valley Foods", exact: true }),
+  ).toHaveCount(1);
+  await expect(
     page.getByText("$169.79", { exact: true }).first(),
   ).toBeVisible();
   await page
@@ -329,6 +333,7 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   await expect(page.locator(".payables-report-heading")).toContainText(
     "Fresh Valley Foods",
   );
+  await expect(page.locator(".payables-print-supplier")).toBeVisible();
   await expect(
     page
       .locator(".payables-report")
@@ -348,11 +353,11 @@ test("Supervisor ledger records a partial cheque, preserves outstanding and expo
   ).toHaveCount(0);
 });
 
-test("dashboard shows four actionable KPIs and scoped lists, and operations render in Persian without page overflow", async ({
+test("dashboard shows five operational KPIs and authorized on-shift staff, and operations render in Persian without page overflow", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await runCanonicalBusinessFixture(
+  const fixture = await runCanonicalBusinessFixture(
     page,
     (state) => {
       const common = { at: new Date().toISOString(), by: "Demo Supervisor" };
@@ -379,6 +384,7 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
           action: "Stop offer",
         },
       ];
+      return { at: common.at };
     },
     undefined,
   );
@@ -387,18 +393,16 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
   await expect(page.getByText("Approve price", { exact: true })).toBeVisible();
   await expect(page.getByText("Create offer", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Stop offer", { exact: true })).toHaveCount(0);
-  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(4);
-  await expect(page.locator(".kpi-label")).toHaveText([
-    "Approvals waiting",
-    "Open alerts",
-    "Open shorts",
-    "Expiring soon",
-  ]);
+  await assertDashboardOperationalAndShiftTiles(page);
+  const beforeReads = await readCanonicalBusinessEvidence(page);
+  await expect(page.getByText("More operations", { exact: true })).toHaveCount(
+    0,
+  );
   for (const heading of [
-    "Approvals queue",
+    "Approvals waiting",
     "Alerts",
     "Recent invoices",
-    "Returns",
+    "This week",
     "Supplier balances",
     `Notes for ${configuredRoleLabel(readConfiguredRoleDefinitions(configuration.roles), "manager", "en")}`,
     "Activity",
@@ -406,6 +410,40 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
     await expect(
       page.getByRole("heading", { name: heading, exact: true }),
     ).toBeVisible();
+  const activity = page.locator(".dashboard-activity");
+  await expect(activity.locator(".dashboard-activity-list")).toHaveCount(1);
+  await expect(activity.getByRole("listitem")).toHaveCount(1);
+  await expect(activity.locator("time")).toHaveAttribute(
+    "datetime",
+    fixture.at,
+  );
+  await expect(activity.locator("time")).toHaveText(/^\d{2}:\d{2}$/);
+  const weekly = page.locator(".dashboard-this-week");
+  await expect(weekly.locator(".dashboard-week-stat")).toHaveCount(3);
+  await expect(weekly.getByRole("link")).toHaveText([
+    "Returns",
+    "Received",
+    "Price updates",
+  ]);
+  for (const value of await weekly
+    .locator(".dashboard-week-stat > strong")
+    .allTextContents())
+    expect(value.trim()).toMatch(/^\d+$/);
+  for (const href of ["#returns", "#received", "#price-updates"]) {
+    await weekly.locator(`a[href="${href}"]`).click();
+    await expect(page).toHaveURL((url) => url.hash === href);
+    await page.goto("/#dashboard");
+    await expect(weekly).toBeVisible();
+    await expect(
+      activity.getByText("Approve price", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      activity.getByText("Create offer", { exact: true }),
+    ).toHaveCount(0);
+    await expect(activity.getByText("Stop offer", { exact: true })).toHaveCount(
+      0,
+    );
+  }
   await page
     .getByRole("button", { name: "Expiring soon: 2", exact: true })
     .click();
@@ -422,6 +460,12 @@ test("dashboard shows four actionable KPIs and scoped lists, and operations rend
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  const afterReads = await readCanonicalBusinessEvidence(page);
+  expect(afterReads.activity).toEqual(beforeReads.activity);
+  expect(afterReads.invoices).toEqual(beforeReads.invoices);
+  expect(afterReads.stock_movements).toEqual(beforeReads.stock_movements);
+  expect(afterReads.ledger).toEqual(beforeReads.ledger);
+  expect(afterReads.products).toEqual(beforeReads.products);
 });
 
 test("invalid pickup evidence, invalid store-use quantities, and invalid financial amounts show errors without changing records or crashing the app", async ({
@@ -440,20 +484,25 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
     .getByRole("button", { name: "Record pickup", exact: true })
     .last()
     .click();
-  for (const [label, message] of [
-    ["Supplier representative name", "Enter the supplier representative name."],
-    [
-      "Signed paper pickup slip reference",
-      "Enter the signed paper pickup slip reference.",
-    ],
-  ]) {
-    await expect(
-      page
-        .locator(".field")
-        .filter({ has: page.getByLabel(label, { exact: true }) })
-        .getByRole("alert"),
-    ).toHaveText(message);
-  }
+  await expect(
+    page
+      .locator(".field")
+      .filter({
+        has: page.getByLabel("Supplier representative name", { exact: true }),
+      })
+      .getByRole("alert"),
+  ).toHaveText("Enter the supplier representative name.");
+  const optionalReference = page.getByLabel("Reference (optional)", {
+    exact: true,
+  });
+  await expect(optionalReference).toHaveValue("");
+  await expect(optionalReference).not.toHaveAttribute("aria-invalid", "true");
+  await expect(
+    page
+      .locator(".field")
+      .filter({ has: optionalReference })
+      .getByRole("alert"),
+  ).toHaveCount(0);
   expect(await stored(page)).toEqual(beforePickup);
   await expect(
     page.getByRole("heading", { name: /^Return #1$/, level: 1 }),
@@ -564,7 +613,11 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
   ).toContainText("Enter a valid amount with no more than two decimal places");
   expect(await stored(page)).toEqual(beforeAmount);
   await expect(
-    page.getByRole("heading", { name: "Payables", exact: true, level: 1 }),
+    page.getByRole("heading", {
+      name: "Fresh Valley Foods",
+      exact: true,
+      level: 1,
+    }),
   ).toBeVisible();
   await expect(
     page.getByLabel("Signed amount (credits are negative)", { exact: true }),

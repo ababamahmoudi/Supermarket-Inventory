@@ -1,5 +1,6 @@
 import { runCanonicalBusinessFixture } from "./business-fixture";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
 import { expect, test } from "@playwright/test";
 import { chooseOption, setBranch, signIn, visitPage } from "./helpers";
 
@@ -143,8 +144,10 @@ test("the dashboard replaces stock projections with actual arrivals for the sele
       if (!saved.invoices)
         throw new Error("The receipt fixture requires invoices.");
       const receipt = saved.invoices.find(
-        (invoice: { status: string; branch: string }) =>
-          invoice.status === "posted" && invoice.branch === "Branch 1",
+        (invoice: { company_id: string; status: string; branch: string }) =>
+          invoice.company_id === saved.config.company.seed_key &&
+          invoice.status === "posted" &&
+          invoice.branch === "Branch 1",
       );
       if (!receipt)
         throw new Error("The seed must retain a posted North York receipt");
@@ -155,31 +158,77 @@ test("the dashboard replaces stock projections with actual arrivals for the sele
   );
   await page.reload();
   expect(receiptFixture.id).toBeTruthy();
+  const beforeReads = await readCanonicalBusinessEvidence(page);
+  const weekly = page.locator(".dashboard-this-week");
   await expect(
-    page.getByRole("heading", { name: "Arrived this week", exact: true }),
+    weekly.getByRole("heading", { name: "This week", exact: true }),
   ).toBeVisible();
+  await expect(page.getByText("More operations", { exact: true })).toHaveCount(
+    0,
+  );
+  const received = weekly.locator(".dashboard-week-stat").filter({
+    has: page.getByRole("link", { name: "Received", exact: true }),
+  });
+  const deliveryCount = received.locator(":scope > strong");
+  await expect(
+    received.getByText("Deliveries received", { exact: true }),
+  ).toBeVisible();
+  await expect(deliveryCount).toHaveText(/^[1-9]\d*$/);
+  const northYorkCount = await deliveryCount.textContent();
   await expect(
     page.getByRole("heading", { name: "Low stock", exact: true }),
   ).toHaveCount(0);
-  await expect(page.locator(".dashboard-kpis > .kpi-card")).toHaveCount(4);
+  await assertDashboardOperationalAndShiftTiles(page);
   await setBranch(page, "Warehouse");
-  await expect(
-    page.getByText("No deliveries this week.", { exact: true }),
-  ).toBeVisible();
-  await setBranch(page, "North York");
-  await expect(
-    page.getByText("No deliveries this week.", { exact: true }),
-  ).toHaveCount(0);
-  const arrived = page.locator(".card").filter({
-    has: page.getByRole("heading", {
-      name: "Arrived this week",
-      exact: true,
-    }),
+  await expect(deliveryCount).toHaveText("0");
+  // D7 replaces the old arrival preview with this real scoped destination.
+  await received.getByRole("link", { name: "Received", exact: true }).click();
+  await expect(page).toHaveURL((url) => url.hash === "#received");
+  await page.getByRole("button", { name: "Date range", exact: true }).click();
+  const dateRange = page.getByRole("dialog", {
+    name: "Date range",
+    exact: true,
   });
-  expect(await arrived.locator(".dashboard-list-row").count()).toBeGreaterThan(
-    0,
+  await dateRange
+    .getByRole("button", { name: "This week", exact: true })
+    .click();
+  await expect(dateRange).toBeHidden();
+  await expect(
+    page.getByText("No deliveries match these filters.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".received-table")).toHaveCount(0);
+  await setBranch(page, "North York");
+  // The phone's compact receipt row omits the invoice column; search by the
+  // genuine retained reference and verify its exact source-invoice link.
+  await page
+    .getByRole("textbox", { name: "Search Received", exact: true })
+    .fill(receiptFixture.number);
+  const sourceHref = `#invoices?id=${encodeURIComponent(receiptFixture.id)}&line=`;
+  const receiptRows = page.locator(
+    `.received-table tbody tr[data-row-href^="${sourceHref}"]`,
   );
-  await expect(arrived).toContainText(receiptFixture.number);
+  await expect(receiptRows.first()).toBeVisible();
+  expect(await receiptRows.count()).toBeGreaterThan(0);
+  const sourceLink = receiptRows
+    .first()
+    .locator(`a[href^="${sourceHref}"]`)
+    .filter({ visible: true })
+    .first();
+  if (!(await sourceLink.isVisible()))
+    await receiptRows.first().locator(".table-details-toggle").click();
+  await expect(sourceLink).toBeVisible();
+  await expect(sourceLink).toHaveAttribute(
+    "href",
+    (await receiptRows.first().getAttribute("data-row-href"))!,
+  );
+  await page.goto("/#dashboard");
+  await expect(deliveryCount).toHaveText(northYorkCount!);
+  const afterReads = await readCanonicalBusinessEvidence(page);
+  expect(afterReads.invoices).toEqual(beforeReads.invoices);
+  expect(afterReads.invoice).toEqual(beforeReads.invoice);
+  expect(afterReads.stock_movements).toEqual(beforeReads.stock_movements);
+  expect(afterReads.ledger).toEqual(beforeReads.ledger);
+  expect(afterReads.products).toEqual(beforeReads.products);
   await expect(
     page.locator("select, input[type=number], input[type=date]"),
   ).toHaveCount(0);

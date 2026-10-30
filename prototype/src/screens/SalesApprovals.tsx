@@ -1,3 +1,6 @@
+import { ApprovalNumbers } from "./ApprovalNumbers";
+import { regularPrice } from "../catalog";
+import { ProductPrice } from "../weight-price-presentation";
 import { companyTimestampText } from "../company-time";
 import { saleRequestTab, type SaleRequestTab } from "../sale-request-status";
 import { SellingPriceValue } from "../selling-price-presentation";
@@ -18,7 +21,13 @@ import {
   type ChangePriceInput,
   type PriceChangePreview,
 } from "../sales";
-import { DateText, ProductName, LtrText, demoUserLabel } from "../presentation";
+import {
+  DateText,
+  ProductName,
+  LtrText,
+  demoUserLabel,
+  categoryLabel,
+} from "../presentation";
 import { WhatsMissing } from "../WhatsMissing";
 import {
   Badge,
@@ -30,6 +39,7 @@ import {
   Field,
 } from "../ui";
 import "./sales-c8.css";
+import "./approval-receiving.css";
 
 export function SaleRequestCards({
   compact = false,
@@ -214,47 +224,87 @@ export function SaleRequestCards({
             }))
           : [];
         return (
-          <section
-            className={`sale-request-card${compact ? " is-compact" : ""}`}
+          <Card
+            className={`sale-request-card approval-detail-row${compact ? " is-compact" : ""}`}
             key={request.id}
             data-sale-request-id={request.id}
           >
-            <div className="sales-title-row">
+            <div className="approval-row-heading">
               <h3>
                 {product ? (
-                  <ProductName product={product} language={lang} />
+                  <a href={`#product?code=${encodeURIComponent(product.code)}`}>
+                    <ProductName product={product} language={lang} />
+                  </a>
                 ) : (
                   <LtrText>{request.product_code}</LtrText>
                 )}
               </h3>
-              <Badge
-                tone={
-                  pending
-                    ? "pending"
-                    : request.status === "approved"
-                      ? "approved"
-                      : request.status === "expired"
-                        ? "danger"
-                        : "neutral"
-                }
-              >
-                {pending
-                  ? t("Sale request", "درخواست حراج")
-                  : request.status === "approved"
-                    ? t("Approved sale request", "درخواست حراج تأییدشده")
-                    : request.status === "rejected"
-                      ? t("Rejected", "ردشده")
-                      : request.status === "expired"
-                        ? t("Expired", "منقضی‌شده")
-                        : t("Withdrawn", "پس‌گرفته‌شده")}
-              </Badge>
-            </div>
-            <WhatsMissing issues={issues} />
-            <div className="sale-request-facts">
-              <strong>
-                {request.status === "approved" && !terms && (
-                  <small>{t("Requested price", "قیمت درخواستی")} </small>
+              {product && (
+                <p className="muted approval-product-context">
+                  <bdi dir="ltr">{product.unit_size}</bdi> ·{" "}
+                  {categoryLabel(
+                    state.config.pricing_categories.find(
+                      (row) => row.key === product.pricing_category,
+                    )?.label ?? product.pricing_category,
+                    lang,
+                  )}{" "}
+                  · <bdi dir="auto">{product.main_supplier}</bdi> ·{" "}
+                  <bdi dir="ltr">{product.code}</bdi>
+                </p>
+              )}
+              <div className="approval-row-badges">
+                {pending && (
+                  <Badge tone="pending">{t("Pending", "در انتظار")}</Badge>
                 )}
+                <Badge
+                  tone={
+                    pending
+                      ? "pending"
+                      : request.status === "approved"
+                        ? "approved"
+                        : request.status === "expired"
+                          ? "danger"
+                          : "neutral"
+                  }
+                >
+                  {pending
+                    ? t("Sale request", "درخواست حراج")
+                    : request.status === "approved"
+                      ? t("Approved sale request", "درخواست حراج تأییدشده")
+                      : request.status === "rejected"
+                        ? t("Rejected", "ردشده")
+                        : request.status === "expired"
+                          ? t("Expired", "منقضی‌شده")
+                          : t("Withdrawn", "پس‌گرفته‌شده")}
+                </Badge>
+              </div>
+            </div>
+            <ApprovalNumbers
+              financial={canDecide}
+              leadingLabel={t("Regular price", "قیمت عادی")}
+              leading={
+                product &&
+                (effect?.regular_price ??
+                  regularPrice(state, product, request.branch)) ? (
+                  <ProductPrice
+                    value={
+                      (effect?.regular_price ??
+                        regularPrice(state, product, request.branch))!
+                    }
+                    product={product}
+                    config={state.config}
+                  />
+                ) : (
+                  t("Not added", "اضافه نشده")
+                )
+              }
+              leadingNote={
+                pending
+                  ? t("until now", "تا الان")
+                  : t("Current regular price", "قیمت عادی فعلی")
+              }
+              priceLabel={t("Sale price", "قیمت حراج")}
+              price={
                 <SellingPriceValue
                   current={salePriceDisplay(
                     {
@@ -265,38 +315,52 @@ export function SaleRequestCards({
                   )}
                   currency={state.config.company.currency}
                 />
-              </strong>
-              <span>{branchLabel(state.config, request.branch, lang)}</span>
-              <span>
-                <LtrText>
-                  <DateText value={terms?.starts_on ?? request.starts_on} />
-                  {(terms ? terms.last_day : request.last_day) && (
-                    <>
-                      {" "}
-                      –{" "}
-                      <DateText
-                        value={(terms ? terms.last_day : request.last_day)!}
-                      />
-                    </>
+              }
+              priceNote={
+                <>
+                  <LtrText>
+                    <DateText value={terms?.starts_on ?? request.starts_on} />
+                    {(terms ? terms.last_day : request.last_day) && (
+                      <>
+                        {" "}
+                        –{" "}
+                        <DateText
+                          value={(terms ? terms.last_day : request.last_day)!}
+                        />
+                      </>
+                    )}
+                  </LtrText>
+                  {!(terms ? terms.last_day : request.last_day) && (
+                    <> · {t("No end date", "بدون تاریخ پایان")}</>
                   )}
-                </LtrText>
-                {!(terms ? terms.last_day : request.last_day) && (
-                  <> · {t("No end date", "بدون تاریخ پایان")}</>
-                )}
-              </span>
-            </div>
-            {request.requester && (
-              <p className="muted">
-                {t("Requested by", "درخواست‌دهنده")}:{" "}
-                {demoUserLabel(request.requester, lang)}
-                {request.why && (
-                  <>
-                    {" "}
-                    · {t("Why?", "چرا؟")} {request.why}
-                  </>
-                )}
-              </p>
-            )}
+                </>
+              }
+              marginLabel={t("Margin", "حاشیه سود")}
+              margin={
+                effect?.margin ? (
+                  <LtrText>
+                    {new Decimal(effect.margin).times(100).toFixed(1)}%
+                  </LtrText>
+                ) : (
+                  t("Not added", "اضافه نشده")
+                )
+              }
+              marginNote={
+                effect?.minimum_margin
+                  ? effect.below_minimum_margin
+                    ? t(
+                        `Below ${new Decimal(effect.minimum_margin).times(100).toString()}% minimum`,
+                        `کمتر از حداقل ${new Decimal(effect.minimum_margin).times(100).toString()}٪`,
+                      )
+                    : t(
+                        `Min. ${new Decimal(effect.minimum_margin).times(100).toString()}%`,
+                        `حداقل ${new Decimal(effect.minimum_margin).times(100).toString()}٪`,
+                      )
+                  : undefined
+              }
+              warning={Boolean(effect?.below_minimum_margin)}
+            />
+            <WhatsMissing issues={issues} />
             {!pending && (
               <div className="sale-request-decision">
                 <p className="muted">
@@ -330,25 +394,8 @@ export function SaleRequestCards({
                 )}
               </div>
             )}
-            {effect?.margin && (
-              <p>
-                {t("Margin at this price", "حاشیه سود در این قیمت")}{" "}
-                <LtrText>
-                  {new Decimal(effect.margin)
-                    .times(100)
-                    .toFixed(0, Decimal.ROUND_HALF_UP)}
-                  %
-                </LtrText>
-              </p>
-            )}
             {effect?.below_minimum_margin && (
-              <div className="banner pending sale-request-margin-warning">
-                <p>
-                  {t(
-                    "This price is below the minimum margin.",
-                    "این قیمت کمتر از حداقل حاشیهٔ سود است.",
-                  )}
-                </p>
+              <div className="approval-margin-warning">
                 <Checkbox
                   id={`sale-request-margin-${request.id}`}
                   checked={acknowledgments[request.id] ?? false}
@@ -360,8 +407,8 @@ export function SaleRequestCards({
                   }
                 >
                   {t(
-                    "Use this price anyway",
-                    "با این حال از این قیمت استفاده شود",
+                    "Use this price anyway — it's below the minimum margin.",
+                    "با وجود حاشیه کمتر از حداقل، این قیمت را استفاده کن.",
                   )}
                 </Checkbox>
               </div>
@@ -398,31 +445,49 @@ export function SaleRequestCards({
                 </Field>
               </section>
             )}
-            {canDecide && pending && (
-              <div className="actions sale-request-actions">
-                <Button disabled={!preview} onClick={() => approve(request)}>
-                  {t("Approve", "تأیید")}
-                </Button>
-                <Button
-                  id={`sale-request-review-${request.id}`}
-                  variant="neutral"
-                  onClick={() => setChanging(request)}
-                >
-                  {t("Change and approve", "تغییر و تأیید")}
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setRejecting(request);
-                    setReason("");
-                    setRejectAttempted(false);
-                  }}
-                >
-                  {t("Reject", "رد")}
-                </Button>
-              </div>
-            )}
-          </section>
+            <div className="approval-card-footer">
+              <p className="approval-meta muted">
+                {branchLabel(state.config, request.branch, lang)}
+                {request.requester && (
+                  <>
+                    {" "}
+                    · {t("Requested by", "درخواست از")}{" "}
+                    <bdi>{demoUserLabel(request.requester, lang)}</bdi>
+                  </>
+                )}
+                {request.why && (
+                  <>
+                    {" "}
+                    · {t("Why", "دلیل")}: {request.why}
+                  </>
+                )}
+              </p>
+              {canDecide && pending && (
+                <div className="actions sale-request-actions" data-control-row>
+                  <Button
+                    id={`sale-request-review-${request.id}`}
+                    variant="secondary"
+                    onClick={() => setChanging(request)}
+                  >
+                    {t("Change and approve", "تغییر و تأیید")}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      setRejecting(request);
+                      setReason("");
+                      setRejectAttempted(false);
+                    }}
+                  >
+                    {t("Reject", "رد کردن")}
+                  </Button>
+                  <Button disabled={!preview} onClick={() => approve(request)}>
+                    {t("Approve", "تأیید")}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </Card>
         );
       })}
       {changing && canDecide && (
@@ -483,6 +548,9 @@ export function SaleRequestCards({
   return compact ? (
     content
   ) : (
-    <Card title={t("Sale requests", "درخواست‌های حراج")}>{content}</Card>
+    <div className="approval-sale-list">
+      <h2>{t("Sale requests", "درخواست‌های حراج")}</h2>
+      {content}
+    </div>
   );
 }

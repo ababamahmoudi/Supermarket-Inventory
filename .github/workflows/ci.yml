@@ -8,7 +8,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Each separately pushed demo item must finish its own checks.
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -22,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -83,6 +84,14 @@ jobs:
           output.write_text(yaml.safe_dump(config, sort_keys=False))
           PY
           .venv/bin/pre-commit run --all-files --config .local/pre-commit-ci.yaml
+      - name: Use official Ubuntu mirrors for browser dependencies
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            printf '%s\t%s\n' \
+              'https://archive.ubuntu.com/ubuntu/' 'priority:1' \
+              'https://security.ubuntu.com/ubuntu/' 'priority:2' | \
+              sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
       - name: Run browser smoke tests
         run: |
           cd frontend
@@ -131,14 +140,20 @@ jobs:
       - name: Check prototype lint and formatting
         run: npm run lint
       - name: Run prototype unit tests and every seed pricing case
-        run: npm test
+        # Native repository tests retain their own concurrent-write proofs. One
+        # file worker avoids CPU contention on the two-core hosted runner.
+        run: |
+          npm exec -- vitest run --maxWorkers=1
+          npm run test:sdk
       - name: Build the prototype
         run: npm run build
 
   prototype_browser_tests:
     name: Prototype browser shard ${{ matrix.shard }}/4
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # CI213 reached the 40-minute job cap while its 485-case shard was still
+    # progressing. Allow the expanded suite to finish; test limits stay strict.
+    timeout-minutes: 50
     strategy:
       fail-fast: false
       matrix:
@@ -163,8 +178,16 @@ jobs:
         run: npm ci
       - name: Build the prototype
         run: npm run build
+      - name: Use official Ubuntu mirrors for browser dependencies
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            printf '%s\t%s\n' \
+              'https://archive.ubuntu.com/ubuntu/' 'priority:1' \
+              'https://security.ubuntu.com/ubuntu/' 'priority:2' | \
+              sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
       - name: Install Chromium, WebKit and browser dependencies
-        run: npx playwright install --with-deps chromium webkit
+        run: npx playwright install --with-deps chromium webkit firefox
       - name: Test desktop and phone browser workflows
         run: npm run e2e -- --workers=2 --shard=${{ matrix.shard }}/4 --reporter=github,html
         env:

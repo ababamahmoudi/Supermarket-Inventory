@@ -39,7 +39,9 @@ export type SystemReconciliationSource =
   | "sales_clock"
   | "date_reminders"
   | "return_credit_reminders"
-  | "price_updates";
+  | "price_updates"
+  | "timesheets_migration"
+  | "packages_migration";
 // Only this repository can mint a system witness, while its synchronous,
 // company-scoped transaction callback is active. Plain/spread/retained objects
 // never authorize clock or derived-notification writes.
@@ -585,6 +587,8 @@ export class BrowserAuthorityRepository {
       "date_reminders",
       "return_credit_reminders",
       "price_updates",
+      "timesheets_migration",
+      "packages_migration",
     ]);
     if (!sources.has(source)) throw new AuthorityStorageError("transaction");
     const result = await this.locked(

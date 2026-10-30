@@ -1,8 +1,15 @@
+import { openInvoiceDetails } from "./helpers";
 import { createHash } from "node:crypto";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
 import Decimal from "decimal.js";
-import { chooseOption, invoiceImage, signIn } from "./helpers";
+import {
+  chooseOption,
+  invoiceImage,
+  signIn,
+  openInvoiceLine,
+  confirmInvoiceLine,
+} from "./helpers";
 import type { DemoState } from "../src/types";
 import { openC8PriceDialog } from "../scripts/capture-c8-proof.mjs";
 
@@ -29,9 +36,32 @@ async function rememberedPack(page: Page) {
 }
 
 async function manual(page: Page) {
+  const previousId = (await stored(page)).invoice.id;
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "New invoice", exact: true })
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
+  await openInvoiceDetails(page);
+  await expect
+    .poll(async () => {
+      const current = (await stored(page)).invoice;
+      return (
+        current.id !== previousId &&
+        current.entry_mode === "manual" &&
+        current.lines.length === 0
+      );
+    })
+    .toBe(true);
+  const currentId = (await stored(page)).invoice.id;
+  await expect(page).toHaveURL(
+    (url) => url.hash === `#invoices?id=${encodeURIComponent(currentId)}`,
+  );
+  await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
+  await page
+    .getByLabel("Invoice number", { exact: true })
+    .fill("FICTIONAL-C2-MANUAL");
   await page
     .locator("#invoice-details-fields")
     .getByLabel("Supplier", { exact: true })
@@ -40,11 +70,20 @@ async function manual(page: Page) {
     .getByRole("listbox", { name: "Supplier", exact: true })
     .getByRole("option", { name: /Fresh Valley Foods/ })
     .click();
+  await chooseOption(
+    page,
+    page.getByRole("combobox", {
+      name: "Add a product to the invoice",
+      exact: true,
+    }),
+    "0002",
+    "Canned Fava Beans 400 g",
+  );
   await page.getByRole("button", { name: "Add line", exact: true }).click();
   await expect(page.locator(".invoice-line")).toHaveCount(1);
   const id = (await stored(page)).invoice.id;
   await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
+    .getByLabel("Attach original", { exact: true })
     .setInputFiles(invoiceImage);
   // A pre-existing manual line is visible while its original is still saving.
   // Start edits only after this exact retained file and route are accepted.
@@ -67,23 +106,28 @@ async function manual(page: Page) {
       sha256: createHash("sha256").update(invoiceImage.buffer).digest("hex"),
     });
   await expect(
-    page.getByRole("button", { name: "New invoice", exact: true }),
+    page.getByRole("button", { name: "Save and close", exact: true }),
   ).toBeEnabled();
   await expect(page).toHaveURL(
     (url) => url.hash === `#invoices?id=${encodeURIComponent(id)}`,
   );
   await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
   await expect(page.locator(".invoice-line")).toHaveCount(1);
-  return page.locator(".invoice-line").first();
+  return openInvoiceLine(page, 0);
 }
 
 async function confirmNoDate(page: Page) {
-  const line = page.locator(".invoice-line").first();
-  await line.getByRole("button", { name: "No", exact: true }).click();
+  const line = await openInvoiceLine(page, 0);
   await line
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+    .getByRole("group", { name: "Track date", exact: true })
+    .getByRole("button", { name: "No", exact: true })
     .click();
-  await expect(line.getByText("Confirmed", { exact: true })).toBeVisible();
+  await confirmInvoiceLine(page, line);
+  await expect(
+    page
+      .getByTestId("invoice-line-row-0")
+      .getByRole("img", { name: "Confirmed", exact: true }),
+  ).toBeVisible();
 }
 
 async function post(page: Page) {
@@ -107,28 +151,28 @@ test("retained case quote bills exactly, remembers the pack and leaves the poste
   await signIn(page, "Supervisor");
   await rememberedPack(page);
   const line = await manual(page);
-  await expect(line.getByLabel("Units per case", { exact: true })).toHaveValue(
-    "12",
-  );
   await chooseOption(
     page,
-    line.getByLabel("Quantity unit", { exact: true }),
+    line.getByLabel("Unit", { exact: true }),
     "cases",
     "Cases",
   );
   // The real unit-change command converts the old count before the next edit.
   // Wait for its projected control so it cannot replace the value mid-fill.
-  await expect(line.getByLabel("Quantity unit", { exact: true })).toHaveText(
-    "Cases",
+  await expect(line.getByLabel("Unit", { exact: true })).toHaveText("Cases");
+  await expect(line.getByLabel("Units per case", { exact: true })).toHaveValue(
+    "12",
   );
-  await line.getByLabel("Invoiced", { exact: true }).fill("500");
-  await expect(line.getByLabel("Invoiced", { exact: true })).toHaveValue("500");
+  await line.getByLabel("Cases invoiced", { exact: true }).fill("500");
+  await expect(line.getByLabel("Cases invoiced", { exact: true })).toHaveValue(
+    "500",
+  );
   await line.getByLabel("Case cost before tax", { exact: true }).fill("19.99");
   await expect(
     line.getByLabel("Unit cost before tax", { exact: true }),
   ).toHaveValue("1.6658");
-  await expect(line.locator(".invoice-pack-equation")).toContainText(
-    "500 × 12 = 6000",
+  await expect(line.locator(".receiving-pack-equation")).toHaveText(
+    "500 cases × 12 units = 6000 units",
   );
   await confirmNoDate(page);
   await post(page);
@@ -195,22 +239,61 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
   const order = before.orders!.at(-1)!;
   expect(order.status).toBe("ordered");
   const line = await manual(page);
-  await line.getByLabel("Invoiced", { exact: true }).fill("18");
+  await line.getByLabel("Invoiced units", { exact: true }).fill("18");
   await line.getByLabel("Unit cost before tax", { exact: true }).fill("1.1000");
+  // On phones the line editor is a full-screen sheet; keep its edits and return
+  // to invoice details before choosing and reviewing the purchase order.
+  await line.getByRole("button", { name: "Close", exact: true }).click();
   const comparison = page.locator(".invoice-order-card");
   await chooseOption(
     page,
-    comparison.getByLabel("Order (optional)", { exact: true }),
+    page
+      .locator("#invoice-details-fields")
+      .getByLabel("Order (optional)", { exact: true }),
     order.id,
-    `${order.reference} · ${order.date}`,
+    order.reference,
   );
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  const unavailablePost = page.getByRole("button", {
+    name: "Post invoice",
+    exact: true,
+  });
+  await expect(unavailablePost).toBeDisabled();
+  await expect(unavailablePost).toHaveAttribute("aria-disabled", "true");
+  await unavailablePost.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(unavailablePost).toBeFocused();
   await expect(
-    page.getByRole("link", {
-      name: "Choose a decision for every order difference before posting.",
-      exact: true,
-    }),
-  ).toBeVisible();
+    unavailablePost.locator("..").getByRole("tooltip"),
+  ).toContainText("Click Post invoice for the full What's missing list.");
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("alert", { name: "What's missing", exact: true }),
+  ).toContainText("decide whether to keep or refuse the extra delivery");
+  const missingPanel = page.getByRole("alert", {
+    name: "What's missing",
+    exact: true,
+  });
+  await missingPanel
+    .locator(".receiving-missing-row")
+    .filter({ hasText: "decide whether to keep or refuse the extra delivery" })
+    .getByRole("button", { name: "Show", exact: true })
+    .click();
+  await expect(
+    page
+      .locator("#invoice-order-line-0-extra-decision")
+      .getByRole("button", { name: "Keep it (we pay for it)", exact: true }),
+  ).toBeFocused();
+  await missingPanel
+    .locator(".receiving-missing-row")
+    .filter({ hasText: "accept the changed cost" })
+    .getByRole("button", { name: "Show", exact: true })
+    .click();
+  await expect(
+    page
+      .locator("#invoice-order-line-0-price-decision")
+      .getByRole("button", { name: "Accept new cost", exact: true }),
+  ).toBeFocused();
   const row = comparison.locator('tr[data-invoice-line="0"]');
   const refusal = comparison.getByRole("button", {
     name: "Refused / sent back with the driver",
@@ -264,7 +347,18 @@ test("order comparison requires explicit extra and changed-cost decisions, then 
     "Refused / sent back with the driver · 6 · $6.60",
   );
   await expect(postedLine).toContainText("Accept new cost");
-  await expect(postedLine.getByRole("cell").nth(2)).toHaveText("$1.10");
+  expect(
+    new Decimal(after.invoice.lines[0].unit_cost_before_tax).toFixed(4),
+  ).toBe("1.1000");
+  if ((page.viewportSize()?.width ?? 1440) < 760) {
+    const summary = postedLine.locator(".receiving-phone-quantity");
+    await expect(summary).toBeVisible();
+    await expect(summary).toContainText("· $1.1000");
+  } else {
+    const cost = postedLine.locator(".receiving-cost-cell");
+    await expect(cost).toBeVisible();
+    await expect(cost).toHaveText("$1.1000");
+  }
   await expect(
     page.locator(
       ".posted-invoice-document input, .posted-invoice-document select",
@@ -313,12 +407,19 @@ test("short-dated expiry discount requires a real date and preserves an existing
     .getByRole("button", { name: "Short-dated (expiry discount)", exact: true })
     .click();
   await expect(
-    line.getByRole("button", { name: "No", exact: true }),
+    line
+      .getByRole("group", { name: "Track date", exact: true })
+      .getByRole("button", { name: "No", exact: true }),
   ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  ).toBeDisabled();
+  const unavailablePost = page.getByRole("button", {
+    name: "Post invoice",
+    exact: true,
+  });
+  await unavailablePost.focus();
+  await page.keyboard.press("Enter");
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toBeVisible();
@@ -330,9 +431,30 @@ test("short-dated expiry discount requires a real date and preserves an existing
     .getByRole("dialog", { name: "Choose date", exact: true })
     .getByRole("button", { name: "Today", exact: true })
     .click();
-  await line
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+  await chooseOption(
+    page,
+    line.locator("#invoice-line-0-date-type"),
+    "best_before",
+    "Best before",
+  );
+  await line.getByRole("button", { name: "Close", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click({ force: true });
+  await page
+    .getByRole("alert", { name: "What's missing", exact: true })
+    .locator(".receiving-missing-row")
+    .filter({ hasText: "Change Date type to Expiry" })
+    .getByRole("button", { name: "Show", exact: true })
     .click();
+  await expect(page.locator("#invoice-line-0-date-type")).toBeFocused();
+  await chooseOption(
+    page,
+    page.locator("#invoice-line-0-date-type"),
+    "expiry",
+    "Expiry",
+  );
+  await confirmInvoiceLine(page, line);
   await post(page);
   const after = await stored(page);
   const product = after.products.find((item) => item.code === "0002")!;

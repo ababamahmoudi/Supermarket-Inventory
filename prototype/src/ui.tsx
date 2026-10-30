@@ -1,6 +1,7 @@
 import {
   useEffect,
   useLayoutEffect,
+  useCallback,
   useId,
   useRef,
   useState,
@@ -15,9 +16,13 @@ import {
   type AnchorHTMLAttributes,
   type ReactElement,
   type ReactNode,
+  type ComponentPropsWithRef,
   type InputHTMLAttributes,
+  type TextareaHTMLAttributes,
+  type Ref,
   type CSSProperties,
   type KeyboardEvent,
+  type DetailsHTMLAttributes,
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { Slot } from "@radix-ui/react-slot";
@@ -40,6 +45,18 @@ import {
   Columns3,
 } from "lucide-react";
 import { useDemo } from "./store";
+import {
+  beginDialogFeedbackScope,
+  endDialogFeedbackScope,
+} from "./dialog-feedback";
+import { useDialogScrollEdges } from "./use-dialog-scroll-edges";
+import {
+  matchesSelectOption,
+  matchingSelectTerms,
+  normalizeSelectSearch,
+} from "./select-search";
+import { SelectMatch } from "./SelectMatch";
+import { boundedPopoverPosition } from "./popover-position";
 import { translate } from "./i18n";
 import {
   navigationKey,
@@ -83,7 +100,7 @@ const buttonVariants = cva("button", {
       quiet: "button-quiet",
       ghost: "button-quiet button-ghost",
     },
-    size: { default: "", sm: "button-sm" },
+    size: { default: "", sm: "button-sm", label: "button-label-action" },
   },
   defaultVariants: { variant: "primary", size: "default" },
 });
@@ -94,7 +111,7 @@ export function Button({
   className,
   type = "button",
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
+}: ComponentPropsWithRef<"button"> & {
   variant?:
     | "primary"
     | "secondary"
@@ -105,19 +122,96 @@ export function Button({
     | "danger"
     | "quiet"
     | "ghost";
-  size?: "default" | "sm";
+  size?: "default" | "sm" | "label";
   asChild?: boolean;
 }) {
   const Component = asChild ? Slot : "button";
   return (
     <Component
       className={cn("ui-button", buttonVariants({ variant, size }), className)}
-      data-control-kind="action"
+      data-control-kind={size === "label" ? "label-action" : "action"}
       type={type}
       {...props}
     />
   );
 }
+export function Disclosure({
+  summary,
+  children,
+  className,
+  ...props
+}: DetailsHTMLAttributes<HTMLDetailsElement> & { summary: ReactNode }) {
+  return (
+    <details {...props} className={cn("ui-disclosure", className)}>
+      <summary
+        className={cn("ui-button", buttonVariants({ variant: "plain" }))}
+        data-control-kind="disclosure"
+      >
+        <span>{summary}</span>
+        <ChevronDown size={16} aria-hidden="true" />
+      </summary>
+      {children}
+    </details>
+  );
+}
+/** The icon is centred over the whole title/subtitle block, not its first line. */
+export function IconText({
+  icon,
+  children,
+  className,
+  ...props
+}: HTMLAttributes<HTMLSpanElement> & { icon: ReactNode }) {
+  return (
+    <span {...props} className={cn("ui-icon-text", className)}>
+      <span
+        className="ui-icon-text-icon"
+        data-icon-text-icon
+        aria-hidden="true"
+      >
+        {icon}
+      </span>
+      <span className="ui-icon-text-copy" data-icon-text-copy>
+        {children}
+      </span>
+    </span>
+  );
+}
+
+/** A value in a column keeps a plain text edge, including an amber date. */
+export function ColumnValue({
+  tone = "default",
+  className,
+  ...props
+}: HTMLAttributes<HTMLSpanElement> & {
+  tone?: "default" | "pending" | "danger" | "muted";
+}) {
+  return (
+    <span
+      {...props}
+      className={cn("ui-column-value", `is-${tone}`, className)}
+    />
+  );
+}
+
+/** A composed card heading reserves the same row whether or not it has actions. */
+export function CardHeader({
+  title,
+  actions,
+  children,
+  className,
+  ...props
+}: Omit<HTMLAttributes<HTMLElement>, "title"> & {
+  title?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <header {...props} className={cn("ui-card-header", className)}>
+      {title ? <h2>{title}</h2> : children}
+      {actions && <div className="actions">{actions}</div>}
+    </header>
+  );
+}
+
 export function Card({
   title,
   children,
@@ -151,6 +245,31 @@ export function TableRowLink({
     </a>
   );
 }
+/** The single record-details control for rows that open a local dialog. */
+export function TableRowAction({
+  className,
+  children,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & { "aria-label": string }) {
+  return (
+    <Button
+      {...props}
+      variant="ghost"
+      className={cn("ui-icon-button table-row-link", className)}
+      data-control-kind="disclosure"
+    >
+      {children ?? (
+        <ChevronRight
+          className="directional"
+          size={20}
+          strokeWidth={1.5}
+          aria-hidden="true"
+        />
+      )}
+    </Button>
+  );
+}
+
 type BadgeTone =
   "pending" | "approved" | "danger" | "info" | "neutral" | "progress";
 function statusTone(children: ReactNode): BadgeTone | undefined {
@@ -287,16 +406,18 @@ function statusTone(children: ReactNode): BadgeTone | undefined {
 }
 export function Badge({
   tone = "neutral",
+  wrap = false,
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone }) {
+}: HTMLAttributes<HTMLSpanElement> & { tone?: BadgeTone; wrap?: boolean }) {
   const resolvedTone = statusTone(children) ?? tone;
   const offer = typeof children === "string" && /^\d+\s+for\s+/i.test(children);
   return (
     <span
       className={cn(
         "badge ui-badge",
+        wrap && "is-wrappable",
         resolvedTone,
         { "offer-pill": offer },
         className,
@@ -311,6 +432,8 @@ export function Badge({
 export const StatusBadge = Badge;
 export function Field({
   adornment,
+  labelAdornment,
+  labelContent,
   containerId,
   label,
   children,
@@ -319,16 +442,26 @@ export function Field({
   className,
 }: {
   label: string;
+  labelContent?: ReactNode;
   children: ReactNode;
   adornment?: ReactNode;
+  labelAdornment?: ReactNode;
   containerId?: string;
   error?: string;
-  hint?: string;
+  hint?: ReactNode;
   className?: string;
 }) {
   const generated = useId();
-  const child = isValidElement(children)
-    ? (children as ReactElement<{
+  const fieldControl =
+    isValidElement(children) && children.type === "textarea" ? (
+      <AutoTextarea
+        {...(children.props as TextareaHTMLAttributes<HTMLTextAreaElement>)}
+      />
+    ) : (
+      children
+    );
+  const child = isValidElement(fieldControl)
+    ? (fieldControl as ReactElement<{
         id?: string;
         "aria-label"?: string;
         "aria-labelledby"?: string;
@@ -340,17 +473,28 @@ export function Field({
   const labelId = `${id}-label`;
   const descriptionId = `${id}-help`;
   const optional = label.match(/^(.*?)\s+(\((?:optional|اختیاری)\))$/);
-  return (
-    <div id={containerId} className={cn("field", className)}>
-      <label id={labelId} htmlFor={id}>
-        {optional ? (
+  const fieldLabel = (
+    <label id={labelId} htmlFor={id}>
+      {labelContent ??
+        (optional ? (
           <>
             {optional[1]} <span className="field-optional">{optional[2]}</span>
           </>
         ) : (
           label
-        )}
-      </label>
+        ))}
+    </label>
+  );
+  return (
+    <div id={containerId} className={cn("field", className)}>
+      {labelAdornment ? (
+        <div className="ui-field-label-row">
+          {fieldLabel}
+          {labelAdornment}
+        </div>
+      ) : (
+        fieldLabel
+      )}
       {child
         ? cloneElement(child, {
             id,
@@ -392,7 +536,7 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="page-header">
+    <header className="page-header" data-ui-component="page-header">
       <div>
         <h1>{title}</h1>
         {description && <p className="muted">{description}</p>}
@@ -409,24 +553,36 @@ export function DataTable({
   expandedRowKeys,
   onExpandedRowKeysChange,
   phoneList,
+  recordDetails = false,
+  horizontalScroll = false,
+  density = "default",
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
   columns?: ResponsiveColumn[];
   responsive?: boolean;
+  horizontalScroll?: boolean;
+  density?: "default" | "medium" | "compact";
   expandedRowKeys?: string[];
   onExpandedRowKeysChange?: (keys: string[]) => void;
+  /** A canonical detail page/dialog exposes omitted facts; omit a second row disclosure. */
+  recordDetails?: boolean;
   phoneList?: {
     name: string;
     value: string;
     secondary: string[];
     selection?: string;
+    /** Compose phone facts only from declared, authorized cells and the genuine record link. */
+    render?: (slots: {
+      cell: (key: string) => ReactNode;
+      recordLink: ReactNode;
+    }) => ReactNode;
   };
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const [actionWidths, setActionWidths] = useState<Record<string, number>>({});
   const [availableWidth, setAvailableWidth] = useState(0);
-  const [screenMobile, setMobile] = useState(() => window.innerWidth < 760);
+  const [screenMobile, setMobile] = useState(() => window.innerWidth <= 760);
   const [printing, setPrinting] = useState(
     () => window.matchMedia?.("print").matches ?? false,
   );
@@ -436,7 +592,7 @@ export function DataTable({
   const expandedRows = expandedRowKeys ?? localExpandedRows;
   const detailsId = useId();
   useEffect(() => {
-    const resize = () => setMobile(window.innerWidth < 760);
+    const resize = () => setMobile(window.innerWidth <= 760);
     const printMedia = window.matchMedia?.("print");
     // Native print captures the DOM immediately after beforeprint returns.
     // Commit the full permitted table before the browser takes that snapshot.
@@ -511,7 +667,13 @@ export function DataTable({
     window.innerWidth >= 1440 &&
     !column.actions &&
     /^(name|product|supplier)$/.test(column.key ?? "")
-      ? { ...column, minWidth: Math.max(240, column.minWidth ?? 0) }
+      ? {
+          ...column,
+          minWidth: Math.max(
+            column.desktopMinWidth ?? 240,
+            column.minWidth ?? 0,
+          ),
+        }
       : column,
   );
   const layout = layoutResponsive
@@ -522,6 +684,7 @@ export function DataTable({
         resolvedColumns.map((column, index) =>
           column.actions ? (actionWidths[column.key ?? String(index)] ?? 0) : 0,
         ),
+        !recordDetails,
       )
     : {
         visible: resolvedColumns.flatMap((column, index) =>
@@ -536,6 +699,7 @@ export function DataTable({
     .filter((index) => resolvedColumns[index].actions)
     .at(-1);
   const separateDetailsColumn =
+    !recordDetails &&
     layoutResponsive &&
     !(mobile && phoneList) &&
     layout.collapsed.length > 0 &&
@@ -642,16 +806,25 @@ export function DataTable({
               control.getBoundingClientRect().width > 0,
           );
           if (!controls.length) continue;
+          const facts = Array.from(
+            group.querySelectorAll<HTMLElement>("[data-action-fact]"),
+          ).filter(
+            (fact) =>
+              fact.closest("td") === cell &&
+              fact.getBoundingClientRect().width > 0,
+          );
           const gap = parseFloat(getComputedStyle(group).columnGap || "0") || 0;
-          const controlsWidth = controls.reduce(
+          const controlsWidth = [...controls, ...facts].reduce(
             (total, control) => total + control.getBoundingClientRect().width,
             0,
           );
           width = Math.max(
             width,
-            controlsWidth + gap * (controls.length - 1) + padding,
+            controlsWidth +
+              gap * (controls.length + facts.length - 1) +
+              padding,
           );
-          for (const control of controls) measured.add(control);
+          for (const control of [...controls, ...facts]) measured.add(control);
         }
         next[columnId(column)] = Math.ceil(width);
       });
@@ -676,6 +849,35 @@ export function DataTable({
       observer?.disconnect();
     };
   });
+  // Sort indicators are separate from the caption: numeric captions end on
+  // the same edge as their values even after sorting or switching direction.
+  const headerContent = (content: ReactNode, align: "start" | "end") =>
+    Children.map(content, (child) => {
+      if (
+        !isValidElement<{ children?: ReactNode }>(child) ||
+        (child.type !== Button && child.type !== "button")
+      )
+        return child;
+      const parts = Children.toArray(child.props.children);
+      const indicator = parts.filter(
+        (part) => typeof part === "string" && /^\s*[↑↓]\s*$/.test(part),
+      );
+      const caption = parts.filter((part) => !indicator.includes(part));
+      const mark = indicator.length ? (
+        <span className="table-sort-indicator" aria-hidden="true">
+          {indicator}
+        </span>
+      ) : null;
+      return cloneElement(child, {
+        children: (
+          <>
+            {align === "end" && mark}
+            <span className="table-header-label">{caption}</span>
+            {align !== "end" && mark}
+          </>
+        ),
+      });
+    });
   const decorate = (nodes: ReactNode, path = "table"): ReactNode =>
     Children.map(nodes, (node, nodeIndex) => {
       if (
@@ -704,6 +906,7 @@ export function DataTable({
             (cell.props.colSpan ?? 1) > 1,
         );
         const canExpand =
+          !recordDetails &&
           layoutResponsive &&
           !(mobile && phoneList) &&
           bodyRow &&
@@ -734,13 +937,25 @@ export function DataTable({
           </IconButton>
         ) : null;
         if (mobile && phoneList && bodyRow && !fullRow) {
+          const withoutRowLinks = (nodes: ReactNode): ReactNode =>
+            Array.isArray(nodes)
+              ? nodes.map(withoutRowLinks)
+              : !isValidElement<{ children?: ReactNode }>(nodes)
+                ? nodes
+                : nodes.type === TableRowLink || nodes.type === TableRowAction
+                  ? null
+                  : nodes.props.children === undefined
+                    ? nodes
+                    : cloneElement(nodes, {
+                        children: withoutRowLinks(nodes.props.children),
+                      });
           const permittedCell = (key: string | undefined) => {
             const index = resolvedColumns.findIndex(
               (column) => column.key === key && !column.hidden,
             );
             const cell = index < 0 ? null : rowCells[index];
             return isValidElement<{ children?: ReactNode }>(cell)
-              ? cell.props.children
+              ? withoutRowLinks(cell.props.children)
               : null;
           };
           const findLink = (nodes: ReactNode): ReactNode => {
@@ -749,13 +964,19 @@ export function DataTable({
                 !isValidElement<{ children?: ReactNode; href?: string }>(child)
               )
                 continue;
-              if (child.type === TableRowLink) return child;
+              if (child.type === TableRowLink || child.type === TableRowAction)
+                return child;
               const found = findLink(child.props.children);
               if (found) return found;
             }
             return null;
           };
-          const routeLink = findLink(rowCells);
+          const routeLink = findLink(
+            rowCells.filter(
+              (_, index) =>
+                resolvedColumns[index] && !resolvedColumns[index].hidden,
+            ),
+          );
           return cloneElement(navigation, {
             className: cn(node.props.className, "phone-list-row"),
             tabIndex: href ? 0 : undefined,
@@ -783,7 +1004,19 @@ export function DataTable({
                 window.location.hash = href;
               }
             },
-            children: (
+            children: phoneList.render ? (
+              phoneList.render({
+                cell: permittedCell,
+                recordLink:
+                  routeLink ??
+                  (href ? (
+                    <TableRowLink
+                      href={href}
+                      aria-label={translate("Open", "باز کردن")}
+                    />
+                  ) : null),
+              })
+            ) : (
               <>
                 {phoneList.selection && (
                   <td className="phone-list-selection">
@@ -889,6 +1122,14 @@ export function DataTable({
                       ? "end"
                       : (column.align ?? "start"),
                   },
+                  ...(cell.type === "th"
+                    ? {
+                        children: headerContent(
+                          content,
+                          column.align === "end" ? "end" : "start",
+                        ),
+                      }
+                    : {}),
                   ...(endActions
                     ? {
                         children:
@@ -979,10 +1220,14 @@ export function DataTable({
         "table-wrap",
         "ui-data-table",
         layoutResponsive && "is-responsive",
+        horizontalScroll && "is-scrollable",
+        density === "compact" && "is-compact",
+        density === "medium" && "is-medium",
         mobile && "is-mobile",
         printing && "is-printing",
         mobile && phoneList && "is-phone-list",
         phoneList?.selection && "has-phone-selection",
+        recordDetails && "has-record-details",
         className,
       )}
       tabIndex={0}
@@ -1190,6 +1435,75 @@ export function useListFilterOrigin(list: string) {
   };
 }
 
+/** Labels, differently sized values and notes share three grid tracks. */
+export function NumberGroup({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return <div {...props} className={cn("ui-number-group", className)} />;
+}
+export function NumberStat({
+  label,
+  value,
+  note,
+  column,
+  className,
+  style,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & {
+  label: ReactNode;
+  value: ReactNode;
+  note?: ReactNode;
+  column?: number;
+}) {
+  return (
+    <div
+      {...props}
+      className={cn("ui-number-stat", className)}
+      style={
+        {
+          ...style,
+          ...(column === undefined ? {} : { "--number-column": column }),
+        } as CSSProperties
+      }
+    >
+      <span className="ui-number-label">{label}</span>
+      <strong className="ui-number-value" data-number-baseline>
+        {value}
+      </strong>
+      <small className="ui-number-note">
+        {note ?? <span aria-hidden="true">&nbsp;</span>}
+      </small>
+    </div>
+  );
+}
+
+/** Peer controls share a height and centre; labelled field rows can bottom-align. */
+export function ControlRow({
+  children,
+  className,
+  size = "page",
+  align = "center",
+  ...props
+}: HTMLAttributes<HTMLDivElement> & {
+  size?: "page" | "small";
+  align?: "center" | "end";
+}) {
+  return (
+    <div
+      {...props}
+      className={cn(
+        "ui-control-row",
+        align === "end" && "is-field-row",
+        className,
+      )}
+      data-ui-control-size={size}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function FilterToolbar({
   children,
   search,
@@ -1208,17 +1522,20 @@ export function FilterToolbar({
     <div
       className={cn("filter-toolbar c9-filter-toolbar", className)}
       {...props}
+      data-ui-component="filter-toolbar"
     >
-      {leading}
-      {isValidElement(search) && search.type === "input" ? (
-        <div className="filter-search-pill">
-          <Search size={18} strokeWidth={1.5} aria-hidden="true" />
-          {search}
-        </div>
-      ) : (
-        search
-      )}
-      {children}
+      <div className="filter-toolbar-controls">
+        {leading}
+        {isValidElement(search) && search.type === "input" ? (
+          <div className="filter-search-pill">
+            <Search size={18} strokeWidth={1.5} aria-hidden="true" />
+            {search}
+          </div>
+        ) : (
+          search
+        )}
+        {children}
+      </div>
       {(count !== undefined || actions !== undefined) && (
         <div className="filter-toolbar-end filter-toolbar-trailing">
           {count !== undefined && <span className="filter-count">{count}</span>}
@@ -1234,9 +1551,11 @@ export function FilterChip({
   onChange,
   children,
   className,
+  appearance = "surface",
   ...props
 }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange"> & {
   checked: boolean;
+  appearance?: "surface" | "neutral";
   onChange: (checked: boolean) => void;
 }) {
   return (
@@ -1244,6 +1563,8 @@ export function FilterChip({
       {...props}
       variant="neutral"
       className={cn("filter-chip", className)}
+      data-ui-component="filter-chip"
+      data-chip-appearance={appearance}
       aria-pressed={checked}
       onClick={(event) => {
         props.onClick?.(event);
@@ -1272,23 +1593,38 @@ export function EmptyState({
   );
 }
 export function Dialog({
+  id,
   open,
   onOpenChange,
   title,
   description,
   children,
   className,
+  icon,
+  iconTone = "neutral",
+  footer,
+  bodyClassName,
+  heading,
 }: {
+  id?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: ReactNode;
   children?: ReactNode;
   className?: string;
+  icon?: ReactNode;
+  iconTone?: "neutral" | "approved" | "danger";
+  footer?: ReactNode;
+  bodyClassName?: string;
+  heading?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
   const titleId = useId();
+  const descriptionId = useId();
+  const structured = icon !== undefined || footer !== undefined;
+  useDialogScrollEdges(ref, open);
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -1297,6 +1633,7 @@ export function Dialog({
         document.activeElement instanceof HTMLElement
           ? document.activeElement
           : null;
+      beginDialogFeedbackScope(dialog);
       dialog.showModal();
       (
         dialog.querySelector<HTMLElement>("[autofocus]") ??
@@ -1309,19 +1646,28 @@ export function Dialog({
       )?.focus();
     } else if (!open && dialog.open) {
       dialog.close();
-      trigger.current?.focus();
+      endDialogFeedbackScope(dialog);
+      trigger.current?.focus({ preventScroll: true });
     }
     return () => {
       if (dialog.open) dialog.close();
-      trigger.current?.focus();
+      endDialogFeedbackScope(dialog);
+      trigger.current?.focus({ preventScroll: true });
     };
   }, [open]);
   return (
     <dialog
+      id={id}
       ref={ref}
-      className={cn("confirm-dialog ui-dialog", className)}
+      className={cn(
+        "confirm-dialog ui-dialog",
+        structured && "ui-dialog-structured",
+        className,
+      )}
       tabIndex={-1}
-      aria-labelledby={open ? titleId : undefined}
+      aria-labelledby={open && !heading ? titleId : undefined}
+      aria-label={heading ? title : undefined}
+      aria-describedby={description ? descriptionId : undefined}
       onKeyDown={(event) => {
         if (event.key !== "Tab" || event.defaultPrevented) return;
         const dialog = event.currentTarget;
@@ -1357,6 +1703,7 @@ export function Dialog({
         onOpenChange(false);
       }}
       onClick={(event) => {
+        event.stopPropagation();
         if (event.target !== event.currentTarget) return;
         const box = event.currentTarget.getBoundingClientRect();
         if (
@@ -1369,7 +1716,26 @@ export function Dialog({
       }}
     >
       <div className="ui-dialog-header">
-        <h2 id={titleId}>{title}</h2>
+        {structured && icon && (
+          <span
+            className={cn("ui-dialog-icon", `is-${iconTone}`)}
+            aria-hidden="true"
+          >
+            {icon}
+          </span>
+        )}
+        {structured ? (
+          <div className="ui-dialog-heading">
+            <h2 id={titleId}>{heading ?? title}</h2>
+            {description && (
+              <div id={descriptionId} className="dialog-description muted">
+                {description}
+              </div>
+            )}
+          </div>
+        ) : (
+          <h2 id={titleId}>{title}</h2>
+        )}
         <IconButton
           aria-label={translate("Close dialog", "بستن پنجره")}
           onClick={() => onOpenChange(false)}
@@ -1377,10 +1743,21 @@ export function Dialog({
           <X size={20} aria-hidden="true" />
         </IconButton>
       </div>
-      {description && (
-        <div className="dialog-description muted">{description}</div>
+      {!structured && description && (
+        <div id={descriptionId} className="dialog-description muted">
+          {description}
+        </div>
       )}
-      {children}
+      {structured ? (
+        <>
+          <div className={cn("ui-dialog-body", bodyClassName)}>{children}</div>
+          {footer && (
+            <DialogActions className="ui-dialog-footer">{footer}</DialogActions>
+          )}
+        </>
+      ) : (
+        children
+      )}
     </dialog>
   );
 }
@@ -1448,67 +1825,70 @@ type ControlAttributes = Pick<
 export type SelectOption = {
   value: string;
   label: string;
+  /** Short selected text; the complete label remains in the open option list. */
+  selectedLabel?: string;
+  /** Additional already-authorized public names, product codes or barcodes. */
+  searchTerms?: readonly string[];
+  /** Closed-box instruction; never appears as a selectable row. */
+  placeholder?: boolean;
   content?: ReactNode;
   disabled?: boolean;
   count?: number;
 };
 
-function usePopover(minWidth = 224) {
+export function usePopover<T extends HTMLElement = HTMLButtonElement>(
+  minWidth = 224,
+  options: { minimumHeight?: number; gap?: number } = {},
+) {
+  const minimumHeight = options.minimumHeight ?? 240;
+  const gap = options.gap ?? 8;
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<CSSProperties>({});
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<T>(null);
   const popupRef = useRef<HTMLDivElement>(null);
-  const measure = () => {
+  const measure = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const width = Math.min(
-      Math.max(rect.width, minWidth),
-      window.innerWidth - 24,
+    const viewport = window.visualViewport;
+    const next = boundedPopoverPosition(
+      rect,
+      {
+        left: viewport?.offsetLeft ?? 0,
+        top: viewport?.offsetTop ?? 0,
+        width: viewport?.width ?? window.innerWidth,
+        height: viewport?.height ?? window.innerHeight,
+        layoutHeight: window.innerHeight,
+      },
+      {
+        minWidth,
+        minimumHeight,
+        gap,
+        rtl: document.documentElement.dir === "rtl",
+        obstruction: document
+          .querySelector(".undo-toast-stack")
+          ?.getBoundingClientRect(),
+      },
     );
-    const rtl = document.documentElement.dir === "rtl";
-    const left = Math.max(
-      12,
-      Math.min(
-        rtl ? rect.right - width : rect.left,
-        window.innerWidth - width - 12,
-      ),
+    setPosition((previous) =>
+      Object.keys(previous).length === Object.keys(next).length &&
+      Object.entries(next).every(
+        ([key, value]) => previous[key as keyof CSSProperties] === value,
+      )
+        ? previous
+        : next,
     );
-    // Undo remains above dialogs. Keep an overlapping popup above that live
-    // message as well, so its last option can still receive real pointer clicks.
-    const toast = document
-      .querySelector(".undo-toast-stack")
-      ?.getBoundingClientRect();
-    const overlapsToast =
-      toast &&
-      toast.width > 0 &&
-      toast.height > 0 &&
-      toast.right > left &&
-      toast.left < left + width;
-    const bottomLimit = Math.min(
-      window.innerHeight - 16,
-      overlapsToast ? toast.top - 8 : window.innerHeight - 16,
-    );
-    const roomBelow = bottomLimit - rect.bottom;
-    const aboveBottom = Math.min(rect.top - 8, bottomLimit);
-    const above = roomBelow < 240 && aboveBottom > roomBelow;
-    setPosition({
-      position: "fixed",
-      left,
-      width,
-      ...(above
-        ? { bottom: window.innerHeight - aboveBottom }
-        : { top: rect.bottom + 8 }),
-      maxHeight: Math.max(120, above ? aboveBottom - 16 : roomBelow),
-    });
-  };
+  }, [minWidth, minimumHeight, gap]);
   const close = (restoreFocus = false) => {
     setOpen(false);
     if (restoreFocus) triggerRef.current?.focus();
   };
   const show = () => {
     measure();
-    setPortalTarget(triggerRef.current?.closest("dialog") ?? document.body);
+    setPortalTarget(
+      triggerRef.current?.closest<HTMLElement>("[data-popover-root],dialog") ??
+        document.body,
+    );
     setOpen(true);
   };
   useEffect(() => {
@@ -1529,17 +1909,38 @@ function usePopover(minWidth = 224) {
       )
         close();
     };
+    const escape = (event: globalThis.KeyboardEvent) => {
+      // A completed inbox action can disable its focused button; Escape must still close.
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close(true);
+      }
+    };
+    document.addEventListener("keydown", escape);
     document.addEventListener("pointerdown", outside);
     document.addEventListener("focusin", blur);
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", measure);
+    viewport?.addEventListener("scroll", measure);
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(measure);
+    if (triggerRef.current) observer?.observe(triggerRef.current);
+    measure();
     return () => {
+      document.removeEventListener("keydown", escape);
       document.removeEventListener("pointerdown", outside);
       document.removeEventListener("focusin", blur);
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
+      viewport?.removeEventListener("resize", measure);
+      viewport?.removeEventListener("scroll", measure);
+      observer?.disconnect();
     };
-  });
+  }, [open, measure]);
   return { open, show, close, position, portalTarget, triggerRef, popupRef };
 }
 
@@ -1548,6 +1949,7 @@ export function Select({
   onChange,
   options,
   searchable,
+  placeholder,
   className,
   disabled,
   leadingIcon,
@@ -1557,6 +1959,7 @@ export function Select({
   onChange: (value: string) => void;
   options: SelectOption[];
   searchable?: boolean;
+  placeholder?: string;
   leadingIcon?: ReactNode;
 }) {
   const { t } = useDemo();
@@ -1574,15 +1977,19 @@ export function Select({
   const [active, setActive] = useState(value);
   const searchRef = useRef<HTMLInputElement>(null);
   const typeahead = useRef({ value: "", time: 0 });
-  const canSearch = searchable ?? options.length > 8;
+  const selectableOptions = options.filter((option) => !option.placeholder);
+  const canSearch = searchable || selectableOptions.length > 8;
   const selected = options.find((option) => option.value === value);
-  const filtered = options.filter((option) =>
-    option.label.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
+  const filtered = selectableOptions.filter((option) =>
+    matchesSelectOption(option, query),
   );
   const enabled = filtered.filter((option) => !option.disabled);
+  const activeOptionIndex = options.findIndex(
+    (option) => option.value === active && filtered.includes(option),
+  );
   const open = (edge?: "first" | "last") => {
     setQuery("");
-    const choices = options.filter((option) => !option.disabled);
+    const choices = selectableOptions.filter((option) => !option.disabled);
     setActive(
       edge === "first"
         ? (choices[0]?.value ?? "")
@@ -1596,11 +2003,12 @@ export function Select({
     if (canSearch) requestAnimationFrame(() => searchRef.current?.focus());
   };
   const choose = (option: SelectOption) => {
-    if (option.disabled) return;
+    if (option.disabled || option.placeholder) return;
     onChange(option.value);
     closePopup(true);
   };
   const keydown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.nativeEvent.isComposing) return;
     if (event.key === "Escape" && popupOpen) {
       event.preventDefault();
       event.stopPropagation();
@@ -1649,10 +2057,12 @@ export function Select({
         (now - typeahead.current.time < 700 ? typeahead.current.value : "") +
         event.key.toLocaleLowerCase();
       typeahead.current.time = now;
-      const match = options.find(
+      const match = selectableOptions.find(
         (option) =>
           !option.disabled &&
-          option.label.toLocaleLowerCase().startsWith(typeahead.current.value),
+          normalizeSelectSearch(option.label).startsWith(
+            normalizeSelectSearch(typeahead.current.value),
+          ),
       );
       if (match) {
         if (!popupOpen) open();
@@ -1662,11 +2072,29 @@ export function Select({
   };
   useEffect(() => {
     if (!popupOpen) return;
-    const option = document.getElementById(
-      `${listId}-${options.findIndex((item) => item.value === active)}`,
+    const option = document.getElementById(`${listId}-${activeOptionIndex}`);
+    const list = option?.parentElement;
+    if (option && list) {
+      const row = option.getBoundingClientRect();
+      const bounds = list.getBoundingClientRect();
+      if (row.top < bounds.top) list.scrollTop -= bounds.top - row.top;
+      else if (row.bottom > bounds.bottom)
+        list.scrollTop += row.bottom - bounds.bottom;
+    }
+  }, [activeOptionIndex, popupOpen, listId]);
+  useLayoutEffect(() => {
+    const popup = popupRef.current;
+    const maximum = popupPosition.maxHeight;
+    if (!popupOpen || !popup || typeof maximum !== "number") return;
+    const retained = Number(popup.dataset.initialHeight ?? 0);
+    const height = Math.min(
+      maximum,
+      retained || popup.getBoundingClientRect().height,
     );
-    option?.scrollIntoView?.({ block: "nearest" });
-  }, [active, popupOpen, options, listId]);
+    if (!retained && height > 0) popup.dataset.initialHeight = String(height);
+    // Filtering an upward-opening list must not move its search field.
+    popup.style.minBlockSize = `${height}px`;
+  }, [popupOpen, popupPosition.maxHeight, popupRef]);
   return (
     <>
       <button
@@ -1684,8 +2112,8 @@ export function Select({
         aria-expanded={popupOpen}
         aria-controls={listId}
         aria-activedescendant={
-          popupOpen && active
-            ? `${listId}-${options.findIndex((item) => item.value === active)}`
+          popupOpen && activeOptionIndex >= 0
+            ? `${listId}-${activeOptionIndex}`
             : undefined
         }
         onClick={() => (popupOpen ? closePopup() : open())}
@@ -1704,10 +2132,14 @@ export function Select({
             data-sizing-label={option.label}
           />
         ))}
-        <span className={selected ? undefined : "muted"}>
+        <span
+          className={selected && !selected.placeholder ? undefined : "muted"}
+        >
           <bdi dir="auto">
-            {selected?.content ??
+            {selected?.selectedLabel ??
+              selected?.content ??
               selected?.label ??
+              placeholder ??
               t("Choose an option", "یک گزینه انتخاب کنید")}
           </bdi>
         </span>
@@ -1718,7 +2150,15 @@ export function Select({
           <div
             ref={popupRef}
             className="ui-popover ui-select-popover"
-            style={popupPosition}
+            style={{
+              ...popupPosition,
+              maxHeight: Math.min(
+                320,
+                typeof popupPosition.maxHeight === "number"
+                  ? popupPosition.maxHeight
+                  : 320,
+              ),
+            }}
             onKeyDown={keydown}
           >
             {canSearch && (
@@ -1731,20 +2171,18 @@ export function Select({
                   aria-label={t("Search options", "جستجوی گزینه‌ها")}
                   aria-controls={listId}
                   aria-activedescendant={
-                    active
-                      ? `${listId}-${options.findIndex((item) => item.value === active)}`
+                    activeOptionIndex >= 0
+                      ? `${listId}-${activeOptionIndex}`
                       : undefined
                   }
                   onChange={(event) => {
                     const nextQuery = event.target.value;
                     setQuery(nextQuery);
                     setActive(
-                      options.find(
+                      selectableOptions.find(
                         (option) =>
                           !option.disabled &&
-                          option.label
-                            .toLocaleLowerCase()
-                            .includes(nextQuery.toLocaleLowerCase()),
+                          matchesSelectOption(option, nextQuery),
                       )?.value ?? "",
                     );
                   }}
@@ -1764,9 +2202,7 @@ export function Select({
                   id={`${listId}-${options.findIndex((item) => item.value === option.value)}`}
                   type="button"
                   role="option"
-                  aria-label={
-                    option.content === undefined ? undefined : option.label
-                  }
+                  aria-label={option.label}
                   aria-selected={option.value === value}
                   aria-disabled={option.disabled || undefined}
                   disabled={option.disabled}
@@ -1780,7 +2216,18 @@ export function Select({
                   onClick={() => choose(option)}
                 >
                   <span>
-                    <bdi dir="auto">{option.content ?? option.label}</bdi>
+                    <bdi dir="auto">
+                      {option.content ?? (
+                        <SelectMatch value={option.label} query={query} />
+                      )}
+                    </bdi>
+                    {matchingSelectTerms(option, query).map((term) => (
+                      <small className="ui-option-match-detail" key={term}>
+                        <bdi dir="auto">
+                          <SelectMatch value={term} query={query} />
+                        </bdi>
+                      </small>
+                    ))}
                   </span>
                   {option.value === value && (
                     <Check size={16} strokeWidth={1.5} aria-hidden="true" />
@@ -1789,7 +2236,7 @@ export function Select({
               ))}
               {!filtered.length && (
                 <p className="ui-option-empty" role="status">
-                  {t("No matching options", "گزینه‌ای پیدا نشد")}
+                  {t("No matches", "موردی پیدا نشد")}
                 </p>
               )}
             </div>
@@ -1909,6 +2356,209 @@ export function Switch({
   );
 }
 
+// While a box has focus it shows exactly what the person typed. Saves finish
+// later (the browser database is asynchronous), so applying a slower saved
+// value mid-typing used to drop or repeat characters ("20" became "240",
+// "1.3" became "13"). The saved value shows again when the person leaves.
+const sameEntry = (entry: string, saved: string) => {
+  if (entry === saved || entry.trim() === saved.trim()) return true;
+  const number = /^\s*-?(\d+\.?\d*|\.\d+)\s*$/;
+  if (entry.trim() === "") return number.test(saved) && Number(saved) === 0;
+  return (
+    number.test(entry) && number.test(saved) && Number(entry) === Number(saved)
+  );
+};
+function useTypingBuffer(value: unknown) {
+  const saved = value === null || value === undefined ? "" : String(value);
+  const [typing, setTyping] = useState<string | null>(null);
+  const typed = useRef<string[]>([]);
+  useEffect(() => {
+    if (typing === null) return;
+    // A late save of something the person typed is an echo: keep their text.
+    // Anything else (a chip, a recalculation) is a real change: show it.
+    if (!typed.current.some((entry) => sameEntry(entry, saved)))
+      setTyping(saved);
+    // Only a new saved value should trigger this check.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saved]);
+  return {
+    shown: typing ?? saved,
+    focus: () => {
+      typed.current = [saved];
+      setTyping(saved);
+    },
+    change: (next: string, focused: boolean) => {
+      // Only a box the person is typing in keeps its own text.
+      if (!focused) return;
+      typed.current.push(next);
+      setTyping(next);
+    },
+    blur: () => setTyping(null),
+  };
+}
+
+/** A text box for a saved value: keeps every keystroke while it has focus. */
+export function BufferedInput({
+  value,
+  onChange,
+  onFocus,
+  onBlur,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "value"> & {
+  value: string | number | null | undefined;
+  ref?: Ref<HTMLInputElement>;
+}) {
+  const buffer = useTypingBuffer(value);
+  return (
+    <input
+      {...props}
+      value={buffer.shown}
+      onFocus={(event) => {
+        buffer.focus();
+        onFocus?.(event);
+      }}
+      onChange={(event) => {
+        buffer.change(
+          event.target.value,
+          event.target.ownerDocument.activeElement === event.target,
+        );
+        onChange?.(event);
+      }}
+      onBlur={(event) => {
+        buffer.blur();
+        onBlur?.(event);
+      }}
+    />
+  );
+}
+
+/** Shared notes/descriptions grow to six lines, then scroll without a resize grip. */
+export function AutoTextarea({
+  ref,
+  value,
+  defaultValue,
+  rows = 2,
+  maxRows = 6,
+  minHeight = 0,
+  className,
+  onInput,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  ref?: Ref<HTMLTextAreaElement>;
+  maxRows?: number;
+  minHeight?: number;
+}) {
+  const element = useRef<HTMLTextAreaElement | null>(null);
+  const fit = useCallback(() => {
+    const node = element.current;
+    if (!node) return;
+    const computed = getComputedStyle(node);
+    const line =
+      parseFloat(computed.lineHeight) ||
+      (parseFloat(computed.fontSize) || 14) * 1.5;
+    const padding =
+      (parseFloat(computed.paddingTop) || 0) +
+      (parseFloat(computed.paddingBottom) || 0);
+    const border =
+      (parseFloat(computed.borderTopWidth) || 0) +
+      (parseFloat(computed.borderBottomWidth) || 0);
+    const maximum = line * maxRows + padding + border;
+    const minimum = Math.min(
+      maximum,
+      Math.max(line * Math.min(2, maxRows) + padding + border, minHeight),
+    );
+    node.style.minBlockSize = `${minimum}px`;
+    node.style.maxBlockSize = `${maximum}px`;
+    node.style.height = "auto";
+    node.style.height = `${Math.min(maximum, Math.max(minimum, node.scrollHeight + border))}px`;
+    node.style.overflowY =
+      node.scrollHeight + border > maximum + 1 ? "auto" : "hidden";
+  }, [maxRows, minHeight]);
+  const attach = useCallback(
+    (node: HTMLTextAreaElement | null) => {
+      element.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
+  useLayoutEffect(() => {
+    fit();
+    let active = true;
+    void document.fonts?.ready.then(() => {
+      if (active) fit();
+    });
+    return () => {
+      active = false;
+    };
+  }, [value, defaultValue, fit]);
+  useLayoutEffect(() => {
+    const node = element.current;
+    if (!node || typeof ResizeObserver === "undefined") return;
+    let width = node.getBoundingClientRect().width;
+    const observer = new ResizeObserver(() => {
+      const next = node.getBoundingClientRect().width;
+      if (Math.abs(next - width) < 1) return;
+      width = next;
+      fit();
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [fit]);
+  return (
+    <textarea
+      {...props}
+      ref={attach}
+      className={cn("ui-auto-textarea", className)}
+      value={value}
+      defaultValue={defaultValue}
+      rows={rows}
+      data-autogrow-max-rows={maxRows}
+      onInput={(event) => {
+        fit();
+        onInput?.(event);
+      }}
+    />
+  );
+}
+
+/** A multiline saved value uses the same keystroke buffer as receiving inputs. */
+export function BufferedTextarea({
+  value,
+  onChange,
+  onFocus,
+  onBlur,
+  ...props
+}: Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "value"> & {
+  value: string | number | null | undefined;
+  ref?: Ref<HTMLTextAreaElement>;
+  minHeight?: number;
+  maxRows?: number;
+}) {
+  const buffer = useTypingBuffer(value);
+  return (
+    <AutoTextarea
+      {...props}
+      value={buffer.shown}
+      onFocus={(event) => {
+        buffer.focus();
+        onFocus?.(event);
+      }}
+      onChange={(event) => {
+        buffer.change(
+          event.target.value,
+          event.target.ownerDocument.activeElement === event.target,
+        );
+        onChange?.(event);
+      }}
+      onBlur={(event) => {
+        buffer.blur();
+        onBlur?.(event);
+      }}
+    />
+  );
+}
+
 export function NumberField({
   value,
   onChange,
@@ -1916,6 +2566,7 @@ export function NumberField({
   max,
   step,
   className,
+  keepTyping = false,
   ...props
 }: Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -1926,9 +2577,14 @@ export function NumberField({
   min?: string | number;
   max?: string | number;
   step?: string | number;
+  /** Keep the person's own text while focused (see BufferedInput). Off by
+   * default so screens that correct a value at once (Labels copies) keep
+   * showing the corrected value immediately. */
+  keepTyping?: boolean;
 }) {
+  const Input = keepTyping ? BufferedInput : "input";
   return (
-    <input
+    <Input
       {...props}
       type="text"
       dir={props.dir ?? "ltr"}
@@ -2408,12 +3064,18 @@ export function IconButton({
 }
 
 const MenuContext = createContext<(() => void) | null>(null);
+/** Async related-record menus keep their content mounted until current intent is checked. */
+export function useMenuClose() {
+  return useContext(MenuContext);
+}
 export function Menu({
   label,
   icon,
   showChevron = true,
   iconOnly = false,
   minWidth = 224,
+  popupClassName,
+  maxViewportHeight = 1,
   children,
   className,
   ...props
@@ -2423,6 +3085,9 @@ export function Menu({
   showChevron?: boolean;
   iconOnly?: boolean;
   minWidth?: number;
+  popupClassName?: string;
+  /** Fraction of the visible viewport; ordinary menus retain their existing bound. */
+  maxViewportHeight?: number;
   children: ReactNode;
   className?: string;
   "aria-label"?: string;
@@ -2440,7 +3105,7 @@ export function Menu({
   const itemsWithin = (menu: HTMLElement | null) =>
     Array.from(
       menu?.querySelectorAll<HTMLButtonElement>(
-        '[role="menuitem"]:not(:disabled)',
+        ':is([role="menuitem"], [role="menuitemcheckbox"]):not(:disabled)',
       ) ?? [],
     ).filter((item) => item.closest('[role="menu"]') === menu);
   const focusItem = (edge: "first" | "last") =>
@@ -2496,8 +3161,15 @@ export function Menu({
                 props["aria-label"] ??
                 (typeof label === "string" ? label : undefined)
               }
-              className="ui-popover ui-menu-popover"
-              style={popupPosition}
+              className={cn("ui-popover ui-menu-popover", popupClassName)}
+              style={{
+                ...popupPosition,
+                maxHeight: Math.min(
+                  Number(popupPosition.maxHeight) || window.innerHeight,
+                  (window.visualViewport?.height ?? window.innerHeight) *
+                    maxViewportHeight,
+                ),
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Escape") {
                   event.preventDefault();
@@ -2537,27 +3209,37 @@ export function MenuItem({
   children,
   onClick,
   disabled,
+  checked,
   className,
+  closeOnSelect = true,
   ...props
 }: {
   children: ReactNode;
   onClick: () => void;
   disabled?: boolean;
+  checked?: boolean;
   className?: string;
+  closeOnSelect?: boolean;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">) {
   const close = useContext(MenuContext);
   return (
     <button
       {...props}
       type="button"
-      role="menuitem"
+      role={checked === undefined ? "menuitem" : "menuitemcheckbox"}
+      aria-checked={checked}
       disabled={disabled}
       className={cn("ui-menu-item", className)}
       onClick={() => {
         onClick();
-        close?.();
+        if (closeOnSelect) close?.();
       }}
     >
+      {checked !== undefined && (
+        <span className="ui-checkbox-box" aria-hidden="true">
+          {checked && <Check size={14} strokeWidth={2} />}
+        </span>
+      )}
       {children}
     </button>
   );
@@ -2596,7 +3278,9 @@ export function MenuSubmenu({
       focusFrame.current = null;
       if (!opening.current) return;
       menu.current
-        ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
+        ?.querySelector<HTMLButtonElement>(
+          ':is([role="menuitem"], [role="menuitemcheckbox"]):not(:disabled)',
+        )
         ?.focus();
     });
   };
@@ -2660,7 +3344,7 @@ export function MenuSubmenu({
               event.stopPropagation();
               const items = Array.from(
                 event.currentTarget.querySelectorAll<HTMLButtonElement>(
-                  '[role="menuitem"]:not(:disabled)',
+                  ':is([role="menuitem"], [role="menuitemcheckbox"]):not(:disabled)',
                 ),
               );
               const current = items.findIndex(
@@ -2690,7 +3374,12 @@ export function DialogActions({
   className,
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("ui-dialog-actions", className)} {...props} />;
+  return (
+    <div className={cn("ui-dialog-actions", className)} {...props}>
+      <div className="dialog-action-feedback-host" data-dialog-feedback-host />
+      {props.children}
+    </div>
+  );
 }
 
 export function SummaryTile({
@@ -2742,6 +3431,8 @@ type SegmentedProps = {
   onChange: (value: string) => void;
   options: SelectOption[];
   "aria-label"?: string;
+  "aria-describedby"?: string;
+  title?: string;
   className?: string;
   showZeroCounts?: boolean;
 };

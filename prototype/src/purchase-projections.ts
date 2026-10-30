@@ -1,3 +1,4 @@
+import { effectiveMovementReceivedAt } from "./invoice-received-version";
 import type { AuthenticatedActor } from "./authority-types";
 import { freshActor } from "./authority";
 import { can } from "./permissions";
@@ -18,9 +19,10 @@ export type ClearanceLotReadDTO = Pick<
 
 export type ReceiptLotSourceReadDTO = Omit<
   ReceiptLot["source_receipts"][number],
-  "unit_cost" | "invoice_id" | "line_index"
+  "unit_cost" | "acquisition_amount" | "invoice_id" | "line_index"
 > & {
   unit_cost?: string;
+  acquisition_amount?: string;
   invoice_id?: string;
   line_index?: number;
 };
@@ -161,6 +163,9 @@ export function projectPurchaseOperational(
                 }
               : {}),
             ...(costAllowed ? { unit_cost: receipt.unit_cost } : {}),
+            ...(costAllowed && receipt.acquisition_amount !== undefined
+              ? { acquisition_amount: receipt.acquisition_amount }
+              : {}),
           })),
         };
       });
@@ -186,7 +191,7 @@ export function projectPurchaseOperational(
         type: movement.type,
         reference: movement.reference,
         by: movement.by,
-        at: movement.at,
+        at: effectiveMovementReceivedAt(state, movement),
         ...(movement.invoice_id &&
         canInvoiceAuthority(state, actor, "invoices.read", movement.invoice_id)
           ? { invoice_id: movement.invoice_id, line_index: movement.line_index }
@@ -412,6 +417,7 @@ export function projectSuppliers(
         : undefined,
       phone: supplier.phone,
       email: supplier.email,
+      website: supplier.website,
       sales_rep_name: supplier.sales_rep_name,
       sales_rep_phone: supplier.sales_rep_phone,
       payment_terms: supplier.payment_terms,

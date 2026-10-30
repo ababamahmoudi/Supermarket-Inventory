@@ -1,3 +1,4 @@
+import { inspectTableAlignment } from "./alignment-a2-proof";
 import { resolve } from "node:path";
 import { applyBlackTeaAcrossStores } from "./e2-browser-flow";
 import {
@@ -36,26 +37,75 @@ for (const width of [390, 430])
         const rows = list.locator("tr.phone-list-row");
         await expect(rows.first()).toBeVisible();
         expect(await rows.count()).toBeGreaterThan(0);
-        for (const row of await rows.all()) {
-          await expect(row.locator(".phone-list-name")).toBeVisible();
-          await expect(row.locator(".phone-list-value")).toBeVisible();
-          await expect(
-            row.locator(".phone-list-chevron .table-row-link"),
-          ).toHaveCount(1);
-          await expect(row.locator(".table-details-toggle")).toHaveCount(0);
-          expect(
-            await row.evaluate((element) => ({
-              radius: getComputedStyle(element).borderRadius,
-              background: getComputedStyle(element).backgroundColor,
-              secondaryDirection: getComputedStyle(
-                element.querySelector(".phone-list-secondary")!,
-              ).flexDirection,
-            })),
-          ).toEqual({
-            radius: "0px",
-            background: "rgba(0, 0, 0, 0)",
-            secondaryDirection: "row",
-          });
+        if (scene.page === "returns") {
+          const proof = await inspectTableAlignment(page);
+          expect(proof.failures).toEqual([]);
+          expect(proof.maxError).toBeLessThanOrEqual(2);
+          expect(proof.returnCards).toBe(await rows.count());
+          expect(proof.returnCards).toBeGreaterThan(0);
+          for (const row of await rows.all()) {
+            await expect(row.locator(".return-phone-header")).toBeVisible();
+            await expect(row.locator(".return-phone-items")).toBeVisible();
+            await expect(row.locator(".return-phone-meta")).toBeVisible();
+            await expect(row.locator(".return-phone-next")).toBeVisible();
+            await expect(
+              row.locator(".return-phone-next .table-row-link"),
+            ).toHaveAttribute(
+              "href",
+              (await row.getAttribute("data-row-href"))!,
+            );
+            await expect(row.locator(".table-row-link")).toHaveCount(1);
+            await expect(row.locator(".table-details-toggle")).toHaveCount(0);
+            const geometry = await row.evaluate((element) => {
+              const probe = document.createElement("div");
+              probe.style.background = "var(--field-fill)";
+              probe.style.borderRadius = "var(--radius-menu)";
+              probe.style.display = "none";
+              document.body.append(probe);
+              const expected = {
+                radius: getComputedStyle(probe).borderRadius,
+                background: getComputedStyle(probe).backgroundColor,
+              };
+              probe.remove();
+              return {
+                actual: {
+                  radius: getComputedStyle(element).borderRadius,
+                  background: getComputedStyle(element).backgroundColor,
+                },
+                expected,
+                slots: [...element.children].map((cell) => cell.className),
+              };
+            });
+            expect(geometry.actual).toEqual(geometry.expected);
+            expect(geometry.slots).toEqual([
+              "return-phone-header",
+              "return-phone-items",
+              "return-phone-meta",
+              "return-phone-next",
+            ]);
+          }
+        } else {
+          for (const row of await rows.all()) {
+            await expect(row.locator(".phone-list-name")).toBeVisible();
+            await expect(row.locator(".phone-list-value")).toBeVisible();
+            await expect(
+              row.locator(".phone-list-chevron .table-row-link"),
+            ).toHaveCount(1);
+            await expect(row.locator(".table-details-toggle")).toHaveCount(0);
+            expect(
+              await row.evaluate((element) => ({
+                radius: getComputedStyle(element).borderRadius,
+                background: getComputedStyle(element).backgroundColor,
+                secondaryDirection: getComputedStyle(
+                  element.querySelector(".phone-list-secondary")!,
+                ).flexDirection,
+              })),
+            ).toEqual({
+              radius: "0px",
+              background: "rgba(0, 0, 0, 0)",
+              secondaryDirection: "row",
+            });
+          }
         }
         if (scene.page === "products" || scene.page === "labels") {
           const englishName = rows
@@ -184,37 +234,31 @@ for (const width of [390, 430])
         });
       }
       await page.goto("/#dashboard");
-      const returns = page.locator(".dashboard-returns .dashboard-list-row");
-      if (await returns.count()) {
-        await expect(
-          returns.first().locator(".dashboard-list-action .table-row-link"),
-        ).toHaveCount(1);
-        await expect(
-          returns.first().locator(".dashboard-list-copy"),
-        ).toBeVisible();
-        const positions = await returns.first().evaluate((row) => {
-          const copy = row
-            .querySelector(".dashboard-list-copy")!
-            .getBoundingClientRect();
-          const pill = row
-            .querySelector(".dashboard-list-pill")!
-            .getBoundingClientRect();
-          return {
-            copyStart: copy.left,
-            copyEnd: copy.right,
-            pillStart: pill.left,
-            pillEnd: pill.right,
-          };
-        });
-        if (language === "fa")
-          expect(positions.pillEnd).toBeLessThanOrEqual(
-            positions.copyStart + 1,
-          );
-        else
-          expect(positions.copyEnd).toBeLessThanOrEqual(
-            positions.pillStart + 1,
-          );
-      }
+      // R2f D7 deliberately replaced the old disclosure/return-row block.
+      const weekly = page.locator(".dashboard-this-week");
+      await expect(
+        weekly.getByRole("heading", {
+          name: language === "fa" ? "این هفته" : "This week",
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(
+        page.getByText(language === "fa" ? "عملیات بیشتر" : "More operations", {
+          exact: true,
+        }),
+      ).toHaveCount(0);
+      await expect(weekly.locator(".dashboard-week-stat")).toHaveCount(3);
+      const returnsLink = weekly.getByRole("link", {
+        name: language === "fa" ? "مرجوعی‌ها" : "Returns",
+        exact: true,
+      });
+      await expect(returnsLink).toHaveAttribute("href", "#returns");
+      await returnsLink.click();
+      await expect(page).toHaveURL(/#returns$/);
+      const retainedReturns = await inspectTableAlignment(page);
+      expect(retainedReturns.failures).toEqual([]);
+      expect(retainedReturns.returnCards).toBeGreaterThan(0);
+      expect(retainedReturns.maxError).toBeLessThanOrEqual(2);
       await signIn(page, "ny-floor");
       await page.goto("/#suppliers");
       await expect(

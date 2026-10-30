@@ -27,10 +27,10 @@ test("divisors update live, survive refresh, and invalid money preserves valid r
   page,
 }) => {
   let sandbox = await openSettings(page);
-  await expect(sandbox.getByText("$1.49", { exact: true })).toBeVisible();
-  const divisor = page.getByLabel("Cost divisor for Grocery", { exact: true });
-  await divisor.fill("0.50");
   await expect(sandbox.getByText("$1.99", { exact: true })).toBeVisible();
+  const divisor = page.getByLabel("Cost divisor for Grocery", { exact: true });
+  await divisor.fill("0.40");
+  await expect(sandbox.getByText("$2.99", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   // Clicking Save starts the asynchronous authority transaction. Reload only
   // after its actual company-scoped record accepts this exact divisor.
@@ -41,7 +41,7 @@ test("divisors update live, survive refresh, and invalid money preserves valid r
         (category) => category.key === "grocery",
       )?.cost_divisor;
     })
-    .toBe("0.50");
+    .toBe("0.40");
 
   await page.reload();
   sandbox = page.locator(".card").filter({
@@ -49,13 +49,13 @@ test("divisors update live, survive refresh, and invalid money preserves valid r
   });
   await expect(
     page.getByLabel("Cost divisor for Grocery", { exact: true }),
-  ).toHaveValue("0.50");
-  await expect(sandbox.getByText("$1.99", { exact: true })).toBeVisible();
+  ).toHaveValue("0.40");
+  await expect(sandbox.getByText("$2.99", { exact: true })).toBeVisible();
   await page.getByLabel("Cost divisor for Grocery", { exact: true }).fill("0");
   await expect(page.getByRole("alert")).toContainText(
     "Enter a divisor greater than zero.",
   );
-  await expect(sandbox.getByText("$1.99", { exact: true })).toBeVisible();
+  await expect(sandbox.getByText("$2.99", { exact: true })).toBeVisible();
 
   await page
     .getByLabel("Cost divisor for Grocery", { exact: true })
@@ -71,8 +71,14 @@ test("divisors update live, survive refresh, and invalid money preserves valid r
   await cost.fill("1.12345");
   await expect(sandbox.locator(".price-display")).toHaveCount(0);
   await cost.fill("1.12");
-  await expect(sandbox.getByText("$1.49", { exact: true })).toBeVisible();
-  await expect(sandbox.getByText("24.83%", { exact: true })).toBeVisible();
+  await expect(sandbox.getByText("$1.99", { exact: true })).toBeVisible();
+  await expect(sandbox.getByText("43.72%", { exact: true })).toBeVisible();
+  await expect(
+    sandbox.getByText("Below minimum margin", { exact: true }),
+  ).toHaveCount(0);
+  await cost.fill("0.75");
+  await expect(sandbox.getByText("$0.99", { exact: true })).toBeVisible();
+  await expect(sandbox.getByText("24.24%", { exact: true })).toBeVisible();
   await expect(
     sandbox.getByText("Below minimum margin", { exact: true }),
   ).toBeVisible();
@@ -117,5 +123,5 @@ test("Reset demo restores pricing rules, including an invalid field draft", asyn
   await expect(
     page.getByLabel("Cost divisor for Grocery", { exact: true }),
   ).toHaveValue("0.65");
-  await expect(page.getByText("$1.49", { exact: true })).toBeVisible();
+  await expect(page.getByText("$1.99", { exact: true })).toBeVisible();
 });

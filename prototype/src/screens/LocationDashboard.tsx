@@ -1,5 +1,6 @@
 import { CalendarClock, PackageMinus, Tags, Truck } from "lucide-react";
 import { useDemo } from "../store";
+import { TimesheetOnShiftTile } from "../TimesheetOnShiftTile";
 import { PriceUpdatesDashboardCard } from "../price-update-presentation";
 import { useProtectedQuery } from "../use-protected-query";
 import {
@@ -153,6 +154,7 @@ export default function LocationDashboard() {
               icon={<PackageMinus size={20} />}
               onClick={() => navigate("returns")}
             />
+            <TimesheetOnShiftTile />
           </div>
           <PriceUpdatesDashboardCard />
           <div className="location-dashboard-cards">

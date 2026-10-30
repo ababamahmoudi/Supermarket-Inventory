@@ -165,10 +165,17 @@ function AddDateForm({
               searchable
               options={[
                 {
+                  placeholder: true,
                   value: "",
                   label: t("Choose product", "محصول را انتخاب کنید"),
                 },
                 ...products.map((product) => ({
+                  searchTerms: [
+                    product.name_en,
+                    product.name_fa ?? "",
+                    product.code,
+                    product.barcode ?? "",
+                  ],
                   value: product.code,
                   label: `${lang === "fa" ? product.name_fa || product.name_en : product.name_en} · ${lang === "fa" ? product.name_en : product.name_fa} · ${product.code}`,
                 })),
@@ -347,7 +354,11 @@ function RemoveDateForm({
             setError("");
           }}
           options={[
-            { value: "", label: t("Choose reason", "دلیل را انتخاب کنید") },
+            {
+              placeholder: true,
+              value: "",
+              label: t("Choose reason", "دلیل را انتخاب کنید"),
+            },
             ...dateRemovalReasons.map((value) => ({
               value,
               label: dateRemovalReasonLabel(value, t),
@@ -457,6 +468,7 @@ function StopTrackingForm({
           }}
           options={[
             {
+              placeholder: true,
               value: "",
               label: t(
                 "Choose what to do with the dates",

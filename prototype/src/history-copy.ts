@@ -6,7 +6,89 @@ import { configSeed } from "./config";
 import { configuredRoleLabel } from "./role-config";
 
 const actions: Record<string, [string, string]> = {
+  "Set category for new invoice products": [
+    "Set category for new invoice products",
+    "تعیین دسته برای کالاهای جدید فاکتور",
+  ],
+  "Add invoice charge or credit": [
+    "Add invoice charge or credit",
+    "افزودن هزینه یا اعتبار فاکتور",
+  ],
+  "Edit invoice charge or credit": [
+    "Edit invoice charge or credit",
+    "ویرایش هزینه یا اعتبار فاکتور",
+  ],
+  "Remove invoice charge or credit": [
+    "Remove invoice charge or credit",
+    "حذف هزینه یا اعتبار فاکتور",
+  ],
+  "Edit weight product cost": [
+    "Edit weight product cost",
+    "ویرایش هزینه کالای وزنی",
+  ],
+  "Propose price after manual cost edit": [
+    "Propose price after manual cost edit",
+    "پیشنهاد قیمت پس از ویرایش دستی هزینه",
+  ],
+  "Invoice paper total acknowledged as wrong": [
+    "Invoice paper total acknowledged as wrong",
+    "جمع اشتباه روی فاکتور تأیید شد",
+  ],
+  "Package offers reconciled": [
+    "Package offers reconciled",
+    "پیشنهادهای بسته هماهنگ شد",
+  ],
+  "Package sale needs review": [
+    "Package sale needs review",
+    "حراج بسته نیاز به بررسی دارد",
+  ],
+  "Add package size": ["Add package size", "افزودن اندازه بسته"],
+  "Edit package size": ["Edit package size", "ویرایش اندازه بسته"],
+  "Archive package size": ["Archive package size", "بایگانی اندازه بسته"],
+  "Package price recalculated": [
+    "Package price recalculated",
+    "قیمت بسته دوباره محاسبه شد",
+  ],
+  "Package cost recalculated": [
+    "Package cost recalculated",
+    "هزینه بسته دوباره محاسبه شد",
+  ],
+  "Timesheet settings changed": [
+    "Timesheet settings changed",
+    "تنظیمات کارکرد تغییر کرد",
+  ],
+  "Add timesheet staff": ["Add timesheet staff", "افزودن فرد به فهرست کارکرد"],
+  "Edit timesheet staff": [
+    "Edit timesheet staff",
+    "ویرایش فرد در فهرست کارکرد",
+  ],
+  "Archive timesheet staff": [
+    "Archive timesheet staff",
+    "بایگانی فرد در فهرست کارکرد",
+  ],
+  "Restore timesheet staff": [
+    "Restore timesheet staff",
+    "بازگردانی فرد در فهرست کارکرد",
+  ],
+  "Add timesheet day": ["Add timesheet day", "افزودن روز کارکرد"],
+  "Add timesheet row": ["Add timesheet row", "افزودن ردیف کارکرد"],
+  "Edit timesheet row": ["Edit timesheet row", "ویرایش ردیف کارکرد"],
+  "Remove timesheet row": ["Remove timesheet row", "برداشتن ردیف کارکرد"],
+  "Edit timesheet notes": ["Edit timesheet notes", "ویرایش یادداشت کارکرد"],
+  "Created return": ["Created return", "ایجاد مرجوعی"],
+  "Change approval category": [
+    "Change approval category",
+    "تغییر دسته‌بندی درخواست تأیید",
+  ],
+  "Resubmit approval": ["Resubmit approval", "ارسال دوباره درخواست تأیید"],
   "Create invoice draft": ["Create invoice draft", "ایجاد پیش‌نویس فاکتور"],
+  "Invoice pages changed": ["Invoice pages changed", "تغییر صفحه‌های فاکتور"],
+  "Cancel invoice": ["Discard invoice", "کنار گذاشتن فاکتور"],
+  "Distinguish suppliers": ["Distinguish suppliers", "تأمین‌کنندگان متفاوت"],
+  "Activate supplier without approval": [
+    "Activate supplier without approval",
+    "فعال‌سازی تأمین‌کننده بدون تأیید",
+  ],
   "Removed fictional data": [
     "Removed fictional data",
     "داده‌های خیالی حذف شدند",
@@ -81,6 +163,10 @@ const actions: Record<string, [string, string]> = {
     "Company settings changed",
     "تنظیمات شرکت تغییر کرد",
   ],
+  "AI reading settings changed": [
+    "AI reading settings changed",
+    "تنظیمات خواندن هوش مصنوعی تغییر کرد",
+  ],
   "Branches changed": ["Branches changed", "شعبه‌ها تغییر کردند"],
   "Pricing rules changed": [
     "Pricing rules changed",
@@ -101,6 +187,10 @@ const actions: Record<string, [string, string]> = {
   "Restore template": ["Restore template", "بازیابی قالب"],
   "Move invoice": ["Move invoice", "انتقال فاکتور"],
   "Correct invoice": ["Correct invoice", "اصلاح فاکتور"],
+  "Correct invoice received date": [
+    "Correct invoice received date",
+    "اصلاح زمان دریافت فاکتور",
+  ],
   "Attach original": ["Attach original", "پیوست اصل"],
   "Return settings changed": [
     "Return settings changed",
@@ -204,6 +294,15 @@ export function historyActionLabel(action: string, lang: Language): string {
   return copy ? translate(...copy, lang) : activityLabel(action, lang);
 }
 const fields: Record<string, [string, string]> = {
+  in_time: ["In", "ورود"],
+  out_time: ["Out", "خروج"],
+  department_key: ["Department", "بخش"],
+  department_name_en: ["Department (English)", "بخش (انگلیسی)"],
+  department_name_fa: ["Department (Persian)", "بخش (فارسی)"],
+  usual_department_key: ["Usual department", "بخش معمول"],
+  departments: ["Departments", "بخش‌ها"],
+  photo_count: ["Photos", "عکس‌ها"],
+  quantity_unit: ["Unit", "واحد"],
   sale_price: ["Sale price", "قیمت تخفیف"],
   requested_price: ["Sale price", "قیمت تخفیف"],
   regular_price: ["Regular price", "قیمت عادی"],
@@ -231,6 +330,7 @@ const fields: Record<string, [string, string]> = {
   location: ["Location", "مکان"],
   outstanding_amount: ["Outstanding amount", "مبلغ پرداخت‌نشده"],
   reason: ["Reason", "دلیل"],
+  received_at: ["Received", "زمان دریافت"],
   name: ["Name", "نام"],
   name_en: ["English name", "نام انگلیسی"],
   name_fa: ["Persian name", "نام فارسی"],

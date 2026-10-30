@@ -100,6 +100,8 @@ describe("invoice review and posting", () => {
 
   it("posts delivered stock and financial entries once, without inventing approvals for unchanged-price lines", () => {
     const state = reviewed();
+    // Preserve this configured legacy-price boundary; default endings have separate R3c coverage.
+    state.config.rounding_bands.final_ending_adjustment = null;
     state.invoice.lines.find(
       (line) => line.product_code === "0009",
     )!.qty_received_at_posting = 8;
@@ -138,12 +140,13 @@ describe("invoice review and posting", () => {
     expect(state).toEqual(saved);
   });
 
-  it("requires an explicit date answer on every line and a date for Yes", () => {
+  it("defaults No without another answer and requires a date for Yes", () => {
     const state = reviewed();
     const rice = state.invoice.lines[0];
     rice.pricing_category = "rice";
     rice.date_confirmed = false;
-    expect(invoiceBlockers(state, receivingActor(state))).toContain("date");
+    rice.date_tracking = false;
+    expect(invoiceBlockers(state, receivingActor(state))).not.toContain("date");
     rice.date_tracking = true;
     rice.date_confirmed = true;
     rice.date_value = undefined;
@@ -201,6 +204,8 @@ describe("invoice review and posting", () => {
 
   it("keeps an unchanged-price minimum-margin review instead of silently changing the register price", () => {
     const state = reviewed();
+    // Preserve this configured legacy-price boundary; default endings have separate R3c coverage.
+    state.config.rounding_bands.final_ending_adjustment = null;
     const line = state.invoice.lines.find(
       (item) => item.product_code === "0002",
     )!;
@@ -231,6 +236,8 @@ describe("invoice review and posting", () => {
 
   it("deduplicates identical margin contexts and keeps changed costs or rules as fresh reviews", () => {
     const state = reviewed();
+    // Preserve this configured legacy-price boundary; default endings have separate R3c coverage.
+    state.config.rounding_bands.final_ending_adjustment = null;
     const postCost = (cost: string) => {
       state.invoice = reviewed().invoice;
       state.invoice.lines.find(
@@ -268,6 +275,8 @@ describe("invoice review and posting", () => {
 
   it("appends new invoice evidence to an acknowledged margin context without reopening it", () => {
     const state = reviewed();
+    // Preserve this configured legacy-price boundary; default endings have separate R3c coverage.
+    state.config.rounding_bands.final_ending_adjustment = null;
     const receiveCost = () => {
       state.invoice = reviewed().invoice;
       state.invoice.lines.find(
@@ -352,13 +361,13 @@ describe("invoice review and posting", () => {
     expect(state).toEqual(before);
   });
 
-  it("requires a note for unknown lower-price information and confirms a proposed supplier before posting", () => {
+  it("requires a note for unknown lower-price information without supplier confirmation", () => {
     const state = reviewed();
     state.invoice.lower_price_answers = { same_expiry: "unknown", note: "" };
     state.invoice.supplier_confirmed = false;
-    expect(invoiceBlockers(state, receivingActor(state))).toEqual(
-      expect.arrayContaining(["lower_price", "supplier_pending"]),
-    );
+    expect(invoiceBlockers(state, receivingActor(state))).toEqual([
+      "lower_price",
+    ]);
     state.invoice.lower_price_answers = { same_expiry: "no_previous_stock" };
     state.invoice.supplier_confirmed = true;
     expect(invoiceBlockers(state, receivingActor(state))).toEqual([]);

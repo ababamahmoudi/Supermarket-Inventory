@@ -1,3 +1,10 @@
+import Decimal from "decimal.js";
+import { returnOverviewCredits } from "../return-overview-credit";
+import { useCatalogQuery } from "../catalog-query";
+import "./returns-r2f.css";
+import { returnReasonLabel } from "../return-reason-copy";
+import { returnReasons, type ReturnReason } from "../return-create";
+import { NewReturnDialog } from "./NewReturnDialog";
 import { useProtectedQuery } from "../use-protected-query";
 import { configuredRoleLabel } from "../role-config";
 import type { AuthenticatedActor } from "../authority-types";
@@ -27,6 +34,7 @@ import {
 } from "../return-workflow";
 import "./returns-a2.css";
 import { ReturnStatusBadge } from "../ReturnStatusBadge";
+import { FitText } from "../FitText";
 import { ReturnActionForms, ReturnCancellationForm } from "./ReturnActionForms";
 import { ReturnEvidenceImage } from "../ReturnEvidenceImage";
 import type { DemoState } from "../types";
@@ -52,7 +60,15 @@ import {
   TableRowLink,
   useTableColumns,
 } from "../ui";
-import { DateText, demoUserLabel, LtrText, ProductName } from "../presentation";
+import {
+  DateText,
+  demoUserLabel,
+  LtrText,
+  ProductName,
+  Money,
+  QuantityText,
+  UnitText,
+} from "../presentation";
 import {
   operationError,
   returnUnpickedQuantity,
@@ -143,6 +159,16 @@ function ReturnsContent() {
   const branches = configuredBranches(state.config).filter((id) =>
     currentActor.allowed_branches.includes(id),
   );
+  const canStartReturn = branches.some(
+    (location) =>
+      (branch === "all" || location === branch) &&
+      can("returns.create", {
+        company_id: currentActor.company_id,
+        kind: "location_record",
+        location_ids: [location],
+        mutation: true,
+      }),
+  );
   const [hash, setHash] = useState(() => window.location.hash);
   const detailId = hash.startsWith("#return?")
     ? new URLSearchParams(hash.split("?")[1]).get("id")
@@ -180,6 +206,7 @@ function ReturnsContent() {
   );
   const [search, setSearch] = useListState("returns.search", "");
   const [policyOpen, setPolicyOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [panel, setPanel] = useState<
     "pickup" | "correct" | "resolve" | "cancel"
@@ -234,38 +261,90 @@ function ReturnsContent() {
           (item) => item.reference === memoReference,
         ) ?? null)
       : null);
+  const showBranch = branch === "all";
+  const mayReadCredit = can("returns.amount_read", domainScope(state));
+  const creditQuery = useCatalogQuery(
+    "returns.amount_read",
+    domainScope(state),
+    "returns-overview-credit",
+    (canonical, current) => returnOverviewCredits(canonical, current),
+  );
+  const creditsById = new Map(
+    creditQuery.data?.map((row) => [row.return_id, row]),
+  );
   const tableColumns = useTableColumns("returns", [
     {
       key: "reference",
-      minWidth: 108,
-      label: t("Return #", "شماره مرجوعی"),
+      minWidth: 72,
+      label: t("Return #", "مرجوعی #"),
       required: true,
-      width: 108,
+      width: 72,
+      fixedWidth: true,
       priority: 0,
       mobilePrimary: true,
     },
     {
       key: "supplier",
-      minWidth: 240,
+      minWidth: 148,
       label: t("Supplier", "تأمین‌کننده"),
       required: true,
-      width: 220,
+      width: 200,
+      fixedWidth: true,
       priority: 0,
     },
-    { key: "location", label: t("Branch", "شعبه"), width: 144, priority: 3 },
-    { key: "date", label: t("Created", "ایجادشده"), width: 128, priority: 4 },
+    ...(showBranch
+      ? [
+          {
+            key: "location",
+            label: t("Branch", "شعبه"),
+            width: 136,
+            priority: 4,
+          },
+        ]
+      : []),
     {
       key: "items",
       label: t("Items", "اقلام"),
-      width: 76,
-      align: "end",
-      priority: 5,
+      minWidth: 180,
+      priority: 0,
+      required: true,
     },
-    { key: "status", label: t("Status", "وضعیت"), width: 172, priority: 1 },
+    ...(mayReadCredit
+      ? [
+          {
+            key: "credit",
+            label: t("Credit due", "اعتبار مورد انتظار"),
+            width: 112,
+            fixedWidth: true,
+            minWidth: 104,
+            align: "end" as const,
+            priority: 1,
+          },
+        ]
+      : []),
+    {
+      key: "date",
+      label: t("Created", "ایجادشده"),
+      width: 116,
+      fixedWidth: true,
+      minWidth: 108,
+      align: "end",
+      priority: 3,
+    },
+    {
+      key: "status",
+      label: t("Status", "وضعیت"),
+      width: 176,
+      fixedWidth: true,
+      minWidth: 140,
+      priority: 1,
+    },
     {
       key: "actions",
       label: t("Next action", "اقدام بعدی"),
-      width: 144,
+      width: 176,
+      fixedWidth: true,
+      minWidth: 140,
       align: "end",
       actions: true,
       priority: 2,
@@ -321,7 +400,9 @@ function ReturnsContent() {
     return (
       matchesStatus &&
       (supplier === "all" || record.supplier === supplier) &&
-      (returnBranch === "all" || record.branch === returnBranch) &&
+      (!showBranch ||
+        returnBranch === "all" ||
+        record.branch === returnBranch) &&
       (!searchQuery || searchableText.includes(searchQuery))
     );
   });
@@ -346,6 +427,68 @@ function ReturnsContent() {
         ? product.name_fa || product.name_en
         : product.name_en
       : code;
+  };
+  const overviewItems = (record: OperationalReturnRead) => {
+    const totals = new Map<string, Decimal>();
+    for (const line of record.lines) {
+      const unit = usesPounds(line) ? "lb" : "units";
+      totals.set(unit, (totals.get(unit) ?? new Decimal(0)).plus(line.qty));
+    }
+    const reason = record.lines[0]?.reason ?? "";
+    return (
+      <div className="return-list-items">
+        <div className="return-list-item-names">
+          {record.lines.slice(0, 2).map((line, index) => (
+            <span key={`${line.product_code}:${index}`}>
+              <FitText
+                intrinsic
+                className="return-list-item-name"
+                value={productName(line.product_code)}
+                render={(visible) => <UnitText>{visible}</UnitText>}
+              />{" "}
+              <span className="muted return-list-item-quantity">
+                × <LtrText>{line.qty}</LtrText>
+                {index === 1 && record.lines.length > 2 ? (
+                  <>
+                    {" "}
+                    ·{" "}
+                    {t(
+                      `+${record.lines.length - 2} more`,
+                      `+${record.lines.length - 2} قلم دیگر`,
+                    )}
+                  </>
+                ) : null}
+              </span>
+            </span>
+          ))}
+        </div>
+        <small className="muted">
+          {[...totals].map(([unit, total], index) => (
+            <span key={unit}>
+              {index > 0 ? " · " : ""}
+              <QuantityText
+                value={total.toString()}
+                unit={unit === "lb" ? "lb" : "units"}
+                language={lang}
+              />
+            </span>
+          ))}
+          {reason && (
+            <>
+              {" "}
+              ·{" "}
+              {returnReasons.includes(reason as ReturnReason)
+                ? returnReasonLabel(reason as ReturnReason, t)
+                : reason === "Leaking"
+                  ? t("Leaking", "نشتی")
+                  : reason === "Torn bag"
+                    ? t("Torn bag", "کیسه پاره")
+                    : reason}
+            </>
+          )}
+        </small>
+      </div>
+    );
   };
   const statusLabel = (status: string) => returnUiStatusLabel(status, t);
   const returnStatus = (record: OperationalReturnRead) => (
@@ -405,10 +548,39 @@ function ReturnsContent() {
     );
   return (
     <>
+      {creating && (
+        <NewReturnDialog
+          key={JSON.stringify([
+            currentActor.company_id,
+            currentActor.session_id,
+            currentActor.person_version,
+            authorityGeneration,
+            currentActor.selection,
+          ])}
+          onClose={() => setCreating(false)}
+          onCreated={(id) => {
+            const target = `#return?id=${encodeURIComponent(id)}`;
+            setCreating(false);
+            if (window.location.hash !== hash) return;
+            // The committed business revision can reinstall the hash listener
+            // before the browser dispatches hashchange. Adopt this accepted
+            // route immediately so the new detail never remains on the list.
+            setHash(target);
+            window.location.hash = target;
+          }}
+        />
+      )}
       {!detailId ? (
         <>
           <PageHeader
             title={t("Returns", "مرجوعی‌ها")}
+            actions={
+              canStartReturn ? (
+                <Button onClick={() => setCreating(true)}>
+                  {t("New return", "مرجوعی جدید")}
+                </Button>
+              ) : undefined
+            }
             description={t(
               "Supplier returns and credits",
               "مرجوعی و بستانکاری تأمین‌کنندگان",
@@ -482,32 +654,34 @@ function ReturnsContent() {
                   ).map((value) => ({ value, label: statusLabel(value) })),
                 ]}
               />
-              <Select
-                aria-label={t("Return branch", "شعبه مرجوعی")}
-                value={returnBranch}
-                onChange={setReturnBranch}
-                options={[
-                  {
-                    value: "all",
-                    label: can("returns.amount_read")
-                      ? t("All branches", "همه شعب")
-                      : currentActor.allowed_branches.length > 1
-                        ? t("All my locations", "همه محل‌های من")
-                        : configuredBranchLabel(
-                            state.config,
-                            overviewContext.branch,
-                            lang,
-                          ),
-                  },
-                  ...branches.map((value) => ({
-                    value,
-                    label: configuredBranchLabel(state.config, value, lang),
-                  })),
-                ]}
-              />
+              {showBranch && (
+                <Select
+                  aria-label={t("Return branch", "شعبه مرجوعی")}
+                  value={returnBranch}
+                  onChange={setReturnBranch}
+                  options={[
+                    {
+                      value: "all",
+                      label: can("returns.amount_read")
+                        ? t("All branches", "همه شعب")
+                        : currentActor.allowed_branches.length > 1
+                          ? t("All my locations", "همه محل‌های من")
+                          : configuredBranchLabel(
+                              state.config,
+                              overviewContext.branch,
+                              lang,
+                            ),
+                    },
+                    ...branches.map((value) => ({
+                      value,
+                      label: configuredBranchLabel(state.config, value, lang),
+                    })),
+                  ]}
+                />
+              )}
               {(supplier !== "all" ||
                 status !== "all" ||
-                returnBranch !== "all" ||
+                (showBranch && returnBranch !== "all") ||
                 search ||
                 returnTab !== "open") && (
                 <Button
@@ -526,42 +700,87 @@ function ReturnsContent() {
               )}
             </FilterToolbar>
             <DataTable
+              recordDetails
               className="returns-overview-table"
               phoneList={{
                 name: "supplier",
                 value: "status",
-                secondary: ["reference", "location", "date"],
+                secondary: ["reference", "items", "date", "credit"],
+                render: ({ cell, recordLink }) => (
+                  <>
+                    <td className="return-phone-header">
+                      <span className="return-phone-reference">
+                        {cell("reference")}
+                      </span>
+                      <span className="return-phone-supplier">
+                        {cell("supplier")}
+                      </span>
+                      <span className="return-phone-status">
+                        {cell("status")}
+                      </span>
+                    </td>
+                    <td className="return-phone-items">{cell("items")}</td>
+                    <td className="return-phone-meta">
+                      <span>{cell("date")}</span>
+                      <span>{cell("credit")}</span>
+                    </td>
+                    <td className="return-phone-next">
+                      {cell("actions")}
+                      {recordLink}
+                    </td>
+                  </>
+                ),
               }}
-              columns={tableColumns.columns}
+              horizontalScroll
+              // Keep the person's selected facts available on tablets via the
+              // existing bounded scroll surface, rather than dropping credit.
+              columns={tableColumns.columns.map((column) => ({
+                ...column,
+                required: true,
+              }))}
             >
               <thead>
                 <tr>
-                  <th>{t("Return #", "شماره مرجوعی")}</th>
+                  <th>{t("Return #", "مرجوعی #")}</th>
                   <th>{t("Supplier", "تأمین‌کننده")}</th>
-                  <th>{t("Branch", "شعبه")}</th>
-                  <th>{t("Created", "ایجادشده")}</th>
-                  <th className="number-cell returns-items-cell">
-                    {t("Items", "اقلام")}
-                  </th>
+                  {showBranch && <th>{t("Branch", "شعبه")}</th>}
+                  <th>{t("Items", "اقلام")}</th>
+                  {mayReadCredit && (
+                    <th className="numeric">
+                      {t("Credit due", "اعتبار مورد انتظار")}
+                    </th>
+                  )}
+                  <th className="numeric">{t("Created", "ایجادشده")}</th>
                   <th>{t("Status", "وضعیت")}</th>
-                  <th className="action-cell">
-                    {t("Next action", "اقدام بعدی")}
+                  <th className="numeric action-cell">
+                    <span className="returns-next-action-heading">
+                      {t("Next action", "اقدام بعدی")}
+                    </span>
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {overviewReturns.map((record) => {
                   const action =
-                    record.status === "open"
-                      ? t("Record pickup", "ثبت جمع‌آوری")
-                      : record.status === "cancellation_review"
-                        ? t("Review cancellation", "بررسی لغو")
-                        : record.status === "claim_pending"
-                          ? t("Review claim", "بررسی ادعا")
-                          : record.status === "cancelled" ||
-                              record.status === "resolved"
-                            ? t("View", "مشاهده")
-                            : t("Record resolution", "ثبت حل‌وفصل");
+                    !can(
+                      "returns.pickup_record",
+                      domainScope(state, record, true),
+                    ) &&
+                    !can(
+                      "returns.operational_resolve",
+                      domainScope(state, record, true),
+                    )
+                      ? t("View", "مشاهده")
+                      : record.status === "open"
+                        ? t("Record pickup", "ثبت جمع‌آوری")
+                        : record.status === "cancellation_review"
+                          ? t("Review cancellation", "بررسی لغو")
+                          : record.status === "claim_pending"
+                            ? t("Review claim", "بررسی ادعا")
+                            : record.status === "cancelled" ||
+                                record.status === "resolved"
+                              ? t("View", "مشاهده")
+                              : t("Record resolution", "ثبت حل‌وفصل");
                   return (
                     <tr
                       key={record.id}
@@ -592,35 +811,87 @@ function ReturnsContent() {
                         </a>
                       </td>
                       <td>
-                        <LtrText>{record.supplier}</LtrText>
+                        <a className="entity-link" href={detailHref(record)}>
+                          <LtrText>{record.supplier}</LtrText>
+                        </a>
                       </td>
-                      <td className="branch-label">
-                        {configuredBranchLabel(
-                          state.config,
-                          record.branch,
-                          lang,
-                        )}
-                      </td>
-                      <td>
-                        <DateText value={record.created_at} />
-                      </td>
-                      <td className="number-cell returns-items-cell">
-                        <LtrText>
-                          {record.lines.reduce(
-                            (sum, line) => sum + line.qty,
-                            0,
+                      {showBranch && (
+                        <td className="branch-label">
+                          {configuredBranchLabel(
+                            state.config,
+                            record.branch,
+                            lang,
                           )}
-                        </LtrText>
+                        </td>
+                      )}
+                      <td>{overviewItems(record)}</td>
+                      {mayReadCredit && (
+                        <td className="numeric return-credit-due">
+                          {mayReadCredit &&
+                            (() => {
+                              if (!creditQuery.ready)
+                                return (
+                                  <span
+                                    className="muted ui-numeric-caption"
+                                    role="status"
+                                  >
+                                    {t("Loading…", "در حال دریافت…")}
+                                  </span>
+                                );
+                              if (creditQuery.error)
+                                return (
+                                  <span
+                                    className="muted ui-numeric-caption"
+                                    title={t(
+                                      "Credit amounts are unavailable. Refresh to try again.",
+                                      "مبالغ اعتبار در دسترس نیست. صفحه را تازه کنید.",
+                                    )}
+                                  >
+                                    {t("Unavailable", "در دسترس نیست")}
+                                  </span>
+                                );
+                              const value = creditsById.get(record.id);
+                              return value?.amount !== null &&
+                                value?.amount !== undefined &&
+                                value.currency ? (
+                                <strong>
+                                  <Money
+                                    value={value.amount}
+                                    currency={value.currency}
+                                  />
+                                  {value.currency !==
+                                    state.config.company.currency && (
+                                    <small className="return-credit-currency muted">
+                                      <LtrText>{value.currency}</LtrText>
+                                    </small>
+                                  )}
+                                </strong>
+                              ) : (
+                                <span
+                                  className="muted ui-numeric-caption"
+                                  title={t(
+                                    "Retained cost or currency needs review",
+                                    "هزینه یا ارز نگهداری‌شده نیاز به بررسی دارد",
+                                  )}
+                                >
+                                  {t("Needs review", "نیاز به بررسی")}
+                                </span>
+                              );
+                            })()}
+                        </td>
+                      )}
+                      <td className="numeric">
+                        <DateText value={record.created_at} />
                       </td>
                       <td>{returnStatus(record)}</td>
                       <td className="action-cell">
                         <div className="actions table-actions">
-                          {record.status !== "cancelled" &&
-                            record.status !== "resolved" && (
-                              <Button asChild variant="neutral" size="sm">
-                                <a href={detailHref(record)}>{action}</a>
-                              </Button>
-                            )}
+                          <span
+                            data-action-fact
+                            className="muted returns-next-action"
+                          >
+                            {action}
+                          </span>
                           <TableRowLink
                             href={detailHref(record)}
                             aria-label={`${t("View", "مشاهده")} ${t("Return", "مرجوعی")} #${returnNumber(record)}`}
@@ -675,6 +946,7 @@ function ReturnsContent() {
         {memo && (
           <>
             <ReturnMemoPreview
+              config={state.config}
               memo={memo}
               language={lang}
               documentLanguage={
@@ -733,6 +1005,7 @@ function ReturnsContent() {
                   );
                   printDocument(
                     <ReturnMemoDocument
+                      config={state.config}
                       memo={freshMemo}
                       language={lang}
                       documentLanguage={
@@ -953,7 +1226,13 @@ function ReturnsContent() {
                       record.lines.some(
                         (line) =>
                           record.line_progress[line.product_code].available > 0,
-                      )) && (
+                      )) &&
+                    can(
+                      record.status === "open"
+                        ? "returns.pickup_record"
+                        : "returns.operational_resolve",
+                      domainScope(state, record, true),
+                    ) && (
                       <Button
                         disabled={
                           !can(
@@ -1160,12 +1439,27 @@ function ReturnsContent() {
                             ? t("Leaking", "نشتی")
                             : line.reason === "Torn bag"
                               ? t("Torn bag", "کیسه پاره")
-                              : line.reason}
+                              : returnReasons.includes(
+                                    line.reason as ReturnReason,
+                                  )
+                                ? returnReasonLabel(
+                                    line.reason as ReturnReason,
+                                    t,
+                                  )
+                                : line.reason}
                           {line.location && (
                             <div className="muted">
                               {line.location === "Walk-in cooler"
                                 ? t("Walk-in cooler", "سردخانه")
-                                : line.location}
+                                : configuredBranches(state.config).includes(
+                                      line.location,
+                                    )
+                                  ? configuredBranchLabel(
+                                      state.config,
+                                      line.location,
+                                      lang,
+                                    )
+                                  : line.location}
                             </div>
                           )}
                         </td>
@@ -1203,7 +1497,19 @@ function ReturnsContent() {
                 </p>
               )}
               {record.status !== "cancelled" &&
-                record.status !== "cancellation_review" && (
+                record.status !== "cancellation_review" &&
+                (can(
+                  "returns.pickup_record",
+                  domainScope(state, record, true),
+                ) ||
+                  can(
+                    "returns.operational_resolve",
+                    domainScope(state, record, true),
+                  ) ||
+                  can("returns.pickup_correct", {
+                    ...domainScope(state, record, true),
+                    location_policy: "retained_correction",
+                  })) && (
                   <div className="return-secondary-actions">
                     {record.status !== "open" &&
                       record.status !== "resolved" &&
@@ -1600,25 +1906,32 @@ function ReturnsContent() {
                   (record.evidence ?? []).map((event) => (
                     <div className="history-row" key={event.id}>
                       <strong>
-                        {event.kind === "pickup_correction"
-                          ? t("Corrected pickup", "جمع‌آوری اصلاح‌شده")
-                          : event.kind === "outstanding"
-                            ? t("Still outstanding", "هنوز باقی‌مانده")
-                            : event.kind === "pickup"
-                              ? t("Recorded pickup", "جمع‌آوری ثبت‌شده")
-                              : event.kind === "replacement"
-                                ? t(
-                                    "Received replacement",
-                                    "جایگزین دریافت‌شده",
-                                  )
-                                : event.kind === "original_recovery"
-                                  ? t(
-                                      "Received safe original goods",
-                                      "اصل کالای سالم دریافت شد",
-                                    )
-                                  : event.kind.startsWith("cancellation")
-                                    ? t("Cancellation review", "بررسی لغو")
-                                    : t("Resolution claim", "ادعای حل‌وفصل")}
+                        {event.kind === "created"
+                          ? t("Created return", "مرجوعی ایجاد شد")
+                          : event.kind === "creation_photo"
+                            ? t("Return photo", "عکس مرجوعی")
+                            : event.kind === "pickup_correction"
+                              ? t("Corrected pickup", "جمع‌آوری اصلاح‌شده")
+                              : event.kind === "outstanding"
+                                ? t("Still outstanding", "هنوز باقی‌مانده")
+                                : event.kind === "pickup"
+                                  ? t("Recorded pickup", "جمع‌آوری ثبت‌شده")
+                                  : event.kind === "replacement"
+                                    ? t(
+                                        "Received replacement",
+                                        "جایگزین دریافت‌شده",
+                                      )
+                                    : event.kind === "original_recovery"
+                                      ? t(
+                                          "Received safe original goods",
+                                          "اصل کالای سالم دریافت شد",
+                                        )
+                                      : event.kind.startsWith("cancellation")
+                                        ? t("Cancellation review", "بررسی لغو")
+                                        : t(
+                                            "Resolution claim",
+                                            "ادعای حل‌وفصل",
+                                          )}
                       </strong>
                       <p>
                         <LtrText>

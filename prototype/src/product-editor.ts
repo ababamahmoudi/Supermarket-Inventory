@@ -112,6 +112,26 @@ export function saveProductEdits(
   context = checkContext(state, context);
   const product = ownProduct(state, context.company_id, code);
   if (
+    product.sold_by === "weight" &&
+    edits.sold_by === "each" &&
+    state.products.some(
+      (item) =>
+        item.company_id === product.company_id &&
+        item.package_of_product_id === product.code &&
+        item.status !== "archived",
+    )
+  )
+    fail("unit_size");
+  if (
+    product.package_of_product_id &&
+    (edits.pricing_category !== product.pricing_category ||
+      edits.main_supplier !== product.main_supplier ||
+      (edits.sold_by !== undefined && edits.sold_by !== "each") ||
+      edits.unit_size !== product.unit_size ||
+      edits.barcode.trim() !== product.barcode)
+  )
+    fail("pricing_category");
+  if (
     edits.sold_by !== undefined &&
     edits.sold_by !== "each" &&
     edits.sold_by !== "weight"
@@ -122,8 +142,12 @@ export function saveProductEdits(
     expectedSnapshot
   )
     fail("stale");
-  for (const key of ["name_en", "unit_size"] as const)
-    if (!edits[key].trim()) fail(key);
+  if (!edits.name_en.trim()) fail("name_en");
+  if (
+    (edits.sold_by ?? product.sold_by) !== "weight" &&
+    !edits.unit_size.trim()
+  )
+    fail("unit_size");
   if (
     !state.config.pricing_categories.some(
       (category) => category.key === edits.pricing_category,
@@ -196,6 +220,8 @@ export function saveProductEdits(
     date_reminder_days: edits.date_reminder_days ?? product.date_reminder_days,
     sold_by: edits.sold_by ?? product.sold_by ?? "each",
   });
+  if (product.package_of_product_id)
+    product.package_version = (product.package_version ?? 0) + 1;
   applyProductDateDrafts(state, context, product, edits.dates, now);
   if (edits.date_tracking === false && edits.date_tracking_stop === "clear")
     stopProductDateTracking(state, context, code, "clear");

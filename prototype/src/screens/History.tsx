@@ -1,3 +1,5 @@
+import { returnReasons, type ReturnReason } from "../return-create";
+import { returnReasonLabel } from "../return-reason-copy";
 import { domainScope } from "../domain-authority";
 import { reverseActivity } from "../history";
 import { useEffect, useState } from "react";
@@ -28,6 +30,7 @@ import {
   historyChangeIsMoney,
   historyDisplayChanges,
   historyProductName,
+  historyInvoiceEvidence,
   type HistoryDisplayChange,
 } from "../history-display";
 import {
@@ -339,6 +342,8 @@ export default function History() {
           ? patch.field
           : String(patch.path.at(-1))
         : undefined;
+      if (field === "reason" && returnReasons.includes(raw as ReturnReason))
+        return returnReasonLabel(raw as ReturnReason, t);
       if (field === "supplier_invoice_number" || field === "invoice_number")
         return <LtrText className="history-invoice-reference">{raw}</LtrText>;
       if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return <DateText value={raw} />;
@@ -413,6 +418,21 @@ export default function History() {
     );
   };
   const summary = (entry: Activity) => {
+    const invoice = historyInvoiceEvidence(entry);
+    if (invoice && entry.action === "Create invoice draft" && invoice.imported)
+      return (
+        <span>
+          {t("Created from an imported reading", "ایجادشده از خوانش واردشده")}
+          {" · "}
+          {tCount(
+            "{{count}} line",
+            "{{count}} lines",
+            "{{count}} ردیف",
+            "{{count}} ردیف",
+            invoice.lineCount,
+          )}
+        </span>
+      );
     const changes = historyDisplayChanges(entry);
     const expanded = expandedChanges.includes(entry.id);
     const displayChange = (change: HistoryDisplayChange, index: number) => {
@@ -629,6 +649,7 @@ export default function History() {
                         {new Intl.DateTimeFormat("en-GB", {
                           hour: "2-digit",
                           minute: "2-digit",
+                          hourCycle: "h23",
                           timeZone: state.config.company.timezone,
                         }).format(new Date(entry.at))}
                       </LtrText>
@@ -642,7 +663,19 @@ export default function History() {
                   </td>
                   <td>{historyActionLabel(entry.action, lang)}</td>
                   <td>
-                    {productName(entry) ? (
+                    {historyInvoiceEvidence(entry) ? (
+                      <a
+                        className="entity-link"
+                        href={`#invoices?id=${encodeURIComponent(historyInvoiceEvidence(entry)!.id ?? "")}`}
+                      >
+                        {t("Invoice", "فاکتور")}{" "}
+                        <LtrText className="history-invoice-reference">
+                          {historyInvoiceEvidence(entry)!.number}
+                        </LtrText>
+                        {" · "}
+                        <bdi>{historyInvoiceEvidence(entry)!.supplier}</bdi>
+                      </a>
+                    ) : productName(entry) ? (
                       <bdi dir="auto">
                         <UnitText>{productName(entry)!}</UnitText>
                       </bdi>

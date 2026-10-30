@@ -357,6 +357,56 @@ describe("scoped immutable browser evidence", () => {
   });
 });
 describe("lossless legacy inline migration", () => {
+  it("migrates removed original archives and verifies their exact references and bytes through a saved backup", async () => {
+    const repository = new MemoryFiles();
+    const removed = `data:application/pdf;base64,${btoa("%PDF-1.7\nWholly fictional removed source\n%%EOF")}`;
+    const original = {
+      company_id: company,
+      file_name: "fictional-first.pdf",
+      file_data: pdf,
+      original_pages: [] as { file_data: string }[],
+      retained_original_pages: [
+        { file_name: "fictional-first.pdf", file_data: pdf },
+        { file_name: "fictional-removed.pdf", file_data: removed },
+      ],
+    };
+    const migrated = await migrateInlineFiles(original, company, repository);
+    expect(migrated.migrated).toBe(2);
+    expect(migrated.state.original_pages).toEqual([]);
+    expect(migrated.state.retained_original_pages).toHaveLength(2);
+    expect(migrated.state.file_data).toBe(
+      migrated.state.retained_original_pages[0].file_data,
+    );
+    for (const [index, inline] of [pdf, removed].entries()) {
+      const saved = await readStoredFile(
+        migrated.state.retained_original_pages[index].file_data,
+        company,
+        repository,
+      );
+      expect(await saved.source.arrayBuffer()).toEqual(
+        await inlineFileBlob(inline).arrayBuffer(),
+      );
+    }
+    expect(original.retained_original_pages[1].file_data).toBe(removed);
+    const raw = JSON.stringify(migrated.state);
+    const reference = await archiveFileStorageSnapshot(
+      "fictional-f8-removed-pages",
+      raw,
+      company,
+      repository,
+    );
+    expect(await readFileStorageBackup(reference, company, repository)).toBe(
+      raw,
+    );
+    expect(
+      JSON.parse(await readFileStorageBackup(reference, company, repository))
+        .retained_original_pages,
+    ).toEqual(migrated.state.retained_original_pages);
+    expect(
+      (await migrateInlineFiles(migrated.state, company, repository)).migrated,
+    ).toBe(0);
+  });
+
   it("migrates invoice, logo and historical-only inverse/guard bytes together and is idempotent", async () => {
     const repository = new MemoryFiles();
     const original = {

@@ -1,3 +1,9 @@
+import type {
+  TimesheetSettings,
+  TimesheetStaff,
+  TimesheetDay,
+  TimesheetRow,
+} from "./timesheet-types";
 import type { NoteDoneRule } from "./note-engagement";
 import type { configSeed, demoSeed } from "./config";
 import type { NotebookDefinition, NotebookEntry } from "./notebooks";
@@ -6,6 +12,7 @@ import type { InvoiceLocationCorrection } from "./received";
 import type { SupplierItemDefinition } from "./supplier-items";
 import type { Order, OrderComparison, InvoiceNewItemMatch } from "./orders";
 import type { InvoiceContentCorrection } from "./invoice-corrections";
+import type { InvoiceReceivedCorrection } from "./invoice-received-version";
 import type { ReturnMemo, ReturnPickupCorrection } from "./return-workflow";
 import type { ReceiptLot } from "./receipt-lots";
 import type { BranchRequest, RequestTransferEvent } from "./branch-requests";
@@ -28,7 +35,12 @@ import type {
   PriceUpdatesSettings,
   NotificationSettings,
 } from "./price-updates";
+import type { MakerBranding } from "./maker-branding";
 import type { RoleDefinition } from "./role-config";
+import type {
+  LiveInvoiceReading,
+  LiveReadingModelDetail,
+} from "./invoice-live-reading-types";
 import type { NoteEngagement } from "./note-engagement";
 export type Role = RoleId;
 /** Old serialized input only; never a current authority role. */
@@ -48,8 +60,31 @@ export type CompanyConfig = Omit<
   | "notifications"
   | "roles"
   | "notebooks"
+  | "invoices"
+  | "timesheets"
+  | "modules"
+  | "branding"
+  | "receiving"
+  | "rounding_bands"
 > & {
+  rounding_bands: import("./pricing-ending-rule").RoundingBands;
+  receiving: Omit<
+    typeof configSeed.receiving,
+    "ai_reading_mode" | "ai_reader_address" | "default_payment_terms"
+  > & {
+    ai_reading_mode?: "simulated" | "live";
+    ai_reader_address?: string | null;
+    /** Missing legacy setting uses the configured seed default; null/blank disables it. */
+    default_payment_terms?: string | null;
+  };
+  branding?: MakerBranding;
+  invoices: Omit<typeof configSeed.invoices, "delivery_window"> & {
+    delivery_window?: { start: string; end: string };
+  };
   roles: RoleDefinition[];
+  timesheets?: TimesheetSettings;
+  /** Persisted legacy input is upgraded before publication. */
+  modules: typeof configSeed.modules;
   notebooks: {
     built_in: {
       kind: string;
@@ -99,6 +134,10 @@ export type CompanyConfig = Omit<
     main_display_unit: "lb" | "kg";
     show_second_unit: boolean;
     use_rounding_bands: boolean;
+    package_container_fee?: string;
+    package_container_cost?: string;
+    package_barcode_prefix?: string;
+    ounces_per_lb?: string;
   };
   returns?: {
     deduct_expected_credit_at_pickup: boolean;
@@ -146,6 +185,29 @@ export type Product = Omit<
   date_reminder_days?: number;
   first_added_branch?: Branch;
   sold_by?: "each" | "weight";
+  /** Stable parent Product Code within company_id; product codes are never reused. */
+  package_of_product_id?: string;
+  package_size?: string;
+  package_size_unit?: "g" | "kg" | "lb" | "oz";
+  package_size_lb?: string;
+  package_barcode_generated?: boolean;
+  package_version?: number;
+  package_pending_prices?: Record<Branch, string>;
+  /** Financial-only derived per-location costs; absent from public catalog DTOs. */
+  package_branch_costs?: Record<Branch, string>;
+  manual_costs?: Record<
+    Branch,
+    {
+      company_id: string;
+      branch: string;
+      unit_cost_before_tax: string;
+      receipt_basis: Record<Branch, string | null>;
+      at: string;
+      by_user_id: string;
+      by: string;
+    }
+  >;
+
   price_provenance?: Record<Branch, PriceProvenance>;
   manual_prices?: Record<
     Branch,
@@ -161,6 +223,9 @@ export type Product = Omit<
   >;
 };
 export interface Approval extends ScopedRecord {
+  pricing_category?: string;
+  resubmitted_from_id?: string;
+  resubmitted_as_id?: string;
   decided_by_user_id?: string;
   decided_at?: string;
   decision_attribution?: DecisionAttribution;
@@ -199,12 +264,14 @@ export interface Approval extends ScopedRecord {
   threshold?: string | null;
   invoice_ids?: string[];
   config_version?: string;
+  free_case_answer?: import("./invoice-free-cases").FreeCaseView;
+  receiving_price?: import("./invoice-receiving-price").ReceivingPriceView;
   manual_override?: boolean;
   clear_manual_price?: boolean;
   manual_price_review?: {
     kept_price: string;
     calculated_price: string;
-    prior_cost: string;
+    prior_cost: string | null;
     received_cost: string;
     receiver_recommendation: "keep" | "rule";
     decision?: "keep" | "rule";
@@ -218,6 +285,8 @@ export interface Approval extends ScopedRecord {
   sale_id?: string;
 }
 export interface Alert extends ScopedRecord {
+  /** Canonical derived-package sale review; never invoice receipt evidence. */
+  package_parent_product_code?: string;
   decided_by_user_id?: string;
   decision_attribution?: DecisionAttribution;
   id: string;
@@ -270,6 +339,47 @@ export interface Alert extends ScopedRecord {
   order_id?: string;
   order_differences?: InvoiceOrderDifference[];
 }
+export type InvoiceCheckReceipts = Record<
+  string,
+  { checked_by_user_id: string; checked_at: string }
+>;
+
+export interface InvoiceReadingProductMatch {
+  product_code: string;
+  basis:
+    | "supplier_code"
+    | "supplier_description"
+    | "barcode"
+    | "catalog_name"
+    | "other_supplier_description";
+  earlier_delivery: boolean;
+  requires_check: boolean;
+  /** Retained evidence only; never included in the invoice read DTO. */
+  source_invoice_id?: string;
+  /** Distinguishes uncertain identity from a known item's changed pack. */
+  identity_requires_check?: boolean;
+}
+export interface InvoiceKnownDelivery {
+  status: "same" | "changed";
+  date: string;
+  changes: {
+    field:
+      | "description"
+      | "supplier_item_code"
+      | "quantity_unit"
+      | "units_per_case"
+      | "pack_size"
+      | "unit_cost_before_tax"
+      | "pricing_category";
+    before: string;
+    after: string;
+    unit?: "case" | "unit" | "lb";
+  }[];
+  /** Internal evidence and edit guard; never projected as invoice DTO fields. */
+  source_invoice_id?: string;
+  source_line_id?: string;
+  fingerprint?: string;
+}
 export type InvoiceLine = Omit<
   (typeof demoSeed.demo_invoice.lines)[number],
   | "confidence"
@@ -291,13 +401,18 @@ export type InvoiceLine = Omit<
   | "order_new_item_match"
 > & {
   company_id: string;
+  id?: string;
   confidence?: number;
   low_confidence_fields?: string[];
+  checked_fields?: InvoiceCheckReceipts;
   taxable_inferred?: boolean;
   barcode?: string;
   handwritten_note?: string;
   expiry_as_printed?: string;
   pack_size?: string;
+  /** Exact AI/source description, separate from checked or edited clean names. */
+  free_case_group?: import("./invoice-free-cases").InvoiceFreeCaseGroup;
+  printed_description?: string;
   import_line_index?: number;
   pricing_category?: string;
   date_tracking?: boolean;
@@ -307,19 +422,42 @@ export type InvoiceLine = Omit<
   lot_number?: string;
   qty_later_received?: number;
   review_confirmed?: boolean;
+  review_changed_after_confirmation?: boolean;
   short_before_tax?: string;
   short_tax?: string;
   line_tax?: string;
   new_name_en?: string;
+  new_name_suggestion?: string;
+  new_name_swap?: { name: string; supplier_item_code: string };
   new_name_fa?: string;
+  new_description_en?: string;
+  new_description_fa?: string;
   units_per_case?: number;
+  units_per_case_inferred?: boolean;
+  imported_unit_cost_basis?: {
+    amount: string;
+    units: string;
+    unit_cost_before_tax: string;
+    units_per_case: number;
+    product_code: string;
+    printed_unit_cost_before_tax: string;
+    printed_cost_basis?: "unit" | "case";
+    printed_case_cost_before_tax?: string;
+  };
+  receiving_price?: import("./invoice-receiving-price").ReceivingPriceProposal;
   manual_price_decision?: "keep" | "rule";
   short_dated?: boolean;
   supplier_item_id?: string;
   supplier_item_code?: string;
+  supplier_item_code_inferred?: boolean;
+  reading_supplier_promotion?: boolean;
+  reading_product_match?: InvoiceReadingProductMatch;
+  known_delivery?: InvoiceKnownDelivery;
   quantity_unit?: "cases" | "units" | "kg" | "lb";
   quantity_entered?: string | number;
   case_cost_before_tax?: string;
+  converted_case_cost_before_tax?: string;
+  converted_case_units_per_case?: number;
   order_item_id?: string;
   refused_units?: number;
   extra_delivery_decision?: "keep" | "refuse";
@@ -334,6 +472,21 @@ export type InvoiceLine = Omit<
   case_weight?: string;
   case_weight_unit?: "kg" | "lb";
   canonical_lb_quantity?: string;
+  /** Original case cost and measured pack retain exact paper cents after unit changes. */
+  weight_case_cost_basis?: {
+    case_cost: string;
+    weight: string;
+    unit: "kg" | "lb";
+  };
+  weight_case_quantity?: string;
+  weight_case_received_quantity?: string;
+  paper_line_total?: string;
+  paper_total_acknowledgement?: {
+    paper: string;
+    calculated: string;
+    checked_by_user_id: string;
+    checked_at: string;
+  };
   order_new_item_match?: InvoiceNewItemMatch;
 };
 export type DemoInvoice = Omit<
@@ -347,7 +500,15 @@ export type DemoInvoice = Omit<
     reviewer_user_ids?: string[];
     reviewer_origin_location_id?: string;
     version?: number;
-    status: "empty" | "reading" | "draft" | "review" | "posted";
+    status: "empty" | "reading" | "draft" | "review" | "posted" | "cancelled";
+    cancellation?: {
+      by_user_id: string;
+      by: string;
+      at: string;
+      reason: string;
+    };
+    live_reading?: LiveInvoiceReading;
+    simulated_reading?: true;
     lines: InvoiceLine[];
     file_name?: string;
     file_type?: string;
@@ -361,20 +522,33 @@ export type DemoInvoice = Omit<
       file_size: number;
       original_sha256: string;
     }[];
+    /** Private removed sources; bytes and their relation to this invoice are retained. */
+    retained_original_pages?: NonNullable<DemoInvoice["original_pages"]>;
+    /** Explicit logical pages of the one retained PDF; absent means every page. */
+    pdf_page_selection?: number[];
     low_confidence_fields?: string[];
+    calculated_fields?: string[];
+    calculated_from_lines?: boolean;
+    import_currency_inferred?: boolean;
+    checked_fields?: InvoiceCheckReceipts;
     reading_record?: {
-      source: "imported";
+      source: "imported" | "live";
       file_name: string;
       page_sha256s: string[];
       models: string[];
+      model_details?: LiveReadingModelDetail[];
       reading_cost_usd: string;
       exported_at: string;
       ai_source: string;
+      seconds?: number;
+      supplier_name_as_printed?: string;
     };
     import_currency?: string;
     import_warnings?: string[];
     import_handwritten_notes?: string[];
     order_reference?: string;
+    bill_to?: string;
+    supplier_tax_number?: string;
     other_charges?: {
       line_no?: number;
       line_type: "deposit" | "fee" | "discount" | "credit" | "other";
@@ -382,6 +556,7 @@ export type DemoInvoice = Omit<
       amount: string;
       taxable: boolean;
       low_confidence_fields?: string[];
+      checked_fields?: InvoiceCheckReceipts;
     }[];
     demo_original_snapshot?: true;
     legacy_demo_original?: {
@@ -391,6 +566,8 @@ export type DemoInvoice = Omit<
     };
     invoice_date?: string;
     received_at?: string;
+    imported_received_source?: "handwriting" | "invoice_date" | "unresolved";
+    imported_received_alternative?: string;
     receiving_employee?: string;
     due_date?: string;
     posted_at?: string;
@@ -398,6 +575,8 @@ export type DemoInvoice = Omit<
     entry_mode?: "upload" | "manual";
     payment_terms?: string;
     payment_term_days?: number;
+    payment_terms_inferred?: boolean;
+    payment_terms_defaulted?: boolean;
     due_date_manual?: boolean;
     final_total_manual?: boolean;
     supplier_review_required?: boolean;
@@ -490,7 +669,17 @@ export interface LabelWaitlistItem extends ScopedRecord {
     | "price_update";
 }
 export interface ReturnLine {
+  /** Exact grouped-receipt claim value; never inferred from rounded pricing cost. */
+  acquisition_basis?: import("./invoice-free-acquisition").ReturnAcquisitionBasis;
+  source_receipt?: {
+    invoice_id: string;
+    line_index: number;
+    received_at: string;
+    source_fingerprint: string;
+  };
   quantity_unit?: "units" | "lb";
+  entered_quantity?: string;
+  entered_quantity_unit?: "units" | "cases" | "lb" | "kg";
   unit_cost?: string;
   product_code: string;
   qty: number;
@@ -508,6 +697,13 @@ export interface ReturnLine {
   outstanding_note?: string;
 }
 export interface ReturnRecord extends ScopedRecord {
+  /** Immutable source-cost currency for returns created from posted receipts. */
+  currency?: string;
+  supplier_id?: string;
+  created_by_user_id?: string;
+  created_by_role_snapshot?: Role;
+  creation_request_id?: string;
+  creation_fingerprint?: string;
   id: string;
   supplier: string;
   lines: ReturnLine[];
@@ -613,6 +809,11 @@ export interface LedgerEntry extends ScopedRecord {
   note?: string;
 }
 export interface Activity extends ScopedRecord {
+  invoice_category_selection?: {
+    line_ids: string[];
+    count: number;
+    category: string;
+  };
   actor_user_id?: string;
   actor_role?: Role;
   actor_role_snapshot?: Role;
@@ -643,6 +844,7 @@ export interface SupplierRecord {
   name: string;
   phone: string;
   email: string;
+  website?: string;
   sales_rep_name: string;
   sales_rep_phone: string;
   payment_terms: string;
@@ -667,6 +869,12 @@ export interface HistoryRecoveryMarker {
 }
 export interface DemoState {
   version: 1;
+  prototype_r2e_package_schema?: 1;
+  prototype_r2d_timesheet_schema?: 1;
+  prototype_r2d_timesheet_demo?: 1;
+  timesheet_staff?: TimesheetStaff[];
+  timesheet_days?: TimesheetDay[];
+  timesheet_rows?: TimesheetRow[];
   /** The supplied balance figures are a dated demo snapshot, not ledger entries. */
   supplier_balance_snapshot_date?: string;
   supplier_balance_snapshot_currency?: string;
@@ -680,6 +888,8 @@ export interface DemoState {
   prototype_c8_schema?: 1;
   prototype_e1_schema?: 1;
   prototype_e2_schema?: 1;
+  prototype_r2_supplier_schema?: 1;
+  supplier_name_distinctions?: string[];
   price_update_tasks?: PriceUpdateTask[];
   price_update_baseline?: Record<string, PriceSnapshot>;
   price_task_prints?: PriceTaskPrint[];
@@ -692,6 +902,7 @@ export interface DemoState {
   sale_label_effects?: string[];
   receipt_lots?: ReceiptLot[];
   invoice_content_corrections?: InvoiceContentCorrection[];
+  invoice_received_corrections?: InvoiceReceivedCorrection[];
   supplier_items?: SupplierItemDefinition[];
   orders?: Order[];
   branch_requests?: BranchRequest[];

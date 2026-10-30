@@ -90,10 +90,11 @@ for (const language of ["en", "fa"] as const) {
             })
             .getByRole("link", { includeHidden: true }),
         ).toHaveText(
-          // S1 (Ali's rule): everyone, including the Cashier, adds dates.
+          // Everyone, including Cashiers, can record their shift, create a
+          // return and add dates. The exact list still excludes private pages.
           language === "fa"
-            ? ["جست‌وجو", "پیگیری تاریخ"]
-            : ["Lookup", "Date tracking"],
+            ? ["جست‌وجو", "کارکرد", "مرجوعی‌ها", "پیگیری تاریخ"]
+            : ["Lookup", "Timesheets", "Returns", "Date tracking"],
         );
       }
       await signOut(page, language);
@@ -164,7 +165,7 @@ for (const language of ["en", "fa"] as const) {
       .getByLabel(words(language, "Username", "نام کاربری"), { exact: true })
       .fill("e1-smoke-employee");
     await page
-      .getByLabel(words(language, "Password", "گذرواژه"), { exact: true })
+      .getByLabel(words(language, "Password", "رمز عبور"), { exact: true })
       .fill(code);
     await page
       .getByRole("button", {
@@ -275,7 +276,7 @@ for (const language of ["en", "fa"] as const) {
       .getByLabel(words(language, "Username", "نام کاربری"), { exact: true })
       .fill("ny-floor");
     await worker
-      .getByLabel(words(language, "Password", "گذرواژه"), { exact: true })
+      .getByLabel(words(language, "Password", "رمز عبور"), { exact: true })
       .fill("demo1234");
     await worker
       .getByRole("button", {

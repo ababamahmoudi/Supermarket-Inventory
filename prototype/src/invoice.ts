@@ -1,7 +1,21 @@
+import {
+  validFreeCaseGroup,
+  bindFreeCaseProduct,
+  freeCaseExclusion,
+  freeCaseView,
+  refreshFreeCaseAnswer,
+  freeCasePrintedDescriptions,
+} from "./invoice-free-cases";
+import { businessFingerprint } from "./business-fingerprint";
+import { receivingPriceProblem } from "./invoice-receiving-price";
+import { effectiveRoundingBands } from "./pricing-ending-rule";
 import type { InvoiceEditableLine } from "./invoice-edit-types";
 import { invoiceView, type InvoiceLineView } from "./invoice-projections";
 import Decimal from "decimal.js";
-import { invoiceCheckCount } from "./invoice-checks";
+import {
+  fillCalculatedInvoiceTotals,
+  invoiceCheckCount,
+} from "./invoice-checks";
 import type { AuthenticatedActor } from "./authority-types";
 import { cloneWithAuthority } from "./authority";
 import { can, directoryRecipients, requireCapability } from "./permissions";
@@ -23,22 +37,31 @@ import { configuredBranches } from "./settings";
 import {
   supplierRecords,
   supplierMatches,
-  missingInvoiceSupplierDetails,
   confirmSupplier,
 } from "./supplier-editor";
 import { companyCalendarDate } from "./company-time";
-import { invoiceComputedTotal, paymentTermsDays } from "./invoice-entry";
+import {
+  invoiceComputedTotal,
+  paymentTermsDays,
+  isMonthlyPaymentTerms,
+} from "./invoice-entry";
 import { recordInvoiceReceiptLots } from "./receipt-lots";
 import { nextProductCode } from "./manual-product";
 import { manualPrice } from "./manual-prices";
 import { recordSaleReceiptCost, type SaleReceiptCostInput } from "./sales";
 import { effectiveInvoiceLocation } from "./received";
 import { effectiveInvoiceVersion } from "./invoice-version";
+import { requireLiveManualInvoice } from "./invoice-live-reading-state";
 import { trackingChoiceForProduct } from "./date-tracking";
+import { normalizedPrintedItem } from "./invoice-printed-item";
+import { readingProductUnitSize } from "./invoice-reading-products";
 import {
   initializeInvoiceWeight,
   invoiceLineCalculation,
+  invoiceLineAmount,
   refreshInvoiceWeight,
+  invoicePaperTotalMismatch,
+  invoiceSourceWeightQuantity,
 } from "./invoice-weight";
 import {
   validateWeightQuantity,
@@ -60,7 +83,7 @@ import {
   shortOrderReceipt,
   validateShortOrderReceipt,
   applyShortOrderReceipt,
-  clearInvoiceOrderLine,
+  reindexInvoiceOrderLines,
 } from "./invoice-orders";
 import type {
   Approval,
@@ -69,6 +92,7 @@ import type {
   DemoInvoice,
   DemoState,
   InvoiceLine,
+  Product,
 } from "./types";
 
 const cents = (value: Decimal.Value) =>
@@ -126,22 +150,16 @@ export function companyDate(
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
-/** A new/incomplete manual supplier is a review task, never a posting shortcut. */
+/** Supplier profiles are optional receiving follow-up; they never require approval. */
 export function markInvoiceSupplierReview(
   invoice: DemoInvoice,
   supplier: ReturnType<typeof supplierRecords>[number],
-  previousSupplier = invoice.supplier,
+  _previousSupplier = invoice.supplier,
 ): void {
-  const requiresReview =
-    supplier.status !== "confirmed" ||
-    (invoice.supplier_review_required &&
-      !invoice.supplier_review_confirmed &&
-      supplierMatches(supplier, previousSupplier)) ||
-    (invoice.entry_mode === "manual" &&
-      missingInvoiceSupplierDetails(supplier).length > 0);
-  invoice.supplier_review_required = requiresReview;
-  invoice.supplier_review_confirmed = false;
-  if (requiresReview) invoice.status = "review";
+  void _previousSupplier; // Legacy callers can still pass their previous selection.
+  invoice.supplier_confirmed = supplier.active;
+  invoice.supplier_review_required = false;
+  invoice.supplier_review_confirmed = true;
 }
 
 export function confirmInvoiceSupplierReview(
@@ -155,7 +173,7 @@ export function confirmInvoiceSupplierReview(
     company_id: invoice.company_id,
     kind: "company_shared",
   });
-  if (invoice.status === "posted")
+  if (invoice.status === "posted" || invoice.status === "cancelled")
     throw new Error(
       "Only an Owner or Manager can confirm this supplier review.",
     );
@@ -166,8 +184,6 @@ export function confirmInvoiceSupplierReview(
   );
   if (!supplier || !supplier.active)
     throw new Error("Choose an active supplier.");
-  if (missingInvoiceSupplierDetails(supplier).length)
-    throw new Error("Complete supplier details before confirming.");
   if (supplier.status !== "confirmed")
     confirmSupplier(state, context, supplier.id, now);
   if (invoice.supplier_review_confirmed) return;
@@ -218,7 +234,7 @@ export function removeInvoiceLine(
   invoice.order_comparison = undefined;
   invoice.order_missing_decisions = undefined;
   invoice.lower_price_answers = undefined;
-  for (const line of invoice.lines) clearInvoiceOrderLine(line);
+  reindexInvoiceOrderLines(invoice);
   recalculateInvoice(invoice, state.config);
   state.activity.push({
     id: createId("invoice-line-remove"),
@@ -288,8 +304,126 @@ export function rememberInvoiceSupplierItem(
     ...line,
     supplier_item_id: line.supplier_item_id ?? item.id,
     supplier_item_code: line.supplier_item_code ?? item.supplier_item_code,
+    ...(!line.supplier_item_code && item.supplier_item_code_inferred
+      ? { supplier_item_code_inferred: true }
+      : {}),
     units_per_case: line.units_per_case ?? item.units_per_case,
   };
+}
+
+/** Posting alone learns a printed key; importing or renaming a draft never does. */
+function learnPostedInvoiceDescriptions(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  invoice: DemoInvoice,
+  now: string,
+): void {
+  if (invoice.status !== "posted" || invoice.company_id !== actor.company_id)
+    return;
+  const supplier = supplierRecords(state).find(
+    (record) =>
+      record.company_id === invoice.company_id &&
+      supplierMatches(record, invoice.supplier),
+  );
+  if (!supplier) return;
+  for (const line of invoice.lines.flatMap((row) => {
+    const descriptions = freeCasePrintedDescriptions(row);
+    return descriptions.length
+      ? descriptions.map((raw) => ({ ...row, printed_description: raw }))
+      : [row];
+  })) {
+    const raw = line.printed_description ?? "";
+    const key = normalizedPrintedItem(raw);
+    if (
+      !key ||
+      acceptedInvoiceUnits(line) <= 0 ||
+      !state.products.some(
+        (product) =>
+          product.company_id === invoice.company_id &&
+          product.code === line.product_code &&
+          product.status !== "archived",
+      )
+    )
+      continue;
+    const candidates = (state.supplier_items ?? []).filter(
+      (record) =>
+        record.company_id === invoice.company_id &&
+        record.supplier_id === supplier.id &&
+        record.product_code === line.product_code &&
+        !record.archived &&
+        (line.supplier_item_id
+          ? record.id === line.supplier_item_id
+          : line.supplier_item_code_inferred ||
+            !line.supplier_item_code ||
+            record.supplier_item_code === line.supplier_item_code),
+    );
+    if (
+      candidates.length > 1 ||
+      (line.supplier_item_id && candidates.length === 0)
+    )
+      continue;
+    let binding = candidates[0];
+    if (!binding) {
+      binding = {
+        id: createId("supplier-item"),
+        company_id: invoice.company_id,
+        supplier_id: supplier.id,
+        supplier_name: supplier.name,
+        product_code: line.product_code,
+        supplier_item_code: line.supplier_item_code ?? "",
+        ...(line.supplier_item_code_inferred
+          ? { supplier_item_code_inferred: true }
+          : {}),
+        units_per_case: line.units_per_case ?? 1,
+        created_at: now,
+        created_by: actor.actor,
+        created_by_user_id: actor.user_id,
+      };
+      state.supplier_items ??= [];
+      state.supplier_items.push(binding);
+    }
+    line.supplier_item_id = binding.id;
+    const learned = binding.printed_description_keys?.find(
+      (entry) => entry.key === key && entry.product_code === line.product_code,
+    );
+    if (!learned) {
+      binding.printed_description_keys = [
+        ...(binding.printed_description_keys ?? []),
+        {
+          key,
+          product_code: line.product_code,
+          source_invoice_ids: [invoice.id],
+        },
+      ];
+      binding.updated_at = now;
+      binding.updated_by = actor.actor;
+      binding.updated_by_user_id = actor.user_id;
+    } else if (!learned.source_invoice_ids?.includes(invoice.id)) {
+      learned.source_invoice_ids = [
+        ...(learned.source_invoice_ids ?? []),
+        invoice.id,
+      ];
+      binding.updated_at = now;
+      binding.updated_by = actor.actor;
+      binding.updated_by_user_id = actor.user_id;
+    }
+    if (
+      line.supplier_item_code &&
+      line.supplier_item_code !== binding.supplier_item_code &&
+      !binding.source_keys?.some(
+        (entry) =>
+          entry.product_code === line.product_code &&
+          entry.supplier_item_code === line.supplier_item_code,
+      )
+    )
+      binding.source_keys = [
+        ...(binding.source_keys ?? []),
+        {
+          product_code: line.product_code,
+          supplier_item_code: line.supplier_item_code,
+        },
+      ];
+  }
 }
 
 export function createInvoice(
@@ -297,6 +431,7 @@ export function createInvoice(
   actor: AuthenticatedActor,
   branch: Branch,
   manual = false,
+  options?: { empty?: boolean },
 ): DemoInvoice {
   const company = state.config.company.seed_key;
   actor = requirePurchase(
@@ -326,64 +461,66 @@ export function createInvoice(
     receiving_employee: actor.actor,
     due_date: dateAfter(today, 14),
     short_receipt_keys: [],
-    lines: manual
-      ? []
-      : seed.lines.map((line) =>
-          initializeInvoiceWeight(
-            rememberInvoiceSupplierItem(
-              state,
-              actor,
-              {
-                company_id: company,
-                supplier: seed.supplier,
-                branch,
-              },
-              {
-                ...line,
-                company_id: company,
-                // Let the receiver explicitly mark the four chips missing, rather than inventing a shortage.
-                qty_received_at_posting: line.qty_invoiced,
-                qty_later_received: 0,
-                pricing_category:
-                  state.products.find(
-                    (product) => product.code === line.product_code,
-                  )?.pricing_category ?? "grocery",
-                review_confirmed: false,
-                sold_by:
-                  line.sold_by === "weight"
-                    ? "weight"
-                    : (state.products.find(
+    ...(options?.empty ? { short_lines: [] } : {}),
+    lines:
+      manual || options?.empty
+        ? []
+        : seed.lines.map((line) =>
+            initializeInvoiceWeight(
+              rememberInvoiceSupplierItem(
+                state,
+                actor,
+                {
+                  company_id: company,
+                  supplier: seed.supplier,
+                  branch,
+                },
+                {
+                  ...line,
+                  id: createId("invoice-line"),
+                  company_id: company,
+                  // Let the receiver explicitly mark the four chips missing, rather than inventing a shortage.
+                  qty_received_at_posting: line.qty_invoiced,
+                  qty_later_received: 0,
+                  pricing_category:
+                    state.products.find(
+                      (product) => product.code === line.product_code,
+                    )?.pricing_category ?? "grocery",
+                  review_confirmed: false,
+                  sold_by:
+                    line.sold_by === "weight"
+                      ? "weight"
+                      : (state.products.find(
+                          (product) => product.code === line.product_code,
+                        )?.sold_by ?? "each"),
+                  quantity_unit:
+                    line.quantity_unit === "cases" ? "cases" : "units",
+                  date_tracking:
+                    trackingChoiceForProduct(
+                      state.products.find(
                         (product) => product.code === line.product_code,
-                      )?.sold_by ?? "each"),
-                quantity_unit:
-                  line.quantity_unit === "cases" ? "cases" : "units",
-                date_tracking:
-                  trackingChoiceForProduct(
-                    state.products.find(
-                      (product) => product.code === line.product_code,
-                    ),
-                  ) === "yes",
-                date_confirmed:
-                  trackingChoiceForProduct(
-                    state.products.find(
-                      (product) => product.code === line.product_code,
-                    ),
-                  ) !== undefined,
-                new_name_en:
-                  line.product_code === "NEW" ? line.description : undefined,
-                new_name_fa:
-                  line.product_code === "NEW" ? "زرشک خشک ۱۰۰ گرمی" : undefined,
-                line_tax: line.taxable
-                  ? cents(
-                      new Decimal(line.line_total).times(state.config.tax.rate),
-                    )
-                  : "0.00",
-              },
+                      ),
+                    ) === "yes",
+                  date_confirmed: true,
+                  new_name_en:
+                    line.product_code === "NEW" ? line.description : undefined,
+                  new_name_fa:
+                    line.product_code === "NEW"
+                      ? "زرشک خشک ۱۰۰ گرمی"
+                      : undefined,
+                  line_tax: line.taxable
+                    ? cents(
+                        new Decimal(line.line_total).times(
+                          state.config.tax.rate,
+                        ),
+                      )
+                    : "0.00",
+                },
+              ),
+              state.config,
             ),
-            state.config,
           ),
-        ),
-    ...(manual
+    ...(manual || options?.empty
       ? {
           supplier: "",
           supplier_confirmed: false,
@@ -417,13 +554,25 @@ export function addManualLine(
     state.invoice.id,
     true,
   );
-  requireInvoiceAuthority(
-    state,
-    actor,
-    "invoices.enter_manual",
-    state.invoice.id,
-    true,
-  );
+  if (
+    !canInvoiceAuthority(
+      state,
+      actor,
+      "invoices.enter_manual",
+      state.invoice.id,
+      true,
+    ) &&
+    state.invoice.live_reading?.phase === "manual"
+  )
+    actor = requireLiveManualInvoice(state, actor, state.invoice.id);
+  else
+    requireInvoiceAuthority(
+      state,
+      actor,
+      "invoices.enter_manual",
+      state.invoice.id,
+      true,
+    );
   const product = state.products.find(
     (item) =>
       item.code === code && item.company_id === state.invoice.company_id,
@@ -446,6 +595,7 @@ export function addManualLine(
       ? product.last_cost_before_tax
       : "");
   state.invoice.lines.push({
+    id: createId("invoice-line"),
     company_id: state.invoice.company_id,
     product_code: code,
     description: product.name_en,
@@ -460,12 +610,16 @@ export function addManualLine(
     current_selling_price: product.selling_price,
     pricing_category: product.pricing_category,
     demo_note: "",
+    low_confidence_fields: [],
     review_confirmed: false,
     sold_by: product.sold_by ?? "each",
     date_tracking: trackingChoiceForProduct(product) === "yes",
-    date_confirmed: trackingChoiceForProduct(product) !== undefined,
+    date_confirmed: true,
     supplier_item_id: item?.id,
     supplier_item_code: item?.supplier_item_code,
+    ...(item?.supplier_item_code_inferred
+      ? { supplier_item_code_inferred: true }
+      : {}),
     units_per_case: item?.units_per_case ?? 1,
     quantity_unit: "units",
     quantity_entered: "1",
@@ -511,12 +665,26 @@ export function setInvoiceLineQuantity(
   line.refused_units = 0;
   line.extra_delivery_decision = undefined;
   line.order_price_decision = undefined;
+  line.review_changed_after_confirmation ||= Boolean(line.review_confirmed);
   line.review_confirmed = false;
+  delete line.known_delivery;
 }
 
+export type InvoiceCalculationInput = Pick<
+  DemoInvoice,
+  | "reading_record"
+  | "other_charges"
+  | "subtotal"
+  | "tax"
+  | "final_total"
+  | "final_total_manual"
+  | "low_confidence_fields"
+  | "payable_after_open_shorts"
+> & { lines: InvoiceEditableLine[] };
+
 export function recalculateInvoice(
-  invoice: DemoInvoice,
-  config: CompanyConfig,
+  invoice: InvoiceCalculationInput,
+  config: Pick<CompanyConfig, "tax" | "weighed_items">,
 ): void {
   let subtotal = new Decimal(0);
   let tax = new Decimal(0);
@@ -542,17 +710,7 @@ export function recalculateInvoice(
       !validInvoiceLineQuantity(line)
     )
       continue;
-    if (line.sold_by !== "weight")
-      line.line_total = cents(
-        line.quantity_unit === "cases" &&
-          line.case_cost_before_tax !== undefined &&
-          validCost(line.case_cost_before_tax)
-          ? new Decimal(line.case_cost_before_tax).times(
-              line.quantity_entered ??
-                new Decimal(line.qty_invoiced).div(line.units_per_case ?? 1),
-            )
-          : new Decimal(line.unit_cost_before_tax).times(line.qty_invoiced),
-      );
+    if (line.sold_by !== "weight") line.line_total = invoiceLineAmount(line);
     const profile = config.tax.profiles.find(
       (item) => item.key === line.tax_profile,
     );
@@ -561,7 +719,6 @@ export function recalculateInvoice(
     );
     subtotal = subtotal.plus(line.line_total);
     tax = tax.plus(line.line_tax);
-    line.review_confirmed = false;
   }
   for (const charge of invoice.other_charges ?? []) {
     try {
@@ -580,6 +737,7 @@ export function recalculateInvoice(
     if (!invoice.final_total_manual)
       invoice.final_total = invoiceComputedTotal(invoice)!;
   }
+  fillCalculatedInvoiceTotals(invoice);
   invoice.payable_after_open_shorts = cents(
     new Decimal(validMoney(invoice.final_total) ? invoice.final_total : "0")
       .minus(shortTotals(invoice).total)
@@ -601,6 +759,8 @@ export function lineRefused(line: InvoiceEditableLine): {
   tax: string;
   total: string;
 } {
+  const grouped = freeCaseExclusion(line, "refused");
+  if (grouped) return grouped;
   const quantity = line.refused_units ?? 0;
   if (
     !quantity ||
@@ -660,7 +820,7 @@ export function validInvoiceLineQuantity(line: InvoiceEditableLine): boolean {
         ? new Decimal(validateWeightQuantity(line.quantity_entered ?? ""))
             .times(validateWeightQuantity(line.case_weight ?? ""))
             .toString()
-        : validateWeightQuantity(line.source_quantity ?? "");
+        : invoiceSourceWeightQuantity(line);
     if (!new Decimal(source).eq(line.source_quantity ?? "0")) return false;
     const canonical = weightQuantityPerLb(
       source,
@@ -697,9 +857,7 @@ export function validInvoiceLineReceived(line: InvoiceEditableLine): boolean {
         line.source_quantity ?? "0",
       )
         ? line.source_received_quantity!
-        : validateWeightQuantity(line.source_received_quantity ?? "", {
-            allowZero: true,
-          });
+        : invoiceSourceWeightQuantity(line, true);
     return (
       new Decimal(
         weightQuantityPerLb(
@@ -719,11 +877,11 @@ export function validCost(value: string): boolean {
   return /^\d+(?:\.\d{1,4})?$/.test(value);
 }
 
-function validMoney(value: string): boolean {
+export function validMoney(value: string): boolean {
   return /^\d+(?:\.\d{1,2})?$/.test(value);
 }
 
-function actualDate(value: string | undefined): boolean {
+export function actualDate(value: string | undefined): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value ?? "")) return false;
   const date = new Date(`${value}T12:00:00Z`);
   return (
@@ -737,6 +895,8 @@ export function lineShort(line: InvoiceEditableLine): {
   tax: string;
   total: string;
 } {
+  const grouped = freeCaseExclusion(line, "short");
+  if (grouped) return grouped;
   const quantity = Decimal.max(
     0,
     new Decimal(line.qty_invoiced).minus(line.qty_received_at_posting),
@@ -778,6 +938,12 @@ export function shortTotals(invoice: {
   let beforeTax = new Decimal(0);
   let tax = new Decimal(0);
   for (const line of invoice.lines) {
+    const grouped = freeCaseExclusion(line, "open_short");
+    if (grouped) {
+      beforeTax = beforeTax.plus(grouped.beforeTax);
+      tax = tax.plus(grouped.tax);
+      continue;
+    }
     const short = lineShort(line);
     const restored = line.qty_later_received ?? 0;
     beforeTax = beforeTax
@@ -996,15 +1162,43 @@ export type InvoiceBlocker =
   | "review"
   | "date"
   | "lower_price"
+  | "selling_price"
   | "manual_price"
   | "order"
   | "order_decisions"
   | "checks"
   | "barcode";
 
+function compatibleNamedProduct(
+  state: DemoState,
+  line: InvoiceLine,
+  product: Product,
+): boolean {
+  const lineSize =
+    readingProductUnitSize(line.pack_size ?? "") ||
+    readingProductUnitSize(line.new_name_en ?? "");
+  const productSize =
+    product.unit_size || readingProductUnitSize(product.name_en);
+  return (
+    (line.sold_by ?? "each") === (product.sold_by ?? "each") &&
+    normalizedPrintedItem(lineSize) === normalizedPrintedItem(productSize) &&
+    (!line.barcode || !product.barcode || line.barcode === product.barcode) &&
+    !(state.supplier_items ?? []).some(
+      (item) =>
+        item.company_id === line.company_id &&
+        !item.archived &&
+        item.product_code === product.code &&
+        normalizedPrintedItem(item.supplier_name) ===
+          normalizedPrintedItem(state.invoice.supplier) &&
+        item.units_per_case !== (line.units_per_case ?? 1),
+    )
+  );
+}
+
 export function invoiceBlockers(
   state: DemoState,
   actor: AuthenticatedActor,
+  lineIndexes?: Partial<Record<InvoiceBlocker, number[]>>,
 ): InvoiceBlocker[] {
   const invoice = state.invoice;
   const blockers: InvoiceBlocker[] = [];
@@ -1015,37 +1209,28 @@ export function invoiceBlockers(
     blockers.push("branch");
   if (invoice.company_id !== state.config.company.seed_key)
     blockers.push("company");
-  if (!invoice.supplier.trim()) blockers.push("supplier");
-  const supplier = supplierRecords(state).find(
-    (record) =>
-      record.company_id === invoice.company_id &&
-      supplierMatches(record, invoice.supplier),
-  );
   if (
-    !supplier ||
-    supplier.status !== "confirmed" ||
-    !invoice.supplier_confirmed
+    !invoice.supplier.trim() ||
+    !supplierRecords(state).some(
+      (record) =>
+        record.company_id === invoice.company_id &&
+        record.active &&
+        supplierMatches(record, invoice.supplier),
+    )
   )
-    blockers.push("supplier_pending");
+    blockers.push("supplier");
   if (
-    invoice.entry_mode === "manual" &&
-    supplier &&
-    missingInvoiceSupplierDetails(supplier).length
-  )
-    blockers.push("supplier_details");
-  if (invoice.supplier_review_required && !invoice.supplier_review_confirmed)
-    blockers.push("supplier_review");
-  if (
-    invoice.entry_mode === "manual" &&
     invoice.payment_terms &&
     ((/^net/i.test(invoice.payment_terms) &&
       paymentTermsDays(invoice.payment_terms) === undefined) ||
       (!invoice.due_date_manual &&
-        paymentTermsDays(invoice.payment_terms) !== undefined &&
+        (paymentTermsDays(invoice.payment_terms) !== undefined ||
+          isMonthlyPaymentTerms(invoice.payment_terms)) &&
         !actualDate(invoice.due_date)))
   )
     blockers.push("payment_terms");
   if (
+    !invoice.supplier_invoice_number.trim() ||
     !actualDate(invoice.invoice_date) ||
     !invoice.received_at ||
     Number.isNaN(Date.parse(invoice.received_at)) ||
@@ -1067,13 +1252,57 @@ export function invoiceBlockers(
     })
   )
     blockers.push("money");
-  for (const line of invoice.lines) {
+  const names = new Map<string, InvoiceLine>();
+  for (const line of invoice.lines)
+    if (line.product_code === "NEW") {
+      const name = normalizedPrintedItem(line.new_name_en ?? "");
+      const catalogMatches = state.products.filter(
+        (product) =>
+          product.company_id === invoice.company_id &&
+          normalizedPrintedItem(product.name_en) === name,
+      );
+      if (
+        catalogMatches.length > 1 ||
+        catalogMatches.some(
+          (product) => !compatibleNamedProduct(state, line, product),
+        )
+      )
+        blockers.push("matching");
+      const prior = names.get(name);
+      if (
+        prior &&
+        JSON.stringify([
+          prior.sold_by,
+          prior.units_per_case,
+          prior.barcode ?? "",
+          prior.supplier_item_code_inferred ? "" : prior.supplier_item_code,
+          prior.pricing_category,
+          readingProductUnitSize(prior.pack_size ?? ""),
+        ]) !==
+          JSON.stringify([
+            line.sold_by,
+            line.units_per_case,
+            line.barcode ?? "",
+            line.supplier_item_code_inferred ? "" : line.supplier_item_code,
+            line.pricing_category,
+            readingProductUnitSize(line.pack_size ?? ""),
+          ])
+      )
+        blockers.push("matching");
+      else names.set(name, line);
+    }
+  for (const [lineIndex, line] of invoice.lines.entries()) {
+    const firstLineBlocker = blockers.length;
+    if (line.free_case_group && !validFreeCaseGroup(line))
+      blockers.push("review");
     const product = state.products.find(
       (item) =>
         item.code === line.product_code &&
         item.company_id === invoice.company_id,
     );
     if (line.company_id !== invoice.company_id) blockers.push("company");
+    if (product?.sold_by === "weight" && line.sold_by !== "weight")
+      blockers.push("quantity");
     if (
       line.product_code === "NEW" &&
       line.barcode &&
@@ -1138,6 +1367,8 @@ export function invoiceBlockers(
         blockers.push("cost");
       }
     }
+    if (invoicePaperTotalMismatch(line)) blockers.push("cost");
+    if (receivingPriceProblem(state, lineIndex)) blockers.push("selling_price");
     if (!line.review_confirmed) blockers.push("review");
     const category = state.config.pricing_categories.find(
       (item) =>
@@ -1148,7 +1379,7 @@ export function invoiceBlockers(
     } catch {
       blockers.push("cost");
     }
-    if (!line.date_confirmed || (line.date_tracking && !line.date_value))
+    if (line.date_tracking && (!line.date_confirmed || !line.date_value))
       blockers.push("date");
     if (
       line.short_dated &&
@@ -1167,10 +1398,14 @@ export function invoiceBlockers(
       product &&
       acceptedInvoiceUnits(line) > 0 &&
       !line.short_dated &&
+      !line.receiving_price &&
       manualDecisionForLine(state, actor, line, invoice.branch) &&
       !line.manual_price_decision
     )
       blockers.push("manual_price");
+    if (lineIndexes)
+      for (const blocker of new Set(blockers.slice(firstLineBlocker)))
+        (lineIndexes[blocker] ??= []).push(lineIndex);
   }
   if (canonicalLowerPriceLines(state, actor).length) {
     const answer = invoice.lower_price_answers;
@@ -1221,18 +1456,6 @@ export function postInvoice(
       for (const row of orderComparison.lines)
         invoice.lines[row.invoice_line_index].order_item_id = row.order_line_id;
     const now = new Date().toISOString();
-    if (!invoice.supplier_invoice_number.trim()) {
-      invoice.supplier_invoice_number = String(
-        1 +
-          state.ledger.filter(
-            (entry) =>
-              entry.company_id === invoice.company_id &&
-              entry.supplier === invoice.supplier &&
-              entry.type === "invoice",
-          ).length,
-      );
-      invoice.number_is_system_assigned = true;
-    }
     const saleCostInputs = new Map<string, SaleReceiptCostInput>();
     const priorCosts = new Map(
       state.products
@@ -1243,7 +1466,11 @@ export function postInvoice(
             product.last_cost_before_tax,
         ]),
     );
+    const newProductCodes = new Map<string, string>();
     for (const [lineIndex, line] of invoice.lines.entries()) {
+      const newNameKey = normalizedPrintedItem(line.new_name_en ?? "");
+      if (line.product_code === "NEW" && newProductCodes.has(newNameKey))
+        line.product_code = newProductCodes.get(newNameKey)!;
       if (line.refused_units && acceptedInvoiceUnits(line) === 0) {
         const short = lineShort(line);
         line.short_before_tax = short.beforeTax;
@@ -1259,7 +1486,7 @@ export function postInvoice(
         product = state.products.find(
           (item) =>
             item.company_id === invoice.company_id &&
-            item.name_en === line.new_name_en,
+            normalizedPrintedItem(item.name_en) === newNameKey,
         );
         if (product) line.product_code = product.code;
       }
@@ -1271,12 +1498,15 @@ export function postInvoice(
           code: line.product_code,
           name_en: line.new_name_en!,
           name_fa: line.new_name_fa?.trim() ?? "",
+          description_en: line.new_description_en?.trim() ?? "",
+          description_fa: line.new_description_fa?.trim() ?? "",
           first_added_branch: invoice.branch,
           pricing_category: line.pricing_category ?? "grocery",
           unit_size:
             line.sold_by === "weight"
               ? ""
-              : (line.pack_size ?? (invoice.reading_record ? "" : "100 g")),
+              : readingProductUnitSize(line.pack_size ?? "") ||
+                readingProductUnitSize(line.new_name_en ?? ""),
           sold_by: line.sold_by ?? "each",
           last_cost_before_tax: line.unit_cost_before_tax,
           selling_price: "",
@@ -1292,6 +1522,9 @@ export function postInvoice(
         state.products.push(product);
       }
       if (!product) throw new Error("Resolve every product before posting.");
+      if (newNameKey && normalizedPrintedItem(product.name_en) === newNameKey)
+        newProductCodes.set(newNameKey, product.code);
+      bindFreeCaseProduct(line);
       const calculation = invoiceLineCalculation(
         line,
         line.pricing_category ?? product.pricing_category,
@@ -1303,11 +1536,14 @@ export function postInvoice(
       const costChanged = !new Decimal(
         priorCosts.get(product.code) ?? product.last_cost_before_tax,
       ).eq(line.unit_cost_before_tax);
-      const manualReview = !!manual && costChanged;
-      const keepsManual = !!manual && !costChanged;
+      const receivingPrice = line.receiving_price;
+      const manualReview = !receivingPrice && !!manual && costChanged;
+      const keepsManual = !receivingPrice && !!manual && !costChanged;
       const usesRule = manualReview;
       // The receiver's choice is a retained recommendation; only the Owner or Manager decides.
-      const price = manualReview ? rulePrice : keepsManual ? prior! : rulePrice;
+      const price =
+        receivingPrice?.price ??
+        (manualReview ? rulePrice : keepsManual ? prior! : rulePrice);
       const manualPriceReview: Approval["manual_price_review"] = manualReview
         ? {
             kept_price: prior!,
@@ -1322,7 +1558,7 @@ export function postInvoice(
           item.key === (line.pricing_category ?? product.pricing_category),
       )!;
       const actualMargin =
-        keepsManual && new Decimal(price).gt(0)
+        (keepsManual || receivingPrice) && new Decimal(price).gt(0)
           ? new Decimal(price)
               .minus(line.unit_cost_before_tax)
               .div(price)
@@ -1330,16 +1566,21 @@ export function postInvoice(
           : calculation.margin;
       const margin = {
         margin: actualMargin,
-        below_minimum: keepsManual
-          ? category.minimum_margin !== null &&
-            category.minimum_margin !== "" &&
-            actualMargin !== null &&
-            new Decimal(actualMargin).lt(category.minimum_margin)
-          : calculation.below_minimum_margin,
+        below_minimum:
+          keepsManual || receivingPrice
+            ? category.minimum_margin !== null &&
+              category.minimum_margin !== "" &&
+              actualMargin !== null &&
+              new Decimal(actualMargin).lt(category.minimum_margin)
+            : calculation.below_minimum_margin,
       };
       line.calculated_selling_price = rulePrice;
       line.current_selling_price = prior;
-      if (!line.short_dated && acceptedInvoiceUnits(line) > 0) {
+      if (
+        !product.package_of_product_id &&
+        !line.short_dated &&
+        acceptedInvoiceUnits(line) > 0
+      ) {
         product.price_provenance ??= {};
         const previousProvenance = product.price_provenance[invoice.branch];
         product.price_provenance[invoice.branch] = {
@@ -1350,24 +1591,37 @@ export function postInvoice(
         };
       }
       if (
+        !product.package_of_product_id &&
         !line.short_dated &&
         acceptedInvoiceUnits(line) > 0 &&
-        (!manual || costChanged) &&
-        (manualReview || usesRule || prior !== price || margin.below_minimum)
+        (receivingPrice || !manual || costChanged) &&
+        (receivingPrice ||
+          manualReview ||
+          usesRule ||
+          prior !== price ||
+          margin.below_minimum)
       ) {
-        const context = `${invoice.company_id}:${invoice.branch}:${product.code}:${prior ?? "new"}:${line.unit_cost_before_tax}:${line.manual_price_decision ?? "standard"}:${JSON.stringify(
-          {
-            categories: state.config.pricing_categories,
-            bands: state.config.rounding_bands,
-            corrections: state.config.special_corrections,
-          },
-        )}`;
+        const context = businessFingerprint({
+          company: invoice.company_id,
+          branch: invoice.branch,
+          product: product.code,
+          prior,
+          cost: line.unit_cost_before_tax,
+          manual_price_decision: line.manual_price_decision ?? "standard",
+          receiving_price: receivingPrice,
+          categories: state.config.pricing_categories,
+          bands: effectiveRoundingBands(state.config),
+          corrections: state.config.special_corrections,
+        });
         const existing = state.approvals.find(
           (item) =>
             item.company_id === invoice.company_id &&
             item.branch === invoice.branch &&
             item.product_code === product.code &&
             item.proposed_price === price &&
+            !line.free_case_group &&
+            !item.free_case_answer &&
+            !receivingPrice &&
             (prior === price && !usesRule
               ? item.type === "margin_review" && item.config_version === context
               : item.type !== "margin_review" && item.status === "pending"),
@@ -1391,7 +1645,9 @@ export function postInvoice(
           !state.approvals.some((item) => item.config_version === context)
         ) {
           state.approvals.push({
-            id: `${invoice.id}:proposal:${product.code}`,
+            id: receivingPrice
+              ? `${invoice.id}:proposal:${product.code}:${line.id ?? lineIndex}`
+              : `${invoice.id}:proposal:${product.code}`,
             company_id: invoice.company_id,
             branch: invoice.branch,
             product_code: product.code,
@@ -1401,7 +1657,7 @@ export function postInvoice(
             type:
               prior === null
                 ? "new_product"
-                : prior === price && !usesRule
+                : prior === price && !usesRule && !receivingPrice
                   ? "margin_review"
                   : "price_change",
             unit_cost: line.unit_cost_before_tax,
@@ -1409,6 +1665,9 @@ export function postInvoice(
             threshold: category.minimum_margin,
             reason: margin.below_minimum ? "Below minimum margin" : undefined,
             config_version: context,
+            ...(line.free_case_group
+              ? { free_case_answer: freeCaseView(line, true) }
+              : {}),
             invoice_ids: [invoice.id],
             created_at: now,
             invoice_number: invoice.supplier_invoice_number,
@@ -1416,6 +1675,20 @@ export function postInvoice(
             triggered_by_user_id: actor.user_id,
             posted_at: now,
             source_invoice_id: invoice.id,
+            ...(receivingPrice
+              ? {
+                  manual_override: true,
+                  receiving_price: {
+                    price: receivingPrice.price,
+                    entered_price: receivingPrice.entered_price,
+                    price_unit: receivingPrice.price_unit,
+                    calculated_price: rulePrice,
+                    set_by_user_id: receivingPrice.set_by_user_id,
+                    set_by: receivingPrice.set_by,
+                    set_at: receivingPrice.set_at,
+                  },
+                }
+              : {}),
             clear_manual_price: usesRule,
             manual_price_review: manualPriceReview,
           });
@@ -1434,11 +1707,15 @@ export function postInvoice(
         type: "received",
         reference: `${invoice.supplier_invoice_number}:line:${lineIndex + 1}`,
         by: invoice.receiving_employee!,
-        at: now,
+        at: invoice.received_at ?? now,
         invoice_id: invoice.id,
         line_index: lineIndex,
       });
-      if (!line.short_dated && acceptedInvoiceUnits(line) > 0) {
+      if (
+        !product.package_of_product_id &&
+        !line.short_dated &&
+        acceptedInvoiceUnits(line) > 0
+      ) {
         saleCostInputs.set(product.code, {
           invoice_id: invoice.id,
           product_code: product.code,
@@ -1596,6 +1873,7 @@ export function postInvoice(
       new Decimal(invoice.final_total).minus(totals.total).minus(refused.total),
     );
     invoice.status = "posted";
+    learnPostedInvoiceDescriptions(state, actor, invoice, now);
     recordInvoiceReceiptLots(state, invoice);
     invoice.posted_at = now;
     if (orderComparison) {
@@ -1640,6 +1918,13 @@ export function postInvoice(
       company_id: invoice.company_id,
       branch: invoice.branch,
       action: "Posted invoice",
+      entity_type: "invoice",
+      entity_id: invoice.id,
+      after: {
+        supplier_invoice_number: invoice.supplier_invoice_number,
+        supplier: invoice.supplier,
+        line_count: invoice.lines.length,
+      },
       by: actor.actor,
       actor_user_id: actor.user_id,
       actor_username: actor.username,
@@ -1678,6 +1963,7 @@ export function receiveShort(
   receipt: string,
   actor: AuthenticatedActor,
   invoiceLineIndex?: number,
+  freeMemberIndex?: number,
 ): string {
   actor = requireInvoiceAuthority(
     state,
@@ -1720,13 +2006,22 @@ export function receiveShort(
     if (!line) throw new Error("Choose an invoice line.");
     const lineIndex = invoice.lines.indexOf(line);
     const lineReceiptKey = `line:${lineIndex}:${receiptReference}`;
+    const memberReceiptKey =
+      line.free_case_group &&
+      Number.isSafeInteger(freeMemberIndex) &&
+      line.free_case_group.members[freeMemberIndex!]
+        ? `line:${lineIndex}:member:${freeMemberIndex}:${receiptReference}`
+        : undefined;
     if (
       invoice.short_receipt_keys.includes(receiptReference) ||
-      invoice.short_receipt_keys.includes(lineReceiptKey)
+      invoice.short_receipt_keys.includes(lineReceiptKey) ||
+      (memberReceiptKey &&
+        invoice.short_receipt_keys.includes(memberReceiptKey))
     )
       return "0.00";
     const receiptEvent =
-      invoiceLineIndex === undefined ? receiptReference : lineReceiptKey;
+      memberReceiptKey ??
+      (invoiceLineIndex === undefined ? receiptReference : lineReceiptKey);
     const short = lineShort(line);
     const previous = line.qty_later_received ?? 0;
     if (
@@ -1736,36 +2031,87 @@ export function receiveShort(
       new Decimal(previous).plus(quantity).gt(short.quantity)
     )
       throw new Error("Receive no more than the remaining missing quantity.");
-    const baseDelta = new Decimal(
-      cumulativeAllocation(
-        short.beforeTax,
-        new Decimal(previous).plus(quantity).toNumber(),
-        short.quantity,
-        line.sold_by === "weight",
-      ),
-    ).minus(
-      cumulativeAllocation(
-        short.beforeTax,
-        previous,
-        short.quantity,
-        line.sold_by === "weight",
-      ),
-    );
-    const taxDelta = new Decimal(
-      cumulativeAllocation(
-        short.tax,
-        new Decimal(previous).plus(quantity).toNumber(),
-        short.quantity,
-        line.sold_by === "weight",
-      ),
-    ).minus(
-      cumulativeAllocation(
-        short.tax,
-        previous,
-        short.quantity,
-        line.sold_by === "weight",
-      ),
-    );
+    let groupedBase: Decimal | undefined, groupedTax: Decimal | undefined;
+    let freePart:
+      | NonNullable<InvoiceLine["free_case_group"]>["allocation"][number]
+      | undefined;
+    if (line.free_case_group) {
+      if (!validFreeCaseGroup(line))
+        throw new Error(
+          "Review the paid/free receipt evidence before receiving it.",
+        );
+      const group = line.free_case_group;
+      const missing = group.members.filter(
+        (m) =>
+          (group.decision !== "mistake" || !m.free) &&
+          m.qty >
+            group.allocation.find((a) => a.member_id === m.id)!.received +
+              group.allocation.find((a) => a.member_id === m.id)!.later,
+      );
+      const member =
+        freeMemberIndex === undefined
+          ? missing.length === 1
+            ? missing[0]
+            : undefined
+          : group.members[freeMemberIndex];
+      if (!member || !missing.includes(member))
+        throw new Error(
+          "Choose the paid or free source member for this later delivery.",
+        );
+      freePart = group.allocation.find((a) => a.member_id === member.id)!;
+      if (quantity > member.qty - freePart.received - freePart.later)
+        throw new Error(
+          "Receive no more than this paid/free member remaining quantity.",
+        );
+      const allocationDelta = (amount: Decimal) =>
+        amount
+          .times(freePart!.later + quantity)
+          .div(member.qty)
+          .toDecimalPlaces(2)
+          .minus(
+            amount.times(freePart!.later).div(member.qty).toDecimalPlaces(2),
+          );
+      groupedBase = allocationDelta(new Decimal(member.paper_amount));
+      groupedTax = allocationDelta(
+        new Decimal(line.line_tax || "0")
+          .times(member.paper_amount)
+          .div(group.paid_amount),
+      );
+    }
+    const baseDelta =
+      groupedBase ??
+      new Decimal(
+        cumulativeAllocation(
+          short.beforeTax,
+          new Decimal(previous).plus(quantity).toNumber(),
+          short.quantity,
+          line.sold_by === "weight",
+        ),
+      ).minus(
+        cumulativeAllocation(
+          short.beforeTax,
+          previous,
+          short.quantity,
+          line.sold_by === "weight",
+        ),
+      );
+    const taxDelta =
+      groupedTax ??
+      new Decimal(
+        cumulativeAllocation(
+          short.tax,
+          new Decimal(previous).plus(quantity).toNumber(),
+          short.quantity,
+          line.sold_by === "weight",
+        ),
+      ).minus(
+        cumulativeAllocation(
+          short.tax,
+          previous,
+          short.quantity,
+          line.sold_by === "weight",
+        ),
+      );
     const restored = cents(baseDelta.plus(taxDelta));
     const orderReceipt = shortOrderReceipt(
       state,
@@ -1811,9 +2157,17 @@ export function receiveShort(
       ? invoicePriorRegularCost(state, evidence, receiptProduct.code)
       : null;
     line.qty_later_received = new Decimal(previous).plus(quantity).toNumber();
+    if (freePart) {
+      freePart.later += quantity;
+      refreshFreeCaseAnswer(line);
+    }
     invoice.short_receipt_keys.push(receiptEvent);
     if (invoice !== original) {
       original.lines[lineIndex].qty_later_received = line.qty_later_received;
+      if (line.free_case_group)
+        original.lines[lineIndex].free_case_group = structuredClone(
+          line.free_case_group,
+        );
       original.short_receipt_keys ??= [];
       original.short_receipt_keys.push(receiptEvent);
     }
@@ -2062,7 +2416,8 @@ function recordLaterRegularReceipt(
       item.type === "short_resolved_received" &&
       item.qty > 0,
   );
-  if (!product || !receipt || line.short_dated) return;
+  if (!product || !receipt || line.short_dated || product.package_of_product_id)
+    return;
   const now = new Date(receipt.at);
   const calculation = invoiceLineCalculation(
     line,

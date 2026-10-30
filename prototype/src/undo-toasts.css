@@ -1,5 +1,6 @@
 .undo-toast-stack {
   position: fixed;
+  translate: var(--floating-feedback-inline-shift, 0px) 0;
   inset-inline-end: 24px;
   inset-block-end: max(
     var(--undo-footer-offset, 24px),
@@ -44,23 +45,53 @@
   }
 }
 
-/* A shared modal footer reserves its own message row; no fixed overlay on actions. */
-:root dialog[open] .ui-dialog-actions:has(> .undo-toast-stack) {
+/* Modal feedback shares the footer's row and uses secondary text, never a toast. */
+.dialog-action-feedback-host {
+  flex: 1 1 0;
+  order: -1;
+  min-inline-size: 0;
+  min-block-size: 0;
+  align-self: center;
+  margin-inline-end: auto;
+}
+.dialog-action-feedback-host:not(:empty) {
+  flex: 0 0 100%;
+  grid-column: 1 / -1;
+  inline-size: 100%;
+  margin-inline-end: 0;
+}
+.dialog-action-feedback {
+  min-inline-size: 0;
+}
+.dialog-action-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-block-size: 44px;
+  color: var(--text-muted);
+  font-size: var(--font-size-label);
+}
+.dialog-action-status > span:first-child {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dialog-action-status > .dialog-action-undo {
+  flex: 0 0 auto;
+}
+.dialog-action-status:has(.undo-toast-error) {
   flex-wrap: wrap;
 }
-:root dialog[open] .ui-dialog-actions > .undo-toast-stack {
-  position: static;
-  flex: 1 0 100%;
-  order: -1;
-  inline-size: 100%;
-  max-inline-size: 100%;
-  margin: 0;
+:root .dialog-action-status .dialog-action-undo.ui-button.button {
+  color: var(--link-text);
+  background: var(--color-clear);
+  padding-inline: 0;
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: 44px;
 }
-
-:root [data-undo-toast-host] > .undo-toast-stack {
-  position: static;
-  order: -1;
-  inline-size: 100%;
-  max-inline-size: 100%;
-  margin: 0;
+.dialog-action-status .undo-toast-error {
+  flex-basis: 100%;
 }

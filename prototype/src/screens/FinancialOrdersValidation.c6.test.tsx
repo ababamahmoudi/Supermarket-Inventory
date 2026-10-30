@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   cleanup,
   fireEvent,
@@ -19,6 +21,11 @@ import {
 import Payables from "./Payables";
 import Orders from "./Orders";
 
+// Vitest stubs CSS imports, so mount the actual production visibility rules.
+const payablesStyles = readFileSync(
+  resolve(process.cwd(), "src/screens/payables-klead.css"),
+  "utf8",
+);
 const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
 afterEach(() => {
   clearRenderedUiReadiness();
@@ -64,7 +71,14 @@ function Harness({ page }: { page: "payables" | "orders" }) {
   const { state } = useDemo();
   return (
     <>
-      {page === "payables" ? <Payables /> : <Orders />}
+      {page === "payables" ? (
+        <>
+          <style>{payablesStyles}</style>
+          <Payables />
+        </>
+      ) : (
+        <Orders />
+      )}
       <output data-testid="ledger-json">{JSON.stringify(state.ledger)}</output>
       <output data-testid="orders-json">{JSON.stringify(state.orders)}</output>
     </>
@@ -242,7 +256,7 @@ it("explains All branches on payment preview and links to the actual branch choo
     }),
   );
   expect(
-    screen.getByRole("combobox", { name: "Payables branch" }),
+    screen.getByRole("combobox", { name: "Statement location" }),
   ).toHaveFocus();
   expect(screen.getByTestId("ledger-json").textContent).toBe(before);
 });
@@ -260,6 +274,12 @@ it("C7 supplier rows open their ledger by keyboard and chevron without posting m
   expect(
     await screen.findByRole("heading", { name: "Fresh Valley Foods" }),
   ).toBeVisible();
+  expect(window.location.hash).toMatch(/^#payables\?supplier=/);
+  expect(document.querySelector(".payables-overview")).toBeNull();
+  await user.click(screen.getByRole("button", { name: "All suppliers" }));
+  await renderedUiReady(() =>
+    Boolean(screen.queryByRole("row", { name: "Golden Grain Distributors" })),
+  );
   const next = screen.getByRole("row", { name: "Golden Grain Distributors" });
   await user.click(
     within(next).getByRole("link", { name: "View Golden Grain Distributors" }),

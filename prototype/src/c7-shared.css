@@ -352,7 +352,7 @@
   :root .dashboard-activity-item time {
     font-size: var(--font-size-caption);
   }
-  @media (max-width: 759px) {
+  @media (max-width: 760px) {
     :root .ui-card.card {
       padding: 20px;
     }

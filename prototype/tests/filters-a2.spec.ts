@@ -1,5 +1,6 @@
 import { expect, test, type Locator } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 test.setTimeout(60000);
 
@@ -55,6 +56,7 @@ test("Offers combines name/code/label search, category, supplier, type and statu
   page,
 }) => {
   await signIn(page, "supervisor");
+  await approvedLookupPrices(page, ["0003"]);
   await page.goto("/#offers");
   const filters = page.getByLabel("Offer filters", { exact: true });
   const current = page.locator("section.card").filter({
@@ -108,9 +110,8 @@ test("Offers combines name/code/label search, category, supplier, type and statu
   await expect(filters.locator(".filter-count")).toHaveText("1 offer");
   await current
     .locator('tbody tr[data-product-code="0003"]')
-    .getByRole("button", { name: "More", exact: true })
+    .getByRole("button", { name: "Stop offer", exact: true })
     .click();
-  await page.getByRole("menuitem", { name: /^Stop offer ·/ }).click();
   await page
     .getByRole("dialog", { name: "Stop offer", exact: true })
     .getByRole("button", { name: "Stop offer", exact: true })
@@ -197,15 +198,35 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
     has: page.getByRole("heading", { name: "Current offers", exact: true }),
   });
   await expect(current.locator("tbody tr[data-product-code]")).toHaveCount(5);
-  await expect(current.locator('tr[data-product-code="0003"]')).toHaveCount(1);
-  const juiceScope = await responsiveColumn(
-    current.locator('tr[data-product-code="0003"]'),
-    "Scope",
-  );
-  await expect(juiceScope.locator(".offer-group-entry")).toHaveCount(2);
-  await expect(
-    current.locator("tbody").getByText("Richmond Hill", { exact: true }),
-  ).toBeVisible();
+  const juice = current.locator('tr[data-product-code="0003"]');
+  await expect(juice).toHaveCount(1);
+  const assertJuiceRecordLocations = async (expected: string[]) => {
+    await juice
+      .getByRole("button", { name: "Open offer", exact: true })
+      .click();
+    const record = page.getByRole("dialog", { name: "Offer", exact: true });
+    await expect(record.locator(".offer-record")).toHaveCount(expected.length);
+    const locations = record
+      .locator(".offer-record dl > div")
+      .filter({ has: page.getByText("Location", { exact: true }) })
+      .locator("dd");
+    await expect(locations).toHaveText(expected);
+    await record.getByRole("button", { name: "Close", exact: true }).click();
+  };
+  if (
+    (await juice.evaluate((element) => element.matches(".phone-list-row"))) ||
+    (await juice.locator('td[data-column-label="Scope"]').count())
+  ) {
+    const juiceScope = await responsiveColumn(juice, "Scope");
+    await expect(juiceScope.locator(".offer-group-entry")).toHaveCount(2);
+    await expect(
+      current.locator("tbody").getByText("Richmond Hill", { exact: true }),
+    ).toBeVisible();
+  } else {
+    // R2c keeps one record disclosure when the table omits Scope. Read the
+    // actual retained offer records rather than requiring a second expander.
+    await assertJuiceRecordLocations(["All branches", "Richmond Hill"]);
+  }
   await signIn(page, "floor_worker");
   await page.goto("/#offers");
   await expect(
@@ -231,6 +252,7 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
   await expect(
     current.locator("tbody").getByText("Richmond Hill", { exact: true }),
   ).toHaveCount(0);
+  await assertJuiceRecordLocations(["All branches"]);
   await filters
     .getByRole("button", { name: "Clear filters", exact: true })
     .click();
@@ -239,7 +261,7 @@ test("Offers branch filtering never lets a Floor Worker read another branch offe
   );
 });
 
-test("Payables filters supplier totals and keeps selected report in the same branch", async ({
+test("Payables filters supplier totals and keeps its own statement in the same branch", async ({
   page,
 }) => {
   await signIn(page, "supervisor");
@@ -261,11 +283,18 @@ test("Payables filters supplier totals and keeps selected report in the same bra
   await expect(report.locator(".payables-summary-grid")).toContainText(
     "$169.79",
   );
+  // R2c opens a dedicated statement; its concrete location remains changeable.
   await chooseOption(
     page,
-    filters.getByLabel("Payables branch", { exact: true }),
+    page
+      .locator(".payables-toolbar")
+      .getByLabel("Statement location", { exact: true }),
     "Richmond Hill",
   );
+  await expect(report.locator(".payables-summary-grid")).toContainText("$0.00");
+  await page
+    .getByRole("button", { name: "All suppliers", exact: true })
+    .click();
   const selectedSupplier = overview.locator("tbody tr").filter({
     has: page.getByRole("link", { name: "Fresh Valley Foods", exact: true }),
   });
@@ -276,10 +305,9 @@ test("Payables filters supplier totals and keeps selected report in the same bra
   await expect(await responsiveColumn(selectedSupplier, "Balance")).toHaveText(
     "$0.00",
   );
-  await expect(report.locator(".payables-summary-grid")).toContainText("$0.00");
   await filters
-    .getByRole("checkbox", { name: "With balance", exact: true })
-    .check();
+    .getByRole("button", { name: "With balance", exact: true })
+    .click();
   await expect(report).toHaveCount(0);
   await expect(overview).toContainText("No suppliers match these filters");
   await filters
@@ -291,11 +319,11 @@ test("Payables filters supplier totals and keeps selected report in the same bra
     "North York",
   );
   await filters
-    .getByRole("checkbox", { name: "Overdue only", exact: true })
-    .check();
+    .getByRole("button", { name: "Overdue only", exact: true })
+    .click();
   await filters
-    .getByRole("checkbox", { name: "With balance", exact: true })
-    .check();
+    .getByRole("button", { name: "With balance", exact: true })
+    .click();
   const rows = overview.locator("tbody tr");
   await expect(rows).toHaveCount(2);
   await expect(
@@ -308,14 +336,21 @@ test("Payables filters supplier totals and keeps selected report in the same bra
     await grain
       .getByRole("link", { name: "Golden Grain Distributors", exact: true })
       .click();
-    await expect(page.locator(".payables-report-heading h2")).toHaveText(
-      "Golden Grain Distributors",
-    );
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "Golden Grain Distributors",
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect(
       report.locator(".payables-summary-grid .ui-summary-tile").filter({
         has: page.getByText("Overdue", { exact: true }),
       }),
     ).toContainText("$210.00");
+    await page
+      .getByRole("button", { name: "All suppliers", exact: true })
+      .click();
   } else {
     await expect(grain).toContainText("$210.00");
   }

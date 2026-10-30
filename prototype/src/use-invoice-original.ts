@@ -29,31 +29,43 @@ export function useInvoiceOriginal(invoice: InvoiceReadDTO, page = 0) {
   const key = JSON.stringify([
     invoice.id,
     invoice.company_id,
-    invoice.version,
     invoice.file_name,
     invoice.file_type,
     invoice.file_size,
     invoice.original_page_count,
+    invoice.reading_record?.page_sha256s[page],
     page,
     actor?.user_id,
     actor?.session_id,
     actor?.authority_epoch,
     actor?.person_version,
     authorityGeneration,
-    businessRevision,
+    authorityDirectoryVersion,
+    locationSelection,
+    permitted,
+  ]);
+  const accessKey = JSON.stringify([
+    invoice.id,
+    invoice.company_id,
+    page,
+    actor?.user_id,
+    actor?.session_id,
+    actor?.authority_epoch,
+    actor?.person_version,
+    authorityGeneration,
     authorityDirectoryVersion,
     locationSelection,
     permitted,
   ]);
   // A fresh request token prevents a previous key's bytes reappearing if that
   // same key returns after a denied/intermediate scope, before revalidation.
-  const request = useMemo(() => ({ key }), [key]);
+  const request = useMemo(() => ({ key: accessKey }), [accessKey]);
   const latest = useRef(query);
   useEffect(() => {
     latest.current = query;
   }, [query]);
   const [snapshot, setSnapshot] = useState<{
-    key: string;
+    hash: string;
     request: typeof request;
     url?: string;
     source?: Blob;
@@ -62,9 +74,9 @@ export function useInvoiceOriginal(invoice: InvoiceReadDTO, page = 0) {
     type?: string;
     error?: boolean;
   } | null>(null);
+  const retained = useRef(snapshot);
   useEffect(() => {
     let active = true;
-    let url: string | undefined;
     if (!permitted) {
       return () => {
         active = false;
@@ -77,32 +89,68 @@ export function useInvoiceOriginal(invoice: InvoiceReadDTO, page = 0) {
     }).then(
       (record) => {
         if (!active) return;
-        url = URL.createObjectURL(record.preview);
-        setSnapshot({
-          key,
+        const previous = retained.current;
+        // Keep decoded image/PDF objects while the immutable bytes agree.
+        if (previous?.request === request && previous.hash === record.sha256) {
+          if (
+            previous.name !== record.name ||
+            previous.size !== record.source_size ||
+            previous.type !== record.type
+          ) {
+            const refreshed = {
+              ...previous,
+              name: record.name,
+              size: record.source_size,
+              type: record.type,
+            };
+            retained.current = refreshed;
+            setSnapshot(refreshed);
+          }
+          return;
+        }
+        const next = {
+          hash: record.sha256,
           request,
-          url,
+          url: URL.createObjectURL(record.preview),
           source: record.source,
           size: record.source_size,
           name: record.name,
           type: record.type,
-        });
+        };
+        retained.current = next;
+        setSnapshot(next);
       },
       () => {
-        if (active) setSnapshot({ key, request, error: true });
+        if (active) {
+          const failure = { hash: "", request, error: true };
+          retained.current = failure;
+          setSnapshot(failure);
+        }
       },
     );
     return () => {
       active = false;
+    };
+  }, [
+    key,
+    request,
+    permitted,
+    invoice.company_id,
+    invoice.id,
+    page,
+    businessRevision,
+  ]);
+  // Each URL survives a revalidation. Retire it only after its replacement has
+  // committed, or on unmount; denied authority is masked synchronously below.
+  useEffect(() => {
+    const url = snapshot?.url;
+    return () => {
       if (url) URL.revokeObjectURL(url);
     };
-  }, [key, request, permitted, invoice.company_id, invoice.id, page]);
-  const visible =
-    snapshot?.key === key && snapshot.request === request && permitted
-      ? snapshot
-      : null;
+  }, [snapshot?.url, request]);
+  const visible = snapshot?.request === request && permitted ? snapshot : null;
   return {
-    key,
+    key: JSON.stringify([request.key, visible?.hash]),
     url: visible?.url,
     source: visible?.source,
     size: visible?.size,

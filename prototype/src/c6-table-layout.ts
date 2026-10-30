@@ -2,6 +2,8 @@ import type { TableColumnDefinition } from "./c3-column-preferences";
 
 export type ResponsiveColumn = Partial<TableColumnDefinition> & {
   hidden?: boolean;
+  /** Explicit composition minimum for desktop name/product/supplier columns; defaults to 240 px. */
+  desktopMinWidth?: number;
 };
 
 const tablePriorities: Record<string, string[]> = {
@@ -68,6 +70,12 @@ export function tableResponsiveDefinition(
   const rank = tablePriorities[table]?.indexOf(column.key) ?? -1;
   return {
     ...column,
+    // Reserve the full Product Code caption plus its sort indicator and 24px
+    // cell padding, including the existing comfortable text-size option.
+    minWidth:
+      column.key === "code" && !column.fixedWidth
+        ? Math.max(128, column.minWidth ?? 0)
+        : column.minWidth,
     priority:
       column.priority ??
       (column.actions ? 2 : rank < 0 ? index + 20 : rank + 1),
@@ -121,6 +129,7 @@ export function allocateTableColumns(
   availableWidth: number,
   mobile: boolean,
   measuredMinimums: readonly number[] = [],
+  reserveDetails = true,
 ): { visible: number[]; collapsed: number[]; minimums: number[] } {
   const minimums = columns.map(
     (column, index) =>
@@ -146,7 +155,7 @@ export function allocateTableColumns(
     );
   } else if (availableWidth > 0) {
     // A modest first-cell reserve holds the details disclosure without squeezing words.
-    const budget = Math.max(0, availableWidth - 36);
+    const budget = Math.max(0, availableWidth - (reserveDetails ? 36 : 0));
     const candidates = [...visible]
       .filter(
         (index) =>

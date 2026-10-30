@@ -17,6 +17,7 @@ import {
   compatibleInvoiceOrders,
   currentInvoiceOrderComparison,
   invoiceOrderIssues,
+  invoiceOrderProblems,
   setInvoiceExtraDecision,
   setInvoiceOrder,
 } from "./invoice-orders";
@@ -157,8 +158,11 @@ describe("invoice pack snapshots and payable precision", () => {
     const remembered = uploaded.lines.find(
       (line) => line.product_code === "0002",
     )!;
+    expect(remembered.id).toMatch(/^invoice-line-/);
+    expect(remembered.id).not.toBe(parsed.id);
     expect(remembered).toEqual({
       ...parsed,
+      id: remembered.id,
       supplier_item_id: item.id,
       supplier_item_code: "UPLOAD-PACK-12",
       units_per_case: 12,
@@ -190,6 +194,11 @@ describe("invoice pack snapshots and payable precision", () => {
     state.supplier_items = [];
     const original = createInvoice(state, actor(state), "Branch 1");
     const parsed = original.lines.find((line) => line.product_code === "0002")!;
+    const expectFreshParsed = (line: InvoiceLine | undefined) => {
+      expect(line?.id).toMatch(/^invoice-line-/);
+      expect(line?.id).not.toBe(parsed.id);
+      expect(line).toEqual({ ...parsed, id: line?.id });
+    };
     const context = actor(state);
     const first = saveSupplierItem(state, context, original.supplier, {
       product_code: "0002",
@@ -201,19 +210,19 @@ describe("invoice pack snapshots and payable precision", () => {
       supplier_item_code: "UPLOAD-12",
       units_per_case: 12,
     });
-    expect(
+    expectFreshParsed(
       createInvoice(state, actor(state), "Branch 1").lines.find(
         (line) => line.product_code === "0002",
       ),
-    ).toEqual(parsed);
+    );
     state.supplier_items = [
       { ...first, company_id: "another-company", units_per_case: 48 },
     ];
-    expect(
+    expectFreshParsed(
       createInvoice(state, actor(state), "Branch 1").lines.find(
         (line) => line.product_code === "0002",
       ),
-    ).toEqual(parsed);
+    );
     const otherSupplier = supplierRecords(state).find(
       (supplier) => supplier.name !== original.supplier,
     )!;
@@ -225,11 +234,11 @@ describe("invoice pack snapshots and payable precision", () => {
         units_per_case: 48,
       },
     ];
-    expect(
+    expectFreshParsed(
       createInvoice(state, actor(state), "Branch 1").lines.find(
         (line) => line.product_code === "0002",
       ),
-    ).toEqual(parsed);
+    );
   });
   it("bills the retained $19.99 case quote exactly across 500 cases rather than reconstructing rounded unit cost", () => {
     const state = draft();
@@ -483,10 +492,37 @@ describe("invoice compared with its order", () => {
     expect(state.products.map((product) => product.code)).toEqual(
       products.map((product) => product.code),
     );
-    expect(state.approvals).toEqual(proposals);
+    // The accepted existing line legitimately proposes the default .99 price;
+    // the fully refused NEW line creates no extra approval or catalog identity.
+    expect(state.approvals).toEqual([
+      ...proposals,
+      expect.objectContaining({
+        id: `${state.invoice.id}:proposal:0002`,
+        product_code: "0002",
+        source_invoice_id: state.invoice.id,
+        type: "price_change",
+        status: "pending",
+        current_price: "1.49",
+        proposed_price: "1.99",
+        unit_cost: "0.9800",
+      }),
+    ]);
+    expect(
+      state.products.find((product) => product.code === "0002")!.selling_price,
+    ).toBe("1.49");
+    expect(
+      state.products.find((product) => product.code === "0002")!.branch_prices,
+    ).toEqual(
+      products.find((product) => product.code === "0002")!.branch_prices,
+    );
     expect(state.expiry).toEqual(expiry);
     expect(state.invoice.lines[1].product_code).toBe("NEW");
     expect(receipts(state)).toHaveLength(1);
+    expect(receipts(state)[0]).toMatchObject({
+      line_index: 0,
+      product_code: "0002",
+      units: 12,
+    });
     expect(order.status).toBe("received");
     expect(state.invoice.payable_after_open_shorts).toBe("11.76");
   });
@@ -706,5 +742,80 @@ describe("short-dated expiry discounts", () => {
     recalculateInvoice(state.invoice, state.config);
     confirm(state);
     expect(invoiceBlockers(state, actor(state))).toContain("date");
+  });
+});
+
+describe("R2b fresh order blocker provenance", () => {
+  it("distinguishes a stale comparison from an unavailable order", () => {
+    const state = draft();
+    const order = addOrder(state);
+    link(state);
+    order.version++;
+    expect(invoiceOrderProblems(state, actor(state))).toEqual([
+      { kind: "stale" },
+    ]);
+    expect(invoiceOrderIssues(state, actor(state))).toEqual(["order"]);
+    state.orders = [];
+    expect(invoiceOrderProblems(state, actor(state))).toEqual([
+      { kind: "unavailable" },
+    ]);
+  });
+  it.each(["extra", "price", "missing"] as const)(
+    "identifies the exact unresolved %s decision",
+    (kind) => {
+      const state = draft();
+      addOrder(state);
+      if (kind === "extra")
+        setInvoiceLineQuantity(state.invoice.lines[0], "24", "units", 12);
+      if (kind === "price")
+        state.invoice.lines[0].unit_cost_before_tax = "1.5000";
+      if (kind === "missing")
+        state.invoice.lines[0].qty_received_at_posting = 8;
+      link(state);
+      const problem = invoiceOrderProblems(state, actor(state)).find(
+        (item) => item.kind === kind,
+      );
+      expect(problem).toMatchObject(
+        kind === "missing"
+          ? { kind, order_line_id: "order-line-1" }
+          : { kind, line: 0 },
+      );
+      expect(invoiceOrderIssues(state, actor(state))).toEqual([
+        "order_decisions",
+      ]);
+    },
+  );
+  it("identifies an inactive linked supplier without inventing a difference to answer", () => {
+    const state = draft();
+    const order = addOrder(state);
+    link(state);
+    state.suppliers ??= structuredClone([...supplierRecords(state)]);
+    state.suppliers.find(
+      (supplier) => supplier.id === order.supplier_id,
+    )!.active = false;
+    expect(invoiceOrderProblems(state, actor(state))).toEqual([
+      { kind: "supplier" },
+    ]);
+    expect(invoiceOrderIssues(state, actor(state))).toEqual([
+      "order_decisions",
+    ]);
+  });
+});
+
+it("R2b distinguishes a refused-quantity mismatch from an unanswered extra-delivery choice", () => {
+  const state = draft();
+  addOrder(state);
+  setInvoiceLineQuantity(state.invoice.lines[0], "24", "units", 12);
+  link(state);
+  setInvoiceExtraDecision(state, actor(state), 0, "refuse");
+  state.invoice.lines[0].refused_units = 11;
+  expect(invoiceOrderProblems(state, actor(state))).toContainEqual({
+    kind: "extra_quantity",
+    line: 0,
+  });
+  setInvoiceExtraDecision(state, actor(state), 0, "refuse");
+  expect(invoiceOrderProblems(state, actor(state))).not.toContainEqual({
+    kind: "extra_quantity",
+    line: 0,
   });
 });

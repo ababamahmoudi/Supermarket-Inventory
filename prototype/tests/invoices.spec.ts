@@ -7,6 +7,8 @@ import {
   confirmInvoiceLine,
   setLanguage,
   openInvoiceUpload,
+  openInvoiceLine,
+  openInvoiceDetails,
 } from "./helpers";
 
 test.setTimeout(60000);
@@ -23,18 +25,49 @@ async function signInWorker(page: Page) {
   ).toBeVisible();
 }
 async function upload(page: Page) {
-  await (
-    await openInvoiceUpload(page)
-  ).setInputFiles({
-    name: "fictional-supplier-invoice.png",
-    mimeType: "image/png",
-    buffer: pixel,
-  });
+  const before = await readCanonicalBusinessEvidence(page);
+  const picker = await openInvoiceUpload(page);
+  // Hold browser scheduling while the real upload/storage work completes so
+  // this pending-state assertion cannot miss a prompt simulated completion.
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  let invoiceId = "";
+  try {
+    await picker.setFiles({
+      name: "fictional-supplier-invoice.png",
+      mimeType: "image/png",
+      buffer: pixel,
+    });
+    await expect(
+      page.getByRole("status").filter({ hasText: "Reading invoice…" }),
+    ).toBeVisible();
+    await expect
+      .poll(async () => {
+        const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+        invoiceId = invoice.id;
+        return {
+          newId: invoice.id !== before.invoice.id,
+          fileName: invoice.file_name,
+          originalHash: invoice.file_data?.split(":").at(-1),
+          status: invoice.status,
+        };
+      })
+      .toEqual({
+        newId: true,
+        fileName: "fictional-supplier-invoice.png",
+        originalHash: createHash("sha256").update(pixel).digest("hex"),
+        status: "reading",
+      });
+    const pending = await readCanonicalBusinessEvidence(page);
+    expect(pending.ledger).toEqual(before.ledger);
+    expect(pending.approvals).toEqual(before.approvals);
+    expect(pending.stock_movements).toEqual(before.stock_movements);
+    expect(pending.stock).toEqual(before.stock);
+  } finally {
+    await page.clock.resume();
+  }
   await expect(
-    page.getByRole("status").filter({ hasText: "Reading invoice…" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Review invoice lines" }),
+    page.getByRole("heading", { name: "Invoice lines" }),
   ).toBeVisible({ timeout: 8000 });
   await expect(page.locator(".invoice-line")).toHaveCount(6, {
     timeout: 10000,
@@ -44,6 +77,7 @@ async function upload(page: Page) {
       readCanonicalBusinessEvidence(page).then((canonicalState) => {
         const invoice = JSON.parse(JSON.stringify(canonicalState)!).invoice;
         return {
+          id: invoice.id,
           fileName: invoice.file_name,
           originalHash: invoice.file_data?.split(":").at(-1),
           status: invoice.status,
@@ -51,6 +85,7 @@ async function upload(page: Page) {
       }),
     )
     .toEqual({
+      id: invoiceId,
       fileName: "fictional-supplier-invoice.png",
       originalHash: createHash("sha256").update(pixel).digest("hex"),
       status: "review",
@@ -75,39 +110,50 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   page.on("pageerror", (error) => browserErrors.push(error.message));
   await signInWorker(page);
   // The unread retained original now opens from its real Drafts row.
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page
+    .locator(".invoice-saved-table tbody tr td:first-child a")
+    .first()
+    .click();
   await expect(
-    page
-      .getByRole("complementary", { name: "Original invoice", exact: true })
-      .getByText("AI invoice reading is simulated", { exact: true }),
+    page.getByRole("complementary", { name: "Original invoice", exact: true }),
   ).toBeVisible();
-  // This workflow tests a new uploaded invoice, separately from the retained
-  // original whose Continue action was checked above.
-  await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  await expect(page.locator("main")).not.toContainText(
+    "AI invoice reading is simulated",
+  );
+  await page
+    .getByRole("button", { name: "Save and close", exact: true })
+    .click();
   const before = await stored(page);
   const beforeStock = before.stock["Branch 1:0009"];
   await upload(page);
   expect(await page.evaluate(() => typeof globalThis.crypto.randomUUID)).toBe(
     "undefined",
   );
-  const sumac = page.locator(".invoice-line").nth(1);
+  const sumac = await openInvoiceLine(page, 1);
   await sumac.getByLabel("Unit cost before tax", { exact: true }).fill("1.60");
-  await expect(sumac.locator(".price-display")).toHaveText("$2.99");
+  const sellingPrice = sumac.locator("#invoice-line-1-selling-price");
+  await expect(sellingPrice).toBeEditable();
+  await expect(sellingPrice).toHaveValue("2.99");
   await sumac.getByLabel("Unit cost before tax", { exact: true }).fill("1.30");
-  await expect(sumac.locator(".price-display")).toHaveText("$1.99");
-  const chips = page.locator(".invoice-line").nth(5);
-  const markShort = chips.getByRole("checkbox", {
-    name: "Mark as short",
-    exact: true,
-  });
-  await expect(markShort).not.toBeChecked();
-  await markShort.click();
-  await expect(markShort).toBeChecked();
-  await expect(chips.getByText(/Deduction:/)).toContainText("$7.23");
+  await expect(sellingPrice).toHaveValue("1.99");
+  const chips = await openInvoiceLine(page, 5);
+  await chips
+    .getByRole("button", { name: "Report short or refused", exact: true })
+    .click();
+  await chips.getByLabel("Short units", { exact: true }).fill("4");
+  await expect(chips.getByText(/Deduction:/)).toContainText("$6.40");
+  await expect(chips.getByText(/Delivered units:/)).toContainText("8");
+  await chips.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(
+    chips.getByLabel("Delivered units", { exact: true }),
+  ).toHaveValue("8");
+  await chips.getByRole("button", { name: "Close", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click({ force: true });
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
   ).toBeVisible();
@@ -123,15 +169,33 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
     "Unknown — add a note",
   );
   await page
+    .getByRole("alert", { name: "What's missing", exact: true })
+    .locator(".receiving-missing-row")
+    .filter({ hasText: "Lower-cost receipt note is empty" })
+    .getByRole("button", { name: "Show", exact: true })
+    .click();
+  await expect(page.locator("#invoice-lower-note")).toBeFocused();
+  await page
     .getByLabel("What information is unknown? (required)", { exact: true })
     .fill("Demo only: old stock label cannot be read.");
-  for (const line of await page.locator(".invoice-line").all()) {
-    await line.getByRole("button", { name: "No", exact: true }).click();
+  for (let index = 0; index < 6; index++) {
+    const line = await openInvoiceLine(page, index);
+    const track = line.getByRole("group", { name: "Track date", exact: true });
+    await track.getByRole("button", { name: "No", exact: true }).click();
     await confirmInvoiceLine(page, line);
   }
+  await openInvoiceDetails(page);
   await page
-    .getByRole("button", { name: "Save as draft", exact: true })
+    .getByRole("button", { name: "Looks right: Invoice details", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "Looks right: Totals", exact: true })
+    .click();
+  const savedRoute = page.url();
+  await page
+    .getByRole("button", { name: "Save and close", exact: true })
+    .click();
+  await page.goto(savedRoute);
   await page.reload();
   await expect(
     page.getByLabel("What information is unknown? (required)", { exact: true }),
@@ -157,7 +221,9 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
     .getByRole("dialog", { name: "Post invoice", exact: true })
     .getByRole("button", { name: "Post invoice", exact: true })
     .click();
-  await expect(page.locator(".banner[role=status]")).toContainText("Posted.");
+  await expect(page.locator(".posted-invoice-title-row")).toContainText(
+    "Posted",
+  );
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toHaveCount(0);
@@ -221,40 +287,44 @@ test("manual draft survives a refresh and cannot post without its original", asy
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await chooseOption(
+    page,
+    page.getByLabel("Add a product to the invoice", { exact: true }),
+    "0002",
+    "Canned Fava Beans 400 g",
+  );
   await page.getByRole("button", { name: "Add line", exact: true }).click();
-  await page
-    .locator(".invoice-line")
+  const editor = await openInvoiceLine(page, 0);
+  await editor
+    .getByRole("group", { name: "Track date", exact: true })
     .getByRole("button", { name: "No", exact: true })
     .click();
+  await confirmInvoiceLine(page, editor);
+  const savedRoute = page.url();
   await page
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+    .getByRole("button", { name: "Save and close", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Save as draft", exact: true })
-    .click();
+  await page.goto(savedRoute);
   await page.reload();
   await expect(page.locator(".invoice-line")).toHaveCount(1);
   await expect(
-    page.locator(".invoice-line").getByText("Confirmed", { exact: true }),
+    page
+      .locator(".invoice-line")
+      .getByRole("img", { name: "Confirmed", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".invoice-line")).toHaveAttribute(
     "data-expanded",
     "false",
   );
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
-  await expect(
-    page.getByRole("link", {
-      name: "Add the original invoice (PDF or photo) before posting.",
-      exact: true,
-    }),
-  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Post invoice", exact: true }).click();
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Post invoice", exact: true })
+    .click({ force: true });
   await expect(
     page.getByRole("alert", { name: "What's missing", exact: true }),
-  ).toBeVisible();
+  ).toContainText("Original invoice is missing. Attach its PDF or photo.");
   const state = await stored(page);
   expect(state.invoice.status).toBe("draft");
   expect(
@@ -272,19 +342,21 @@ test("Persian invoice review mirrors the shell and keeps Western price digits", 
   await setLanguage(page, "fa");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(
-    page.getByRole("heading", { name: "بررسی ردیف‌های فاکتور", exact: true }),
+    page.getByRole("heading", { name: "ردیف‌های فاکتور", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText("خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است", {
       exact: true,
     }),
-  ).toBeVisible();
-  await expect(
-    page.locator(".invoice-line").nth(0).locator(".price-display"),
-  ).toHaveText("$1.49");
+  ).toHaveCount(0);
+  const line = await openInvoiceLine(page, 0);
+  await expect(line.locator("#invoice-line-0-selling-price")).toHaveValue(
+    "1.99",
+  );
+  await expect(line.locator("#invoice-line-0-selling-price")).toBeEditable();
   await expect(
     page.getByRole("group", { name: "پیگیری تاریخ", exact: true }),
-  ).toHaveCount(6);
+  ).toHaveCount(1);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,

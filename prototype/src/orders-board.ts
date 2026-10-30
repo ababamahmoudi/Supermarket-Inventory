@@ -30,7 +30,7 @@ import type {
 
 export type OrderPrintConfig = Pick<
   CompanyConfig,
-  "company" | "branches" | "supplier_documents"
+  "company" | "branches" | "supplier_documents" | "branding"
 >;
 export type OrderSupplierChoice = Pick<
   SupplierRecord,
@@ -70,7 +70,7 @@ export function ordersBoard(
     b.created_at.localeCompare(a.created_at),
   );
   const suppliers = projectSuppliers(state, actor)
-    .filter((supplier) => supplier.active && supplier.status === "confirmed")
+    .filter((supplier) => supplier.active)
     .map((supplier) => ({
       id: supplier.id,
       company_id: supplier.company_id,
@@ -155,10 +155,7 @@ export function orderFormCandidates(
     purchaseLocationScope(actor.company_id, location),
   );
   const supplier = projectSuppliers(state, scoped).find(
-    (record) =>
-      record.active &&
-      record.status === "confirmed" &&
-      supplierMatches(record, supplierName),
+    (record) => record.active && supplierMatches(record, supplierName),
   );
   if (!supplier) throw new Error("supplier");
   const costs_visible = can(
@@ -300,6 +297,7 @@ export function orderPrintSnapshot(
     order,
     config: structuredClone({
       company: state.config.company,
+      branding: state.config.branding,
       branches: state.config.branches,
       supplier_documents: state.config.supplier_documents,
     }),

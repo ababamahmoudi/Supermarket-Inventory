@@ -1,0 +1,35 @@
+.live-reading-ready-region {
+  position: fixed;
+  translate: var(--floating-feedback-inline-shift, 0px) 0;
+  inset-inline-end: 20px;
+  inset-block-end: max(
+    var(--live-reading-footer-offset, 24px),
+    env(safe-area-inset-bottom)
+  );
+  z-index: 90;
+  display: grid;
+  gap: 8px;
+  max-inline-size: min(480px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.live-reading-ready {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+  pointer-events: auto;
+}
+.live-reading-ready > span {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.live-reading-ready .ui-button,
+.live-reading-ready .ui-icon-button {
+  flex: 0 0 auto;
+}

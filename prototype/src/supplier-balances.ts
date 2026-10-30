@@ -1,4 +1,8 @@
 import Decimal from "decimal.js";
+import {
+  awaitingPickupReturnCredits,
+  type AwaitingPickupReturnCredit,
+} from "./return-credit-preview";
 import type { AuthenticatedActor } from "./authority-types";
 import { cloneWithAuthority, actorAtLocation } from "./authority";
 import { requirePurchase } from "./purchase-authority";
@@ -16,6 +20,8 @@ export interface SupplierBalanceSummary extends LedgerSummary {
   confirmed_balance: string;
   pending_credit: string;
   pending_returns: PendingReturnCredit[];
+  awaiting_pickup_returns: AwaitingPickupReturnCredit[];
+  awaiting_pickup_credit: string;
   overdue: string;
   next_due_date?: string;
   /** A separately displayed seed snapshot; never a fabricated ledger record. */
@@ -170,6 +176,15 @@ export function supplierBalanceSummary(
     (sum, claim) => sum.plus(claim.amount),
     new Decimal(0),
   );
+  const awaitingPickup = awaitingPickupReturnCredits(
+    state,
+    context,
+    throughDate,
+  ).filter((claim) =>
+    identity
+      ? supplierMatches(identity, claim.supplier)
+      : claim.supplier === supplier,
+  );
   const confirmedBalance = new Decimal(summary.balance).plus(snapshotBalance);
   return {
     ...summary,
@@ -177,6 +192,11 @@ export function supplierBalanceSummary(
     confirmed_balance: confirmedBalance.toFixed(2),
     pending_credit: pendingCredit.toFixed(2),
     pending_returns: pendingReturns,
+    awaiting_pickup_returns: awaitingPickup,
+    awaiting_pickup_credit: awaitingPickup
+      .filter((claim) => claim.currency === state.config.company.currency)
+      .reduce((sum, claim) => sum.plus(claim.amount), new Decimal(0))
+      .toFixed(2),
     overdue: actualOverdue.plus(snapshotOverdue).toFixed(2),
     next_due_date:
       dueDates.filter((date) => date >= asOf).sort()[0] ?? dueDates.sort()[0],

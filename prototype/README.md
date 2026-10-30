@@ -1,8 +1,8 @@
-# Supermarket browser prototype — C9 review
+# Supermarket browser prototype — R2b review
 
 This demo runs in your browser. All supplier records, documents and people are fictional; invoice reading and the privileged second sign-in step are simulated. There is no backend or real AI. Canonical business and people/session records are in browser-local IndexedDB, with uploaded files in a separate IndexedDB store and interface preferences in browser settings storage. No Docker or Python is needed. Each browser and phone keeps its own separate data.
 
-Current review branch: **`feat/prototype-c9`**, based on main after C8, E1, E2 and E3 merged with passing CI. Use the [C9 review guide](../docs/PR_C9_REVIEW.md) for its click paths, screenshots and actual test results; the [prior combined review](../docs/PR_C8_E1_E2_E3_REVIEW.md) retains earlier evidence. The [device-access guide](../docs/phone-demo-hosting.md) explains same-Wi-Fi access, virtual machines and optional private Internet hosting.
+Current review branch: **`feat/prototype-r2-receiving`**. Use the [R2b review guide](../docs/PR_R2B_REVIEW.md) for all twenty items, public fictional import files and staged rename/correction click paths. [PR #29/latest checks](https://github.com/ababamahmoudi/Supermarket-Inventory/pull/29/checks) records exact-commit verification; all seven checks are required before completion. The [earlier R2 guide](../docs/PR_R2_REVIEW.md), [C9 guide](../docs/PR_C9_REVIEW.md) and [combined C8/E review](../docs/PR_C8_E1_E2_E3_REVIEW.md) retain earlier context. The [device-access guide](../docs/phone-demo-hosting.md) explains same-Wi-Fi access, virtual machines and optional private Internet hosting.
 
 `npm run preview` already listens on `0.0.0.0:5174`. Use its **Local** address on the serving computer and its **Network** address on other devices on the same Wi-Fi. Do not override it with `--host 127.0.0.1`, which prevents those other devices from connecting. A public Internet address requires a hosted HTTPS deployment; running preview alone does not publish the app.
 

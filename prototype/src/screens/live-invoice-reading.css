@@ -1,0 +1,71 @@
+.live-invoice-dropzone > p {
+  max-inline-size: 38rem;
+  margin-inline: auto;
+}
+.live-invoice-dropzone .actions {
+  justify-content: center;
+}
+.live-reading-time {
+  font-variant-numeric: tabular-nums;
+}
+.live-reading-steps {
+  display: grid;
+  gap: 12px;
+  padding-inline-start: 20px;
+  margin-block: 20px;
+}
+.live-reading-steps [aria-current="step"] {
+  color: var(--accent);
+  font-weight: 700;
+}
+.live-reading-pages {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin-block: 16px;
+  padding: 0;
+}
+.live-reading-pages > li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-inline-size: 0;
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-control);
+  padding: 8px 12px;
+}
+.live-reading-page-name {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+.live-reading-page-number {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+.live-reading-pages .actions {
+  flex: 0 0 auto;
+}
+.live-reading-choices {
+  flex-wrap: wrap;
+}
+.live-reading-provenance {
+  margin-block: 12px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+@media (min-width: 761px) {
+  .live-invoice-camera {
+    display: none;
+  }
+}
+
+.live-invoice-page-editor {
+  min-inline-size: 0;
+}
+.live-pdf-page-choices {
+  display: grid;
+  gap: 12px;
+}
+.live-invoice-page-editor > .helper {
+  margin-block: 8px;
+}

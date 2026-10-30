@@ -1,7 +1,10 @@
+import { migratePackageState } from "./package-state";
+import { migrateTimesheetState } from "./timesheet-state";
 import {
   migratePriceUpdates,
   evaluatePriceUpdates,
   capturePriceUpdateChanges,
+  captureSalesClockPackageChanges,
 } from "./price-updates";
 import { configSeed } from "./config";
 import { initialState, loadInitialBusiness } from "./e1-bootstrap";
@@ -44,6 +47,8 @@ export function browserShellOptions(projectors: ReadModelProjectors) {
     ) => {
       await migratePriceUpdates(...args);
       await migrateSalePriceInvariants(...args);
+      await migrateTimesheetState(...args);
+      await migratePackageState(...args);
     },
     historyRecovery: {
       status: historyRecoveryStatus,
@@ -61,7 +66,13 @@ export function browserShellOptions(projectors: ReadModelProjectors) {
     signedOutView: (state?: DemoState) =>
       signedOutReadView(state?.config ?? configSeed),
     systemJobs: [
-      { source: "sales_clock", apply: evaluateSales },
+      {
+        source: "sales_clock",
+        apply: (state, attribution) => {
+          evaluateSales(state, attribution);
+          captureSalesClockPackageChanges(state, attribution);
+        },
+      },
       { source: "date_reminders", apply: syncDateReminderAlerts },
       { source: "return_credit_reminders", apply: syncReturnCreditAlerts },
       { source: "price_updates", apply: evaluatePriceUpdates },

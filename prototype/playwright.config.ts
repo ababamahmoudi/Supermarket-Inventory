@@ -29,6 +29,28 @@ export default defineConfig({
         launchOptions: {},
       },
     },
+    {
+      name: "firefox-receiving",
+      testMatch: "r2-receiving-stability.spec.ts",
+      use: {
+        ...devices["Desktop Firefox"],
+        browserName: "firefox",
+        // A configured system Chromium executable cannot run Firefox.
+        launchOptions: {},
+      },
+    },
+    {
+      name: "firefox-r2g-509",
+      testMatch: "r2g-*.spec.ts",
+      grep: /@r2g-509/,
+      use: {
+        ...devices["Desktop Firefox"],
+        browserName: "firefox",
+        viewport: { width: 509, height: 1000 },
+        // Ali's responsive-review width uses real Firefox in CI.
+        launchOptions: {},
+      },
+    },
   ],
   webServer: {
     command: "npm run preview",

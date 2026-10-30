@@ -1,6 +1,5 @@
 .invoice-payment-terms,
-.invoice-date-suggestions,
-.invoice-supplier-review {
+.invoice-date-suggestions {
   display: grid;
   min-inline-size: 0;
   gap: 16px;
@@ -15,32 +14,6 @@
 .invoice-date-suggestion {
   justify-content: space-between;
 }
-.invoice-received-fields {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
-}
-.invoice-received-fields .ui-date-field {
-  min-inline-size: 180px;
-  white-space: nowrap;
-}
-.invoice-lines-table .invoice-line-summary .field > label {
-  position: static;
-  inline-size: auto;
-  block-size: auto;
-  margin: 0 0 8px;
-  overflow: visible;
-  clip-path: none;
-  white-space: normal;
-  overflow-wrap: normal;
-}
-/* Keep the action row after the form. A bottom-sticky row pulled the footer
-   into the first viewport and painted over the saved-draft table. */
-:root .invoice-workspace .invoice-action-footer,
-:root .invoice-workspace .invoice-action-footer .bottom-bar {
-  position: static;
-  inset-block-end: auto;
-}
 .received-range-trigger {
   max-inline-size: 100%;
   flex-wrap: wrap;
@@ -52,22 +25,6 @@
   flex-wrap: wrap;
   gap: 16px;
   margin-block-end: 24px;
-}
-.invoice-lines-table th,
-.invoice-lines-table td {
-  overflow-wrap: normal;
-  word-break: normal;
-}
-.invoice-lines-table .control-narrow,
-.invoice-lines-table .ui-number-field {
-  min-inline-size: 0;
-  max-inline-size: 100%;
-}
-.invoice-lines-table .invoice-line-toggle .product-name strong,
-.invoice-lines-table .invoice-line-toggle .product-name small,
-.invoice-lines-table .invoice-line-price > small,
-.invoice-lines-table .invoice-line-price > p {
-  white-space: normal;
 }
 .invoice-line-mobile-caption {
   display: none;
@@ -81,44 +38,129 @@
     line-height: var(--line-height-caption);
     font-weight: var(--font-weight-caption);
   }
-  .invoice-received-fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .invoice-lines-table table,
-  .invoice-lines-table tbody,
-  .invoice-lines-table tr,
-  .invoice-lines-table td {
-    display: block;
-    inline-size: 100%;
-    min-inline-size: 0;
-  }
-  .invoice-lines-table thead,
-  .invoice-lines-table colgroup {
-    display: none;
-  }
-  .invoice-lines-table .invoice-line {
-    padding-block: 16px;
-    border-block-end: 1px solid var(--divider);
-  }
-  .invoice-lines-table .invoice-line-summary {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
   .invoice-line-summary > td:first-child {
     grid-column: 1 / -1;
-  }
-  .invoice-lines-table .invoice-line-summary > td,
-  .invoice-lines-table .invoice-line-detail > td {
-    padding: 8px 0;
   }
   .invoice-line-summary .control-narrow {
     max-inline-size: 100%;
   }
   .invoice-line-toggle .product-name strong,
-  .invoice-line-toggle .product-name small,
-  .invoice-line-price > p,
-  .invoice-line-price > small {
+  .invoice-line-toggle .product-name small {
     white-space: normal;
+  }
+}
+
+:root .ui-dialog.ui-dialog-structured.invoice-entry-choice-dialog {
+  inline-size: min(720px, calc(100vw - 32px));
+  max-inline-size: min(720px, calc(100vw - 32px));
+}
+.invoice-entry-choice-grid {
+  display: grid;
+  grid-auto-rows: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+:root
+  .ui-dialog.invoice-entry-choice-dialog
+  .invoice-entry-choice-grid
+  > .ui-button.invoice-entry-choice-tile {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  justify-content: start;
+  gap: 8px 12px;
+  inline-size: 100%;
+  max-inline-size: none;
+  block-size: auto;
+  min-block-size: 116px;
+  padding: 20px;
+  white-space: normal;
+  text-align: start;
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-control);
+}
+.invoice-entry-choice-tile > svg {
+  grid-row: 1 / -1;
+  color: var(--accent);
+}
+:root
+  .ui-dialog.invoice-entry-choice-dialog
+  .invoice-entry-choice-tile
+  > strong {
+  font-size: var(--font-size-body);
+  color: var(--text);
+}
+:root .ui-dialog.invoice-entry-choice-dialog .invoice-entry-choice-tile > span {
+  min-inline-size: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-body);
+}
+:root
+  .ui-dialog.invoice-entry-choice-dialog
+  .invoice-entry-choice-tile:hover:not(:disabled),
+:root
+  .ui-dialog.invoice-entry-choice-dialog
+  .invoice-entry-choice-tile:focus-visible {
+  border-color: var(--accent);
+}
+@media (max-width: 760px) {
+  :root dialog.ui-dialog.invoice-entry-choice-dialog {
+    inline-size: 100vw;
+    max-inline-size: 100vw;
+  }
+  :root .ui-dialog.invoice-entry-choice-dialog > .ui-dialog-header {
+    padding: 16px 16px 0;
+  }
+  :root .ui-dialog.invoice-entry-choice-dialog > .ui-dialog-body {
+    padding: 12px 16px 0;
+  }
+  :root .ui-dialog.invoice-entry-choice-dialog > .ui-dialog-footer {
+    padding: 16px;
+  }
+  :root
+    .ui-dialog.invoice-entry-choice-dialog
+    .invoice-entry-choice-grid
+    > .ui-button.invoice-entry-choice-tile {
+    grid-template-columns: 22px minmax(0, 1fr);
+    min-block-size: 104px;
+    gap: 8px;
+    padding: 12px;
+  }
+  .invoice-entry-choice-tile > svg {
+    grid-row: 1;
+  }
+  .invoice-entry-choice-tile > span {
+    grid-column: 1 / -1;
+  }
+}
+
+:root .ui-dialog.invoice-entry-choice-dialog .ui-dialog-body > .helper {
+  margin-block: 12px 0;
+}
+
+/* R2e C2: metadata stays inside its table column. */
+.invoice-queue-progress {
+  display: block;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.invoice-saved-drafts + .ui-card {
+  margin-block-start: 24px;
+}
+
+@media (max-width: 760px) {
+  .invoice-saved-table .invoice-queue-primary-action {
+    display: none;
+  }
+  .invoice-saved-table .invoice-queue-phone-actions {
+    margin-inline-start: auto;
+    display: inline-flex;
+    align-items: center;
   }
 }

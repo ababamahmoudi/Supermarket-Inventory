@@ -65,6 +65,16 @@ export function SaleEndTaskTitle({ task }: { task: PriceUpdateTask }) {
   );
 }
 export function PriceUpdateChange({ task }: { task: PriceUpdateTask }) {
+  const { t } = useDemo();
+  if (task.old_price.price === null)
+    return (
+      <span className="price-update-change is-new-item">
+        <Badge tone="neutral">{t("New item", "کالای جدید")}</Badge>
+        <strong>
+          <PriceUpdateValue value={task.new_price} />
+        </strong>
+      </span>
+    );
   return (
     <span className="price-update-change">
       <del>

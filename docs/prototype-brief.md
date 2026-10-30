@@ -1,6 +1,6 @@
 # Prototype brief (Phase 0)
 
-**Purpose:** a clickable demo to show the Super Arzon owner and win initial approval. It runs entirely in the browser with **no backend, no server database, no real AI**. C6 authorizes browser IndexedDB for local file evidence, not a hosted database. It must look and feel like the real product, because the screens and design will carry over.
+**Purpose:** a clickable demo to show the Super Arzon owner and win initial approval. Business state runs in the browser with no hosted backend/server database. R3 optionally connects invoice images to Ali's existing external local AI reader kit; Simulated remains the default. C6 authorizes browser IndexedDB for local file evidence, not a hosted database. It must look and feel like the real product, because the screens and design will carry over.
 
 ## Constraints
 
@@ -8,7 +8,7 @@
 - Data comes from `seed/demo-data.json` and `seed/arzon-config.json`, held in memory (a small store such as Zustand). Persist to browser storage so a refresh does not wipe the demo, and provide **Reset demo** inside the Demo menu. A2 may extend the owner files with explicitly fictional, prototype-only fixtures in `prototype/src/fixtures/a2-demo-data.json` (fictional records) and `prototype/src/demo-fixtures.ts` (loading/migration); list these added records in the review summary so they can later move into `seed/`. C3/C4 authorize changes only inside prototype/, docs/ and seed/ (fictional demo data, configuration and additional pricing cases). Update realistic packs/original fixtures without changing prior monetary totals or overwriting saved user data; preserve every existing pricing case. This supersedes C1/C2's location-only seed restriction.
 - The pricing engine is real: implement `pricing-engine.md` in TypeScript (Decimal library), run **every case** in `seed/pricing-test-cases.json` as unit tests, and use it live in the demo (change a cost → price recalculates).
 - Follow `design-language.md` (**Klead design language v1**) exactly, including its Hard rules and short-window collapsible sidebar groups (up to 1020px height, current group open, every page/user menu reachable without sidebar scrolling; expanded groups at 1080p), and match the owner retouches in `docs/design-references/klead-v1/`; use `assets/arzon-logo.png` directly on the white sidebar.
-- Honesty: show the small **"AI invoice reading is simulated"** note on Invoices and **"Demo with fictional data"** inside Demo. Remove fictional/demo disclaimers from operational page copy; the data remains fictional and this documentation remains explicit. No real supplier or customer data anywhere.
+- Honesty: show the small **"AI invoice reading is simulated"** note on Invoices only in Simulated mode, and **"Demo with fictional data"** inside Demo. Live mode uses the actual kit response. No real supplier/customer data belongs in source, seed, fixtures, documentation, screenshots or commits; any real-invoice rehearsal stays on Ali's own devices and configured kit.
 - Static build deployable to any static host, or runnable locally with `npm run dev` for a meeting. If hosted, use an unlisted URL.
 - Keep it light: no animations beyond simple transitions; fast on a laptop.
 
@@ -82,13 +82,14 @@ Capture each requested feature in English light, dark, Persian and phone: saved 
 9. **Close.** The roadmap: Phase 1 core app; later the cash register connection (live stock, loss detection) and an online food-ordering site.
    If real AI reading is ready (step 0.3), ask the owner for any invoice from today's delivery and read it live; otherwise say plainly that the reading is simulated. Do not quote prices or timelines in the demo itself.
 
-## Step 0.3: Real AI invoice reading for the demo (after the design work)
+## Step 0.3: Real AI invoice reading for the demo — Built in R3
 
-- Add one small server piece (for example, a single serverless function or a tiny local server) whose only job is to send the uploaded invoice to an AI provider and return the extraction JSON from `data-model.md`. The AI key lives **only** there, never in browser code or the repository.
-- Before building it, list 2–3 vision-capable AI providers with the estimated cost per invoice and trade-offs, recommend one, and wait for Ali's choice. Set a monthly spending cap on the provider account.
-- The browser sends the file, shows the same progress steps, and fills the same review screen with real lines and real confidence values. Matching, pricing, and approvals stay in the existing app logic; the AI never writes prices or stock directly.
-- Keep the simulated mode: a **"Simulated reading"** switch in the Demo menu, and an automatic fallback to it (with a calm message) if the real call fails or takes longer than 30 seconds.
-- Rehearse with 5–10 invoices of different layouts that Ali is allowed to use, and list what went wrong and what was fixed. Never commit real invoices to the repository.
+- R3 uses Ali's already running local invoice-reader kit: GET `/health` and POST `/api/v1/invoice-readings`. No new provider/server implementation, provider selection or browser key field is needed. Kit keys stay solely in its external `keys.env`; provider accounts and spending controls remain with the kit.
+- Settings → Receiving selects Simulated (default) or Live and the editable reader address. Missing/Reset address uses `http://localhost:5191`. Only Owner/Manager may save it or use the matching Demo Simulated reading shortcut. Test connection has a five-second limit and honest network/CORS guidance.
+- Save the Processing draft and exact original PDF/photos first. Send only ordered/downscaled invoice images; PDF rendering uses about 200 dpi, JPEG quality 0.85, at most ten pages and a 2400 px long side. Use the same existing AI importer for the real reading, preserving the verified draft's identity, raw originals, duplicates, matching, Decimal calculations and human review. The AI never posts or writes stock/prices directly.
+- The live limit is **four minutes**, replacing the earlier 30-second idea by Ali's R3 decision. Show truthful steps, elapsed time, usually about a minute and Cancel. Failure/cancellation preserves the draft. Retry, manual entry and demo-only simulated reading require explicit choices; there is no automatic fallback/retry loop. Reloaded unfinished requests offer Read again/Enter by hand and cannot spin forever.
+- Owner/Manager alone receives actual reading duration, USD cost and model names. Automated tests intercept the kit endpoints with fictional media/readings; they never call paid AI or use real invoices.
+- Ali's rehearsal starts the kit with `npm run serve`, starts/restarts the app preview, selects Live and tests connection, then tries a photo, a PDF, failure choices and a phone on the same Wi-Fi. Each device must be able to reach the Mac's reader address, and the kit must allow the actual app origin through CORS. Never assume or invent the kit's implementation.
 
 ## C1 and C2: approved store workflow (2026-10-09)
 
@@ -159,7 +160,6 @@ Stack **feat/prototype-e3-phones** on final E2 and finish the four-PR delivery w
 Write docs/phone-demo-hosting.md with exact latest-branch Ubuntu Node22/no-Docker commands, same-Wi-Fi/VM/firewall checks, secure-context and current camera-scanner limits, owner-run free-plan private Cloudflare Pages+Access steps for every production/preview hostname, update-after-merge and removal. Create no accounts/resources or deployment. Browser/phone/origin data remains separate.
 
 Capture actual compact Products/Received and genuine standalone emulation; distinguish emulation from an actual Home Screen launch, which requires real hardware. Tests must inspect generated manifest/service worker allowlist and negative private-response cases, real work/update guards, every designated row family's interaction/private fields and all existing suites/pricing. Record actual pass/fail/skipped/unrun outcomes and source/asset identity, not an imagined physical-device result. Final joint review names all four PRs/branches and latest E3 commands/click paths/limits.
-
 
 ## C9 current authorized slice
 

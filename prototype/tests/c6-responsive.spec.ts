@@ -1,7 +1,75 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
-import { signIn, setLanguage } from "./helpers";
+import { signIn, setLanguage, setBranch } from "./helpers";
+import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
+import { inspectDashboardCardLayout } from "./dashboard-card-layout";
 import { inspectResponsiveLayout } from "../scripts/c6-layout-proof.mjs";
+
+async function expectDelayedNavigationTooltip(
+  navigationItem: Locator,
+  label: string,
+  intent: "focus" | "mouseenter",
+) {
+  await navigationItem.evaluate((element, eventName) => {
+    performance.clearMarks("c6-tooltip-intent");
+    performance.clearMeasures("c6-tooltip-delay");
+    element.addEventListener(
+      eventName,
+      () => {
+        performance.mark("c6-tooltip-intent");
+        const observer = new MutationObserver(() => {
+          const tooltip = document.querySelector(".collapsed-nav-tooltip");
+          if (
+            tooltip &&
+            getComputedStyle(tooltip).visibility === "visible" &&
+            tooltip.getBoundingClientRect().width > 0
+          ) {
+            performance.measure("c6-tooltip-delay", "c6-tooltip-intent");
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.body, {
+          attributes: true,
+          childList: true,
+          subtree: true,
+        });
+      },
+      { once: true },
+    );
+  }, intent);
+  if (intent === "focus") await navigationItem.focus();
+  else await navigationItem.hover();
+  const tooltip = navigationItem
+    .page()
+    .getByRole("tooltip", { name: label, exact: true });
+  await expect(tooltip).toBeVisible();
+  const delay = await navigationItem.evaluate(
+    () =>
+      performance.getEntriesByName("c6-tooltip-delay", "measure")[0]?.duration,
+  );
+  // Allow one frame of measurement tolerance around the 300ms intent delay.
+  expect(delay).toBeGreaterThanOrEqual(290);
+  await expect(navigationItem).toHaveAttribute(
+    "aria-describedby",
+    (await tooltip.getAttribute("id"))!,
+  );
+  await expect(tooltip).toHaveCSS("pointer-events", "auto");
+  expect(
+    await tooltip.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        bounds.x + bounds.width / 2,
+        bounds.y + bounds.height / 2,
+      );
+      return {
+        portal: element.parentElement === document.body,
+        topLayer: element.matches(":popover-open"),
+        hit: Boolean(hit && element.contains(hit)),
+      };
+    }),
+  ).toEqual({ portal: true, topLayer: true, hit: true });
+}
+
 for (const language of ["en", "fa"] as const)
   for (const width of [390, 768, 900, 1024, 1180, 1280, 1440, 1920]) {
     test(`C7 adaptive tables and shell: ${language} ${width}px`, async ({
@@ -10,6 +78,7 @@ for (const language of ["en", "fa"] as const)
       test.setTimeout(180000);
       await page.setViewportSize({ width, height: 1080 });
       await signIn(page, "Supervisor");
+      await setBranch(page, "Branch 1");
       await setLanguage(page, language);
       for (const control of await page
         .locator(".topbar > button,.topbar > .ui-select")
@@ -41,6 +110,10 @@ for (const language of ["en", "fa"] as const)
         expect(proof.actualWidth).toBe(width);
         expect(proof.failures, `${scene} ${language} ${width}`).toEqual([]);
         if (scene === "dashboard") {
+          await assertDashboardOperationalAndShiftTiles(page, {
+            language,
+            navigate: false,
+          });
           const actual = await page.evaluate(() => {
             const rect = (element: Element) => {
               const value = element.getBoundingClientRect();
@@ -70,6 +143,15 @@ for (const language of ["en", "fa"] as const)
                 }),
               ),
               aside: rect(document.querySelector(".dashboard-aside")!),
+              main: rect(document.querySelector(".dashboard-main")!),
+              contentCards: [
+                ...document.querySelectorAll(".dashboard-layout .card"),
+              ]
+                .filter((element) => element.getBoundingClientRect().height > 0)
+                .map((element) => ({
+                  alignSelf: getComputedStyle(element).alignSelf,
+                  ...rect(element),
+                })),
             };
           });
           await writeFile(
@@ -78,23 +160,25 @@ for (const language of ["en", "fa"] as const)
           );
           expect(actual.topbar.height).toBe(60);
           expect(actual.accounts).toBe(1);
-          expect(actual.kpis).toHaveLength(4);
+          expect(actual.kpis).toHaveLength(6);
           expect(
             new Set(actual.kpis.map((card) => Math.round(card.y))).size,
-          ).toBe(width < 760 ? 2 : 1);
+          ).toBe(width < 760 ? 3 : width < 1000 ? 2 : 1);
           for (const row of actual.rows) {
             expect(row.cards).toHaveLength(2);
             const [first, second] = row.cards;
-            if (width < 760) {
+            if (width <= 1100) {
               expect(first.width).toBeCloseTo(second.width, 0);
               expect(second.y).toBeGreaterThanOrEqual(first.bottom + 15);
             } else {
               expect(first.y).toBeCloseTo(second.y, 0);
-              expect(first.height).toBeCloseTo(second.height, 0);
+              // D7 stretches only the actual neighbouring purchase pair.
+              expect(first.height).toBeGreaterThan(0);
+              expect(second.height).toBeGreaterThan(0);
               const gap =
                 Math.max(first.x, second.x) -
                 Math.min(first.right, second.right);
-              expect(gap).toBeCloseTo(24, 0);
+              expect(gap).toBeCloseTo(20, 0);
               // Grid track spans include their internal gutters: adding the
               // shared gutter proves the actual 8+4 or 6+6 allocation.
               expect((first.width + gap) / (second.width + gap)).toBeCloseTo(
@@ -103,7 +187,11 @@ for (const language of ["en", "fa"] as const)
               );
             }
           }
-          if (width >= 1440) expect(actual.aside.width).toBe(280);
+          if (width >= 1440)
+            expect(actual.main.width / actual.aside.width).toBeCloseTo(2, 1);
+          const cardLayout = await inspectDashboardCardLayout(page);
+          expect(cardLayout.cards.length).toBe(actual.contentCards.length);
+          expect(cardLayout.failures).toEqual([]);
         }
       }
       await page.goto("/#product?code=0006");
@@ -154,12 +242,57 @@ for (const language of ["en", "fa"] as const)
         await expect(page.locator(".sidebar")).toHaveCSS("width", "72px");
         const navigationItem = page.locator('.sidebar nav a[href="#products"]');
         const navigationLabel = navigationItem.locator(".nav-item-label");
-        await navigationItem.focus();
+        const tooltip = page.getByRole("tooltip", {
+          name: language === "en" ? "Products" : "محصولات",
+          exact: true,
+        });
+        await page.locator("#menu-toggle").click();
+        await expect(page.locator("#menu-toggle")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+        await expect(page.locator(".sidebar")).toHaveCSS("width", "248px");
         await expect(navigationLabel).toBeVisible();
-        await page.locator(".topbar-search-icon").focus();
-        await expect(navigationLabel).not.toBeVisible();
         await navigationItem.hover();
-        await expect(navigationLabel).toBeVisible();
+        await navigationItem.focus();
+        expect(
+          await page.evaluate(
+            () =>
+              new Promise<boolean>((resolve) => {
+                const started = performance.now();
+                let appeared = false;
+                const observe = () => {
+                  appeared ||= Boolean(
+                    document.querySelector(".collapsed-nav-tooltip"),
+                  );
+                  if (performance.now() - started >= 350) resolve(appeared);
+                  else requestAnimationFrame(observe);
+                };
+                observe();
+              }),
+          ),
+        ).toBe(false);
+        await page.keyboard.press("Escape");
+        await expect(page.locator("#menu-toggle")).toHaveAttribute(
+          "aria-expanded",
+          "false",
+        );
+        await page.mouse.move(width / 2, 540);
+        await expect(page.locator(".sidebar")).toHaveCSS("width", "72px");
+        await expect(navigationLabel).not.toBeVisible();
+        await expect(tooltip).toHaveCount(0);
+        await expectDelayedNavigationTooltip(
+          navigationItem,
+          language === "en" ? "Products" : "محصولات",
+          "focus",
+        );
+        await page.locator(".topbar-search-icon").focus();
+        await expect(tooltip).toHaveCount(0);
+        await expectDelayedNavigationTooltip(
+          navigationItem,
+          language === "en" ? "Products" : "محصولات",
+          "mouseenter",
+        );
         if (info.project.name === "phone")
           await page.locator(".topbar-search-icon").tap();
         else await page.locator(".topbar-search-icon").click();

@@ -160,7 +160,7 @@ describe("payment terms and editable totals", () => {
   });
 });
 
-describe("manual supplier review", () => {
+describe("optional supplier profiles", () => {
   const fields = {
     name: "Fictional C6 Supplier",
     phone: "",
@@ -184,17 +184,17 @@ describe("manual supplier review", () => {
       const supplier = saveSupplier(state, receiver, fields, {
         invoice_quick_add: true,
       });
-      expect(supplier.status).toBe("proposed");
+      expect(supplier.status).toBe("confirmed");
       state.invoice.supplier = supplier.name;
       markInvoiceSupplierReview(state.invoice, supplier);
-      expect(state.invoice.status).toBe("review");
-      expect(invoiceBlockers(state, receiver)).toContain("supplier_details");
-      expect(() => confirmSupplier(state, actor, supplier.id)).toThrow(
-        "Complete supplier details",
+      expect(state.invoice.supplier_review_required).toBe(false);
+      expect(invoiceBlockers(state, receiver)).not.toContain(
+        "supplier_details",
       );
+      expect(() => confirmSupplier(state, actor, supplier.id)).not.toThrow();
     }
   });
-  it("requires completion and explicit Manager confirmation without posting or mutating money", () => {
+  it("allows optional profile completion without posting or mutating money", () => {
     const { state, actor } = fixture();
     const supplier = saveSupplier(state, actor, fields, {
       invoice_quick_add: true,
@@ -209,24 +209,24 @@ describe("manual supplier review", () => {
       payment_terms: "Net 14",
     });
     const ledger = structuredClone(state.ledger);
-    expect(invoiceBlockers(state, actor)).toContain("supplier_review");
+    expect(invoiceBlockers(state, actor)).not.toContain("supplier_review");
     confirmInvoiceSupplierReview(state, actor);
     expect(invoiceBlockers(state, actor)).not.toContain("supplier_review");
     expect(supplier.status).toBe("confirmed");
     expect(state.invoice.status).not.toBe("posted");
     expect(state.ledger).toEqual(ledger);
   });
-  it("preserves standalone Manager creation while incomplete manual use stays blocked", () => {
+  it("keeps an incomplete supplier usable in manual and uploaded invoices", () => {
     const { state, actor } = fixture();
     const supplier = saveSupplier(state, actor, fields);
     expect(supplier.status).toBe("confirmed");
     state.invoice.supplier = supplier.name;
     state.invoice.supplier_confirmed = true;
-    expect(invoiceBlockers(state, actor)).toContain("supplier_details");
+    expect(invoiceBlockers(state, actor)).not.toContain("supplier_details");
     state.invoice.entry_mode = "upload";
     expect(invoiceBlockers(state, actor)).not.toContain("supplier_details");
   });
-  it("does not bypass explicit review by reselecting the completed same supplier", () => {
+  it("keeps reselecting the same supplier independent from profile completion", () => {
     const { state, actor } = fixture();
     const supplier = saveSupplier(state, actor, fields);
     state.invoice.supplier = supplier.name;
@@ -239,7 +239,7 @@ describe("manual supplier review", () => {
       payment_terms: "Net 14",
     });
     markInvoiceSupplierReview(state.invoice, supplier, supplier.name);
-    expect(invoiceBlockers(state, actor)).toContain("supplier_review");
+    expect(invoiceBlockers(state, actor)).not.toContain("supplier_review");
     confirmInvoiceSupplierReview(state, actor);
     expect(invoiceBlockers(state, actor)).not.toContain("supplier_review");
   });
@@ -279,6 +279,21 @@ describe("draft line removal", () => {
     expect(state.invoice.lines).toEqual(before.invoice.lines);
     expect(state.ledger).toEqual(ledger);
     expect(state.stock_movements).toEqual(movements);
+  });
+  it("refuses line-removal Undo after an intervening edit to another stable line", () => {
+    const { state, actor } = fixture();
+    addManualLine(state, actor, "0002");
+    addManualLine(state, actor, "0003");
+    const before = cloneWithAuthority(state);
+    removeInvoiceLine(state, actor, 0);
+    attachReversals(before, state, actor);
+    const removal = state.activity.at(-1)!.id;
+    state.invoice.lines[0].unit_cost_before_tax = "4.0000";
+    const changed = structuredClone(state);
+    expect(() => reverseActivity(state, actor, removal, "undo")).toThrow(
+      "conflict",
+    );
+    expect(state).toEqual(changed);
   });
   it("rejects posted removal and unauthorized locations atomically", () => {
     const { state, actor } = fixture();

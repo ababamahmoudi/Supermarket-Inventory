@@ -43,6 +43,13 @@ async function checkToolbar(toolbar: Locator, route: string) {
         right: rect.right,
         height: rect.height,
         center: rect.top + rect.height / 2,
+        kind: control.matches(".filter-search-pill")
+          ? "search-container"
+          : control.matches(".ui-segments")
+            ? "segment-track"
+            : control.matches(".ui-icon-button")
+              ? "icon"
+              : "ordinary",
       }));
     const trailing = element
       .querySelector(".filter-toolbar-trailing")
@@ -52,10 +59,20 @@ async function checkToolbar(toolbar: Locator, route: string) {
       card: { left: card.left, right: card.right },
       controls,
       trailing: trailing
-        ? { left: trailing.left, right: trailing.right }
+        ? { left: trailing.left, right: trailing.right, top: trailing.top }
         : null,
       direction: getComputedStyle(element).direction,
       gap: getComputedStyle(element).gap,
+      searchInputs: [
+        ...element.querySelectorAll<HTMLInputElement>(
+          ".filter-search-pill input",
+        ),
+      ]
+        .filter((input) => input.getBoundingClientRect().height > 0)
+        .map((input) => ({
+          name: input.getAttribute("aria-label"),
+          height: input.getBoundingClientRect().height,
+        })),
     };
   });
   expect(geometry.controls.length, route).toBeGreaterThan(1);
@@ -69,8 +86,19 @@ async function checkToolbar(toolbar: Locator, route: string) {
     `${route} end inset`,
   ).toBeCloseTo(20, 0);
   const rows: (typeof geometry.controls)[] = [];
+  const r2cScreen = ["suppliers", "payables", "offers"].includes(route);
+  if (r2cScreen)
+    await expect(
+      toolbar.locator(`xpath=ancestor::*[@data-r2c-screen="${route}"]`),
+      `${route}: the actual R2c screen owns its control size`,
+    ).toHaveCount(1);
   for (const control of geometry.controls) {
-    expect(control.height, `${route}: ${control.name}`).toBeCloseTo(40, 0);
+    // R2e's quality contract gives the complete row one 44px centre line.
+    const expectedHeight = 44;
+    expect(control.height, `${route}: ${control.name}`).toBeCloseTo(
+      expectedHeight,
+      0,
+    );
     expect(control.x, `${route}: start overflow`).toBeGreaterThanOrEqual(
       geometry.bar.left - 1,
     );
@@ -81,6 +109,8 @@ async function checkToolbar(toolbar: Locator, route: string) {
     if (row) row.push(control);
     else rows.push([control]);
   }
+  for (const input of geometry.searchInputs)
+    expect(input.height, `${route}: ${input.name}`).toBeCloseTo(44, 0);
   for (const row of rows) {
     expect(
       Math.max(...row.map((item) => item.center)) -
@@ -89,6 +119,14 @@ async function checkToolbar(toolbar: Locator, route: string) {
     ).toBeLessThanOrEqual(1);
   }
   expect(geometry.trailing, `${route}: count/actions end group`).not.toBeNull();
+  if (geometry.trailing && (await toolbar.page().viewportSize())!.width > 760)
+    expect(
+      Math.abs(
+        geometry.trailing.top -
+          Math.min(...geometry.controls.map((control) => control.top)),
+      ),
+      `${route}: count and Columns remain on the first filter row`,
+    ).toBeLessThanOrEqual(1);
   if (geometry.trailing)
     expect(
       geometry.direction === "rtl"

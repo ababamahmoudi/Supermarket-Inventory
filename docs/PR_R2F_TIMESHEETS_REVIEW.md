@@ -1,0 +1,37 @@
+# R2f D1/D2 Timesheets review
+
+## D1 — Daily sheet
+
+1. Sign in as Manager, Branch Supervisor or Cashier. Choose an allowed branch and open Timesheets. See the actual branch/day, distinct people, compact hours and current on-shift count. Owner access remains available; Floor Worker and module-Off access remain denied.
+2. At 1440px see three independently sized department columns; at1000px see two, at390px one. Department titles use the current language only. Each person stays on one row with Name / In / Out / Hours / shift menu.
+3. Focus a blank time: a small Now choice shows that branch's actual24-hour clock. Tap it to save that explicit time, or type730 then leave the field to get07:30. A populated field has no Now suggestion. Typing, save echoes and validation keep neighbouring controls in place.
+4. A valid current open shift shows elapsed blue hours with “so far”; overnight completion shows +1 day. A past missing Out remains amber and does not invent a clock-out. Future In times have no elapsed claim.
+5. Open Week and Export CSV. A missing-Out shift still contributes0 completed hours even when its daily display shows elapsed time. Saving a real Out makes its completed duration available normally.
+6. Use the row's shift menu → Remove → confirm; History still retains the change. Use Header History to see only the authorized selected day's records. Notes remains the last daily card, grows without a resize grip and preserves Saved/Saving/Retry feedback.
+7. Print remains the bilingual R2d paper (day/week) with the configured maker footer. Back/hash navigation, queued edits, original editing identity, branch-local date choice and native reload protection retain their existing guards.
+
+The reference's people and numbers are illustrative. The app always displays its actual authorized records. Daily captions may include clearly marked current elapsed hours; canonical completed payroll, week, CSV and paper are unchanged until an Out is recorded. Physical printing remains a hardware check. Validation results and D2 instructions are recorded below when integrated.
+
+D1 validation: production TypeScript/Vite build, changed-file ESLint, 27 focused display/autosave/clock/navigation unit checks, and the 13-case desktop-driven browser matrix passed. The matrix covers EN/FA, light/dark and1440/1000/390 widths with real saved-state assertions; widths, control heights, column edges and input centres are checked. Actual screenshots were captured for every matrix variant and compared with the approved references. Existing Manager/Cashier focused hash navigation, failing Browser Back/Retry and native reload checks passed. The existing print check now asserts both configured English and Persian maker footer spans, matching Group E.
+
+## D2 — Manage staff
+
+1. Timesheets → Manage staff. At1440/1000px, see the880px window, current branch, Search / Active and Archived counts / Add person on one44px row, aligned column captions and boxed people. At390px, Search, switch and Add person fill separate rows; department/login appear below each name.
+2. Search an actual name. Select Archived and Active; counts describe real branch records, independently of search. Names follow the current language with the available other-language name below. A stored eligible login displays its real username with the person icon; an unlinked person says No app login.
+3. Add person. The New person form appears above the same list and focuses English name. Enter an English name, optional Persian name, choose a configured department and optional permitted login. Add person saves the real record, returns to Active with search cleared and displays the new row. Cancel only closes the unsaved form.
+4. Open a row menu → Edit; change the optional Persian name/login and save. Menu → Archive → confirm moves the actual person to Archived while keeping past times. Select Archived → menu → Restore. Done closes the directory.
+5. If another write changes a person while its editor is open, Save rejects the stale version and retains the staged text with an explanatory error. Closing/reopening reloads current data. Archive also waits for the actual guarded write before closing its confirmation.
+
+D2 visual references use illustrative people and account names. The app uses the current authorized records and only displays accounts the operator can read; these may produce a different number of rows and a bounded scroll area. No historical shift or account is invented for a screenshot. Validation results follow below.
+
+D2 validation: the twelve EN/FA × light/dark ×1440/1000/390 cases check actual staff/add writes, true counts/logins,880px outer window (358px at390),44px toolbar/footer,36px standalone menus,64px desktop rows, rounded102px first phone box, and logical column edges. The approved source’s inline form actions use the small40px row. Stale-edit and failed-archive/Retry negative cases preserve newer records, typed values and historical shifts. Real offer Stop → queued Undo → Manage staff → Undo checks at1440/390 verify that Done and footer height stay within2px, the note returns, the actual offer is active again, and staff/shifts never change. The27 focused buffer/clock/navigation/display unit checks, affected existing Cashier staff edit/link/archive/restore/history case, TypeScript/build and changed-file lint/format checks pass.
+
+The real Now popup retains shared viewport bounds and can flip above a field near the lower edge. Source mockups use a static below-field suggestion; no viewport/focus guard is weakened. Staff uses the source’s shared36px standalone contextual icon; the daily menu matches its adjacent44px time fields. The footer reserves one stable44px grid track for its note or actual modal Undo feedback, preventing a late feedback arrival from shifting Done.
+
+## Integration alignment follow-up
+
+The existing full-route phone alignment check now understands C6’s visible Select all/Product band above five-region product cards, and D8’s approved header/items/meta/next return cards. It binds actual product names/codes and canonical return IDs/numbers/suppliers/items, requires the real matching record chevron, and distinguishes an omitted/private credit column from an authorized displayed credit. Checkbox controls fit the44px Labels selection track. The2px desktop columns, phone containment and logical-edge budget remain. New EN/FA probes select actual eligible products, measure at least three real returns, reject a4px shift, hidden checkbox, forged destination, copied markup and Cashier credit injection, and verify that following the real chevron writes no return/ledger state.
+
+## Native unload completion proof
+
+The unit regression holds the genuine repository transaction before its write and again after the actual canonical07:30 update/original-actor audit has committed but its result is still in flight. Unload must remain blocked through both phases. It then observes actual app-work completion before asserting that the pending-work flag clears and native unload is allowed. This replaces a one-second poll after merely releasing a scheduling gate; no application hook, timeout increase, retry or weaker assertion is introduced. The existing30-second test budget still catches a save that never completes.

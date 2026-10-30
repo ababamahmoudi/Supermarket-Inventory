@@ -13,6 +13,15 @@ const saved = (page: Page): Promise<DemoState> =>
     JSON.parse(JSON.stringify(canonicalState)!),
   );
 
+async function showReviewOriginal(page: Page, language: "en" | "fa" = "en") {
+  if ((page.viewportSize()?.width ?? 1440) <= 760)
+    await page
+      .getByRole("button", {
+        name: language === "en" ? /^View original \(/ : /^مشاهده اصل \(/,
+      })
+      .click();
+}
+
 for (const language of ["en", "fa"] as const)
   test(`posted original and confirmed correction retain immutable evidence and version links in ${language}`, async ({
     page,
@@ -37,7 +46,7 @@ for (const language of ["en", "fa"] as const)
       .locator(".invoice-posted-workspace")
       .evaluate((element) => {
         const header = element.querySelector(".posted-invoice-header")!;
-        const original = element.querySelector(".invoice-original-card")!;
+        const original = element.querySelector(".original-viewer")!;
         return !!(
           header.compareDocumentPosition(original) &
           Node.DOCUMENT_POSITION_FOLLOWING
@@ -49,6 +58,7 @@ for (const language of ["en", "fa"] as const)
         exact: true,
       }),
     ).toHaveCount(0);
+    await showReviewOriginal(page, language);
     const image = page.getByRole("img", {
       name: fa ? "تصویر اصل فاکتور" : "Original invoice image",
       exact: true,
@@ -61,10 +71,21 @@ for (const language of ["en", "fa"] as const)
       .toBeGreaterThan(0);
     const downloadPromise = page.waitForEvent("download");
     await page
-      .getByRole("button", { name: fa ? "دانلود" : "Download", exact: true })
+      .locator(".invoice-original-controls:visible")
+      .getByRole("button", { name: fa ? "بیشتر" : "More", exact: true })
+      .click();
+    await page
+      .getByRole("menuitem", { name: fa ? "دانلود" : "Download", exact: true })
       .click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe(original.file_name);
+
+    if ((page.viewportSize()?.width ?? 1440) < 760)
+      await page
+        .locator(
+          ".original-viewer-dialog[open] .ui-dialog-header .ui-icon-button",
+        )
+        .click();
 
     await page
       .getByRole("button", {
@@ -76,7 +97,9 @@ for (const language of ["en", "fa"] as const)
       name: fa ? "اصلاح فاکتور" : "Correct invoice",
       exact: true,
     });
-    const first = dialog.locator(".invoice-correction-line").first();
+    await expect(dialog.locator(".receiving-line-editor")).toHaveCount(0);
+    await dialog.locator(".invoice-line-toggle").first().click();
+    const first = dialog.locator(".receiving-line-editor");
     const nextCost = new Decimal(original.lines[0].unit_cost_before_tax)
       .plus("0.5000")
       .toFixed(4);
@@ -85,6 +108,10 @@ for (const language of ["en", "fa"] as const)
         exact: true,
       })
       .fill(nextCost);
+    await first
+      .getByRole("button", { name: fa ? "بستن" : "Close", exact: true })
+      .last()
+      .click();
     await dialog
       .getByLabel(fa ? "دلیل (الزامی)" : "Reason (required)", { exact: true })
       .fill("Correct the recorded fictional unit cost.");
@@ -242,7 +269,10 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
   await page.goto("/#invoices");
   const previousInvoiceId = (await saved(page)).invoice.id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "New invoice", exact: true })
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
   // File injection bypasses inert/disabled controls. Wait for the real manual
   // command and protected workspace before acting as an enabled file picker.
   await expect
@@ -256,17 +286,33 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
     })
     .toBe(true);
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible();
-  const upload = page.getByLabel("Upload a PDF or photo", { exact: true });
+  const upload = page.getByLabel("Attach original", { exact: true });
   await expect(upload).toBeEnabled();
   await upload.setInputFiles(fixture);
+  await showReviewOriginal(page);
   const canvas = page.getByRole("img", {
     name: "Original invoice PDF",
     exact: true,
   });
   await expect(canvas).toBeVisible();
-  await expect(page.locator(".invoice-pdf-pages")).toContainText("1 / 2");
+  await expect(
+    page.locator(".invoice-original-page").filter({ visible: true }),
+  ).toHaveAttribute("aria-label", "Page 1 of 2");
+  if ((page.viewportSize()?.width ?? 1440) <= 760) {
+    const trigger = page.locator(".original-viewer-phone-trigger");
+    await expect(trigger).toHaveText(
+      "View original2 pages · opens full screen",
+    );
+    await expect
+      .poll(() =>
+        trigger
+          .locator("img")
+          .evaluate((element: HTMLImageElement) => element.naturalWidth),
+      )
+      .toBeGreaterThan(0);
+  }
   await expect
     .poll(() =>
       canvas.evaluate((element) => (element as HTMLCanvasElement).width),
@@ -291,7 +337,9 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
     (element as HTMLCanvasElement).toDataURL(),
   );
   await page.getByRole("button", { name: "Next page", exact: true }).click();
-  await expect(page.locator(".invoice-pdf-pages")).toContainText("2 / 2");
+  await expect(
+    page.locator(".invoice-original-page").filter({ visible: true }),
+  ).toHaveAttribute("aria-label", "Page 2 of 2");
   await expect
     .poll(() =>
       canvas.evaluate((element) => (element as HTMLCanvasElement).toDataURL()),
@@ -376,17 +424,21 @@ test("an uploaded PDF uses the custom viewer, navigates actual pages and retains
   expect(Buffer.from(beforeReload.bytes)).toEqual(fixture.buffer);
   expect(digest(Buffer.from(beforeReload.bytes))).toBe(expectedHash);
   await page.reload();
-  await expect(page.locator(".invoice-pdf-pages")).toContainText("1 / 2");
+  await showReviewOriginal(page);
+  await expect(
+    page.locator(".invoice-original-page").filter({ visible: true }),
+  ).toHaveAttribute("aria-label", "Page 1 of 2");
   expect((await saved(page)).invoice.file_data).toBe(uploaded);
   await expect.poll(() => pixel(0.18)).toEqual([51, 102, 204]);
   const afterReload = await storedPdf();
   expect(afterReload).toEqual(beforeReload);
   expect(Buffer.from(afterReload.bytes)).toEqual(fixture.buffer);
-  const downloadEvent = page.waitForEvent("download");
   await page
-    .locator(".invoice-original-controls")
-    .getByRole("button", { name: "Download", exact: true })
+    .locator(".invoice-original-controls:visible")
+    .getByRole("button", { name: "More", exact: true })
     .click();
+  const downloadEvent = page.waitForEvent("download");
+  await page.getByRole("menuitem", { name: "Download", exact: true }).click();
   const download = await downloadEvent;
   expect(download.suggestedFilename()).toBe(fixture.name);
   const downloadPath = await download.path();

@@ -1,5 +1,6 @@
 /** Private authentication data never belongs in a business read model or export. */
 const privateAuthorityKeys = new Set([
+  "pricingquote",
   "authority",
   "authoritysnapshot",
   "privateauthority",
@@ -55,6 +56,25 @@ export function privateAuthorityField(key: string): boolean {
     .some((part) => privateAuthorityKeys.has(normalized(part)));
 }
 
+/** Matching sources and diagnostic details stay private in every audit/export. */
+const privateBusinessKeys = new Set([
+  "printeddescriptionkeys",
+  "freecasegroup",
+  "acquisitionbasis",
+  "acquisitionamount",
+  "sourceinvoiceids",
+  "retainedoriginalpages",
+  "failurediagnostic",
+]);
+function privateAuditField(key: string): boolean {
+  return (
+    privateAuthorityField(key) ||
+    key
+      .split(/[.[\]·]/)
+      .some((part) => privateBusinessKeys.has(normalized(part)))
+  );
+}
+
 function publicValue(value: unknown, parentKey?: string): unknown {
   if (Array.isArray(value))
     return value.map((item) => publicValue(item, parentKey));
@@ -71,11 +91,11 @@ function publicValue(value: unknown, parentKey?: string): unknown {
     Array.isArray(path) &&
     path.some((part) =>
       typeof part === "string"
-        ? privateAuthorityField(part)
+        ? privateAuditField(part)
         : part &&
           typeof part === "object" &&
           "key" in part &&
-          privateAuthorityField(String(part.key)),
+          privateAuditField(String(part.key)),
     );
   const privatePath =
     pathIsPrivate(record.path) ||
@@ -87,7 +107,7 @@ function publicValue(value: unknown, parentKey?: string): unknown {
     Object.entries(record)
       .filter(
         ([key]) =>
-          !privateAuthorityField(key) &&
+          !privateAuditField(key) &&
           (!decision || decisionSnapshotKeys.has(key)) &&
           !(authorityObject && ["phone", "email"].includes(key)) &&
           !(

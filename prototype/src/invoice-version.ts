@@ -1,4 +1,5 @@
 import type { DemoInvoice, DemoState } from "./types";
+import { effectiveInvoiceReceivedAt } from "./invoice-received-version";
 
 export interface InvoiceVersion {
   version_id: string;
@@ -66,10 +67,14 @@ export function effectiveInvoiceVersion(
   state: DemoState,
   original: DemoInvoice,
 ): DemoInvoice {
-  return currentOperationalVersion(
+  const invoice = currentOperationalVersion(
     original,
     invoiceContentVersions(state, original).at(-1)!,
   ).invoice;
+  const receivedAt = effectiveInvoiceReceivedAt(state, original);
+  return receivedAt !== invoice.received_at
+    ? { ...invoice, received_at: receivedAt }
+    : invoice;
 }
 
 export function invoiceVersion(

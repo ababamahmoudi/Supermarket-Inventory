@@ -1,0 +1,179 @@
+/* Reserve the same 36px record chevron and 8px gap as the actual next-action row. */
+.returns-next-action-heading {
+  display: inline-block;
+  margin-inline-end: 44px;
+}
+.return-list-items {
+  display: grid;
+  gap: 2px;
+  min-inline-size: 0;
+}
+.return-list-item-names {
+  display: grid;
+  line-height: 1.4;
+}
+.return-list-item-names > span {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  min-inline-size: 0;
+}
+.return-list-item-name {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.return-list-item-quantity {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.return-list-items > small {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.return-credit-due {
+  white-space: nowrap;
+}
+@media (max-width: 759px) {
+  :root .returns-overview .returns-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  :root .returns-overview .returns-toolbar .filter-toolbar-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    inline-size: 100%;
+  }
+  :root .returns-overview .returns-toolbar .filter-toolbar-controls > *,
+  :root
+    .returns-overview
+    .returns-toolbar
+    .filter-toolbar-controls
+    > .filter-search-pill {
+    inline-size: 100%;
+    max-inline-size: none;
+    min-inline-size: 0;
+  }
+  :root .returns-overview .returns-toolbar .filter-toolbar-trailing,
+  :root .returns-overview .returns-toolbar .filter-count,
+  :root .returns-overview .returns-toolbar .returns-toolbar-end {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    inline-size: 100%;
+  }
+  :root
+    .returns-overview-table.ui-data-table.is-responsive.is-mobile.is-phone-list
+    tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  :root
+    .returns-overview-table.ui-data-table.is-responsive.is-mobile.is-phone-list
+    tr.phone-list-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "heading" "items" "meta" "next";
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--field-fill);
+    border-radius: var(--radius-menu);
+    box-shadow: var(--shadow-none);
+  }
+  :root
+    .returns-overview-table.ui-data-table.is-responsive.is-mobile.is-phone-list
+    tr.phone-list-row
+    > .return-phone-header {
+    grid-area: heading;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  :root
+    .returns-overview-table.ui-data-table.is-responsive.is-mobile.is-phone-list
+    tr.phone-list-row
+    > td {
+    min-block-size: 0;
+    block-size: auto;
+  }
+  .return-phone-reference {
+    flex: 0 0 auto;
+  }
+  .return-phone-supplier {
+    min-inline-size: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .return-phone-status {
+    flex: 0 0 auto;
+    max-inline-size: 57%;
+  }
+  .return-phone-status .ui-badge {
+    max-inline-size: 100%;
+    background: var(--info-bg);
+    padding: 3px 10px;
+    border-radius: var(--radius-round);
+    white-space: nowrap;
+  }
+  .return-phone-status .ui-badge.pending {
+    background: var(--pending-bg);
+  }
+  .return-phone-status .ui-badge.approved {
+    background: var(--approved-bg);
+  }
+  .return-phone-status .ui-status-dot {
+    display: none;
+  }
+  .return-phone-items {
+    grid-area: items;
+  }
+  .return-phone-items .return-list-item-names > span {
+    white-space: normal;
+    overflow: visible;
+  }
+  :root
+    .returns-overview-table.ui-data-table.is-responsive.is-mobile.is-phone-list
+    tr.phone-list-row
+    > .return-phone-meta {
+    grid-area: meta;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .return-phone-meta > :first-child {
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+  }
+  :root
+    .returns-overview-table.ui-data-table.is-responsive.is-mobile.is-phone-list
+    tr.phone-list-row
+    > .return-phone-next {
+    grid-area: next;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-block-start: 6px;
+    border-block-start: 1px solid var(--row-divider);
+  }
+  .return-phone-next .actions {
+    flex: 1;
+    justify-content: flex-start;
+  }
+}
+.return-credit-currency {
+  display: block;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-body);
+}
