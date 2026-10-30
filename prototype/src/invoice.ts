@@ -161,7 +161,7 @@ export function confirmInvoiceSupplierReview(
     company_id: invoice.company_id,
     kind: "company_shared",
   });
-  if (invoice.status === "posted")
+  if (invoice.status === "posted" || invoice.status === "cancelled")
     throw new Error(
       "Only an Owner or Manager can confirm this supplier review.",
     );

@@ -112,6 +112,7 @@ import "./invoice-a2.css";
 import "./invoice-c3.css";
 import "./invoice-entry-c6.css";
 import { InvoiceQueueTable } from "./InvoiceQueueTable";
+import { DiscardInvoice } from "./DiscardInvoice";
 import { InvoiceReviewPage } from "./invoice-review/InvoiceReviewPage";
 import { ReviewHeader } from "./invoice-review/ReviewHeader";
 import { InvoiceJsonImport } from "./InvoiceJsonImport";
@@ -524,7 +525,11 @@ function InvoicePickerList() {
             count: count("posted"),
             label: t("Posted", "ثبت‌شده"),
           },
-          { value: "cancelled", count: 0, label: t("Cancelled", "لغوشده") },
+          {
+            value: "cancelled",
+            count: count("cancelled"),
+            label: t("Cancelled", "لغوشده"),
+          },
         ]}
       />
       <Card className="invoice-picker">
@@ -739,15 +744,17 @@ function InvoiceWorkspace({
   >({});
   const blockers = workspace.blockers;
   const currentTab: InvoiceTab =
-    invoice.status === "reading"
-      ? "processing"
-      : invoice.status === "posted"
-        ? "posted"
-        : invoice.status === "review"
-          ? blockers.length
-            ? "needs_review"
-            : "ready_to_post"
-          : "drafts";
+    invoice.status === "cancelled"
+      ? "cancelled"
+      : invoice.status === "reading"
+        ? "processing"
+        : invoice.status === "posted"
+          ? "posted"
+          : invoice.status === "review"
+            ? blockers.length
+              ? "needs_review"
+              : "ready_to_post"
+            : "drafts";
   const [selectedView, setSelectedView] = useListState<{
     invoiceId: string;
     stage: InvoiceTab;
@@ -1401,7 +1408,9 @@ function InvoiceWorkspace({
             ? t("Processing", "در حال پردازش")
             : tab === "needs_review"
               ? t("Needs review", "نیازمند بررسی")
-              : t("Ready to post", "آماده ثبت")
+              : tab === "cancelled"
+                ? t("Cancelled", "لغوشده")
+                : t("Ready to post", "آماده ثبت")
       }
       className="invoice-saved-drafts"
     >
@@ -1814,6 +1823,33 @@ function InvoiceWorkspace({
                       )}
           </EmptyState>
         </Card>
+      ) : invoice.status === "cancelled" ? (
+        <div
+          className="receiving-review"
+          data-testid="invoice-cancelled-detail"
+        >
+          <ReviewHeader
+            invoice={invoice}
+            missing=""
+            onClose={() => navigate("invoices?tab=cancelled")}
+            onPost={() => {}}
+            onAttemptPost={() => {}}
+          />
+          <Card title={t("Cancelled", "لغوشده")}>
+            <p>
+              {invoice.cancellation?.by} ·{" "}
+              <DateText value={invoice.cancellation?.at ?? ""} />
+            </p>
+            <p>
+              {invoice.cancellation?.reason === "Empty draft"
+                ? t("Empty draft", "پیش‌نویس خالی")
+                : invoice.cancellation?.reason}
+            </p>
+          </Card>
+          {invoice.original_available && (
+            <OriginalViewer invoice={invoice} onAttach={() => {}} />
+          )}
+        </div>
       ) : locked ? (
         <>
           <PostedInvoice
@@ -1851,9 +1887,18 @@ function InvoiceWorkspace({
           <PageHeader
             title={t("New invoice", "فاکتور جدید")}
             actions={
-              <Button variant="secondary" onClick={() => navigate("invoices")}>
-                {t("Save and close", "ذخیره و بستن")}
-              </Button>
+              <>
+                <DiscardInvoice
+                  invoice={invoice}
+                  onDiscarded={() => navigate("invoices?tab=cancelled")}
+                />
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate("invoices")}
+                >
+                  {t("Save and close", "ذخیره و بستن")}
+                </Button>
+              </>
             }
           />
           <Card>

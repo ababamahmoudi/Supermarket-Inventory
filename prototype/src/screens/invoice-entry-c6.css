@@ -135,3 +135,14 @@
 .invoice-saved-drafts + .ui-card {
   margin-block-start: 24px;
 }
+
+@media (max-width: 760px) {
+  .invoice-saved-table .invoice-queue-primary-action {
+    display: none;
+  }
+  .invoice-saved-table .invoice-queue-phone-actions {
+    margin-inline-start: auto;
+    display: inline-flex;
+    align-items: center;
+  }
+}

@@ -333,6 +333,16 @@ export function invoiceView(
   );
   const view = {
     ...select(invoice, invoiceKeys),
+    ...(invoice.cancellation
+      ? {
+          cancellation: select(invoice.cancellation, [
+            "by_user_id",
+            "by",
+            "at",
+            "reason",
+          ]),
+        }
+      : {}),
     ...(invoice.live_reading
       ? { live_reading: projectLiveInvoiceReading(invoice.live_reading) }
       : {}),

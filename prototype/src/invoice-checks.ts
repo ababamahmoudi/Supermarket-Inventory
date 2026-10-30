@@ -154,7 +154,7 @@ export function visibleInvoiceCheckFields(record: {
 
 /** Adopt the receiving defaults on an authorized draft, preserving explicit date choices. */
 export function normalizeInvoiceReceivingReview(invoice: DemoInvoice): void {
-  if (invoice.status === "posted") return;
+  if (invoice.status === "posted" || invoice.status === "cancelled") return;
   const required = [
     "supplier",
     "supplier_invoice_number",

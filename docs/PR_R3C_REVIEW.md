@@ -10,7 +10,7 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 | 2     | K1 — unchanged known products green                  | Delivered         |
 | 3     | K2 — printed-name matching and checked-values import | Delivered         |
 | 4     | K6 — missing-paper payment default                   | Delivered         |
-| 5     | F4 — retained Discard / Cancelled / Undo             | In implementation |
+| 5     | F4 — retained Discard / Cancelled / Undo             | Delivered         |
 | 6     | F7 — truthful processing header                      | In implementation |
 | 7     | F3 — native picker before draft creation             | In implementation |
 | 8     | K3 — configurable .49 → .99                          | In implementation |
@@ -83,6 +83,16 @@ Owner verification passed 267 tests across 19 files, full lint/build and 18 actu
 4. A reading with actual printed/checked terms keeps those terms. Existing manual drafts and stored invoices retain their prior values.
 
 Combined K0/K1/K2/K6 verification passed 85 targeted unit tests, four English/Persian desktop/phone browser cases and a fresh build, with no browser skips or retries. Independent full CI is recorded on PR #29.
+
+## F4 — retained Discard, Cancelled and Undo
+
+1. In Invoices, click **New invoice → Manual entry**, then **Save and close** without entering content. Open Drafts → the row's **More → Discard invoice**. It moves to Cancelled immediately, with no confirmation dialog.
+2. Open an unposted invoice that has an original or entered fields. Click **Discard invoice** in its header. Click the dialog's Discard button with an empty Reason: **Add a reason** appears and nothing is changed. Cancel the dialog; the invoice is unchanged.
+3. Open Discard again, enter a fictional reason and confirm. Open **Cancelled**, then the record. Check its reason/person/time and original. The record has no Post or editing controls.
+4. Open another invoice, then click the **Undo** toast. Return to the discarded record: its draft is restored and the invoice you opened meanwhile is unchanged. For a restored live-reading draft, use **Read again** explicitly; Undo itself does not restart reading.
+5. For a draft already entered by hand, Discard → Undo restores its manual-entry workflow. Continue adding a line with the original permitted role.
+
+The integrated final source passed 129 targeted units, a fresh build and eight English/Persian desktop/phone browser cases, with no skips or retries. Independent full CI is tracked on PR #29.
 
 ## After the demo — record only
 

@@ -494,7 +494,13 @@ export type DemoInvoice = Omit<
     reviewer_user_ids?: string[];
     reviewer_origin_location_id?: string;
     version?: number;
-    status: "empty" | "reading" | "draft" | "review" | "posted";
+    status: "empty" | "reading" | "draft" | "review" | "posted" | "cancelled";
+    cancellation?: {
+      by_user_id: string;
+      by: string;
+      at: string;
+      reason: string;
+    };
     live_reading?: LiveInvoiceReading;
     simulated_reading?: true;
     lines: InvoiceLine[];

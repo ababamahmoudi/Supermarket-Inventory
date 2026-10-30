@@ -28,6 +28,7 @@ export function invoiceListStage(
   },
   blockersById: Readonly<Record<string, readonly unknown[] | undefined>>,
 ): InvoiceListTab | null {
+  if (invoice.status === "cancelled") return "cancelled";
   if (invoice.status === "posted") return "posted";
   if (invoice.status === "reading") return "processing";
   if (

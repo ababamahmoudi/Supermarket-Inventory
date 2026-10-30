@@ -644,3 +644,7 @@ Checked answers and later human name edits are authoritative product-name propos
 ## 2026-10-30 — R3c K6 — missing-paper payment default
 
 **R3c K6 — configured defaults with source precedence:** use the receiving configuration for missing-paper terms instead of guessing from a supplier's earlier invoices. Seed Monthly; keep it configurable and preserve an explicit disabled value. Share preview/import resolution so the visible count agrees with the imported draft. Preserve printed/checked source precedence, genuine due-date questions, ordinary manual creation, existing records and source bytes. A default is provenance, not a human check.
+
+## 2026-10-30 — R3c F4 — retained Discard, Cancelled and Undo
+
+**R3c F4 — retained cancellation:** Discard is an audited lifecycle change, not deletion. Retain the original and history, offer a counted read-only Cancelled stage and use the existing conflict/authority-checked Undo. Record an explicit reason for entered content while making genuinely empty-draft disposal immediate. Bind reversal to the exact retained target rather than the global workspace slot; retire old attempts on both transitions and preserve genuine manual recovery. Never reverse posted purchases or create compensating financial/stock facts for a draft discard.

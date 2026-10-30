@@ -236,6 +236,7 @@ export function Dashboard() {
       reading: t("Processing", "در حال پردازش"),
       review: t("Needs review", "نیاز به بررسی"),
       posted: t("Posted", "ثبت‌شده"),
+      cancelled: t("Cancelled", "لغوشده"),
     })[status];
   const initials = (name: string) =>
     name

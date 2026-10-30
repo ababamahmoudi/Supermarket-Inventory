@@ -1,5 +1,11 @@
 # Data model
 
+## R3c F4 — retained Discard, Cancelled and Undo
+
+`DemoInvoice.status` adds `"cancelled"`; `cancellation?: { by_user_id: string; by: string; at: string; reason: string }` retains current actor/time/reason and is explicitly projected for authorized invoice reads. Cancelled invoices remain in the canonical invoice records and have a real counted list stage. The original files/pages, line/source evidence and earlier History remain retained. Posted invoices cannot be discarded; Cancelled records cannot be edited or posted.
+
+Discard checks fresh invoice edit authority, exact target/version and genuine emptiness. Empty drafts use the attributed reason `Empty draft`; drafts with entered content require a reason. The existing reversible `Cancel invoice` Activity is displayed as **Discard invoice**. Its special inverse addresses one retained invoice ID, checks the exact current target, restores the trusted pre-discard content and rechecks current edit authority. Undo after opening another invoice restores only the discarded target and leaves the current workspace untouched. Version/attempt identity advance on Discard and recovery; an old reading response cannot resume. A genuinely manual live-reading phase stays manual so its existing narrow manual-entry authority survives Undo; processing recovery stays inactive until a person explicitly reads again.
+
 ## R3c K6 — missing-paper payment default
 
 `CompanyConfig.receiving.default_payment_terms?: string | null` is seeded as `"Monthly"`. A missing legacy setting resolves from the seed without rewriting stored configuration; explicit null, blank or an unrecognized term disables the default. Recognized configured terms reuse the existing calendar/day-term parser.

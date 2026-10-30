@@ -6,6 +6,7 @@ import { ReadingMoney } from "../InvoiceReadingReview";
 import { effectiveInvoiceLocation } from "../received";
 import { branchLabel as configuredBranchLabel } from "../settings";
 import { useLiveReadingActivity } from "../live-reading-activity";
+import { DiscardInvoice } from "./DiscardInvoice";
 
 function LiveQueueProgress({ invoice }: { invoice: InvoiceReadDTO }) {
   const { t } = useDemo();
@@ -107,6 +108,26 @@ export function InvoiceQueueTable({
           "date",
           "progress",
         ],
+        render: ({ cell, recordLink }) => (
+          <>
+            <td className="phone-list-name">{cell("invoice")}</td>
+            <td className="phone-list-value">{cell("total")}</td>
+            <td className="phone-list-chevron">{recordLink}</td>
+            <td className="phone-list-secondary">
+              {[
+                "supplier",
+                ...(branch === "all" ? ["location"] : []),
+                "date",
+                "progress",
+              ].map((key) => (
+                <span key={key}>{cell(key)}</span>
+              ))}
+              <span className="invoice-queue-phone-actions">
+                {cell("action")}
+              </span>
+            </td>
+          </>
+        ),
       }}
     >
       <thead>
@@ -187,7 +208,9 @@ export function InvoiceQueueTable({
               </td>
               <td>
                 <span className="invoice-queue-progress">
-                  {saved.live_reading && saved.status === "reading" ? (
+                  {saved.status === "cancelled" ? (
+                    t("Cancelled", "لغوشده")
+                  ) : saved.live_reading && saved.status === "reading" ? (
                     <LiveQueueProgress invoice={saved} />
                   ) : (
                     t(
@@ -199,18 +222,22 @@ export function InvoiceQueueTable({
               </td>
               <td>
                 <Button
+                  className="invoice-queue-primary-action"
                   variant={reviewAction ? "primary" : "secondary"}
                   size="sm"
                   onClick={() => void open(saved)}
                 >
-                  {reviewAction
-                    ? t("Review", "بررسی")
-                    : unreadOriginal(saved)
-                      ? t("Continue", "ادامه")
-                      : saved.live_reading && saved.status === "reading"
-                        ? t("Read again", "خواندن دوباره")
-                        : t("Resume draft", "ادامه پیش‌نویس")}
+                  {saved.status === "cancelled"
+                    ? t("Open invoice", "باز کردن فاکتور")
+                    : reviewAction
+                      ? t("Review", "بررسی")
+                      : unreadOriginal(saved)
+                        ? t("Continue", "ادامه")
+                        : saved.live_reading && saved.status === "reading"
+                          ? t("Read again", "خواندن دوباره")
+                          : t("Resume draft", "ادامه پیش‌نویس")}
                 </Button>
+                <DiscardInvoice invoice={saved} menu />
               </td>
             </tr>
           );

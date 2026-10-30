@@ -1,3 +1,8 @@
+## 2026-10-30 — R3c F4 — retained Discard, Cancelled and Undo
+
+- Add header/list Discard with immediate empty-draft disposal, reasoned confirmation for entered content, retained Cancelled records and read-only original/attribution. Undo restores only the exact authorized target, preserves manual-entry recovery and retires old reading attempts without another request.
+- Owner verification passed 110 targeted discard/History/live units, full lint/build and eight EN/FA desktop/phone browser cases. The integrated final source passed 129 targeted units, a fresh build and all eight EN/FA desktop/phone discard browser cases, with no skips or retries. Independent full CI is tracked on PR #29.
+
 ## 2026-10-30 — R3c K6 — missing-paper payment default
 
 - Default absent AI-reading payment terms from receiving configuration, seeded Monthly with a quiet translated hint and correct next-month due date. Printed/checked terms take precedence; manual changes clear default provenance. Preserve genuine source/due-date questions, existing/manual invoices and originals.

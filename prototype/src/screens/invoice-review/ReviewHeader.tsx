@@ -5,6 +5,7 @@ import { Badge, Button } from "../../ui";
 import { DateText, LtrValue, NotAdded } from "../../presentation";
 import { branchLabel } from "../../settings";
 import type { InvoiceReadDTO } from "../../invoice-projections";
+import { DiscardInvoice } from "../DiscardInvoice";
 export function ReviewHeader({
   invoice,
   missing,
@@ -56,11 +57,13 @@ export function ReviewHeader({
               <NotAdded />
             )}
             <Badge tone={invoice.status === "posted" ? "approved" : "neutral"}>
-              {invoice.status === "posted"
-                ? t("Posted", "ثبت‌شده")
-                : invoice.status === "reading" && invoice.live_reading
-                  ? t("Processing", "در حال پردازش")
-                  : t("In review", "در حال بررسی")}
+              {invoice.status === "cancelled"
+                ? t("Cancelled", "لغوشده")
+                : invoice.status === "posted"
+                  ? t("Posted", "ثبت‌شده")
+                  : invoice.status === "reading" && invoice.live_reading
+                    ? t("Processing", "در حال پردازش")
+                    : t("In review", "در حال بررسی")}
             </Badge>
           </div>
           {(invoice.reading_record ||
@@ -82,16 +85,21 @@ export function ReviewHeader({
           )}
         </div>
         <div className="actions">
+          <DiscardInvoice invoice={invoice} onDiscarded={onClose} />
           <Button variant="neutral" onClick={onClose}>
-            {t("Save and close", "ذخیره و بستن")}
+            {invoice.status === "cancelled"
+              ? t("Close", "بستن")
+              : t("Save and close", "ذخیره و بستن")}
           </Button>
-          <PostInvoiceControl
-            missing={missing}
-            disabled={postDisabled}
-            onPost={onPost}
-            onAttemptPost={onAttemptPost}
-            className="receiving-desktop-post"
-          />
+          {invoice.status !== "cancelled" && (
+            <PostInvoiceControl
+              missing={missing}
+              disabled={postDisabled}
+              onPost={onPost}
+              onAttemptPost={onAttemptPost}
+              className="receiving-desktop-post"
+            />
+          )}
         </div>
       </div>
     </header>
