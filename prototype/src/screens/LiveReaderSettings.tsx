@@ -12,6 +12,7 @@ import {
 import { useSettingsConfiguration } from "../settings-configuration";
 import { useDemo } from "../store";
 import { Button, Card, Field, Select } from "../ui";
+import { useNavigationIntent } from "../use-navigation-intent";
 
 export default function LiveReaderSettings() {
   const config = useSettingsConfiguration();
@@ -26,7 +27,18 @@ export default function LiveReaderSettings() {
 }
 
 function ReadingSettingsForm() {
-  const { command, t } = useDemo();
+  const { actor, authorityGeneration, command, t } = useDemo();
+  const captureConnectionIntent = useNavigationIntent(
+    JSON.stringify([
+      actor?.company_id,
+      actor?.user_id,
+      actor?.session_id,
+      actor?.authority_epoch,
+      actor?.person_version,
+      actor?.selection,
+      authorityGeneration,
+    ]),
+  );
   const config = useSettingsConfiguration();
   const canonical = getLiveReaderSettings(config.receiving);
   const retainedAddress =
@@ -106,6 +118,7 @@ function ReadingSettingsForm() {
       return;
     }
     const controller = new AbortController();
+    const isCurrent = captureConnectionIntent();
     connectionRequest.current = controller;
     setTesting(true);
     try {
@@ -113,7 +126,8 @@ function ReadingSettingsForm() {
         shownAddress,
         controller.signal,
       );
-      if (connectionRequest.current === controller) setConnection(result);
+      if (connectionRequest.current === controller && isCurrent())
+        setConnection(result);
     } catch {
       // A changed address, closed page or new identity cancels this result.
     } finally {
@@ -125,11 +139,15 @@ function ReadingSettingsForm() {
   }
   return (
     <Card
-      className="settings-form-card"
+      className="settings-form-card settings-reader-card"
       title={t("AI reading", "خواندن با هوش مصنوعی")}
+      data-testid="reader-settings-card"
     >
-      <div className="form-grid">
-        <Field label={t("Reading mode", "حالت خواندن")}>
+      <div className="settings-reader-fields">
+        <Field
+          className="settings-reader-mode"
+          label={t("Reading mode", "حالت خواندن")}
+        >
           <Select
             aria-label={t("Reading mode", "حالت خواندن")}
             value={mode}
@@ -144,7 +162,14 @@ function ReadingSettingsForm() {
             ]}
           />
         </Field>
-        <Field label={t("Reader address", "نشانی خواننده")}>
+        <Field
+          className="settings-reader-address"
+          label={t("Reader address", "نشانی خواننده")}
+          hint={t(
+            "localhost means this device. On a phone, use the reader computer’s address on the same Wi-Fi.",
+            "localhost یعنی همین دستگاه. در تلفن، از نشانی رایانهٔ خواننده در همان وای‌فای استفاده کنید.",
+          )}
+        >
           <input
             type="url"
             dir="ltr"
@@ -159,7 +184,7 @@ function ReadingSettingsForm() {
           />
         </Field>
       </div>
-      <div className="actions settings-section-actions">
+      <div className="actions settings-reader-actions">
         <Button
           variant="neutral"
           disabled={pending}
@@ -182,7 +207,7 @@ function ReadingSettingsForm() {
         </Button>
       </div>
       {dirty && (
-        <div className="actions settings-section-actions">
+        <div className="actions settings-reader-save">
           <Button
             variant="neutral"
             disabled={pending}

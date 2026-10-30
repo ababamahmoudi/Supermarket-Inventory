@@ -30,7 +30,7 @@ P1 remains after green P0. No pending row in this table is a claim of delivered 
 | 4     | F6 — category for current NEW products                           | Delivered |
 | 5     | F8 — active pages and retained originals                         | Delivered |
 | 6     | F9 — phone chooser fits                                          | Delivered |
-| 7     | F10 — compact actual reader settings                             | Planned   |
+| 7     | F10 — compact actual reader settings                             | Delivered |
 | 8     | F11 — scoped safe failure details                                | Planned   |
 | 9     | K9 — shared checkboxes, pickup and independent Dashboard columns | Planned   |
 
@@ -224,6 +224,12 @@ Local source verification and independent integrated CI are recorded on PR #29.
 Invoices → New invoice at 360, 390, 509 and 760 px. All four methods, the simulation warning and Cancel fit without scrolling. Floor Worker sees unavailable Manual/JSON choices and the complete reason; Manager may use them. Photo/PDF still opens the real native picker. Cancel creates no record.
 
 Verified six existing navigation unit tests, fresh TypeScript/build/full lint and 16 desktop/phone browser cases in 1.1 minutes. The new matrix covers EN/FA, Manager/Floor Worker, both themes, 360/390/509/760 px at 640 px height and 1440 px desktop. Body scrolling, page overflow, clipped content/glyphs, full labels, permission warnings and 2 px interaction stability are asserted. Oversized warning and tile negative controls fail the same oracle. The retained tile audit also passes after intentionally migrating the former phone one-column contract to two columns. No physical camera/library claim.
+
+## P1 F10 — compact actual reader settings
+
+Settings → Receiving → AI reading. Change mode/address, Cancel and confirm the saved values return; then Save a reachable custom address. Test connection shows the real result. Reset and Save return to localhost. At 360/390/509/760 px, the full labels and address control remain usable and the action row fits in EN/FA and both themes.
+
+Verified 37 focused domain/UI units, fresh TypeScript/build/full lint and 20 actual browser cases in 1.2 minutes: EN/FA × light/dark × 360/390/509/760/1440 px. Cases perform real protected Save/Cancel and intercepted fictional HTTP 503 health, check page/text/control containment, compact spacing, adjacent controls, phone touch targets and unchanged unrelated planned-card width/height/content. Pending actual Manager→Owner and unmount health cancellation are unit tested. No real reader/provider or physical-device test.
 
 ## After the demo — record only
 

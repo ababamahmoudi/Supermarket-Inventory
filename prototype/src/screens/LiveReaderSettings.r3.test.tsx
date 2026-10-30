@@ -7,7 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { DemoProvider, initialState } from "../store";
+import { DemoProvider, initialState, useDemo } from "../store";
 import { authenticatedProviderFixture } from "../authority-provider-test-fixture";
 import { SettingsConfigurationGate } from "../SettingsConfigurationGate";
 import i18n from "../i18n";
@@ -35,7 +35,19 @@ afterEach(() => {
     configurable: true,
   });
 });
-async function settingsFixture() {
+function SettingsIdentitySwitch() {
+  const { actor, switchDemoUser } = useDemo();
+  return (
+    <>
+      <output aria-label="Current settings person">{actor?.username}</output>
+      <button onClick={() => void switchDemoUser("owner")}>
+        Switch settings person
+      </button>
+    </>
+  );
+}
+
+async function settingsFixture(identityControl = false) {
   const state = initialState();
   state.config.receiving.ai_reader_address =
     "http://retained-reader.local:5191";
@@ -46,6 +58,7 @@ async function settingsFixture() {
   fixtures.push(fixture);
   render(
     <DemoProvider options={fixture.options}>
+      {identityControl && <SettingsIdentitySwitch />}
       <SettingsConfigurationGate>
         <LiveReaderSettings />
       </SettingsConfigurationGate>
@@ -130,6 +143,63 @@ it("shows honest health outcomes and never displays a result for an address the 
   expect(screen.queryByText(/Can't reach the reader/)).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Test connection" })).toBeEnabled();
   expect(fetcher).toHaveBeenCalledTimes(3);
+});
+
+it("retires the health request when the genuine settings identity changes", async () => {
+  await settingsFixture(true);
+  let finish!: (response: Response) => void;
+  let requestSignal: AbortSignal | undefined;
+  const fetcher = vi.fn((_url: string, options: RequestInit) => {
+    requestSignal = options.signal ?? undefined;
+    return new Promise<Response>((resolve) => {
+      finish = resolve;
+    });
+  });
+  vi.stubGlobal("fetch", fetcher);
+  fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+  expect(requestSignal?.aborted).toBe(false);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Switch settings person" }),
+  );
+  await waitFor(() =>
+    expect(screen.getByLabelText("Current settings person")).toHaveTextContent(
+      "owner",
+    ),
+  );
+  await screen.findByRole("button", { name: "Test connection" });
+  expect(requestSignal?.aborted).toBe(true);
+  await act(async () => finish(new Response("ready", { status: 200 })));
+  expect(
+    screen.queryByText("Connected · reader ready"),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByText(/Can't reach the reader/)).not.toBeInTheDocument();
+  fetcher.mockResolvedValueOnce(new Response("unavailable", { status: 503 }));
+  fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+  await screen.findByText(/The reader answered with HTTP 503/);
+  expect(fetcher).toHaveBeenCalledTimes(2);
+});
+
+it("aborts a health request when the settings page unmounts", async () => {
+  await settingsFixture();
+  let finish!: (response: Response) => void;
+  let requestSignal: AbortSignal | undefined;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((_url: string, options: RequestInit) => {
+      requestSignal = options.signal ?? undefined;
+      return new Promise<Response>((resolve) => {
+        finish = resolve;
+      });
+    }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+  expect(requestSignal?.aborted).toBe(false);
+  cleanup();
+  expect(requestSignal?.aborted).toBe(true);
+  await act(async () => finish(new Response("ready", { status: 200 })));
+  expect(
+    screen.queryByText("Connected · reader ready"),
+  ).not.toBeInTheDocument();
 });
 
 it("the genuine Manager Demo toggle changes the same saved mode and retains its address", async () => {

@@ -711,3 +711,9 @@ Use dedicated source-edit commands rather than initial attachment, which creates
 ## 2026-10-30 — R3c F9 — phone New invoice chooser
 
 The actual New invoice chooser keeps four equal methods in a compact 2×2 grid on phones. Its entry warning explicitly says Photo/PDF use fictional values and do not read the uploaded invoice when Simulated mode is selected. The full retained review warning remains unchanged. Short method helpers, full translated labels, genuine role warnings, native picker inputs and the single Cancel footer remain available. Phone spacing is scoped to this chooser; the shared sheet and unrelated invoice details are unchanged.
+
+## 2026-10-30 — R3c F10 — compact actual reader settings
+
+Settings → Receiving → AI reading has a compact real mode Select and LTR address, adjacent Reset/Test connection controls, one section-owned Cancel/Save changes row when dirty, and the genuine health status. The helper explains that localhost means the current device and a phone needs the reader computer's reachable same-Wi-Fi address. The address/custom base path, reset/null, audit/current-authority save, pending disables, five-second timeout and honest network/CORS semantics are preserved. No key field or planned connection is added. A health result from an earlier person/navigation cannot appear under a replacement identity.
+
+A scoped Receiving layout rule resolves an existing overlap at exactly 760 px where one stylesheet made the group menu horizontal while another gave it a max-content grid column. The actual Persian menu no longer pushes the card outside the page. Other settings-card contents, width and height remain unchanged.
