@@ -1,3 +1,8 @@
+## 2026-10-30 — R3c F7 — truthful reading header
+
+- Show New invoice with truthful ready/active/cancelled/failed/interrupted reading captions; remove empty header fragments and the processing Post control. Preserve actual invoice identity and posting checks once review begins.
+- Owner verification passed six header unit tests, six Chromium browser cases, full lint and production build. Four browsers cover EN/FA desktop/phone active/cancelled transitions; two retain the R2b 2.3 no-post/no-finance regression.
+
 ## 2026-10-30 — R3c F4 — retained Discard, Cancelled and Undo
 
 - Add header/list Discard with immediate empty-draft disposal, reasoned confirmation for entered content, retained Cancelled records and read-only original/attribution. Undo restores only the exact authorized target, preserves manual-entry recovery and retires old reading attempts without another request.

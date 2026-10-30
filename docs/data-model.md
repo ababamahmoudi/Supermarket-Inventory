@@ -1,5 +1,9 @@
 # Data model
 
+## R3c F7 — truthful reading header
+
+No new persisted data-model field. The processing header derives its title/caption from the existing invoice status/original availability, persisted `live_reading.phase` and actual transient activity for that invoice. It does not treat a persisted processing phase as proof that a request is active. Existing completed-reading provenance remains separate from current activity.
+
 ## R3c F4 — retained Discard, Cancelled and Undo
 
 `DemoInvoice.status` adds `"cancelled"`; `cancellation?: { by_user_id: string; by: string; at: string; reason: string }` retains current actor/time/reason and is explicitly projected for authorized invoice reads. Cancelled invoices remain in the canonical invoice records and have a real counted list stage. The original files/pages, line/source evidence and earlier History remain retained. Posted invoices cannot be discarded; Cancelled records cannot be edited or posted.

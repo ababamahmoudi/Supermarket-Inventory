@@ -11,7 +11,7 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 | 3     | K2 — printed-name matching and checked-values import | Delivered         |
 | 4     | K6 — missing-paper payment default                   | Delivered         |
 | 5     | F4 — retained Discard / Cancelled / Undo             | Delivered         |
-| 6     | F7 — truthful processing header                      | In implementation |
+| 6     | F7 — truthful processing header                      | Delivered         |
 | 7     | F3 — native picker before draft creation             | In implementation |
 | 8     | K3 — configurable .49 → .99                          | In implementation |
 | 9     | K4 — selling-price proposal in the line editor       | In implementation |
@@ -93,6 +93,15 @@ Combined K0/K1/K2/K6 verification passed 85 targeted unit tests, four English/Pe
 5. For a draft already entered by hand, Discard → Undo restores its manual-entry workflow. Continue adding a line with the original permitted role.
 
 The integrated final source passed 129 targeted units, a fresh build and eight English/Persian desktop/phone browser cases, with no skips or retries. Independent full CI is tracked on PR #29.
+
+## F7 — truthful reading header
+
+1. With the existing live reader running and Live saved in Settings → Receiving, open Invoices → **New invoice → Photo (AI reading)** or **PDF (AI reading)** and select a fictional invoice file. The header reads **New invoice** and **Original saved · ready to read**, with no empty reference/supplier/date fragments or Post button.
+2. Click **Read invoice**. While its request is active, the header says **Reading with AI…**. Use **Cancel** in the progress card: it changes to **Reading cancelled · original saved** and retains the original. Cancelling never claims a completed read or posts the invoice.
+3. Start a separate fictional reading and reload while its request is still active. Reopen it: the inactive recovery header says **Reading interrupted · read again** until you explicitly read again.
+4. After a successful reading, check that the ordinary invoice reference/supplier/date and existing review/post workflow return.
+
+The integrated final source passed six header unit tests, a fresh build and all six held-reader/header/Post-guard browser cases across English/Persian and desktop/phone, with no skips or retries. Independent full CI is tracked on PR #29.
 
 ## After the demo — record only
 

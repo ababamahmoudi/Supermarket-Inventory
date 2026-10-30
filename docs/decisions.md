@@ -648,3 +648,7 @@ Checked answers and later human name edits are authoritative product-name propos
 ## 2026-10-30 — R3c F4 — retained Discard, Cancelled and Undo
 
 **R3c F4 — retained cancellation:** Discard is an audited lifecycle change, not deletion. Retain the original and history, offer a counted read-only Cancelled stage and use the existing conflict/authority-checked Undo. Record an explicit reason for entered content while making genuinely empty-draft disposal immediate. Bind reversal to the exact retained target rather than the global workspace slot; retire old attempts on both transitions and preserve genuine manual recovery. Never reverse posted purchases or create compensating financial/stock facts for a draft discard.
+
+## 2026-10-30 — R3c F7 — truthful reading header
+
+**R3c F7 — activity must be real:** render a concise New invoice header while the reading has not established invoice identity. Derive active/recovery copy from actual request ownership and retained phase, suppress missing-value fragments and hide the processing Post control. Keep cancellation/failure/interruption distinct, original retention visible and normal review/post behavior unchanged.

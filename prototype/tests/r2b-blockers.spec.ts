@@ -77,9 +77,15 @@ test("R2b 2.3 cannot invoke posting while the original is still being read", asy
   await expect(
     page.getByText("Reading invoice…", { exact: true }).first(),
   ).toBeVisible();
+  const before = await readCanonicalBusinessEvidence(page);
   await expect(
     page.locator(".receiving-header .receiving-post-control > button"),
-  ).toBeDisabled();
+  ).toHaveCount(0);
+  const after = await readCanonicalBusinessEvidence(page);
+  expect(after.invoice.status).not.toBe("posted");
+  expect(after.ledger).toEqual(before.ledger);
+  expect(after.approvals).toEqual(before.approvals);
+  expect(after.stock_movements).toEqual(before.stock_movements);
   await expect(
     page.getByRole("dialog", { name: "Post invoice", exact: true }),
   ).toHaveCount(0);

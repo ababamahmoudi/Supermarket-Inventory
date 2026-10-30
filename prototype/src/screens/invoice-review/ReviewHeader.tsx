@@ -6,6 +6,7 @@ import { DateText, LtrValue, NotAdded } from "../../presentation";
 import { branchLabel } from "../../settings";
 import type { InvoiceReadDTO } from "../../invoice-projections";
 import { DiscardInvoice } from "../DiscardInvoice";
+import { useLiveReadingActivity } from "../../live-reading-activity";
 export function ReviewHeader({
   invoice,
   missing,
@@ -22,6 +23,33 @@ export function ReviewHeader({
   postDisabled?: boolean;
 }) {
   const { state, t, lang } = useDemo();
+  const activity = useLiveReadingActivity(invoice);
+  const processing =
+    invoice.status === "reading" ||
+    (invoice.status === "empty" && invoice.original_available);
+  const processingCaption = activity.active
+    ? t("Reading with AI…", "در حال خواندن با هوش مصنوعی…")
+    : !invoice.live_reading
+      ? t("Simulated reading…", "خوانش شبیه‌سازی‌شده…")
+      : invoice.live_reading.phase === "ready"
+        ? t(
+            "Original saved · ready to read",
+            "اصل فایل ذخیره شد · آمادهٔ خواندن",
+          )
+        : invoice.live_reading.phase === "failed"
+          ? t(
+              "Reading did not finish · original saved",
+              "خوانش کامل نشد · اصل فایل ذخیره شد",
+            )
+          : invoice.live_reading.phase === "cancelled"
+            ? t(
+                "Reading cancelled · original saved",
+                "خوانش لغو شد · اصل فایل ذخیره شد",
+              )
+            : t(
+                "Reading interrupted · read again",
+                "خوانش متوقف شد · دوباره بخوانید",
+              );
   return (
     <header
       className="receiving-header"
@@ -35,37 +63,51 @@ export function ReviewHeader({
       <div className="page-header receiving-header-main">
         <div>
           <h1>
-            {t("Invoice", "فاکتور")}{" "}
-            <span className="invoice-title-reference">
-              <LtrValue value={invoice.supplier_invoice_number} />
-            </span>
+            {processing ? (
+              t("New invoice", "فاکتور جدید")
+            ) : (
+              <>
+                {t("Invoice", "فاکتور")}{" "}
+                <span className="invoice-title-reference">
+                  <LtrValue value={invoice.supplier_invoice_number} />
+                </span>
+              </>
+            )}
           </h1>
-          <div className="receiving-meta">
-            {invoice.supplier || !invoice.live_reading ? (
-              <a
-                href={`#suppliers?name=${encodeURIComponent(invoice.supplier)}`}
+          {processing ? (
+            <p className="receiving-meta" role="status">
+              {processingCaption}
+            </p>
+          ) : (
+            <div className="receiving-meta">
+              {invoice.supplier || !invoice.live_reading ? (
+                <a
+                  href={`#suppliers?name=${encodeURIComponent(invoice.supplier)}`}
+                >
+                  <LtrValue value={invoice.supplier} />
+                </a>
+              ) : (
+                <NotAdded />
+              )}
+              <span>{branchLabel(state.config, invoice.branch, lang)}</span>
+              {invoice.invoice_date || !invoice.live_reading ? (
+                <DateText value={invoice.invoice_date ?? ""} />
+              ) : (
+                <NotAdded />
+              )}
+              <Badge
+                tone={invoice.status === "posted" ? "approved" : "neutral"}
               >
-                <LtrValue value={invoice.supplier} />
-              </a>
-            ) : (
-              <NotAdded />
-            )}
-            <span>{branchLabel(state.config, invoice.branch, lang)}</span>
-            {invoice.invoice_date || !invoice.live_reading ? (
-              <DateText value={invoice.invoice_date ?? ""} />
-            ) : (
-              <NotAdded />
-            )}
-            <Badge tone={invoice.status === "posted" ? "approved" : "neutral"}>
-              {invoice.status === "cancelled"
-                ? t("Cancelled", "لغوشده")
-                : invoice.status === "posted"
-                  ? t("Posted", "ثبت‌شده")
-                  : invoice.status === "reading" && invoice.live_reading
-                    ? t("Processing", "در حال پردازش")
-                    : t("In review", "در حال بررسی")}
-            </Badge>
-          </div>
+                {invoice.status === "cancelled"
+                  ? t("Cancelled", "لغوشده")
+                  : invoice.status === "posted"
+                    ? t("Posted", "ثبت‌شده")
+                    : invoice.status === "reading" && invoice.live_reading
+                      ? t("Processing", "در حال پردازش")
+                      : t("In review", "در حال بررسی")}
+              </Badge>
+            </div>
+          )}
           {(invoice.reading_record ||
             invoice.live_reading?.phase === "complete") && (
             <Badge tone="neutral" wrap>
@@ -91,7 +133,7 @@ export function ReviewHeader({
               ? t("Close", "بستن")
               : t("Save and close", "ذخیره و بستن")}
           </Button>
-          {invoice.status !== "cancelled" && (
+          {invoice.status !== "cancelled" && !processing && (
             <PostInvoiceControl
               missing={missing}
               disabled={postDisabled}

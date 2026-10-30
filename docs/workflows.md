@@ -1,5 +1,9 @@
 # Workflows and state machines
 
+## R3c F7 — truthful reading header
+
+A reading invoice, or an empty invoice with an original, shows **New invoice** instead of an incomplete reference/supplier/date header. A genuinely owned active request shows **Reading with AI…**. An inactive ready attempt says **Original saved · ready to read**; failed and cancelled attempts say respectively **Reading did not finish · original saved** and **Reading cancelled · original saved**. A persisted interrupted attempt says **Reading interrupted · read again**. Simulated reading keeps its own explicit caption. Post invoice is absent during processing. Review resumes the ordinary invoice identity/header and existing posting checks.
+
 ## R3c F4 — retained Discard, Cancelled and Undo
 
 Discard is available from a nonposted invoice header and its list-row More menu. An empty draft moves directly to Cancelled. Entered content opens **Discard invoice?**, explains retained originals/history and requires a reason; Cancel makes no change. The Cancelled tab shows the retained record, attribution, reason and authorized original viewer in read-only form. Use the existing Undo feedback or eligible History reversal to restore the exact draft. Changing the workspace does not redirect Undo. Restoring a reading does not launch a network request; choose Read again explicitly. A previously manual invoice remains usable for manual entry under the same current permissions.
