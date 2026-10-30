@@ -36,7 +36,7 @@
   display: block;
   inline-size: 35%;
   block-size: 100%;
-  border-radius: inherit;
+  border-radius: var(--radius-control);
   background: var(--accent);
   animation: live-reading-wait 1.4s ease-in-out infinite;
 }

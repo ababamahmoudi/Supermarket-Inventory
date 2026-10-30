@@ -1,3 +1,7 @@
+## 2026-10-30 — R3c progress-bar token repair
+
+- Set the indeterminate segment radius to the same explicit radius-control token as its parent, preserving computed geometry and the standalone Klead contract. All three unchanged token-audit tests, formatting and the final build pass.
+
 ## 2026-10-30 — R3c final native-picker proof repair
 
 - Update the retained C8 sale/cost proof helper to accept the native file chooser before a draft exists, matching F3. Preserve actual source SHA, posting, money, authority, stock and layout gates. All 12 affected desktop/phone scenarios pass, with build/scoped lint/format checks and no skips/retries.
