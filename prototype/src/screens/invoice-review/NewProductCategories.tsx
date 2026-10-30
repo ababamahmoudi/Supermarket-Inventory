@@ -35,6 +35,7 @@ export function NewProductCategories({
     <>
       {current && (
         <Button
+          className="receiving-new-category-action"
           variant="secondary"
           size="sm"
           onClick={() => {

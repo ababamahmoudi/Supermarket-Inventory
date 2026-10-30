@@ -1,5 +1,9 @@
 # Klead design language v1
 
+## R3c F6 — receiving heading keeps all controls inside the existing budget
+
+At desktop widths, a receiving heading that actually has the counted new-product category action reserves intrinsic columns for its title and complete filter strip, with a shrinkable middle action. When this real action is present, give the receiving work column a slightly larger share of the existing desktop layout while retaining the original viewer’s 320 px minimum. The full category label may wrap naturally onto two readable lines inside a genuine control with a 44 px minimum and natural height; do not clip it, shrink its typography, scroll the filters or reserve an empty action slot. Keep the existing phone flow and the unchanged 48 px heading/card/composed density limits.
+
 ## R3c P1 K9 — pickup evidence and compact shared screens
 
 The shared 18 px rounded checkbox uses `--field-fill`/`--field-border` unchecked and `--accent-fill`/white tick checked in both themes. Keep actual business acknowledgements as checkboxes and quick boolean filters as their existing chips; radios and switches retain their controls. Actual-pickup rows use a scoped compact grid without reserved empty shortfall tracks. Supplier representative/reference share one row, with usable phone wrapping. The pickup-only stepper composes existing primitives; ordinary NumberField remains a directly editable text field. Dashboard main and aside are separate vertical flex stacks above 950 px; actual consecutive card edges are 20 px apart, independent of the neighbour's height. Preserve content-height unrelated cards, the equal-height purchase pair above 1100 px, stacked purchases below it, the 760–950 px aside grid and existing phone order. No font, clipping, glyph or spacing oracle is weakened.

@@ -71,6 +71,65 @@ for (const language of ["en", "fa"] as const)
         [],
       );
     }
+    for (const width of [1000, 1180, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      const action = page.getByRole("button", {
+        name: word(
+          language,
+          "Set category for 25 new products",
+          "تعیین دسته برای 25 کالای جدید",
+        ),
+        exact: true,
+      });
+      await expect(action).toBeVisible();
+      const heading = page.locator(".receiving-lines-heading");
+      const composition = await heading.evaluate((element) => {
+        const action = element.querySelector<HTMLButtonElement>(".ui-button")!;
+        const filters = element.querySelector<HTMLElement>(".ui-segments")!;
+        const original = element
+          .closest(".receiving-layout")
+          ?.querySelector(".original-viewer");
+        const contained = (target: Element) => {
+          const bounds = target.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(target);
+          return [...range.getClientRects()].every(
+            (text) =>
+              text.left >= bounds.left - 1.5 &&
+              text.right <= bounds.right + 1.5 &&
+              text.top >= bounds.top - 1.5 &&
+              text.bottom <= bounds.bottom + 1.5,
+          );
+        };
+        return {
+          headingHeight: element.getBoundingClientRect().height,
+          headingDisplay: getComputedStyle(element).display,
+          headingWidth: element.getBoundingClientRect().width,
+          originalWidth: original?.getBoundingClientRect().width,
+          actionWidth: action.getBoundingClientRect().width,
+          actionHeight: action.getBoundingClientRect().height,
+          actionFontSize: getComputedStyle(action).fontSize,
+          fullActionContained: contained(action),
+          fullFiltersContained: contained(filters),
+          filterCount: filters.querySelectorAll("button").length,
+          filtersScroll: filters.scrollWidth > filters.clientWidth + 1,
+          documentOverflow:
+            document.documentElement.scrollWidth > innerWidth + 1,
+        };
+      });
+      await info.attach(`F6 counted heading ${language} ${width}`, {
+        body: JSON.stringify(composition),
+        contentType: "application/json",
+      });
+      expect(composition.fullActionContained).toBe(true);
+      expect(composition.fullFiltersContained).toBe(true);
+      expect(composition.filterCount).toBe(3);
+      expect(composition.filtersScroll).toBe(false);
+      expect(composition.documentOverflow).toBe(false);
+      await heading.screenshot({
+        path: info.outputPath(`F6-heading-${language}-${width}.png`),
+      });
+    }
     await openReceivingLine(page, 0);
     await expect(page.locator("#invoice-line-0-supplier-code")).toHaveValue(
       invoice.lines[0].supplier_item_code!,
