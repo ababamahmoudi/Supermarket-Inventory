@@ -45,7 +45,8 @@ for (const language of ["en", "fa"] as const)
         if (kind === "padding") style.paddingBottom = "16px";
         if (kind === "gap") style.borderSpacing = "0 8px";
         if (kind === "wrap") style.inlineSize = "100px";
-        if (kind === "fixed") style.paddingBottom = "20px";
+        // Exceed the unchanged 434px cap even when valid defaults shorten the card.
+        if (kind === "fixed") style.minHeight = "435px";
       }, mutation);
       try {
         const negative = await inspectReceivingDensity(page, invoice);
