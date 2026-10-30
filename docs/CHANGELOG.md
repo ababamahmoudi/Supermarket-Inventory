@@ -1,3 +1,7 @@
+## 2026-10-30 — R3c final native-picker proof repair
+
+- Update the retained C8 sale/cost proof helper to accept the native file chooser before a draft exists, matching F3. Preserve actual source SHA, posting, money, authority, stock and layout gates. All 12 affected desktop/phone scenarios pass, with build/scoped lint/format checks and no skips/retries.
+
 ## 2026-10-30 — R3c K7 — truthful compact reading progress
 
 - Added actual elapsed reading time, an indeterminate bar and truthful successive matching/calculation phases. Protected matching returns counts only; exact source/attempt/current-actor and final import guards remain.

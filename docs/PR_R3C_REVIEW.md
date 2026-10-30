@@ -151,6 +151,8 @@ Integrated service/navigation/footer verification passed 95 units, lint and buil
 
 Integrated verification passed 92 protected matching/paint/service/navigation units, lint and a fresh build. All 34 final selected geometry/509/F0/success/Cancel/stale-target browser cases passed in 4.8 minutes, with no retries or skips. Independent full CI is tracked on PR #29. Root and owner visually reviewed current phone and desktop screenshots. Fictional intercepted responses were used for automation; real-provider/physical-device rehearsal is not claimed.
 
+The retained C8 sale/cost proof helper also uses the genuine native file chooser before draft creation. Its 12 desktop/phone sale/phone-layout scenarios pass with the original source/finance/stock/authority assertions unchanged. Final full CI is tracked on PR #29.
+
 ## After the demo — record only
 
 - Read a supplier's order-confirmation/pre-invoice PDF into an expected order, then use that reading when the invoice arrives.

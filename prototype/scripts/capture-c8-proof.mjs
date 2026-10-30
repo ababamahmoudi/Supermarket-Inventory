@@ -689,23 +689,12 @@ export async function postC8SaleCostInvoice(page, originalPath) {
     name: /^(New invoice|فاکتور جدید)$/,
   });
   await expect(chooser).toBeVisible();
+  const nativeChooser = page.waitForEvent("filechooser");
   await button(chooser, "Photo (AI reading)", "عکس (خوانش هوش مصنوعی)").click();
-  await expect
-    .poll(async () => {
-      const current = (await readC8State(page)).invoice;
-      return (
-        current.id !== previousInvoice &&
-        current.entry_mode === "upload" &&
-        new URL(page.url()).hash ===
-          "#invoices?id=" + encodeURIComponent(current.id) + "&entry=photo"
-      );
-    })
-    .toBe(true);
-  await field(
-    page,
-    "Upload a PDF or photo",
-    "بارگذاری PDF یا عکس",
-  ).setInputFiles(originalPath);
+  const selectedSource = await nativeChooser;
+  // F3 allocates the genuine upload only after a file is selected.
+  expect((await readC8State(page)).invoice.id).toBe(previousInvoice);
+  await selectedSource.setFiles(originalPath);
   const reviewDeadline = Date.now() + 15000;
   await expect
     .poll(
