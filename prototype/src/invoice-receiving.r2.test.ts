@@ -144,6 +144,8 @@ describe("R2 receiving decisions", () => {
           },
         ],
       };
+    // Exercise missing required terms in a company that disables the default.
+    state.config.receiving.default_payment_terms = null;
     const checks = actionableReadingChecks(
       state,
       value,
@@ -163,12 +165,12 @@ describe("R2 receiving decisions", () => {
       "order_reference",
       "bill_to",
       "ship_to",
+      "payment_terms",
       "received_at",
       "supplier",
       "supplier_invoice_number",
       "invoice_date",
       "final_total",
-      "payment_terms",
       "subtotal",
     ]);
     expect(checks.lines[0].low_confidence_fields).toEqual([
@@ -184,6 +186,8 @@ describe("R2 receiving decisions", () => {
   });
   it("counts present optional questions and malformed required dates exactly as the review will show them", () => {
     const state = empty();
+    // Exercise missing required terms in a company that disables the default.
+    state.config.receiving.default_payment_terms = null;
     const checks = actionableReadingChecks(
       state,
       {
@@ -202,9 +206,9 @@ describe("R2 receiving decisions", () => {
     expect(checks.low_confidence_fields).toEqual([
       "bill_to",
       "order_reference",
+      "payment_terms",
       "received_at",
       "invoice_date",
-      "payment_terms",
     ]);
     expect(invoiceCheckCount(checks)).toBe(5);
   });
