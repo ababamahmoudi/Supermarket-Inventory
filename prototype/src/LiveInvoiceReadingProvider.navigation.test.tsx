@@ -77,7 +77,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("ready Open retains a real pending Timesheets edit and its notice until guarded navigation succeeds", async () => {
+async function verifyReadingNavigation(view: "background" | "foreground") {
   localStorage.clear();
   sessionStorage.clear();
   const state = initialState();
@@ -206,9 +206,27 @@ it("ready Open retains a real pending Timesheets edit and its notice until guard
       purchaseInvoiceView(draft, actor, invoiceId),
     );
   });
+  if (view === "foreground") {
+    await act(async () => {
+      window.location.hash = `#invoices?id=${encodeURIComponent(invoiceId)}`;
+    });
+    await renderedUiReady(
+      () => document.querySelector("#invoice-review-header") !== null,
+    );
+  }
   await act(async () => {
     await service.start(invoice);
   });
+  if (view === "foreground") {
+    expect((await fixture.readCanonical()).invoice.live_reading?.phase).toBe(
+      "complete",
+    );
+    expect(window.location.hash).toBe(
+      `#invoices?id=${encodeURIComponent(invoiceId)}`,
+    );
+    expect(screen.queryByTestId("live-reading-ready")).not.toBeInTheDocument();
+    return;
+  }
   const notice = await screen.findByTestId("live-reading-ready");
   expect(notice).toHaveTextContent("FICTIONAL-BACKGROUND-NAV-1");
   const original = fixture.repository.runBusinessCommand.bind(
@@ -262,4 +280,9 @@ it("ready Open retains a real pending Timesheets edit and its notice until guard
   );
   expect((await fixture.readCanonical()).invoice.id).toBe(invoiceId);
   expect((await fixture.readCanonical()).invoice.status).toBe("review");
-});
+}
+
+it.each(["background", "foreground"] as const)(
+  "ready completion preserves real visible navigation and pending Timesheets saves: %s",
+  verifyReadingNavigation,
+);

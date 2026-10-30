@@ -142,6 +142,8 @@ Integrated verification passed 31 focused units and static/build checks. Browser
 
 Integrated service/navigation/footer verification passed 95 units, lint and build. The complete final R3/F0/background/footer matrix passed all 58 browser cases in 8.1 minutes, with no retries or skips. The three-file K3 domain-fixture repair separately passed all 52 tests, and the final composed build passed. Independent full CI is tracked on PR #29. All automated originals/responses are fictional; physical-device/local-reader rehearsal remains on Ali's devices.
 
+When a live read completes on the invoice already open, review appears without a redundant Open notice; open a line and More details normally. The genuine foreground/background App regression, pending Timesheets navigation and footer guards pass 17 units and all 20 related desktop/phone EN/FA browser cases, with no skips/retries.
+
 ## K7 — truthful compact reading progress
 
 1. With Live and the real local reader configured, select a fictional photo/PDF and press **Read invoice**. Check actual elapsed time beside the estimated usually-about-a-minute caption. The indeterminate bar moves without claiming a percentage.

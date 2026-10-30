@@ -680,3 +680,7 @@ Offer a safe ready notice with explicit Open/Dismiss rather than automatic navig
 Show real pipeline work rather than static future-step labels or simulated progress. Add an authorized counts-only matching preflight, and keep actual import/calculation as the final guarded write. Recheck source/attempt/version and current actor across local phases; preserve K1/K2 source-readable aliases, K6 term precedence and all cancellation rules.
 
 Use bounded browser paint opportunities to expose quick real phases without a fabricated progress percentage or arbitrary minimum duration. Hidden documents must not stall behind requestAnimationFrame. Keep the original and card beside each other at 1000/1440, three compact chips on phones, end Cancel, real elapsed time and reduced-motion behavior.
+
+## 2026-10-30 — acknowledge a foreground reading without another navigation
+
+The accepted invoice can finish without a hashchange, so acknowledge its ready notice on completion too. Bind that acknowledgement to agreement between the last accepted route and raw hash; retain the existing deferred Timesheets navigation and current reading-identity checks. This removes the redundant foreground overlay while preserving background completion and guarded Open.

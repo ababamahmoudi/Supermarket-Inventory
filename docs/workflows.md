@@ -1,5 +1,9 @@
 # Workflows and state machines
 
+## R3c — foreground completion acknowledgement
+
+A live read completed while its own invoice is already open goes directly into review without a redundant Open notice. More details and other foreground controls remain clickable. Completion elsewhere still offers Ready/Open; a pending Timesheets save retains its notice until navigation is accepted.
+
 ## R3c K7 — truthful compact reading progress
 
 Start a saved live source with Read invoice. Reading the invoice shows actual elapsed time and an animated indeterminate bar. Once the reader returns, its step becomes a check; Finding products then runs the real protected matcher, followed by Calculating prices around the guarded import. Local phases are quick actual work, not a timed simulation or fake percentage.

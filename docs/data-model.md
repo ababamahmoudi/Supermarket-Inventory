@@ -1,5 +1,9 @@
 # Data model
 
+## R3c — foreground completion acknowledgement
+
+The transient ready-notice controller retains an accepted-route witness. It acknowledges a completed invoice already on that accepted route only when the raw browser hash still agrees; a deferred Timesheets destination cannot clear a background notice early. Canonical reading/source/actor records and authority checks are unchanged.
+
 ## R3c K7 — truthful compact reading progress
 
 Transient live-service stages are preparing, reading, finding and calculating. Actual elapsed time derives from the accepted attempt's started_at; the reading bar is indeterminate, with an estimated usually-about-a-minute caption and no invented percentage.

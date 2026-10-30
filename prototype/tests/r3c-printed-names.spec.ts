@@ -233,6 +233,7 @@ for (const language of ["en", "fa"] as const)
     expect(await retainedSourceHashes(page, after.invoice)).toEqual([
       sourceHash(second),
     ]);
+    await expect(page.getByTestId("live-reading-ready")).toHaveCount(0);
     const secondEditor = await openReceivingLine(page, 0);
     await secondEditor.locator("details.receiving-more > summary").click();
     await expect(

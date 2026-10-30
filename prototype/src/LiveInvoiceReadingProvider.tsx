@@ -41,6 +41,7 @@ export function LiveInvoiceReadingProvider({
 function ReadyReadings({ service }: { service: LiveInvoiceReadingService }) {
   const { t, actor } = useDemo();
   const regionRef = useRef<HTMLDivElement>(null);
+  const acceptedHash = useRef(window.location.hash);
   useFloatingFeedbackOffset(
     regionRef,
     "--live-reading-footer-offset",
@@ -52,7 +53,8 @@ function ReadyReadings({ service }: { service: LiveInvoiceReadingService }) {
   useEffect(() => {
     const accepted = (event: HashChangeEvent) => {
       if (deferTimesheetNavigation(event)) return;
-      service.acceptNavigation(window.location.hash);
+      acceptedHash.current = window.location.hash;
+      service.acceptNavigation(acceptedHash.current);
     };
     window.addEventListener("hashchange", accepted);
     return () => window.removeEventListener("hashchange", accepted);
@@ -62,6 +64,13 @@ function ReadyReadings({ service }: { service: LiveInvoiceReadingService }) {
     service.readyReadings,
     service.readyReadings,
   );
+  useLayoutEffect(() => {
+    // Completion on the already accepted invoice route needs no Open notice.
+    // A pending Timesheets navigation can change the raw hash before its save
+    // is accepted; only acknowledge when both route witnesses still agree.
+    if (window.location.hash === acceptedHash.current)
+      service.acceptNavigation(acceptedHash.current);
+  }, [notices, service]);
   return (
     <div
       ref={regionRef}

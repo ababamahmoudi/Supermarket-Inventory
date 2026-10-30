@@ -1,3 +1,8 @@
+## 2026-10-30 — R3c foreground reading completion repair
+
+- A reading completed on the already accepted invoice route no longer leaves a redundant Open notice over its own editor. Background notices remain until accepted navigation; a raw destination hash while Timesheets saves is not treated as accepted.
+- A genuine App/IndexedDB foreground read reproduced the leftover notice before the fix. All 17 navigation/footer units and 20 EN/FA desktop/phone printed-name, background, stale-Discard/Undo and measured-footer browser cases pass, with unchanged real clicks and no skips/retries. Final build and an independent read-only race/authority review pass.
+
 ## 2026-10-30 — R3c progress-bar token repair
 
 - Set the indeterminate segment radius to the same explicit radius-control token as its parent, preserving computed geometry and the standalone Klead contract. All three unchanged token-audit tests, formatting and the final build pass.
