@@ -1,5 +1,9 @@
 # Data model
 
+## R3c P1 F11 — private actionable reading failures
+
+Only an accepted current failed live attempt may retain `live_reading.failure_diagnostic`. It contains a closed safe reason, a code-chosen field identifier and, for HTTP failures only, a bounded numeric status. Arbitrary response/error text, body, filenames, URLs, provider keys, model names and stacks never enter that diagnostic. Ordinary invoice/workspace DTOs, general History and audit/export projections omit it recursively, including whole snapshots and selector/dotted-path patches. The dedicated protected failure query requires a fresh actual Owner/Manager role, scoped invoice read/cost-read authority, the exact current failed attempt and current source/version/content. Retained-original and failure-diagnostic scrub keys both remain present after integration.
+
 ## R3c P1 F8 — guarded active pages with retained originals
 
 For unread live drafts, `original_pages` is the explicit ordered photo reading selection. An explicit empty array stays empty. Removed logical photos move to private retained-original evidence; duplicate-byte logical sources remain distinct. A saved PDF stays one full original and an optional private numeric selection identifies its active logical pages. Ordinary invoice/workspace DTOs omit archive/selection internals; general History omits the archive. Original viewing and backup retain all source evidence. Accepted imports and explicit manual/simulated recovery preserve the archive and PDF selection.

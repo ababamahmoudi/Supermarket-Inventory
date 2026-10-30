@@ -2,6 +2,7 @@ import type {
   LiveInvoiceReading,
   LiveInvoiceReadingView,
 } from "./invoice-live-reading-types";
+import { businessAuditRead } from "./business-audit-read";
 
 export function projectLiveInvoiceReading(
   value: LiveInvoiceReading | undefined,
@@ -16,8 +17,12 @@ export function projectLiveInvoiceReading(
 }
 
 /** Also protects retained History snapshots and diagnostic-field patches. */
-export function redactLiveReadingProvenance<T>(value: T): T {
-  if (Array.isArray(value)) return value.map(redactLiveReadingProvenance) as T;
+export function redactLiveReadingProvenance<T>(input: T): T {
+  return redactLiveReadingValue(businessAuditRead(input));
+}
+
+function redactLiveReadingValue<T>(value: T): T {
+  if (Array.isArray(value)) return value.map(redactLiveReadingValue) as T;
   if (!value || typeof value !== "object") return value;
   const record = value as Record<string, unknown>;
   const path = Array.isArray(record.path)
@@ -62,6 +67,6 @@ export function redactLiveReadingProvenance<T>(value: T): T {
           item.source === "live"
         );
       })
-      .map(([key, item]) => [key, redactLiveReadingProvenance(item)]),
+      .map(([key, item]) => [key, redactLiveReadingValue(item)]),
   ) as T;
 }

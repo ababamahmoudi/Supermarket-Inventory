@@ -1,6 +1,8 @@
 import { beginAppWork } from "./app-work";
 import { inspectLiveInvoiceMatching } from "./invoice-live-matching";
 import { paintLiveReadingStage } from "./live-reading-paint";
+import { failureFromLiveReadingCause } from "./live-reading-failure-cause";
+import { liveReadingFailure } from "./live-reading-failure";
 import type { AuthenticatedActor } from "./authority-types";
 import type { E1DemoContextValue } from "./e1-demo-context";
 import {
@@ -551,6 +553,7 @@ export class LiveInvoiceReadingService {
           },
         );
         if (result.skipped.length) {
+          const reason = result.skipped[0].reason;
           await this.ports().command(
             "invoices.edit",
             scope(entry),
@@ -560,10 +563,14 @@ export class LiveInvoiceReadingService {
                 invoice_id: entry.invoiceId,
                 attempt_id: attempt.attempt_id,
                 outcome: "failed",
+                diagnostic: liveReadingFailure(
+                  reason === "invoice_number" || reason === "page_sha256"
+                    ? reason
+                    : "import",
+                ),
               });
             },
           );
-          const reason = result.skipped[0].reason;
           this.update(entry, {
             failure: true,
             detailCode:
@@ -626,6 +633,14 @@ export class LiveInvoiceReadingService {
               invoice_id: entry.invoiceId,
               attempt_id: entry.snapshot.attemptId!,
               outcome: cancelled ? "cancelled" : "failed",
+              ...(!cancelled
+                ? {
+                    diagnostic: failureFromLiveReadingCause(
+                      cause,
+                      entry.timedOut,
+                    ),
+                  }
+                : {}),
             });
           })
           .catch(() => undefined);

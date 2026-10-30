@@ -1,5 +1,9 @@
 import Decimal from "decimal.js";
 import { LIVE_READER_MAX_PDF_PAGES } from "./live-reader-limits";
+import {
+  normalizeLiveReadingFailure,
+  type LiveReadingFailure,
+} from "./live-reading-failure";
 import type { AuthenticatedActor } from "./authority-types";
 import { createId } from "./ids";
 import { actorAudit } from "./domain-authority";
@@ -413,6 +417,7 @@ export function settleLiveInvoiceReading(
     invoice_id: string;
     attempt_id: string;
     outcome: "failed" | "cancelled" | "manual";
+    diagnostic?: LiveReadingFailure;
   },
   now = new Date(),
 ) {
@@ -425,8 +430,14 @@ export function settleLiveInvoiceReading(
     !["ready", "processing"].includes(invoice.live_reading!.phase)
   )
     throw new Error("The reading attempt has already finished.");
+  const diagnostic =
+    input.outcome === "failed"
+      ? normalizeLiveReadingFailure(input.diagnostic ?? { reason: "unknown" })
+      : undefined;
   invoice.live_reading!.phase = input.outcome;
   invoice.live_reading!.completed_at = now.toISOString();
+  if (diagnostic) invoice.live_reading!.failure_diagnostic = diagnostic;
+  else delete invoice.live_reading!.failure_diagnostic;
   if (input.outcome === "manual") {
     invoice.status = "review";
     invoice.entry_mode = "manual";

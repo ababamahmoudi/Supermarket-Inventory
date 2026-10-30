@@ -31,7 +31,7 @@ P1 remains after green P0. No pending row in this table is a claim of delivered 
 | 5     | F8 — active pages and retained originals                         | Delivered |
 | 6     | F9 — phone chooser fits                                          | Delivered |
 | 7     | F10 — compact actual reader settings                             | Delivered |
-| 8     | F11 — scoped safe failure details                                | Planned   |
+| 8     | F11 — scoped safe failure details                                | Delivered |
 | 9     | K9 — shared checkboxes, pickup and independent Dashboard columns | Planned   |
 
 ## Start on the Mac
@@ -230,6 +230,15 @@ Verified six existing navigation unit tests, fresh TypeScript/build/full lint an
 Settings → Receiving → AI reading. Change mode/address, Cancel and confirm the saved values return; then Save a reachable custom address. Test connection shows the real result. Reset and Save return to localhost. At 360/390/509/760 px, the full labels and address control remain usable and the action row fits in EN/FA and both themes.
 
 Verified 37 focused domain/UI units, fresh TypeScript/build/full lint and 20 actual browser cases in 1.2 minutes: EN/FA × light/dark × 360/390/509/760/1440 px. Cases perform real protected Save/Cancel and intercepted fictional HTTP 503 health, check page/text/control containment, compact spacing, adjacent controls, phone touch targets and unchanged unrelated planned-card width/height/content. Pending actual Manager→Owner and unmount health cancellation are unit tested. No real reader/provider or physical-device test.
+
+## P1 F11 — private actionable reading failures
+
+1. As Owner or Manager in Live mode, open a failed saved invoice. Read the safe concrete cause and guidance; for a kit model-list problem it identifies `models` or `models[].id` without showing the provider response.
+2. Reload the failed invoice. Its useful safe guidance remains. Fix the real kit externally and explicitly Try again; no app key field is added and no automatic provider request occurs.
+3. Open the same permitted invoice as Floor Worker. The original and existing recovery controls remain available, but the diagnostic is absent from DOM and ordinary protected DTOs.
+4. Before an accepted reading, change active pages after a failure. The old failure/attempt cannot settle or be read again; every original remains saved. Reviewed/manual/completed work cannot be erased through these controls.
+
+Local source verification and independent integrated CI are recorded on PR #29.
 
 ## After the demo — record only
 

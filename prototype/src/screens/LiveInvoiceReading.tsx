@@ -32,6 +32,7 @@ import {
 } from "../invoice-live-pdf-pages";
 import "./live-invoice-reading.css";
 import { LiveReadingProgress } from "./LiveReadingProgress";
+import { LiveReadingFailureDetails } from "./LiveReadingFailureDetails";
 
 type Translate = (en: string, fa: string) => string;
 const demoReadingAvailable = import.meta.env.VITE_DEMO_BUILD !== "false";
@@ -420,6 +421,7 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
                     "اصل فایل شما ذخیره شده است. پیش از خواندن ترتیب صفحه‌ها را بررسی کنید.",
                   )}
           </p>
+          {failed && <LiveReadingFailureDetails invoice={invoice} />}
           {(detail || operation.detailCode) && (
             <p className="helper" role="status">
               {detail || readingDetail(operation.detailCode, t)}

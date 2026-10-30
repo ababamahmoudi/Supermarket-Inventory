@@ -1,3 +1,5 @@
+import type { LiveReadingFailure } from "./live-reading-failure";
+
 export type LiveInvoiceReadingPhase =
   "ready" | "processing" | "failed" | "cancelled" | "complete" | "manual";
 
@@ -6,6 +8,8 @@ export interface LiveInvoiceReading {
   attempt_id?: string;
   started_at?: string;
   completed_at?: string;
+  /** Private safe failure codes; read only through the scoped diagnostic query. */
+  failure_diagnostic?: LiveReadingFailure;
   /** Private command guard, never part of an invoice read DTO or audit export. */
   authority?: {
     origin: "local-reader-v1";

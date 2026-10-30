@@ -56,21 +56,22 @@ export function privateAuthorityField(key: string): boolean {
     .some((part) => privateAuthorityKeys.has(normalized(part)));
 }
 
-/** Matching source references stay internal in every audit/export projection. */
-const privateMatchingKeys = new Set([
+/** Matching sources and diagnostic details stay private in every audit/export. */
+const privateBusinessKeys = new Set([
   "printeddescriptionkeys",
   "freecasegroup",
   "acquisitionbasis",
   "acquisitionamount",
   "sourceinvoiceids",
   "retainedoriginalpages",
+  "failurediagnostic",
 ]);
 function privateAuditField(key: string): boolean {
   return (
     privateAuthorityField(key) ||
     key
       .split(/[.[\]·]/)
-      .some((part) => privateMatchingKeys.has(normalized(part)))
+      .some((part) => privateBusinessKeys.has(normalized(part)))
   );
 }
 

@@ -1,4 +1,9 @@
 import Decimal from "decimal.js";
+import {
+  liveReadingFailure,
+  type LiveReadingFailure,
+  type LiveReadingFailureReason,
+} from "./live-reading-failure";
 import { createId } from "./ids";
 import type { LiveReaderImage } from "./invoice-live-images";
 import type { LiveReadingModelDetail } from "./invoice-live-reading-types";
@@ -37,9 +42,11 @@ export type LiveReaderErrorCode =
   | "cancelled";
 
 export class LiveReaderError extends Error {
+  readonly diagnostic?: LiveReadingFailure;
   constructor(
     readonly code: LiveReaderErrorCode,
     readonly status?: number,
+    reason?: LiveReadingFailureReason,
   ) {
     super(
       {
@@ -54,6 +61,19 @@ export class LiveReaderError extends Error {
       }[code],
     );
     this.name = "LiveReaderError";
+    if (code !== "cancelled")
+      this.diagnostic = liveReadingFailure(
+        reason ??
+          ({
+            address: "address",
+            images: "images",
+            network: "network_or_cors",
+            http: "http",
+            invalid_response: "invalid_envelope",
+            timeout: "timeout",
+          }[code] as LiveReadingFailureReason),
+        status,
+      );
   }
 }
 
@@ -105,30 +125,45 @@ function hasUsableReading(value: unknown): value is InvoiceReading {
   return value.lines.some(isUsableLiveReadingItem);
 }
 
+function invalidResponse(reason: LiveReadingFailureReason): never {
+  throw new LiveReaderError("invalid_response", undefined, reason);
+}
+
 function readResponse(value: unknown): LiveReaderResponse {
+  if (!object(value)) invalidResponse("invalid_envelope");
+  if (!hasUsableReading(value.reading))
+    invalidResponse(
+      object(value.reading) &&
+        (!Array.isArray(value.reading.lines) ||
+          !value.reading.lines.some(isUsableLiveReadingItem))
+        ? "invalid_items"
+        : "invalid_reading",
+    );
   if (
-    !object(value) ||
-    !hasUsableReading(value.reading) ||
     !object(value.statuses) ||
     !Object.values(value.statuses).every(
       (status) => status === "auto" || status === "check",
-    ) ||
-    typeof value.checksPassed !== "boolean" ||
-    !Array.isArray(value.models) ||
-    !value.models.every((model) => modelId(model) !== undefined) ||
+    )
+  )
+    invalidResponse("invalid_statuses");
+  if (typeof value.checksPassed !== "boolean")
+    invalidResponse("invalid_checks_passed");
+  if (!Array.isArray(value.models)) invalidResponse("invalid_models");
+  if (!value.models.every((model) => modelId(model) !== undefined))
+    invalidResponse("invalid_model_id");
+  if (
     typeof value.seconds !== "number" ||
     !Number.isFinite(value.seconds) ||
-    value.seconds < 0 ||
-    !["string", "number"].includes(typeof value.costUSD)
+    value.seconds < 0
   )
-    throw new LiveReaderError("invalid_response");
+    invalidResponse("invalid_seconds");
   const costUSD = decimalCostUSD(value.costUSD);
-  if (costUSD === undefined) throw new LiveReaderError("invalid_response");
+  if (costUSD === undefined) invalidResponse("invalid_cost_usd");
   const models: string[] = [];
   const modelDetails: LiveReaderModelDetail[] = [];
   for (const model of value.models) {
     const id = modelId(model);
-    if (id === undefined) throw new LiveReaderError("invalid_response");
+    if (id === undefined) invalidResponse("invalid_model_id");
     models.push(id);
     if (!object(model)) continue;
     const detail: LiveReaderModelDetail = { id };
@@ -222,7 +257,11 @@ export async function requestLiveInvoiceReading(
         try {
           value = await response.json();
         } catch {
-          throw new LiveReaderError("invalid_response");
+          throw new LiveReaderError(
+            "invalid_response",
+            undefined,
+            "invalid_json",
+          );
         }
         return readResponse(value);
       } catch (error) {
@@ -278,6 +317,6 @@ export function buildLiveInvoiceReadingsExport(
       }),
     );
   } catch {
-    throw new LiveReaderError("invalid_response");
+    throw new LiveReaderError("invalid_response", undefined, "invalid_export");
   }
 }

@@ -1,3 +1,7 @@
+## 2026-10-30 — R3c P1 F11 — private actionable reading failures
+
+Added accepted-attempt failure classification, private safe retention and a scoped Owner/Manager-only diagnostic read/UI. Preserved F0 acceptance and F8 source/archive privacy. Verified 231 affected unit/UI cases in ten files, fresh production build and final TypeScript, full lint plus the added-case static check, and all 54 English/Persian desktop/phone browser cases in 8.2 minutes: eight new F11 cases, all 38 retained R3 live/settings/recovery/PDF/permission cases, four F0 cases and four F1 simulation cases. No retries/skips. A new integration unit proves F8 source removal retires old failure details without losing the retained original.
+
 ## 2026-10-30 — R3c P1 F10 — compact actual reader settings
 
 Settings → Receiving → AI reading has a compact real mode Select and LTR address, adjacent Reset/Test connection controls, one section-owned Cancel/Save changes row when dirty, and the genuine health status. The helper explains that localhost means the current device and a phone needs the reader computer's reachable same-Wi-Fi address. The address/custom base path, reset/null, audit/current-authority save, pending disables, five-second timeout and honest network/CORS semantics are preserved. No key field or planned connection is added. A health result from an earlier person/navigation cannot appear under a replacement identity.

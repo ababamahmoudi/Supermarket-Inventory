@@ -38,10 +38,12 @@ vi.mock("../invoice-live-pdf-pages", () => ({
   loadLiveOriginalSelection: ports.selection,
   inspectLivePdfPages: vi.fn(),
 }));
-vi.mock("../invoice-live-images", () => ({
+vi.mock("../invoice-live-images", async (original) => ({
+  ...(await original<typeof import("../invoice-live-images")>()),
   prepareLiveReaderImages: ports.prepare,
 }));
-vi.mock("../invoice-live-reader", () => ({
+vi.mock("../invoice-live-reader", async (original) => ({
+  ...(await original<typeof import("../invoice-live-reader")>()),
   LIVE_READING_TIMEOUT_MS: 240000,
   requestLiveInvoiceReading: ports.request,
   buildLiveInvoiceReadingsExport: vi.fn(),
@@ -162,6 +164,7 @@ it("ends an unresponsive preparation at four minutes without ever calling the re
       invoice_id: "fictional-live-draft",
       attempt_id: "fictional-processing-attempt",
       outcome: "failed",
+      diagnostic: { reason: "timeout" },
     },
   );
   expect(appWorkPending()).toBe(false);

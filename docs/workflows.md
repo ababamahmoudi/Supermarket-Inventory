@@ -1,5 +1,9 @@
 # Workflows and state machines
 
+## R3c P1 F11 — private actionable reading failures
+
+An Owner/Manager opening a failed live invoice sees concrete safe guidance, including a malformed `models[].id`, malformed JSON/fields, HTTP status, timeout, honest network/CORS or known page/import failure. Other roles retain the calm saved-original recovery. Useful details survive reload; an explicit retry clears the old failure. Cancel/interruption is not labelled malformed output. Changing active pages retires the previous failure and attempt while preserving all originals. The F0 string/object model forms, numeric/string cost, optional model details and extra envelope fields remain accepted.
+
 ## R3c P1 F10 — compact actual reader settings
 
 Settings → Receiving → AI reading has a compact real mode Select and LTR address, adjacent Reset/Test connection controls, one section-owned Cancel/Save changes row when dirty, and the genuine health status. The helper explains that localhost means the current device and a phone needs the reader computer's reachable same-Wi-Fi address. The address/custom base path, reset/null, audit/current-authority save, pending disables, five-second timeout and honest network/CORS semantics are preserved. No key field or planned connection is added. A health result from an earlier person/navigation cannot appear under a replacement identity.
