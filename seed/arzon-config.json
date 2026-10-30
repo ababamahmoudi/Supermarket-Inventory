@@ -122,7 +122,11 @@
     "below_23": "previous_dollar_99",
     "from_23_to_below_73": "dollar_49",
     "from_73_up": "dollar_99",
-    "minimum_result_when_previous_dollar_does_not_exist": "0.49"
+    "minimum_result_when_previous_dollar_does_not_exist": "0.49",
+    "final_ending_adjustment": {
+      "source_endings": ["0.49"],
+      "target_ending": "0.99"
+    }
   },
   "special_corrections": [
     {

@@ -545,7 +545,7 @@ async function checkWeights(page: Page, language: ReceivingLanguage) {
   );
   await expect(
     editor.locator(".receiving-selling-price .price-display"),
-  ).toContainText("7.49");
+  ).toContainText("7.99");
   await expect
     .poll(
       async () =>

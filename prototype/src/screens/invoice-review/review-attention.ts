@@ -50,6 +50,7 @@ export function invoiceCheckTarget(field: string, line?: number): string {
           expiry_as_printed: "expiry_as_printed",
           handwritten_note: "handwritten_note",
           manual_price_decision: "manual",
+          selling_price: "selling-price",
           refused_units: "refused",
           short_dated: "short-dated",
           confirm: "confirm",

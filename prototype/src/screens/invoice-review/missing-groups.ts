@@ -333,6 +333,14 @@ export function missingGroups(
         "بارکد متعلق به کالای دیگری است. بارکد را اصلاح یا همان کالا را مرتبط کنید.",
         "barcode",
       );
+  for (const index of affected("selling_price"))
+    if (blockers.includes("selling_price"))
+      lineIssue(
+        index,
+        "selling price is invalid or its cost changed. Enter a positive price and review it again.",
+        "قیمت فروش معتبر نیست یا هزینه تغییر کرده است. قیمت مثبت وارد و دوباره بررسی کنید.",
+        "selling_price",
+      );
   for (const index of affected("manual_price"))
     if (blockers.includes("manual_price"))
       lineIssue(

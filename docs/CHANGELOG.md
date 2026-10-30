@@ -1,3 +1,15 @@
+## 2026-10-30 — R3c K3 — configured .49 to .99 and Use Lower
+
+- Added configurable final .49 → .99 rounding, settings controls, precise pre-rule explanation and Use Lower through real attributed receiving proposals/approval. TypeScript, Python references and shared cases agree; historical/manual/Sale/approved prices stay unchanged.
+- Protect set/reset actions against stale actor/source/cost/attempt, Discard/Undo and ABA while preserving valid restored proposals. Public projections retain K1/K2 evidence and omit private quotes.
+- Owner verification passed 131 focused tests, 182 additional pricing tests (batches overlap), 24 shared fixture cases, 31 Python reference tests, lint/build and 14 actual browser cases without retries. Integrated verification passed 412 combined K1/K2 privacy/pricing/receipt tests, 14 browsers, both Python reference checks, Ruff, lint and build. Independent full CI is tracked on PR #29.
+
+## 2026-10-30 — R3c retained-suite repairs before F4
+
+- Keep whole-case weight out of individual Product size; preserve raw pack evidence and true measured item leaves. Fix strict browser targets for the actual nested name/size markup and canonical unit spacing, retaining original weighted Product identity and all geometry/stock/money assertions. All 82 parser units and 12 affected browser cases pass.
+- Make missing-terms fixtures explicitly disable the new default, and make the real density negative exceed the unchanged 434px cap while its Monthly-enabled positive remains. All 37 relevant units, eight tooltip and four density browser cases pass.
+- Reproduce a duplicate unchanged-route event moving an open Timesheets day at midnight after a real save. Ignore that duplicate date intent while preserving actual date/query/Back navigation and all actor/version keys. All 16 clock/navigation tests pass; lint, 75 SDK tests and the final build also pass. The broad pre-fix run recorded 2,757 unit passes and this one causally repaired failure; exact final totals belong to independent CI.
+
 ## 2026-10-30 — R3c F3 — native picker before draft creation
 
 Photo and PDF tiles now open their real native file picker before any draft is created. Cancelled, empty, invalid and stale selections leave business state unchanged; valid selections retain the previous workspace and original bytes on the exact authorized target. Live intake saves the original ready for an explicit read. Storage errors leave a recoverable draft. Browser drivers now exercise actual `FileChooser.setFiles` through the visible source tile, retaining their original source-hash, identity, permissions, finance and stock assertions.

@@ -121,7 +121,7 @@ describe("R2e D4 actual derived price effects", () => {
   it("uses accepted branch prices, derives pending without approval, and emits changes once", () => {
     const { state, parent, actor, child } = domainFixture();
     expect(child.branch_prices).toEqual({
-      "Branch 1": "5.49",
+      "Branch 1": "5.99",
       "Branch 2": "5.99",
     });
     expect(child.selling_price).toBe("");
@@ -169,9 +169,9 @@ describe("R2e D4 actual derived price effects", () => {
       current_price: "8.99",
     });
     capturePriceUpdateChanges(cloneWithAuthority(state), state, actor);
-    expect(pendingPrice(state, child, "Branch 1")).toBe("6.49");
+    expect(pendingPrice(state, child, "Branch 1")).toBe("6.99");
     expect(pendingPrice(state, child, "Branch 2")).toBeNull();
-    expect(child.branch_prices?.["Branch 1"]).toBe("5.49");
+    expect(child.branch_prices?.["Branch 1"]).toBe("5.99");
   });
   it("a genuine parent approval changes only its selected branch and retains child barcode", () => {
     const { state, parent, actor, child } = domainFixture();
@@ -197,7 +197,7 @@ describe("R2e D4 actual derived price effects", () => {
       "Branch 1",
     );
     capturePriceUpdateChanges(before, state, actor);
-    expect(child.branch_prices?.["Branch 1"]).toBe("6.49");
+    expect(child.branch_prices?.["Branch 1"]).toBe("6.99");
     expect(child.branch_prices?.["Branch 2"]).toBe(oldOther);
     expect(child.barcode).toBe(barcode);
     expect(
@@ -209,7 +209,7 @@ describe("R2e D4 actual derived price effects", () => {
     const task = state.price_update_tasks?.find(
       (item) => item.product_code === child.code && item.branch === "Branch 1",
     );
-    expect(task?.new_price.price).toBe("6.49");
+    expect(task?.new_price.price).toBe("6.99");
     expect(task?.steps.length).toBeGreaterThan(1);
   });
   it("manual parent changes and approved sale start/end derive packages in the same command", () => {
@@ -225,7 +225,7 @@ describe("R2e D4 actual derived price effects", () => {
       "Branch 1",
     );
     capturePriceUpdateChanges(before, state, actor, now);
-    expect(child.branch_prices?.["Branch 1"]).toBe("6.49");
+    expect(child.branch_prices?.["Branch 1"]).toBe("6.99");
     const date = new Intl.DateTimeFormat("en-CA", {
       timeZone: state.config.company.timezone,
     }).format(now);
@@ -263,7 +263,7 @@ describe("R2e D4 actual derived price effects", () => {
       state.products.find((item) => item.code === child.code)?.branch_prices?.[
         "Branch 1"
       ],
-    ).toBe("6.49");
+    ).toBe("6.99");
   });
   it("bare company defaults do not approve package prices at unrelated branches", () => {
     const { state, parent, actor, child } = domainFixture();
@@ -341,7 +341,7 @@ describe("R2e D4 actual derived price effects", () => {
       type: "price_change",
       status: "pending",
       proposed_price: "30.99",
-      current_price: "5.49",
+      current_price: "5.99",
     });
     expect(() =>
       resolveApproval(
@@ -360,7 +360,7 @@ describe("R2e D4 actual derived price effects", () => {
     const cashier = catalogTestActor(state, "cashier");
     const dto = projectProductReadDTO(state, cashier, child);
     expect(dto.package_of_product_id).toBe(parent.code);
-    expect(dto.branch_prices).toEqual({ "Branch 1": "5.49" });
+    expect(dto.branch_prices).toEqual({ "Branch 1": "5.99" });
     expect(JSON.stringify(dto)).not.toMatch(
       /last_cost|margin|formula|actor_user|source_invoice/,
     );
@@ -389,7 +389,7 @@ describe("R2e D5 actual canonical package API", () => {
       const child = after.state.products.find(
         (item) => item.code === saved.product_code,
       )!;
-      expect(child.branch_prices?.["Branch 1"]).toBe("5.49");
+      expect(child.branch_prices?.["Branch 1"]).toBe("5.99");
       expect(
         after.state.price_update_tasks?.filter(
           (item) => item.product_code === child.code,
@@ -573,7 +573,7 @@ describe("R2e D5 actual canonical package API", () => {
       expect(
         after.products.find((item) => item.code === added.product_code)
           ?.branch_prices?.["Branch 1"],
-      ).toBe("11.49");
+      ).toBe("11.99");
       const stable = JSON.stringify({
         tasks: after.price_update_tasks,
         labels: after.label_waitlist,
@@ -700,7 +700,7 @@ describe("R2e D6 protected transaction edge proofs", () => {
         (item) => item.code === generated.product_code,
       )!;
       expect(child.barcode).toMatch(/^29\d{11}$/);
-      expect(child.branch_prices?.["Branch 1"]).toBe("6.49");
+      expect(child.branch_prices?.["Branch 1"]).toBe("6.99");
       const maker = await service.add(identity, {
         parent_code: parentCode,
         expected_parent_snapshot: snapshot,
@@ -788,7 +788,7 @@ describe("R2e D6 protected transaction edge proofs", () => {
         package_size: "500",
         package_version: 2,
         name_en: edits.name_en,
-        branch_prices: { "Branch 1": "10.49" },
+        branch_prices: { "Branch 1": "10.99" },
       });
       await expect(
         service.edit(identity, original.code, edits),
@@ -992,14 +992,14 @@ describe("R2e package effects share the installed sales-clock write", () => {
       expect(
         ended.products.find((item) => item.code === added.product_code)
           ?.branch_prices?.["Branch 1"],
-      ).toBe("5.49");
+      ).toBe("5.99");
       expect(
         ended.price_update_tasks?.find(
           (item) =>
             item.product_code === added.product_code &&
             item.branch === "Branch 1",
         )?.new_price.price,
-      ).toBe("5.49");
+      ).toBe("5.99");
       const stable = JSON.stringify({
         child: ended.products.find((item) => item.code === added.product_code),
         tasks: ended.price_update_tasks,

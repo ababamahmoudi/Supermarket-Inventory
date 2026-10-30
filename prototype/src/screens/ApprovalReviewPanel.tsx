@@ -105,6 +105,27 @@ export function ApprovalReviewPanel({
             />
           </Field>
         )}
+      {actualApproval.receiving_price && (
+        <section className="list-box" data-testid="receiving-price-approval">
+          <p>
+            {t(
+              `Set by ${actualApproval.receiving_price.set_by} during receiving`,
+              `تعیین‌شده توسط ${actualApproval.receiving_price.set_by} هنگام دریافت`,
+            )}
+          </p>
+          <p>
+            {t("Requested price", "قیمت پیشنهادی")}:{" "}
+            <bdi dir="ltr">
+              {priceLabel(actualApproval.receiving_price.price)}
+            </bdi>
+            {" · "}
+            {t("Calculated price", "قیمت محاسبه‌شده")}:{" "}
+            <bdi dir="ltr">
+              {priceLabel(actualApproval.receiving_price.calculated_price)}
+            </bdi>
+          </p>
+        </section>
+      )}
       <section
         className="approval-review-summary"
         aria-label={t("Approval summary", "خلاصه تأیید")}

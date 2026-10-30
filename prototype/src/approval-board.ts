@@ -181,7 +181,9 @@ export function approvalPanelRead(
       : (approval.unit_cost ?? product.last_cost_before_tax)) || null;
   const manualReview =
     showEffects &&
-    (approval.manual_price_review || approval.source_manual_request)
+    (approval.manual_price_review ||
+      approval.source_manual_request ||
+      approval.receiving_price)
       ? manualRegularApprovalPreview(state, actor, approval, regularDecision)
       : null;
   const proposedPrice = manualReview?.price ?? approval.proposed_price;

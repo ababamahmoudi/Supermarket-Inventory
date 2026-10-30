@@ -1,3 +1,8 @@
+import {
+  receivingPriceQuote,
+  receivingPriceProblem,
+  receivingPriceEligible,
+} from "./invoice-receiving-price";
 import type { AuthenticatedActor } from "./authority-types";
 import { cloneWithAuthority, freshActor } from "./authority";
 import {
@@ -111,6 +116,7 @@ export function invoiceWorkspaceRead(
         row.code === line.product_code && row.company_id === line.company_id,
     );
     let price: string | null = null,
+      roundedUpFrom: string | null = null,
       costValid = true;
     try {
       // A new imported product awaits a person's category choice. Its valid
@@ -122,14 +128,17 @@ export function invoiceWorkspaceRead(
         if (line.quantity_unit === "cases" && line.sold_by !== "weight")
           costValid &&= validCost(line.case_cost_before_tax ?? "");
       } else {
-        price =
-          working.invoice.status === "posted"
-            ? line.calculated_selling_price
-            : invoiceLineCalculation(
-                line,
-                line.pricing_category ?? product?.pricing_category ?? "grocery",
-                working.config,
-              ).selling_price;
+        if (working.invoice.status === "posted")
+          price = line.calculated_selling_price;
+        else {
+          const calculation = invoiceLineCalculation(
+            line,
+            line.pricing_category ?? product?.pricing_category ?? "grocery",
+            working.config,
+          );
+          price = calculation.selling_price;
+          roundedUpFrom = calculation.rounded_up_from;
+        }
       }
     } catch {
       costValid = false;
@@ -157,6 +166,10 @@ export function invoiceWorkspaceRead(
     return {
       index,
       price,
+      roundedUpFrom,
+      receivingPriceQuote: receivingPriceQuote(working, index),
+      receivingPriceInvalid: receivingPriceProblem(working, index),
+      receivingPriceEligible: receivingPriceEligible(working, line),
       costValid,
       manual: marker ? { price: marker.price } : null,
       manualReplacement: replacement ? { price: replacement.price } : null,

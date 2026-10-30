@@ -15,9 +15,9 @@ import fixtures from "../../seed/pricing-test-cases.json";
 describe("R2e D package Decimal pricing", () => {
   it.each([
     ["100", "g", "2.99", "2.99"],
-    ["250", "g", "5.49", "5.99"],
-    ["500", "g", "10.49", "10.99"],
-    ["1", "lb", "9.49", "9.99"],
+    ["250", "g", "5.99", "5.99"],
+    ["500", "g", "10.99", "10.99"],
+    ["1", "lb", "9.99", "9.99"],
     ["2", "kg", "39.99", "40.99"],
   ] as const)(
     "%s %s uses the actual parent category rounding",
@@ -72,7 +72,7 @@ describe("R2e D package Decimal pricing", () => {
     expect(
       calculatePackagePrice("100", "g", "8.99", "4.1000", "grocery", config)
         .selling_price,
-    ).toBe("2.49");
+    ).toBe("2.99");
   });
   it.each(["0", "-1", "1e2", "NaN", "Infinity", "0.0000001"])(
     "rejects invalid size %s",

@@ -65,7 +65,9 @@ export type CompanyConfig = Omit<
   | "modules"
   | "branding"
   | "receiving"
+  | "rounding_bands"
 > & {
+  rounding_bands: import("./pricing-ending-rule").RoundingBands;
   receiving: Omit<
     typeof configSeed.receiving,
     "ai_reading_mode" | "ai_reader_address" | "default_payment_terms"
@@ -262,6 +264,7 @@ export interface Approval extends ScopedRecord {
   threshold?: string | null;
   invoice_ids?: string[];
   config_version?: string;
+  receiving_price?: import("./invoice-receiving-price").ReceivingPriceView;
   manual_override?: boolean;
   clear_manual_price?: boolean;
   manual_price_review?: {
@@ -439,6 +442,7 @@ export type InvoiceLine = Omit<
     printed_cost_basis?: "unit" | "case";
     printed_case_cost_before_tax?: string;
   };
+  receiving_price?: import("./invoice-receiving-price").ReceivingPriceProposal;
   manual_price_decision?: "keep" | "rule";
   short_dated?: boolean;
   supplier_item_id?: string;

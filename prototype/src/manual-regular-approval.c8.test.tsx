@@ -108,7 +108,7 @@ async function prepare() {
       item.product_code === "0012",
   )!;
   expect(approval.manual_price_review?.receiver_recommendation).toBe("keep");
-  expect(approval.proposed_price).toBe("23.49");
+  expect(approval.proposed_price).toBe("23.99");
   const fixture = await authenticatedProviderFixture({
     state,
     role: "manager",
@@ -153,7 +153,7 @@ it("offers calculated price by default despite receiver Keep, and applies it onl
   const dialog = await prepare();
   expect(
     within(dialog).getByRole("combobox", { name: "Selling price" }),
-  ).toHaveTextContent("Use the new calculated price $23.49");
+  ).toHaveTextContent("Use the new calculated price $23.99");
   expect(screen.getByLabelText("Actual regular price")).toHaveTextContent(
     "24.99",
   );
@@ -166,7 +166,7 @@ it("offers calculated price by default despite receiver Keep, and applies it onl
   );
   await waitFor(() =>
     expect(screen.getByLabelText("Actual regular price")).toHaveTextContent(
-      "23.49",
+      "23.99",
     ),
   );
   expect(screen.getByLabelText("Manual marker")).toHaveTextContent("none");

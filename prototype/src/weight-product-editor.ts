@@ -1,3 +1,4 @@
+import { effectiveRoundingBands } from "./pricing-ending-rule";
 import Decimal from "decimal.js";
 import type { AuthenticatedActor } from "./authority-types";
 import { freshActor, cloneWithAuthority, actorAtLocation } from "./authority";
@@ -167,7 +168,7 @@ export function weightEditorSnapshot(
       : productStoreCost(state, actor, product),
     pricing: {
       categories: state.config.pricing_categories,
-      bands: state.config.rounding_bands,
+      bands: effectiveRoundingBands(state.config),
       corrections: state.config.special_corrections,
       weighed: state.config.weighed_items,
       tax: state.config.tax,
@@ -507,7 +508,7 @@ export function weightPricingSnapshot(
     },
     cost_locations: costDecisionLocations(state, actor),
     categories: state.config.pricing_categories,
-    bands: state.config.rounding_bands,
+    bands: effectiveRoundingBands(state.config),
     corrections: state.config.special_corrections,
     weighed: state.config.weighed_items,
     tax: state.config.tax,

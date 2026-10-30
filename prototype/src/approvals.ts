@@ -1,3 +1,4 @@
+import { effectiveRoundingBands } from "./pricing-ending-rule";
 import { offerVersion, stopCompanyOfferAtStore } from "./offer-store-scopes";
 import { businessFingerprint } from "./business-fingerprint";
 import type { AuthenticatedActor, SystemAttribution } from "./authority-types";
@@ -138,6 +139,8 @@ export function approvalSnapshot(
         approval.margin,
         approval.threshold,
         approval.manual_price_review,
+        approval.receiving_price,
+        approval.manual_override,
         approval.pricing_category,
         (state.invoice_location_corrections ?? [])
           .filter(
@@ -571,7 +574,10 @@ export function manualRegularApprovalPreview(
     price,
     has_current_cost: validCost,
     regular_price: review?.kept_price ?? approval.current_price ?? null,
-    calculated_price: review?.calculated_price ?? approval.proposed_price,
+    calculated_price:
+      review?.calculated_price ??
+      approval.receiving_price?.calculated_price ??
+      approval.proposed_price,
     margin,
     threshold,
     below_minimum_margin: Boolean(
@@ -671,6 +677,15 @@ export function resolveApproval(
   )
     throw new Error(
       "Add a reason for keeping or approving this price below the minimum margin",
+    );
+  if (
+    decision === "approve" &&
+    approval.receiving_price &&
+    (regularPreview?.below_minimum_margin || regularPreview?.below_cost) &&
+    !reason?.trim()
+  )
+    throw new Error(
+      "Add a reason for approving this price below the minimum margin",
     );
   if (decision === "approve" && sourceRequest) {
     approval.unit_cost =
@@ -847,13 +862,15 @@ export function changeApprovalCategory(
   if (approval.pricing_category === categoryKey) return approval;
   approval.pricing_category = categoryKey;
   approval.proposed_price = calculation.selling_price;
+  if (approval.receiving_price)
+    approval.receiving_price.calculated_price = calculation.selling_price;
   approval.margin = calculation.margin;
   approval.unit_cost = cost;
   approval.threshold = category.minimum_margin;
   approval.config_version = businessFingerprint({
     cost,
     category,
-    pricing: state.config.rounding_bands,
+    pricing: effectiveRoundingBands(state.config),
     corrections: state.config.special_corrections,
   });
   approval.manual_override = false;
@@ -989,7 +1006,8 @@ export function requiresIndividualApprovalReview(approval: Approval): boolean {
   return Boolean(
     approval.type === "margin_review" ||
     approval.manual_price_review ||
-    approval.source_manual_request,
+    approval.source_manual_request ||
+    approval.receiving_price,
   );
 }
 

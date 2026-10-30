@@ -262,7 +262,7 @@ describe("R2 invoice approvals", () => {
       request.id,
       "grocery",
     );
-    expect(preview).toBe("15.49");
+    expect(preview).toBe("15.99");
     expect(
       changeApprovalCategory(state, actor, request.id, "grocery")
         .proposed_price,

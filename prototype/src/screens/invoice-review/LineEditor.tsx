@@ -1,3 +1,4 @@
+import { setInvoiceReceivingPrice } from "../../invoice-receiving-price";
 import { LineArithmetic } from "./LineArithmetic";
 import { ProductPrice } from "../../weight-price-presentation";
 import { useRef, useState } from "react";
@@ -105,6 +106,27 @@ export function LineEditor({
   const [persian, setPersian] = useState(
     line.new_name_fa ?? product?.name_fa ?? "",
   );
+  const [priceSaving, setPriceSaving] = useState(false);
+  const setReceivingPrice = async (value: string | null) => {
+    if (correction || priceSaving) return false;
+    setPriceSaving(true);
+    try {
+      return (
+        (await reviewUpdate((draft, actor) => {
+          setInvoiceReceivingPrice(
+            draft,
+            actor,
+            index,
+            value,
+            workspace.lineDetails[index]!.receivingPriceQuote,
+          );
+          return true;
+        })) === true
+      );
+    } finally {
+      setPriceSaving(false);
+    }
+  };
   const [attempted, setAttempted] = useState(false);
   const editorBody = useRef<HTMLDivElement>(null);
   const [reservedBodyHeight, setReservedBodyHeight] = useState(0);
@@ -311,6 +333,7 @@ export function LineEditor({
             quantity_entered: "invoiced",
             quantity_unit: "unit",
             qty_received_at_posting: "delivered",
+            selling_price: "selling-price",
             unit_cost_before_tax: "cost",
             case_cost_before_tax: "case-cost",
             units_per_case: "pack",
@@ -1304,7 +1327,11 @@ export function LineEditor({
                 </div>
               )}
             </section>
-            <section className="receiving-line-price">
+            <section
+              className="receiving-line-price"
+              id={id("selling-price")}
+              tabIndex={-1}
+            >
               <div className="receiving-selling-price">
                 <div>
                   <span>
@@ -1329,11 +1356,12 @@ export function LineEditor({
                         {workspace.lineDetails[index]?.price ? (
                           <Money
                             value={
-                              line.short_dated
+                              line.receiving_price?.price ||
+                              (line.short_dated
                                 ? product?.branch_prices?.[invoice.branch] ||
                                   product?.selling_price ||
                                   workspace.lineDetails[index]!.price!
-                                : workspace.lineDetails[index]!.price!
+                                : workspace.lineDetails[index]!.price!)
                             }
                           />
                         ) : (
@@ -1421,8 +1449,61 @@ export function LineEditor({
               />
             </Field>
           )}
+          {!correction && workspace.lineDetails[index]?.roundedUpFrom && (
+            <p className="muted" data-testid="receiving-rounded-up">
+              {t(
+                `Rounded up from ${money(workspace.lineDetails[index]!.roundedUpFrom!)} (store rule)`,
+                `گردشده به بالا از ${money(workspace.lineDetails[index]!.roundedUpFrom!)} (قاعدهٔ فروشگاه)`,
+              )}
+              {workspace.lineDetails[index]?.receivingPriceEligible && (
+                <Button
+                  disabled={priceSaving}
+                  onClick={() =>
+                    void setReceivingPrice(
+                      workspace.lineDetails[index]!.roundedUpFrom!,
+                    )
+                  }
+                >
+                  {t(
+                    `Use ${money(workspace.lineDetails[index]!.roundedUpFrom!)}`,
+                    `استفاده از ${money(workspace.lineDetails[index]!.roundedUpFrom!)}`,
+                  )}
+                </Button>
+              )}
+            </p>
+          )}
+          {!correction &&
+            workspace.lineDetails[index]?.receivingPriceInvalid && (
+              <p className="form-error" role="alert">
+                {t(
+                  "The price or its cost changed. Review the selling price again, or use the calculated price.",
+                  "قیمت یا هزینهٔ آن تغییر کرده است. قیمت فروش را دوباره بررسی کنید یا قیمت محاسبه‌شده را انتخاب کنید.",
+                )}
+              </p>
+            )}
+          {!correction && line.receiving_price && (
+            <p className="muted" data-testid="receiving-price-attribution">
+              <Badge>{t("Manual price proposal", "پیشنهاد قیمت دستی")}</Badge>{" "}
+              {t(
+                `Set by ${line.receiving_price.set_by} during receiving`,
+                `تعیین‌شده توسط ${line.receiving_price.set_by} هنگام دریافت`,
+              )}
+              {" · "}
+              {t("Calculated price", "قیمت محاسبه‌شده")}:{" "}
+              {workspace.lineDetails[index]?.price
+                ? money(workspace.lineDetails[index]!.price!)
+                : t("Not added", "اضافه نشده")}
+              <Button
+                disabled={priceSaving}
+                onClick={() => void setReceivingPrice(null)}
+              >
+                {t("Use calculated price", "استفاده از قیمت محاسبه‌شده")}
+              </Button>
+            </p>
+          )}
           {!correction &&
             workspace.lineDetails[index]?.manualReplacement &&
+            !line.receiving_price &&
             !line.short_dated && (
               <section>
                 <Field label={t("Manual price decision", "تصمیم قیمت دستی")}>

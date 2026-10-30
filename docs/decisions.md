@@ -656,3 +656,9 @@ Checked answers and later human name edits are authoritative product-name propos
 ## 2026-10-30 — R3c F3 — native picker before draft creation
 
 Photo/PDF source selection now precedes draft creation. The native picker is opened synchronously by the actual source-tile gesture; no asynchronous business command comes before that gesture. A shared intake function validates the selection, checks the initiating actor/location/navigation witness again inside the initial protected creation transaction, then retains and attaches originals through existing private target-bound upload handles. A separate root navigation witness guards the final route change without mistaking the intake's own child remount for user navigation. This prevents empty drafts on cancellation and prevents stale asynchronous validation from creating or reopening an invoice after the person has moved elsewhere. Existing upload-draft recovery remains available when storage fails.
+
+## 2026-10-30 — R3c K3 — configured .49 to .99 and Use Lower
+
+Apply a configurable final Decimal ending adjustment only to new calculations. Resolve absent legacy configuration read-only so the requested default does not rewrite approved prices or silently discard explicit custom/disabled rules. Keep TypeScript and both Python references aligned through shared cases.
+
+Use the real receiving proposal/approval pipeline for Use Lower. Separate stable calculation evidence from mandatory fresh action evidence; immutable price Activity prevents Set → Reset ABA while exact Undo can retain a still-valid proposal and its actual editor. Preserve source/paper/stock/ledger evidence and current approved/Sale charges.

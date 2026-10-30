@@ -55,8 +55,8 @@ describe("weighed pricing preserves the existing pricing foundation", () => {
         fixture.special_2_49_3_49_correction_applied,
       );
       expect(weightPriceDisplay(result.selling_price, state.config)).toEqual({
-        main: { amount: "7.49", unit: "lb" },
-        secondary: { amount: "16.51", unit: "kg" },
+        main: { amount: "7.99", unit: "lb" },
+        secondary: { amount: "17.61", unit: "kg" },
       });
     },
   );
@@ -285,15 +285,15 @@ describe("weighed product and settings decisions", () => {
     expect(product).toMatchObject({
       sold_by: "weight",
       last_cost_before_tax: "4.9895",
-      selling_price: "7.49",
+      selling_price: "7.99",
     });
-    expect(rulePrice(state, product)).toBe("7.49");
+    expect(rulePrice(state, product)).toBe("7.99");
     state.config.weighed_items = {
       ...DEFAULT_WEIGHED_SETTINGS,
       use_rounding_bands: false,
     };
     expect(rulePrice(state, product)).toBe("7.68");
-    expect(product.selling_price).toBe("7.49");
+    expect(product.selling_price).toBe("7.99");
   });
   it("saves reversible settings without repricing products and denies unauthorized or invalid saves atomically", () => {
     const state = initialState();

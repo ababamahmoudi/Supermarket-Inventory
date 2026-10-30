@@ -48,7 +48,11 @@ export type InvoiceProductMatchReadDTO = Pick<
 >;
 export type InvoiceLineView = Omit<
   InvoiceLine,
-  "demo_note" | InvoiceLineMoney | "reading_product_match" | "known_delivery"
+  | "demo_note"
+  | InvoiceLineMoney
+  | "reading_product_match"
+  | "known_delivery"
+  | "receiving_price"
 > &
   Partial<Pick<InvoiceLine, InvoiceLineMoney>> & {
     reading_product_match?: InvoiceProductMatchReadDTO;
@@ -56,6 +60,7 @@ export type InvoiceLineView = Omit<
       NonNullable<InvoiceLine["known_delivery"]>,
       "status" | "date" | "changes"
     >;
+    receiving_price?: import("./invoice-receiving-price").ReceivingPriceView;
   };
 type InvoiceMoney =
   "subtotal" | "tax" | "final_total" | "payable_after_open_shorts";
@@ -384,6 +389,17 @@ export function invoiceView(
           },
         };
       })(),
+      ...(line.receiving_price
+        ? {
+            receiving_price: select(line.receiving_price, [
+              "price",
+              "calculated_price",
+              "set_by_user_id",
+              "set_by",
+              "set_at",
+            ]),
+          }
+        : {}),
       ...(costs ? select(line, lineMoneyKeys) : {}),
       ...(line.order_new_item_match
         ? {

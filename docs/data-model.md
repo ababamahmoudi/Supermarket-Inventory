@@ -1,5 +1,13 @@
 # Data model
 
+## R3c K3 — configured .49 to .99 and Use Lower
+
+`CompanyConfig.rounding_bands.final_ending_adjustment` is optional/null or `{ source_endings, target_ending }`. The seed default is `["0.49"] → "0.99"`; target must exceed every unique valid source cent fraction. Null or empty sources disables it; explicit custom/disabled values survive. Missing legacy configuration resolves through a read-only effective default, without a persisted migration, backup write or repricing existing Products.
+
+New calculations apply this Decimal adjustment once after category/band/special rounding. `PricingResult.rounded_up_from` retains the actual pre-adjustment price for the quiet explanation. TypeScript, both Python references and shared fixture cases agree. Historical approved/manual/Sale/posted prices remain unchanged.
+
+Use Lower retains an attributed `InvoiceLine.receiving_price` proposal with independent calculated price. Its private pricing basis is separate from the mandatory action witness, which also binds current actor/session/location, lifecycle/attempt/source/current proposal and latest immutable price Activity. Set/reset reject stale and ABA actions; valid Discard/Undo restoration preserves the original receiver without reviving old actions. Posting creates individual manual-price approval with requested/calculated prices and the receiver; it does not change the current approved charge. Internal quote serialization stays outside public/audit views.
+
 ## R3c F3 — native picker before draft creation
 
 Photo/PDF intake keeps its selected `File` objects and initiating actor/location/navigation witness in transient UI memory. Opening or cancelling the native picker does not allocate an invoice ID, retain a new invoice, write an activity or save a blob. Empty, invalid or stale selections are rejected before the initial protected creation transaction. The transaction rechecks the genuine company, user/session, authority/person version and concrete receiving location, then retains the prior workspace and creates the selected target with its actual creator.

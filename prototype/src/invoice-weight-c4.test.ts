@@ -94,7 +94,7 @@ describe("invoice source weight quantities and exact costs", () => {
       ),
     ).toMatchObject({
       type: "new_product",
-      proposed_price: "7.49",
+      proposed_price: "7.99",
       unit_cost: "4.9895",
       status: "pending",
     });
@@ -107,7 +107,7 @@ describe("invoice source weight quantities and exact costs", () => {
     expect(line.line_total).toBe("12.38");
     expect(
       invoiceLineCalculation(line, "grocery", state.config).selling_price,
-    ).toBe("7.49");
+    ).toBe("7.99");
     expect(invoiceBlockers(state, context(state))).toEqual([]);
     postInvoice(state, context(state));
     expect(state.invoice.final_total).toBe("12.38");

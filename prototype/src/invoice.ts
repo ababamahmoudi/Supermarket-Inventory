@@ -1,3 +1,6 @@
+import { businessFingerprint } from "./business-fingerprint";
+import { receivingPriceProblem } from "./invoice-receiving-price";
+import { effectiveRoundingBands } from "./pricing-ending-rule";
 import type { InvoiceEditableLine } from "./invoice-edit-types";
 import { invoiceView, type InvoiceLineView } from "./invoice-projections";
 import Decimal from "decimal.js";
@@ -1135,6 +1138,7 @@ export type InvoiceBlocker =
   | "review"
   | "date"
   | "lower_price"
+  | "selling_price"
   | "manual_price"
   | "order"
   | "order_decisions"
@@ -1273,6 +1277,7 @@ export function invoiceBlockers(
       }
     }
     if (invoicePaperTotalMismatch(line)) blockers.push("cost");
+    if (receivingPriceProblem(state, lineIndex)) blockers.push("selling_price");
     if (!line.review_confirmed) blockers.push("review");
     const category = state.config.pricing_categories.find(
       (item) =>
@@ -1302,6 +1307,7 @@ export function invoiceBlockers(
       product &&
       acceptedInvoiceUnits(line) > 0 &&
       !line.short_dated &&
+      !line.receiving_price &&
       manualDecisionForLine(state, actor, line, invoice.branch) &&
       !line.manual_price_decision
     )
@@ -1432,11 +1438,14 @@ export function postInvoice(
       const costChanged = !new Decimal(
         priorCosts.get(product.code) ?? product.last_cost_before_tax,
       ).eq(line.unit_cost_before_tax);
-      const manualReview = !!manual && costChanged;
-      const keepsManual = !!manual && !costChanged;
+      const receivingPrice = line.receiving_price;
+      const manualReview = !receivingPrice && !!manual && costChanged;
+      const keepsManual = !receivingPrice && !!manual && !costChanged;
       const usesRule = manualReview;
       // The receiver's choice is a retained recommendation; only the Owner or Manager decides.
-      const price = manualReview ? rulePrice : keepsManual ? prior! : rulePrice;
+      const price =
+        receivingPrice?.price ??
+        (manualReview ? rulePrice : keepsManual ? prior! : rulePrice);
       const manualPriceReview: Approval["manual_price_review"] = manualReview
         ? {
             kept_price: prior!,
@@ -1451,7 +1460,7 @@ export function postInvoice(
           item.key === (line.pricing_category ?? product.pricing_category),
       )!;
       const actualMargin =
-        keepsManual && new Decimal(price).gt(0)
+        (keepsManual || receivingPrice) && new Decimal(price).gt(0)
           ? new Decimal(price)
               .minus(line.unit_cost_before_tax)
               .div(price)
@@ -1459,12 +1468,13 @@ export function postInvoice(
           : calculation.margin;
       const margin = {
         margin: actualMargin,
-        below_minimum: keepsManual
-          ? category.minimum_margin !== null &&
-            category.minimum_margin !== "" &&
-            actualMargin !== null &&
-            new Decimal(actualMargin).lt(category.minimum_margin)
-          : calculation.below_minimum_margin,
+        below_minimum:
+          keepsManual || receivingPrice
+            ? category.minimum_margin !== null &&
+              category.minimum_margin !== "" &&
+              actualMargin !== null &&
+              new Decimal(actualMargin).lt(category.minimum_margin)
+            : calculation.below_minimum_margin,
       };
       line.calculated_selling_price = rulePrice;
       line.current_selling_price = prior;
@@ -1486,22 +1496,32 @@ export function postInvoice(
         !product.package_of_product_id &&
         !line.short_dated &&
         acceptedInvoiceUnits(line) > 0 &&
-        (!manual || costChanged) &&
-        (manualReview || usesRule || prior !== price || margin.below_minimum)
+        (receivingPrice || !manual || costChanged) &&
+        (receivingPrice ||
+          manualReview ||
+          usesRule ||
+          prior !== price ||
+          margin.below_minimum)
       ) {
-        const context = `${invoice.company_id}:${invoice.branch}:${product.code}:${prior ?? "new"}:${line.unit_cost_before_tax}:${line.manual_price_decision ?? "standard"}:${JSON.stringify(
-          {
-            categories: state.config.pricing_categories,
-            bands: state.config.rounding_bands,
-            corrections: state.config.special_corrections,
-          },
-        )}`;
+        const context = businessFingerprint({
+          company: invoice.company_id,
+          branch: invoice.branch,
+          product: product.code,
+          prior,
+          cost: line.unit_cost_before_tax,
+          manual_price_decision: line.manual_price_decision ?? "standard",
+          receiving_price: receivingPrice,
+          categories: state.config.pricing_categories,
+          bands: effectiveRoundingBands(state.config),
+          corrections: state.config.special_corrections,
+        });
         const existing = state.approvals.find(
           (item) =>
             item.company_id === invoice.company_id &&
             item.branch === invoice.branch &&
             item.product_code === product.code &&
             item.proposed_price === price &&
+            !receivingPrice &&
             (prior === price && !usesRule
               ? item.type === "margin_review" && item.config_version === context
               : item.type !== "margin_review" && item.status === "pending"),
@@ -1525,7 +1545,9 @@ export function postInvoice(
           !state.approvals.some((item) => item.config_version === context)
         ) {
           state.approvals.push({
-            id: `${invoice.id}:proposal:${product.code}`,
+            id: receivingPrice
+              ? `${invoice.id}:proposal:${product.code}:${line.id ?? lineIndex}`
+              : `${invoice.id}:proposal:${product.code}`,
             company_id: invoice.company_id,
             branch: invoice.branch,
             product_code: product.code,
@@ -1535,7 +1557,7 @@ export function postInvoice(
             type:
               prior === null
                 ? "new_product"
-                : prior === price && !usesRule
+                : prior === price && !usesRule && !receivingPrice
                   ? "margin_review"
                   : "price_change",
             unit_cost: line.unit_cost_before_tax,
@@ -1550,6 +1572,18 @@ export function postInvoice(
             triggered_by_user_id: actor.user_id,
             posted_at: now,
             source_invoice_id: invoice.id,
+            ...(receivingPrice
+              ? {
+                  manual_override: true,
+                  receiving_price: {
+                    price: receivingPrice.price,
+                    calculated_price: rulePrice,
+                    set_by_user_id: receivingPrice.set_by_user_id,
+                    set_by: receivingPrice.set_by,
+                    set_at: receivingPrice.set_at,
+                  },
+                }
+              : {}),
             clear_manual_price: usesRule,
             manual_price_review: manualPriceReview,
           });

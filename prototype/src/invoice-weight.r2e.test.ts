@@ -395,7 +395,7 @@ describe("R2e A measured weight cases preserve money", () => {
     ).toMatchObject({ sold_by: "each", last_cost_before_tax: "25.0000" });
     expect(
       state.approvals.find((row) => row.product_code === line.product_code),
-    ).toMatchObject({ unit_cost: "25.0000", proposed_price: "38.49" });
+    ).toMatchObject({ unit_cost: "25.0000", proposed_price: "38.99" });
   });
   it("posts the converted line and creates the real first-price approval from the canonical per-lb cost", () => {
     const { state, line } = example();

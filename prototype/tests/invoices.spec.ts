@@ -315,7 +315,7 @@ test("Persian invoice review mirrors the shell and keeps Western price digits", 
     }),
   ).toHaveCount(0);
   const line = await openInvoiceLine(page, 0);
-  await expect(line.locator(".price-display")).toHaveText("$1.49");
+  await expect(line.locator(".price-display")).toHaveText("$1.99");
   await expect(
     page.getByRole("group", { name: "پیگیری تاریخ", exact: true }),
   ).toHaveCount(1);

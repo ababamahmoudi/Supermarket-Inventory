@@ -555,8 +555,8 @@ describe("immutable invoice content corrections", () => {
     expect(preview.approval_changes).toEqual([
       expect.objectContaining({
         product_code: "0002",
-        selling_price: "1.49",
-        creates_pending_proposal: false,
+        selling_price: "1.99",
+        creates_pending_proposal: true,
       }),
     ]);
     correctPostedInvoice(
@@ -568,9 +568,17 @@ describe("immutable invoice content corrections", () => {
       "seed-correction",
     );
     expect(state.invoice.supplier_invoice_number).toBe("FV-20390");
+    // A new calculated proposal does not reprice this historical approved amount.
+    expect(
+      state.products.find((row) => row.code === "0002")!.selling_price,
+    ).toBe("1.49");
   });
   it("previews no new approval at the approved price while retaining supersession and the corrected cost", () => {
-    const state = posted();
+    const state = posted(false, 10, (draft) => {
+      // Retain this exact unchanged-price/minimum boundary under a deliberate
+      // legacy setting; the preceding default-enabled correction covers .99.
+      draft.config.rounding_bands.final_ending_adjustment = null;
+    });
     const product = state.products.find((product) => product.code === "0002")!;
     const staleProposal = {
       ...structuredClone(state.approvals[0]),
@@ -634,7 +642,11 @@ describe("immutable invoice content corrections", () => {
     ).toEqual(untouched);
   });
   it("previews and creates a margin review when the unchanged approved price is below the configured margin", () => {
-    const state = posted();
+    const state = posted(false, 10, (draft) => {
+      // Retain this exact unchanged-price/minimum boundary under a deliberate
+      // legacy setting; the preceding default-enabled correction covers .99.
+      draft.config.rounding_bands.final_ending_adjustment = null;
+    });
     const product = state.products.find((product) => product.code === "0002")!;
     state.config.pricing_categories.find(
       (category) => category.key === product.pricing_category,

@@ -1,5 +1,11 @@
 # Workflows and state machines
 
+## R3c K3 — configured .49 to .99 and Use Lower
+
+In Settings → Catalog → Rounding rules, configure Round selected price endings up, Source price endings and Round up to ending. The default is On, 0.49 → 0.99. Save changes retains an explicit custom/disabled rule; the same page's Price tester is a preview and never reprices stored approved Products.
+
+A newly calculated receiving price that changes ending shows Rounded up from $X (store rule) and Use $X. Choosing it makes a real attributed manual receiving-price proposal, clears confirmation and preserves the separately calculated amount. Use calculated price removes the proposal. Posting sends the proposal to individual approval with the original receiving person, even when somebody else posts. Existing scope, below-cost/minimum reason and final approval guards remain; no approved charge changes before approval.
+
 ## R3c F3 — native picker before draft creation
 
 From Invoices, **New invoice → Photo (AI reading)** opens the browser's native image picker directly; **PDF (AI reading)** opens a single-PDF picker. Photo permits multiple images and does not force a camera capture attribute. The chooser closes when the native picker opens. Cancelling returns to the current screen without creating a blank invoice. Valid selection retains the previous workspace, creates the authorized target, saves the chosen originals and opens that target; ordinary intake no longer passes through an empty upload page. A live selection becomes ready to read and requires the existing explicit **Read invoice** action; saving a source does not automatically call the reader or post an invoice.

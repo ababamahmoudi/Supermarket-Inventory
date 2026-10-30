@@ -71,7 +71,7 @@ test("R2f D3 stages costs and new sizes without writes on Cancel, then saves a r
   expect(cancelled.ledger).toEqual(before.ledger);
   dialog = await openWeightProductEditor(page);
   await stageWeightPackage(page, "250");
-  await expect(dialog.locator(".weight-package-price")).toContainText("$4.49");
+  await expect(dialog.locator(".weight-package-price")).toContainText("$4.99");
   await dialog
     .getByRole("button", { name: "Save product", exact: true })
     .click();
@@ -98,7 +98,7 @@ test("R2f D3 stages costs and new sizes without writes on Cancel, then saves a r
   expect(child).toBeDefined();
   expect(child?.package_size).toBe("250");
   expect(child?.barcode).toMatch(/^20\d{11}$/);
-  expect(child?.branch_prices?.["Branch 1"]).toBe("4.49");
+  expect(child?.branch_prices?.["Branch 1"]).toBe("4.99");
   expect(
     saved.price_update_tasks?.filter(
       (item) => item.product_code === child!.code,
@@ -536,7 +536,7 @@ test("R2f D3 New size uses the actual parent Sale basis and saves exactly its re
   const before = await readCanonicalBusinessEvidence(page);
   dialog = await openWeightProductEditor(page, parent.code);
   await expect(dialog.locator(".weight-product-price-main")).toContainText(
-    "$5.49",
+    "$5.99",
   );
   await expect(dialog.locator(".weight-package-formula")).toContainText(
     "$4.99/lb",
@@ -553,12 +553,12 @@ test("R2f D3 New size uses the actual parent Sale basis and saves exactly its re
     "lb",
   );
   await expect(dialog.locator(".weight-package-add-preview")).toContainText(
-    "$5.49",
+    "$5.99",
   );
   await dialog.getByRole("button", { name: "Add size", exact: true }).click();
   await expect(
     dialog.locator('[data-package-code="staged"] .weight-package-price'),
-  ).toContainText("$5.49");
+  ).toContainText("$5.99");
   const queried = await readCanonicalBusinessEvidence(page);
   expect(queried.products).toEqual(before.products);
   expect(queried.approvals).toEqual(before.approvals);
@@ -571,7 +571,7 @@ test("R2f D3 New size uses the actual parent Sale basis and saves exactly its re
   expect(
     saved.products.find((item) => item.package_of_product_id === parent.code)
       ?.branch_prices?.["Branch 1"],
-  ).toBe("5.49");
+  ).toBe("5.99");
   expect(
     saved.sales?.find((item) => item.product_code === parent.code)?.sale_price,
   ).toBe("4.99");

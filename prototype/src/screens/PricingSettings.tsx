@@ -1,3 +1,5 @@
+import { configSeed } from "../config";
+import { effectiveRoundingBands } from "../pricing-ending-rule";
 import { useSettingsConfiguration } from "../settings-configuration";
 import { useState } from "react";
 import Decimal from "decimal.js";
@@ -217,13 +219,13 @@ export default function PricingSettings() {
   const dirty =
     JSON.stringify([
       draft.pricing_categories,
-      draft.rounding_bands,
+      effectiveRoundingBands(draft),
       draft.special_corrections,
       weighedSettings(draft),
     ]) !==
     JSON.stringify([
       configuration.pricing_categories,
-      configuration.rounding_bands,
+      effectiveRoundingBands(configuration),
       configuration.special_corrections,
       weighedSettings(configuration),
     ]);
@@ -629,6 +631,97 @@ export default function PricingSettings() {
             </div>
           ))}
         </div>
+        <section className="settings-section">
+          <Switch
+            checked={Boolean(
+              effectiveRoundingBands(draft).final_ending_adjustment
+                ?.source_endings.length,
+            )}
+            onChange={(enabled) =>
+              changeDraft("bands", (previous) => ({
+                ...previous,
+                rounding_bands: {
+                  ...previous.rounding_bands,
+                  final_ending_adjustment: enabled
+                    ? structuredClone(
+                        configSeed.rounding_bands.final_ending_adjustment,
+                      )
+                    : null,
+                },
+              }))
+            }
+          >
+            {t(
+              "Round selected price endings up",
+              "گرد کردن پایان‌های انتخاب‌شده به بالا",
+            )}
+          </Switch>
+          {effectiveRoundingBands(draft).final_ending_adjustment && (
+            <div className="form-grid">
+              <Field
+                label={t("Source price endings", "پایان‌های مبدأ قیمت")}
+                hint={t(
+                  "Separate endings with commas, for example .49.",
+                  "پایان‌ها را با ویرگول جدا کنید، مانند .49.",
+                )}
+                error={ruleErrors.bands}
+              >
+                <input
+                  id="pricing-final-source"
+                  dir="ltr"
+                  value={effectiveRoundingBands(
+                    draft,
+                  ).final_ending_adjustment!.source_endings.join(", ")}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value;
+                    changeDraft("bands", (previous) => ({
+                      ...previous,
+                      rounding_bands: {
+                        ...previous.rounding_bands,
+                        final_ending_adjustment: {
+                          ...effectiveRoundingBands(previous)
+                            .final_ending_adjustment!,
+                          source_endings: value.trim()
+                            ? value.split(",").map((ending) => ending.trim())
+                            : [],
+                        },
+                      },
+                    }));
+                  }}
+                />
+              </Field>
+              <Field
+                label={t("Round up to ending", "گرد کردن به پایان")}
+                hint={t(
+                  "The target must be higher than every source ending.",
+                  "پایان مقصد باید از همه پایان‌های مبدأ بیشتر باشد.",
+                )}
+              >
+                <NumberField
+                  id="pricing-final-target"
+                  dir="ltr"
+                  value={
+                    effectiveRoundingBands(draft).final_ending_adjustment!
+                      .target_ending
+                  }
+                  onChange={(value) =>
+                    changeDraft("bands", (previous) => ({
+                      ...previous,
+                      rounding_bands: {
+                        ...previous.rounding_bands,
+                        final_ending_adjustment: {
+                          ...effectiveRoundingBands(previous)
+                            .final_ending_adjustment!,
+                          target_ending: value,
+                        },
+                      },
+                    }))
+                  }
+                />
+              </Field>
+            </div>
+          )}
+        </section>
         <Field
           label={t("Minimum result", "حداقل نتیجه")}
           className="settings-short-field"

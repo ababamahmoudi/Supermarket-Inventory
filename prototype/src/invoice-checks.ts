@@ -1,3 +1,4 @@
+import { receivingPriceProblem } from "./invoice-receiving-price";
 import { invoiceLineAmount, invoicePaperTotalMismatch } from "./invoice-weight";
 import Decimal from "decimal.js";
 import { createId } from "./ids";
@@ -402,6 +403,11 @@ export function confirmInvoiceLineChecks(
     throw new InvoiceLineConfirmationError(
       "unit_cost_before_tax",
       "Enter a nonnegative cost with up to four decimal places.",
+    );
+  if (receivingPriceProblem(state, lineIndex))
+    throw new InvoiceLineConfirmationError(
+      "selling_price",
+      "Enter a positive selling price and review it again after cost or category changes.",
     );
   if (line.sold_by !== "weight" && line.quantity_unit === "cases") {
     try {

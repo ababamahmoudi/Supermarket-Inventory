@@ -1,5 +1,6 @@
 /** Private authentication data never belongs in a business read model or export. */
 const privateAuthorityKeys = new Set([
+  "pricingquote",
   "authority",
   "authoritysnapshot",
   "privateauthority",

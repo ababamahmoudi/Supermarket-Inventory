@@ -13,7 +13,7 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 | 5     | F4 — retained Discard / Cancelled / Undo             | Delivered         |
 | 6     | F7 — truthful processing header                      | Delivered         |
 | 7     | F3 — native picker before draft creation             | Delivered         |
-| 8     | K3 — configurable .49 → .99                          | In implementation |
+| 8     | K3 — configurable .49 → .99                          | Delivered         |
 | 9     | K4 — selling-price proposal in the line editor       | In implementation |
 | 10    | K5 — reading survives navigation                     | In implementation |
 | 11    | K7 — compact truthful reading progress               | In implementation |
@@ -112,6 +112,15 @@ The integrated final source passed six header unit tests, a fresh build and all 
 5. Invalid/empty choices do not create records. Automated coverage also delays actual source validation, leaves Invoices and returns before validation finishes, and verifies full canonical no-create. The retained manual-original attachment tests also verify that storage rejection releases pending protection and preserves the existing draft.
 
 Integrated verification passed 16 unit tests, a fresh build and all 12 English/Persian desktop/phone picker browser cases, with no skips or retries. Independent full CI is tracked on PR #29.
+
+## K3 — configured .49 to .99 and Use Lower
+
+1. In a fictional demo profile as Owner/Manager, open **Settings → Catalog → Rounding rules**. Default Round selected price endings up is On, Source price endings is **0.49**, and Round up to ending is **0.99**.
+2. On the same page, use **Price tester → Each → Grocery**, with unit cost before tax **1.00**. The calculated price is **1.99**. Disable the final rule and Save changes in this fictional profile: it becomes **1.49**. Restore the intended default. Existing approved Products do not reprice.
+3. With Simulated saved in Settings → Receiving, enter a fresh fictional PDF through New invoice. Open its first Grocery line (the unchanged fictional six-line simulation): the calculated **1.99** shows **Rounded up from $1.49 (store rule)**. Choose **Use $1.49**. It becomes a manual proposal attributed to the actual receiving person, while calculated price remains 1.99 and approved charge stays unchanged.
+4. Choose **Use calculated price** to reset. Or retain the lower proposal, finish the ordinary invoice checks, confirm and post. In Approvals, open that individual manual-price proposal: requested/calculated prices and the original receiver remain visible even if a different Manager posted. Cancel/reject leaves the earlier approved charge intact; approval uses the existing scope/reason guards.
+
+The owner passed 131 focused units, 182 additional pricing tests (overlapping batches), 24 shared Python fixtures, 31 Python reference tests, static/build checks and 14 browser cases. Integrated final-source verification passed 412 combined tests across 21 files, 14 browser cases, 24 shared Python fixtures, 31 Python reference tests, Ruff/static checks and a fresh build, with no browser retries or skips. Independent full CI is tracked on PR #29. Automated fixtures are fictional; no real-provider or physical-device rehearsal is claimed.
 
 ## After the demo — record only
 

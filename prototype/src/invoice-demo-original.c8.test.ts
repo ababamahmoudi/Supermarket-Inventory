@@ -153,7 +153,7 @@ describe("C8 actual included original supplier confirmation", () => {
       ),
     ).toMatchObject({
       status: "pending",
-      proposed_price: "23.49",
+      proposed_price: "23.99",
       applies_after_sale: true,
     });
     expect(
@@ -241,11 +241,11 @@ describe("C8 actual included original supplier confirmation", () => {
       ),
     ).toMatchObject({
       status: "pending",
-      proposed_price: "23.49",
+      proposed_price: "23.99",
       applies_after_sale: true,
       manual_price_review: {
         kept_price: "24.99",
-        calculated_price: "23.49",
+        calculated_price: "23.99",
         receiver_recommendation: "keep",
       },
     });

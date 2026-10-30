@@ -48,10 +48,10 @@ describe("precision and boundaries", () => {
       "0.99",
     );
     expect(calculatePrice("1.2250", "kitchenware", config).selling_price).toBe(
-      "1.49",
+      "1.99",
     );
     expect(calculatePrice("1.7249", "kitchenware", config).selling_price).toBe(
-      "1.49",
+      "1.99",
     );
     expect(calculatePrice("1.7250", "kitchenware", config).selling_price).toBe(
       "1.99",
@@ -69,7 +69,7 @@ describe("precision and boundaries", () => {
   });
 
   it("uses the configured minimum for low and zero band costs", () => {
-    expect(calculatePrice("0", "grocery").selling_price).toBe("0.49");
+    expect(calculatePrice("0", "grocery").selling_price).toBe("0.99");
     const config = configuration();
     config.rounding_bands.minimum_result_when_previous_dollar_does_not_exist =
       "0.29";
@@ -83,7 +83,7 @@ describe("precision and boundaries", () => {
       "2.99",
     );
     expect(calculatePrice("1.50", "kitchenware", config).selling_price).toBe(
-      "2.49",
+      "2.99",
     );
     expect(
       calculatePrice("1.60", "rice", config).special_correction_applied,
@@ -102,10 +102,10 @@ describe("configuration changes need no code changes", () => {
     const config = configuration();
     const before = calculatePrice("1.00", "grocery", config);
     config.pricing_categories.find((c) => c.key === "grocery")!.cost_divisor =
-      "0.50";
-    expect(before.selling_price).toBe("1.49");
+      "0.40";
+    expect(before.selling_price).toBe("1.99");
     expect(calculatePrice("1.00", "grocery", config).selling_price).toBe(
-      "1.99",
+      "2.99",
     );
   });
 
@@ -114,7 +114,7 @@ describe("configuration changes need no code changes", () => {
     config.rounding_bands.bands[0].upper_exclusive = "0.40";
     config.rounding_bands.bands[1].lower_inclusive = "0.40";
     expect(calculatePrice("1.50", "kitchenware", config).selling_price).toBe(
-      "2.49",
+      "2.99",
     );
     expect(calculatePrice("1.35", "kitchenware", config).selling_price).toBe(
       "1.99",
@@ -145,7 +145,7 @@ describe("configuration changes need no code changes", () => {
     config.pricing_categories[0].key = "fresh_produce";
     config.pricing_categories[0].label = "Fresh produce";
     expect(calculatePrice("1.00", "fresh_produce", config).selling_price).toBe(
-      "1.49",
+      "1.99",
     );
     expect(() => calculatePrice("1.00", "grocery", config)).toThrowError(
       "unknown_category",
@@ -155,7 +155,9 @@ describe("configuration changes need no code changes", () => {
 
 describe("minimum margin", () => {
   it("flags the unchanged-price 1.12 / 1.49 example without altering the price", () => {
-    const result = calculatePrice("1.12", "grocery");
+    const config = configuration();
+    config.rounding_bands.final_ending_adjustment = null;
+    const result = calculatePrice("1.12", "grocery", config);
     expect(result.selling_price).toBe("1.49");
     expect(result.below_minimum_margin).toBe(true);
     expect(new Decimal(result.margin!).times("100").toFixed(2)).toBe("24.83");
@@ -163,6 +165,7 @@ describe("minimum margin", () => {
 
   it("compares the exact ratio at the threshold rather than a formatted percent", () => {
     const config = configuration();
+    config.rounding_bands.final_ending_adjustment = null;
     config.pricing_categories.find((c) => c.key === "grocery")!.minimum_margin =
       "0.24833";
     expect(calculatePrice("1.12", "grocery", config).below_minimum_margin).toBe(
@@ -182,6 +185,7 @@ describe("minimum margin", () => {
 
   it("accepts an exact threshold and always flags an undefined zero-price margin", () => {
     const config = configuration();
+    config.rounding_bands.final_ending_adjustment = null;
     config.pricing_categories.find((c) => c.key === "grocery")!.cost_divisor =
       "1";
     config.pricing_categories.find((c) => c.key === "grocery")!.minimum_margin =
@@ -217,8 +221,8 @@ describe("invalid input cannot create prices", () => {
   });
 
   it("accepts positive signed decimal costs without float conversion", () => {
-    expect(calculatePrice("+1.0000", "grocery").selling_price).toBe("1.49");
-    expect(calculatePrice("-0.0000", "grocery").selling_price).toBe("0.49");
+    expect(calculatePrice("+1.0000", "grocery").selling_price).toBe("1.99");
+    expect(calculatePrice("-0.0000", "grocery").selling_price).toBe("0.99");
   });
 
   it("rejects numeric money rather than accepting a floating-point value", () => {
@@ -310,7 +314,7 @@ describe("properties over a deterministic range of four-decimal costs", () => {
         const cost = new Decimal(i).times("0.0731").toFixed(4);
         const result = calculatePrice(cost, category.key);
         expect(new Decimal(result.selling_price).gte("0")).toBe(true);
-        expect(result.selling_price).toMatch(/\.(49|99)$/);
+        expect(result.selling_price).toMatch(/\.99$/);
         if (category.rounding === "always_up_to_next_99") {
           const price = new Decimal(result.selling_price);
           expect(price.gte(result.raw_price)).toBe(true);
@@ -336,5 +340,82 @@ describe("properties over a deterministic range of four-decimal costs", () => {
       );
       expect(result.selling_price).toMatch(/\.(29|39|79|89)$/);
     }
+  });
+});
+
+describe("configured final price endings", () => {
+  it("retains the true lower selling amount through ordinary and existing special corrections", () => {
+    expect(calculatePrice("1.00", "grocery")).toMatchObject({
+      selling_price: "1.99",
+      after_band_rounding: "1.49",
+      rounded_up_from: "1.49",
+    });
+    expect(calculatePrice("1.60", "grocery")).toMatchObject({
+      selling_price: "2.99",
+      after_band_rounding: "2.49",
+      special_correction_applied: true,
+      rounded_up_from: "2.49",
+    });
+    expect(calculatePrice("1.50", "kitchenware")).toMatchObject({
+      selling_price: "2.99",
+      rounded_up_from: "2.49",
+    });
+    expect(calculatePrice("3.00", "rice").rounded_up_from).toBeNull();
+  });
+  it("supports old missing defaults, explicit disabled and custom endings without mutating them", () => {
+    const config = configuration();
+    delete config.rounding_bands.final_ending_adjustment;
+    const before = JSON.stringify(config);
+    expect(calculatePrice("1.00", "grocery", config).selling_price).toBe(
+      "1.99",
+    );
+    expect(JSON.stringify(config)).toBe(before);
+    config.rounding_bands.final_ending_adjustment = null;
+    expect(calculatePrice("1.00", "grocery", config).selling_price).toBe(
+      "1.49",
+    );
+    config.rounding_bands.final_ending_adjustment = {
+      source_endings: [],
+      target_ending: ".99",
+    };
+    expect(calculatePrice("1.00", "grocery", config).selling_price).toBe(
+      "1.49",
+    );
+    config.rounding_bands.final_ending_adjustment = {
+      source_endings: [".49"],
+      target_ending: ".89",
+    };
+    expect(calculatePrice("1.00", "grocery", config).selling_price).toBe(
+      "1.89",
+    );
+    expect(calculatePrice("1.60", "grocery", config).selling_price).toBe(
+      "2.99",
+    );
+    expect(
+      calculatePrice("1.60", "grocery", config).rounded_up_from,
+    ).toBeNull();
+  });
+  it.each([
+    { source_endings: [".49"], target_ending: ".49" },
+    { source_endings: [".99"], target_ending: ".49" },
+    { source_endings: [".49", "0.490"], target_ending: ".99" },
+    { source_endings: [".499"], target_ending: ".99" },
+    { source_endings: ["NaN"], target_ending: ".99" },
+    { source_endings: [".49"], target_ending: "1.00" },
+  ])("rejects invalid ending adjustment %j", (rule) => {
+    const config = configuration();
+    config.rounding_bands.final_ending_adjustment = rule;
+    expect(() => validatePricingConfig(config)).toThrowError("invalid_ending");
+  });
+  it("also adjusts newly calculated cent prices when weight bands are disabled", () => {
+    const config = configuration();
+    config.pricing_categories[0].cost_divisor = "1";
+    expect(
+      calculatePrice("4.49", "grocery", config, { skip_band_rounding: true }),
+    ).toMatchObject({
+      selling_price: "4.99",
+      rounded_up_from: "4.49",
+      after_band_rounding: null,
+    });
   });
 });

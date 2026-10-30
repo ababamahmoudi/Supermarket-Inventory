@@ -759,7 +759,7 @@ describe("C8 accepted regular invoice cost and held-delivery evidence", () => {
       sale_price: "16.99",
       sale_id: sale.id,
       regular_price_before: "20.99",
-      proposed_regular_price: "23.49",
+      proposed_regular_price: "23.99",
       invoice_id: "demo-c8-hw-5012",
       branch: "Branch 1",
     });
@@ -1228,7 +1228,7 @@ describe("C8 adversarial source evidence and later receipts", () => {
     });
     expect(
       state.approvals.find((entry) => entry.id.includes("LATER-HW-ONE")),
-    ).toMatchObject({ proposed_price: "23.49", applies_after_sale: true });
+    ).toMatchObject({ proposed_price: "23.99", applies_after_sale: true });
     const snapshot = JSON.stringify(state);
     expect(receiveShort(state, "0012", 1, "LATER-HW-ONE", worker, 0)).toBe(
       "0.00",
@@ -1442,10 +1442,10 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     expect(review).toMatchObject({
       type: "price_change",
       status: "pending",
-      proposed_price: "23.49",
+      proposed_price: "23.99",
       manual_price_review: {
         kept_price: "24.99",
-        calculated_price: "23.49",
+        calculated_price: "23.99",
         prior_cost: "12.6000",
         received_cost: "14.2000",
         receiver_recommendation: "keep",
@@ -1453,7 +1453,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
     });
     expect(regularPrice(state, "0012", "Branch 1")).toBe("24.99");
     expect(manualRegularApprovalPreview(state, manager, review).price).toBe(
-      "23.49",
+      "23.99",
     );
     const marker = structuredClone(manualPrice(state, product(), "Branch 1")),
       evidence = finance(),
@@ -1508,7 +1508,7 @@ describe("C8 Manager decision on changed-cost manual regular invoices", () => {
       undefined,
       approvalSnapshot(state, manager, "0012"),
     );
-    expect(regularPrice(state, "0012", "Branch 1")).toBe("23.49");
+    expect(regularPrice(state, "0012", "Branch 1")).toBe("23.99");
     expect(manualPrice(state, product(), "Branch 1")).toBeNull();
     expect(regularPrice(state, "0012", "Branch 2")).toBe("24.99");
     expect(manualPrice(state, product(), "Branch 2")?.price).toBe("24.99");
@@ -1689,7 +1689,7 @@ describe("C8 fresh manual decisions after actual cost transitions", () => {
     );
     expect(again).toBeDefined();
     expect(again.id).not.toBe(first.id);
-    expect(again.proposed_price).toBe("23.49");
+    expect(again.proposed_price).toBe("23.99");
     expect(again.manual_price_review!.receiver_recommendation).toBe("keep");
     expect(regularPrice(state, "0012", "Branch 1")).toBe("24.99");
   });
@@ -1717,7 +1717,7 @@ describe("C8 fresh manual decisions after actual cost transitions", () => {
     )!;
     expect(review.manual_price_review).toMatchObject({
       kept_price: "24.99",
-      calculated_price: "23.49",
+      calculated_price: "23.99",
       receiver_recommendation: "keep",
     });
     expect(regularPrice(state, "0012", "Branch 1")).toBe("24.99");
