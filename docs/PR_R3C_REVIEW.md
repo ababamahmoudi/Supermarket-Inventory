@@ -27,7 +27,7 @@ P1 remains after green P0. No pending row in this table is a claim of delivered 
 | 1     | K8 — paid/free receiving and exact acquisition                   | Delivered |
 | 2     | F1 — unmistakable retained simulation warning                    | Delivered |
 | 3     | F2 — exact localhost reader default                              | Delivered |
-| 4     | F6 — category for current NEW products                           | Planned   |
+| 4     | F6 — category for current NEW products                           | Delivered |
 | 5     | F8 — active pages and retained originals                         | Planned   |
 | 6     | F9 — phone chooser fits                                          | Planned   |
 | 7     | F10 — compact actual reader settings                             | Planned   |
@@ -198,6 +198,17 @@ Local source verification and independent integrated CI are recorded on PR #29.
 4. Change only the mode through the Manager Demo control. A saved custom address is preserved. Automated health checks are fictional; keep provider keys only in the reader kit.
 
 Local source verification and independent integrated CI are recorded on PR #29.
+
+## P1 F6 — one protected category choice for current NEW products
+
+1. Use the existing guide's Node 22 install/build/preview steps and open `http://localhost:5174`. Keep the real reader kit running separately; no new provider call is needed for the category operation.
+2. Read/import an unposted fictional invoice with at least two genuinely new products, ideally with an unchanged known product beside them. Open its Needs review record as the permitted Floor receiver or Manager.
+3. Beside **Invoice lines**, click **Set category for 2 new products**. Choose a configured category. Cancel once: nothing changes.
+4. Reopen, choose the category and click **Set category**. Exactly those two NEW rows show it; the known row stays unchanged. Each NEW row still needs its other first-time checks. Printed tax and original amounts stay retained; inferred tax may change and ordinary reconciliation remains visible.
+5. Inspect Activity/Undo for the real receiver and restore the category choice if desired. A dialog left open while another genuine edit changes its invoice must keep the selection and explain that the receiver must close/review/reopen before saving.
+6. Repeat in Persian on a phone. The dialog's primary action must remain visible, the NEW rows stay amber and the page must not overflow horizontally.
+
+The K8/F6 composition passed 218 tests, full lint/build and all six real EN/FA desktop/phone mixed-row/stale cases without skips/retries. Valid group choices survive the intended category edit; previously stale group evidence does not. Integrated full CI is tracked on PR #29.
 
 ## After the demo — record only
 

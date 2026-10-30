@@ -37,6 +37,7 @@ import { createId } from "./ids";
 import type { DemoState, DemoInvoice } from "./types";
 import { normalizeInvoiceReceivingReview } from "./invoice-checks";
 import { invoiceRecords } from "./invoice-records";
+import { newInvoiceCategoriesRead } from "./invoice-new-categories";
 
 function canonicalInvoice(state: DemoState, id: string): DemoInvoice {
   const invoice =
@@ -249,6 +250,7 @@ export function invoiceWorkspaceRead(
     lowerLineIndexes: lowerPriceLineIndexes(working, actor),
     lineDetails,
     supplierItems,
+    newProductCategories: newInvoiceCategoriesRead(state, actor, id),
     locationSuggestion: suggestedInvoiceLocation(state, canonical),
   };
 }

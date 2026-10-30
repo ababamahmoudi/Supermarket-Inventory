@@ -1,5 +1,9 @@
 # Requirements (current owner workflow, C9 — 2026-10-19)
 
+## R3c P1 F6 — category for NEW products
+
+An authorized receiving person chooses one configured active category for the exact current NEW-line set in one protected atomic action. Other first-time questions remain amber and unconfirmed. Existing Products, explicit tax, paper/source/cost/quantity and financial records remain unchanged; inferred tax and existing calculated-header provenance refresh narrowly. Stale/foreign/posted/processing/correction actions cannot mutate the invoice.
+
 ## R3c P1 F2 — exact localhost reader fallback
 
 Settings → Receiving uses `http://localhost:5191` when no custom reader address is saved. Reset restores that same fallback, and Save retains null rather than a host-derived address. A phone's localhost is the phone; use the reader computer's reachable custom network address when reading from another device. Test connection retains its genuine health result and never changes saved settings on failure.

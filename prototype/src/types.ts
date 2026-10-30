@@ -805,6 +805,11 @@ export interface LedgerEntry extends ScopedRecord {
   note?: string;
 }
 export interface Activity extends ScopedRecord {
+  invoice_category_selection?: {
+    line_ids: string[];
+    count: number;
+    category: string;
+  };
   actor_user_id?: string;
   actor_role?: Role;
   actor_role_snapshot?: Role;

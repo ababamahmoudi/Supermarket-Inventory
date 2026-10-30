@@ -699,3 +699,7 @@ Use retained invoice provenance to identify simulated output; current settings a
 ## 2026-10-30 — R3c F2 — exact localhost reader fallback
 
 Use the prompt's exact localhost fallback instead of deriving a reader target from the page host. Preserve explicit saved addresses and normalized custom base paths; never silently send an invoice to a different reader because retained settings are malformed. Existing safe-address validation, authority, audit and health timeout remain unchanged.
+
+## 2026-10-30 — R3c F6 — fresh atomic NEW-product categories
+
+Use a canonical actor/source/config/History fingerprint and exact current NEW-ID set rather than invoice version alone. Apply one candidate target and one attributed reversible Activity, preserving active workspace and current cost authority for retained Undo. Call the protected command directly so a category-only action does not normalize unrelated missing paper fields. Shared category changes preserve a K8 answer only when it was valid before the intentional edit; stale source evidence cannot be refreshed into validity. Keep explicit tax, other questions, existing Products and financial records untouched.

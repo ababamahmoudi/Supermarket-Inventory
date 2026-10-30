@@ -19,7 +19,10 @@ import type { RequestTransferEvent } from "./branch-requests";
 import Decimal from "decimal.js";
 import { revertSaleLifecycle, SalesError } from "./sales";
 import { recoverDiscardedInvoice } from "./invoice-discard";
-import { invoiceAuthorityScope } from "./invoice-authority";
+import {
+  canInvoiceAuthority,
+  invoiceAuthorityScope,
+} from "./invoice-authority";
 
 export type HistoryContext = AuthenticatedActor;
 export type HistoryPath = (string | { key: string; value: string })[];
@@ -1059,6 +1062,21 @@ function patchScope(
     entry.entity_type === "invoice" &&
     entry.entity_id === invoiceRecord?.id &&
     invoiceRecord?.status === "cancelled";
+  const newCategoriesUndo =
+    invoiceRecord &&
+    entry.action === "Set category for new invoice products" &&
+    entry.entity_type === "invoice" &&
+    entry.entity_id === invoiceRecord?.id &&
+    ["draft", "review"].includes(invoiceRecord?.status ?? "") &&
+    invoiceRecord?.live_reading?.phase !== "processing" &&
+    canInvoiceAuthority(
+      state,
+      context,
+      "invoices.edit",
+      invoiceRecord.id,
+      true,
+    ) &&
+    canInvoiceAuthority(state, context, "invoices.cost_read", invoiceRecord.id);
   if (invoiceRecord?.status === "cancelled" && !discardUndo)
     throw new HistoryError("irreversible");
   if (discardUndo) {
@@ -1106,6 +1124,7 @@ function patchScope(
     !canDomain(state, context, "history.read_all") &&
     !workerDatePreference &&
     !(discardUndo && patch.path[0] === "invoices") &&
+    !(newCategoriesUndo && patch.path[0] === "invoices") &&
     ![
       "notes",
       "notifications",

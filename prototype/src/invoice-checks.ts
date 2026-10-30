@@ -1,5 +1,8 @@
 import { receivingPriceProblem } from "./invoice-receiving-price";
-import { validFreeCaseGroup } from "./invoice-free-cases";
+import {
+  refreshFreeCaseAnswer,
+  validFreeCaseGroup,
+} from "./invoice-free-cases";
 import { invoiceLineAmount, invoicePaperTotalMismatch } from "./invoice-weight";
 import Decimal from "decimal.js";
 import { createId } from "./ids";
@@ -217,6 +220,7 @@ export function acknowledgeInvoiceCheck(
   actor: AuthenticatedActor,
   field: string,
   lineIndex?: number,
+  now = new Date(),
 ): void {
   requireInvoiceAuthority(
     state,
@@ -232,7 +236,7 @@ export function acknowledgeInvoiceCheck(
   if (!record) throw new Error("Choose an invoice line.");
   if (lineIndex !== undefined && field === "taxable")
     state.invoice.lines[lineIndex].taxable_inferred = false;
-  acknowledgeRecordCheck(record, actor.user_id, field);
+  acknowledgeRecordCheck(record, actor.user_id, field, now);
 }
 
 /** Receipts use canonical field names; aliases are one human question. */
@@ -243,6 +247,7 @@ function acknowledgeRecordCheck(
   },
   userId: string,
   field: string,
+  now = new Date(),
 ): void {
   const key = invoiceCheckField(field);
   if (
@@ -257,7 +262,7 @@ function acknowledgeRecordCheck(
   record.checked_fields ??= {};
   record.checked_fields[key] = {
     checked_by_user_id: userId,
-    checked_at: new Date().toISOString(),
+    checked_at: now.toISOString(),
   };
 }
 
@@ -702,20 +707,25 @@ export function setInvoiceLineCategory(
   category: string,
   config: CompanyConfig,
 ): void {
+  const preserveFreeCaseAnswer = validFreeCaseGroup(line);
   line.pricing_category = category;
   delete line.known_delivery;
   line.review_changed_after_confirmation ||= Boolean(line.review_confirmed);
   line.review_confirmed = false;
-  if (!line.taxable_inferred) return;
-  const categoryConfig = config.pricing_categories.find(
-    (item) => item.key === category,
-  );
-  const profile = config.tax.profiles.find(
-    (item) => item.key === categoryConfig?.default_tax_profile,
-  );
-  line.tax_profile = profile?.key ?? "non_taxable";
-  line.taxable = profile ? new Decimal(profile.rate).gt(0) : false;
-  line.line_tax = /^\d+(?:\.\d{1,2})?$/.test(line.line_total)
-    ? new Decimal(line.line_total).times(profile?.rate ?? "0").toFixed(2)
-    : "";
+  if (line.taxable_inferred) {
+    const categoryConfig = config.pricing_categories.find(
+      (item) => item.key === category,
+    );
+    const profile = config.tax.profiles.find(
+      (item) => item.key === categoryConfig?.default_tax_profile,
+    );
+    line.tax_profile = profile?.key ?? "non_taxable";
+    line.taxable = profile ? new Decimal(profile.rate).gt(0) : false;
+    line.line_tax = /^\d+(?:\.\d{1,2})?$/.test(line.line_total)
+      ? new Decimal(line.line_total).times(profile?.rate ?? "0").toFixed(2)
+      : "";
+  }
+  // A genuine category choice changes inferred tax, not the receiver's valid
+  // paid/free answer. Never refresh an answer that was stale before this edit.
+  if (preserveFreeCaseAnswer) refreshFreeCaseAnswer(line);
 }

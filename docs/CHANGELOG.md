@@ -1,3 +1,9 @@
+## 2026-10-30 — R3c P1 F6 — category for current new products
+
+- Add counted Set category for N new products with real Floor attribution, one atomic guarded candidate and reversible Activity, retained-target support and stale-dialog preservation. Keep all other first-time questions, existing rows, explicit tax and source/financial evidence.
+- Shared category/inferred-tax edits refresh an already-valid K8 answer only after capturing prior validity; previously stale choices remain stale and K4 proposals require revalidation.
+- Integrated K8/F6 source passed 218 focused tests across 13 suites, full lint/build and six actual EN/FA desktop/phone apply/cancel/reload/stale browser cases, with no skips/retries. Full CI is tracked on PR #29.
+
 ## 2026-10-30 — R3c P1 F2 — exact localhost reader fallback
 
 Reader default and Reset now resolve to `http://localhost:5191` on every page host. Saved custom/malformed addresses and unrelated receiving configuration are preserved. Verified 35 domain/settings UI units, fresh TypeScript/production build and two desktop/phone browser cases exercising custom save, connection outcomes, Reset, reload and the shared Demo mode control. No skips or retries.

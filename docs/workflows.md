@@ -1,5 +1,14 @@
 # Workflows and state machines
 
+## R3c P1 F6 — one protected category choice for current NEW products
+
+- Beside Invoice lines, an authorized draft/review receiver sees **Set category for N new products** for the actual current `NEW` lines. Correction, Processing, Posted, Cancelled and no-NEW views omit it. The shared translated Dialog and searchable Select use configured active pricing categories.
+- One protected read returns only count, exact IDs and an opaque SHA-256 action fingerprint. The command rechecks the actual actor/session/company/location and edit/cost authority, exact NEW set, full canonical invoice/source, config/topology, relevant Product facts and retained History. A stale source/config/action, another actor/session/device/location, missing/duplicate IDs or an invalid/archived category writes nothing. Undo does not revive a captured old choice.
+- One cloned candidate applies the existing category setter and only its actual category-check acknowledgments, with the real receiver and one command time. NEW lines remain unconfirmed and retain all other questions. Existing rows, explicit tax, paper/source evidence, quantity/cost and manual receiving-price provenance remain intact. Inferred tax follows the new category. Existing calculated headers refresh only through the canonical helper; unrelated missing amounts/questions are preserved. Current short/refused payable refreshes from retained header facts.
+- The dialog invokes the existing protected store command directly because the broad workspace update wrapper normalizes unrelated missing paper fields. No catalog, approval, stock, receipt, ledger or supplier-binding mutation occurs.
+- One attributed reversible invoice Activity records IDs/count/category and exact target before/after. The same canonical read/write contract supports a retained target without changing the active workspace. The narrow retained-invoice History exception requires this exact F6 action, draft/review target and fresh invoice edit/cost authority.
+- K4 human prices remain retained and become stale for genuine revalidation after their category basis changes. The command clones the full canonical line, preserving current K8 paid/free facts through the guarded shared category hook above.
+
 ## R3c P1 F2 — exact localhost reader fallback
 
 Settings → Receiving uses `http://localhost:5191` when no custom reader address is saved. Reset restores that same fallback, and Save retains null rather than a host-derived address. A phone's localhost is the phone; use the reader computer's reachable custom network address when reading from another device. Test connection retains its genuine health result and never changes saved settings on failure.

@@ -11,6 +11,7 @@ import { weightQuantityFromLb } from "../../weighed";
 import { ReadingMoney as Money } from "../../InvoiceReadingReview";
 import { LineEditor } from "./LineEditor";
 import { KnownDeliverySummary } from "./KnownDeliverySummary";
+import { NewProductCategories } from "./NewProductCategories";
 import type { LineCommands, ReviewProps } from "./types";
 
 type LineFilter = "all" | "attention" | "confirmed";
@@ -104,6 +105,12 @@ export function LinesTable({
     <section className="list-box receiving-lines">
       <div className="receiving-lines-heading">
         <h2>{t("Invoice lines", "ردیف‌های فاکتور")}</h2>
+        {!correction && (
+          <NewProductCategories
+            invoiceId={invoice.id}
+            current={workspace.newProductCategories}
+          />
+        )}
         {correction ? (
           <span className="muted">
             {tCount(
