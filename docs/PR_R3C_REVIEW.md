@@ -14,7 +14,7 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 | 6     | F7 — truthful processing header                      | Delivered         |
 | 7     | F3 — native picker before draft creation             | Delivered         |
 | 8     | K3 — configurable .49 → .99                          | Delivered         |
-| 9     | K4 — selling-price proposal in the line editor       | In implementation |
+| 9     | K4 — selling-price proposal in the line editor       | Delivered         |
 | 10    | K5 — reading survives navigation                     | In implementation |
 | 11    | K7 — compact truthful reading progress               | In implementation |
 
@@ -121,6 +121,16 @@ Integrated verification passed 16 unit tests, a fresh build and all 12 English/P
 4. Choose **Use calculated price** to reset. Or retain the lower proposal, finish the ordinary invoice checks, confirm and post. In Approvals, open that individual manual-price proposal: requested/calculated prices and the original receiver remain visible even if a different Manager posted. Cancel/reject leaves the earlier approved charge intact; approval uses the existing scope/reason guards.
 
 The owner passed 131 focused units, 182 additional pricing tests (overlapping batches), 24 shared Python fixtures, 31 Python reference tests, static/build checks and 14 browser cases. Integrated final-source verification passed 412 combined tests across 21 files, 14 browser cases, 24 shared Python fixtures, 31 Python reference tests, Ruff/static checks and a fresh build, with no browser retries or skips. Independent full CI is tracked on PR #29. Automated fixtures are fictional; no real-provider or physical-device rehearsal is claimed.
+
+## K4 — editable receiving selling price
+
+1. Open a fictional unposted invoice line. **Selling price (per unit)** is editable. Rapidly type **1.83**: the complete amount/focus remain. Close and reopen, or reload and reopen the saved draft: the receiving proposal still shows 1.83 and the actual receiver's name.
+2. Clear the amount or enter **0**, then Confirm line. The line stays unconfirmed and the actual Selling price input is marked/focused. Enter valid positive cents again. **Use calculated price** resets the proposal. A rejected repository save restores the committed amount and offers a fresh explicit retry; it never claims an unsaved price was committed.
+3. With a permitted Manager/Owner, inspect ordinary margin/minimum/below-cost warnings. A Floor Worker retains the permitted receiving price/cost workflow without private numeric margin/minimum details.
+4. For weight, with kg main display and factor **2.20462**, enter **17.61/kg**: retain that exact entered amount/unit and canonical **7.99/lb** proposal. Proposed and earlier approved prices identify the configured display unit. A changed factor requires explicit re-review of the visible entered amount; factor 2 maps 17.61/kg to canonical 8.81/lb.
+5. Finish required checks and confirm the lines. Let a different Manager post. In **Approvals → individual manual price → Review approval**, check requested/calculated prices, entered kg amount if relevant, and **Set by the original receiving person during receiving**. Cancel/reject retains the earlier approved charge; genuine final approval uses the existing scope/reason guards.
+
+Integrated verification passed 31 focused units and static/build checks. Browser verification passed 18 main/legacy cases, two final kg/lb comparison cases and six Price tester cases, with no skips/retries. This includes native IndexedDB abort/rollback/retry, real source/receipt workflows and a visible divisor change with a genuine below-minimum warning. Independent full CI is tracked on PR #29. Automated originals and responses are fictional.
 
 ## After the demo — record only
 

@@ -1,4 +1,10 @@
-import { setInvoiceReceivingPrice } from "../../invoice-receiving-price";
+import { validReceivingPrice } from "../../invoice-receiving-price";
+import { ReceivingPriceInputQueue } from "./receiving-price-input";
+import {
+  weighedSettings,
+  weightPriceDisplay,
+  type WeightUnit,
+} from "../../weighed";
 import { LineArithmetic } from "./LineArithmetic";
 import { ProductPrice } from "../../weight-price-presentation";
 import { useRef, useState } from "react";
@@ -107,25 +113,34 @@ export function LineEditor({
     line.new_name_fa ?? product?.name_fa ?? "",
   );
   const [priceSaving, setPriceSaving] = useState(false);
-  const setReceivingPrice = async (value: string | null) => {
-    if (correction || priceSaving) return false;
+  const [priceFailure, setPriceFailure] = useState("");
+  const priceControl = useRef<HTMLDivElement>(null);
+  const priceQueue = useRef(new ReceivingPriceInputQueue()).current;
+  const refreshPriceQuote = () => {
+    priceQueue.refresh(workspace.lineDetails[index]!.receivingPriceQuote);
+    if (!priceQueue.pending) setPriceFailure("");
+  };
+  const setReceivingPrice = async (
+    value: string | null,
+    unit?: WeightUnit,
+    typing = false,
+  ) => {
+    if (correction) return false;
+    if (!typing) refreshPriceQuote();
     setPriceSaving(true);
-    try {
-      return (
-        (await reviewUpdate((draft, actor) => {
-          setInvoiceReceivingPrice(
-            draft,
-            actor,
-            index,
-            value,
-            workspace.lineDetails[index]!.receivingPriceQuote,
-          );
-          return true;
-        })) === true
+    const saved = await priceQueue.save(reviewUpdate, index, value, unit);
+    setPriceSaving(priceQueue.pending > 0);
+    if (!saved) {
+      setPriceFailure(
+        t(
+          "The price was not saved. Review the current value and try again.",
+          "قیمت ذخیره نشد. مقدار فعلی را بررسی و دوباره تلاش کنید.",
+        ),
       );
-    } finally {
-      setPriceSaving(false);
-    }
+      // The mounted control alone returns to its committed value on failure.
+      priceControl.current?.querySelector("input")?.blur();
+    } else setPriceFailure("");
+    return saved;
   };
   const [attempted, setAttempted] = useState(false);
   const editorBody = useRef<HTMLDivElement>(null);
@@ -271,6 +286,7 @@ export function LineEditor({
       });
   };
   const confirm = async () => {
+    if (!(await priceQueue.settled())) return;
     anchor();
     setAttempted(true);
     const canConfirmLocally =
@@ -284,6 +300,9 @@ export function LineEditor({
       validInvoiceLineReceived(line) &&
       validCaseCost &&
       Boolean(workspace.lineDetails[index]?.costValid) &&
+      !line.receiving_price &&
+      !priceQueue.edited &&
+      !workspace.lineDetails[index]?.receivingPriceInvalid &&
       (!line.date_tracking || actualDate(line.date_value));
     const settle = canConfirmLocally ? onConfirmationStart?.() : undefined;
     try {
@@ -373,6 +392,37 @@ export function LineEditor({
 
   const approvedPrice =
     product?.branch_prices?.[invoice.branch] || product?.selling_price;
+  const priceDetail = workspace.lineDetails[index];
+  const priceUnit =
+    line.sold_by === "weight"
+      ? weighedSettings(state.config).main_display_unit
+      : undefined;
+  const currentPrice =
+    line.receiving_price?.price ??
+    (line.short_dated
+      ? (approvedPrice ?? priceDetail?.price)
+      : priceDetail?.price) ??
+    "";
+  const priceInput =
+    line.receiving_price?.price_unit === priceUnit && priceUnit
+      ? (line.receiving_price?.entered_price ?? currentPrice)
+      : priceUnit && validReceivingPrice(currentPrice)
+        ? weightPriceDisplay(currentPrice, state.config).main.amount
+        : currentPrice;
+  const priceLabel = (value: string) => {
+    if (!priceUnit || !validReceivingPrice(value)) return money(value);
+    const display = weightPriceDisplay(value, state.config).main;
+    return `${money(display.amount)}/${display.unit}`;
+  };
+  const priceInvalid = Boolean(priceDetail?.receivingPriceInvalid);
+  const priceError =
+    priceFailure ||
+    (priceInvalid
+      ? t(
+          "Enter a valid price above zero and review it after any cost or category change.",
+          "قیمت معتبر بیشتر از صفر وارد کنید و پس از تغییر هزینه یا دسته دوباره بررسی کنید.",
+        )
+      : undefined);
   let lowerCost = false;
   try {
     lowerCost =
@@ -1327,21 +1377,15 @@ export function LineEditor({
                 </div>
               )}
             </section>
-            <section
-              className="receiving-line-price"
-              id={id("selling-price")}
-              tabIndex={-1}
-            >
+            <section className="receiving-line-price">
               <div className="receiving-selling-price">
-                <div>
-                  <span>
-                    {correction
-                      ? t("Approved selling price", "قیمت فروش تأییدشده")
-                      : t("Selling price", "قیمت فروش")}
-                  </span>
-                  <strong className="price-display numeric">
-                    {correction ? (
-                      approvedPrice && product ? (
+                {correction ? (
+                  <div>
+                    <span>
+                      {t("Approved selling price", "قیمت فروش تأییدشده")}
+                    </span>
+                    <strong className="price-display numeric">
+                      {approvedPrice && product ? (
                         <ProductPrice
                           value={approvedPrice}
                           product={product}
@@ -1350,38 +1394,84 @@ export function LineEditor({
                         />
                       ) : (
                         t("No approved price yet", "هنوز قیمت تأییدشده‌ای نیست")
-                      )
-                    ) : (
-                      <>
-                        {workspace.lineDetails[index]?.price ? (
-                          <Money
-                            value={
-                              line.receiving_price?.price ||
-                              (line.short_dated
-                                ? product?.branch_prices?.[invoice.branch] ||
-                                  product?.selling_price ||
-                                  workspace.lineDetails[index]!.price!
-                                : workspace.lineDetails[index]!.price!)
-                            }
-                          />
-                        ) : (
-                          t("Not added", "اضافه نشده")
-                        )}
-                      </>
-                    )}
-                  </strong>
-                </div>
+                      )}
+                    </strong>
+                  </div>
+                ) : (
+                  <div ref={priceControl}>
+                    <Field
+                      label={
+                        priceUnit
+                          ? t(
+                              `Selling price (per ${priceUnit})`,
+                              `قیمت فروش (هر ${priceUnit})`,
+                            )
+                          : t("Selling price (per unit)", "قیمت فروش (هر واحد)")
+                      }
+                      error={priceError}
+                    >
+                      <NumberField
+                        id={id("selling-price")}
+                        value={priceInput}
+                        keepTyping
+                        step="0.01"
+                        readOnly={
+                          !priceDetail?.receivingPriceEligible ||
+                          !priceDetail.price
+                        }
+                        aria-invalid={Boolean(priceError)}
+                        onFocus={refreshPriceQuote}
+                        onChange={(value) =>
+                          void setReceivingPrice(value, priceUnit, true)
+                        }
+                      />
+                    </Field>
+                    {priceDetail?.receivingPriceEligible &&
+                      priceDetail.receivingMargin !== null &&
+                      priceDetail?.receivingMargin !== undefined && (
+                        <p
+                          className="muted"
+                          data-testid="receiving-price-margin"
+                        >
+                          {t("Margin", "حاشیه سود")}:{" "}
+                          <LtrValue value={`${priceDetail.receivingMargin}%`} />
+                        </p>
+                      )}
+                    {priceDetail?.receivingPriceEligible &&
+                      priceDetail.receivingBelowCost && (
+                        <p className="form-error" role="status">
+                          {t(
+                            "Below cost. Approval requires a reason.",
+                            "کمتر از هزینه است. تأیید به دلیل نیاز دارد.",
+                          )}
+                        </p>
+                      )}
+                    {priceDetail?.receivingPriceEligible &&
+                      priceDetail.receivingBelowMinimum &&
+                      !priceDetail.receivingBelowCost && (
+                        <p className="form-error" role="status">
+                          {t(
+                            "Below the minimum margin. Approval requires a reason.",
+                            "کمتر از حداقل حاشیه سود است. تأیید به دلیل نیاز دارد.",
+                          )}
+                        </p>
+                      )}
+                  </div>
+                )}
                 {!correction && (
                   <div className="receiving-approved-price">
                     <span>{t("Approved:", "تأییدشده:")}</span>
-                    {product?.branch_prices?.[invoice.branch] ||
-                    product?.selling_price ? (
-                      <Money
-                        value={
-                          product.branch_prices?.[invoice.branch] ||
-                          product.selling_price!
-                        }
-                      />
+                    {approvedPrice && product ? (
+                      product.sold_by === "weight" ? (
+                        <ProductPrice
+                          value={approvedPrice}
+                          product={product}
+                          config={state.config}
+                          stacked
+                        />
+                      ) : (
+                        <Money value={approvedPrice} />
+                      )
                     ) : (
                       t("No approved price yet", "هنوز قیمت تأییدشده‌ای نیست")
                     )}
@@ -1452,8 +1542,8 @@ export function LineEditor({
           {!correction && workspace.lineDetails[index]?.roundedUpFrom && (
             <p className="muted" data-testid="receiving-rounded-up">
               {t(
-                `Rounded up from ${money(workspace.lineDetails[index]!.roundedUpFrom!)} (store rule)`,
-                `گردشده به بالا از ${money(workspace.lineDetails[index]!.roundedUpFrom!)} (قاعدهٔ فروشگاه)`,
+                `Rounded up from ${priceLabel(workspace.lineDetails[index]!.roundedUpFrom!)} (store rule)`,
+                `گردشده به بالا از ${priceLabel(workspace.lineDetails[index]!.roundedUpFrom!)} (قاعدهٔ فروشگاه)`,
               )}
               {workspace.lineDetails[index]?.receivingPriceEligible && (
                 <Button
@@ -1465,21 +1555,23 @@ export function LineEditor({
                   }
                 >
                   {t(
-                    `Use ${money(workspace.lineDetails[index]!.roundedUpFrom!)}`,
-                    `استفاده از ${money(workspace.lineDetails[index]!.roundedUpFrom!)}`,
+                    `Use ${priceLabel(workspace.lineDetails[index]!.roundedUpFrom!)}`,
+                    `استفاده از ${priceLabel(workspace.lineDetails[index]!.roundedUpFrom!)}`,
                   )}
                 </Button>
               )}
             </p>
           )}
           {!correction &&
-            workspace.lineDetails[index]?.receivingPriceInvalid && (
-              <p className="form-error" role="alert">
-                {t(
-                  "The price or its cost changed. Review the selling price again, or use the calculated price.",
-                  "قیمت یا هزینهٔ آن تغییر کرده است. قیمت فروش را دوباره بررسی کنید یا قیمت محاسبه‌شده را انتخاب کنید.",
-                )}
-              </p>
+            priceInvalid &&
+            line.receiving_price &&
+            validReceivingPrice(line.receiving_price.price) && (
+              <Button
+                disabled={priceSaving}
+                onClick={() => void setReceivingPrice(priceInput, priceUnit)}
+              >
+                {t("Review entered price", "بررسی قیمت واردشده")}
+              </Button>
             )}
           {!correction && line.receiving_price && (
             <p className="muted" data-testid="receiving-price-attribution">
@@ -1491,7 +1583,7 @@ export function LineEditor({
               {" · "}
               {t("Calculated price", "قیمت محاسبه‌شده")}:{" "}
               {workspace.lineDetails[index]?.price
-                ? money(workspace.lineDetails[index]!.price!)
+                ? priceLabel(workspace.lineDetails[index]!.price!)
                 : t("Not added", "اضافه نشده")}
               <Button
                 disabled={priceSaving}
@@ -1522,8 +1614,8 @@ export function LineEditor({
                       {
                         value: "rule",
                         label: t(
-                          `Use the new calculated price ${workspace.lineDetails[index]?.price ? money(workspace.lineDetails[index]!.price!) : ""}`,
-                          `استفاده از قیمت محاسبه‌شده جدید ${workspace.lineDetails[index]?.price ? money(workspace.lineDetails[index]!.price!) : ""}`,
+                          `Use the new calculated price ${workspace.lineDetails[index]?.price ? priceLabel(workspace.lineDetails[index]!.price!) : ""}`,
+                          `استفاده از قیمت محاسبه‌شده جدید ${workspace.lineDetails[index]?.price ? priceLabel(workspace.lineDetails[index]!.price!) : ""}`,
                         ),
                       },
                     ]}

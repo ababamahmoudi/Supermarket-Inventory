@@ -1,5 +1,11 @@
 # Data model
 
+## R3c K4 — editable receiving selling price
+
+A receiving-price proposal retains canonical positive cent `price`, independent `calculated_price`, optional exact `entered_price` and `price_unit` (each/lb/kg), and the actual receiving editor/time. Weight input normalizes once using the configured factor and Decimal half-up cents while preserving the typed amount/unit. Posting and approval retain that editor even if somebody else posts. Approved charge and paper/stock/source evidence remain unchanged until the existing actual approval.
+
+The buffered input queue, pending count and tentative returned action tokens are transient UI state. Keystrokes enter the protected serialized command queue immediately; only tokens returned by that input's own successful commands may chain. Stale external edits are rejected. A rejected repository commit restores the visible committed amount, retires tentative tokens and requires an explicit fresh review/retry. Invalid/stale proposals keep a linked selling_price issue and block confirmation/posting. Numeric margin/minimum data requires the existing pricing.margin_read permission; below-cost warnings use the receiver's permitted cost.
+
 ## R3c K3 — configured .49 to .99 and Use Lower
 
 `CompanyConfig.rounding_bands.final_ending_adjustment` is optional/null or `{ source_endings, target_ending }`. The seed default is `["0.49"] → "0.99"`; target must exceed every unique valid source cent fraction. Null or empty sources disables it; explicit custom/disabled values survive. Missing legacy configuration resolves through a read-only effective default, without a persisted migration, backup write or repricing existing Products.

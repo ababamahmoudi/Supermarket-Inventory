@@ -1,5 +1,13 @@
 # Workflows and state machines
 
+## R3c K4 — editable receiving selling price
+
+Open an unposted invoice line and edit Selling price directly. The field labels its configured each/kg/lb unit and saves through the actual protected receiving proposal command. Rapid typing keeps the complete buffered amount/focus; closing the editor does not undo saved draft edits. Use calculated price removes the override. Reopening/reloading retains the saved proposal and its actual receiver.
+
+Empty, zero, malformed or stale price evidence keeps the real field marked; Confirm waits for queued saves and canonical validation before closing an explicitly edited price. A genuine storage rejection restores the committed visible value and permits an explicit retry. Cost/category/source or unit-factor changes require fresh review; they cannot silently adopt another receiver's action token. Weight re-review uses the visible entered amount/unit with the current configured factor.
+
+Posting creates an individual manual-price approval with requested and independently calculated prices, entered weight amount/unit and Set by <person> during receiving. The supervisor's existing approval/reason/scope rules decide the actual price. The earlier approved charge and active Sale behavior remain authoritative until that decision.
+
 ## R3c K3 — configured .49 to .99 and Use Lower
 
 In Settings → Catalog → Rounding rules, configure Round selected price endings up, Source price endings and Round up to ending. The default is On, 0.49 → 0.99. Save changes retains an explicit custom/disabled rule; the same page's Price tester is a preview and never reprices stored approved Products.

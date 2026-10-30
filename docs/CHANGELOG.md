@@ -1,3 +1,9 @@
+## 2026-10-30 — R3c K4 — editable receiving selling price
+
+- Made receiving Selling price editable with stable buffered typing, actual receiving-person attribution, exact entered weight-unit evidence and existing margin/below-cost/minimum warnings. Pending approval shows requested/calculated prices beside the original receiver; current charged money stays unchanged.
+- Invalid/stale inputs stay linked and focused instead of collapsing the editor. Confirm waits for canonical saves; a genuine IndexedDB abort restores the committed value and supports explicit retry. Unit-factor re-review retains the visible typed amount.
+- Integrated verification passed 31 focused units, static/build checks, 18 main browser cases and two actual kg/lb comparison cases, without skips/retries. Six Price tester regressions now explicitly verify the new default, a visibly different saved divisor, and a genuine below-minimum warning; historical .49 prices stay asserted unchanged elsewhere. Independent full CI is tracked on PR #29.
+
 ## 2026-10-30 — R3c K3 — configured .49 to .99 and Use Lower
 
 - Added configurable final .49 → .99 rounding, settings controls, precise pre-rule explanation and Use Lower through real attributed receiving proposals/approval. TypeScript, Python references and shared cases agree; historical/manual/Sale/approved prices stay unchanged.

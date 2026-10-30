@@ -662,3 +662,9 @@ Photo/PDF source selection now precedes draft creation. The native picker is ope
 Apply a configurable final Decimal ending adjustment only to new calculations. Resolve absent legacy configuration read-only so the requested default does not rewrite approved prices or silently discard explicit custom/disabled rules. Keep TypeScript and both Python references aligned through shared cases.
 
 Use the real receiving proposal/approval pipeline for Use Lower. Separate stable calculation evidence from mandatory fresh action evidence; immutable price Activity prevents Set → Reset ABA while exact Undo can retain a still-valid proposal and its actual editor. Preserve source/paper/stock/ledger evidence and current approved/Sale charges.
+
+## 2026-10-30 — R3c K4 — editable receiving selling price
+
+Use the existing protected receiving/approval pipeline for arbitrary typed prices, like K3's Use Lower. Retain exact entered weight amount/unit separately from canonical per-lb cents. Preserve the original receiving editor through a later poster/approver and keep actual approved charges untouched pending approval.
+
+Submit every keystroke through the existing serialized business queue, chain only the field's own successful action tokens and wait for canonical confirmation before closing an edited field. Roll back rejected tentative state to the actual committed value; require fresh current-value review before retry. Preserve stale/ABA/Discard/source guards and private numeric margin/minimum permissions. Show unit-aware approved and proposed prices so configured kg display does not imply a canonical per-lb amount is per kg.

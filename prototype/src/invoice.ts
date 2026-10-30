@@ -1577,6 +1577,8 @@ export function postInvoice(
                   manual_override: true,
                   receiving_price: {
                     price: receivingPrice.price,
+                    entered_price: receivingPrice.entered_price,
+                    price_unit: receivingPrice.price_unit,
                     calculated_price: rulePrice,
                     set_by_user_id: receivingPrice.set_by_user_id,
                     set_by: receivingPrice.set_by,

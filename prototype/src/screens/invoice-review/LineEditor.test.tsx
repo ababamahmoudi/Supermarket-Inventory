@@ -21,6 +21,10 @@ import {
 import { DemoProvider, initialState, useDemo } from "../../store";
 import i18n from "../../i18n";
 import { LineEditor } from "./LineEditor";
+import {
+  setInvoiceWeightCost,
+  setInvoiceWeightQuantity,
+} from "../../invoice-weight";
 import type { EditLine, ReviewUpdate } from "./types";
 import {
   renderedUiReady,
@@ -220,4 +224,58 @@ it("keeps an actually missing category unconfirmed and focuses the required cate
   } finally {
     await finish();
   }
+});
+
+it("shows an approved weight price in the same configured unit as the receiving input without repricing it", async () => {
+  const state = initialState();
+  const actor = authenticatedTestActor(state, "manager", {
+    locations: ["Branch 1"],
+  });
+  state.config.weighed_items = {
+    ...state.config.weighed_items!,
+    main_display_unit: "kg",
+    show_second_unit: true,
+  };
+  state.invoice = createInvoice(state, actor, "Branch 1", true);
+  addManualLine(state, actor, "0016");
+  const line = state.invoice.lines[0];
+  setInvoiceWeightQuantity(line, "1", "lb", state.config);
+  setInvoiceWeightCost(line, "4.9895", "lb", state.config);
+  recalculateInvoice(state.invoice, state.config);
+  const workspace = invoiceWorkspaceRead(state, actor);
+  const fixture = await authenticatedProviderFixture({
+    state,
+    role: "manager",
+  });
+  fixtures.push(fixture);
+  const commands = vi.fn();
+  const view = render(
+    <DemoProvider options={fixture.options}>
+      <EditorWithDelayedProjection
+        workspace={workspace}
+        acknowledgment={Promise.resolve()}
+        editStarted={() => {}}
+        commandStarted={commands}
+        closed={() => {}}
+      />
+    </DemoProvider>,
+  );
+  expect(
+    await screen.findByRole("textbox", {
+      name: "Selling price (per kg)",
+    }),
+  ).toHaveValue("17.61");
+  const approved = view.container.querySelector(".receiving-approved-price")!;
+  expect(approved.querySelector(".weight-price-main")).toHaveTextContent(
+    "$16.51/kg",
+  );
+  expect(approved.querySelector(".weight-price-secondary")).toHaveTextContent(
+    "$7.49/lb",
+  );
+  expect(commands).not.toHaveBeenCalled();
+  const retained = await fixture.readCanonical();
+  expect(retained.products.find((product) => product.code === "0016")).toEqual(
+    state.products.find((product) => product.code === "0016"),
+  );
+  expect(retained.invoice.lines[0].receiving_price).toBeUndefined();
 });

@@ -1,3 +1,5 @@
+import Decimal from "decimal.js";
+import { validReceivingPrice } from "./invoice-receiving-price";
 import {
   receivingPriceQuote,
   receivingPriceProblem,
@@ -163,9 +165,35 @@ export function invoiceWorkspaceRead(
       } catch {
         dateSuggestions = [];
       }
+    const selectedPrice = line.receiving_price?.price ?? price;
+    const actualPrice =
+      selectedPrice && validReceivingPrice(selectedPrice)
+        ? new Decimal(selectedPrice)
+        : null;
+    const selectedMargin =
+      actualPrice && costValid
+        ? actualPrice.minus(line.unit_cost_before_tax).div(actualPrice)
+        : null;
+    const threshold = working.config.pricing_categories.find(
+      (category) =>
+        category.key === (line.pricing_category ?? product?.pricing_category),
+    )?.minimum_margin;
     return {
       index,
       price,
+      receivingMargin:
+        invoice.margin_allowed && selectedMargin
+          ? selectedMargin.times(100).toFixed(2)
+          : null,
+      receivingBelowCost: Boolean(
+        actualPrice && costValid && actualPrice.lt(line.unit_cost_before_tax),
+      ),
+      receivingBelowMinimum: Boolean(
+        invoice.margin_allowed &&
+        selectedMargin &&
+        threshold &&
+        selectedMargin.lt(threshold),
+      ),
       roundedUpFrom,
       receivingPriceQuote: receivingPriceQuote(working, index),
       receivingPriceInvalid: receivingPriceProblem(working, index),

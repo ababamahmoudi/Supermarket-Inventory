@@ -113,6 +113,18 @@ export function ApprovalReviewPanel({
               `تعیین‌شده توسط ${actualApproval.receiving_price.set_by} هنگام دریافت`,
             )}
           </p>
+          {actualApproval.receiving_price.entered_price &&
+            actualApproval.receiving_price.price_unit === "kg" && (
+              <p>
+                {t("Entered price", "قیمت واردشده")}:{" "}
+                <bdi dir="ltr">
+                  {formatMoney(actualApproval.receiving_price.entered_price, {
+                    currency: state.config.company.currency,
+                  })}
+                  /kg
+                </bdi>
+              </p>
+            )}
           <p>
             {t("Requested price", "قیمت پیشنهادی")}:{" "}
             <bdi dir="ltr">

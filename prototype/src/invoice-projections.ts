@@ -393,6 +393,8 @@ export function invoiceView(
         ? {
             receiving_price: select(line.receiving_price, [
               "price",
+              "entered_price",
+              "price_unit",
               "calculated_price",
               "set_by_user_id",
               "set_by",

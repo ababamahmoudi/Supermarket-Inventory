@@ -1,3 +1,4 @@
+import { approvedWeightPricePerLb, type WeightUnit } from "./weighed";
 import { actorAudit } from "./domain-authority";
 import Decimal from "decimal.js";
 import type { AuthenticatedActor } from "./authority-types";
@@ -11,6 +12,8 @@ import { createId } from "./ids";
 export interface ReceivingPriceProposal {
   price: string;
   calculated_price: string;
+  entered_price?: string;
+  price_unit?: "each" | WeightUnit;
   set_by_user_id: string;
   set_by: string;
   set_at: string;
@@ -131,6 +134,7 @@ export function setInvoiceReceivingPrice(
   value: string | null,
   expectedQuote: string,
   now = new Date(),
+  displayedUnit?: WeightUnit,
 ): string {
   actor = requireInvoiceAuthority(
     state,
@@ -153,6 +157,7 @@ export function setInvoiceReceivingPrice(
   if (
     value !== null &&
     (typeof value !== "string" ||
+      (displayedUnit !== undefined && line.sold_by !== "weight") ||
       !receivingPriceEligible(state, line) ||
       value.length > 64)
   )
@@ -164,8 +169,17 @@ export function setInvoiceReceivingPrice(
       line.pricing_category ?? productFor(state, line)?.pricing_category ?? "";
     const calculation = invoiceLineCalculation(line, category, state.config);
     const raw = value.trim();
+    const canonical = validReceivingPrice(raw)
+      ? line.sold_by === "weight" && displayedUnit
+        ? approvedWeightPricePerLb(raw, displayedUnit, state.config)
+        : new Decimal(raw).toFixed(2)
+      : raw;
     line.receiving_price = {
-      price: validReceivingPrice(raw) ? new Decimal(raw).toFixed(2) : raw,
+      price: canonical,
+      entered_price: validReceivingPrice(raw)
+        ? new Decimal(raw).toFixed(2)
+        : raw,
+      price_unit: line.sold_by === "weight" ? (displayedUnit ?? "lb") : "each",
       calculated_price: calculation.selling_price,
       set_by_user_id: actor.user_id,
       set_by: actor.actor,

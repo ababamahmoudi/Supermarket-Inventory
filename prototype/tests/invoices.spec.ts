@@ -98,9 +98,11 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   );
   const sumac = await openInvoiceLine(page, 1);
   await sumac.getByLabel("Unit cost before tax", { exact: true }).fill("1.60");
-  await expect(sumac.locator(".price-display")).toHaveText("$2.99");
+  const sellingPrice = sumac.locator("#invoice-line-1-selling-price");
+  await expect(sellingPrice).toBeEditable();
+  await expect(sellingPrice).toHaveValue("2.99");
   await sumac.getByLabel("Unit cost before tax", { exact: true }).fill("1.30");
-  await expect(sumac.locator(".price-display")).toHaveText("$1.99");
+  await expect(sellingPrice).toHaveValue("1.99");
   const chips = await openInvoiceLine(page, 5);
   await chips
     .getByRole("button", { name: "Report short or refused", exact: true })
@@ -315,7 +317,10 @@ test("Persian invoice review mirrors the shell and keeps Western price digits", 
     }),
   ).toHaveCount(0);
   const line = await openInvoiceLine(page, 0);
-  await expect(line.locator(".price-display")).toHaveText("$1.99");
+  await expect(line.locator("#invoice-line-0-selling-price")).toHaveValue(
+    "1.99",
+  );
+  await expect(line.locator("#invoice-line-0-selling-price")).toBeEditable();
   await expect(
     page.getByRole("group", { name: "پیگیری تاریخ", exact: true }),
   ).toHaveCount(1);

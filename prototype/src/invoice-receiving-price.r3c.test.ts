@@ -66,6 +66,141 @@ function prepare() {
 }
 
 describe("receiving price proposals", () => {
+  it("a kg price entry preserves its unit and actual receiver while proposing canonical per-lb prices", () => {
+    const { state, floor, line } = prepare();
+    Object.assign(line, {
+      sold_by: "weight",
+      quantity_unit: "lb",
+      quantity_entered: "1",
+      source_cost_before_tax: "1.0000",
+      source_cost_unit: "lb",
+    });
+    state.config.weighed_items = {
+      ...state.config.weighed_items!,
+      main_display_unit: "kg",
+    };
+    setInvoiceReceivingPrice(
+      state,
+      floor,
+      0,
+      "17.61",
+      receivingPriceQuote(state, 0),
+      undefined,
+      "kg",
+    );
+    expect(line.receiving_price).toMatchObject({
+      price: "7.99",
+      entered_price: "17.61",
+      price_unit: "kg",
+      set_by_user_id: floor.user_id,
+    });
+    const floorRead = invoiceWorkspaceRead(state, floor);
+    expect(floorRead.lineDetails[0].receivingMargin).toBeNull();
+    expect(floorRead.lineDetails[0].receivingBelowMinimum).toBe(false);
+    const manager = authenticatedTestActor(state, "manager", {
+      locations: ["Branch 1"],
+    });
+    const managerRead = invoiceWorkspaceRead(state, manager);
+    expect(managerRead.lineDetails[0].receivingMargin).toBe("87.48");
+    expect(
+      state.products.find((product) => product.code === line.product_code)
+        ?.selling_price,
+    ).not.toBe("7.99");
+    expect(
+      invoiceView(state, floor, state.invoice.id).lines[0].receiving_price,
+    ).toMatchObject({
+      price: "7.99",
+      entered_price: "17.61",
+      price_unit: "kg",
+    });
+    state.config.weighed_items.conversion_factor = "2";
+    expect(receivingPriceProblem(state, 0)).toBe(true);
+    setInvoiceReceivingPrice(
+      state,
+      floor,
+      0,
+      "17.61",
+      receivingPriceQuote(state, 0),
+      undefined,
+      "kg",
+    );
+    expect(line.receiving_price).toMatchObject({
+      price: "8.81",
+      entered_price: "17.61",
+      price_unit: "kg",
+    });
+    expect(receivingPriceProblem(state, 0)).toBe(false);
+  });
+
+  it("an arbitrary entered price reaches the real pending approval with source money and actual editor preserved", () => {
+    const { state, floor, line } = prepare();
+    const source = structuredClone(state.invoice);
+    const before = structuredClone(state.products);
+    setInvoiceReceivingPrice(
+      state,
+      floor,
+      0,
+      "1.83",
+      receivingPriceQuote(state, 0),
+    );
+    confirmInvoiceLineChecks(state, floor, 0, true);
+    const poster = authenticatedTestActor(state, "manager", {
+      name_en: "Fictional Different Poster",
+    });
+    postInvoice(state, poster);
+    const approval = state.approvals.find((row) => row.receiving_price)!;
+    expect(approval.status).toBe("pending");
+    expect(approval.receiving_price).toMatchObject({
+      price: "1.83",
+      entered_price: "1.83",
+      price_unit: "each",
+      calculated_price: "1.99",
+      set_by_user_id: floor.user_id,
+      set_by: floor.actor,
+    });
+    expect([
+      state.invoice.subtotal,
+      state.invoice.tax,
+      state.invoice.final_total,
+    ]).toEqual([source.subtotal, source.tax, source.final_total]);
+    expect(state.invoice.file_data).toBe(source.file_data);
+    expect(state.invoice.lines[0].unit_cost_before_tax).toBe(
+      source.lines[0].unit_cost_before_tax,
+    );
+    expect(
+      state.products.find((row) => row.code === line.product_code)
+        ?.branch_prices,
+    ).toEqual(
+      before.find((row) => row.code === line.product_code)?.branch_prices,
+    );
+    expect(
+      manualRegularApprovalPreview(state, poster, approval).calculated_price,
+    ).toBe("1.99");
+  });
+
+  it("warnings use the entered price while numeric margins remain private to margin readers", () => {
+    const { state, floor } = prepare();
+    setInvoiceReceivingPrice(
+      state,
+      floor,
+      0,
+      "0.50",
+      receivingPriceQuote(state, 0),
+    );
+    const view = invoiceWorkspaceRead(state, floor);
+    expect(view.lineDetails[0]).toMatchObject({
+      receivingBelowCost: true,
+      receivingMargin: null,
+      receivingBelowMinimum: false,
+    });
+    const manager = authenticatedTestActor(state, "manager");
+    expect(invoiceWorkspaceRead(state, manager).lineDetails[0]).toMatchObject({
+      receivingBelowCost: true,
+      receivingMargin: "-100.00",
+      receivingBelowMinimum: true,
+    });
+  });
+
   it("Set then Reset never resurrects an earlier token for either set or reset", () => {
     const { state, floor } = prepare();
     const original = receivingPriceQuote(state, 0);
