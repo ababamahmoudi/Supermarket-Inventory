@@ -153,3 +153,65 @@ it("does not jump the current sheet at midnight when a genuine same-location sav
   expect(sheet()).toHaveAttribute("data-timesheet-date", "2026-10-26");
   expect(window.location.hash).toBe("#timesheets");
 });
+
+it("ignores a delayed duplicate route notification after a genuine midnight save", async () => {
+  await mount({ kind: "location", location_id: "Branch 1" });
+  await act(async () => {});
+  const originalSheet = sheet();
+  const originalActor = current().actor!;
+  const originalURL = window.location.href;
+  expect(originalSheet).toHaveAttribute("data-timesheet-date", "2026-10-26");
+  vi.setSystemTime(new Date("2026-10-27T04:00:30.000Z"));
+  await act(async () => {
+    await current().command(
+      "timesheets.edit",
+      timesheetScope(originalActor.company_id, "Branch 1", true),
+      (draft, fresh) => {
+        saveTimesheetNotes(draft, fresh, {
+          branch: "Branch 1",
+          date: "2026-10-26",
+          notes: "Retain this working day after a duplicate notification.",
+        });
+      },
+    );
+  });
+  expect(sheet()).toBe(originalSheet);
+  expect(current().actor).toMatchObject({
+    user_id: originalActor.user_id,
+    session_id: originalActor.session_id,
+    authority_epoch: originalActor.authority_epoch,
+    person_version: originalActor.person_version,
+  });
+  expect(sheet()).toHaveAttribute("data-timesheet-date", "2026-10-26");
+  expect(window.location.href).toBe(originalURL);
+  await act(async () => {
+    window.dispatchEvent(
+      new HashChangeEvent("hashchange", {
+        oldURL: originalURL,
+        newURL: originalURL,
+      }),
+    );
+  });
+  expect(
+    (await fixture!.readCanonical()).timesheet_days?.find(
+      (day) => day.branch === "Branch 1" && day.date === "2026-10-26",
+    )?.notes,
+  ).toBe("Retain this working day after a duplicate notification.");
+  expect(sheet()).toBe(originalSheet);
+  expect(sheet()).toHaveAttribute("data-timesheet-date", "2026-10-26");
+  expect(window.location.hash).toBe("#timesheets");
+  await act(async () => {
+    window.location.hash = "#timesheets?date=2026-10-20&view=week";
+  });
+  await waitFor(() =>
+    expect(sheet()).toHaveAttribute("data-timesheet-date", "2026-10-20"),
+  );
+  expect(screen.getByRole("heading", { name: "Week view" })).toBeVisible();
+  await act(async () => {
+    window.history.back();
+  });
+  await waitFor(() => {
+    expect(window.location.hash).toBe("#timesheets");
+    expect(sheet()).toHaveAttribute("data-timesheet-date", "2026-10-27");
+  });
+});

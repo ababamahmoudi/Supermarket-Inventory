@@ -559,9 +559,12 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
     [],
   );
   const acceptedHash = useRef(window.location.hash);
+  const displayedHash = useRef(window.location.hash);
   useLayoutEffect(() => {
-    if (window.location.hash.startsWith("#timesheets"))
+    if (window.location.hash.startsWith("#timesheets")) {
       acceptedHash.current = window.location.hash;
+      displayedHash.current = window.location.hash;
+    }
   }, [intent]);
   useEffect(() => {
     let active = true,
@@ -782,6 +785,10 @@ function TimesheetsContent({ initialBranch }: { initialBranch: string }) {
     }
     const onHash = (event: HashChangeEvent) => {
       if (deferTimesheetNavigation(event)) return;
+      // A delayed notification for the displayed URL carries no new date
+      // intent and must not replace an implicit working day at midnight.
+      if (window.location.hash === displayedHash.current) return;
+      displayedHash.current = window.location.hash;
       sync();
     };
     window.addEventListener("hashchange", onHash);
