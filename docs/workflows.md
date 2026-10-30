@@ -1,5 +1,9 @@
 # Workflows and state machines
 
+## R3c — return to an unread invoice
+
+Opening a ready or actively reading draft preserves its source and attempt exactly. Review normalization waits until there is review data; selecting another invoice and returning cannot invalidate or restart an accepted reader request. Other drafts, originals and financial records remain intact.
+
 ## R3c — foreground completion acknowledgement
 
 A live read completed while its own invoice is already open goes directly into review without a redundant Open notice. More details and other foreground controls remain clickable. Completion elsewhere still offers Ready/Open; a pending Timesheets save retains its notice until navigation is accepted.

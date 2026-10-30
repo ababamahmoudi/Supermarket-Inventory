@@ -1,3 +1,8 @@
+## 2026-10-30 — R3c unread-workspace navigation repair
+
+- Opening an unread ready/processing invoice no longer normalizes its review fields or changes its source witness. Returning from another invoice preserves the active attempt and saved original until the actual reader result is accepted.
+- Two genuine baseline regressions fail on the old selector and pass with the narrow fix. All 70 live-reading units, lint/format, fresh build and 16 EN/FA desktop/phone background-reading cases pass without retries/skips, including four new held-response A → B → A cases with exact source, attempt, other-draft and no-post preservation.
+
 ## 2026-10-30 — R3c foreground reading completion repair
 
 - A reading completed on the already accepted invoice route no longer leaves a redundant Open notice over its own editor. Background notices remain until accepted navigation; a raw destination hash while Timesheets saves is not treated as accepted.

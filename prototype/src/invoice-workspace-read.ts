@@ -75,6 +75,7 @@ export function selectInvoiceWorkspace(
     state.invoice.status = "reading";
   if (
     state.invoice.status !== "posted" &&
+    state.invoice.status !== "reading" &&
     canInvoiceAuthority(state, actor, "invoices.edit", id, true)
   ) {
     normalizeInvoiceReceivingReview(state.invoice);

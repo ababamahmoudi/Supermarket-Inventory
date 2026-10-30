@@ -173,6 +173,68 @@ for (const language of ["en", "fa"] as const) {
     await expectReview(page, first.id, language);
     expectNoPosting(before, await readCanonicalBusinessEvidence(page));
   });
+
+  test(`K5 resumes the unchanged active read after another invoice was selected ${language}`, async ({
+    page,
+  }) => {
+    const gate = deferred();
+    const reference = "BACKGROUND-FICTIONAL-203";
+    const reader = await mockReader(page, [
+      {
+        kind: "held",
+        wait: gate.promise,
+        response: fictionalResponse(reference),
+      },
+    ]);
+    await configureLive(page);
+    await setLanguage(page, language);
+    const before = await readCanonicalBusinessEvidence(page);
+    const firstPhoto = await fictionalPhoto(
+      page,
+      "fictional-background-first.png",
+      "#243f80",
+    );
+    const first = await newLiveOriginal(page, firstPhoto, "photo", language);
+    await pressRead(page, language);
+    await expect.poll(() => reader.requests.length).toBe(1);
+    const activeFirst = (await readCanonicalBusinessEvidence(page)).invoice;
+    const secondPhoto = await fictionalPhoto(
+      page,
+      "fictional-background-second.png",
+      "#38642a",
+    );
+    const second = await newLiveOriginal(page, secondPhoto, "photo", language);
+    expect(second.id).not.toBe(first.id);
+    // This is ordinary same-document app navigation, not a reload or state edit.
+    await page.evaluate((id) => {
+      window.location.hash = `invoices?id=${encodeURIComponent(id)}`;
+    }, first.id);
+    await expect
+      .poll(async () => (await readCanonicalBusinessEvidence(page)).invoice.id)
+      .toBe(first.id);
+    const resumed = (await readCanonicalBusinessEvidence(page)).invoice;
+    expect(resumed).toEqual(activeFirst);
+    expect(reader.requests).toHaveLength(1);
+    gate.resolve();
+    await expectReview(page, first.id, language);
+    await expect(page.getByTestId("live-reading-ready")).toHaveCount(0);
+    const after = await readCanonicalBusinessEvidence(page);
+    expect(after.invoice.supplier_invoice_number).toBe(reference);
+    expect(after.invoice.live_reading?.attempt_id).toBe(
+      activeFirst.live_reading?.attempt_id,
+    );
+    expect(after.invoice.original_pages).toEqual(first.original_pages);
+    const savedSecond = after.invoices!.find((item) => item.id === second.id)!;
+    expect(savedSecond).toEqual(second);
+    expect(await retainedSourceHashes(page, after.invoice)).toEqual([
+      sourceHash(firstPhoto),
+    ]);
+    expect(await retainedSourceHashes(page, savedSecond)).toEqual([
+      sourceHash(secondPhoto),
+    ]);
+    expect(reader.requests).toHaveLength(1);
+    expectNoPosting(before, after);
+  });
 }
 
 for (const language of ["en", "fa"] as const) {

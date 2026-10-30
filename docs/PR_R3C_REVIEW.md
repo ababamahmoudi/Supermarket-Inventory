@@ -144,6 +144,8 @@ Integrated service/navigation/footer verification passed 95 units, lint and buil
 
 When a live read completes on the invoice already open, review appears without a redundant Open notice; open a line and More details normally. The genuine foreground/background App regression, pending Timesheets navigation and footer guards pass 17 units and all 20 related desktop/phone EN/FA browser cases, with no skips/retries.
 
+Also start a live read, open another invoice, and return to the first before the response arrives. The same request completes with the same original/attempt; the other draft remains unchanged. This held-response path and retained background/Discard/Undo paths passed all 16 desktop/phone EN/FA cases, with 70 baseline domain tests and a fresh build.
+
 ## K7 — truthful compact reading progress
 
 1. With Live and the real local reader configured, select a fictional photo/PDF and press **Read invoice**. Check actual elapsed time beside the estimated usually-about-a-minute caption. The indeterminate bar moves without claiming a percentage.

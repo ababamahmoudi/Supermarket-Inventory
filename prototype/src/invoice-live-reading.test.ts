@@ -14,7 +14,10 @@ import {
 import { invoiceView } from "./invoice-projections";
 import { canInvoiceAuthority } from "./invoice-authority";
 import { setInvoiceLocation } from "./received";
-import { invoiceMoveRead } from "./invoice-workspace-read";
+import {
+  invoiceMoveRead,
+  selectInvoiceWorkspace,
+} from "./invoice-workspace-read";
 import { projectHistoryEntry } from "./history";
 import {
   importInvoiceReadings,
@@ -101,6 +104,32 @@ async function processing(role: RoleId = "manager", files?: File[]) {
   );
   return { ...data, attempt };
 }
+it.each(["ready", "processing"] as const)(
+  "preserves %s live source and attempt authority through saved A to manual B to A navigation",
+  async (phase) => {
+    const { state, actor } = await draft("manager", [
+      source("fictional-unread.png", "fictional unread source", "image/png"),
+    ]);
+    if (phase === "processing")
+      beginLiveInvoiceReading(state, actor, state.invoice.id);
+    const original = structuredClone(state.invoice);
+    state.invoice = createInvoice(state, actor, "Branch 1", true);
+    const manual = structuredClone(state.invoice);
+    selectInvoiceWorkspace(state, actor, original.id);
+    expect(state.invoice).toEqual(original);
+    expect(state.invoices!.find((invoice) => invoice.id === manual.id)).toEqual(
+      manual,
+    );
+    expect(() =>
+      settleLiveInvoiceReading(state, actor, {
+        invoice_id: original.id,
+        attempt_id: original.live_reading!.attempt_id!,
+        outcome: "cancelled",
+      }),
+    ).not.toThrow();
+    expect(state.invoice.live_reading!.phase).toBe("cancelled");
+  },
+);
 function envelope(
   attempt: { original_sha256s: string[] },
   count = attempt.original_sha256s.length,
