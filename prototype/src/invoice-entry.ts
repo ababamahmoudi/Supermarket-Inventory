@@ -108,6 +108,7 @@ export function setInvoicePaymentTerms(
 ): void {
   invoice.payment_terms = value;
   invoice.payment_terms_inferred = false;
+  invoice.payment_terms_defaulted = false;
   invoice.payment_term_days = paymentTermsDays(value);
   invoice.due_date_manual = false;
   refreshInvoiceDueDate(invoice);

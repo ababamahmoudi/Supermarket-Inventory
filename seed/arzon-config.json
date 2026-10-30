@@ -366,6 +366,7 @@
     "ai_reading_enabled": true,
     "ai_reading_mode": "simulated",
     "ai_reader_address": null,
+    "default_payment_terms": "Monthly",
     "highlight_below_confidence": 0.8,
     "tax_mismatch_tolerance": "0.05"
   },

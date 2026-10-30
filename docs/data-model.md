@@ -1,5 +1,11 @@
 # Data model
 
+## R3c K6 — missing-paper payment default
+
+`CompanyConfig.receiving.default_payment_terms?: string | null` is seeded as `"Monthly"`. A missing legacy setting resolves from the seed without rewriting stored configuration; explicit null, blank or an unrecognized term disables the default. Recognized configured terms reuse the existing calendar/day-term parser.
+
+`DemoInvoice.payment_terms_defaulted?: boolean` distinguishes a configured default from printed terms and the existing historical `payment_terms_inferred` marker. It is explicitly included in the protected invoice DTO. Reading preview and import share the same resolution: supplied effective reading terms win; otherwise use the configured default. Imported defaulted terms set `payment_terms_inferred = false`, calculate the due date through the existing calendar logic, and retain genuine printed due-date discrepancies/questions. A missing paper due date loses its AI question only when a valid due date is actually computed. No human `checked_fields` receipt is fabricated. `setInvoicePaymentTerms` clears both default/inferred markers and applies the existing due-date recalculation behavior.
+
 ## R3c K2 — Curated names and retained printed matching keys
 
 `InvoiceLine.printed_description` retains the exact original AI/source description separately from a checked or edited clean product name. Shared per-source-index evidence feeds preview and import; checked-only extra rows cannot fabricate original printed text. Product names retain the individual size while carton counts remain pack data; new Each Products derive their unit size from the individual leaf rather than the whole carton.

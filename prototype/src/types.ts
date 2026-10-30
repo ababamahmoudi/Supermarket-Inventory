@@ -68,10 +68,12 @@ export type CompanyConfig = Omit<
 > & {
   receiving: Omit<
     typeof configSeed.receiving,
-    "ai_reading_mode" | "ai_reader_address"
+    "ai_reading_mode" | "ai_reader_address" | "default_payment_terms"
   > & {
     ai_reading_mode?: "simulated" | "live";
     ai_reader_address?: string | null;
+    /** Missing legacy setting uses the configured seed default; null/blank disables it. */
+    default_payment_terms?: string | null;
   };
   branding?: MakerBranding;
   invoices: Omit<typeof configSeed.invoices, "delivery_window"> & {
@@ -558,6 +560,7 @@ export type DemoInvoice = Omit<
     payment_terms?: string;
     payment_term_days?: number;
     payment_terms_inferred?: boolean;
+    payment_terms_defaulted?: boolean;
     due_date_manual?: boolean;
     final_total_manual?: boolean;
     supplier_review_required?: boolean;

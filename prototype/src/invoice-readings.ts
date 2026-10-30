@@ -7,11 +7,8 @@ import type { AuthenticatedActor } from "./authority-types";
 import { can, requireCapability } from "./permissions";
 import { branchId, configuredBranches } from "./settings";
 import { createInvoice, rememberInvoiceSupplierItem } from "./invoice";
-import {
-  paymentTermsDays,
-  paymentTermsDueDate,
-  isMonthlyPaymentTerms,
-} from "./invoice-entry";
+import { paymentTermsDays, paymentTermsDueDate } from "./invoice-entry";
+import { receivingDefaultPaymentTerms } from "./invoice-payment-default";
 import { importedReadingReceived } from "./invoice-reading-dates";
 import { extractSupplierContactText } from "./invoice-reading-supplier-contacts";
 import {
@@ -825,7 +822,43 @@ export function readingInvoiceIdentity(
   return supplier ? `${supplier}:${number}` : undefined;
 }
 
-/** Optional blanks never generate a question, even when the AI marked them check. */
+function readingPaymentTerms(state: DemoState, value: InvoiceReading) {
+  const printedTerms = text(value.payment_terms);
+  const terms = printedTerms || receivingDefaultPaymentTerms(state.config);
+  const defaulted = !printedTerms && Boolean(terms);
+  const days = paymentTermsDays(terms);
+  const computedDue = paymentTermsDueDate(
+    readingExpiryDate(text(value.invoice_date)) ?? "",
+    terms,
+    days,
+  );
+  const suppliedDue = text(value.due_date);
+  const paperDue = readingExpiryDate(suppliedDue) ?? "";
+  return { terms, defaulted, days, computedDue, suppliedDue, paperDue };
+}
+
+function paymentTermReadingChecks(
+  fields: string[],
+  terms: ReturnType<typeof readingPaymentTerms>,
+): string[] {
+  const checks = fields.filter(
+    (field) =>
+      !terms.defaulted ||
+      (field !== "payment_terms" &&
+        !(field === "due_date" && !terms.suppliedDue && terms.computedDue)),
+  );
+  if (!terms.terms) checks.push("payment_terms");
+  if (
+    (terms.suppliedDue && !terms.paperDue) ||
+    (terms.computedDue &&
+      terms.paperDue &&
+      terms.computedDue !== terms.paperDue)
+  )
+    checks.push("due_date");
+  return [...new Set(checks)];
+}
+
+/** Configured defaults are quiet; genuine printed questions remain actionable. */
 export function actionableReadingChecks(
   state: DemoState,
   value: InvoiceReading,
@@ -838,6 +871,7 @@ export function actionableReadingChecks(
   },
 ) {
   const checks = readingCheckFields(statuses, value);
+  const terms = readingPaymentTerms(state, value);
   const received = importedReadingReceived(state.config, value);
   const header = {
     supplier: text(value.supplier_name),
@@ -851,7 +885,7 @@ export function actionableReadingChecks(
     tax: decimal(value.tax, 2),
     final_total: decimal(value.final_total, 2),
     low_confidence_fields: [
-      ...checks.header,
+      ...paymentTermReadingChecks(checks.header, terms),
       ...(received.source !== "invoice_date" ? ["received_at"] : []),
     ],
     calculated_fields: [] as string[],
@@ -863,15 +897,6 @@ export function actionableReadingChecks(
     "final_total",
   ] as const)
     if (!header[field]) header.low_confidence_fields.push(field);
-  if (!text(value.payment_terms))
-    header.low_confidence_fields.push("payment_terms");
-  const due = paymentTermsDueDate(
-    header.invoice_date,
-    text(value.payment_terms),
-  );
-  const printedDue = readingExpiryDate(text(value.due_date));
-  if (due && printedDue && due !== printedDue)
-    header.low_confidence_fields.push("due_date");
   header.low_confidence_fields = [...new Set(header.low_confidence_fields)];
   const lines = (value.lines ?? []).map((line, index) => {
     if (!line.line_type || line.line_type === "item") {
@@ -1578,53 +1603,6 @@ export interface ImportReadingsInput {
   pages: PreparedReadingPages;
   currentLocation?: string;
 }
-/** Latest earlier dated recognized terms; selected source papers count regardless of file order. */
-function usualSupplierPaymentTerms(
-  state: DemoState,
-  supplier: SupplierRecord | undefined,
-  date: string,
-  input: ImportReadingsInput,
-): string {
-  if (!supplier || !date) return "";
-  const choices = (state.invoices ?? [])
-    .filter(
-      (invoice) =>
-        invoice.company_id === state.config.company.seed_key &&
-        supplierMatches(supplier, invoice.supplier),
-    )
-    .map((invoice) => ({
-      date: invoice.invoice_date ?? "",
-      terms: invoice.payment_terms ?? "",
-      tie: invoice.supplier_invoice_number + ":" + invoice.id,
-    }));
-  for (const entry of input.exported.invoices) {
-    if (!input.selectedIds.includes(entry.id)) continue;
-    const reading = effectiveInvoiceReading(entry, input.mode).reading;
-    if (!reading || matchReadingSupplier(state, reading)?.id !== supplier.id)
-      continue;
-    choices.push({
-      date: readingExpiryDate(text(reading.invoice_date)) ?? "",
-      terms: text(reading.payment_terms),
-      tie: text(reading.supplier_invoice_number) + ":" + entry.id,
-    });
-  }
-  return (
-    choices
-      .filter(
-        (choice) =>
-          choice.date &&
-          choice.date < date &&
-          (paymentTermsDays(choice.terms) !== undefined ||
-            isMonthlyPaymentTerms(choice.terms)),
-      )
-      .sort(
-        (left, right) =>
-          right.date.localeCompare(left.date) ||
-          left.tie.localeCompare(right.tie),
-      )[0]?.terms ?? ""
-  );
-}
-
 export function importInvoiceReadings(
   state: DemoState,
   actor: AuthenticatedActor,
@@ -1795,26 +1773,17 @@ export function importInvoiceReadings(
     invoice.supplier_invoice_number = text(value.supplier_invoice_number);
     invoice.number_is_system_assigned = false;
     invoice.invoice_date = readingExpiryDate(text(value.invoice_date)) ?? "";
-    const printedTerms = text(value.payment_terms);
-    invoice.payment_terms =
-      printedTerms ||
-      usualSupplierPaymentTerms(state, supplier, invoice.invoice_date, input);
-    invoice.payment_terms_inferred =
-      !printedTerms && Boolean(invoice.payment_terms);
-    invoice.payment_term_days = paymentTermsDays(invoice.payment_terms);
-    const paperDue = readingExpiryDate(text(value.due_date)) ?? "";
-    const computedDue = paymentTermsDueDate(
-      invoice.invoice_date,
-      invoice.payment_terms,
-      invoice.payment_term_days,
-    );
+    const terms = readingPaymentTerms(state, value);
+    invoice.payment_terms = terms.terms;
+    invoice.payment_terms_inferred = false;
+    invoice.payment_terms_defaulted = terms.defaulted;
+    invoice.payment_term_days = terms.days;
+    const { paperDue, computedDue } = terms;
     invoice.due_date = computedDue || paperDue;
     invoice.due_date_manual = Boolean(
       paperDue && (!computedDue || paperDue === computedDue),
     );
-    if (computedDue && paperDue && paperDue !== computedDue)
-      checks.header.push("due_date");
-    if (!invoice.payment_terms) checks.header.push("payment_terms");
+    checks.header = paymentTermReadingChecks(checks.header, terms);
     invoice.ship_to = text(value.ship_to);
     invoice.bill_to = text(value.bill_to);
     invoice.supplier_tax_number = text(value.supplier_tax_number);

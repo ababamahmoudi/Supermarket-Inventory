@@ -9,7 +9,7 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 | 1     | K0 — final approvals and page error recovery         | Delivered         |
 | 2     | K1 — unchanged known products green                  | Delivered         |
 | 3     | K2 — printed-name matching and checked-values import | Delivered         |
-| 4     | K6 — missing-paper payment default                   | In implementation |
+| 4     | K6 — missing-paper payment default                   | Delivered         |
 | 5     | F4 — retained Discard / Cancelled / Undo             | In implementation |
 | 6     | F7 — truthful processing header                      | In implementation |
 | 7     | F3 — native picker before draft creation             | In implementation |
@@ -74,6 +74,15 @@ CI213 verified K0's 2,652 unit tests, 75 SDK tests, foundation and three browser
 5. Compare checked-mode preview with final review: supplied corrections and original printed evidence produce the same check counts. Raw originals, amounts and source pack/quantity remain unchanged.
 
 Owner verification passed 267 tests across 19 files, full lint/build and 18 actual browser cases with no skips/retries: four checked-import → post → fictional raw live-response cases, four retained K1 cases, two matching cases and eight legacy import/name-layout cases. The independent audit follow-up passed 27 tests for real History projection, nested/path redaction, preserved supplier fields and unchanged canonical evidence. Integrated final-source checks and full CI are recorded on the PR. Automated reader responses and invoice papers are fictional; the real-kit rehearsal remains on the Mac.
+
+## K6 — missing-paper payment default
+
+1. Use the guide's Mac startup steps, sign in as Manager and choose North York. Open Settings → Data, find **Import invoice readings**, click **Choose file…** and select `prototype/tests/fixtures/r3c-monthly-fictional-readings-export.json` from the checkout.
+2. Import the selected fictional invoice, open Needs review and open **FICTIONAL-MONTHLY-31**. Expand Invoice details. Payment terms shows **Monthly** and **Default: first of next month**, without an amber terms question; Due date is **2027-01-01** for the printed **2026-12-31** invoice date. The separate order-reference question remains.
+3. Choose **Net 30 (30 days)** in Payment terms. The default hint disappears and Due date becomes **2027-01-30**. The same invoice/original remains available; this does not post it.
+4. A reading with actual printed/checked terms keeps those terms. Existing manual drafts and stored invoices retain their prior values.
+
+Combined K0/K1/K2/K6 verification passed 85 targeted unit tests, four English/Persian desktop/phone browser cases and a fresh build, with no browser skips or retries. Independent full CI is recorded on PR #29.
 
 ## After the demo — record only
 

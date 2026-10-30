@@ -1,5 +1,9 @@
 # Workflows and state machines
 
+## R3c K6 — missing-paper payment default
+
+When a new AI/checked reading has no payment terms, use the company's receiving default. The seeded Monthly value means the first day of the next month and shows the quiet **Default: first of next month** hint. Printed terms, including explicit checked terms, take precedence; genuinely flagged printed terms/due dates and unrelated questions still need review. Changing the terms manually removes the default hint and recalculates the due date normally. This reading default does not prefill ordinary manual invoice creation or rewrite existing stored invoice terms.
+
 ## R3c K2 — Checked import followed by a raw printed reading
 
 Settings → Data → My checked values overlays supplied corrections without replacing the original AI line evidence. The clean checked description becomes the product proposal; original printed text remains separately viewable. Confirm and post normally. Only genuine accepted posting learns normalized printed keys on the exact supplier/Product association, retaining its source evidence and prior keys.

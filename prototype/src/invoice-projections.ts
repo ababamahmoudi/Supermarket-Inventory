@@ -216,6 +216,7 @@ const invoiceKeys = [
   "entry_mode",
   "payment_term_days",
   "payment_terms_inferred",
+  "payment_terms_defaulted",
   "due_date_manual",
   "final_total_manual",
   "supplier_review_required",

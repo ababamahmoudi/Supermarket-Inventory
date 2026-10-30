@@ -640,3 +640,7 @@ Ali requested an individually verified push for every R3c item. Include the comm
 ## 2026-10-30 — Learn supplier print without overwriting curated names
 
 Checked answers and later human name edits are authoritative product-name proposals, while the original AI description is separate matching evidence. Carry both by original source index in preview and import; never reconstruct a missing raw key from a checked-only extra row. Learn normalized keys only at genuine scoped posting and require their actual readable posted source before using them. Keep individual size in the name/unit size and carton count in pack data. Preserve optional extra description through existing Product fields without granting receiving users direct catalog-edit authority. Treat matching-key/source-ID audit data as private evidence, including flattened patch paths, while keeping canonical History reversal data intact.
+
+## 2026-10-30 — R3c K6 — missing-paper payment default
+
+**R3c K6 — configured defaults with source precedence:** use the receiving configuration for missing-paper terms instead of guessing from a supplier's earlier invoices. Seed Monthly; keep it configurable and preserve an explicit disabled value. Share preview/import resolution so the visible count agrees with the imported draft. Preserve printed/checked source precedence, genuine due-date questions, ordinary manual creation, existing records and source bytes. A default is provenance, not a human check.

@@ -1,3 +1,8 @@
+## 2026-10-30 — R3c K6 — missing-paper payment default
+
+- Default absent AI-reading payment terms from receiving configuration, seeded Monthly with a quiet translated hint and correct next-month due date. Printed/checked terms take precedence; manual changes clear default provenance. Preserve genuine source/due-date questions, existing/manual invoices and originals.
+- Owner verification: 223 tests across seven files, four EN/FA desktop/phone Chromium cases, production build/typecheck and targeted ESLint/Prettier/diff checks passed. Combined final-source verification passed 85 unit tests, four browser cases and a fresh build; independent full CI is recorded on PR #29.
+
 ## 2026-10-30 — R3c K2 printed-name matching
 
 - Retain original printed descriptions separately from clean checked/edited names, using shared per-index evidence in preview and import. Preserve individual size and move carton wording into pack data; checked-only extra rows do not invent printed keys.

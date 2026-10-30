@@ -13,14 +13,25 @@ afterEach(() => {
   cleanup();
   locale.language = "en";
 });
-function Terms({ initial = "Net 30" }: { initial?: string }) {
+function Terms({
+  initial = "Net 30",
+  initiallyDefaulted = false,
+}: {
+  initial?: string;
+  initiallyDefaulted?: boolean;
+}) {
   const [value, setValue] = useState(initial);
+  const [defaulted, setDefaulted] = useState(initiallyDefaulted);
   return (
     <>
       <PaymentTermsControl
         id="test-terms"
         value={value}
-        onChange={setValue}
+        onChange={(next) => {
+          setValue(next);
+          setDefaulted(false);
+        }}
+        defaulted={defaulted}
         label={locale.language === "en" ? "Payment terms" : "شرایط پرداخت"}
       />
       <output aria-label="stored terms">{value}</output>
@@ -62,4 +73,34 @@ it("keeps Other and its custom number in one field and retains quickly typed20",
   expect(screen.getByRole("textbox", { name: "Number of days" })).toBe(days);
   expect(days).toHaveValue("20");
   expect(screen.getByLabelText("stored terms")).toHaveTextContent("Net 20");
+});
+it.each(["en", "fa"] as const)(
+  "shows a quiet Monthly default in %s and removes it after an explicit choice",
+  async (language) => {
+    locale.language = language;
+    const user = userEvent.setup();
+    render(<Terms initial="Monthly" initiallyDefaulted />);
+    const hint =
+      language === "en"
+        ? "Default: first of next month"
+        : "پیش‌فرض: اول ماه بعد";
+    expect(screen.getByText(hint)).toBeVisible();
+    expect(document.querySelector(".invoice-payment-terms")).not.toHaveClass(
+      "please-check-field",
+    );
+    expect(screen.queryByText(/earlier invoice|فاکتور قبلی/)).toBeNull();
+    await user.click(screen.getByRole("combobox"));
+    await user.click(
+      screen.getByRole("option", {
+        name: language === "en" ? "Net 30 (30 days)" : "خالص 30 (30 روز)",
+      }),
+    );
+    expect(screen.getByLabelText("stored terms")).toHaveTextContent("Net 30");
+    expect(screen.queryByText(hint)).toBeNull();
+  },
+);
+it("describes an alternate configured default truthfully", () => {
+  render(<Terms initial="Net 45" initiallyDefaulted />);
+  expect(screen.getByText("Default: Net 45")).toBeVisible();
+  expect(screen.queryByText("Default: first of next month")).toBeNull();
 });

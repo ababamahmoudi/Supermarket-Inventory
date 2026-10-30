@@ -371,14 +371,15 @@ describe("R2b 1.4 payment terms", () => {
       due_date: "2026-09-25",
     });
     expect(state.invoices![2]).toMatchObject({
-      payment_terms: "Due upon receipt",
-      payment_terms_inferred: true,
-      due_date: "2026-08-18",
+      payment_terms: "Monthly",
+      payment_terms_defaulted: true,
+      payment_terms_inferred: false,
+      due_date: "2026-09-01",
     });
     expect(state.invoices![2].low_confidence_fields).not.toContain(
       "payment_terms",
     );
-    expect(state.invoices![2].payment_terms_inferred).toBe(true);
+    expect(state.invoices![2].payment_terms_defaulted).toBe(true);
     expect(state.invoices![3].due_date).toBe("2026-08-19");
     expect(state.invoices![3].low_confidence_fields).toContain("due_date");
     expect(state.invoices![4].due_date).toBe("2026-09-19");
@@ -392,14 +393,14 @@ describe("R2b 1.4 payment terms", () => {
       due_date: "2026-09-08",
     });
   });
-  it("uses only earlier recognized same-supplier terms, independent of file order", async () => {
+  it("uses configured missing-paper terms instead of earlier supplier terms, independent of file order", async () => {
     const source = structuredClone(fixture);
     source.invoices.reverse();
     const { state } = await importFictional(emptyBusiness(), source);
     expect(
       state.invoices!.find((i) => i.supplier_invoice_number === "BFP-0818")
         ?.payment_terms,
-    ).toBe("Due upon receipt");
+    ).toBe("Monthly");
     const future = structuredClone(fixture);
     future.invoices = future.invoices.filter((i) =>
       ["r2b-name-suggestion", "r2b-renamed-product"].includes(i.id),
@@ -408,8 +409,9 @@ describe("R2b 1.4 payment terms", () => {
       emptyBusiness(),
       future,
     );
-    expect(withoutHistory.invoices![0].payment_terms).toBe("");
-    expect(withoutHistory.invoices![0].low_confidence_fields).toContain(
+    expect(withoutHistory.invoices![0].payment_terms).toBe("Monthly");
+    expect(withoutHistory.invoices![0].payment_terms_defaulted).toBe(true);
+    expect(withoutHistory.invoices![0].low_confidence_fields).not.toContain(
       "payment_terms",
     );
   });

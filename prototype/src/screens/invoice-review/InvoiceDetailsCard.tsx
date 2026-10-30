@@ -261,6 +261,7 @@ export function InvoiceDetailsCard({
               label={t("Payment terms (optional)", "شرایط پرداخت (اختیاری)")}
               value={invoice.payment_terms ?? ""}
               inferred={invoice.payment_terms_inferred}
+              defaulted={invoice.payment_terms_defaulted}
               onChange={(value) =>
                 update((draft, actor) => {
                   setInvoicePaymentTerms(draft.invoice, value);

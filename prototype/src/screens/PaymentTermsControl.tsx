@@ -84,6 +84,7 @@ export function PaymentTermsControl({
   label,
   error,
   inferred = false,
+  defaulted = false,
 }: {
   value: string;
   onChange(value: string): void;
@@ -92,6 +93,7 @@ export function PaymentTermsControl({
   label: string;
   error?: string;
   inferred?: boolean;
+  defaulted?: boolean;
 }) {
   const { t } = useDemo();
   const [other, setOther] = useState(false);
@@ -114,6 +116,13 @@ export function PaymentTermsControl({
           : undefined
       }
       label={label}
+      hint={
+        defaulted
+          ? monthly
+            ? t("Default: first of next month", "پیش‌فرض: اول ماه بعد")
+            : t(`Default: ${value}`, `پیش‌فرض: ${value}`)
+          : undefined
+      }
       error={
         error ||
         (invalid
