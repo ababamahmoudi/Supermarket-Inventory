@@ -1,5 +1,11 @@
 # Workflows and state machines
 
+## R3c K0 — Completing the approval board
+
+Approve an individual request or the selected eligible invoice batch through the existing guarded command. Retain refresh data and the existing scroll position while real remaining content is still in view. After departing rows finish, release obsolete reserved space and expose the genuine empty state when the authoritative board is empty. If finishing a bottom invoice group leaves all remaining groups above the viewport, anchor the nearest real remaining row instead of retaining a blank viewport. This deliberate visibility recovery is the narrow exception to ordinary partial-list scroll preservation; it does not create or repeat any approval, receipt, price, invoice or ledger action.
+
+Page-content render errors show a translated reload card inside the app shell. Reload is explicit; ordinary healthy navigation does not remount page content merely to reset the boundary, so unrelated buffered work keeps its existing save/navigation guards.
+
 ## R2g Tier 1 — Review edits and dialog feedback
 
 Invoice review edits charges once, inline inside the lines card. Add, signed-amount/description/tax edit and remove recheck current company, location and draft/review authority, keep the raw original and record actual before/after audit evidence. Charges never become product receipts. Reconcile each change through the existing Decimal totals rules. A draft subtotal currently derived from complete lines/charges updates with those amounts; incomplete evidence remains unresolved. Preserve printed or explicitly entered headers, unknown tax/total and every posted financial record. A later human subtotal edit is authoritative, rather than a historical calculated-from-lines flag.

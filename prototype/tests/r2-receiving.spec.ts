@@ -292,9 +292,25 @@ for (const language of ["en", "fa"] as const) {
     expect(scrollBefore).toBeGreaterThan(100);
     await commit.click();
     await expect(approvalDialog).toHaveCount(0);
-    expect(
-      Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore),
-    ).toBeLessThanOrEqual(2);
+    // With no remaining rows the result must replace the old scroll reserve.
+    // Partial decisions retain their strict 2px contract in r3c-approvals.
+    await expect(
+      page.getByText(
+        word(
+          language,
+          "No pending requests. Receive an invoice to create a proposal.",
+          "درخواستی در انتظار نیست. برای ایجاد پیشنهاد، یک فاکتور دریافت کنید.",
+        ),
+        { exact: true },
+      ),
+    ).toBeInViewport({ ratio: 1 });
+    await expect
+      .poll(() =>
+        page
+          .locator(".approval-board-list")
+          .evaluate((element) => element.getBoundingClientRect().height),
+      )
+      .toBeLessThanOrEqual(2);
     await expect(
       page.getByRole("tab", { name: /^(Approved|تأییدشده) 25$/ }),
     ).toBeVisible();

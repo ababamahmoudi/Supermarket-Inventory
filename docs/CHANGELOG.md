@@ -1,3 +1,10 @@
+## 2026-10-29 — R3c K0 approval completion
+
+- Reproduced final individual and Approve all decisions through genuine fictional import/post flows: the old empty board retained 734 px of height and left its message above the viewport. Also reproduced a completed bottom group leaving older approvals entirely outside the usable viewport. Release obsolete reserved space only for those blank-result cases; retain strict 2 px stability when a real surviving card remains visible, protected reads and existing approval/domain actions.
+- Add a translated page-content error boundary with explicit Reload this page, keeping the app shell available and healthy page state mounted through ordinary reset tokens.
+- Add genuine final-item browser and failing-child boundary regressions; retain the 25-line bulk approval, original invoice/ledger/receipt assertions and strict partial-decision scroll checks. The R3c guide records executed verification and per-item delivery.
+- Record the latest separate-item order and the four explicit after-demo ideas. R2g stays stopped; Ali lifted the earlier freeze.
+
 ## 2026-10-29 — R2g Tier 1 demo polish
 
 - Preserved natural auth keyboard order, actual full-screen original viewing and source-qualified horizontal price choices. Legacy frame/Undo/layout checks now target the approved compositions with causal geometry negatives. Receiving density uses exact row/card budgets: the new 12 px cell padding supersedes the older 3 px/2700 px aggregate assumption, while all 25 canonical lines, source details, counts and money remain checked.

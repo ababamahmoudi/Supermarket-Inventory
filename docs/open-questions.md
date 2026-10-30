@@ -2,9 +2,13 @@
 
 ## After the prototype demo
 
+- **R3c supplier PDF order reading:** upload an order confirmation or pre-invoice PDF in Orders, read an expected order with prices, compare the delivery, then create the invoice with Use the order's reading. Record only; design and implementation wait until after the demo.
+- **R3c branch-request additions:** allow the sender to add also-sending items that the receiver sees as expected in the delivery. This is additional to the Loaded ticks and Mark all as being sent below; record only.
+- **R3c offers:** edit terms, dates and joining/leaving a mix-and-match pool in place, instead of stopping and recreating an offer. Record only.
+- **R3c schema v3:** add AI brand/name suggestions for a person to confirm. The current clean-name and printed-key fixes use the existing reading schema and do not introduce v3.
 - **R2g branch-request picking (Ali, October 28):** retain a per-item Loaded checkbox per request and person, including who/when, across leaving and returning. Add Mark all as being sent, with individual items subsequently changeable to Short. Record only; do not build before the demo.
 - **R2g remaining post-demo polish:** A6 table/checkbox/row actions, A8 all-screen alignment expansion, C2 explicit audited Manager repair review for earlier bad posted weight costs, C4 invoice-approval checkbox alignment, remaining C5 Labels alignment, C6 notebook role/section presentation, C7 selected-only audited name-cleaning review with old-name aliases, and C8 branch-request detail composition. Shared A5 may resolve C3's empty password band and C6's scrollbar without implementing their other deferred work. Never silently repair posted money.
-- **R2g conditional Tier 2:** B5/B6 Offers, B8 New order, B9 phone Timesheets, A1 universal fields, A3 remaining filter bars and A4/B7 shared phone lists are permitted only after green Tier 1 and before October 29 at 22:00 Toronto. Anything incomplete at freeze stays off the branch and waits until after the demo.
+- **R2g Tier 2, deferred by R3c:** B5/B6 Offers, B8 New order, B9 phone Timesheets, A1 universal fields, A3 remaining filter bars and A4/B7 shared phone lists remain outside the active work. Ali stopped R2g for R3c and explicitly lifted its earlier freeze; this does not resume Tier 2.
 - Reading schema v3: separate item name from pack text; add supplier phone/email/representative fields, sold-by-weight mathematics and an AI pricing-category suggestion that a person confirms. These are deferred and are not part of R3.
 - Questions 15 and 29 are resolved for this prototype: R3 uses Ali's existing local kit. Provider selection, credentials, account spending controls and any CORS configuration stay in that external kit; this app adds no provider integration or key field. Broader production AI/server architecture remains a later phase.
 

@@ -86,6 +86,7 @@ export function Approvals() {
     boardRead.data ??
     (retainedBoard?.accessKey === accessKey ? retainedBoard.data : []);
   const boardElement = useRef<HTMLDivElement>(null);
+  const emptyResult = useRef<HTMLDivElement>(null);
   const [boardFloor, setBoardFloor] = useState(0);
   const [departureKey, setDepartureKey] = useState(accessKey);
   const [departing, setDeparting] = useState<
@@ -210,6 +211,67 @@ export function Approvals() {
   const saleCount = saleRequests.filter(
     (request) => saleRequestTab(request.status) === viewStatus,
   ).length;
+  // Keep the reserve while surviving cards still anchor the viewport. A final
+  // group must not strand the user below the remaining board or its empty state.
+  const retainBoardFloor = boardRead.pending || displayedRows.length > 0;
+  useEffect(() => {
+    if (
+      boardRead.pending ||
+      !boardRead.data ||
+      visibleDepartures.length ||
+      !boardFloor
+    )
+      return;
+    const cards = Array.from(
+      boardElement.current?.querySelectorAll<HTMLElement>(
+        ".approval-detail-row",
+      ) ?? [],
+    ).filter((card) => card.getBoundingClientRect().height > 0);
+    const viewportTop = Math.max(
+      0,
+      document.querySelector(".topbar")?.getBoundingClientRect().bottom ?? 0,
+    );
+    const visible = cards.some((card) => {
+      const bounds = card.getBoundingClientRect();
+      return (
+        bounds.height > 0 &&
+        bounds.bottom > viewportTop &&
+        bounds.top < window.innerHeight
+      );
+    });
+    if (items.length && visible) return;
+    const distance = (card: HTMLElement) => {
+      const bounds = card.getBoundingClientRect();
+      return Math.max(
+        viewportTop - bounds.bottom,
+        bounds.top - window.innerHeight,
+        0,
+      );
+    };
+    const target = items.length
+      ? cards.reduce<HTMLElement | null>(
+          (nearest, card) =>
+            !nearest || distance(card) < distance(nearest) ? card : nearest,
+          null,
+        )
+      : !saleCount
+        ? emptyResult.current
+        : null;
+    setBoardFloor(0);
+    if (target)
+      window.scrollTo({
+        left: window.scrollX,
+        top: window.scrollY + target.getBoundingClientRect().top - viewportTop,
+        behavior: "instant",
+      });
+  }, [
+    boardRead.pending,
+    boardRead.data,
+    visibleDepartures.length,
+    items.length,
+    boardFloor,
+    saleCount,
+  ]);
   if (!actor || !can("approvals.read"))
     return <EmptyState>{t("Approvals", "تأییدها")}</EmptyState>;
   const typeName = (item: Approval) =>
@@ -688,26 +750,31 @@ export function Approvals() {
       )}
       <SaleRequestCards status={viewStatus} />
       {items.length === 0 && saleCount === 0 && (
-        <EmptyState>
-          {viewStatus === "pending"
-            ? t(
-                "No pending requests. Receive an invoice to create a proposal.",
-                "درخواستی در انتظار نیست. برای ایجاد پیشنهاد، یک فاکتور دریافت کنید.",
-              )
-            : viewStatus === "approved"
-              ? t("No approved requests yet.", "هنوز درخواستی تأیید نشده است.")
-              : viewStatus === "rejected"
-                ? t("No rejected requests yet.", "هنوز درخواستی رد نشده است.")
-                : t(
-                    "No expired or withdrawn requests yet.",
-                    "هنوز درخواستی منقضی یا پس گرفته نشده است.",
-                  )}
-        </EmptyState>
+        <div ref={emptyResult}>
+          <EmptyState>
+            {viewStatus === "pending"
+              ? t(
+                  "No pending requests. Receive an invoice to create a proposal.",
+                  "درخواستی در انتظار نیست. برای ایجاد پیشنهاد، یک فاکتور دریافت کنید.",
+                )
+              : viewStatus === "approved"
+                ? t(
+                    "No approved requests yet.",
+                    "هنوز درخواستی تأیید نشده است.",
+                  )
+                : viewStatus === "rejected"
+                  ? t("No rejected requests yet.", "هنوز درخواستی رد نشده است.")
+                  : t(
+                      "No expired or withdrawn requests yet.",
+                      "هنوز درخواستی منقضی یا پس گرفته نشده است.",
+                    )}
+          </EmptyState>
+        </div>
       )}
       <div
         ref={boardElement}
         className="approval-board-list"
-        style={{ minBlockSize: boardFloor }}
+        style={{ minBlockSize: retainBoardFloor ? boardFloor : 0 }}
       >
         {items.map((item, itemIndex) => {
           const product = state.products.find(

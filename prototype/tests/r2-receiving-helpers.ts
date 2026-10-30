@@ -59,11 +59,24 @@ export async function importReceivingFixture(
   onPreview?: (preview: Locator) => Promise<void>,
   onSummary?: (summary: Locator) => Promise<void>,
   sourceFile: Parameters<Locator["setInputFiles"]>[0] = receivingFixture,
+  options: { retainExisting?: boolean } = {},
 ) {
   await signIn(page, "Owner");
   await setBranch(page, "Branch 1");
   await setLanguage(page, language);
-  await removeReceivingDemo(page, language);
+  if (options.retainExisting) {
+    await page.goto("/#settings");
+    await page
+      .getByRole("navigation", {
+        name: word(language, "Settings groups", "گروه‌های تنظیمات"),
+        exact: true,
+      })
+      .getByRole("button", {
+        name: word(language, "Data", "داده‌ها"),
+        exact: true,
+      })
+      .click();
+  } else await removeReceivingDemo(page, language);
   await page
     .getByLabel(word(language, "Choose file…", "انتخاب فایل…"), { exact: true })
     .setInputFiles(sourceFile);

@@ -1,4 +1,5 @@
 import { PoweredByMaker } from "./MakerBrand";
+import { PageContentBoundary } from "./PageContentBoundary";
 import { AuthHeader } from "./AuthHeader";
 import PwaMenu from "./PwaMenu";
 import DemoReadingMode from "./DemoReadingMode";
@@ -1804,36 +1805,43 @@ export default function App() {
           key={resetGeneration}
           tabIndex={-1}
         >
-          {cashierPublicProductLookup && currentProduct ? (
-            <CashierPublicProductLookup code={currentProduct.code} />
-          ) : requestedKnownRouteDenied && !cashierSafeTopLevelFallback ? (
-            <Card>
-              <p>
-                {parentKey === "settings"
-                  ? t(
-                      "Only an Owner or Manager can change Settings.",
-                      "فقط مالک یا مدیر می‌تواند تنظیمات را تغییر دهد.",
-                    )
-                  : t(
-                      "You do not have permission for this action.",
-                      "اجازهٔ انجام این کار را ندارید.",
-                    )}
-              </p>
-            </Card>
-          ) : needsReauthentication(page.key) ? (
-            <Reauthenticate />
-          ) : page.key === "dashboard" && !can("dashboard.company") ? (
-            <LocationDashboard />
-          ) : (
-            (screenRegistry[
-              allowed.some(
-                (candidate) =>
-                  candidate.key === parentKey && !candidate.disabled,
-              )
-                ? routeKey
-                : page.key
-            ] ?? screenRegistry[page.key])
-          )}
+          <PageContentBoundary
+            resetKey={`${hash}:${actor.company_id}:${actor.user_id}:${actor.session_id}:${actor.authority_epoch}:${actor.person_version}:${branch}:${resetGeneration}`}
+            title={t("Something went wrong", "مشکلی پیش آمد")}
+            reloadLabel={t("Reload this page", "بارگذاری دوبارهٔ این صفحه")}
+            onReload={() => window.location.reload()}
+          >
+            {cashierPublicProductLookup && currentProduct ? (
+              <CashierPublicProductLookup code={currentProduct.code} />
+            ) : requestedKnownRouteDenied && !cashierSafeTopLevelFallback ? (
+              <Card>
+                <p>
+                  {parentKey === "settings"
+                    ? t(
+                        "Only an Owner or Manager can change Settings.",
+                        "فقط مالک یا مدیر می‌تواند تنظیمات را تغییر دهد.",
+                      )
+                    : t(
+                        "You do not have permission for this action.",
+                        "اجازهٔ انجام این کار را ندارید.",
+                      )}
+                </p>
+              </Card>
+            ) : needsReauthentication(page.key) ? (
+              <Reauthenticate />
+            ) : page.key === "dashboard" && !can("dashboard.company") ? (
+              <LocationDashboard />
+            ) : (
+              (screenRegistry[
+                allowed.some(
+                  (candidate) =>
+                    candidate.key === parentKey && !candidate.disabled,
+                )
+                  ? routeKey
+                  : page.key
+              ] ?? screenRegistry[page.key])
+            )}
+          </PageContentBoundary>
         </main>
       </div>
       <Dialog
