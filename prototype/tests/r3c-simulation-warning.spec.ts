@@ -44,8 +44,8 @@ for (const language of ["en", "fa"] as const)
     await expect(warning).toContainText(
       t(
         language,
-        "The uploaded invoice is not read. Photos and PDFs fill fictional example values.",
-        "فاکتور بارگذاری‌شده خوانده نمی‌شود. عکس‌ها و PDFها با مقادیر نمونهٔ ساختگی پر می‌شوند.",
+        "Photos and PDFs use fictional values; your invoice is not read.",
+        "عکس و PDF با مقادیر ساختگی پر می‌شوند؛ فاکتور شما خوانده نمی‌شود.",
       ),
     );
     await expect(warning.locator("svg")).toBeVisible();

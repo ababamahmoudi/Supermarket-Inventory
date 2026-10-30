@@ -1,3 +1,9 @@
+## 2026-10-30 — R3c P1 F9 — phone New invoice chooser
+
+The actual New invoice chooser keeps four equal methods in a compact 2×2 grid on phones. Its entry warning explicitly says Photo/PDF use fictional values and do not read the uploaded invoice when Simulated mode is selected. The full retained review warning remains unchanged. Short method helpers, full translated labels, genuine role warnings, native picker inputs and the single Cancel footer remain available. Phone spacing is scoped to this chooser; the shared sheet and unrelated invoice details are unchanged.
+
+Verified six existing navigation unit tests, fresh TypeScript/build/full lint and 16 desktop/phone browser cases in 1.1 minutes. The new matrix covers EN/FA, Manager/Floor Worker, both themes, 360/390/509/760 px at 640 px height and 1440 px desktop. Body scrolling, page overflow, clipped content/glyphs, full labels, permission warnings and 2 px interaction stability are asserted. Oversized warning and tile negative controls fail the same oracle. The retained tile audit also passes after intentionally migrating the former phone one-column contract to two columns. No physical camera/library claim.
+
 ## 2026-10-30 — R3c P1 F8 — guarded active pages with retained originals
 
 Added real native Add/Remove photo controls and logical saved-PDF Remove/restore. All original bytes remain available; explicit zero-page selections never fall back. Current-authority/version/attempt guards, private projections/History, backup and accepted import retention are covered. Verified 285 affected unit/UI cases in ten files, fresh TypeScript/production build and ten English/Persian desktop/phone browser cases in 1.9 minutes, with no skips or retries. The browser regression found and separately repaired unread-draft normalization during A→B→A navigation.

@@ -469,12 +469,7 @@ function InvoiceEntryChoices({
             >
               <Camera size={22} aria-hidden="true" />
               <strong>{t("Photo", "عکس")}</strong>
-              <span>
-                {t(
-                  "Take or upload a photo; AI reads it",
-                  "عکس بگیرید یا بارگذاری کنید؛ هوش مصنوعی آن را می‌خواند",
-                )}
-              </span>
+              <span>{t("Take or choose photos", "گرفتن یا انتخاب عکس")}</span>
             </Button>
             <Button
               variant="neutral"
@@ -485,12 +480,7 @@ function InvoiceEntryChoices({
             >
               <FileText size={22} aria-hidden="true" />
               <strong>{t("PDF", "PDF")}</strong>
-              <span>
-                {t(
-                  "Upload a PDF; AI reads it",
-                  "PDF بارگذاری کنید؛ هوش مصنوعی آن را می‌خواند",
-                )}
-              </span>
+              <span>{t("Choose one PDF invoice", "انتخاب یک فاکتور PDF")}</span>
             </Button>
             <Button
               variant="neutral"
@@ -504,7 +494,7 @@ function InvoiceEntryChoices({
             >
               <PenLine size={22} aria-hidden="true" />
               <strong>{t("Manual entry", "ورود دستی")}</strong>
-              <span>{t("Type the invoice in", "فاکتور را تایپ کنید")}</span>
+              <span>{t("Type invoice details", "ورود مشخصات فاکتور")}</span>
             </Button>
             <Button
               variant="neutral"
@@ -515,12 +505,7 @@ function InvoiceEntryChoices({
             >
               <FileJson size={22} aria-hidden="true" />
               <strong>{t("JSON file", "فایل JSON")}</strong>
-              <span>
-                {t(
-                  "Add readings exported from the invoice reader",
-                  "خوانش‌های خروجی از خوانشگر فاکتور را اضافه کنید",
-                )}
-              </span>
+              <span>{t("Import reader output", "افزودن خروجی خوانشگر")}</span>
             </Button>
           </div>
           {!hasLocation && (

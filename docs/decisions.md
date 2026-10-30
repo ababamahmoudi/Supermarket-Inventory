@@ -707,3 +707,7 @@ Use a canonical actor/source/config/History fingerprint and exact current NEW-ID
 ## 2026-10-30 — R3c F8 — guarded active pages with retained originals
 
 Use dedicated source-edit commands rather than initial attachment, which creates an empty draft. Resolve fresh authority and exact invoice/version/attempt/source/content before atomically consuming a whole uploaded batch or changing selection. Every actual edit gets a fresh ready attempt and one attributed source-change activity; a genuine no-op creates neither. The service retires only the old attempt. Delayed storage may finish on retained A while B remains current; it never selects or rewrites B. PDF page counts come from protected decoding and opaque identity/source-bound witnesses, never an untrusted UI count. Saved unread drafts are not normalized as review data merely when navigation selects them.
+
+## 2026-10-30 — R3c F9 — phone New invoice chooser
+
+The actual New invoice chooser keeps four equal methods in a compact 2×2 grid on phones. Its entry warning explicitly says Photo/PDF use fictional values and do not read the uploaded invoice when Simulated mode is selected. The full retained review warning remains unchanged. Short method helpers, full translated labels, genuine role warnings, native picker inputs and the single Cancel footer remain available. Phone spacing is scoped to this chooser; the shared sheet and unrelated invoice details are unchanged.

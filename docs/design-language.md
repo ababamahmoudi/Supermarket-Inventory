@@ -1,5 +1,9 @@
 # Klead design language v1
 
+## R3c P1 F9 — phone New invoice chooser
+
+The actual New invoice chooser keeps four equal methods in a compact 2×2 grid on phones. Its entry warning explicitly says Photo/PDF use fictional values and do not read the uploaded invoice when Simulated mode is selected. The full retained review warning remains unchanged. Short method helpers, full translated labels, genuine role warnings, native picker inputs and the single Cancel footer remain available. Phone spacing is scoped to this chooser; the shared sheet and unrelated invoice details are unchanged.
+
 ## R2g Tier 1 — Approved compositions and shared corrections (2026-10-29)
 
 The [R2g reference](design-reference/r2g/README.md) wins over earlier presentation wording for the Tier 1 scenes. Re-create its measurements through actual shared primitives and scoped compositions; do not paste design-only overrides or introduce `!important`. Every phone breakpoint covers 360–760 px, including 509 px, with the existing strict alignment and 2 px interaction limits. Earlier historical contracts below remain applicable where R2g does not replace them.

@@ -1,5 +1,9 @@
 # Workflows and state machines
 
+## R3c P1 F9 — phone New invoice chooser
+
+The actual New invoice chooser keeps four equal methods in a compact 2×2 grid on phones. Its entry warning explicitly says Photo/PDF use fictional values and do not read the uploaded invoice when Simulated mode is selected. The full retained review warning remains unchanged. Short method helpers, full translated labels, genuine role warnings, native picker inputs and the single Cancel footer remain available. Phone spacing is scoped to this chooser; the shared sheet and unrelated invoice details are unchanged.
+
 ## R3c P1 F8 — guarded active pages with retained originals
 
 Before an accepted reading or manual review, Add page opens the native photo picker and Remove excludes a selected photo from the next explicit Read. Every original remains saved and viewable. For a saved PDF, Remove excludes only the logical page; Add page offers omitted pages from that same saved PDF. It never replaces the PDF or mixes it with photos. Removing every active page disables Read and simulated reading until a valid page is added. A retained original still requires the ordinary reasoned Discard flow. Completed/manual/reviewed invoices cannot use these controls to erase work.

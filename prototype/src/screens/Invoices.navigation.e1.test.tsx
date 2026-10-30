@@ -367,8 +367,6 @@ it.each(["manager", "floor_worker"] as const)(
     expect(
       within(chooser).getByRole("button", { name: "Cancel" }),
     ).toBeVisible();
-    expect(
-      within(chooser).getByText("AI reading is simulated in this demo"),
-    ).toBeVisible();
+    expect(within(chooser).getByText("Simulated mode")).toBeVisible();
   },
 );

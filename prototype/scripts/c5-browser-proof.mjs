@@ -418,7 +418,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           continue;
         }
         const gridStyle = getComputedStyle(grid);
-        const columns = phone ? 1 : 2;
+        const columns = 2;
         const gap = parseFloat(gridStyle.columnGap);
         const bounds = contentBounds(grid);
         const requiredWidth = (bounds.width - gap * (columns - 1)) / columns;
@@ -429,7 +429,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           Math.abs(parseFloat(gridStyle.rowGap) - 12) > 0.5
         )
           failures.push(
-            "Invoice source tiles need their equal two-column or phone one-column grid",
+            "Invoice source tiles need their equal two-column grid",
           );
         const textHeight = (element) => {
           const range = document.createRange();

@@ -1,5 +1,9 @@
 ## R2g Tier 1 — Current approved screen changes (2026-10-29)
 
+## R3c P1 F9 — phone New invoice chooser
+
+The actual New invoice chooser keeps four equal methods in a compact 2×2 grid on phones. Its entry warning explicitly says Photo/PDF use fictional values and do not read the uploaded invoice when Simulated mode is selected. The full retained review warning remains unchanged. Short method helpers, full translated labels, genuine role warnings, native picker inputs and the single Cancel footer remain available. Phone spacing is scoped to this chooser; the shared sheet and unrelated invoice details are unchanged.
+
 Use the byte-identical [approved R2g screenshots](design-reference/r2g/README.md) for auth, receiving, Change price and Lookup. These supersede conflicting historical presentation below; actual configuration, permissions, financial/source evidence and R3 live reading remain authoritative. Phone compositions cover the complete 360–760 px range, including 509 px.
 
 - **Sign-in/passkey/lock (B1):** centred 400 px card, configured store logo, title/subtitle, full-width fields/48 px primary action and actual full maker logo below. Password recovery is on its label row; passkey explains the simulated step; demo accounts stay demo-only.

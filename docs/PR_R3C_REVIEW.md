@@ -29,7 +29,7 @@ P1 remains after green P0. No pending row in this table is a claim of delivered 
 | 3     | F2 — exact localhost reader default                              | Delivered |
 | 4     | F6 — category for current NEW products                           | Delivered |
 | 5     | F8 — active pages and retained originals                         | Delivered |
-| 6     | F9 — phone chooser fits                                          | Planned   |
+| 6     | F9 — phone chooser fits                                          | Delivered |
 | 7     | F10 — compact actual reader settings                             | Planned   |
 | 8     | F11 — scoped safe failure details                                | Planned   |
 | 9     | K9 — shared checkboxes, pickup and independent Dashboard columns | Planned   |
@@ -218,6 +218,12 @@ The K8/F6 composition passed 218 tests, full lint/build and all six real EN/FA d
 4. Save a live draft A, create a manual draft B, and return to A. A remains editable before reading. A delayed upload still attaches only to A if navigation returns to B during storage. Reviewed/manual/completed records offer no destructive replacement path.
 
 Local source verification and independent integrated CI are recorded on PR #29.
+
+## P1 F9 — phone New invoice chooser
+
+Invoices → New invoice at 360, 390, 509 and 760 px. All four methods, the simulation warning and Cancel fit without scrolling. Floor Worker sees unavailable Manual/JSON choices and the complete reason; Manager may use them. Photo/PDF still opens the real native picker. Cancel creates no record.
+
+Verified six existing navigation unit tests, fresh TypeScript/build/full lint and 16 desktop/phone browser cases in 1.1 minutes. The new matrix covers EN/FA, Manager/Floor Worker, both themes, 360/390/509/760 px at 640 px height and 1440 px desktop. Body scrolling, page overflow, clipped content/glyphs, full labels, permission warnings and 2 px interaction stability are asserted. Oversized warning and tile negative controls fail the same oracle. The retained tile audit also passes after intentionally migrating the former phone one-column contract to two columns. No physical camera/library claim.
 
 ## After the demo — record only
 

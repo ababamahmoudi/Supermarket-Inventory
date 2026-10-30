@@ -69,12 +69,7 @@ for (const language of ["en", "fa"] as const) {
           expect(tile.overflow).toBeLessThanOrEqual(1);
           expect(tile.icon && tile.title && tile.description).toBe(true);
         }
-        if (width < 760)
-          for (let i = 1; i < 4; i++)
-            expect(
-              geometry.tiles[i].y - geometry.tiles[i - 1].bottom,
-            ).toBeGreaterThanOrEqual(10);
-        else {
+        {
           expect(
             Math.abs(geometry.tiles[0].y - geometry.tiles[1].y),
           ).toBeLessThanOrEqual(2);
@@ -84,11 +79,7 @@ for (const language of ["en", "fa"] as const) {
         }
         await expect(
           dialog.getByText(
-            word(
-              language,
-              "AI reading is simulated in this demo",
-              "خوانش هوش مصنوعی در این دمو شبیه‌سازی شده است",
-            ),
+            word(language, "Simulated mode", "حالت شبیه‌سازی‌شده"),
           ),
         ).toBeVisible();
         await dialog.screenshot({

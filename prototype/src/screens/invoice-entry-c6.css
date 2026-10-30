@@ -109,16 +109,34 @@
   .invoice-entry-choice-tile:focus-visible {
   border-color: var(--accent);
 }
-@media (max-width: 759px) {
-  .invoice-entry-choice-grid {
-    grid-template-columns: minmax(0, 1fr);
+@media (max-width: 760px) {
+  :root dialog.ui-dialog.invoice-entry-choice-dialog {
+    inline-size: 100vw;
+    max-inline-size: 100vw;
+  }
+  :root .ui-dialog.invoice-entry-choice-dialog > .ui-dialog-header {
+    padding: 16px 16px 0;
+  }
+  :root .ui-dialog.invoice-entry-choice-dialog > .ui-dialog-body {
+    padding: 12px 16px 0;
+  }
+  :root .ui-dialog.invoice-entry-choice-dialog > .ui-dialog-footer {
+    padding: 16px;
   }
   :root
     .ui-dialog.invoice-entry-choice-dialog
     .invoice-entry-choice-grid
     > .ui-button.invoice-entry-choice-tile {
+    grid-template-columns: 22px minmax(0, 1fr);
     min-block-size: 104px;
-    padding: 16px;
+    gap: 8px;
+    padding: 12px;
+  }
+  .invoice-entry-choice-tile > svg {
+    grid-row: 1;
+  }
+  .invoice-entry-choice-tile > span {
+    grid-column: 1 / -1;
   }
 }
 
