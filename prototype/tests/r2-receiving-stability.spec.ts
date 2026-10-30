@@ -134,8 +134,11 @@ for (const language of ["en", "fa"] as const) {
       );
     }
     // A correct tooltip alone cannot excuse a wrong prefix or overflowing glyphs.
-    const visibleName = row.locator(".receiving-product-name bdi");
-    const prefix = await visibleName.textContent();
+    const visibleName = row.locator(
+      ".receiving-product-name > bdi.ltr-fragment",
+    );
+    await expect(visibleName).toHaveCount(1);
+    const originalContents = await visibleName.innerHTML();
     const originalStyle = await visibleName.getAttribute("style");
     try {
       await visibleName.evaluate((element) => {
@@ -150,9 +153,9 @@ for (const language of ["en", "fa"] as const) {
       }, editedName);
       expect((await fittedNameEvidence(row, editedName)).fits).toBe(false);
     } finally {
-      await visibleName.evaluate((element, text) => {
-        element.textContent = text;
-      }, prefix);
+      await visibleName.evaluate((element, contents) => {
+        element.innerHTML = contents;
+      }, originalContents);
       await visibleName.evaluate((element, style) => {
         if (style === null) element.removeAttribute("style");
         else element.setAttribute("style", style);

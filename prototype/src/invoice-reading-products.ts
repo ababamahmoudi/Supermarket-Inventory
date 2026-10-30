@@ -115,6 +115,15 @@ function individualSizes(value: string) {
   const pattern = new RegExp(`\\b(${amount})\\s*(${sizeUnit})\\b`, "gi");
   for (const match of normalized.matchAll(pattern)) {
     if (match.index > 0 && /[-−]/u.test(normalized[match.index - 1])) continue;
+    const perCarton = /^\s*(?:\/\s*|per\s+)(?:case|box|carton|ctn)\b/i.test(
+      normalized.slice(match.index + match[0].length),
+    );
+    const measuredLeaf = new RegExp(`${amount}\\s*[x×*]\\s*$`, "i").test(
+      normalized.slice(0, match.index),
+    );
+    // A direct 10 lb/case describes the whole case; 12 × 330 g/case
+    // explicitly identifies a measured individual item inside the carton.
+    if (perCarton && !measuredLeaf) continue;
     const number = numericText(match[1]);
     if (number === "0") continue;
     sizes.add(`${number} ${canonicalSizeUnit(match[2])}`);

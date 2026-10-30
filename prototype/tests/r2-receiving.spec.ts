@@ -126,7 +126,7 @@ for (const language of ["en", "fa"] as const) {
       await setReceivingCategory(page, editor, language);
       if (index === 0) {
         await expect(editor.locator("#invoice-line-0-name-en")).toHaveValue(
-          "Aurora Test Chickpeas 500ml",
+          "Aurora Test Chickpeas 500 ml",
         );
         await expect(
           editor.getByRole("button", { name: /^Looks right:/ }),

@@ -305,6 +305,13 @@ describe("R3c K2 individual size and carton identity", () => {
     ["6x2LTS", "2 l"],
     ["RiverBrand Jam 24 x 330 GR", "330 g"],
     ["1 × 5LBS", "5 lb"],
+    ["10 LB", "10 lb"],
+    ["10 LB / CASE", ""],
+    ["Spice 10 lb per case", ""],
+    ["10 kg/box", ""],
+    ["10 kg per carton", ""],
+    ["12 × 330g/case", "330 g"],
+    ["3 × 4 × 500g per carton", "500 g"],
     ["4 x 12 OZ", "12 oz"],
     ["500ML", "500 ml"],
     ["330 g / 330gr", "330 g"],
@@ -319,6 +326,32 @@ describe("R3c K2 individual size and carton identity", () => {
       expect(readingProductUnitSize(description)).toBe(size);
     },
   );
+
+  it("keeps whole-case weight in the pack without adding it to a product name", () => {
+    const input = Object.freeze({
+      description: "Fictional Alder Spice",
+      packSize: "10 LB / CASE",
+      unitsPerCase: 1,
+      unit: "case",
+    });
+    expect(splitInvoiceProductDescription(input)).toEqual({
+      name: "Fictional Alder Spice",
+      pack_size: "10 lb / CASE",
+      units_per_case: 1,
+      uncertain: false,
+    });
+    expect(input.packSize).toBe("10 LB / CASE");
+    expect(
+      splitInvoiceProductDescription({
+        description: "Fictional Alder Spice 10 lb/case",
+      }),
+    ).toEqual({
+      name: "Fictional Alder Spice",
+      pack_size: "1 × 10 lb",
+      units_per_case: 1,
+      uncertain: false,
+    });
+  });
 
   it.each([
     ["RiverBrand Fig Jam 330G 12 Per Carton", "RiverBrand Fig Jam 330 g"],
