@@ -4,19 +4,19 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 
 ## Delivery order
 
-| Order | Item                                                 | Status            |
-| ----- | ---------------------------------------------------- | ----------------- |
-| 1     | K0 — final approvals and page error recovery         | Delivered         |
-| 2     | K1 — unchanged known products green                  | Delivered         |
-| 3     | K2 — printed-name matching and checked-values import | Delivered         |
-| 4     | K6 — missing-paper payment default                   | Delivered         |
-| 5     | F4 — retained Discard / Cancelled / Undo             | Delivered         |
-| 6     | F7 — truthful processing header                      | Delivered         |
-| 7     | F3 — native picker before draft creation             | Delivered         |
-| 8     | K3 — configurable .49 → .99                          | Delivered         |
-| 9     | K4 — selling-price proposal in the line editor       | Delivered         |
-| 10    | K5 — reading survives navigation                     | Delivered         |
-| 11    | K7 — compact truthful reading progress               | In implementation |
+| Order | Item                                                 | Status    |
+| ----- | ---------------------------------------------------- | --------- |
+| 1     | K0 — final approvals and page error recovery         | Delivered |
+| 2     | K1 — unchanged known products green                  | Delivered |
+| 3     | K2 — printed-name matching and checked-values import | Delivered |
+| 4     | K6 — missing-paper payment default                   | Delivered |
+| 5     | F4 — retained Discard / Cancelled / Undo             | Delivered |
+| 6     | F7 — truthful processing header                      | Delivered |
+| 7     | F3 — native picker before draft creation             | Delivered |
+| 8     | K3 — configurable .49 → .99                          | Delivered |
+| 9     | K4 — selling-price proposal in the line editor       | Delivered |
+| 10    | K5 — reading survives navigation                     | Delivered |
+| 11    | K7 — compact truthful reading progress               | Delivered |
 
 P1 remains after green P0. No pending row in this table is a claim of delivered behavior.
 
@@ -141,6 +141,15 @@ Integrated verification passed 31 focused units and static/build checks. Browser
 5. On a phone, Ready and Undo sit above the actual Post/footer controls and each other, including Persian/RTL and a changing footer height. Test Post, New invoice, Lookup and Undo with the notice visible.
 
 Integrated service/navigation/footer verification passed 95 units, lint and build. The complete final R3/F0/background/footer matrix passed all 58 browser cases in 8.1 minutes, with no retries or skips. The three-file K3 domain-fixture repair separately passed all 52 tests, and the final composed build passed. Independent full CI is tracked on PR #29. All automated originals/responses are fictional; physical-device/local-reader rehearsal remains on Ali's devices.
+
+## K7 — truthful compact reading progress
+
+1. With Live and the real local reader configured, select a fictional photo/PDF and press **Read invoice**. Check actual elapsed time beside the estimated usually-about-a-minute caption. The indeterminate bar moves without claiming a percentage.
+2. When the reader returns, Reading becomes a check. **Finding products** and **Calculating prices** light up while actual protected local work runs, then review opens. These local steps can be brief. Navigating to Lookup still preserves the request and shows the K5 Ready/Open notice.
+3. At desktop widths **1440 and 1000**, the original and progress card share the top edge in two columns. At phone widths **390 and 509**, all three step chips stay in one row with whole words and Cancel at the end. Repeat in Persian/dark.
+4. Enable the device/browser reduced-motion setting: animation stops, but elapsed time and actual work continue. Cancel stops the current transport; a held late response cannot import or show Ready. Discard/Undo and full-reload recovery retain their explicit new-read rules.
+
+Integrated verification passed 92 protected matching/paint/service/navigation units, lint and a fresh build. All 34 final selected geometry/509/F0/success/Cancel/stale-target browser cases passed in 4.8 minutes, with no retries or skips. Independent full CI is tracked on PR #29. Root and owner visually reviewed current phone and desktop screenshots. Fictional intercepted responses were used for automation; real-provider/physical-device rehearsal is not claimed.
 
 ## After the demo — record only
 

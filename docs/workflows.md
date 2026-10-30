@@ -1,5 +1,11 @@
 # Workflows and state machines
 
+## R3c K7 — truthful compact reading progress
+
+Start a saved live source with Read invoice. Reading the invoice shows actual elapsed time and an animated indeterminate bar. Once the reader returns, its step becomes a check; Finding products then runs the real protected matcher, followed by Calculating prices around the guarded import. Local phases are quick actual work, not a timed simulation or fake percentage.
+
+At desktop widths including 1440 and 1000, the compact card sits beside the original in two columns. Phone layout stacks the original trigger and card, with one row of three chips and whole natural words. Cancel stays at the card end. Reduced motion stops the animation while actual elapsed time/work continue. K5 navigation/background completion and explicit Cancel/Discard/Read again guards remain.
+
 ## R3c K5 — app-level background reading
 
 configure Live and a test reader, select an invoice photo, press Read invoice, then navigate to Lookup. Enter a query and leave its field focused. Let the response finish: the route, query and focus remain; the ready notice appears. Click Open to review the original saved invoice. Repeat while a second invoice is selected: only the first saved invoice fills. Repeat with Discard and Undo while a response is held: no late import or toast occurs, and another read requires an explicit new action. Reload during an active read: Read again is offered without an automatic new request.

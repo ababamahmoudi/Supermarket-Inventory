@@ -1,3 +1,9 @@
+## 2026-10-30 — R3c K7 — truthful compact reading progress
+
+- Added actual elapsed reading time, an indeterminate bar and truthful successive matching/calculation phases. Protected matching returns counts only; exact source/attempt/current-actor and final import guards remain.
+- Place compact three-chip progress beside the original at desktop widths of 1000 and 1440, stack naturally on phones, keep Cancel at the end and respect reduced motion. Genuine geometry/word/glyph/paint/animation negatives retain strict limits.
+- Integrated verification passed 92 focused units, full lint/build; all 34 final selected browser cases passed in 4.8 minutes, without retries or skips. Independent full CI is tracked on PR #29. Final screenshots were visually reviewed at EN390 and FA1000/509.
+
 ## 2026-10-30 — R3c K5 — app-level background reading
 
 - Moved live requests into an app-level guarded service, preserving accepted transport settings across route/invoice/settings changes. Completion fills only the saved target and offers safe explicit Open without stealing focus; actual Cancel, Discard/Undo, reload and fresh authority/source guards remain.

@@ -674,3 +674,9 @@ Submit every keystroke through the existing serialized business queue, chain onl
 Keep the accepted paid reader request in an application-level provider beneath DemoProvider and outside routed page content. Navigating, changing the selected invoice or editing reader settings must not dispose it. Fresh canonical actor/session/source/attempt/version checks still control the final write to its exact saved target. Separate transport retirement from successful Discard so no late answer or Undo can revive an old attempt.
 
 Offer a safe ready notice with explicit Open/Dismiss rather than automatic navigation. Preserve pending Timesheets save ownership and current focus. Measure actual footer/Undo geometry for page feedback rather than assuming a fixed bottom offset; retain existing dialog-owned feedback.
+
+## 2026-10-30 — R3c K7 — truthful compact reading progress
+
+Show real pipeline work rather than static future-step labels or simulated progress. Add an authorized counts-only matching preflight, and keep actual import/calculation as the final guarded write. Recheck source/attempt/version and current actor across local phases; preserve K1/K2 source-readable aliases, K6 term precedence and all cancellation rules.
+
+Use bounded browser paint opportunities to expose quick real phases without a fabricated progress percentage or arbitrary minimum duration. Hidden documents must not stall behind requestAnimationFrame. Keep the original and card beside each other at 1000/1440, three compact chips on phones, end Cancel, real elapsed time and reduced-motion behavior.

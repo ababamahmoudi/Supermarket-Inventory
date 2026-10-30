@@ -20,7 +20,6 @@ import {
 import {
   retainedLiveFiles as retainedFiles,
   liveReadingIdentity,
-  type LiveReadingStage as Stage,
   type LiveReadingDetail,
 } from "../live-invoice-reading-service";
 import type { InvoiceReadDTO } from "../invoice-projections";
@@ -28,6 +27,7 @@ import { FitText } from "../FitText";
 import { useDemo } from "../store";
 import { Button, Card, CardHeader, IconButton } from "../ui";
 import "./live-invoice-reading.css";
+import { LiveReadingProgress } from "./LiveReadingProgress";
 
 type Translate = (en: string, fa: string) => string;
 const demoReadingAvailable = import.meta.env.VITE_DEMO_BUILD !== "false";
@@ -193,14 +193,6 @@ export function LiveInvoiceUpload({
   );
 }
 
-function stepText(stage: Stage, t: Translate) {
-  if (stage === "preparing")
-    return t("Preparing pages…", "در حال آماده‌سازی صفحه‌ها…");
-  if (stage === "finding") return t("Finding products", "یافتن کالاها");
-  if (stage === "calculating")
-    return t("Calculating prices", "محاسبهٔ قیمت‌ها");
-  return t("Reading the invoice", "خواندن فاکتور");
-}
 function readingDetail(code: LiveReadingDetail | undefined, t: Translate) {
   if (code === "pdf_pages")
     return t(
@@ -391,42 +383,17 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
       <CardHeader
         title={
           busy
-            ? stepText(stage, t)
+            ? t("Reading with AI…", "در حال خواندن با هوش مصنوعی…")
             : t("Read this invoice", "خواندن این فاکتور")
         }
       />
       {busy ? (
-        <>
-          <p role="status" className="live-reading-time">
-            {stage === "preparing"
-              ? t("Preparing pages…", "در حال آماده‌سازی صفحه‌ها…")
-              : t("Reading with AI…", "در حال خواندن با هوش مصنوعی…")}{" "}
-            <bdi>{activity.elapsed}</bdi>
-          </p>
-          <p className="helper">
-            {t("Usually 1–2 minutes", "معمولاً ۱ تا ۲ دقیقه")}
-          </p>
-          <ol className="live-reading-steps">
-            <li
-              aria-current={
-                stage === "preparing" || stage === "reading"
-                  ? "step"
-                  : undefined
-              }
-            >
-              {t("Reading the invoice", "خواندن فاکتور")}
-            </li>
-            <li aria-current={stage === "finding" ? "step" : undefined}>
-              {t("Finding products", "یافتن کالاها")}
-            </li>
-            <li aria-current={stage === "calculating" ? "step" : undefined}>
-              {t("Calculating prices", "محاسبهٔ قیمت‌ها")}
-            </li>
-          </ol>
-          <Button variant="neutral" onClick={() => void cancel()}>
-            {t("Cancel", "انصراف")}
-          </Button>
-        </>
+        <LiveReadingProgress
+          stage={stage}
+          elapsed={activity.elapsed}
+          onCancel={cancel}
+          t={t}
+        />
       ) : (
         <>
           <p role={failed ? "alert" : "status"}>

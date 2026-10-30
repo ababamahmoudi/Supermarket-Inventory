@@ -1,4 +1,6 @@
 import { beginAppWork } from "./app-work";
+import { inspectLiveInvoiceMatching } from "./invoice-live-matching";
+import { paintLiveReadingStage } from "./live-reading-paint";
 import type { AuthenticatedActor } from "./authority-types";
 import type { E1DemoContextValue } from "./e1-demo-context";
 import {
@@ -500,7 +502,24 @@ export class LiveInvoiceReadingService {
         id: entry.invoiceId,
       });
       this.assertActive(entry);
+      await paintLiveReadingStage(entry.controller.signal);
+      await this.ports().query(
+        "invoices.edit",
+        scope(entry),
+        (state, actor) => {
+          this.assertActive(entry);
+          this.assertIdentity(entry, actor);
+          return inspectLiveInvoiceMatching(state, actor, {
+            invoice_id: entry.invoiceId,
+            attempt_id: attempt.attempt_id,
+            exported,
+          });
+        },
+      );
+      this.assertActive(entry);
       this.update(entry, { stage: "calculating" });
+      await paintLiveReadingStage(entry.controller.signal);
+      this.assertActive(entry);
       entry.applying = true;
       const release = beginAppWork();
       try {

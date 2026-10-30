@@ -1,5 +1,13 @@
 # Data model
 
+## R3c K7 — truthful compact reading progress
+
+Transient live-service stages are preparing, reading, finding and calculating. Actual elapsed time derives from the accepted attempt's started_at; the reading bar is indeterminate, with an estimated usually-about-a-minute caption and no invented percentage.
+
+The finding stage calls a fresh protected inspectLiveInvoiceMatching query for the exact accepted target/attempt/source/version and current actor. It uses the final K1/K2 resolver and only posted actor-readable printed aliases; only aggregate counts leave the query, with no matching keys, source IDs, cost objects or business writes. Calculating surrounds the actual guarded importer/pricing work, where K6 printed terms still take precedence over defaults. Source/attempt/actor and cancellation checks remain before matching and final apply.
+
+Bounded real paint yields let visible local phases render; hidden documents complete without waiting indefinitely for animation frames. Abort cleans up frames, timers and visibility listeners. Presentation stage/clock state is not persisted as approval, supplier, product or financial evidence.
+
 ## R3c K5 — app-level background reading
 
 A live invoice read now belongs to an app-level `LiveInvoiceReadingService`, provided beneath `DemoProvider` and outside the routed `App` subtree. Leaving the receiving screen or switching the current invoice, handling location, reader address or reading mode preserves the already accepted request and its captured settings. Completion applies the existing guarded importer to only its saved invoice; it never switches the current invoice or route automatically. Cancel aborts the exact current attempt. A separately successful Discard retires the old transport without writing another Cancelled transition. Full reload still requires an explicit Read again.

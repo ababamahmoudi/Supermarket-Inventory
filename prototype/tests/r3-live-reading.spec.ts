@@ -192,7 +192,7 @@ for (const language of ["en", "fa"] as const) {
     const progress = page.getByTestId("live-reading-progress");
     await expect(progress).toBeVisible();
     await expect(progress).toContainText(
-      t(language, "Usually 1–2 minutes", "معمولاً ۱ تا ۲ دقیقه"),
+      t(language, "usually about a minute", "معمولاً حدود یک دقیقه"),
     );
     await expect(
       progress.getByRole("button", {
@@ -212,9 +212,9 @@ for (const language of ["en", "fa"] as const) {
     const elapsedAfter = await elapsedSeconds();
     expect(elapsedAfter - elapsedBefore).toBeGreaterThanOrEqual(72);
     expect(elapsedAfter - elapsedBefore).toBeLessThanOrEqual(73);
-    await expect(progress.locator('[aria-current="step"]')).toHaveText(
-      t(language, "Reading the invoice", "خواندن فاکتور"),
-    );
+    await expect(
+      progress.locator('[aria-current="step"] .live-reading-step-label'),
+    ).toHaveText(t(language, "Reading the invoice", "خواندن فاکتور"));
     const processing = (await readCanonicalBusinessEvidence(page)).invoice;
     expect(processing.id).toBe(original.id);
     expect(processing.status).toBe("reading");
