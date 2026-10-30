@@ -109,6 +109,7 @@ export async function retainedLiveFiles(
       company_id: companyId,
       invoice_id: invoiceId,
       page,
+      purpose: "reading",
     });
     files.push(
       new File([original.source], original.name, { type: original.type }),
@@ -338,6 +339,7 @@ export class LiveInvoiceReadingService {
       return;
     entry.retired = true;
     this.cancel(companyId, invoiceId, expectedAttemptId);
+    this.update(entry, { failure: false, detailCode: undefined });
   };
   dismissReady = (attemptId: string) => {
     this.ready = this.ready.filter((notice) => notice.attemptId !== attemptId);
@@ -477,7 +479,11 @@ export class LiveInvoiceReadingService {
         entry.controller.signal,
       );
       const images = await untilReadingCancelled(
-        prepareLiveReaderImages(files, entry.controller.signal),
+        prepareLiveReaderImages(
+          files,
+          entry.controller.signal,
+          attempt.pdf_pages,
+        ),
         entry.controller.signal,
       );
       this.assertActive(entry);

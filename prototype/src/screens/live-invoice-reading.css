@@ -58,3 +58,14 @@
     display: none;
   }
 }
+
+.live-invoice-page-editor {
+  min-inline-size: 0;
+}
+.live-pdf-page-choices {
+  display: grid;
+  gap: 12px;
+}
+.live-invoice-page-editor > .helper {
+  margin-block: 8px;
+}

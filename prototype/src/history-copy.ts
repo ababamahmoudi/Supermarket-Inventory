@@ -82,6 +82,7 @@ const actions: Record<string, [string, string]> = {
   ],
   "Resubmit approval": ["Resubmit approval", "ارسال دوباره درخواست تأیید"],
   "Create invoice draft": ["Create invoice draft", "ایجاد پیش‌نویس فاکتور"],
+  "Invoice pages changed": ["Invoice pages changed", "تغییر صفحه‌های فاکتور"],
   "Cancel invoice": ["Discard invoice", "کنار گذاشتن فاکتور"],
   "Distinguish suppliers": ["Distinguish suppliers", "تأمین‌کنندگان متفاوت"],
   "Activate supplier without approval": [

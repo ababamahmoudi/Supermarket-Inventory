@@ -703,3 +703,7 @@ Use the prompt's exact localhost fallback instead of deriving a reader target fr
 ## 2026-10-30 — R3c F6 — fresh atomic NEW-product categories
 
 Use a canonical actor/source/config/History fingerprint and exact current NEW-ID set rather than invoice version alone. Apply one candidate target and one attributed reversible Activity, preserving active workspace and current cost authority for retained Undo. Call the protected command directly so a category-only action does not normalize unrelated missing paper fields. Shared category changes preserve a K8 answer only when it was valid before the intentional edit; stale source evidence cannot be refreshed into validity. Keep explicit tax, other questions, existing Products and financial records untouched.
+
+## 2026-10-30 — R3c F8 — guarded active pages with retained originals
+
+Use dedicated source-edit commands rather than initial attachment, which creates an empty draft. Resolve fresh authority and exact invoice/version/attempt/source/content before atomically consuming a whole uploaded batch or changing selection. Every actual edit gets a fresh ready attempt and one attributed source-change activity; a genuine no-op creates neither. The service retires only the old attempt. Delayed storage may finish on retained A while B remains current; it never selects or rewrites B. PDF page counts come from protected decoding and opaque identity/source-bound witnesses, never an untrusted UI count. Saved unread drafts are not normalized as review data merely when navigation selects them.

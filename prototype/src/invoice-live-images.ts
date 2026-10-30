@@ -1,3 +1,4 @@
+import { LIVE_READER_MAX_PDF_PAGES } from "./live-reader-limits";
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { PDFDocumentLoadingTask, RenderTask } from "pdfjs-dist";
 
@@ -7,7 +8,7 @@ export interface LiveReaderImage {
 }
 
 export const LIVE_READER_MAX_SIDE = 2400;
-export const LIVE_READER_MAX_PDF_PAGES = 10;
+export { LIVE_READER_MAX_PDF_PAGES } from "./live-reader-limits";
 export const LIVE_READER_JPEG_QUALITY = 0.85;
 export const LIVE_READER_PDF_DPI = 200;
 
@@ -17,6 +18,7 @@ export type LiveImagePreparationErrorCode =
   | "image_decode"
   | "pdf_decode"
   | "pdf_pages"
+  | "pdf_selection"
   | "canvas";
 
 export class LiveImagePreparationError extends Error {
@@ -127,7 +129,41 @@ async function preparePhoto(file: File, signal?: AbortSignal) {
   }
 }
 
-async function preparePdf(file: File, signal?: AbortSignal) {
+/** Read genuine PDF metadata without altering or rendering its retained bytes. */
+export async function livePdfPageCount(file: File, signal?: AbortSignal) {
+  aborted(signal);
+  let task: PDFDocumentLoadingTask | undefined;
+  const cancel = () => void task?.destroy().catch(() => undefined);
+  signal?.addEventListener("abort", cancel, { once: true });
+  try {
+    const [{ getDocument, GlobalWorkerOptions }, bytes] = await withAbort(
+      Promise.all([import("pdfjs-dist"), file.arrayBuffer()]),
+      signal,
+    );
+    aborted(signal);
+    GlobalWorkerOptions.workerSrc = workerUrl;
+    task = getDocument({ data: new Uint8Array(bytes), isEvalSupported: false });
+    task.onPassword = cancel;
+    const pdf = await withAbort(task.promise, signal);
+    aborted(signal);
+    if (!Number.isSafeInteger(pdf.numPages) || pdf.numPages < 1)
+      throw new LiveImagePreparationError("pdf_decode");
+    return pdf.numPages;
+  } catch (error) {
+    aborted(signal);
+    if (error instanceof LiveImagePreparationError) throw error;
+    throw new LiveImagePreparationError("pdf_decode");
+  } finally {
+    signal?.removeEventListener("abort", cancel);
+    await task?.destroy().catch(() => undefined);
+  }
+}
+
+async function preparePdf(
+  file: File,
+  signal?: AbortSignal,
+  selection?: readonly number[],
+) {
   let task: PDFDocumentLoadingTask | undefined;
   let render: RenderTask | undefined;
   const cancel = () => {
@@ -150,8 +186,21 @@ async function preparePdf(file: File, signal?: AbortSignal) {
     if (pdf.numPages > LIVE_READER_MAX_PDF_PAGES)
       throw new LiveImagePreparationError("pdf_pages", pdf.numPages);
     if (!pdf.numPages) throw new LiveImagePreparationError("pdf_decode");
+    const selected =
+      selection ??
+      Array.from({ length: pdf.numPages }, (_, index) => index + 1);
+    if (
+      !Array.isArray(selected) ||
+      !selected.length ||
+      new Set(selected).size !== selected.length ||
+      selected.some(
+        (page) =>
+          !Number.isSafeInteger(page) || page < 1 || page > pdf.numPages,
+      )
+    )
+      throw new LiveImagePreparationError("pdf_selection");
     const pages: LiveReaderImage[] = [];
-    for (let index = 1; index <= pdf.numPages; index++) {
+    for (const index of selected) {
       aborted(signal);
       const page = await withAbort(pdf.getPage(index), signal);
       const requested = page.getViewport({ scale: LIVE_READER_PDF_DPI / 72 });
@@ -198,9 +247,15 @@ async function preparePdf(file: File, signal?: AbortSignal) {
 export async function prepareLiveReaderImages(
   files: readonly File[],
   signal?: AbortSignal,
+  pdfPages?: readonly number[],
 ): Promise<LiveReaderImage[]> {
   aborted(signal);
   if (!files.length) throw new LiveImagePreparationError("empty");
+  if (
+    pdfPages !== undefined &&
+    (files.length !== 1 || files[0].type !== "application/pdf")
+  )
+    throw new LiveImagePreparationError("pdf_selection");
   const images: LiveReaderImage[] = [];
   for (const file of files) {
     aborted(signal);
@@ -208,7 +263,7 @@ export async function prepareLiveReaderImages(
       file.type === "application/pdf" ||
       (!file.type && /\.pdf$/i.test(file.name))
     )
-      images.push(...(await preparePdf(file, signal)));
+      images.push(...(await preparePdf(file, signal, pdfPages)));
     else if (
       file.type.startsWith("image/") ||
       (!file.type &&

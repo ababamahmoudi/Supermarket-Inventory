@@ -9,7 +9,10 @@ import {
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { LiveInvoiceReading } from "./LiveInvoiceReading";
 import { LiveInvoiceReadingProvider } from "../LiveInvoiceReadingProvider";
-import { useLiveInvoiceReadingService } from "../live-invoice-reading-context";
+import {
+  useLiveInvoiceReadingService,
+  useLiveInvoiceReadingOperation,
+} from "../live-invoice-reading-context";
 import type { InvoiceReadDTO } from "../invoice-projections";
 import type { useDemo } from "../store";
 import { configSeed } from "../config";
@@ -23,12 +26,17 @@ const ports = vi.hoisted(() => ({
   settle: vi.fn(),
   apply: vi.fn(),
   command: vi.fn(),
+  selection: vi.fn(),
 }));
 let context: ReturnType<typeof useDemo>;
 vi.mock("../store", () => ({ useDemo: () => context }));
 vi.mock("../invoice-file-access", () => ({
   loadInvoiceOriginal: ports.load,
   storeInvoiceUpload: vi.fn(),
+}));
+vi.mock("../invoice-live-pdf-pages", () => ({
+  loadLiveOriginalSelection: ports.selection,
+  inspectLivePdfPages: vi.fn(),
 }));
 vi.mock("../invoice-live-images", () => ({
   prepareLiveReaderImages: ports.prepare,
@@ -44,6 +52,9 @@ vi.mock("../invoice-live-reading", () => ({
   settleLiveInvoiceReading: ports.settle,
   applyLiveInvoiceReading: ports.apply,
   reorderLiveInvoiceOriginals: vi.fn(),
+  addLiveInvoicePages: vi.fn(),
+  removeLiveInvoicePage: vi.fn(),
+  selectLiveInvoicePdfPages: vi.fn(),
   useSimulatedLiveInvoiceReading: vi.fn(),
 }));
 const t = (en: string) => en;
@@ -87,6 +98,12 @@ beforeEach(() => {
     query: vi.fn(),
     command: ports.command,
   } as unknown as ReturnType<typeof useDemo>;
+  ports.selection.mockResolvedValue({
+    count: 1,
+    pdf: false,
+    selected: null,
+    editable: true,
+  });
   ports.load.mockResolvedValue({
     source: new Blob(["fictional original"], { type: "image/png" }),
     type: "image/png",
@@ -169,6 +186,51 @@ it("cancels preparation and retains recovery without waiting for its promise", a
   );
   expect(screen.getByRole("button", { name: "Enter by hand" })).toBeVisible();
   expect(appWorkPending()).toBe(false);
+});
+it("prepares the canonical PDF selection and uses reading-purpose original access", async () => {
+  ports.begin.mockReturnValue({
+    invoice_id: "fictional-live-draft",
+    attempt_id: "fictional-processing-attempt",
+    branch: "fictional-location",
+    started_at: new Date().toISOString(),
+    original_sha256s: ["a".repeat(64)],
+    pdf_pages: [2],
+  });
+  await ready();
+  await act(async () =>
+    fireEvent.click(screen.getByRole("button", { name: "Read invoice" })),
+  );
+  expect(ports.prepare).toHaveBeenCalledWith(
+    [expect.any(File)],
+    expect.any(AbortSignal),
+    [2],
+  );
+  expect(
+    ports.load.mock.calls.every((call) => call[1].purpose === "reading"),
+  ).toBe(true);
+  await act(async () =>
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" })),
+  );
+});
+it("keeps the empty active selection empty while allowing a photo to be added", async () => {
+  ports.selection.mockResolvedValue({
+    count: 0,
+    pdf: false,
+    selected: null,
+    editable: true,
+  });
+  render(<LiveInvoiceReading invoice={draft()} />, {
+    wrapper: LiveInvoiceReadingProvider,
+  });
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Add page" })).toBeEnabled(),
+  );
+  expect(screen.getByRole("button", { name: "Read invoice" })).toBeDisabled();
+  expect(ports.load).not.toHaveBeenCalled();
+  expect(ports.begin).not.toHaveBeenCalled();
+  expect(
+    screen.getByText("No pages selected for reading. Add a page to continue."),
+  ).toBeVisible();
 });
 it("keeps the accepted request when the configured reader changes", async () => {
   const view = await ready();
@@ -264,6 +326,12 @@ it("refreshes the protected page preview when an external reorder changes only t
     file_name: "fictional-A.png",
     original_page_count: 3,
   };
+  ports.selection.mockResolvedValue({
+    count: 3,
+    pdf: false,
+    selected: null,
+    editable: true,
+  });
   const view = render(<LiveInvoiceReading invoice={invoice} />, {
     wrapper: LiveInvoiceReadingProvider,
   });
@@ -314,6 +382,12 @@ it("keeps interrupted Processing recovery available while disabling impossible p
       attempt_id: "interrupted-processing-attempt",
     },
   };
+  ports.selection.mockResolvedValue({
+    count: 3,
+    pdf: false,
+    selected: null,
+    editable: true,
+  });
   const view = render(<LiveInvoiceReading invoice={invoice} />, {
     wrapper: LiveInvoiceReadingProvider,
   });
@@ -513,4 +587,39 @@ it("retires only the exact discarded transport without an extra canonical settle
   expect(ports.settle).not.toHaveBeenCalled();
   expect(ports.apply).not.toHaveBeenCalled();
   expect(screen.queryByTestId("live-reading-ready")).toBeNull();
+});
+
+function RetiredFailureControls() {
+  const operation = useLiveInvoiceReadingOperation(draft());
+  return (
+    <>
+      <RetireControls />
+      <output data-testid="retired-failure">{String(operation.failure)}</output>
+    </>
+  );
+}
+it("retires only the accepted failed source snapshot without keeping a stale failure on its replacement", async () => {
+  ports.prepare.mockResolvedValue([{ mime: "image/jpeg", data: "fictional" }]);
+  ports.request.mockRejectedValue(new TypeError("Fictional network failure"));
+  const view = await ready();
+  await act(async () =>
+    fireEvent.click(screen.getByRole("button", { name: "Read invoice" })),
+  );
+  await screen.findByText(
+    "The AI reading didn't finish. Your original is saved.",
+  );
+  const settlements = ports.settle.mock.calls.length;
+  await act(async () => view.rerender(<RetiredFailureControls />));
+  expect(screen.getByTestId("retired-failure")).toHaveTextContent("true");
+  await act(async () =>
+    fireEvent.click(screen.getByRole("button", { name: "Retire old attempt" })),
+  );
+  expect(screen.getByTestId("retired-failure")).toHaveTextContent("true");
+  await act(async () =>
+    fireEvent.click(
+      screen.getByRole("button", { name: "Retire accepted attempt" }),
+    ),
+  );
+  expect(screen.getByTestId("retired-failure")).toHaveTextContent("false");
+  expect(ports.settle).toHaveBeenCalledTimes(settlements);
 });

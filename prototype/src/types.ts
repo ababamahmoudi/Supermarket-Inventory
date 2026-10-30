@@ -522,6 +522,10 @@ export type DemoInvoice = Omit<
       file_size: number;
       original_sha256: string;
     }[];
+    /** Private removed sources; bytes and their relation to this invoice are retained. */
+    retained_original_pages?: NonNullable<DemoInvoice["original_pages"]>;
+    /** Explicit logical pages of the one retained PDF; absent means every page. */
+    pdf_page_selection?: number[];
     low_confidence_fields?: string[];
     calculated_fields?: string[];
     calculated_from_lines?: boolean;

@@ -386,6 +386,7 @@ export function originalReferences(invoice: DemoInvoice) {
       [
         invoice.file_data,
         ...(invoice.original_pages ?? []).map((p) => p.file_data),
+        ...(invoice.retained_original_pages ?? []).map((p) => p.file_data),
       ].filter((value): value is string => !!value),
     ),
   ];

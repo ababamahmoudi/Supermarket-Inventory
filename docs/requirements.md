@@ -1,5 +1,9 @@
 # Requirements (current owner workflow, C9 — 2026-10-19)
 
+## R3c P1 F8 — guarded active pages with retained originals
+
+Before an accepted reading or manual review, Add page opens the native photo picker and Remove excludes a selected photo from the next explicit Read. Every original remains saved and viewable. For a saved PDF, Remove excludes only the logical page; Add page offers omitted pages from that same saved PDF. It never replaces the PDF or mixes it with photos. Removing every active page disables Read and simulated reading until a valid page is added. A retained original still requires the ordinary reasoned Discard flow. Completed/manual/reviewed invoices cannot use these controls to erase work.
+
 ## R3c P1 F6 — category for NEW products
 
 An authorized receiving person chooses one configured active category for the exact current NEW-line set in one protected atomic action. Other first-time questions remain amber and unconfirmed. Existing Products, explicit tax, paper/source/cost/quantity and financial records remain unchanged; inferred tax and existing calculated-header provenance refresh narrowly. Stale/foreign/posted/processing/correction actions cannot mutate the invoice.

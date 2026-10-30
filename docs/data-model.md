@@ -1,5 +1,9 @@
 # Data model
 
+## R3c P1 F8 — guarded active pages with retained originals
+
+For unread live drafts, `original_pages` is the explicit ordered photo reading selection. An explicit empty array stays empty. Removed logical photos move to private retained-original evidence; duplicate-byte logical sources remain distinct. A saved PDF stays one full original and an optional private numeric selection identifies its active logical pages. Ordinary invoice/workspace DTOs omit archive/selection internals; general History omits the archive. Original viewing and backup retain all source evidence. Accepted imports and explicit manual/simulated recovery preserve the archive and PDF selection.
+
 ## R3c P1 F6 — one protected category choice for current NEW products
 
 - Beside Invoice lines, an authorized draft/review receiver sees **Set category for N new products** for the actual current `NEW` lines. Correction, Processing, Posted, Cancelled and no-NEW views omit it. The shared translated Dialog and searchable Select use configured active pricing categories.

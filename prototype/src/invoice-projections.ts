@@ -28,6 +28,7 @@ import {
 import type { LiveInvoiceReadingView } from "./invoice-live-reading-types";
 import { freeCaseView } from "./invoice-free-cases";
 import { currentKnownDelivery } from "./invoice-known-delivery";
+import { retainedInvoiceOriginalPages } from "./invoice-original-pages";
 
 type InvoiceLineMoney =
   | "paper_line_total"
@@ -71,6 +72,8 @@ export type InvoiceView = Omit<
   DemoInvoice,
   | "file_data"
   | "original_pages"
+  | "retained_original_pages"
+  | "pdf_page_selection"
   | "reading_record"
   | "live_reading"
   | "other_charges"
@@ -494,14 +497,10 @@ export function invoiceView(
           },
         }
       : {}),
-    original_available: Boolean(
-      costs &&
-      ((original.file_data && original.file_name) ||
-        original.original_pages?.length),
-    ),
+    original_available:
+      costs && retainedInvoiceOriginalPages(original).length > 0,
     original_page_count: costs
-      ? original.original_pages?.length ||
-        (original.file_data && original.file_name ? 1 : 0)
+      ? retainedInvoiceOriginalPages(original).length
       : 0,
     purchase_cost_allowed: costs,
     margin_allowed: margins,

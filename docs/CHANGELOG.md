@@ -1,3 +1,7 @@
+## 2026-10-30 — R3c P1 F8 — guarded active pages with retained originals
+
+Added real native Add/Remove photo controls and logical saved-PDF Remove/restore. All original bytes remain available; explicit zero-page selections never fall back. Current-authority/version/attempt guards, private projections/History, backup and accepted import retention are covered. Verified 285 affected unit/UI cases in ten files, fresh TypeScript/production build and ten English/Persian desktop/phone browser cases in 1.9 minutes, with no skips or retries. The browser regression found and separately repaired unread-draft normalization during A→B→A navigation.
+
 ## 2026-10-30 — R3c P1 F6 — category for current new products
 
 - Add counted Set category for N new products with real Floor attribution, one atomic guarded candidate and reversible Activity, retained-target support and stale-dialog preservation. Keep all other first-time questions, existing rows, explicit tax and source/financial evidence.

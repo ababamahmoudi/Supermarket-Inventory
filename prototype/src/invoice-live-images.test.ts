@@ -6,6 +6,7 @@ import {
   LIVE_READER_JPEG_QUALITY,
   LIVE_READER_MAX_PDF_PAGES,
   prepareLiveReaderImages,
+  livePdfPageCount,
 } from "./invoice-live-images";
 
 const pdf = vi.hoisted(() => ({ getDocument: vi.fn(), workerSrc: "" }));
@@ -213,6 +214,70 @@ describe("reader image preparation limits", () => {
         return evidence.source ?? evidence.page;
       }),
     ).toEqual(["first.jpg", "1", "2", "last.png"]);
+  });
+});
+
+describe("F8 logical PDF pages and genuine count decoding", () => {
+  it("renders only selected PDF pages in their exact order while retaining full source bytes", async () => {
+    const { task, getPage } = documentTask();
+    const source = originalPdf(),
+      before = await source.arrayBuffer();
+    const images = await prepareLiveReaderImages([source], undefined, [2, 1]);
+    expect(getPage.mock.calls).toEqual([[2], [1]]);
+    expect(images.map((image) => JSON.parse(atob(image.data)).page)).toEqual([
+      "2",
+      "1",
+    ]);
+    expect(await source.arrayBuffer()).toEqual(before);
+    expect(task.destroy).toHaveBeenCalledOnce();
+  });
+  it.each([[[]], [[0]], [[3]], [[1, 1]], [[NaN]], [[1.5]]])(
+    "rejects invalid selection %j before rendering any source page",
+    async (selection) => {
+      const { task, getPage } = documentTask();
+      await expect(
+        prepareLiveReaderImages([originalPdf()], undefined, selection),
+      ).rejects.toMatchObject({ code: "pdf_selection" });
+      expect(getPage).not.toHaveBeenCalled();
+      expect(encoded).toEqual([]);
+      expect(task.destroy).toHaveBeenCalledOnce();
+    },
+  );
+  it("cannot apply PDF page numbers to a photo or a mixed source batch", async () => {
+    const photo = file("fictional-photo.png", "image/png");
+    await expect(
+      prepareLiveReaderImages([photo], undefined, [1]),
+    ).rejects.toMatchObject({ code: "pdf_selection" });
+    await expect(
+      prepareLiveReaderImages([originalPdf(), photo], undefined, [1]),
+    ).rejects.toMatchObject({ code: "pdf_selection" });
+    expect(pdf.getDocument).not.toHaveBeenCalled();
+    expect(encoded).toEqual([]);
+  });
+  it("decodes the actual eleven-page metadata without rendering or relaxing the ten-page read guard", async () => {
+    const { task, getPage } = documentTask(11);
+    const source = file("fictional-eleven.pdf", "application/pdf", elevenPages);
+    expect(await livePdfPageCount(source)).toBe(11);
+    expect(pdf.getDocument.mock.calls[0][0].data).toEqual(
+      new Uint8Array(elevenPages),
+    );
+    expect(getPage).not.toHaveBeenCalled();
+    expect(encoded).toEqual([]);
+    expect(task.destroy).toHaveBeenCalledOnce();
+    expect(new Uint8Array(await source.arrayBuffer())).toEqual(
+      new Uint8Array(elevenPages),
+    );
+  });
+  it("honours cancelled metadata inspection before reading or decoding an original", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const source = originalPdf(),
+      read = vi.spyOn(source, "arrayBuffer");
+    await expect(
+      livePdfPageCount(source, controller.signal),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(read).not.toHaveBeenCalled();
+    expect(pdf.getDocument).not.toHaveBeenCalled();
   });
 });
 

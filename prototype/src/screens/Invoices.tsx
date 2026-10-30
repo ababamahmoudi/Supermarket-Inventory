@@ -1135,13 +1135,20 @@ function InvoiceWorkspace({
         });
         const attachedId = await updateInvoice(
           (draft, currentActor) => {
-            const stored = consumeInvoiceUpload(draft, currentActor, retained);
-            const data = stored.file_data;
             const existing = draft.invoice;
             if (existing.id !== targetInvoiceId)
               throw new Error(
                 "The invoice changed while the original was saving.",
               );
+            if (
+              existing.live_reading &&
+              (existing.file_data ||
+                existing.original_pages?.length ||
+                existing.retained_original_pages?.length)
+            )
+              throw new Error("The saved reading original cannot be replaced.");
+            const stored = consumeInvoiceUpload(draft, currentActor, retained);
+            const data = stored.file_data;
             if (existing.status === "posted") {
               attachPostedInvoiceOriginal(
                 draft,
@@ -2108,7 +2115,11 @@ function InvoiceWorkspace({
             )}
             <OriginalViewer
               invoice={invoice}
-              onAttach={() => originalInput.current?.click()}
+              onAttach={
+                invoice.live_reading
+                  ? undefined
+                  : () => originalInput.current?.click()
+              }
             />
           </div>
         </div>
@@ -2401,6 +2412,7 @@ function InvoiceWorkspace({
         hidden
         type="file"
         accept="application/pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+        disabled={Boolean(invoice.live_reading && invoice.original_available)}
         aria-label={
           invoice.original_available
             ? t("Replace file", "جایگزینی فایل")

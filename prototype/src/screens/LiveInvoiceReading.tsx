@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Camera, FileText, Upload } from "lucide-react";
+import { Camera, FileText, Upload } from "lucide-react";
 import { beginAppWork } from "../app-work";
 import {
   storeInvoiceUpload,
@@ -8,7 +8,6 @@ import {
 import {
   attachLiveInvoiceOriginals,
   settleLiveInvoiceReading,
-  reorderLiveInvoiceOriginals,
   useSimulatedLiveInvoiceReading as applySimulatedLiveReading,
 } from "../invoice-live-reading";
 import { getLiveReaderSettings } from "../live-reader-settings";
@@ -23,9 +22,14 @@ import {
   type LiveReadingDetail,
 } from "../live-invoice-reading-service";
 import type { InvoiceReadDTO } from "../invoice-projections";
-import { FitText } from "../FitText";
 import { useDemo } from "../store";
-import { Button, Card, CardHeader, IconButton } from "../ui";
+import { Button, Card, CardHeader } from "../ui";
+import { LiveInvoicePages } from "./LiveInvoicePages";
+import {
+  inspectLivePdfPages,
+  loadLiveOriginalSelection,
+  type LivePdfPagesAccess,
+} from "../invoice-live-pdf-pages";
 import "./live-invoice-reading.css";
 import { LiveReadingProgress } from "./LiveReadingProgress";
 
@@ -225,12 +229,13 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
   const [fileState, setFileState] = useState<{
     key: string;
     files: File[];
+    pdf: boolean;
+    pdfAccess?: LivePdfPagesAccess;
+    pdfSelection: number[] | null;
+    editable: boolean;
   } | null>(null);
   const [detail, setDetail] = useState("");
   const [changingOrder, setChangingOrder] = useState(false);
-  const orderEditable = ["ready", "failed", "cancelled"].includes(
-    invoice.live_reading?.phase ?? "",
-  );
   const activity = useLiveReadingActivity(invoice);
   const sourceKey = JSON.stringify([
     invoice.id,
@@ -239,27 +244,66 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
     invoice.file_type,
     invoice.file_size,
     invoice.original_page_count,
+    invoice.live_reading?.phase,
+    invoice.live_reading?.attempt_id,
     identity,
   ]);
   const files = fileState?.key === sourceKey ? fileState.files : [];
   const loading = fileState?.key !== sourceKey;
   useEffect(() => {
     let permitted = true;
+    const controller = new AbortController();
     void (async () => {
-      const count =
-        invoice.file_type === "application/pdf"
-          ? 1
-          : Math.max(1, invoice.original_page_count);
+      const selected = await loadLiveOriginalSelection(query, {
+        company_id: invoice.company_id,
+        invoice_id: invoice.id,
+      });
       const loaded = await retainedFiles(
         query,
         invoice.company_id,
         invoice.id,
-        count,
+        selected.count,
       );
-      if (permitted) setFileState({ key: sourceKey, files: loaded });
+      let pdfAccess: LivePdfPagesAccess | undefined;
+      if (selected.pdf) {
+        try {
+          pdfAccess = await inspectLivePdfPages(
+            query,
+            {
+              company_id: invoice.company_id,
+              invoice_id: invoice.id,
+            },
+            controller.signal,
+          );
+        } catch {
+          // Source is retained; the explicit Read action still owns decode/limit errors.
+        }
+      }
+      if (permitted)
+        setFileState({
+          key: sourceKey,
+          files: loaded,
+          pdf: selected.pdf,
+          pdfAccess,
+          pdfSelection:
+            selected.selected ??
+            (pdfAccess
+              ? Array.from(
+                  { length: Math.min(pdfAccess.pages, 10) },
+                  (_, index) => index + 1,
+                )
+              : null),
+          editable: selected.editable,
+        });
     })().catch(() => {
       if (permitted) {
-        setFileState({ key: sourceKey, files: [] });
+        setFileState({
+          key: sourceKey,
+          files: [],
+          pdf: false,
+          pdfSelection: null,
+          editable: false,
+        });
         setDetail(
           t(
             "The original could not be opened. Allow browser storage and try again.",
@@ -270,6 +314,7 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
     });
     return () => {
       permitted = false;
+      controller.abort();
     };
   }, [
     sourceKey,
@@ -281,13 +326,17 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
     invoice.original_page_count,
     t,
   ]);
+  const selectedFileState = fileState?.key === sourceKey ? fileState : null;
+  const hasReadPages =
+    files.length > 0 &&
+    !(selectedFileState?.pdf && selectedFileState.pdfSelection?.length === 0);
   function read() {
     if (
       settings.mode !== "live" ||
       busy ||
       loading ||
       changingOrder ||
-      !files.length
+      !hasReadPages
     )
       return;
     void service.start(invoice);
@@ -334,47 +383,6 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
         ),
       ),
     );
-  }
-  async function move(index: number, delta: number) {
-    const next = index + delta;
-    if (
-      !orderEditable ||
-      busy ||
-      changingOrder ||
-      next < 0 ||
-      next >= files.length
-    )
-      return;
-    const order = files.map((_, position) => position);
-    [order[index], order[next]] = [order[next], order[index]];
-    setChangingOrder(true);
-    try {
-      await command(
-        "invoices.edit",
-        invoiceScope(invoice),
-        (draft, currentActor) =>
-          reorderLiveInvoiceOriginals(draft, currentActor, {
-            invoice_id: invoice.id,
-            order,
-          }),
-      );
-      setFileState(
-        (previous) =>
-          previous && {
-            key: previous.key,
-            files: order.map((position) => previous.files[position]),
-          },
-      );
-    } catch {
-      setDetail(
-        t(
-          "The page order could not be saved. Try again.",
-          "ترتیب صفحه‌ها ذخیره نشد. دوباره تلاش کنید.",
-        ),
-      );
-    } finally {
-      setChangingOrder(false);
-    }
   }
   const failed = failure || invoice.live_reading?.phase === "failed";
   const recovered = invoice.live_reading?.phase !== "ready";
@@ -430,58 +438,27 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
               {t("Opening the original…", "در حال باز کردن اصل فایل…")}
             </p>
           )}
-          {files.length > 0 && (
-            <ol className="live-reading-pages" data-testid="live-reading-pages">
-              {files.map((file, index) => (
-                <li key={String(index) + ":" + file.name}>
-                  <span className="live-reading-page-number">{index + 1}</span>
-                  <FitText
-                    className="live-reading-page-name"
-                    value={file.name}
-                  />
-                  {files.length > 1 && (
-                    <span className="actions">
-                      <IconButton
-                        variant="secondary"
-                        disabled={
-                          !orderEditable || changingOrder || index === 0
-                        }
-                        aria-label={t(
-                          "Move page " + (index + 1) + " up",
-                          "انتقال صفحهٔ " + (index + 1) + " به بالا",
-                        )}
-                        onClick={() => void move(index, -1)}
-                      >
-                        <ArrowUp size={18} aria-hidden="true" />
-                      </IconButton>
-                      <IconButton
-                        variant="secondary"
-                        disabled={
-                          !orderEditable ||
-                          changingOrder ||
-                          index === files.length - 1
-                        }
-                        aria-label={t(
-                          "Move page " + (index + 1) + " down",
-                          "انتقال صفحهٔ " + (index + 1) + " به پایین",
-                        )}
-                        onClick={() => void move(index, 1)}
-                      >
-                        <ArrowDown size={18} aria-hidden="true" />
-                      </IconButton>
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          )}
+          <LiveInvoicePages
+            invoice={invoice}
+            files={files}
+            pdf={
+              selectedFileState?.pdf ?? invoice.file_type === "application/pdf"
+            }
+            pdfAccess={selectedFileState?.pdfAccess}
+            pdfSelection={selectedFileState?.pdfSelection ?? null}
+            disabled={
+              loading || busy || changingOrder || !selectedFileState?.editable
+            }
+            onChanging={setChangingOrder}
+            onDetail={setDetail}
+          />
           <div className="actions live-reading-choices">
             <Button
               disabled={
                 settings.mode !== "live" ||
                 loading ||
                 changingOrder ||
-                !files.length
+                !hasReadPages
               }
               onClick={() => void read()}
             >
@@ -491,11 +468,19 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
                   ? t("Read again", "خواندن دوباره")
                   : t("Read invoice", "خواندن فاکتور")}
             </Button>
-            <Button variant="secondary" onClick={() => void manual()}>
+            <Button
+              variant="secondary"
+              disabled={changingOrder}
+              onClick={() => void manual()}
+            >
               {t("Enter by hand", "ورود دستی")}
             </Button>
             {(failed || settings.mode !== "live") && demoReadingAvailable && (
-              <Button variant="neutral" onClick={() => void simulate()}>
+              <Button
+                variant="neutral"
+                disabled={changingOrder || !hasReadPages}
+                onClick={() => void simulate()}
+              >
                 {t("Use simulated reading", "استفاده از خوانش شبیه‌سازی‌شده")}
               </Button>
             )}

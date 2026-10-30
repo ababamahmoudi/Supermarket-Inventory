@@ -2,6 +2,7 @@ import {
   freeCasePrintedDescriptions,
   groupInvoiceFreeCases,
 } from "./invoice-free-cases";
+import { LIVE_READER_MAX_PDF_PAGES } from "./live-reader-limits";
 import { invoicePackWeight } from "./invoice-case-weight";
 import { selectInvoiceWeightUnit } from "./invoice-weight";
 import Decimal from "decimal.js";
@@ -1909,6 +1910,12 @@ export function importInvoiceReadings(
       delete invoice.simulated_reading;
       const originals = structuredClone(liveOriginalPages(target.invoice));
       invoice.original_pages = originals;
+      if (target.invoice.retained_original_pages)
+        invoice.retained_original_pages = structuredClone(
+          target.invoice.retained_original_pages,
+        );
+      if (target.invoice.pdf_page_selection)
+        invoice.pdf_page_selection = [...target.invoice.pdf_page_selection];
       Object.assign(invoice, originals[0]);
       invoice.reading_record.models = [...live.provenance.models];
       invoice.reading_record.reading_cost_usd = live.provenance.costUSD;
@@ -2002,7 +2009,10 @@ export function importLiveInvoiceReading(
   const pdf =
     originals.length === 1 && originals[0].file_type === "application/pdf";
   if (
-    (pdf && entry.pages.length > 10) ||
+    (pdf && entry.pages.length > LIVE_READER_MAX_PDF_PAGES) ||
+    (pdf &&
+      invoice.pdf_page_selection !== undefined &&
+      entry.pages.length !== invoice.pdf_page_selection.length) ||
     (!pdf && entry.pages.length !== originals.length)
   )
     throw new Error("The live reading pages changed.");

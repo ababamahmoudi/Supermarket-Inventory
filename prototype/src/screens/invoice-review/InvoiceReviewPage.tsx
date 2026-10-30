@@ -341,7 +341,7 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
         </div>
         <OriginalViewer
           invoice={invoice}
-          onAttach={props.onAttach}
+          onAttach={invoice.live_reading ? undefined : props.onAttach}
           onVisibilityChange={(visible) => setHidden(!visible)}
         />
       </div>

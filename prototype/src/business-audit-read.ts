@@ -63,6 +63,7 @@ const privateMatchingKeys = new Set([
   "acquisitionbasis",
   "acquisitionamount",
   "sourceinvoiceids",
+  "retainedoriginalpages",
 ]);
 function privateAuditField(key: string): boolean {
   return (

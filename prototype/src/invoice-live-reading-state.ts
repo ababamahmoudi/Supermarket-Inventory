@@ -5,6 +5,10 @@ import {
   requireInvoiceAuthority,
 } from "./invoice-authority";
 import type { DemoInvoice, DemoState } from "./types";
+import {
+  activeInvoiceOriginalPages,
+  retainedInvoiceOriginalPages,
+} from "./invoice-original-pages";
 
 export function liveReadingInvoice(state: DemoState, id: string): DemoInvoice {
   const invoice =
@@ -16,25 +20,19 @@ export function liveReadingInvoice(state: DemoState, id: string): DemoInvoice {
 }
 
 export function liveOriginalPages(invoice: DemoInvoice) {
-  const pages = invoice.original_pages?.length
-    ? invoice.original_pages
-    : invoice.file_data && invoice.file_name
-      ? [
-          {
-            file_name: invoice.file_name,
-            file_type: invoice.file_type ?? "",
-            file_data: invoice.file_data,
-            file_size: invoice.file_size ?? 0,
-            original_sha256: invoice.file_data.split(":").at(-1) ?? "",
-          },
-        ]
-      : [];
+  const pages = activeInvoiceOriginalPages(invoice);
+  const retained = retainedInvoiceOriginalPages(invoice);
   if (
-    !pages.length ||
-    pages.some(
+    !retained.length ||
+    retained.some(
       (page) =>
-        !page.file_data.startsWith("idb-file:v1:") ||
-        !/^[a-f\d]{64}$/i.test(page.original_sha256),
+        typeof page.file_data !== "string" ||
+        !page.file_data.startsWith(
+          `idb-file:v1:${encodeURIComponent(invoice.company_id)}:`,
+        ) ||
+        typeof page.original_sha256 !== "string" ||
+        !/^[a-f\d]{64}$/i.test(page.original_sha256) ||
+        page.file_data.split(":").at(-1) !== page.original_sha256,
     )
   )
     throw new Error("The saved original is required.");
@@ -42,7 +40,10 @@ export function liveOriginalPages(invoice: DemoInvoice) {
 }
 
 export function liveOriginalSignature(invoice: DemoInvoice): string {
-  return JSON.stringify(liveOriginalPages(invoice));
+  const pages = liveOriginalPages(invoice);
+  return invoice.pdf_page_selection === undefined
+    ? JSON.stringify(pages)
+    : JSON.stringify({ pages, pdf_pages: invoice.pdf_page_selection });
 }
 
 export function liveContentSignature(invoice: DemoInvoice): string {
@@ -171,6 +172,54 @@ export function canUseLiveManualInvoice(
   if (!actor) return false;
   try {
     requireLiveManualInvoice(state, actor, id);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Public expected identity; private source/content witnesses are independently checked. */
+export interface LiveSourceTarget {
+  invoice_id: string;
+  version: number;
+  attempt_id: string;
+}
+
+export function requireLiveSourceTarget(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  input: LiveSourceTarget,
+) {
+  const current = requireLiveRecoveryTransition(state, actor, input);
+  const invoice = current.invoice;
+  if (
+    !Number.isSafeInteger(input.version) ||
+    input.version < 1 ||
+    input.version !== (invoice.version ?? 1) ||
+    !["ready", "failed", "cancelled"].includes(
+      invoice.live_reading?.phase ?? "",
+    ) ||
+    invoice.entry_mode === "manual" ||
+    invoice.lines.length ||
+    invoice.other_charges?.length ||
+    invoice.reading_record
+  )
+    throw new Error("The saved source changed or already has review work.");
+  return current;
+}
+
+export function canEditLiveInvoiceSources(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  id: string,
+): boolean {
+  try {
+    const invoice = liveReadingInvoice(state, id);
+    requireLiveSourceTarget(state, actor, {
+      invoice_id: id,
+      version: invoice.version ?? 1,
+      attempt_id: invoice.live_reading?.attempt_id ?? "",
+    });
     return true;
   } catch {
     return false;

@@ -26,6 +26,7 @@ import {
 } from "./invoice-readings";
 import {
   applyLiveInvoiceReading,
+  addLiveInvoicePages,
   attachLiveInvoiceOriginals,
   beginLiveInvoiceReading,
   canUseLiveManualInvoice,
@@ -64,6 +65,13 @@ vi.mock("./file-database", async (original) => ({
   ),
 }));
 
+function sourceTarget(state: DemoState) {
+  return {
+    invoice_id: state.invoice.id,
+    version: state.invoice.version ?? 1,
+    attempt_id: state.invoice.live_reading?.attempt_id ?? "",
+  };
+}
 function source(
   name = "fictional-source.pdf",
   bytes = "fictional untouched source",
@@ -381,6 +389,7 @@ describe("R3 protected live reading domain", () => {
       const unchanged = snapshot(data.state);
       expect(() =>
         reorderLiveInvoiceOriginals(data.state, data.actor, {
+          ...sourceTarget(data.state),
           invoice_id: data.state.invoice.id,
           order,
         }),
@@ -388,6 +397,7 @@ describe("R3 protected live reading domain", () => {
       expect(snapshot(data.state)).toBe(unchanged);
     }
     reorderLiveInvoiceOriginals(data.state, data.actor, {
+      ...sourceTarget(data.state),
       invoice_id: data.state.invoice.id,
       order: [1, 0],
     });
@@ -405,6 +415,7 @@ describe("R3 protected live reading domain", () => {
     const unchanged = snapshot(data.state);
     expect(() =>
       reorderLiveInvoiceOriginals(data.state, data.actor, {
+        ...sourceTarget(data.state),
         invoice_id: attempt.invoice_id,
         order: [0, 1],
       }),
@@ -800,7 +811,9 @@ describe("R3 protected live reading domain", () => {
   );
 
   it("a rejected upload batch leaves its valid opaque handle reusable", async () => {
-    const data = await draft();
+    const data = await draft("manager", [
+      source("first.jpg", "first fictional bytes", "image/jpeg"),
+    ]);
     const id = data.state.invoice.id;
     const valid = await storeInvoiceUpload(
       data.query,
@@ -809,8 +822,8 @@ describe("R3 protected live reading domain", () => {
     );
     const before = snapshot(data.state);
     expect(() =>
-      attachLiveInvoiceOriginals(data.state, data.actor, {
-        invoice_id: id,
+      addLiveInvoicePages(data.state, data.actor, {
+        ...sourceTarget(data.state),
         uploads: [valid, { name: "forged.jpg", type: "image/jpeg", size: 1 }],
       }),
     ).toThrow();
@@ -820,7 +833,17 @@ describe("R3 protected live reading domain", () => {
         invoice_id: id,
         uploads: [valid],
       }),
+    ).toThrow();
+    expect(snapshot(data.state)).toBe(before);
+    expect(() =>
+      addLiveInvoicePages(data.state, data.actor, {
+        ...sourceTarget(data.state),
+        uploads: [valid],
+      }),
     ).not.toThrow();
+    expect(
+      data.state.invoice.original_pages?.map((page) => page.file_name),
+    ).toEqual(["first.jpg", "extra.jpg"]);
   });
 
   it("Cashier authority cannot read live invoice provenance or start a reading", async () => {
@@ -971,6 +994,7 @@ describe("R3 protected live reading domain", () => {
     ]);
     const before = structuredClone(data.state.invoice);
     reorderLiveInvoiceOriginals(data.state, data.actor, {
+      ...sourceTarget(data.state),
       invoice_id: before.id,
       order: [0, 2, 1],
     });
@@ -1075,6 +1099,7 @@ describe("R3 protected live reading domain", () => {
       const before = structuredClone(data.state.invoice);
       expect(() =>
         reorderLiveInvoiceOriginals(data.state, actor, {
+          ...sourceTarget(data.state),
           invoice_id: before.id,
           order: [0, 2, 1],
         }),
