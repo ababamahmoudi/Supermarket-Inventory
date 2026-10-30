@@ -40,6 +40,7 @@ import {
 } from "./invoice-live-reading-state";
 import type { LiveReadingProvenance } from "./invoice-live-reading-types";
 import { isUsableLiveReadingItem } from "./live-reading-content";
+import { compareKnownDelivery } from "./invoice-known-delivery";
 import type {
   DemoInvoice,
   DemoState,
@@ -518,6 +519,17 @@ export function resolveReadingProductMatch(
                 candidate.code !== product.code,
             ),
           ),
+        identity_requires_check:
+          uncertain ||
+          !sameSupplier(product) ||
+          Boolean(
+            barcode &&
+            products.some(
+              (candidate) =>
+                candidate.barcode === barcode &&
+                candidate.code !== product.code,
+            ),
+          ),
         ...(earlier ? { source_invoice_id: earlier.invoice.id } : {}),
       },
     };
@@ -750,6 +762,7 @@ export function actionableReadingChecks(
   state: DemoState,
   value: InvoiceReading,
   statuses: Record<string, "auto" | "check">,
+  context?: { actor: AuthenticatedActor; branch: string; invoiceId?: string },
 ) {
   const checks = readingCheckFields(statuses, value);
   const received = importedReadingReceived(state.config, value);
@@ -787,19 +800,32 @@ export function actionableReadingChecks(
   if (due && printedDue && due !== printedDue)
     header.low_confidence_fields.push("due_date");
   header.low_confidence_fields = [...new Set(header.low_confidence_fields)];
-  const lines = (value.lines ?? []).map((line, index) =>
-    !line.line_type || line.line_type === "item"
-      ? mapReadingLine(
+  const lines = (value.lines ?? []).map((line, index) => {
+    if (!line.line_type || line.line_type === "item") {
+      const mapped = mapReadingLine(
+        state,
+        matchReadingSupplier(state, value),
+        line,
+        index,
+        checks.lines[index],
+        context?.actor,
+      );
+      if (context && context.branch !== "all")
+        compareKnownDelivery(
           state,
-          matchReadingSupplier(state, value),
-          line,
-          index,
-          checks.lines[index],
-        )
-      : {
-          low_confidence_fields: chargeCheckFields(line, checks.lines[index]),
-        },
-  );
+          context.actor,
+          mapped,
+          matchReadingSupplier(state, value)?.name ?? text(value.supplier_name),
+          context.invoiceId
+            ? { invoiceId: context.invoiceId }
+            : { previewBranch: context.branch },
+        );
+      return mapped;
+    }
+    return {
+      low_confidence_fields: chargeCheckFields(line, checks.lines[index]),
+    };
+  });
   const totals = {
     ...header,
     calculated_from_lines: false,
@@ -839,6 +865,7 @@ export function previewInvoiceReadings(
   requireImport(state, actor);
   return previewInvoiceReadingsAuthorized(
     state,
+    actor,
     exported,
     mode,
     currentLocation,
@@ -846,6 +873,7 @@ export function previewInvoiceReadings(
 }
 function previewInvoiceReadingsAuthorized(
   state: DemoState,
+  actor: AuthenticatedActor,
   exported: InvoiceReadingsExport,
   mode: ImportMode,
   currentLocation: string,
@@ -855,7 +883,13 @@ function previewInvoiceReadingsAuthorized(
     const effective = effectiveInvoiceReading(entry, mode),
       value = effective.reading;
     const checked = value
-      ? actionableReadingChecks(state, value, effective.statuses)
+      ? actionableReadingChecks(state, value, effective.statuses, {
+          actor,
+          branch:
+            suggestReadingLocation(state, value, currentLocation) ??
+            currentLocation,
+          invoiceId: excludedInvoiceId,
+        })
       : undefined;
     return {
       id: entry.id,
@@ -1314,6 +1348,12 @@ export function mapReadingLine(
         source.cost_per_unit_before_tax ?? source.unit_cost_before_tax,
         4,
       ),
+      printed_cost_basis:
+        text(source.cost_per_unit_before_tax) ||
+        text(source.cost_basis).toLowerCase() !== "case"
+          ? "unit"
+          : "case",
+      printed_case_cost_before_tax: printedCaseCost,
     };
   }
   const expiry = readingExpiryDate(text(source.expiry_as_printed));
@@ -1521,6 +1561,7 @@ export function importInvoiceReadings(
   }
   const preview = previewInvoiceReadingsAuthorized(
     state,
+    actor,
     input.exported,
     input.mode,
     "all",
@@ -1738,6 +1779,9 @@ export function importInvoiceReadings(
           mapped.product_code,
           location,
         );
+        compareKnownDelivery(state, actor, mapped, invoice.supplier, {
+          invoiceId: invoice.id,
+        });
         invoice.lines.push(mapped);
       } else {
         const amount = decimal(line.line_total, 2);

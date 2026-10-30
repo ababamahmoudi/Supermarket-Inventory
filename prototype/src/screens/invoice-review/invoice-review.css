@@ -89,6 +89,30 @@
 .receiving-progress-checks {
   background: var(--pending-bg);
 }
+.receiving-progress-checks[data-clear="true"] {
+  color: var(--approved);
+  background: var(--approved-bg);
+}
+.receiving-known-counts {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  overflow-wrap: anywhere;
+}
+.receiving-progress:has(.receiving-known-counts) {
+  flex-wrap: wrap;
+}
+.receiving-known-delivery {
+  display: grid;
+  min-inline-size: 0;
+  margin-block-start: 2px;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  overflow-wrap: anywhere;
+}
+.receiving-known-delivery[data-known-delivery="changed"] {
+  color: var(--pending);
+}
 .receiving-progress-totals[data-match="true"] {
   color: var(--approved);
   background: var(--approved-bg);
@@ -1286,6 +1310,9 @@
   }
   .receiving-progress-checks {
     grid-column: 2;
+  }
+  .receiving-known-counts {
+    grid-column: 1 / -1;
   }
   .receiving-progress-totals {
     display: none;

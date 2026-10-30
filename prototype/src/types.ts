@@ -350,6 +350,29 @@ export interface InvoiceReadingProductMatch {
   requires_check: boolean;
   /** Retained evidence only; never included in the invoice read DTO. */
   source_invoice_id?: string;
+  /** Distinguishes uncertain identity from a known item's changed pack. */
+  identity_requires_check?: boolean;
+}
+export interface InvoiceKnownDelivery {
+  status: "same" | "changed";
+  date: string;
+  changes: {
+    field:
+      | "description"
+      | "supplier_item_code"
+      | "quantity_unit"
+      | "units_per_case"
+      | "pack_size"
+      | "unit_cost_before_tax"
+      | "pricing_category";
+    before: string;
+    after: string;
+    unit?: "case" | "unit" | "lb";
+  }[];
+  /** Internal evidence and edit guard; never projected as invoice DTO fields. */
+  source_invoice_id?: string;
+  source_line_id?: string;
+  fingerprint?: string;
 }
 export type InvoiceLine = Omit<
   (typeof demoSeed.demo_invoice.lines)[number],
@@ -407,6 +430,8 @@ export type InvoiceLine = Omit<
     units_per_case: number;
     product_code: string;
     printed_unit_cost_before_tax: string;
+    printed_cost_basis?: "unit" | "case";
+    printed_case_cost_before_tax?: string;
   };
   manual_price_decision?: "keep" | "rule";
   short_dated?: boolean;
@@ -415,6 +440,7 @@ export type InvoiceLine = Omit<
   supplier_item_code_inferred?: boolean;
   reading_supplier_promotion?: boolean;
   reading_product_match?: InvoiceReadingProductMatch;
+  known_delivery?: InvoiceKnownDelivery;
   quantity_unit?: "cases" | "units" | "kg" | "lb";
   quantity_entered?: string | number;
   case_cost_before_tax?: string;

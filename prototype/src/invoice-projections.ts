@@ -26,6 +26,7 @@ import {
   redactLiveReadingProvenance,
 } from "./invoice-live-reading-projection";
 import type { LiveInvoiceReadingView } from "./invoice-live-reading-types";
+import { currentKnownDelivery } from "./invoice-known-delivery";
 
 type InvoiceLineMoney =
   | "paper_line_total"
@@ -47,10 +48,14 @@ export type InvoiceProductMatchReadDTO = Pick<
 >;
 export type InvoiceLineView = Omit<
   InvoiceLine,
-  "demo_note" | InvoiceLineMoney | "reading_product_match"
+  "demo_note" | InvoiceLineMoney | "reading_product_match" | "known_delivery"
 > &
   Partial<Pick<InvoiceLine, InvoiceLineMoney>> & {
     reading_product_match?: InvoiceProductMatchReadDTO;
+    known_delivery?: Pick<
+      NonNullable<InvoiceLine["known_delivery"]>,
+      "status" | "date" | "changes"
+    >;
   };
 type InvoiceMoney =
   "subtotal" | "tax" | "final_total" | "payable_after_open_shorts";
@@ -341,6 +346,30 @@ export function invoiceView(
     lines: invoice.lines.map((line) => ({
       ...select(line, lineKeys),
       ...projectReadingProductMatch(state, current, line),
+      ...(() => {
+        const known = currentKnownDelivery(line);
+        if (
+          !known ||
+          !canInvoiceAuthority(
+            state,
+            current,
+            "invoices.read",
+            known.source_invoice_id,
+          )
+        )
+          return {};
+        return {
+          known_delivery: {
+            status: known.status,
+            date: known.date,
+            changes: known.changes
+              .filter(
+                (change) => costs || change.field !== "unit_cost_before_tax",
+              )
+              .map((change) => structuredClone(change)),
+          },
+        };
+      })(),
       ...(costs ? select(line, lineMoneyKeys) : {}),
       ...(line.order_new_item_match
         ? {

@@ -7,7 +7,7 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 | Order | Item                                                 | Status                   |
 | ----- | ---------------------------------------------------- | ------------------------ |
 | 1     | K0 — final approvals and page error recovery         | Verified; first delivery |
-| 2     | K1 — unchanged known products green                  | In implementation        |
+| 2     | K1 — unchanged known products green                  | Verified; next delivery  |
 | 3     | K2 — printed-name matching and checked-values import | In implementation        |
 | 4     | K6 — missing-paper payment default                   | In implementation        |
 | 5     | F4 — retained Discard / Cancelled / Undo             | In implementation        |
@@ -52,6 +52,18 @@ The unchanged approval component was reproduced through both final individual an
 A further genuine reproduction retained older fictional approvals above the newly posted group. Finishing that bottom group left no surviving card in the usable viewport. The fix also recovers that case; the normal partial-decision proof checks the same real visible survivor before and after, with the 2 px limit unchanged.
 
 K0 verification passed 33 targeted unit tests across four files, including App, Timesheets navigation and the actual error boundary; full lint, production build and final TypeScript checks passed. Ten unique targeted browser cases passed in English/Persian on desktop/phone across two runs: six new short regressions and four retained 25-line bulk cases, with no skips or retries. Application source was identical across those runs. Subsequent item click paths are added with their separate delivery; the PR records the pushed commit and full CI outcome.
+
+## K1 — repeat deliveries become green
+
+1. Start in a separate practice browser profile if you want an isolated rehearsal. Use Settings → Data to import a wholly fictional delivery, review its first-time name/pack/category checks and post it normally. Product approval may remain pending.
+2. Import/read a second invoice from the same supplier with the same items. Import complete offers **Open Ready to post** when no real blocker remains. Open it: unchanged lines are green with a check and **Same as last delivery**, with no comparable check count and no line-confirmation click.
+3. The progress strip shows same/changed/new counts. Press Post invoice to open its ordinary confirmation, then Cancel if you are only inspecting. Reading and opening the confirmation have not posted anything or changed the original Product/approval/ledger.
+4. Read a third fictional delivery with one changed cost. Exactly that row is amber; it shows the actual old/new case cost and earlier-delivery date, and its question leads to the editable Case cost. Changed codes/packs and unrelated real source/date/quantity discrepancies still ask for review.
+5. Open and edit a known line: stale automatic evidence is invalidated. Check another company/location/role only through its genuine permissions; internal evidence IDs/fingerprints are never displayed or exported as public invoice facts.
+
+K1 owner verification passed 236 tests across 18 importer/check/matching files, full lint/build and six actual browser cases (four new English/Persian desktop/phone plus two retained rename/cross-supplier cases), with no skips or retries. The unchanged baseline causally failed the second-delivery automatic-confirmation assertion. Real Each→lb and Weight→Each regressions retain incomparable cost questions. Combined K0+K1 verification then passed 42 units, four desktop/phone English/Persian browser cases and a fresh build. Full CI results are recorded with delivery on the PR.
+
+CI213 verified K0's 2,652 unit tests, 75 SDK tests, foundation and three browser shards, but the remaining progressing shard reached the 40-minute job cap. Subsequent runs allow 50 minutes with all individual tests unchanged. Each separately pushed item retains its own full CI run instead of being canceled by the next push. One older notification case recovered on retry in CI213; it is recorded rather than described as a first-attempt pass.
 
 ## After the demo — record only
 

@@ -241,6 +241,7 @@ export function LineEditor({
       await reviewUpdate((draft, actor) => {
         const item = draft.invoice.lines[index];
         item.new_name_en = english;
+        delete item.known_delivery;
         item.review_changed_after_confirmation ||= item.review_confirmed;
         item.review_confirmed = false;
         acknowledgeInvoiceCheck(draft, actor, "description", index);

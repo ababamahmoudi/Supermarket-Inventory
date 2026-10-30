@@ -63,7 +63,10 @@ async function addReading(
     summary.getByRole("heading", { name: "1 invoice imported", exact: true }),
   ).toBeVisible();
   await summary
-    .getByRole("button", { name: "Open Needs review", exact: true })
+    .getByRole("button", {
+      name: index === 1 ? "Open Ready to post" : "Open Needs review",
+      exact: true,
+    })
     .click();
   await page
     .locator(".invoice-saved-drafts tbody tr")

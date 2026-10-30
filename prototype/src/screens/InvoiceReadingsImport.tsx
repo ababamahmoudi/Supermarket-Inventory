@@ -33,6 +33,8 @@ import {
   type InvoiceReadingsExport,
 } from "../invoice-readings";
 import { removeFictionalData } from "../empty-store";
+import { invoiceWorkspaceRead } from "../invoice-workspace-read";
+import { canInvoiceAuthority } from "../invoice-authority";
 import "./invoice-readings.css";
 
 type Translate = (en: string, fa: string) => string;
@@ -564,6 +566,25 @@ export default function InvoiceReadingsImport() {
   const [emptyConfirmation, setEmptyConfirmation] = useState("");
   const [removing, setRemoving] = useState(false);
   const [emptyMessage, setEmptyMessage] = useState("");
+  const importedClassification = useProtectedQuery(
+    summary && summary.imported.length && can("invoices.read")
+      ? "invoices.read"
+      : null,
+    { company_id: state.config.company.seed_key, kind: "company_shared" },
+    (canonical, actor) => {
+      const id = summary?.imported.find((id) =>
+        canInvoiceAuthority(canonical, actor, "invoices.cost_read", id),
+      );
+      return id ? invoiceWorkspaceRead(canonical, actor, id).blockersById : {};
+    },
+    summary?.imported.join(":") ?? "no-import-summary",
+  );
+  const importedReady = Boolean(
+    summary?.imported.length &&
+    summary.imported.every(
+      (id) => importedClassification.data?.[id]?.length === 0,
+    ),
+  );
   useEffect(() => () => reader.current?.abort(), []);
   if (!can("settings.manage") || (role !== "owner" && role !== "manager"))
     return null;
@@ -705,8 +726,12 @@ export default function InvoiceReadingsImport() {
             </>
           }
           description={t(
-            "Drafts are ready in Needs review.",
-            "پیش‌نویس‌ها آمادهٔ بررسی‌اند.",
+            importedReady
+              ? "Invoices are ready to post."
+              : "Drafts are ready in Needs review.",
+            importedReady
+              ? "فاکتورها آمادهٔ ثبت‌اند."
+              : "پیش‌نویس‌ها آمادهٔ بررسی‌اند.",
           )}
           icon={<Check size={22} />}
           iconTone="approved"
@@ -717,12 +742,21 @@ export default function InvoiceReadingsImport() {
                 {t("Close", "بستن")}
               </Button>
               <Button
+                disabled={
+                  summary.imported.length > 0 && importedClassification.pending
+                }
                 onClick={() => {
                   setSummary(null);
-                  navigate("invoices?tab=needs_review");
+                  navigate(
+                    importedReady
+                      ? "invoices?tab=ready_to_post"
+                      : "invoices?tab=needs_review",
+                  );
                 }}
               >
-                {t("Open Needs review", "باز کردن نیازمند بررسی")}
+                {importedReady
+                  ? t("Open Ready to post", "باز کردن آمادهٔ ثبت")
+                  : t("Open Needs review", "باز کردن نیازمند بررسی")}
               </Button>
             </>
           }

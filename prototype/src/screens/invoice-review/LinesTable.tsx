@@ -10,6 +10,7 @@ import { categoryLabel } from "../../formatters";
 import { weightQuantityFromLb } from "../../weighed";
 import { ReadingMoney as Money } from "../../InvoiceReadingReview";
 import { LineEditor } from "./LineEditor";
+import { KnownDeliverySummary } from "./KnownDeliverySummary";
 import type { LineCommands, ReviewProps } from "./types";
 
 type LineFilter = "all" | "attention" | "confirmed";
@@ -213,7 +214,9 @@ export function LinesTable({
                 ? t("Retained posted line", "ردیف ثبت‌شده بدون تغییر")
                 : t("Changed in this correction", "در این اصلاح تغییر کرده")
               : line.review_confirmed
-                ? t("Confirmed", "تأیید شد")
+                ? line.known_delivery?.status === "same"
+                  ? t("Same as last delivery", "مانند تحویل قبلی")
+                  : t("Confirmed", "تأیید شد")
                 : line.review_changed_after_confirmation
                   ? t(
                       "Changed after confirming: confirm again",
@@ -412,6 +415,9 @@ export function LinesTable({
                         </>
                       )}
                     </small>
+                    {!correction && (
+                      <KnownDeliverySummary known={line.known_delivery} />
+                    )}
                     <span className="receiving-phone-quantity">
                       {quantity} ·{" "}
                       <span className="receiving-phone-cost">{cost}</span>

@@ -1212,6 +1212,7 @@ function InvoiceWorkspace({
       draft.invoice.lines[index].review_changed_after_confirmation ||=
         wasConfirmed;
       draft.invoice.lines[index].review_confirmed = false;
+      delete draft.invoice.lines[index].known_delivery;
       if (recalculate) recalculateInvoice(draft.invoice, draft.config);
     });
     setMessage("");

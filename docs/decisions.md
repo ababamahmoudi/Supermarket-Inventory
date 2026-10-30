@@ -628,3 +628,11 @@ The previous 25-line/2700 px test was calibrated to 3 px cell padding. R2g expli
 ## 2026-10-29 — Release completed approval-board space
 
 The retained board height and restored scroll correctly stabilize partial decisions, but keep a finished board scrolled below its empty message. Genuine posted-invoice reproductions confirm both an offscreen empty message and a completed bottom group leaving older requests entirely outside the usable viewport. After departures finish, release obsolete space when the board is authoritatively empty or no real surviving card is visible, then expose the empty state or nearest remaining card. Keep the protected retained-read and strict 2 px behavior when a real surviving card is already visible. A separate page-content error boundary catches actual render failures without removing navigation or remounting healthy pages to reset it.
+
+## 2026-10-30 — Trust actual repeat-delivery facts, preserve unknowns
+
+Compare an identified same-supplier item with its authorized effective posted purchase, rather than borrowing a current catalog cost or an unposted draft. Keep automatic evidence distinct from human check receipts and invalidate it after edits. Treat a known identity's changed pack/code/cost as precise field questions instead of repeating an uncertain Product question, while retaining genuine paper, quantity and date conflicts. Project only authorized facts, never internal evidence IDs or fingerprints. A fully ready import opens its true tab explicitly so the new automatic state remains reachable.
+
+## 2026-10-30 — Complete CI for each separately pushed item
+
+Ali requested an individually verified push for every R3c item. Include the commit SHA in the CI concurrency group so a later item does not cancel an earlier item's full run; duplicate runs of the same commit still share a group. CI213's 485-case browser shard advanced without a failed assertion until the 40-minute job cap canceled it. Allow 50 minutes for these expanded jobs, preserving all cases, individual test timeouts, worker/retry settings, conditional skips and numerical assertions. Continue local verification before each push and inspect complete full-CI results as the independently running jobs finish.

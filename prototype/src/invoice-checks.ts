@@ -684,6 +684,7 @@ export function setInvoiceLineCategory(
   config: CompanyConfig,
 ): void {
   line.pricing_category = category;
+  delete line.known_delivery;
   line.review_changed_after_confirmation ||= Boolean(line.review_confirmed);
   line.review_confirmed = false;
   if (!line.taxable_inferred) return;

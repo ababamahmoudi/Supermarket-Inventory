@@ -25,6 +25,12 @@ export function ProgressStrip({
   const confirmed = invoice.lines.filter((x) => x.review_confirmed).length;
   const difference = invoiceTotalsCheck(invoice);
   const amount = difference.totalDifference ?? difference.subtotalDifference;
+  const same = invoice.lines.filter(
+    (line) => line.known_delivery?.status === "same",
+  ).length;
+  const changed = invoice.lines.filter(
+    (line) => line.known_delivery?.status === "changed",
+  ).length;
   return (
     <div className="receiving-progress" role="status">
       <span className="receiving-progress-count">
@@ -33,6 +39,14 @@ export function ProgressStrip({
           `${confirmed} از ${invoice.lines.length} ردیف تأیید شد`,
         )}
       </span>
+      {invoice.lines.some((line) => line.import_line_index !== undefined) && (
+        <span className="receiving-known-counts">
+          {t(
+            `${same} same as before · ${changed} changed · ${invoice.lines.length - same - changed} new`,
+            `${same} مانند قبل · ${changed} تغییرکرده · ${invoice.lines.length - same - changed} جدید`,
+          )}
+        </span>
+      )}
       <span className="receiving-progress-track" aria-hidden="true">
         <span
           style={{
@@ -40,8 +54,15 @@ export function ProgressStrip({
           }}
         />
       </span>
-      <span className="receiving-progress-checks">
-        <CircleAlert size={16} aria-hidden="true" />
+      <span
+        className="receiving-progress-checks"
+        data-clear={checkCount === 0 || undefined}
+      >
+        {checkCount ? (
+          <CircleAlert size={16} aria-hidden="true" />
+        ) : (
+          <CheckCircle2 size={16} aria-hidden="true" />
+        )}
         {t(
           `${checkCount} highlighted ${checkCount === 1 ? "field" : "fields"}`,
           `${checkCount} فیلد مشخص‌شده`,

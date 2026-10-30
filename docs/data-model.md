@@ -1,5 +1,13 @@
 # Data model
 
+## R3c K1 — Automatic repeat-delivery evidence
+
+`InvoiceLine.known_delivery` retains a same/changed status, actual earlier-delivery date, precise field changes and internal source invoice/line identities plus a content fingerprint. Compare only a uniquely identified same-supplier Product against authorized effective posted purchase evidence, including corrections; a Product may still be pending approval. Canonical Decimal costs use the actual case/unit/per-lb basis. Changed printed codes, packs, conflicting paper costs and independent quantity/date/arithmetic questions remain review evidence.
+
+An Each/weight dimension change is an explicit unit question. Numeric costs in unlike dimensions are neither equal evidence nor a meaningful historical delta; current AI cost questions and printed/paper arithmetic remain independent.
+
+Automatic confirmation clears only equality-proven comparable questions and sets the ordinary confirmed state without creating human `checked_fields` receipts. Actual edits invalidate the evidence; projections also check its fingerprint. Public invoice DTOs deliberately select status/date/changes, reauthorize the source and omit internal identities/fingerprints. Cost changes require invoice cost visibility; protected History/sales projections redact the private evidence. Preview uses the genuine actor and actual proposed location, without granting Settings/import authority to a live uploader.
+
 ## R2g Tier 1 — Existing records, explicit provenance
 
 Weight-parent `unit_size` may be blank; ordinary Each products and package children retain their size constraints. Existing stored text is preserved. This does not change canonical weight units, costs, package codes/barcodes or Decimal conversion precision.

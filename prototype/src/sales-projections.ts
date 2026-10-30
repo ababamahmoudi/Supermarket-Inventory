@@ -20,6 +20,8 @@ import {
 } from "./offers-read-model";
 
 const privateFields = new Set([
+  "known_delivery",
+  "imported_unit_cost_basis",
   "unit_cost",
   "cost_snapshot",
   "previous_cost",

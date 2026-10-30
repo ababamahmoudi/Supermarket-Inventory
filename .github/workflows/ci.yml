@@ -8,7 +8,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Each separately pushed demo item must finish its own checks.
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -22,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -150,9 +151,9 @@ jobs:
   prototype_browser_tests:
     name: Prototype browser shard ${{ matrix.shard }}/4
     runs-on: ubuntu-latest
-    # The expanded suite has about 400 cases per shard; a clean CI204 shard
-    # needed 28.3 minutes before setup. Keep individual test limits unchanged.
-    timeout-minutes: 40
+    # CI213 reached the 40-minute job cap while its 485-case shard was still
+    # progressing. Allow the expanded suite to finish; test limits stay strict.
+    timeout-minutes: 50
     strategy:
       fail-fast: false
       matrix:

@@ -538,6 +538,7 @@ export function setInvoiceLineQuantity(
   line.order_price_decision = undefined;
   line.review_changed_after_confirmation ||= Boolean(line.review_confirmed);
   line.review_confirmed = false;
+  delete line.known_delivery;
 }
 
 export type InvoiceCalculationInput = Pick<

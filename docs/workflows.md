@@ -1,5 +1,11 @@
 # Workflows and state machines
 
+## R3c K1 — First delivery, then repeat delivery
+
+Read/import a first fictional delivery, review its new product and post through ordinary authority. The Product's approval may remain pending. Read another invoice from the same supplier: trusted unchanged name/pack/cost/category values become a green Same as last delivery line automatically, with no line-confirmation click or fabricated checker receipt. Only real changed fields stay amber with before/after and earlier-delivery date; unresolved independent evidence is retained. The progress strip counts same/changed/new and includes automatic confirmations.
+
+Import complete derives readiness from the protected imported invoices and opens the actual Ready to post or Needs review tab explicitly, so an older saved tab filter cannot hide a green delivery. No matching, preview or ready-state navigation posts an invoice or changes a Product, approval or ledger. Posting remains explicit and all genuine header/totals/source blockers still apply.
+
 ## R3c K0 — Completing the approval board
 
 Approve an individual request or the selected eligible invoice batch through the existing guarded command. Retain refresh data and the existing scroll position while real remaining content is still in view. After departing rows finish, release obsolete reserved space and expose the genuine empty state when the authoritative board is empty. If finishing a bottom invoice group leaves all remaining groups above the viewport, anchor the nearest real remaining row instead of retaining a blank viewport. This deliberate visibility recovery is the narrow exception to ordinary partial-list scroll preservation; it does not create or repeat any approval, receipt, price, invoice or ledger action.

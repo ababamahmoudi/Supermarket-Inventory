@@ -1,3 +1,12 @@
+## 2026-10-30 — R3c K1 known deliveries
+
+- Confirm unchanged same-supplier lines automatically from real effective posted evidence, including corrected purchases and pending-approval Products. Show Same as last delivery with a green check and same/changed/new counts; preserve genuine changed fields, uncertainty and paper arithmetic.
+- Retain separate automatic evidence instead of forged human receipts, invalidate it on edits, and explicitly protect source identities, fingerprints and cost comparisons in invoice/History/sales projections.
+- Route an all-ready import to Ready to post using protected current classification, preserving explicit no-write Post preview and existing checks.
+- Added first-post/second-read, exact changed-cost/pack/code, effective correction, authority and privacy coverage. Owner verification passed 236 unit tests and six real browser cases; integrated-source validation and per-item CI are recorded in the review guide and PR.
+- Keep unlike Each/weight bases amber without comparing their numeric costs or clearing genuine current-paper questions. Combined K0+K1 validation passed 42 targeted units, four actual browser cases and a fresh build.
+- Give each pushed item an independent full CI run and allow 50 minutes per expanded browser job after CI213 reached its 40-minute cap. All tests, individual timeouts, workers/retries, skips and numerical limits remain unchanged.
+
 ## 2026-10-29 — R3c K0 approval completion
 
 - Reproduced final individual and Approve all decisions through genuine fictional import/post flows: the old empty board retained 734 px of height and left its message above the viewport. Also reproduced a completed bottom group leaving older approvals entirely outside the usable viewport. Release obsolete reserved space only for those blank-result cases; retain strict 2 px stability when a real surviving card remains visible, protected reads and existing approval/domain actions.
