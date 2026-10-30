@@ -1,5 +1,13 @@
 # Data model
 
+## R3c K5 — app-level background reading
+
+A live invoice read now belongs to an app-level `LiveInvoiceReadingService`, provided beneath `DemoProvider` and outside the routed `App` subtree. Leaving the receiving screen or switching the current invoice, handling location, reader address or reading mode preserves the already accepted request and its captured settings. Completion applies the existing guarded importer to only its saved invoice; it never switches the current invoice or route automatically. Cancel aborts the exact current attempt. A separately successful Discard retires the old transport without writing another Cancelled transition. Full reload still requires an explicit Read again.
+
+The service continues checking real company/person/session/role/version authority at protected command/query boundaries. The existing source hash/content/version/attempt guards remain canonical. A replacement session cannot adopt a late answer. The ready notice contains only the permitted invoice reference, has explicit Dismiss and Open, and Open reauthorizes the exact saved target through the existing guarded navigation path. Pending Timesheets saves keep the notice until navigation is actually accepted. The toast uses the app's bottom toast edge so it does not cover New invoice.
+
+The service registry, activity snapshots and ready notices are transient application state. Canonical original/attempt/source/version and guarded import records retain their existing shape. Ready and page Undo use measured footer/peer bounds, actual mobile layout viewport and physical RTL overflow correction. They clear genuine bottom controls, ignore the desktop sticky top strip, and preserve dialog-owned Undo. Observers/listeners and scheduled frames clean up on unmount.
+
 ## R3c K4 — editable receiving selling price
 
 A receiving-price proposal retains canonical positive cent `price`, independent `calculated_price`, optional exact `entered_price` and `price_unit` (each/lb/kg), and the actual receiving editor/time. Weight input normalizes once using the configured factor and Decimal half-up cents while preserving the typed amount/unit. Posting and approval retain that editor even if somebody else posts. Approved charge and paper/stock/source evidence remain unchanged until the existing actual approval.

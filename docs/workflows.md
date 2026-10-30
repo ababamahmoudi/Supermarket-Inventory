@@ -1,5 +1,11 @@
 # Workflows and state machines
 
+## R3c K5 — app-level background reading
+
+configure Live and a test reader, select an invoice photo, press Read invoice, then navigate to Lookup. Enter a query and leave its field focused. Let the response finish: the route, query and focus remain; the ready notice appears. Click Open to review the original saved invoice. Repeat while a second invoice is selected: only the first saved invoice fills. Repeat with Discard and Undo while a response is held: no late import or toast occurs, and another read requires an explicit new action. Reload during an active read: Read again is offered without an automatic new request.
+
+Only an explicit Cancel stops the accepted ordinary reading; a successful Discard retires its obsolete attempt without another Cancelled transition. A full reload requires explicit Read again. Changed reader address/mode affects later runs; the accepted run retains its captured transport settings. Completion never auto-navigates, changes the selected invoice or steals focus. Open reauthorizes the saved target and waits for the existing Timesheets navigation/save guard. Ready and page Undo use measured footer/peer bounds, actual mobile layout viewport and physical RTL overflow correction. They clear genuine bottom controls, ignore the desktop sticky top strip, and preserve dialog-owned Undo. Observers/listeners and scheduled frames clean up on unmount.
+
 ## R3c K4 — editable receiving selling price
 
 Open an unposted invoice line and edit Selling price directly. The field labels its configured each/kg/lb unit and saves through the actual protected receiving proposal command. Rapid typing keeps the complete buffered amount/focus; closing the editor does not undo saved draft edits. Use calculated price removes the override. Reopening/reloading retains the saved proposal and its actual receiver.

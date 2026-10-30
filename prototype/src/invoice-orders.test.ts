@@ -492,10 +492,37 @@ describe("invoice compared with its order", () => {
     expect(state.products.map((product) => product.code)).toEqual(
       products.map((product) => product.code),
     );
-    expect(state.approvals).toEqual(proposals);
+    // The accepted existing line legitimately proposes the default .99 price;
+    // the fully refused NEW line creates no extra approval or catalog identity.
+    expect(state.approvals).toEqual([
+      ...proposals,
+      expect.objectContaining({
+        id: `${state.invoice.id}:proposal:0002`,
+        product_code: "0002",
+        source_invoice_id: state.invoice.id,
+        type: "price_change",
+        status: "pending",
+        current_price: "1.49",
+        proposed_price: "1.99",
+        unit_cost: "0.9800",
+      }),
+    ]);
+    expect(
+      state.products.find((product) => product.code === "0002")!.selling_price,
+    ).toBe("1.49");
+    expect(
+      state.products.find((product) => product.code === "0002")!.branch_prices,
+    ).toEqual(
+      products.find((product) => product.code === "0002")!.branch_prices,
+    );
     expect(state.expiry).toEqual(expiry);
     expect(state.invoice.lines[1].product_code).toBe("NEW");
     expect(receipts(state)).toHaveLength(1);
+    expect(receipts(state)[0]).toMatchObject({
+      line_index: 0,
+      product_code: "0002",
+      units: 12,
+    });
     expect(order.status).toBe("received");
     expect(state.invoice.payable_after_open_shorts).toBe("11.76");
   });

@@ -1,5 +1,6 @@
 .undo-toast-stack {
   position: fixed;
+  translate: var(--floating-feedback-inline-shift, 0px) 0;
   inset-inline-end: 24px;
   inset-block-end: max(
     var(--undo-footer-offset, 24px),

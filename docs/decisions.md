@@ -668,3 +668,9 @@ Use the real receiving proposal/approval pipeline for Use Lower. Separate stable
 Use the existing protected receiving/approval pipeline for arbitrary typed prices, like K3's Use Lower. Retain exact entered weight amount/unit separately from canonical per-lb cents. Preserve the original receiving editor through a later poster/approver and keep actual approved charges untouched pending approval.
 
 Submit every keystroke through the existing serialized business queue, chain only the field's own successful action tokens and wait for canonical confirmation before closing an edited field. Roll back rejected tentative state to the actual committed value; require fresh current-value review before retry. Preserve stale/ABA/Discard/source guards and private numeric margin/minimum permissions. Show unit-aware approved and proposed prices so configured kg display does not imply a canonical per-lb amount is per kg.
+
+## 2026-10-30 — R3c K5 — app-level background reading
+
+Keep the accepted paid reader request in an application-level provider beneath DemoProvider and outside routed page content. Navigating, changing the selected invoice or editing reader settings must not dispose it. Fresh canonical actor/session/source/attempt/version checks still control the final write to its exact saved target. Separate transport retirement from successful Discard so no late answer or Undo can revive an old attempt.
+
+Offer a safe ready notice with explicit Open/Dismiss rather than automatic navigation. Preserve pending Timesheets save ownership and current focus. Measure actual footer/Undo geometry for page feedback rather than assuming a fixed bottom offset; retain existing dialog-owned feedback.

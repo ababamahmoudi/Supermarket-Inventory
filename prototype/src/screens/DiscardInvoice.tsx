@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { discardInvoice, invoiceDiscardRead } from "../invoice-discard";
 import { clearLiveReadingActive } from "../live-reading-activity";
+import { useOptionalLiveInvoiceReadingService } from "../live-invoice-reading-context";
 import { useDemo } from "../store";
 import type { InvoiceReadDTO } from "../invoice-projections";
 import {
@@ -25,6 +26,7 @@ export function DiscardInvoice({
   onDiscarded?(): void;
 }) {
   const { query, command, can, t } = useDemo();
+  const reader = useOptionalLiveInvoiceReadingService();
   const [confirmation, setConfirmation] = useState<{ version: number } | null>(
     null,
   );
@@ -60,6 +62,7 @@ export function DiscardInvoice({
           reason: why,
         }),
       );
+      reader?.retire(invoice.company_id, invoice.id, result.attempt_id);
       clearLiveReadingActive(invoice.company_id, invoice.id, result.attempt_id);
       setConfirmation(null);
       onDiscarded?.();

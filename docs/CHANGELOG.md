@@ -1,3 +1,10 @@
+## 2026-10-30 — R3c K5 — app-level background reading
+
+- Moved live requests into an app-level guarded service, preserving accepted transport settings across route/invoice/settings changes. Completion fills only the saved target and offers safe explicit Open without stealing focus; actual Cancel, Discard/Undo, reload and fresh authority/source guards remain.
+- Ready and Undo clear actual phone Post/footer controls and RTL viewport bounds, with clean observer/listener teardown and unchanged dialog feedback ownership.
+- Integrated verification passed 95 focused service/navigation/footer units, full lint/build; all 58 final R3/F0/background/footer browser cases passed in 8.1 minutes, without retries or skips. The final composed build passed; independent full CI is tracked on PR #29.
+- Repaired three K3 domain-test fixtures to retain a genuine historical margin boundary, a default-on pending1.99/current1.49 counterpart, a truly manual price with actual requester/decider identity, and exact legitimate accepted-line proposals beside a wholly refused NEW line. All 52 relevant tests pass; no production behavior or historical price assertion was removed.
+
 ## 2026-10-30 — R3c K4 — editable receiving selling price
 
 - Made receiving Selling price editable with stable buffered typing, actual receiving-person attribution, exact entered weight-unit evidence and existing margin/below-cost/minimum warnings. Pending approval shows requested/calculated prices beside the original receiver; current charged money stays unchanged.

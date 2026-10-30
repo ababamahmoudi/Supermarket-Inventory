@@ -1,32 +1,28 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Camera, FileText, Upload } from "lucide-react";
 import { beginAppWork } from "../app-work";
 import {
-  loadInvoiceOriginal,
   storeInvoiceUpload,
   type InvoiceUploadHandle,
-  type ProtectedInvoiceQuery,
 } from "../invoice-file-access";
 import {
   attachLiveInvoiceOriginals,
-  beginLiveInvoiceReading,
   settleLiveInvoiceReading,
-  applyLiveInvoiceReading,
   reorderLiveInvoiceOriginals,
   useSimulatedLiveInvoiceReading as applySimulatedLiveReading,
 } from "../invoice-live-reading";
-import { prepareLiveReaderImages } from "../invoice-live-images";
-import {
-  buildLiveInvoiceReadingsExport,
-  LIVE_READING_TIMEOUT_MS,
-  requestLiveInvoiceReading,
-} from "../invoice-live-reader";
 import { getLiveReaderSettings } from "../live-reader-settings";
+import { useLiveReadingActivity } from "../live-reading-activity";
 import {
-  clearLiveReadingActive,
-  markLiveReadingActive,
-  useLiveReadingActivity,
-} from "../live-reading-activity";
+  useLiveInvoiceReadingOperation,
+  useLiveInvoiceReadingService,
+} from "../live-invoice-reading-context";
+import {
+  retainedLiveFiles as retainedFiles,
+  liveReadingIdentity,
+  type LiveReadingStage as Stage,
+  type LiveReadingDetail,
+} from "../live-invoice-reading-service";
 import type { InvoiceReadDTO } from "../invoice-projections";
 import { FitText } from "../FitText";
 import { useDemo } from "../store";
@@ -40,37 +36,6 @@ const invoiceScope = (invoice: InvoiceReadDTO) => ({
   kind: "company_shared" as const,
   entity_id: invoice.id,
 });
-function untilCancelled<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
-  if (signal.aborted)
-    return Promise.reject(new DOMException("Cancelled", "AbortError"));
-  return new Promise((resolve, reject) => {
-    const cancel = () => reject(new DOMException("Cancelled", "AbortError"));
-    signal.addEventListener("abort", cancel, { once: true });
-    work
-      .then(resolve, reject)
-      .finally(() => signal.removeEventListener("abort", cancel));
-  });
-}
-async function retainedFiles(
-  query: ProtectedInvoiceQuery,
-  companyId: string,
-  invoiceId: string,
-  count: number,
-) {
-  const files: File[] = [];
-  for (let page = 0; page < count; page++) {
-    const original = await loadInvoiceOriginal(query, {
-      company_id: companyId,
-      invoice_id: invoiceId,
-      page,
-    });
-    files.push(
-      new File([original.source], original.name, { type: original.type }),
-    );
-  }
-  return files;
-}
-
 /** Store all original bytes before any preparation or external request. */
 export function LiveInvoiceUpload({
   invoice,
@@ -228,7 +193,6 @@ export function LiveInvoiceUpload({
   );
 }
 
-type Stage = "preparing" | "reading" | "finding" | "calculating";
 function stepText(stage: Stage, t: Translate) {
   if (stage === "preparing")
     return t("Preparing pages…", "در حال آماده‌سازی صفحه‌ها…");
@@ -237,49 +201,39 @@ function stepText(stage: Stage, t: Translate) {
     return t("Calculating prices", "محاسبهٔ قیمت‌ها");
   return t("Reading the invoice", "خواندن فاکتور");
 }
-function sourceScope(actor: ReturnType<typeof useDemo>["actor"]) {
-  return JSON.stringify([
-    actor?.company_id,
-    actor?.user_id,
-    actor?.session_id,
-    actor?.role,
-    actor?.authority_epoch,
-    actor?.person_version,
-    actor?.selection,
-  ]);
+function readingDetail(code: LiveReadingDetail | undefined, t: Translate) {
+  if (code === "pdf_pages")
+    return t(
+      "A PDF can contain at most 10 pages. Choose a shorter PDF or enter this invoice by hand.",
+      "PDF می‌تواند حداکثر ۱۰ صفحه داشته باشد. PDF کوتاه‌تری انتخاب کنید یا فاکتور را دستی وارد کنید.",
+    );
+  if (code === "invoice_number")
+    return t(
+      "This supplier already has that invoice number in the app.",
+      "این شمارهٔ فاکتور برای این تأمین‌کننده از قبل در برنامه است.",
+    );
+  if (code === "page_sha256")
+    return t(
+      "An original page with the same SHA-256 is already in the app.",
+      "یک صفحهٔ اصل با همین SHA-256 از قبل در برنامه است.",
+    );
+  if (code === "import")
+    return t("The invoice could not be imported.", "ورود این فاکتور ممکن نشد.");
+  return "";
 }
 
 /** A persisted live draft is recoverable independently of this request's lifetime. */
 export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
   const { state, actor, command, query, t } = useDemo();
   const settings = getLiveReaderSettings(state.config.receiving);
-  const identity = sourceScope(actor);
-  const requestScope = JSON.stringify([
-    identity,
-    invoice.id,
-    settings.mode,
-    settings.readerAddress,
-  ]);
-  const token = requestScope;
-  const current = useRef(token);
-  useLayoutEffect(() => {
-    current.current = token;
-  }, [token]);
-  const alive = useRef(true);
-  const operation = useRef<{
-    controller: AbortController;
-    attemptId?: string;
-    timedOut?: boolean;
-  } | null>(null);
+  const identity = liveReadingIdentity(actor);
+  const service = useLiveInvoiceReadingService();
+  const operation = useLiveInvoiceReadingOperation(invoice);
+  const { busy, stage, failure } = operation;
   const [fileState, setFileState] = useState<{
     key: string;
     files: File[];
   } | null>(null);
-  const [working, setWorking] = useState({ token, busy: false });
-  const busy = working.token === token && working.busy;
-  const setBusy = (value: boolean) => setWorking({ token, busy: value });
-  const [stage, setStage] = useState<Stage>("preparing");
-  const [failure, setFailure] = useState(false);
   const [detail, setDetail] = useState("");
   const [changingOrder, setChangingOrder] = useState(false);
   const orderEditable = ["ready", "failed", "cancelled"].includes(
@@ -335,229 +289,22 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
     invoice.original_page_count,
     t,
   ]);
-  useEffect(() => {
-    alive.current = true;
-    operation.current = null;
-    return () => {
-      alive.current = false;
-      const pending = operation.current;
-      pending?.controller.abort();
-      clearLiveReadingActive(
-        invoice.company_id,
-        invoice.id,
-        pending?.attemptId,
-      );
-      if (pending?.attemptId)
-        void command(
-          "invoices.edit",
-          {
-            company_id: invoice.company_id,
-            kind: "company_shared",
-            entity_id: invoice.id,
-          },
-          (draft, currentActor) =>
-            settleLiveInvoiceReading(draft, currentActor, {
-              invoice_id: invoice.id,
-              attempt_id: pending.attemptId!,
-              outcome: "cancelled",
-            }),
-        ).catch(() => undefined);
-    };
-  }, [token, command, invoice.company_id, invoice.id]);
-  useEffect(() => {
-    const pending = operation.current;
-    if (
-      pending?.attemptId &&
-      (invoice.live_reading?.attempt_id !== pending.attemptId ||
-        invoice.live_reading?.phase !== "processing")
-    )
-      pending.controller.abort();
-  }, [invoice.live_reading?.attempt_id, invoice.live_reading?.phase]);
-
-  async function read() {
+  function read() {
     if (
       settings.mode !== "live" ||
-      operation.current ||
+      busy ||
       loading ||
       changingOrder ||
       !files.length
     )
       return;
-    const pending = {
-      controller: new AbortController(),
-      attemptId: undefined as string | undefined,
-      timedOut: false,
-    };
-    operation.current = pending;
-    const present = () =>
-      alive.current &&
-      current.current === token &&
-      operation.current === pending;
-    const valid = () => present() && !pending.controller.signal.aborted;
-    let deadline: ReturnType<typeof setTimeout> | undefined = setTimeout(() => {
-      pending.timedOut = true;
-      pending.controller.abort();
-    }, LIVE_READING_TIMEOUT_MS);
-    setBusy(true);
-    setFailure(false);
-    setDetail("");
-    setStage("preparing");
-    try {
-      const attempt = await command(
-        "invoices.edit",
-        invoiceScope(invoice),
-        (draft, currentActor) =>
-          beginLiveInvoiceReading(draft, currentActor, invoice.id),
-      );
-      pending.attemptId = attempt.attempt_id;
-      if (!valid()) throw new DOMException("Cancelled", "AbortError");
-      markLiveReadingActive(
-        invoice.company_id,
-        invoice.id,
-        attempt.attempt_id,
-        attempt.started_at,
-      );
-      // Read the current protected source order after the accepted begin. A
-      // different tab's saved reorder must never pair old images with new hashes.
-      const readingFiles = await untilCancelled(
-        retainedFiles(
-          query,
-          invoice.company_id,
-          invoice.id,
-          attempt.original_sha256s.length,
-        ),
-        pending.controller.signal,
-      );
-      const images = await untilCancelled(
-        prepareLiveReaderImages(readingFiles, pending.controller.signal),
-        pending.controller.signal,
-      );
-      if (!valid()) throw new DOMException("Cancelled", "AbortError");
-      setStage("reading");
-      const response = await requestLiveInvoiceReading(
-        settings.readerAddress,
-        images,
-        pending.controller.signal,
-      );
-      if (!valid()) throw new DOMException("Cancelled", "AbortError");
-      clearTimeout(deadline);
-      deadline = undefined;
-      setStage("finding");
-      const hashes =
-        readingFiles.length === 1 && readingFiles[0].type === "application/pdf"
-          ? images.map(() => attempt.original_sha256s[0])
-          : attempt.original_sha256s;
-      const exported = buildLiveInvoiceReadingsExport(response, {
-        images,
-        originalSha256: hashes,
-        fileName: readingFiles[0].name,
-        id: invoice.id,
-      });
-      if (!valid()) throw new DOMException("Cancelled", "AbortError");
-      setStage("calculating");
-      const release = beginAppWork();
-      try {
-        const result = await command(
-          "invoices.edit",
-          invoiceScope(invoice),
-          (draft, currentActor) => {
-            if (!valid()) throw new DOMException("Cancelled", "AbortError");
-            return applyLiveInvoiceReading(draft, currentActor, {
-              invoice_id: invoice.id,
-              attempt_id: attempt.attempt_id,
-              exported,
-              provenance: {
-                seconds: response.seconds,
-                costUSD: String(response.costUSD),
-                models: response.models,
-                ...(response.modelDetails
-                  ? { modelDetails: response.modelDetails }
-                  : {}),
-              },
-            });
-          },
-        );
-        if (!result.imported.length && !valid())
-          throw new DOMException("Cancelled", "AbortError");
-        if (result.skipped.length && valid()) {
-          await command(
-            "invoices.edit",
-            invoiceScope(invoice),
-            (draft, currentActor) =>
-              settleLiveInvoiceReading(draft, currentActor, {
-                invoice_id: invoice.id,
-                attempt_id: attempt.attempt_id,
-                outcome: "failed",
-              }),
-          );
-          const duplicate = result.skipped[0].reason;
-          setDetail(
-            duplicate === "invoice_number"
-              ? t(
-                  "This supplier already has that invoice number in the app.",
-                  "این شمارهٔ فاکتور برای این تأمین‌کننده از قبل در برنامه است.",
-                )
-              : duplicate === "page_sha256"
-                ? t(
-                    "An original page with the same SHA-256 is already in the app.",
-                    "یک صفحهٔ اصل با همین SHA-256 از قبل در برنامه است.",
-                  )
-                : t(
-                    "The invoice could not be imported.",
-                    "ورود این فاکتور ممکن نشد.",
-                  ),
-          );
-          setFailure(true);
-        }
-      } finally {
-        release();
-      }
-    } catch (cause) {
-      const cancelled = pending.controller.signal.aborted && !pending.timedOut;
-      if (pending.attemptId)
-        await command(
-          "invoices.edit",
-          invoiceScope(invoice),
-          (draft, currentActor) =>
-            settleLiveInvoiceReading(draft, currentActor, {
-              invoice_id: invoice.id,
-              attempt_id: pending.attemptId!,
-              outcome: cancelled ? "cancelled" : "failed",
-            }),
-        ).catch(() => undefined);
-      if (present() && !cancelled) {
-        setFailure(true);
-        if (
-          cause &&
-          typeof cause === "object" &&
-          "code" in cause &&
-          cause.code === "pdf_pages"
-        )
-          setDetail(
-            t(
-              "A PDF can contain at most 10 pages. Choose a shorter PDF or enter this invoice by hand.",
-              "PDF می‌تواند حداکثر ۱۰ صفحه داشته باشد. PDF کوتاه‌تری انتخاب کنید یا فاکتور را دستی وارد کنید.",
-            ),
-          );
-      }
-    } finally {
-      clearTimeout(deadline);
-      clearLiveReadingActive(invoice.company_id, invoice.id, pending.attemptId);
-      if (operation.current === pending) {
-        operation.current = null;
-        if (alive.current && current.current === token) setBusy(false);
-      }
-    }
+    void service.start(invoice);
   }
   function cancel() {
-    const pending = operation.current;
-    if (!pending) return;
-    pending.controller.abort();
-    clearLiveReadingActive(invoice.company_id, invoice.id, pending.attemptId);
-    setFailure(false);
+    service.cancel(invoice.company_id, invoice.id, operation.attemptId);
   }
   async function manual() {
-    operation.current?.controller.abort();
+    service.cancel(invoice.company_id, invoice.id, operation.attemptId);
     const attemptId = invoice.live_reading?.attempt_id;
     if (!attemptId) return;
     try {
@@ -581,7 +328,7 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
     }
   }
   async function simulate() {
-    operation.current?.controller.abort();
+    service.cancel(invoice.company_id, invoice.id, operation.attemptId);
     await command(
       "invoices.edit",
       invoiceScope(invoice),
@@ -698,9 +445,9 @@ export function LiveInvoiceReading({ invoice }: { invoice: InvoiceReadDTO }) {
                     "اصل فایل شما ذخیره شده است. پیش از خواندن ترتیب صفحه‌ها را بررسی کنید.",
                   )}
           </p>
-          {detail && (
+          {(detail || operation.detailCode) && (
             <p className="helper" role="status">
-              {detail}
+              {detail || readingDetail(operation.detailCode, t)}
             </p>
           )}
           {settings.mode !== "live" && (

@@ -15,7 +15,7 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 | 7     | F3 — native picker before draft creation             | Delivered         |
 | 8     | K3 — configurable .49 → .99                          | Delivered         |
 | 9     | K4 — selling-price proposal in the line editor       | Delivered         |
-| 10    | K5 — reading survives navigation                     | In implementation |
+| 10    | K5 — reading survives navigation                     | Delivered         |
 | 11    | K7 — compact truthful reading progress               | In implementation |
 
 P1 remains after green P0. No pending row in this table is a claim of delivered behavior.
@@ -131,6 +131,16 @@ The owner passed 131 focused units, 182 additional pricing tests (overlapping ba
 5. Finish required checks and confirm the lines. Let a different Manager post. In **Approvals → individual manual price → Review approval**, check requested/calculated prices, entered kg amount if relevant, and **Set by the original receiving person during receiving**. Cancel/reject retains the earlier approved charge; genuine final approval uses the existing scope/reason guards.
 
 Integrated verification passed 31 focused units and static/build checks. Browser verification passed 18 main/legacy cases, two final kg/lb comparison cases and six Price tester cases, with no skips/retries. This includes native IndexedDB abort/rollback/retry, real source/receipt workflows and a visible divisor change with a genuine below-minimum warning. Independent full CI is tracked on PR #29. Automated originals and responses are fictional.
+
+## K5 — app-level background reading
+
+1. Configure Live, choose a fictional photo/PDF and explicitly press **Read invoice**. Navigate to **Lookup**, enter a query and leave its field focused. Let the reader respond: Lookup/query/focus remain and a ready notice appears. Click **Open** to review that saved invoice.
+2. Repeat while another invoice is selected. Only the first saved draft fills. Changing reader address/mode during a run does not retarget it; those settings apply to a later explicit read.
+3. Hold a response, Discard the draft and Undo it. The old response cannot import or show Ready, and Undo does not restart the request. Use **Read again** explicitly. Reload during a reading also requires an explicit new read.
+4. Finish a read while a real Timesheets field save is pending, then Open. The existing save/navigation guard retains ownership and the notice stays until navigation is accepted.
+5. On a phone, Ready and Undo sit above the actual Post/footer controls and each other, including Persian/RTL and a changing footer height. Test Post, New invoice, Lookup and Undo with the notice visible.
+
+Integrated service/navigation/footer verification passed 95 units, lint and build. The complete final R3/F0/background/footer matrix passed all 58 browser cases in 8.1 minutes, with no retries or skips. The three-file K3 domain-fixture repair separately passed all 52 tests, and the final composed build passed. Independent full CI is tracked on PR #29. All automated originals/responses are fictional; physical-device/local-reader rehearsal remains on Ali's devices.
 
 ## After the demo — record only
 

@@ -8,6 +8,8 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { LiveInvoiceReading } from "./LiveInvoiceReading";
+import { LiveInvoiceReadingProvider } from "../LiveInvoiceReadingProvider";
+import { useLiveInvoiceReadingService } from "../live-invoice-reading-context";
 import type { InvoiceReadDTO } from "../invoice-projections";
 import type { useDemo } from "../store";
 import { configSeed } from "../config";
@@ -108,7 +110,9 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 async function ready() {
-  const view = render(<LiveInvoiceReading invoice={draft()} />);
+  const view = render(<LiveInvoiceReading invoice={draft()} />, {
+    wrapper: LiveInvoiceReadingProvider,
+  });
   await waitFor(() =>
     expect(screen.getByRole("button", { name: "Read invoice" })).toBeEnabled(),
   );
@@ -166,7 +170,7 @@ it("cancels preparation and retains recovery without waiting for its promise", a
   expect(screen.getByRole("button", { name: "Enter by hand" })).toBeVisible();
   expect(appWorkPending()).toBe(false);
 });
-it("aborts the old request intent when the configured reader changes", async () => {
+it("keeps the accepted request when the configured reader changes", async () => {
   const view = await ready();
   await act(async () =>
     fireEvent.click(screen.getByRole("button", { name: "Read invoice" })),
@@ -188,11 +192,11 @@ it("aborts the old request intent when the configured reader changes", async () 
   await act(async () =>
     view.rerender(<LiveInvoiceReading invoice={draft()} />),
   );
-  expect(signal.aborted).toBe(true);
+  expect(signal.aborted).toBe(false);
   expect(ports.request).not.toHaveBeenCalled();
-  expect(screen.getByRole("button", { name: "Enter by hand" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
 });
-it("aborts when Live mode is switched off without making an automatic fallback request", async () => {
+it("keeps the accepted request when Live mode is switched off without making an automatic fallback request", async () => {
   const view = await ready();
   await act(async () =>
     fireEvent.click(screen.getByRole("button", { name: "Read invoice" })),
@@ -214,12 +218,12 @@ it("aborts when Live mode is switched off without making an automatic fallback r
   await act(async () =>
     view.rerender(<LiveInvoiceReading invoice={draft()} />),
   );
-  expect(signal.aborted).toBe(true);
+  expect(signal.aborted).toBe(false);
   expect(ports.request).not.toHaveBeenCalled();
-  expect(screen.getByRole("button", { name: "Read invoice" })).toBeDisabled();
+  expect(screen.queryByRole("button", { name: "Read invoice" })).toBeNull();
   expect(
-    screen.getByRole("button", { name: "Use simulated reading" }),
-  ).toBeVisible();
+    screen.queryByRole("button", { name: "Use simulated reading" }),
+  ).toBeNull();
 });
 it("aborts when another accepted attempt supersedes this one", async () => {
   const view = await ready();
@@ -227,18 +231,16 @@ it("aborts when another accepted attempt supersedes this one", async () => {
     fireEvent.click(screen.getByRole("button", { name: "Read invoice" })),
   );
   const signal = ports.prepare.mock.calls[0][1] as AbortSignal;
+  const replacement = {
+    ...draft(),
+    live_reading: {
+      phase: "processing" as const,
+      attempt_id: "another-accepted-attempt",
+    },
+  };
+  context = { ...context, state: { ...context.state, invoice: replacement } };
   await act(async () =>
-    view.rerender(
-      <LiveInvoiceReading
-        invoice={{
-          ...draft(),
-          live_reading: {
-            phase: "processing",
-            attempt_id: "another-accepted-attempt",
-          },
-        }}
-      />,
-    ),
+    view.rerender(<LiveInvoiceReading invoice={replacement} />),
   );
   expect(signal.aborted).toBe(true);
   expect(ports.request).not.toHaveBeenCalled();
@@ -262,7 +264,9 @@ it("refreshes the protected page preview when an external reorder changes only t
     file_name: "fictional-A.png",
     original_page_count: 3,
   };
-  const view = render(<LiveInvoiceReading invoice={invoice} />);
+  const view = render(<LiveInvoiceReading invoice={invoice} />, {
+    wrapper: LiveInvoiceReadingProvider,
+  });
   const shownOrder = () =>
     Array.from(
       screen
@@ -310,7 +314,9 @@ it("keeps interrupted Processing recovery available while disabling impossible p
       attempt_id: "interrupted-processing-attempt",
     },
   };
-  const view = render(<LiveInvoiceReading invoice={invoice} />);
+  const view = render(<LiveInvoiceReading invoice={invoice} />, {
+    wrapper: LiveInvoiceReadingProvider,
+  });
   await waitFor(() =>
     expect(screen.getByRole("button", { name: "Read again" })).toBeEnabled(),
   );
@@ -336,4 +342,175 @@ it("keeps interrupted Processing recovery available while disabling impossible p
     screen.getByRole("button", { name: "Move page 2 down" }),
   ).toBeEnabled();
   expect(ports.request).not.toHaveBeenCalled();
+});
+
+it("continues the same paid request after the invoice screen leaves and applies to its saved target", async () => {
+  ports.prepare.mockResolvedValue([{ mime: "image/jpeg", data: "fictional" }]);
+  let answer!: (value: unknown) => void;
+  ports.request.mockReturnValue(
+    new Promise((resolve) => {
+      answer = resolve;
+    }),
+  );
+  ports.apply.mockReturnValue({ imported: [], skipped: [] });
+  const view = await ready();
+  await act(async () =>
+    fireEvent.click(screen.getByRole("button", { name: "Read invoice" })),
+  );
+  await waitFor(() => expect(ports.request).toHaveBeenCalledTimes(1));
+  const signal = ports.request.mock.calls[0][2] as AbortSignal;
+  await act(async () => view.rerender(<p>Lookup remains open</p>));
+  try {
+    expect(signal.aborted).toBe(false);
+    expect(ports.settle).not.toHaveBeenCalled();
+    expect(appWorkPending()).toBe(false);
+  } finally {
+    await act(async () =>
+      answer({ seconds: 12, costUSD: "0.0123", models: ["Fictional reader"] }),
+    );
+  }
+  await waitFor(() => expect(ports.apply).toHaveBeenCalledTimes(1));
+  expect(ports.apply.mock.calls[0][2]).toMatchObject({
+    invoice_id: "fictional-live-draft",
+    attempt_id: "fictional-processing-attempt",
+  });
+  expect(screen.getByText("Lookup remains open")).toBeVisible();
+  expect(ports.request).toHaveBeenCalledTimes(1);
+  expect(ports.settle).not.toHaveBeenCalled();
+  expect(appWorkPending()).toBe(false);
+});
+
+it("uses the accepted reader address after settings and location selection change", async () => {
+  let prepared!: (images: unknown) => void;
+  ports.prepare.mockReturnValue(
+    new Promise((resolve) => {
+      prepared = resolve;
+    }),
+  );
+  ports.request.mockResolvedValue({
+    seconds: 12,
+    costUSD: "0.0123",
+    models: ["Fictional reader"],
+  });
+  ports.apply.mockReturnValue({ imported: [], skipped: [] });
+  const view = await ready();
+  await act(async () =>
+    fireEvent.click(screen.getByRole("button", { name: "Read invoice" })),
+  );
+  context = {
+    ...context,
+    actor: {
+      ...context.actor!,
+      selection: { kind: "location", location_id: "other-fictional-location" },
+    },
+    state: {
+      ...context.state,
+      config: {
+        ...context.state.config,
+        receiving: {
+          ...context.state.config.receiving,
+          ai_reading_mode: "simulated",
+          ai_reader_address: "http://other-fictional-reader.test:5191",
+        },
+      },
+    },
+  };
+  await act(async () => view.rerender(<p>Other route</p>));
+  expect((ports.prepare.mock.calls[0][1] as AbortSignal).aborted).toBe(false);
+  await act(async () => prepared([{ mime: "image/jpeg", data: "fictional" }]));
+  await waitFor(() => expect(ports.apply).toHaveBeenCalledTimes(1));
+  expect(ports.request.mock.calls[0][0]).toBe(
+    "http://fictional-reader.test:5191",
+  );
+  expect(ports.request).toHaveBeenCalledTimes(1);
+});
+
+it("cannot adopt a late background response under a replacement session", async () => {
+  ports.prepare.mockResolvedValue([{ mime: "image/jpeg", data: "fictional" }]);
+  let answer!: (value: unknown) => void;
+  ports.request.mockReturnValue(
+    new Promise((resolve) => {
+      answer = resolve;
+    }),
+  );
+  const view = await ready();
+  await act(async () =>
+    fireEvent.click(screen.getByRole("button", { name: "Read invoice" })),
+  );
+  await waitFor(() => expect(ports.request).toHaveBeenCalledTimes(1));
+  const signal = ports.request.mock.calls[0][2] as AbortSignal;
+  context = {
+    ...context,
+    actor: { ...context.actor!, session_id: "replacement-fictional-session" },
+  };
+  await act(async () => view.rerender(<p>New session</p>));
+  expect(signal.aborted).toBe(true);
+  await act(async () =>
+    answer({ seconds: 12, costUSD: "0.0123", models: ["Fictional reader"] }),
+  );
+  expect(ports.apply).not.toHaveBeenCalled();
+  expect(ports.settle).not.toHaveBeenCalled();
+  expect(screen.queryByTestId("live-reading-ready")).toBeNull();
+});
+
+function RetireControls() {
+  const service = useLiveInvoiceReadingService();
+  return (
+    <>
+      <button
+        onClick={() =>
+          service.retire(
+            "fictional-live-company",
+            "fictional-live-draft",
+            "old-unrelated-attempt",
+          )
+        }
+      >
+        Retire old attempt
+      </button>
+      <button
+        onClick={() =>
+          service.retire(
+            "fictional-live-company",
+            "fictional-live-draft",
+            "fictional-processing-attempt",
+          )
+        }
+      >
+        Retire accepted attempt
+      </button>
+    </>
+  );
+}
+it("retires only the exact discarded transport without an extra canonical settlement", async () => {
+  ports.prepare.mockResolvedValue([{ mime: "image/jpeg", data: "fictional" }]);
+  let answer!: (value: unknown) => void;
+  ports.request.mockReturnValue(
+    new Promise((resolve) => {
+      answer = resolve;
+    }),
+  );
+  const view = await ready();
+  await act(async () =>
+    fireEvent.click(screen.getByRole("button", { name: "Read invoice" })),
+  );
+  await waitFor(() => expect(ports.request).toHaveBeenCalledTimes(1));
+  const signal = ports.request.mock.calls[0][2] as AbortSignal;
+  await act(async () => view.rerender(<RetireControls />));
+  await act(async () =>
+    fireEvent.click(screen.getByRole("button", { name: "Retire old attempt" })),
+  );
+  expect(signal.aborted).toBe(false);
+  await act(async () =>
+    fireEvent.click(
+      screen.getByRole("button", { name: "Retire accepted attempt" }),
+    ),
+  );
+  expect(signal.aborted).toBe(true);
+  await act(async () =>
+    answer({ seconds: 12, costUSD: "0.0123", models: ["Fictional reader"] }),
+  );
+  expect(ports.settle).not.toHaveBeenCalled();
+  expect(ports.apply).not.toHaveBeenCalled();
+  expect(screen.queryByTestId("live-reading-ready")).toBeNull();
 });

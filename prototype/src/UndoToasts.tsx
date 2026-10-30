@@ -13,6 +13,7 @@ import type { UndoToast } from "./undo-queue";
 import { dialogFeedbackScope } from "./dialog-feedback";
 import { Button, IconButton } from "./ui";
 import "./undo-toasts.css";
+import { useFloatingFeedbackOffset } from "./use-floating-feedback-offset";
 
 function UndoToastItem({
   toast,
@@ -176,54 +177,7 @@ export default function UndoToasts() {
     });
     return () => observer.disconnect();
   }, []);
-  useEffect(() => {
-    const stack = stackRef.current;
-    if (!stack) return;
-    let frame = 0;
-    const measure = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const height =
-          document.documentElement.clientHeight || window.innerHeight;
-        let offset = 24;
-        // Reserve the real footer geometry rather than placing a message over its controls.
-        for (const bar of document.querySelectorAll<HTMLElement>(
-          ".bottom-bar, .invoice-action-footer, .labels-selection-bar, .sticky-actions, [data-sticky-actions], dialog[open] .dialog-actions, dialog[open] .ui-dialog-actions, dialog[open] .c3-dialog-actions, dialog[open] .product-editor-actions",
-        )) {
-          const style = getComputedStyle(bar);
-          const bounds = bar.getBoundingClientRect();
-          if (
-            !bounds.height ||
-            style.visibility === "hidden" ||
-            style.display === "none" ||
-            bounds.bottom > height + 2 ||
-            bounds.top < 0
-          )
-            continue;
-          if (
-            ["fixed", "sticky"].includes(style.position) ||
-            bounds.bottom > height - 120
-          )
-            offset = Math.max(offset, height - bounds.top + 12);
-        }
-        stack.style.setProperty(
-          "--undo-footer-offset",
-          `${Math.ceil(offset)}px`,
-        );
-      });
-    };
-    measure();
-    const observer = new MutationObserver(measure);
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
-      cancelAnimationFrame(frame);
-    };
-  }, [host, undoToasts.length, user, locked, mustChangePassword]);
+  useFloatingFeedbackOffset(stackRef, "--undo-footer-offset");
   // Only the person who did the action is offered its Undo.
   const own = undoToasts.filter(
     (item) => !item.actor_username || item.actor_username === user?.username,

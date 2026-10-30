@@ -174,6 +174,10 @@ describe("invoice, approval, offer and catalog integration", () => {
 
   it("keeps an invoice margin review out of pending-price lookup and sends an override through normal approval", () => {
     const state = initialState();
+    // Preserve the exact historical 1.12/1.49 minimum-margin boundary for a
+    // company with the optional ending adjustment disabled. Default-on behavior
+    // and unchanged approved 1.49 are covered by the next case.
+    state.config.rounding_bands.final_ending_adjustment = null;
     prepareInvoice(state, "1.12");
     postInvoice(state, worker(state));
     const product = state.products.find((item) => item.code === "0002")!;
@@ -227,6 +231,37 @@ describe("invoice, approval, offer and catalog integration", () => {
           item.status === "suggested",
       ),
     ).toBe(true);
+  });
+
+  it("the enabled ending adjustment proposes 1.99 instead of a historical 1.49 margin review and keeps the charged price unchanged", () => {
+    const state = initialState();
+    prepareInvoice(state, "1.12");
+    postInvoice(state, worker(state));
+    const product = state.products.find((item) => item.code === "0002")!;
+    const proposal = state.approvals.find(
+      (item) =>
+        item.source_invoice_id === state.invoice.id &&
+        item.product_code === product.code,
+    )!;
+    expect(proposal).toMatchObject({
+      type: "price_change",
+      status: "pending",
+      current_price: "1.49",
+      proposed_price: "1.99",
+      unit_cost: "1.12",
+      threshold: "0.25",
+    });
+    expect(
+      state.approvals.filter(
+        (item) =>
+          item.source_invoice_id === state.invoice.id &&
+          item.product_code === product.code &&
+          item.type === "margin_review",
+      ),
+    ).toEqual([]);
+    expect(pendingPrice(state, product, "Branch 1")).toBe("1.99");
+    expect(effectivePrice(state, product, "Branch 1")).toBe("1.49");
+    expect(product.selling_price).toBe("1.49");
   });
 });
 

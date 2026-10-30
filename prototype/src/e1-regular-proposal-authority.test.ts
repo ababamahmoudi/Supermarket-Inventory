@@ -4,6 +4,7 @@ import { authenticatedTestActor } from "./authority-test-fixture";
 import { cloneWithAuthority } from "./authority";
 import { proposeRegularPrice, resolveApproval } from "./approvals";
 import { regularPrice } from "./catalog";
+import { calculatePrice } from "./pricing";
 import { manualPrice } from "./manual-prices";
 import { recordPickup, submitFinancialClaim } from "./operations";
 
@@ -24,8 +25,17 @@ describe("E1 regular proposal decision identity and retained write-off safety", 
       supervisor,
       product.code,
       "Branch 1",
-      "15.99",
+      "15.79",
     );
+    // A genuine manual amount stays distinct from the new default rule 15.99.
+    expect(
+      calculatePrice(
+        product.last_cost_before_tax,
+        product.pricing_category,
+        state.config,
+      ).selling_price,
+    ).toBe("15.99");
+    expect(request.proposed_price).toBe("15.79");
     expect(regularPrice(state, product, "Branch 1")).toBe(price);
     expect(request.source_manual_request?.requester_user_id).toBe(
       supervisor.user_id,
@@ -50,7 +60,7 @@ describe("E1 regular proposal decision identity and retained write-off safety", 
       "branch",
       "Branch 1",
     );
-    expect(regularPrice(state, product, "Branch 1")).toBe("15.99");
+    expect(regularPrice(state, product, "Branch 1")).toBe("15.79");
     expect(request.decided_by_user_id).toBe(manager.user_id);
     expect(request.decision_attribution?.user_id).toBe(manager.user_id);
     expect(request.source_manual_request?.requester_user_id).toBe(
