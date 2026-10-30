@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { openShellAction } from "./helpers";
+import { openShellAction, signIn } from "./helpers";
+import { runCanonicalBusinessFixture } from "./business-fixture";
 import { importReceivingFixture, word } from "./r2-receiving-helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 
@@ -35,6 +36,15 @@ for (const language of ["en", "fa"] as const)
     }, info) => {
       const phone = info.project.name === "phone";
       await page.setViewportSize({ width: phone ? 390 : 1440, height: 900 });
+      await signIn(page, "Owner");
+      // This 25-line boundary deliberately includes missing required terms.
+      await runCanonicalBusinessFixture(
+        page,
+        (state) => {
+          state.config.receiving.default_payment_terms = null;
+        },
+        null,
+      );
       const invoice = await importReceivingFixture(page, language);
       if (theme === "dark")
         await (
