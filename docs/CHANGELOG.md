@@ -1,4 +1,14 @@
+## 2026-10-30 — R3c fixed category fit and controlled pending proofs
+
+The full category action now has a fixed 48 px height and enough text room at the original 640 px grid boundary. Scoped existing 4 px gap/inset tokens keep its complete 13 px label within two lines, including the reproduced classic-scrollbar width. The original 1.7:1 panes, full label, filters and all card/density limits remain. No style oracle is relaxed.
+
+Pending-reading browser checks now pause supported browser scheduling around the real upload or retained-original action. They still require visible Reading, exact canonical reading identity/source and unchanged financial records; the posting guard additionally covers the phone footer. Scheduling resumes before the existing review deadlines, then verifies the same retained invoice. The four unpaused F1 tests remain unchanged. This does not restore an artificial user wait. Mac/Ubuntu and older reader/phone setup guides now point to the current branch, exact localhost fallback and background-reading rules.
+
+Verification: 55/55 receiving cases passed in 9.5 minutes with zero retries/skips, covering every one of the eight CI240 sizing failures and all 39 earlier source failures. The 420 native loaded-font boundary probes, 40 counterfeit checks, 16 original density negatives and three token audits pass. The pending-state matrix passed all 14 cases in 2.0 minutes, including every affected case and four unchanged unpaused F1 cases. The final six-case composed smoke run also passed in 1.0 minute without retries/skips. Full composed lint/format/build/types pass; overlapping batches are not summed.
+
 ## 2026-10-30 — R3c final control composition and real simulated readiness
+
+This entry records the earlier intermediate verification; the fixed-category fit entry above defines the final sizing.
 
 Restored the original 1.7:1 invoice panes, kept the full category action at 48 px without stretching, and fitted its heading with scoped existing 8 px spacing. The new control has a real native dialog association. Its audit recognition is bound to canonical invoice/company/NEW count and exact real structure; generic control rules and every original pane/density number remain. All 55 actual source-regression cases passed, covering all 39 pane/control CI failures plus retained density/F6/compact flows, 40 counterfeit checks and 16 original density negative controls.
 

@@ -34,7 +34,7 @@ P0 and P1 were delivered in the order below. Full per-commit CI outcomes are rec
 | 8     | F11 — scoped safe failure details                                | Delivered |
 | 9     | K9 — shared checkboxes, pickup and independent Dashboard columns | Delivered |
 
-## Start on the Mac
+## Start on Mac or Ubuntu
 
 Use Node 22.22.2 or a later Node 22 release. Keep the existing reader kit in its own folder; run its documented `npm run serve` there and leave it running. Keys remain only in that kit's `keys.env`.
 
@@ -51,7 +51,9 @@ npm run preview
 
 Open `http://localhost:5174`, sign in as `manager` / `demo1234`, finish the simulated second step and choose North York. Existing browser data is retained; use a separate browser profile for isolated fictional practice. Stop preview before rebuilding and restart it afterward.
 
-For live rehearsal, open Settings → Receiving → AI reading → Live → Test connection → Save changes. Keep a retained custom address when the reader runs on another computer. On a phone, localhost refers to that phone, so use the Mac's reachable LAN address. The kit must allow the actual app origin through its own network/CORS configuration. Without a saved custom address, the reader defaults to http://localhost:5191.
+From another device, open `http://<App-computer-LAN-IP>:5174` on the same network; localhost refers to the device displaying the app.
+
+For live rehearsal, open Settings → Receiving → AI reading → Live → Test connection → Save changes. Keep a retained custom address when the reader runs on another computer. On a phone, use the reader computer's reachable LAN address. The kit must allow the actual app origin through its own network/CORS configuration. Without a saved custom address, the reader defaults to `http://localhost:5191`.
 
 ## K0 — final approval and page recovery
 
@@ -210,7 +212,7 @@ Local source verification and independent integrated CI are recorded on PR #29.
 5. Inspect Activity/Undo for the real receiver and restore the category choice if desired. A dialog left open while another genuine edit changes its invoice must keep the selection and explain that the receiver must close/review/reopen before saving.
 6. Repeat in Persian on a phone. The dialog's primary action must remain visible, the NEW rows stay amber and the page must not overflow horizontally.
 
-The K8/F6 composition passed 218 tests and six real mixed-row/stale cases. Final control validation passed 55 cases covering all 39 actual pane/control CI failures plus the original density/F6/compact checks. The full action is 48 px, compact rather than stretched; panes retain their original 1.7:1 ratio. Generic standards remain unchanged; all 40 counterfeit probes and 16 original density negatives reject their intended defects. Final composed build/types and 77 component tests pass. Full independent CI is recorded on PR #29.
+The K8/F6 composition passed 218 tests and six real mixed-row/stale cases. The latest control validation passed all 55 cases in 9.5 minutes without retries/skips, covering all eight CI240 sizing failures and the 39 earlier pane/control failures. All 420 loaded-font width measurements pass in native desktop/classic-scrollbar/phone contexts. The full action is fixed at 48 px with 13 px text; panes retain their original 1.7:1 ratio. The permanent regression now includes 1425 px and requires exactly 48 px. All 40 counterfeit probes and 16 original density negatives remain effective. The pending-reading proof passed 14 desktop/phone cases, retaining real canonical reading/source/financial checks before resuming the existing review deadlines; four unpaused F1 cases are unchanged. Full composed lint/build/types pass. Full independent CI for the final pushed commit is tracked on PR #29.
 
 ## P1 F8 — guarded active pages with retained originals
 

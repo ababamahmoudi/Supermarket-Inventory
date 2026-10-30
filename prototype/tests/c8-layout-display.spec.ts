@@ -143,7 +143,8 @@ for (const language of ["en", "fa"] as const) {
     await signIn(page, "Supervisor");
     await page.goto("/#invoices");
     await setLanguage(page, language);
-    const before = (await saved(page)).invoice;
+    const beforeState = await saved(page);
+    const before = beforeState.invoice;
     expect(before.status).toBe("empty");
     expect(before.file_data).toMatch(/^idb-file:v1:/);
     const originalHash = await retainedOriginalHash(page, before.file_data!);
@@ -175,22 +176,43 @@ for (const language of ["en", "fa"] as const) {
         { exact: true },
       ),
     ).toHaveCount(0);
-    await continueOriginal.click();
-    // The shared phone list opens the retained original first; its detail
-    // action starts the same read operation as desktop Continue.
-    if ((page.viewportSize()?.width ?? 1440) <= 760)
-      await page
-        .getByRole("button", {
-          name: copy(language, "Read invoice", "خواندن فاکتور"),
-          exact: true,
-        })
-        .click();
-    await expect(
-      page.getByText(
-        copy(language, "Reading invoice…", "در حال خواندن فاکتور…"),
-        { exact: true },
-      ),
-    ).toBeVisible();
+    // Hold the pending read while inspecting its genuine retained source;
+    // resume normal scheduling before the existing review deadline below.
+    await page.clock.install();
+    await page.clock.pauseAt(new Date(Date.now() + 1000));
+    try {
+      await continueOriginal.click();
+      // The shared phone list opens the retained original first; its detail
+      // action starts the same read operation as desktop Continue.
+      if ((page.viewportSize()?.width ?? 1440) <= 760)
+        await page
+          .getByRole("button", {
+            name: copy(language, "Read invoice", "خواندن فاکتور"),
+            exact: true,
+          })
+          .click();
+      await expect(
+        page.getByText(
+          copy(language, "Reading invoice…", "در حال خواندن فاکتور…"),
+          { exact: true },
+        ),
+      ).toBeVisible();
+      const pending = await saved(page);
+      expect(pending.invoice).toMatchObject({
+        id: before.id,
+        status: "reading",
+        file_data: before.file_data,
+      });
+      expect(await retainedOriginalHash(page, pending.invoice.file_data!)).toBe(
+        originalHash,
+      );
+      expect(pending.ledger).toEqual(beforeState.ledger);
+      expect(pending.approvals).toEqual(beforeState.approvals);
+      expect(pending.stock_movements).toEqual(beforeState.stock_movements);
+      expect(pending.stock).toEqual(beforeState.stock);
+    } finally {
+      await page.clock.resume();
+    }
     await expect(
       page.getByRole("heading", {
         name: copy(language, "Invoice lines", "ردیف‌های فاکتور"),
@@ -198,8 +220,11 @@ for (const language of ["en", "fa"] as const) {
       }),
     ).toBeVisible({ timeout: 10000 });
     await expect
-      .poll(async () => (await saved(page)).invoice.status)
-      .toBe("review");
+      .poll(async () => {
+        const invoice = (await saved(page)).invoice;
+        return { id: invoice.id, status: invoice.status };
+      })
+      .toEqual({ id: before.id, status: "review" });
     const after = (await saved(page)).invoice;
     expect(after.id).toBe(before.id);
     expect(after.file_data).toBe(before.file_data);

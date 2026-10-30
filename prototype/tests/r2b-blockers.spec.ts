@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { createHash } from "node:crypto";
 import { openInvoiceUpload, invoiceImage, signIn } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import invented from "./fixtures/r2-fictional-readings-export.json" with { type: "json" };
@@ -73,23 +74,67 @@ test("R2b 2.3 cannot invoke posting while the original is still being read", asy
 }) => {
   await signIn(page, "Owner");
   await page.goto("/#invoices");
-  await (await openInvoiceUpload(page)).setFiles(invoiceImage);
-  await expect(
-    page.getByText("Reading invoice…", { exact: true }).first(),
-  ).toBeVisible();
   const before = await readCanonicalBusinessEvidence(page);
-  await expect(
-    page.locator(".receiving-header .receiving-post-control > button"),
-  ).toHaveCount(0);
-  const after = await readCanonicalBusinessEvidence(page);
-  expect(after.invoice.status).not.toBe("posted");
-  expect(after.ledger).toEqual(before.ledger);
-  expect(after.approvals).toEqual(before.approvals);
-  expect(after.stock_movements).toEqual(before.stock_movements);
-  await expect(
-    page.getByRole("dialog", { name: "Post invoice", exact: true }),
-  ).toHaveCount(0);
-  await expect(page.locator("#invoice-missing-list")).toHaveCount(0);
+  const picker = await openInvoiceUpload(page);
+  // Keep the genuine saved-original reading state pending throughout the
+  // posting checks; native file, crypto and IndexedDB work still completes.
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  let invoiceId: string;
+  const originalHash = createHash("sha256")
+    .update(invoiceImage.buffer)
+    .digest("hex");
+  try {
+    await picker.setFiles(invoiceImage);
+    await expect(
+      page.getByText("Reading invoice…", { exact: true }).first(),
+    ).toBeVisible();
+    const pending = await readCanonicalBusinessEvidence(page);
+    invoiceId = pending.invoice.id;
+    expect(invoiceId).not.toBe(before.invoice.id);
+    expect(pending.invoice).toMatchObject({
+      status: "reading",
+      file_name: invoiceImage.name,
+      simulated_reading: true,
+    });
+    expect(pending.invoice.file_data).toMatch(/^idb-file:v1:/);
+    expect(pending.invoice.file_data?.split(":").at(-1)).toBe(originalHash);
+    await expect(
+      page.locator(".receiving-header .receiving-post-control > button"),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Post invoice", exact: true }),
+    ).toHaveCount(0);
+    const after = await readCanonicalBusinessEvidence(page);
+    expect(after.invoice).toEqual(pending.invoice);
+    expect(after.invoice.status).toBe("reading");
+    expect(after.ledger).toEqual(before.ledger);
+    expect(after.approvals).toEqual(before.approvals);
+    expect(after.stock_movements).toEqual(before.stock_movements);
+    expect(after.stock).toEqual(before.stock);
+    await expect(
+      page.getByRole("dialog", { name: "Post invoice", exact: true }),
+    ).toHaveCount(0);
+    await expect(page.locator("#invoice-missing-list")).toHaveCount(0);
+  } finally {
+    await page.clock.resume();
+  }
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        id: invoice.id,
+        status: invoice.status,
+        originalHash: invoice.file_data?.split(":").at(-1),
+      };
+    })
+    .toEqual({ id: invoiceId, status: "review", originalHash });
+  await expect(page.getByTestId("invoice-review")).toBeVisible();
+  const reviewed = await readCanonicalBusinessEvidence(page);
+  expect(reviewed.ledger).toEqual(before.ledger);
+  expect(reviewed.approvals).toEqual(before.approvals);
+  expect(reviewed.stock_movements).toEqual(before.stock_movements);
+  expect(reviewed.stock).toEqual(before.stock);
 });
 for (const language of ["en", "fa"] as const) {
   test(`R2b 2.3 every accepted reading check has a rendered review target in ${language}`, async ({

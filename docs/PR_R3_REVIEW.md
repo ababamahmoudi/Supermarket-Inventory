@@ -12,7 +12,7 @@ Work stays on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababama
 | L4   | Fictional unit/browser coverage checks preparation, deadlines, genuine authority, shared-importer identity/money, raw bytes, failure choices, recovery, duplicates and privacy. Existing simulated/JSON tests remain in the required suite.                                        |
 | L5   | Requirements, workflows, data model, prototype Step 0.3, decisions and deferred schema questions reflect R3. The request limit is four minutes. Schema v3 waits until after the demo.                                                                                              |
 
-## Start on the Mac
+## Start on Mac or Ubuntu
 
 Use Node 22.22.2 or a later Node 22 release for the app.
 
@@ -38,8 +38,8 @@ Use Node 22.22.2 or a later Node 22 release for the app.
    On the computer running the app, open `http://localhost:5174`. From the Mac when the app runs on Ubuntu, open `http://<App-computer-LAN-IP>:5174` instead. Stop preview with Ctrl+C before rebuilding, then restart it after each build.
 
 3. Sign in with `manager` / `demo1234`, complete the simulated passkey step and choose North York. Existing saved data is retained. Use a separate browser profile if you want a clean practice store.
-4. Open **Settings → Receiving → AI reading**. Choose **Live** under Reading mode. The default Reader address follows the app page's hostname. If both app and kit run on the Mac at localhost, `http://localhost:5191` is correct. If the app runs on Ubuntu, change Reader address to `http://<Mac-LAN-IP>:5191`; the reader runs on the Mac, not the app computer.
-5. Press **Test connection**. A successful health response says **Connected · reader ready**. Press **Save changes** to apply the mode/address; that action appears when you change a setting. Reset restores the address derived from this page's hostname; save that choice as well.
+4. Open **Settings → Receiving → AI reading**. Choose **Live** under Reading mode. Without a saved custom address, Reader address is exactly `http://localhost:5191`. Localhost means the device displaying the app. If the reader runs on another computer, enter that reader computer's reachable LAN address, for example `http://<Reader-computer-LAN-IP>:5191`.
+5. Press **Test connection**. A successful health response says **Connected · reader ready**. Press **Save changes** to apply the mode/address; that action appears when you change a setting. Reset restores `http://localhost:5191`; save that choice as well.
 
 ## Read a photo invoice
 
@@ -63,7 +63,7 @@ Choose **Invoices → New invoice → PDF (AI reading)** and select one PDF. Sav
 - **Cancel:** cancel an active read, reopen the draft and verify that the original is still there.
 - **Reload:** reload while the request is pending. The interrupted request cannot resume; use **Read again** or **Enter by hand**. Page ordering is unavailable during interrupted Processing; ready/failed/cancelled drafts allow it. There is no automatic simulated completion or endless spinner. A fresh sign-in can recover the same saved draft without accepting a late result from the old session.
 - **Duplicate:** read a second source with a supplier/invoice number already retained in the app. The existing duplicate message blocks the reading import and keeps the Processing draft. Only the verified target excludes itself from duplicate matching.
-- **Quick demo switch:** open Demo (on a phone, inside More) and use the checked **Simulated reading** item. It changes the same company mode as Settings and preserves the reader address. No queued request may apply after its actor/location/mode has changed.
+- **Quick demo switch:** open Demo (on a phone, inside More) and use the checked **Simulated reading** item. It changes the same company mode as Settings and preserves the reader address. An already accepted reading continues for its original saved invoice and captured reader settings; changing the current location, address or mode affects later readings. Current actor/session/authority and saved-source guards still reject stale or unauthorized results.
 
 The four-minute limit includes preparation and the live request. A failed or cancelled request never posts, retries itself or silently substitutes fictional values. A usable `checksPassed: false` response still enters normal human review; an unusable/incomplete result offers recovery.
 

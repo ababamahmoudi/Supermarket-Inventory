@@ -14,6 +14,7 @@ for (const language of ["en", "fa"] as const)
   }, info) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     const invoice = await importReceivingFixture(page, language);
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
     if (language === "fa")
       await (await openShellAction(page, "تغییر به تم تیره")).click();
     const before = await readCanonicalBusinessEvidence(page);
@@ -71,7 +72,7 @@ for (const language of ["en", "fa"] as const)
         [],
       );
     }
-    for (const width of [509, 1000, 1180, 1280, 1440]) {
+    for (const width of [509, 1000, 1180, 1280, 1425, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       const action = page.getByRole("button", {
         name: word(
@@ -122,7 +123,7 @@ for (const language of ["en", "fa"] as const)
         contentType: "application/json",
       });
       expect(composition.fullActionContained).toBe(true);
-      expect(composition.actionHeight).toBeGreaterThanOrEqual(48);
+      expect(composition.actionHeight).toBe(48);
       expect(composition.actionFontSize).toBe("13px");
       expect(composition.fullFiltersContained).toBe(true);
       expect(composition.filterCount).toBe(3);

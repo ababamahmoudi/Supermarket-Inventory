@@ -728,10 +728,18 @@ The external invoice/credit-note reference is optional, while a pickup remains a
 
 ## 2026-10-30 — R3c F6 — fit the full category action rather than add a heading row
 
-The added category action made the 25-line receiving heading 92 px against its existing 48 px cap. Preserve the original 1.7:1 pane ratio and every original row/card/composed budget. Use compact 8 px spacing only in the new header composition, full 13 px text, a text-intrinsic 48 px action, and narrow-card wrapping. The original viewer does not give up its approved share.
+The added category action made the 25-line receiving heading 92 px against its existing 48 px cap. Preserve the original 1.7:1 pane ratio and every original row/card/composed budget. Use compact 4 px spacing only in the new header composition, full 13 px text, a text-intrinsic fixed 48 px action, and narrow-card wrapping. The original viewer does not give up its approved share.
 
 The new action is a real native-button/dialog pair, not a choice widget. Its 48 px peer contract is recognized only with canonical company/invoice/NEW-count evidence, exact translated text, unique structural context and a real controlled category dialog. Preserve all generic height/width/radius/variant/type rules; counterfeits must fail. The exact pane/control failures, full-label containment and all existing density negatives are checked before publication.
 
 ## 2026-10-30 — R3c simulation — complete when the real source work is ready
 
 Simulated examples already exist when their original has been verified and durably saved. Remove the cosmetic 2500 ms wait and complete on the next cancellable task using the same fresh-authority, exact-invoice/status guarded command. Keep original-first storage and all Live guards; no provider request, posting, stock or ledger change is introduced. A gated real-provider/storage component regression proves no review before the original is saved and exact-byte, attribution and business preservation afterward. Browser proof retains the existing five-second completion assertions. F1 additionally requires the actual review heading within its ordinary five-second visibility deadline before independently checking canonical status and the retained source.
+
+## 2026-10-30 — R3c pending-state proofs use controlled scheduling
+
+The simulation's unnecessary wait must not become a test dependency. Use Playwright's supported paused browser clock around the real native upload or retained-original read. File, crypto and IndexedDB work remain native; assert visible Reading, the genuine saved invoice/source and unchanged financial records while completion is held. Resume normal scheduling before the existing review deadlines and verify the same invoice reaches review. Keep every original no-post and source assertion. This proves the pending phase under controlled scheduling, rather than imposing a minimum user-visible duration or accepting review as a substitute for reading. Normal unpaused F1 tests continue to enforce prompt completion.
+
+## 2026-10-30 — R3c category fit includes the narrow grid edge
+
+A 48 px minimum with automatic height permitted the full English category label to form three lines and grow to 54.5625 px. The actual original grid can give it less text room when the page has a classic scrollbar. Keep the 640 px container breakpoint, fonts, panes and numerical density checks. Give only the new category-bearing heading the existing 4 px gap and action inline-inset tokens, enforce its fixed 48 px contract and verify every glyph fits. Check loaded fonts and the active grid edge, not only the wider overlay-scrollbar scene. The local supported Chromium and CI browser versions remain separately recorded; actual full CI is the final browser gate.

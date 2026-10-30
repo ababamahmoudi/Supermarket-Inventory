@@ -258,17 +258,17 @@
   inline-size: fit-content;
   max-inline-size: 100%;
   min-inline-size: 0;
-  block-size: auto;
+  block-size: 48px;
   min-block-size: 48px;
   max-block-size: none;
-  padding-inline: 8px;
+  padding-inline: 4px;
   white-space: normal;
 }
 @container receiving-lines (min-width: 640px) {
   .receiving-lines-heading:has(> .receiving-new-category-action) {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr) max-content;
-    gap: 8px;
+    gap: 4px;
   }
 }
 .receiving-lines-table {

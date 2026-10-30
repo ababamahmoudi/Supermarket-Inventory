@@ -25,16 +25,47 @@ async function signInWorker(page: Page) {
   ).toBeVisible();
 }
 async function upload(page: Page) {
-  await (
-    await openInvoiceUpload(page)
-  ).setFiles({
-    name: "fictional-supplier-invoice.png",
-    mimeType: "image/png",
-    buffer: pixel,
-  });
-  await expect(
-    page.getByRole("status").filter({ hasText: "Reading invoice…" }),
-  ).toBeVisible();
+  const before = await readCanonicalBusinessEvidence(page);
+  const picker = await openInvoiceUpload(page);
+  // Hold browser scheduling while the real upload/storage work completes so
+  // this pending-state assertion cannot miss a prompt simulated completion.
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  let invoiceId = "";
+  try {
+    await picker.setFiles({
+      name: "fictional-supplier-invoice.png",
+      mimeType: "image/png",
+      buffer: pixel,
+    });
+    await expect(
+      page.getByRole("status").filter({ hasText: "Reading invoice…" }),
+    ).toBeVisible();
+    await expect
+      .poll(async () => {
+        const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+        invoiceId = invoice.id;
+        return {
+          newId: invoice.id !== before.invoice.id,
+          fileName: invoice.file_name,
+          originalHash: invoice.file_data?.split(":").at(-1),
+          status: invoice.status,
+        };
+      })
+      .toEqual({
+        newId: true,
+        fileName: "fictional-supplier-invoice.png",
+        originalHash: createHash("sha256").update(pixel).digest("hex"),
+        status: "reading",
+      });
+    const pending = await readCanonicalBusinessEvidence(page);
+    expect(pending.ledger).toEqual(before.ledger);
+    expect(pending.approvals).toEqual(before.approvals);
+    expect(pending.stock_movements).toEqual(before.stock_movements);
+    expect(pending.stock).toEqual(before.stock);
+  } finally {
+    await page.clock.resume();
+  }
   await expect(
     page.getByRole("heading", { name: "Invoice lines" }),
   ).toBeVisible({ timeout: 8000 });
@@ -46,6 +77,7 @@ async function upload(page: Page) {
       readCanonicalBusinessEvidence(page).then((canonicalState) => {
         const invoice = JSON.parse(JSON.stringify(canonicalState)!).invoice;
         return {
+          id: invoice.id,
           fileName: invoice.file_name,
           originalHash: invoice.file_data?.split(":").at(-1),
           status: invoice.status,
@@ -53,6 +85,7 @@ async function upload(page: Page) {
       }),
     )
     .toEqual({
+      id: invoiceId,
       fileName: "fictional-supplier-invoice.png",
       originalHash: createHash("sha256").update(pixel).digest("hex"),
       status: "review",
