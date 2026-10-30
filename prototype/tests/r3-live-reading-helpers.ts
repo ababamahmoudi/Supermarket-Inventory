@@ -301,9 +301,10 @@ export async function newLiveOriginal(
     name: t(language, "New invoice", "فاکتور جدید"),
     exact: true,
   });
-  await expect(
-    chooser.getByText("AI reading is simulated in this demo", { exact: true }),
-  ).toHaveCount(0);
+  await expect(chooser).toBeVisible();
+  await expect(chooser.getByTestId("invoice-simulation-warning")).toHaveCount(
+    0,
+  );
   const nativePicker = page.waitForEvent("filechooser");
   await chooser
     .getByRole("button", {

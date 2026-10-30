@@ -1,3 +1,9 @@
+## 2026-10-30 — R3c F9 — retained disclosure proofs match the actual chooser
+
+The retained native-picker tests now require both the exact Simulated mode title and the complete statement that photos/PDFs use fictional values and do not read the invoice. Live-mode proof first requires the actual chooser to be visible, then checks absence of the real translated warning component. All picker type/multiple/cancel, no-draft, exact canonical state, original/identity and branch-permission assertions remain.
+
+The four obsolete-copy cases failed on the unchanged application before this test-contract repair. The combined 12-case desktop/phone disclosure/F0/F1 run passed; after the final visible-chooser guard, all eight overlapping F0/F1 cases passed again with traces and zero skips/retries. Targeted lint/format and the fresh production build passed. Production source and original F0 tests are unchanged. No timeout, retry, conditional skip or numerical oracle was relaxed.
+
 ## 2026-10-30 — R3c F6 — restore compact full-action receiving heading
 
 Fixed the persistent English/Persian desktop density regression exposed by CI #232. The new category action no longer creates a second heading row; its complete text, the title and all filters remain usable. The unchanged 25-line checks, heading/card/composed limits and all deliberate negative controls are retained. Verification passed build/types, targeted lint/format, all three unchanged token audits and all 16 English/Persian desktop/phone browser cases in 3.0 minutes, with zero skips or retries. Each 25-line desktop fixture now measures a 48 px heading (was 92; cap 48), a 2046 px complete lines card (was 2090; cap 2046), and a 3060.515625 px composed review (was 3104.515625; cap 3100). All four deliberate negative controls remain effective. Full counted-label/filter containment also passes at 1000, 1180, 1280 and 1440 px.

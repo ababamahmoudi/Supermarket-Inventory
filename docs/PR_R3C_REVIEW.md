@@ -223,6 +223,8 @@ Local source verification and independent integrated CI are recorded on PR #29.
 
 In Simulated mode, open Invoices → New invoice at 360, 390, 509 and 760 px. All four methods, the compact simulation warning and Cancel fit without scrolling. Repeat in Live mode: the four methods and Cancel fit, with the simulation warning absent. Floor Worker sees unavailable Manual/JSON choices and the complete reason; Manager may use them. Photo/PDF still opens the real native picker. Cancel creates no record.
 
+The retained native-picker proof also requires both exact English strings, **Simulated mode** and **Photos and PDFs use fictional values; your invoice is not read.** Live checks first require the chooser to be visible and then require its actual simulation warning to be absent in either language. All existing source/cancel/no-draft/branch checks remain. Four retained entry cases and all eight F0/F1 desktop/phone cases pass; the final stronger Live guard was verified by rerunning the eight overlapping F0/F1 cases with no skips/retries.
+
 Verified six existing navigation unit tests, fresh TypeScript/build/full lint and 16 desktop/phone browser cases in 1.1 minutes. The new matrix covers EN/FA, Manager/Floor Worker, both themes, 360/390/509/760 px at 640 px height and 1440 px desktop. Body scrolling, page overflow, clipped content/glyphs, full labels, permission warnings and 2 px interaction stability are asserted. Oversized warning and tile negative controls fail the same oracle. The retained tile audit also passes after intentionally migrating the former phone one-column contract to two columns. No physical camera/library claim.
 
 ## P1 F10 — compact actual reader settings

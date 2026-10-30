@@ -168,7 +168,15 @@ test("R2b 3.4 photo and PDF choices disclose simulated reading and open their na
       name: "New invoice",
       exact: true,
     });
-    await expect(chooser).toContainText("AI reading is simulated in this demo");
+    await expect(
+      chooser.getByText("Simulated mode", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      chooser.getByText(
+        "Photos and PDFs use fictional values; your invoice is not read.",
+        { exact: true },
+      ),
+    ).toBeVisible();
     const picker = await openInvoiceSourcePicker(page, source);
     expect(await picker.element().getAttribute("accept")).toBe(accept);
     expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);

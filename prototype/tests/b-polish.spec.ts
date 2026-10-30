@@ -677,7 +677,15 @@ test("Demo disclaimers stay in Demo and simulated AI reading is explained in its
     name: "New invoice",
     exact: true,
   });
-  await expect(chooser).toContainText("AI reading is simulated in this demo");
+  await expect(
+    chooser.getByText("Simulated mode", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    chooser.getByText(
+      "Photos and PDFs use fictional values; your invoice is not read.",
+      { exact: true },
+    ),
+  ).toBeVisible();
   const beforeSelection = await readCanonicalBusinessEvidence(page);
   const picker = await openInvoiceSourcePicker(page);
   expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
