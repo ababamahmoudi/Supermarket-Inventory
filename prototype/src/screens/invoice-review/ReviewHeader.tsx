@@ -7,6 +7,7 @@ import { branchLabel } from "../../settings";
 import type { InvoiceReadDTO } from "../../invoice-projections";
 import { DiscardInvoice } from "../DiscardInvoice";
 import { useLiveReadingActivity } from "../../live-reading-activity";
+import { InvoiceSimulationNotice } from "../InvoiceSimulationNotice";
 export function ReviewHeader({
   invoice,
   missing,
@@ -120,11 +121,6 @@ export function ReviewHeader({
                   )}
             </Badge>
           )}
-          {invoice.simulated_reading && (
-            <Badge tone="neutral">
-              {t("Simulated reading", "خوانش شبیه‌سازی‌شده")}
-            </Badge>
-          )}
         </div>
         <div className="actions">
           <DiscardInvoice invoice={invoice} onDiscarded={onClose} />
@@ -144,6 +140,7 @@ export function ReviewHeader({
           )}
         </div>
       </div>
+      {invoice.simulated_reading && <InvoiceSimulationNotice />}
     </header>
   );
 }

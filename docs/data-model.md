@@ -1,5 +1,9 @@
 # Data model
 
+## R3c P1 F1 — explicit retained simulation provenance
+
+An actual simulated upload records `simulated_reading: true` when its original is retained. This marker belongs to the invoice and survives a later change of company reading mode. New Live originals, manual attachments, imported readings and reopened posted records are not relabelled from current settings. Existing explicit simulated fallback retains the same marker.
+
 ## R3c P1 K8 — one paid/free product with exact source money
 
 Keep three independent facts: exact paid paper amount, regular pricing unit cost and exact acquisition amount/physical coverage. Bonus's higher regular pricing cost is not the cost paid for every acquired physical unit. The private `InvoiceLine.free_case_group` retains immutable source members, source fingerprint, original/bound Product identity, paid/free quantities, genuine choice/answer basis, source-specific received/refused/later allocation and optional discrepancy note.

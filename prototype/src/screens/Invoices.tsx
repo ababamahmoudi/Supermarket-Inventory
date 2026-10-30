@@ -121,6 +121,7 @@ import { InvoiceJsonImport } from "./InvoiceJsonImport";
 import { OriginalViewer } from "./invoice-review/OriginalViewer";
 import { LiveInvoiceReading, LiveInvoiceUpload } from "./LiveInvoiceReading";
 import { getLiveReaderSettings } from "../live-reader-settings";
+import { InvoiceSimulationNotice } from "./InvoiceSimulationNotice";
 import {
   createPickedInvoice,
   invoiceEntryOrigin,
@@ -457,6 +458,7 @@ function InvoiceEntryChoices({
             "روش افزودن فاکتور را انتخاب کنید.",
           )}
         >
+          {!liveMode && <InvoiceSimulationNotice entry />}
           <div className="invoice-entry-choice-grid">
             <Button
               variant="neutral"
@@ -534,14 +536,6 @@ function InvoiceEntryChoices({
               {t(
                 "Manual entry and JSON imports are available to Owners and Managers.",
                 "ورود دستی و فایل JSON برای مالک و مدیر در دسترس است.",
-              )}
-            </p>
-          )}
-          {!liveMode && (
-            <p className="helper">
-              {t(
-                "AI reading is simulated in this demo",
-                "خوانش هوش مصنوعی در این دمو شبیه‌سازی شده است",
               )}
             </p>
           )}
@@ -1203,6 +1197,12 @@ function InvoiceWorkspace({
             next.file_type = file.type;
             next.file_data = data;
             next.file_size = stored.file_size;
+            if (
+              next.entry_mode !== "manual" &&
+              !next.reading_record &&
+              !next.live_reading
+            )
+              next.simulated_reading = true;
             // Existing manual entries stay intact when their original is attached.
             next.status =
               next.entry_mode === "manual"
@@ -2061,14 +2061,7 @@ function InvoiceWorkspace({
                 />
               )}
             </Field>
-            {!liveMode && (
-              <p className="helper">
-                {t(
-                  "AI invoice reading is simulated",
-                  "خواندن فاکتور با هوش مصنوعی شبیه‌سازی شده است",
-                )}
-              </p>
-            )}
+            {!liveMode && <InvoiceSimulationNotice entry />}
           </Card>
         </div>
       ) : routeId &&

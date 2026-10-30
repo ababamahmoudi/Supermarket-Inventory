@@ -350,6 +350,7 @@ it("protects the actual source snapshot while a same-ID manual original is retai
   );
   expect(await stored.source.text()).toBe(content);
   expect(stored.source_size).toBe(original.size);
+  expect(state.invoice.simulated_reading).toBeUndefined();
   expect(state.invoice.lines).toEqual([]);
   expect(window.location.hash).toBe(`#invoices?id=${encodeURIComponent(id)}`);
 });

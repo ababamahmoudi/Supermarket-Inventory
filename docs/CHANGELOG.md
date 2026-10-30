@@ -1,3 +1,7 @@
+## 2026-10-30 — R3c P1 F1 — explicit retained simulation provenance
+
+Made the simulated-mode warning prominent and explicit about fictional values. Ordinary simulated uploads now retain their marker after Live is enabled. Verified 29 intake/pending/header/navigation unit tests, fresh TypeScript/production build and four English/Persian desktop/phone browser cases covering native selection/cancel, simulation, Live switch, reload and a subsequent genuine mocked Live read. No skips or retries.
+
 ## 2026-10-30 — R3c P1 K8 — paid/free receiving and exact acquisition
 
 - Merge proven counted paid/free members into one review line/Product, with actual Floor choice and visible original receiver/choice in real approval. Keep exact paper totals, physical quantities, pricing cost and source acquisition budgets separate.

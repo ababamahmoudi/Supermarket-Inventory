@@ -1,5 +1,9 @@
 # Workflows and state machines
 
+## R3c P1 F1 — explicit retained simulation provenance
+
+The simulated New invoice chooser prominently warns that the uploaded invoice is not read and that fictional example values are filled. The same warning stays with a genuinely simulated invoice during reading/review and in its posted view, including after settings switch to Live or the page reloads. Live reads keep their normal review and provenance. A failed live read still needs an explicit recovery choice.
+
 ## R3c P1 K8 — one paid/free product with exact source money
 
 Two proven same-product imported members, one paid and one zero/blank cost with a known positive quantity, become one review line. They retain their original printed descriptions, source indices, quantities, cost evidence, tax, dates, lot and delivery allocations privately. Conflicting barcodes, explicit supplier codes, pack, sold-by, tax/date/lot or ambiguous extra members do not merge. Weighed groups remain unsupported and separate.

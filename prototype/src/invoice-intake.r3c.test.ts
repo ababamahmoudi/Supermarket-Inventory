@@ -12,6 +12,7 @@ import {
 } from "./invoice-intake";
 import type { ProtectedInvoiceQuery } from "./invoice-file-access";
 import type { RoleId } from "./authority-types";
+import { invoiceView } from "./invoice-projections";
 const sources = vi.hoisted(() => new Map<string, Uint8Array>());
 vi.mock("./file-database", async (original) => ({
   ...(await original<typeof import("./file-database")>()),
@@ -263,4 +264,31 @@ describe("R3c F3 picker-before-draft intake", () => {
     expect(data.state.activity).toHaveLength(1);
     expect(sources.size).toBe(0);
   });
+});
+
+it("retains genuine simulated intake provenance after switching to Live without mislabelling a live original", async () => {
+  const data = environment();
+  data.state.config.receiving.ai_reading_mode = "simulated";
+  const original = file();
+  const id = await createPickedInvoice(
+    data.ports,
+    data.actor,
+    selected(data, [original]),
+    vi.fn(),
+  );
+  const simulated = structuredClone(data.state.invoice);
+  expect(simulated.simulated_reading).toBe(true);
+  expect(Buffer.from(sources.get(simulated.file_data!)!)).toEqual(
+    Buffer.from(await original.arrayBuffer()),
+  );
+  data.state.config.receiving.ai_reading_mode = "live";
+  expect(data.state.invoice).toEqual(simulated);
+  expect(invoiceView(data.state, data.actor, id).simulated_reading).toBe(true);
+  await createPickedInvoice(data.ports, data.actor, selected(data), vi.fn());
+  expect(data.state.invoice.id).not.toBe(id);
+  expect(data.state.invoice.simulated_reading).toBeUndefined();
+  expect(data.state.invoice.lines).toEqual([]);
+  expect(data.state.invoices!.find((invoice) => invoice.id === id)).toEqual(
+    simulated,
+  );
 });

@@ -1,5 +1,9 @@
 # Requirements (current owner workflow, C9 — 2026-10-19)
 
+## R3c P1 F1 — explicit retained simulation provenance
+
+The simulated New invoice chooser prominently warns that the uploaded invoice is not read and that fictional example values are filled. The same warning stays with a genuinely simulated invoice during reading/review and in its posted view, including after settings switch to Live or the page reloads. Live reads keep their normal review and provenance. A failed live read still needs an explicit recovery choice.
+
 ## R3c P1 K8 — paid/free receiving
 
 Proven same-product counted paid/free members form one review line and one Product identity. The actual receiver chooses Bonus, Two-for-one or Mistake; ordinary first-time and genuine source questions remain. Preserve exact paper/physical/acquisition evidence, member-specific later receipts and source-bounded return cents, with actual answer/approval attribution and cost-safe projections. Conflicting or unsupported weighted sources require explicit separate handling; grouped posted monetary/date/lot corrections are denied conservatively.

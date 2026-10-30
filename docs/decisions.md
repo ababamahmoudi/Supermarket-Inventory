@@ -691,3 +691,7 @@ The accepted invoice can finish without a hashchange, so acknowledge its ready n
 - `freeCaseView(line, costs)` provides safe decision/receiver/member-quantity facts and, only with invoice cost authority, selected `financial` arithmetic. `invoice-display-arithmetic.ts` is presentation-only and must not replace canonical domain calculation in commands.
 - F6 integration: category selection preserves an already-valid group decision. Capture `validFreeCaseGroup(line)` before the intended category/inferred-tax edit, then `refreshFreeCaseAnswer(line)` only for that previously valid group after the edit. Do not refresh an already-stale answer indiscriminately. Preserve explicit printed tax. Retain the actor-aware quote signature in the workspace merge.
 - K9 integration: preserve both `correction_of: original.id` (K8 cumulative acquisition offset) and `request_id: original.pickup_request_id` (K9 pickup identity) when correcting memos. Preserve K9 optional-reference eligibility via `pickupEvidenceKey` while retaining K8 exact `returnAcquisitionAmount` branches. Root owns this merge.
+
+## 2026-10-30 — R3c F1 — explicit retained simulation provenance
+
+Use retained invoice provenance to identify simulated output; current settings alone cannot establish how an older invoice was produced. A shared translated warning with existing warning tokens appears before the chooser's source tiles and on retained simulated records. Mark only actual simulated source transactions; preserve manual, imported, live and posted-source workflows.

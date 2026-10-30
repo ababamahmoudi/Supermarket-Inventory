@@ -25,7 +25,7 @@ P1 remains after green P0. No pending row in this table is a claim of delivered 
 | Order | Item                                                             | Status    |
 | ----- | ---------------------------------------------------------------- | --------- |
 | 1     | K8 — paid/free receiving and exact acquisition                   | Delivered |
-| 2     | F1 — unmistakable retained simulation warning                    | Planned   |
+| 2     | F1 — unmistakable retained simulation warning                    | Delivered |
 | 3     | F2 — exact localhost reader default                              | Planned   |
 | 4     | F6 — category for current NEW products                           | Planned   |
 | 5     | F8 — active pages and retained originals                         | Planned   |
@@ -180,6 +180,15 @@ The retained C8 sale/cost proof helper also uses the genuine native file chooser
 5. Create split returns from a grouped receipt; expected credits remain capped at the exact acquisition amount. Recovery/cancellation and actual supplier credit retain their ordinary separate meaning.
 
 Local verification passed 1,165 affected tests, lint/build and all 12 EN/FA desktop/phone cases with actual Floor answer, retained original/hash, Manager Post, visible receiver/choice and genuine approval. No skips or retries. Independent money/privacy review is clear. The final navigation-baseline composition additionally passed 134 focused group/acquisition/live-source/price/audit tests and a fresh build; full CI is tracked on PR #29. Counted groups are supported; grouped weight and posted monetary/date/lot correction edits are conservatively denied.
+
+## P1 F1 — explicit retained simulation provenance
+
+1. In a practice browser profile using Simulated mode, open Invoices → New invoice. Read the prominent warning before selecting Photo or PDF.
+2. Cancel the native picker: no blank invoice is added. Choose a wholly fictional image; its review clearly says the uploaded invoice was not read and fictional values were used.
+3. Save Live in Settings → Receiving, reopen that simulated invoice and reload. Its warning stays visible.
+4. Start a new fictional Live invoice and explicitly read it. Its review has normal Live provenance and no simulation warning. Automated responses are intercepted fictional examples; physical-reader rehearsal remains on the actual device.
+
+Local source verification and independent integrated CI are recorded on PR #29.
 
 ## After the demo — record only
 

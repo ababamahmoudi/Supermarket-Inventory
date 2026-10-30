@@ -39,6 +39,7 @@ import type {
 import type { InvoiceEditableLine } from "../invoice-edit-types";
 import { useProtectedQuery } from "../use-protected-query";
 import { LiveReadingProvenance } from "../LiveReadingProvenance";
+import { InvoiceSimulationNotice } from "./InvoiceSimulationNotice";
 import {
   requireInvoiceAuthority,
   canInvoiceAuthority,
@@ -284,11 +285,6 @@ export function PostedInvoice({
                     )}
               </small>
             )}
-            {invoice.simulated_reading && (
-              <small className="muted">
-                {t("Simulated reading", "خوانش شبیه‌سازی‌شده")}
-              </small>
-            )}
           </div>
           <div className="actions">
             {current &&
@@ -332,6 +328,7 @@ export function PostedInvoice({
             </Button>
           </div>
         </div>
+        {invoice.simulated_reading && <InvoiceSimulationNotice />}
       </header>
       <div
         className={`receiving-layout${originalVisible ? "" : " is-original-hidden"}`}

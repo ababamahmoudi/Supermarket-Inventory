@@ -276,6 +276,7 @@ export async function createPickedInvoice(
       Object.assign(invoice, pages[0], {
         original_pages: pages,
         status: invoice.lines.length ? "reading" : "draft",
+        simulated_reading: true,
       });
       publish(state, invoice);
     },
