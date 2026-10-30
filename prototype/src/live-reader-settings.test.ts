@@ -19,11 +19,11 @@ afterEach(() => {
 describe("R3 local reader settings", () => {
   it.each([
     ["localhost", "http://localhost:5191"],
-    ["172.16.66.128", "http://172.16.66.128:5191"],
-    ["reader-mac.local", "http://reader-mac.local:5191"],
-    ["::1", "http://[::1]:5191"],
-    ["[::1]", "http://[::1]:5191"],
-  ])("uses this page host without its app port: %s", (host, expected) => {
+    ["172.16.66.128", "http://localhost:5191"],
+    ["reader-mac.local", "http://localhost:5191"],
+    ["::1", "http://localhost:5191"],
+    ["[::1]", "http://localhost:5191"],
+  ])("uses localhost regardless of this page host: %s", (host, expected) => {
     expect(defaultReaderAddress(host)).toBe(expected);
   });
 
@@ -36,10 +36,25 @@ describe("R3 local reader settings", () => {
       getLiveReaderSettings(state.config.receiving, "172.16.66.128"),
     ).toEqual({
       mode: "simulated",
-      readerAddress: "http://172.16.66.128:5191",
+      readerAddress: "http://localhost:5191",
     });
     expect(state.config).toEqual(before);
   });
+
+  it.each([undefined, null, "", "  "])(
+    "uses localhost for absent or blank retained address %s without changing it",
+    (address) => {
+      const receiving = initialState().config.receiving;
+      receiving.ai_reading_mode = "live";
+      receiving.ai_reader_address = address;
+      const before = structuredClone(receiving);
+      expect(getLiveReaderSettings(receiving, "phone.example.test")).toEqual({
+        mode: "live",
+        readerAddress: "http://localhost:5191",
+      });
+      expect(receiving).toEqual(before);
+    },
+  );
 
   it("retains an explicit custom address and mode, including malformed input for correction", () => {
     const receiving = initialState().config.receiving;
@@ -81,7 +96,9 @@ describe("R3 local reader settings", () => {
     const before = structuredClone(receiving);
     const result = getLiveReaderSettings(receiving, "default-mac.local");
     expect(result.readerAddress).toBe('{"invalid":"retained-address"}');
-    expect(result.readerAddress).not.toBe("http://default-mac.local:5191");
+    expect(result.readerAddress).not.toBe(
+      defaultReaderAddress("default-mac.local"),
+    );
     const fetcher = vi.fn();
     vi.stubGlobal("fetch", fetcher);
     await expect(
@@ -142,7 +159,7 @@ describe("R3 local reader settings", () => {
       expect(
         getLiveReaderSettings(state.config.receiving, "phone-host.local")
           .readerAddress,
-      ).toBe("http://phone-host.local:5191");
+      ).toBe("http://localhost:5191");
     },
   );
 

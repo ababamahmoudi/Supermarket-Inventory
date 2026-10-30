@@ -695,3 +695,7 @@ The accepted invoice can finish without a hashchange, so acknowledge its ready n
 ## 2026-10-30 — R3c F1 — explicit retained simulation provenance
 
 Use retained invoice provenance to identify simulated output; current settings alone cannot establish how an older invoice was produced. A shared translated warning with existing warning tokens appears before the chooser's source tiles and on retained simulated records. Mark only actual simulated source transactions; preserve manual, imported, live and posted-source workflows.
+
+## 2026-10-30 — R3c F2 — exact localhost reader fallback
+
+Use the prompt's exact localhost fallback instead of deriving a reader target from the page host. Preserve explicit saved addresses and normalized custom base paths; never silently send an invoice to a different reader because retained settings are malformed. Existing safe-address validation, authority, audit and health timeout remain unchanged.

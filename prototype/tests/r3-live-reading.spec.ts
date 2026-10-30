@@ -40,7 +40,7 @@ const oversizedPdfPath = fileURLToPath(
   new URL("./fixtures/r3-fictional-eleven-page.pdf", import.meta.url),
 );
 
-test("R3 settings use the dynamic reader default, real connection outcomes and one shared Demo mode", async ({
+test("R3 settings use the localhost reader default, real connection outcomes and one shared Demo mode", async ({
   page,
 }) => {
   const health = { ok: true };
@@ -56,7 +56,7 @@ test("R3 settings use the dynamic reader default, real connection outcomes and o
     exact: true,
   });
   await expect(mode).toHaveText("Simulated");
-  const expectedDefault = `http://${new URL(page.url()).hostname}:5191`;
+  const expectedDefault = "http://localhost:5191";
   await expect(address).toHaveValue(expectedDefault);
   await address.fill(readerAddress);
   await chooseOption(page, mode, "live", "Live");

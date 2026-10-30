@@ -55,7 +55,7 @@ async function settingsFixture() {
   return fixture;
 }
 
-it("saves Live and the custom address through genuine settings authority, and Reset restores the dynamic default", async () => {
+it("saves Live and the custom address through genuine settings authority, and Reset restores the localhost default", async () => {
   const fixture = await settingsFixture();
   const before = await fixture.readCanonical();
   fireEvent.click(screen.getByRole("combobox", { name: "Reading mode" }));

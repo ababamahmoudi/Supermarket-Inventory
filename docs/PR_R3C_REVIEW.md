@@ -26,7 +26,7 @@ P1 remains after green P0. No pending row in this table is a claim of delivered 
 | ----- | ---------------------------------------------------------------- | --------- |
 | 1     | K8 — paid/free receiving and exact acquisition                   | Delivered |
 | 2     | F1 — unmistakable retained simulation warning                    | Delivered |
-| 3     | F2 — exact localhost reader default                              | Planned   |
+| 3     | F2 — exact localhost reader default                              | Delivered |
 | 4     | F6 — category for current NEW products                           | Planned   |
 | 5     | F8 — active pages and retained originals                         | Planned   |
 | 6     | F9 — phone chooser fits                                          | Planned   |
@@ -187,6 +187,15 @@ Local verification passed 1,165 affected tests, lint/build and all 12 EN/FA desk
 2. Cancel the native picker: no blank invoice is added. Choose a wholly fictional image; its review clearly says the uploaded invoice was not read and fictional values were used.
 3. Save Live in Settings → Receiving, reopen that simulated invoice and reload. Its warning stays visible.
 4. Start a new fictional Live invoice and explicitly read it. Its review has normal Live provenance and no simulation warning. Automated responses are intercepted fictional examples; physical-reader rehearsal remains on the actual device.
+
+Local source verification and independent integrated CI are recorded on PR #29.
+
+## P1 F2 — exact localhost reader fallback
+
+1. Open Settings → Receiving. With no saved custom address, Reader address is exactly `http://localhost:5191`.
+2. Enter the reachable address of the actual reader computer if needed, test the connection and save it. Reopen settings: that custom address remains.
+3. Click Reset, then Save changes and reload. The address is again `http://localhost:5191`; the selected reading mode is retained.
+4. Change only the mode through the Manager Demo control. A saved custom address is preserved. Automated health checks are fictional; keep provider keys only in the reader kit.
 
 Local source verification and independent integrated CI are recorded on PR #29.
 

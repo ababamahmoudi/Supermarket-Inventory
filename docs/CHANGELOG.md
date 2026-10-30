@@ -1,3 +1,7 @@
+## 2026-10-30 — R3c P1 F2 — exact localhost reader fallback
+
+Reader default and Reset now resolve to `http://localhost:5191` on every page host. Saved custom/malformed addresses and unrelated receiving configuration are preserved. Verified 35 domain/settings UI units, fresh TypeScript/production build and two desktop/phone browser cases exercising custom save, connection outcomes, Reset, reload and the shared Demo mode control. No skips or retries.
+
 ## 2026-10-30 — R3c P1 F1 — explicit retained simulation provenance
 
 Made the simulated-mode warning prominent and explicit about fictional values. Ordinary simulated uploads now retain their marker after Live is enabled. Verified 29 intake/pending/header/navigation unit tests, fresh TypeScript/production build and four English/Persian desktop/phone browser cases covering native selection/cancel, simulation, Live switch, reload and a subsequent genuine mocked Live read. No skips or retries.

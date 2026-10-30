@@ -1,5 +1,9 @@
 # Data model
 
+## R3c P1 F2 — exact localhost reader fallback
+
+Absent, null or blank `receiving.ai_reader_address` resolves to exactly `http://localhost:5191`, regardless of the app page's hostname. Reading that fallback does not rewrite retained configuration. A saved custom address, including a malformed restored value needing correction, remains authoritative and visible. Reset persists null; mode-only changes keep the saved address.
+
 ## R3c P1 F1 — explicit retained simulation provenance
 
 An actual simulated upload records `simulated_reading: true` when its original is retained. This marker belongs to the invoice and survives a later change of company reading mode. New Live originals, manual attachments, imported readings and reopened posted records are not relabelled from current settings. Existing explicit simulated fallback retains the same marker.

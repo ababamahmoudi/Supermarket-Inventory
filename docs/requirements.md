@@ -1,5 +1,9 @@
 # Requirements (current owner workflow, C9 — 2026-10-19)
 
+## R3c P1 F2 — exact localhost reader fallback
+
+Settings → Receiving uses `http://localhost:5191` when no custom reader address is saved. Reset restores that same fallback, and Save retains null rather than a host-derived address. A phone's localhost is the phone; use the reader computer's reachable custom network address when reading from another device. Test connection retains its genuine health result and never changes saved settings on failure.
+
 ## R3c P1 F1 — explicit retained simulation provenance
 
 The simulated New invoice chooser prominently warns that the uploaded invoice is not read and that fictional example values are filled. The same warning stays with a genuinely simulated invoice during reading/review and in its posted view, including after settings switch to Live or the page reloads. Live reads keep their normal review and provenance. A failed live read still needs an explicit recovery choice.

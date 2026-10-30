@@ -15,13 +15,10 @@ export class ReaderAddressError extends Error {
   }
 }
 
-export function defaultReaderAddress(
-  hostname = typeof window === "undefined"
-    ? "localhost"
-    : window.location.hostname,
-): string {
-  const host = hostname || "localhost";
-  return `http://${host.includes(":") && !host.startsWith("[") ? `[${host}]` : host}:5191`;
+/** Keep the legacy host argument compatible; localhost always means this device. */
+export function defaultReaderAddress(hostname?: string): string {
+  void hostname;
+  return "http://localhost:5191";
 }
 
 export function normalizeReaderAddress(address: string): string {
