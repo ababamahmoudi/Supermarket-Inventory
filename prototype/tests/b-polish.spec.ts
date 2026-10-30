@@ -538,7 +538,7 @@ test("Part 1 Open return exposes pickup and cancellation, then resolution after 
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Receiving representative");
   await form
-    .getByLabel("Signed paper pickup slip reference", { exact: true })
+    .getByLabel("Reference (optional)", { exact: true })
     .fill("PICKUP-B-POLISH");
   await form
     .getByRole("button", { name: "Record pickup", exact: true })

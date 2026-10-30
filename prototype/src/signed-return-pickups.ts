@@ -1,3 +1,4 @@
+import { pickupEvidenceKey } from "./return-pickup-identity";
 import Decimal from "decimal.js";
 import type { ReturnRecord } from "./types";
 import type { EvidenceEvent, OperationalReturn } from "./operations";
@@ -10,6 +11,8 @@ export type SignedPickupMemo = Pick<
   | "branch"
   | "return_id"
   | "signed_evidence_reference"
+  | "pickup_request_id"
+  | "created_by_user_id"
   | "representative"
   | "correction_of"
 > & {
@@ -85,13 +88,17 @@ export function signedReturnPickupQuantities(
     }
   };
   for (const memo of memos) {
+    const key = pickupEvidenceKey(
+      memo.signed_evidence_reference,
+      memo.pickup_request_id,
+    );
     if (
       memo.company_id !== record.company_id ||
       memo.branch !== record.branch ||
       memo.return_id !== record.id ||
       !memo.id ||
       valid.has(memo.id) ||
-      !memo.signed_evidence_reference?.trim() ||
+      !key ||
       !memo.representative?.trim()
     )
       continue;
@@ -118,6 +125,10 @@ export function signedReturnPickupQuantities(
         !previous ||
         superseded.has(memo.correction_of) ||
         !correction ||
+        pickupEvidenceKey(
+          previous.memo.signed_evidence_reference,
+          previous.memo.pickup_request_id,
+        ) !== key ||
         memo.signed_evidence_reference !==
           previous.memo.signed_evidence_reference ||
         memo.representative !== previous.memo.representative ||
@@ -129,11 +140,14 @@ export function signedReturnPickupQuantities(
       }
       superseded.add(memo.correction_of);
     } else {
-      const samePaper = rootPapers.get(memo.signed_evidence_reference.trim());
+      const samePaper = rootPapers.get(key);
       if (samePaper) {
         const prior = valid.get(samePaper);
         if (
           !prior ||
+          (!memo.signed_evidence_reference.trim() &&
+            (prior.memo.representative !== memo.representative ||
+              prior.memo.created_by_user_id !== memo.created_by_user_id)) ||
           !sameQuantities(
             prior.quantities,
             Object.fromEntries(
@@ -151,9 +165,16 @@ export function signedReturnPickupQuantities(
       const matching = events.filter(
         (event) =>
           event.kind === "pickup" &&
-          event.document?.trim() === memo.signed_evidence_reference.trim(),
+          pickupEvidenceKey(event.document, event.pickup_request_id) === key,
       );
       if (
+        ((memo.pickup_request_id ||
+          !memo.signed_evidence_reference.trim() ||
+          matching.some((event) => event.pickup_request_id)) &&
+          (matching.length !== 1 ||
+            !memo.created_by_user_id ||
+            matching[0].pickup_request_id !== memo.pickup_request_id ||
+            matching[0].actor_user_id !== memo.created_by_user_id)) ||
         matching.some(
           (event) =>
             event.representative?.trim() !== memo.representative.trim() ||
@@ -163,8 +184,7 @@ export function signedReturnPickupQuantities(
         continue;
     }
     valid.set(memo.id, { memo, quantities });
-    if (!memo.correction_of)
-      rootPapers.set(memo.signed_evidence_reference.trim(), memo.id);
+    if (!memo.correction_of) rootPapers.set(key, memo.id);
   }
   const totals = new Map<string, Decimal>();
   const hasAmbiguousAncestor = (id: string) => {

@@ -730,9 +730,7 @@ for (const language of ["en", "fa"] as const) {
     await field(form, "Supplier representative name").fill(
       "Fictional Representative",
     );
-    await field(form, "Signed paper pickup slip reference").fill(
-      "C7-SIGNED-PAPER-001",
-    );
+    await field(form, "Reference (optional)").fill("C7-SIGNED-PAPER-001");
     await button(form, "Record pickup").click();
     await expect(page.locator(".return-detail-title")).toContainText(
       "Waiting for credit",

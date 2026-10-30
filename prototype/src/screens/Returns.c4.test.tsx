@@ -286,7 +286,7 @@ it("renders an already recorded pickup success in Persian after a language chang
     "Demo Driver",
   );
   await user.type(
-    screen.getByLabelText("Signed paper pickup slip reference"),
+    screen.getByLabelText("Reference (optional)"),
     "SIGNED-LANGUAGE-SWITCH",
   );
   await user.click(

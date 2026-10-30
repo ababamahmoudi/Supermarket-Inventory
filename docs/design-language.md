@@ -1,5 +1,9 @@
 # Klead design language v1
 
+## R3c P1 K9 — pickup evidence and compact shared screens
+
+The shared 18 px rounded checkbox uses `--field-fill`/`--field-border` unchecked and `--accent-fill`/white tick checked in both themes. Keep actual business acknowledgements as checkboxes and quick boolean filters as their existing chips; radios and switches retain their controls. Actual-pickup rows use a scoped compact grid without reserved empty shortfall tracks. Supplier representative/reference share one row, with usable phone wrapping. The pickup-only stepper composes existing primitives; ordinary NumberField remains a directly editable text field. Dashboard main and aside are separate vertical flex stacks above 950 px; actual consecutive card edges are 20 px apart, independent of the neighbour's height. Preserve content-height unrelated cards, the equal-height purchase pair above 1100 px, stacked purchases below it, the 760–950 px aside grid and existing phone order. No font, clipping, glyph or spacing oracle is weakened.
+
 ## R3c P1 F10 — compact actual reader settings
 
 Settings → Receiving → AI reading has a compact real mode Select and LTR address, adjacent Reset/Test connection controls, one section-owned Cancel/Save changes row when dirty, and the genuine health status. The helper explains that localhost means the current device and a phone needs the reader computer's reachable same-Wi-Fi address. The address/custom base path, reset/null, audit/current-authority save, pending disables, five-second timeout and honest network/CORS semantics are preserved. No key field or planned connection is added. A health result from an earlier person/navigation cannot appear under a replacement identity.

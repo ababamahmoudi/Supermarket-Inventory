@@ -46,7 +46,7 @@ test("supplier pickup and partial substitute receipt preserve Payables; settled 
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Fictional Representative");
   await page
-    .getByLabel("Signed paper pickup slip reference", { exact: true })
+    .getByLabel("Reference (optional)", { exact: true })
     .fill("DEMO-SIGNED-001");
   await page
     .getByRole("button", { name: "Record pickup", exact: true })
@@ -484,20 +484,25 @@ test("invalid pickup evidence, invalid store-use quantities, and invalid financi
     .getByRole("button", { name: "Record pickup", exact: true })
     .last()
     .click();
-  for (const [label, message] of [
-    ["Supplier representative name", "Enter the supplier representative name."],
-    [
-      "Signed paper pickup slip reference",
-      "Enter the signed paper pickup slip reference.",
-    ],
-  ]) {
-    await expect(
-      page
-        .locator(".field")
-        .filter({ has: page.getByLabel(label, { exact: true }) })
-        .getByRole("alert"),
-    ).toHaveText(message);
-  }
+  await expect(
+    page
+      .locator(".field")
+      .filter({
+        has: page.getByLabel("Supplier representative name", { exact: true }),
+      })
+      .getByRole("alert"),
+  ).toHaveText("Enter the supplier representative name.");
+  const optionalReference = page.getByLabel("Reference (optional)", {
+    exact: true,
+  });
+  await expect(optionalReference).toHaveValue("");
+  await expect(optionalReference).not.toHaveAttribute("aria-invalid", "true");
+  await expect(
+    page
+      .locator(".field")
+      .filter({ has: optionalReference })
+      .getByRole("alert"),
+  ).toHaveCount(0);
   expect(await stored(page)).toEqual(beforePickup);
   await expect(
     page.getByRole("heading", { name: /^Return #1$/, level: 1 }),

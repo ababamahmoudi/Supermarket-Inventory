@@ -92,6 +92,21 @@
   min-inline-size: 0;
   inline-size: auto;
 }
+/* Each desktop stack follows its own card heights, independent of its neighbour. */
+@media (min-width: 951px) {
+  :root .r2c-dashboard .dashboard-main,
+  :root .r2c-dashboard .dashboard-aside {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  :root .r2c-dashboard .dashboard-main > .card,
+  :root .r2c-dashboard .dashboard-main > .dashboard-row,
+  :root .r2c-dashboard .dashboard-aside > .card {
+    inline-size: 100%;
+    flex: 0 0 auto;
+  }
+}
 :root .r2c-dashboard .card {
   min-inline-size: 0;
   padding: 20px;

@@ -1,5 +1,9 @@
 # Data model
 
+## R3c P1 K9 — pickup evidence and compact shared screens
+
+An actual pickup command may carry a bounded `request_id`; a blank optional external reference requires one. The mounted pickup form creates its identity once and keeps it through save/retry. Accepted pickup events retain `pickup_request_id` and `pickup_request_fingerprint`; immutable memos retain `pickup_request_id`. The fingerprint binds company, actual retained location/return, actual actor, normalized quantities/representative/reference/photo/note/shortfall decisions. It never uses an empty paper number as a shared key or recomputes accepted identity from later remaining quantities/cost. Corrections append a memo with `correction_of` and preserve the original request identity, representative and exact optional reference. Existing numbered-paper evidence remains compatible. No new stock projection, supplier credit or currency conversion is introduced.
+
 ## R3c P1 F11 — private actionable reading failures
 
 Only an accepted current failed live attempt may retain `live_reading.failure_diagnostic`. It contains a closed safe reason, a code-chosen field identifier and, for HTTP failures only, a bounded numeric status. Arbitrary response/error text, body, filenames, URLs, provider keys, model names and stacks never enter that diagnostic. Ordinary invoice/workspace DTOs, general History and audit/export projections omit it recursively, including whole snapshots and selector/dotted-path patches. The dedicated protected failure query requires a fresh actual Owner/Manager role, scoped invoice read/cost-read authority, the exact current failed attempt and current source/version/content. Retained-original and failure-diagnostic scrub keys both remain present after integration.

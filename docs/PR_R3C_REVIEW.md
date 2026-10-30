@@ -18,7 +18,7 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 | 10    | K5 — reading survives navigation                     | Delivered |
 | 11    | K7 — compact truthful reading progress               | Delivered |
 
-P1 remains after green P0. No pending row in this table is a claim of delivered behavior.
+P0 and P1 were delivered in the order below. Full per-commit CI outcomes are recorded on PR #29; local item batches overlap and are not a unique-suite total.
 
 ## P1 delivery order
 
@@ -32,7 +32,7 @@ P1 remains after green P0. No pending row in this table is a claim of delivered 
 | 6     | F9 — phone chooser fits                                          | Delivered |
 | 7     | F10 — compact actual reader settings                             | Delivered |
 | 8     | F11 — scoped safe failure details                                | Delivered |
-| 9     | K9 — shared checkboxes, pickup and independent Dashboard columns | Planned   |
+| 9     | K9 — shared checkboxes, pickup and independent Dashboard columns | Delivered |
 
 ## Start on the Mac
 
@@ -51,7 +51,7 @@ npm run preview
 
 Open `http://localhost:5174`, sign in as `manager` / `demo1234`, finish the simulated second step and choose North York. Existing browser data is retained; use a separate browser profile for isolated fictional practice. Stop preview before rebuilding and restart it afterward.
 
-For live rehearsal, open Settings → Receiving → AI reading → Live → Test connection → Save changes. Keep a retained custom address when the reader runs on another computer. On a phone, localhost refers to that phone, so use the Mac's reachable LAN address. The kit must allow the actual app origin through its own network/CORS configuration. F2's exact localhost default belongs to the later P1 work.
+For live rehearsal, open Settings → Receiving → AI reading → Live → Test connection → Save changes. Keep a retained custom address when the reader runs on another computer. On a phone, localhost refers to that phone, so use the Mac's reachable LAN address. The kit must allow the actual app origin through its own network/CORS configuration. Without a saved custom address, the reader defaults to http://localhost:5191.
 
 ## K0 — final approval and page recovery
 
@@ -174,7 +174,7 @@ The retained C8 sale/cost proof helper also uses the genuine native file chooser
 ## P1 K8 — one paid/free product with exact source money
 
 1. Import/read a fictional or private local invoice with the same actual product on a paid and zero/blank-cost row. Keep real invoice bytes outside GitHub and fixtures.
-2. Open its single merged line. As Floor Worker choose each free-case answer on a fresh draft, inspect the free tag / actual division math / supplier-difference explanation and retain the original viewer.
+2. Open its single merged line. As Floor Worker choose **Free case (bonus)**, **Two for the price of one**, and **Mistake on the invoice**, each on a fresh draft, inspect the free tag / actual division math / supplier-difference explanation and retain the original viewer.
 3. Confirm the line and totals. As Manager post the invoice, open Approvals, inspect the original receiver/choice and approve. Check one Product, correct physical quantity and unchanged paper total.
 4. On a paid/free shortage, allocate actual missing/refused member quantities. Receive the free units first and verify no payable restoration; receive paid units and verify only their original cents return. Both members may share a delivery document reference.
 5. Create split returns from a grouped receipt; expected credits remain capped at the exact acquisition amount. Recovery/cancellation and actual supplier credit retain their ordinary separate meaning.
@@ -183,10 +183,10 @@ Local verification passed 1,165 affected tests, lint/build and all 12 EN/FA desk
 
 ## P1 F1 — explicit retained simulation provenance
 
-1. In a practice browser profile using Simulated mode, open Invoices → New invoice. Read the prominent warning before selecting Photo or PDF.
-2. Cancel the native picker: no blank invoice is added. Choose a wholly fictional image; its review clearly says the uploaded invoice was not read and fictional values were used.
-3. Save Live in Settings → Receiving, reopen that simulated invoice and reload. Its warning stays visible.
-4. Start a new fictional Live invoice and explicitly read it. Its review has normal Live provenance and no simulation warning. Automated responses are intercepted fictional examples; physical-reader rehearsal remains on the actual device.
+1. In a separate fictional practice browser profile, open Settings → Receiving → AI reading, choose Simulated and Save changes. Open Invoices → New invoice. Check **Simulated mode / Photos and PDFs use fictional values; your invoice is not read.** above the four methods.
+2. Choose Photo, then cancel the native picker: no blank invoice is added. Choose Photo again and select a wholly fictional image; its review clearly says the uploaded invoice was not read and fictional values were used.
+3. Save Live in Settings → Receiving, reopen that simulated invoice and reload. Its full **Simulated reading** warning stays visible. If you normally post it during rehearsal, the posted view retains the warning too.
+4. With the actual reader kit running and Test connection successful, start a fresh fictional Live invoice and press **Read invoice**. Successful review has normal Live provenance and no simulation warning. This is the actual-device rehearsal; automated responses are intercepted fictional examples.
 
 Local source verification and independent integrated CI are recorded on PR #29.
 
@@ -195,7 +195,7 @@ Local source verification and independent integrated CI are recorded on PR #29.
 1. Open Settings → Receiving. With no saved custom address, Reader address is exactly `http://localhost:5191`.
 2. Enter the reachable address of the actual reader computer if needed, test the connection and save it. Reopen settings: that custom address remains.
 3. Click Reset, then Save changes and reload. The address is again `http://localhost:5191`; the selected reading mode is retained.
-4. Change only the mode through the Manager Demo control. A saved custom address is preserved. Automated health checks are fictional; keep provider keys only in the reader kit.
+4. Save a custom address again, then change only the mode through the Manager Demo control. That saved custom address is preserved. Automated health checks are fictional; keep provider keys only in the reader kit.
 
 Local source verification and independent integrated CI are recorded on PR #29.
 
@@ -213,15 +213,15 @@ The K8/F6 composition passed 218 tests, full lint/build and all six real EN/FA d
 ## P1 F8 — guarded active pages with retained originals
 
 1. In Live mode choose two wholly fictional photos. Use Add page to select another photo, Remove a middle page and use the arrows to change the remaining order. Read explicitly: only the listed order is sent. View original still offers every saved photo.
-2. Remove every listed photo. Read is disabled and Add page remains available. Add photos, reload, then explicitly Read. Cancelling or choosing an invalid native file creates no source edit.
-3. Choose a wholly fictional two-page PDF. Remove page 1, use Add page to restore that saved page, then select only page 2 and reload. Read sends only page 2; View original still has both pages.
-4. Save a live draft A, create a manual draft B, and return to A. A remains editable before reading. A delayed upload still attaches only to A if navigation returns to B during storage. Reviewed/manual/completed records offer no destructive replacement path.
+2. On a fresh unread Live photo draft, remove every listed photo. Read is disabled and Add page remains available. Add photos, reload, then explicitly Read. Cancelling or choosing an invalid native file creates no source edit.
+3. Create a separate new Live invoice with a wholly fictional two-page PDF. Remove page 1, use Add page to restore that saved page, then select only page 2 and reload. Read sends only page 2; View original still has both pages.
+4. Start and save another unread Live draft A, create a manual draft B, and return to A. A remains editable before reading. A delayed upload still attaches only to A if navigation returns to B during storage. Reviewed/manual/completed records offer no destructive replacement path.
 
 Local source verification and independent integrated CI are recorded on PR #29.
 
 ## P1 F9 — phone New invoice chooser
 
-Invoices → New invoice at 360, 390, 509 and 760 px. All four methods, the simulation warning and Cancel fit without scrolling. Floor Worker sees unavailable Manual/JSON choices and the complete reason; Manager may use them. Photo/PDF still opens the real native picker. Cancel creates no record.
+In Simulated mode, open Invoices → New invoice at 360, 390, 509 and 760 px. All four methods, the compact simulation warning and Cancel fit without scrolling. Repeat in Live mode: the four methods and Cancel fit, with the simulation warning absent. Floor Worker sees unavailable Manual/JSON choices and the complete reason; Manager may use them. Photo/PDF still opens the real native picker. Cancel creates no record.
 
 Verified six existing navigation unit tests, fresh TypeScript/build/full lint and 16 desktop/phone browser cases in 1.1 minutes. The new matrix covers EN/FA, Manager/Floor Worker, both themes, 360/390/509/760 px at 640 px height and 1440 px desktop. Body scrolling, page overflow, clipped content/glyphs, full labels, permission warnings and 2 px interaction stability are asserted. Oversized warning and tile negative controls fail the same oracle. The retained tile audit also passes after intentionally migrating the former phone one-column contract to two columns. No physical camera/library claim.
 
@@ -239,6 +239,17 @@ Verified 37 focused domain/UI units, fresh TypeScript/build/full lint and 20 act
 4. Before an accepted reading, change active pages after a failure. The old failure/attempt cannot settle or be read again; every original remains saved. Reviewed/manual/completed work cannot be erased through these controls.
 
 Local source verification and independent integrated CI are recorded on PR #29.
+
+## P1 K9 — checkboxes, pickup and Dashboard
+
+Use the guide's existing Node 22, build/restart-preview and Manager sign-in steps at `http://localhost:5174`. Keep real invoices and reader keys outside the repository. K9 itself does not call the reader.
+
+1. **Checkboxes:** open Products → Columns; toggle an optional column with Space and inspect checked/clear states. Open Notes → New notebook and inspect Who can read, Who can add and Entry fields; required disabled entries stay selected. Cancel without creating a notebook. Open Settings → Labels and Returns and compare their actual checkboxes. Switch light/dark and English/Persian. Payables' two quick filters remain chips.
+2. **Compact pickup:** open Returns → an existing fictional open return → Record pickup. At a wide desktop window, name, return quantity, pickup stepper and any shortfall controls share the compact item row; representative/reference share their row. Repeat at about 1000 px and on a phone. Type a full actual quantity: shortfall fields disappear. Reduce the quantity with minus: reason and outcome appear. Enter both when required, keep the representative blank and try Save to verify the linked missing-field message; then enter a fictional representative. Cancel first to confirm nothing was recorded.
+3. **Optional reference:** reopen Record pickup, enter actual quantities and any required shortfall choices plus representative, leave Reference (optional) blank and save. Open the retained RM memo: it has its own RM number, actual quantities/cost/expected credit/signatures and No reference provided for the optional external reference. Reload; the same memo remains. A further pickup of a kept remainder is a new actual event. Credit is still a separate authorized resolution/verification action.
+4. **Dashboard:** open Dashboard at 1440 px and about 1000 px. Adjacent cards in either column have the same compact spacing, following their own contents. Above 1100 px the purchase charts deliberately have equal height; below it they stack at natural height. Around 900 px the aside retains its two-column grid. On a phone, This week remains immediately after the KPI tiles, followed by the existing card order. Repeat in Persian and dark theme; Golden Grain Distributors remains fully contained in the real invoice supplier cell.
+
+The composed K8/K9 checks include actual blank-reference pickup and correction/credit against exact paid/free acquisition cents. Local and final independent CI outcomes are recorded on PR #29.
 
 ## After the demo — record only
 

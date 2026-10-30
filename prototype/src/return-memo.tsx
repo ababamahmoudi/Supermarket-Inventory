@@ -204,7 +204,10 @@ export function ReturnMemoDocument({
       )}
       <p>
         {text("Signed paper evidence", "مدرک کاغذی امضاشده")}:{" "}
-        <bdi>{memo.signed_evidence_reference}</bdi>
+        <bdi>
+          {memo.signed_evidence_reference ||
+            text("No reference provided", "مرجعی ارائه نشده")}
+        </bdi>
       </p>
       {memo.correction_of && (
         <p>{text("Corrected pickup", "جمع‌آوری اصلاح‌شده")}</p>

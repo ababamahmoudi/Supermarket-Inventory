@@ -58,3 +58,52 @@ export async function inspectDashboardCardLayout(page: Page) {
     return { cards, sameRow, columns, failures };
   });
 }
+
+/** K9 measures actual adjacent card edges within each independent desktop column. */
+export async function inspectDashboardColumnSpacing(page: Page) {
+  return page.evaluate(() => {
+    const failures: string[] = [];
+    const columns = ["dashboard-main", "dashboard-aside"].map((name) => {
+      const column = document.querySelector(`.r2c-dashboard .${name}`)!;
+      const cards = [...column.children].filter(
+        (element) =>
+          element.matches(".card,.dashboard-purchase-pair") &&
+          element.getBoundingClientRect().height > 0,
+      );
+      const edges = cards.map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          title: element.querySelector("h2")?.textContent ?? element.className,
+          top: rect.top,
+          bottom: rect.bottom,
+          left: rect.left,
+          right: rect.right,
+          height: rect.height,
+        };
+      });
+      const gaps = edges.slice(1).map((edge, index) => ({
+        after: edges[index].title,
+        before: edge.title,
+        gap: edge.top - edges[index].bottom,
+      }));
+      if (window.innerWidth >= 951) {
+        for (const gap of gaps)
+          if (Math.abs(gap.gap - 20) > 1)
+            failures.push(
+              `${name}: card gap ${gap.gap} after ${gap.after}; expected 20`,
+            );
+        if (edges.length < 2)
+          failures.push(`${name}: missing actual card edges`);
+      }
+      return {
+        name,
+        display: getComputedStyle(column).display,
+        direction: getComputedStyle(column).flexDirection,
+        gridColumns: getComputedStyle(column).gridTemplateColumns,
+        edges,
+        gaps,
+      };
+    });
+    return { columns, failures };
+  });
+}

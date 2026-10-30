@@ -1,3 +1,4 @@
+import { pickupEvidenceKey } from "./return-pickup-identity";
 import Decimal from "decimal.js";
 import { freshActor } from "./authority";
 import type { AuthenticatedActor } from "./authority-types";
@@ -39,7 +40,10 @@ function credit(
       memo.company_id === record.company_id &&
       memo.branch === record.branch &&
       memo.return_id === record.id &&
-      memo.signed_evidence_reference?.trim() &&
+      pickupEvidenceKey(
+        memo.signed_evidence_reference,
+        memo.pickup_request_id,
+      ) &&
       memo.representative?.trim() &&
       !(record.pickup_memos ?? []).some(
         (next) => next.correction_of === memo.id,

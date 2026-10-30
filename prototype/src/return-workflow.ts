@@ -53,6 +53,7 @@ export interface ReturnMemo {
   created_by_role_snapshot?: OperationsContext["role"];
   representative: string;
   signed_evidence_reference: string;
+  pickup_request_id?: string;
   currency: string;
   deduct_expected_credit: boolean;
   lines: ReturnMemoLine[];
@@ -242,6 +243,7 @@ export function createReturnMemo(
     representative: string;
     slip: string;
     correction_of?: string;
+    request_id?: string;
   },
   evidence: InternalPurchaseEvidence,
   at = new Date().toISOString(),
@@ -341,6 +343,7 @@ export function createReturnMemo(
     created_by_role_snapshot: context.role,
     representative: input.representative.trim(),
     signed_evidence_reference: input.slip.trim(),
+    pickup_request_id: input.request_id,
     currency: record.creation_request_id
       ? record.currency!
       : state.config.company.currency,

@@ -395,7 +395,7 @@ for (const width of [1280, 1440, 1920]) {
         .getByLabel("Supplier representative name", { exact: true })
         .fill("Demo Driver");
       await pickup
-        .getByLabel("Signed paper pickup slip reference", { exact: true })
+        .getByLabel("Reference (optional)", { exact: true })
         .fill("SIGNED-C4-LAYOUT-001");
       await pickup
         .getByRole("button", { name: "Record pickup", exact: true })

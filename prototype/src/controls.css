@@ -319,8 +319,16 @@ input.ui-number[type="text"] {
   border-radius: var(--radius-keycap);
   background: var(--surface-soft);
 }
+.ui-checkbox-box {
+  border-color: var(--field-border);
+  background: var(--field-fill);
+}
 .ui-checked-control[aria-checked="true"] .ui-checkbox-box,
-.ui-menu-item[aria-checked="true"] .ui-checkbox-box,
+.ui-menu-item[aria-checked="true"] .ui-checkbox-box {
+  border-color: var(--accent-fill);
+  background: var(--accent-fill);
+  color: var(--klead-white);
+}
 .ui-checked-control[aria-checked="true"] .ui-radio-box {
   border-color: var(--accent);
   background: var(--accent);

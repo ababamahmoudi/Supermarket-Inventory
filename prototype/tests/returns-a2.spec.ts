@@ -601,7 +601,7 @@ test("Return detail pickup does not deduct stock twice and replacement increases
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Fictional Representative");
   await page
-    .getByLabel("Signed paper pickup slip reference", { exact: true })
+    .getByLabel("Reference (optional)", { exact: true })
     .fill("A2-SIGNED-001");
   await page
     .locator(".return-action-card")

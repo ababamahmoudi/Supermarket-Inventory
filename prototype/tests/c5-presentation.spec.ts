@@ -151,9 +151,7 @@ for (const variant of ["en-light", "en-dark", "fa-light"] as const) {
       .getByLabel("Actual pickup quantity", { exact: true })
       .fill("3");
     await field(pickup, "Supplier representative name").fill("Demo Driver");
-    await field(pickup, "Signed paper pickup slip reference").fill(
-      "SIGNED-C5-COLOR-001",
-    );
+    await field(pickup, "Reference (optional)").fill("SIGNED-C5-COLOR-001");
     await button(pickup, "Record pickup").click();
     // This existing status is published only after the actual command completes.
     await expect(page.getByRole("status")).toHaveText(
@@ -864,9 +862,7 @@ test("C5 return evidence, memo, cancellation and settlement forms retain compact
   const pickup = page.locator(".return-action-card");
   await pickup.getByLabel("Actual pickup quantity", { exact: true }).fill("3");
   await field(pickup, "Supplier representative name").fill("Demo Driver");
-  await field(pickup, "Signed paper pickup slip reference").fill(
-    "SIGNED-C5-FORMS-001",
-  );
+  await field(pickup, "Reference (optional)").fill("SIGNED-C5-FORMS-001");
   await button(pickup, "Record pickup").click();
   await expect(page.locator(".return-detail-title")).toContainText(
     "Waiting for credit",

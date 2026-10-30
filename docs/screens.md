@@ -1,5 +1,9 @@
 ## R2g Tier 1 — Current approved screen changes (2026-10-29)
 
+## R3c P1 K9 — pickup evidence and compact shared screens
+
+Returns → Record pickup and Correct pickup show compact product/return-quantity/actual-stepper rows, with shortfall reason and required outcome only when needed. Labels are **Reference (optional)** and **Invoice number or credit note number, if any**, with Persian equivalents. Representative is still required. RM preview truthfully says **No reference provided** for an empty external reference; the RM's own retained number stays distinct. Products Columns, Notebook Who can read/Who can add/Entry fields, Labels settings and Returns settings share the same checkbox. Payables filters remain chips. Dashboard cards in the two desktop columns follow their own content heights without vertical holes.
+
 ## R3c P1 F10 — compact actual reader settings
 
 Settings → Receiving → AI reading has a compact real mode Select and LTR address, adjacent Reset/Test connection controls, one section-owned Cancel/Save changes row when dirty, and the genuine health status. The helper explains that localhost means the current device and a phone needs the reader computer's reachable same-Wi-Fi address. The address/custom base path, reset/null, audit/current-authority save, pending disables, five-second timeout and honest network/CORS semantics are preserved. No key field or planned connection is added. A health result from an earlier person/navigation cannot appear under a replacement identity.
@@ -144,7 +148,7 @@ A signed-in Cashier who opens an unsupported, known top-level screen such as `#r
 List uses Columns/Reset columns and retained tab/filter/scroll state. Every detail has Back to Invoices and clickable breadcrumbs.
 
 - Tabs: **Drafts · Processing · Needs review · Ready to post · Posted · Cancelled**. Search by supplier, number, date.
-- **New invoice** is the blue primary opening Photo (AI reading), PDF (AI reading), Manual entry and JSON file. Photo/PDF retain simulated reading. JSON reuses the protected additive Settings import and opens its drafts without clearing existing business. Concrete-location and role requirements remain.
+- **New invoice** is the blue primary opening Photo (AI reading), PDF (AI reading), Manual entry and JSON file. Photo/PDF use the configured Simulated/Live mode; Simulated remains the default. JSON reuses the protected additive Settings import and opens its drafts without clearing existing business. Concrete-location and role requirements remain.
 - **+ Add supplier** opens the same max-720 px form as Suppliers. Name is required; the supplier is Active immediately, with optional profile details and one Owner/Manager completion notification when incomplete. Supplier approval/profile details never block posting. Branch Supervisor and Floor Worker have no opening-balance fields. Deactivated suppliers are absent from new-invoice choices; their old invoice links remain readable.
 - **+ Add new product** opens the shared product editor in new mode. Owner/Manager additions are Active immediately; Floor Worker additions remain Pending approval with no opening-count controls. Selecting a newly saved supplier or product returns to and updates the same invoice without losing existing header/line edits.
 - Manual drafts can be saved without an original. The original photo/PDF dropzone stays available, and posting remains blocked until the original is attached and every existing posting/line-review requirement is met.
