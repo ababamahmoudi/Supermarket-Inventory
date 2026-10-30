@@ -1,5 +1,9 @@
 # Requirements (current owner workflow, C9 — 2026-10-19)
 
+## R3c — simulated review follows verified source readiness
+
+In Simulated mode, verify and durably save the original first. Once the retained source and fictional example values are ready, finish the simulated draft on the next task rather than waiting for an artificial reading duration. Keep the unmistakable fictional-values warning and ordinary human checks; this creates no Product, posting, stock movement or ledger entry. The completion command retains its actual-person/company/branch/current-invoice/status authority checks, and Live requests keep their separate app-level lifecycle and explicit retry/Cancel rules.
+
 ## R3c P1 K9 — pickup evidence and compact shared screens
 
 **K9 — shared choices, actual pickup and independent Dashboard columns.** Every shared checkbox uses the Products Columns control: a rounded field-fill/field-border square when clear and accent-fill/white tick when selected. Preserve keyboard, checked/disabled/focus semantics; Payables quick filters remain the existing colour-only chips. Record actual pickup uses compact item rows with the product, retained return quantity and a genuine minus/input/plus stepper, adding the required shortfall reason and outcome only below the currently remaining quantity. Supplier representative remains required; Reference (optional) accepts an empty external invoice/credit-note number. A blank reference must retain an actual request identity, immutable event/memo proof and the same financial/physical/authority protections as numbered paper. Saving pickup never posts supplier credit. Desktop Dashboard main/aside stacks are independent flex columns from 951 px, with 20 px between actual adjacent cards. Keep the existing 760–950 px two-column aside, phone order and deliberate equal-height purchase pair only when side by side.

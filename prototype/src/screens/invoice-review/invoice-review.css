@@ -252,20 +252,23 @@
   justify-content: space-between;
   gap: 12px;
 }
+:root
+  .receiving-lines-heading
+  > .receiving-new-category-action.ui-button.button {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  block-size: auto;
+  min-block-size: 48px;
+  max-block-size: none;
+  padding-inline: 8px;
+  white-space: normal;
+}
 @container receiving-lines (min-width: 640px) {
   .receiving-lines-heading:has(> .receiving-new-category-action) {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr) max-content;
-  }
-  :root
-    .receiving-lines-heading
-    > .receiving-new-category-action.ui-button.button {
-    inline-size: auto;
-    min-inline-size: 0;
-    block-size: auto;
-    min-block-size: 44px;
-    max-block-size: none;
-    white-space: normal;
+    gap: 8px;
   }
 }
 .receiving-lines-table {
@@ -1238,11 +1241,6 @@
   position: static;
 }
 @media (min-width: 1180px) {
-  .receiving-layout:not(.is-original-hidden):has(
-      .receiving-new-category-action
-    ) {
-    grid-template-columns: minmax(0, 1.9fr) minmax(320px, 1fr);
-  }
   .original-viewer {
     position: sticky;
     inset-block-start: calc(

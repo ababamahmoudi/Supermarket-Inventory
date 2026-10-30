@@ -1,4 +1,5 @@
 import { File as NodeFile } from "node:buffer";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { useState } from "react";
 import {
@@ -353,6 +354,77 @@ it("protects the actual source snapshot while a same-ID manual original is retai
   expect(state.invoice.simulated_reading).toBeUndefined();
   expect(state.invoice.lines).toEqual([]);
   expect(window.location.hash).toBe(`#invoices?id=${encodeURIComponent(id)}`);
+});
+it("opens simulated review promptly after its original is durably saved without changing stock or money", async () => {
+  const { read } = await show();
+  const before = await read();
+  const input = await photoPicker(read, "pdf");
+  const content = "%PDF-1.7\nFictional simulation-ready evidence\n%%EOF";
+  const original = new NodeFile([content], "fictional-simulation-ready.pdf", {
+    type: "application/pdf",
+  });
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const arrayBuffer = original.arrayBuffer.bind(original);
+  vi.spyOn(original, "arrayBuffer").mockImplementation(async () => {
+    await gate;
+    return arrayBuffer();
+  });
+  fireEvent.change(input, { target: { files: [original] } });
+  let invoiceId = "";
+  await waitFor(
+    async () => {
+      const current = await read();
+      invoiceId = current.invoice.id;
+      expect(invoiceId).not.toBe(before.invoice.id);
+      expect(current.invoice.status).toBe("draft");
+      expect(current.invoice.file_data).toBeUndefined();
+      expect(current.ledger).toEqual(before.ledger);
+      expect(current.stock_movements).toEqual(before.stock_movements);
+      expect(current.stock).toEqual(before.stock);
+    },
+    { timeout: 10000 },
+  );
+  expect(screen.queryByTestId("invoice-review")).not.toBeInTheDocument();
+  await act(async () => {
+    release();
+  });
+  await waitFor(
+    async () => {
+      const current = await read();
+      expect(current.invoice.id).toBe(invoiceId);
+      expect(current.invoice.file_data).toMatch(/^idb-file:v1:/);
+    },
+    { timeout: 10000 },
+  );
+  // The fictional values and verified original are ready; review needs no
+  // additional reading delay. Keep persistence checks separate from this wait.
+  await waitFor(async () => {
+    expect((await read()).invoice.status).toBe("review");
+    expect(screen.getByTestId("invoice-review")).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Invoice lines" }),
+    ).toBeVisible();
+  });
+  const after = await read();
+  expect(after.invoice.id).toBe(invoiceId);
+  expect(after.invoice.created_by_user_id).toBe("demo-person-manager");
+  expect(after.invoice.branch).toBe("Branch 1");
+  expect(after.invoice.simulated_reading).toBe(true);
+  const stored = await readStoredFile(
+    after.invoice.file_data!,
+    after.invoice.company_id,
+  );
+  expect(await stored.source.text()).toBe(content);
+  expect(stored.source_size).toBe(original.size);
+  expect(stored.sha256).toBe(
+    createHash("sha256").update(content).digest("hex"),
+  );
+  expect(after.ledger).toEqual(before.ledger);
+  expect(after.stock_movements).toEqual(before.stock_movements);
+  expect(after.stock).toEqual(before.stock);
 });
 it("opens the actual recognized original without creating an intermediate empty invoice and holds source readiness", async () => {
   const { read } = await show();

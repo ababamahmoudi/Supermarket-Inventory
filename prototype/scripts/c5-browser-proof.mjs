@@ -67,8 +67,12 @@ export async function today(page, scope = page) {
 }
 
 /** Read only the real configured company record; never initialize a proof database. */
-async function retainedReturnEvidence(page) {
-  if (!(await page.locator(".returns-overview").count())) return [];
+async function retainedControlEvidence(page) {
+  const returnsNeeded = (await page.locator(".returns-overview").count()) > 0;
+  const receivingNeeded =
+    (await page.locator(".receiving-new-category-action").count()) > 0;
+  if (!returnsNeeded && !receivingNeeded)
+    return { returns: [], receivingCategory: null };
   const [authoritySource, sourceConfig, retainedConfig] = await Promise.all([
     readFile(
       new URL("../src/authority-repository.ts", import.meta.url),
@@ -88,17 +92,17 @@ async function retainedReturnEvidence(page) {
     ...JSON.parse(sourceConfig).company,
   }.seed_key;
   if (!databaseName || !companyId)
-    throw new Error("Missing canonical Returns proof configuration");
+    throw new Error("Missing canonical control proof configuration");
   return page.evaluate(
-    ({ databaseName, companyId }) =>
+    ({ databaseName, companyId, returnsNeeded, receivingNeeded }) =>
       new Promise((resolve, reject) => {
         const open = indexedDB.open(databaseName);
         open.onupgradeneeded = () => {
           open.transaction.abort();
-          reject(new Error("Returns proof cannot create a database"));
+          reject(new Error("Control proof cannot create a database"));
         };
         open.onerror = open.onblocked = () =>
-          reject(new Error("Cannot open canonical Returns evidence"));
+          reject(new Error("Cannot open canonical control evidence"));
         open.onsuccess = () => {
           const database = open.result;
           database.onversionchange = () => database.close();
@@ -121,7 +125,7 @@ async function retainedReturnEvidence(page) {
               return;
             }
             const state = record.state;
-            records = state.returns
+            const returns = (returnsNeeded ? state.returns : [])
               .filter((item) => item.company_id === companyId)
               .map((item, index) => ({
                 id: item.id,
@@ -142,28 +146,54 @@ async function retainedReturnEvidence(page) {
                   };
                 }),
               }));
+            const invoice = state.invoice;
+            const routeId = new window.URLSearchParams(
+              window.location.hash.split("?")[1] ?? "",
+            ).get("id");
+            const ids = invoice.lines.map(
+              (line, index) => line.id ?? String(index),
+            );
+            const receivingCategory =
+              receivingNeeded &&
+              /^#invoices(?:[?]|$)/.test(window.location.hash) &&
+              invoice.company_id === companyId &&
+              (!routeId || routeId === invoice.id) &&
+              ["draft", "review"].includes(invoice.status) &&
+              invoice.live_reading?.phase !== "processing" &&
+              new Set(ids).size === ids.length
+                ? {
+                    invoiceId: invoice.id,
+                    count: invoice.lines.filter(
+                      (line) =>
+                        line.product_code === "NEW" &&
+                        line.company_id === invoice.company_id,
+                    ).length,
+                  }
+                : null;
+            records = { returns, receivingCategory };
           };
           transaction.oncomplete = () => {
             database.close();
             if (records) resolve(records);
-            else reject(new Error("Missing canonical Returns evidence"));
+            else reject(new Error("Missing canonical control evidence"));
           };
           transaction.onerror = transaction.onabort = () => {
             database.close();
-            reject(new Error("Cannot read canonical Returns evidence"));
+            reject(new Error("Cannot read canonical control evidence"));
           };
         };
       }),
-    { databaseName, companyId },
+    { databaseName, companyId, returnsNeeded, receivingNeeded },
   );
 }
 
 /** Measures every visible real control, including semantic widget exceptions. */
 export async function inspect(page, screen, variant, role = "supervisor") {
   await settled(page);
-  const expectedReturns = await retainedReturnEvidence(page);
+  const { returns: expectedReturns, receivingCategory } =
+    await retainedControlEvidence(page);
   return page.evaluate(
-    ({ screen, variant, role, expectedReturns }) => {
+    ({ screen, variant, role, expectedReturns, receivingCategory }) => {
       const visible = (element) => {
         if (
           typeof element.checkVisibility === "function" &&
@@ -1001,6 +1031,132 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         )
           failures.push(
             `R2c field height: ${tidy(element.getAttribute("aria-label") || element.id)}`,
+          );
+      }
+      // F6's full counted action is a genuine 48px peer of the line filters.
+      // A copied marker cannot opt an unrelated action out of generic sizing.
+      const receivingCategoryActions = new Set();
+      for (const action of document.querySelectorAll(
+        "button.receiving-new-category-action,button[data-ui-component='receiving-new-categories']",
+      )) {
+        if (!visible(action)) continue;
+        const heading = action.parentElement;
+        const lines = heading?.parentElement;
+        const review = lines?.closest(
+          '.receiving-review[data-testid="invoice-review"]',
+        );
+        const filters = heading?.querySelector(
+          ':scope > .ui-segments[role="group"]',
+        );
+        const filterButtons = [
+          ...(filters?.querySelectorAll(":scope > button") ?? []),
+        ];
+        const dialogId = action.getAttribute("aria-controls");
+        const dialogs = [...document.querySelectorAll("dialog")].filter(
+          (dialog) => dialog.id === dialogId,
+        );
+        const dialog = dialogs.length === 1 ? dialogs[0] : null;
+        const categoryField = dialog?.querySelector(":scope > .field");
+        const categoryLabel = categoryField?.querySelector("label");
+        const categorySelect = categoryField?.querySelector(
+          "button.ui-select[role='combobox']",
+        );
+        const footer = dialog?.querySelector(":scope > .ui-dialog-actions");
+        const footerButtons = [
+          ...(footer?.querySelectorAll(":scope > button") ?? []),
+        ];
+        const fa = document.documentElement.lang.startsWith("fa");
+        const count = receivingCategory?.count ?? 0;
+        const expectedLabel = fa
+          ? `تعیین دسته برای ${count} کالای جدید`
+          : `Set category for ${count} new product${count === 1 ? "" : "s"}`;
+        const filterLabels = fa
+          ? ["همه", "نیازمند بررسی", "تأییدشده"]
+          : ["All", "Needs attention", "Confirmed"];
+        const sourceId = review
+          ?.querySelector(".original-viewer[data-original-invoice-id]")
+          ?.getAttribute("data-original-invoice-id");
+        const actionBounds = action.getBoundingClientRect();
+        const actionRange = document.createRange();
+        actionRange.selectNodeContents(action);
+        const actionGlyphs = [...actionRange.getClientRects()];
+        const fullLabelContained =
+          actionGlyphs.length > 0 &&
+          actionGlyphs.every(
+            (glyph) =>
+              glyph.left >= actionBounds.left - 1.5 &&
+              glyph.right <= actionBounds.right + 1.5 &&
+              glyph.top >= actionBounds.top - 1.5 &&
+              glyph.bottom <= actionBounds.bottom + 1.5,
+          );
+        const genuine = Boolean(
+          count > 0 &&
+          review &&
+          document.querySelectorAll(
+            '.receiving-review[data-testid="invoice-review"]',
+          ).length === 1 &&
+          sourceId === receivingCategory.invoiceId &&
+          lines?.matches("section.list-box.receiving-lines") &&
+          lines.parentElement?.matches(".receiving-work") &&
+          lines.firstElementChild === heading &&
+          heading.matches(".receiving-lines-heading") &&
+          heading.children.length === 4 &&
+          heading.firstElementChild?.matches("h2") &&
+          tidy(heading.firstElementChild.textContent) ===
+            (fa ? "ردیف‌های فاکتور" : "Invoice lines") &&
+          heading.querySelectorAll(":scope > button").length === 1 &&
+          lines.querySelector(
+            ":scope > .receiving-lines-table > table.receiving-table",
+          ) &&
+          action.matches(
+            "button.ui-button.button.button-secondary[data-control-kind='action'][data-ui-component='receiving-new-categories']",
+          ) &&
+          action.type === "button" &&
+          !action.disabled &&
+          !action.hasAttribute("role") &&
+          action.children.length === 0 &&
+          fullLabelContained &&
+          Math.abs(parseFloat(getComputedStyle(action).fontSize) - 13) < 0.1 &&
+          tidy(action.textContent) === expectedLabel &&
+          action.getAttribute("aria-haspopup") === "dialog" &&
+          dialog?.matches("dialog.ui-dialog.receiving-new-categories-dialog") &&
+          action.nextElementSibling === dialog &&
+          dialog.parentElement === heading &&
+          action.getAttribute("aria-expanded") === String(dialog.open) &&
+          tidy(
+            dialog.querySelector(":scope > .ui-dialog-header h2")?.textContent,
+          ) === expectedLabel &&
+          categoryLabel?.id &&
+          tidy(categoryLabel.textContent) ===
+            (fa ? "دسته قیمت‌گذاری" : "Pricing category") &&
+          categorySelect &&
+          (categoryLabel.htmlFor === categorySelect.id ||
+            (categorySelect.getAttribute("aria-labelledby") ?? "")
+              .split(/\s+/)
+              .includes(categoryLabel.id)) &&
+          footerButtons.length === 2 &&
+          footerButtons[0].classList.contains("button-secondary") &&
+          footerButtons[1].classList.contains("button-primary") &&
+          tidy(footerButtons[0].textContent) === (fa ? "انصراف" : "Cancel") &&
+          tidy(footerButtons[1].textContent) ===
+            (fa ? "تعیین دسته" : "Set category") &&
+          filters?.getAttribute("aria-label") ===
+            (fa ? "فیلتر ردیف‌های فاکتور" : "Filter invoice lines") &&
+          filterButtons.length === 3 &&
+          filterButtons.every(
+            (control, index) =>
+              control.type === "button" &&
+              ["true", "false"].includes(
+                control.getAttribute("aria-pressed"),
+              ) &&
+              tidy(control.querySelector(":scope > span")?.textContent) ===
+                filterLabels[index],
+          ),
+        );
+        if (genuine) receivingCategoryActions.add(action);
+        else
+          failures.push(
+            "Receiving category action lacks its canonical invoice/dialog contract",
           );
       }
       // D9 retains the approved compact plain header and field-height Add line row.
@@ -2907,6 +3063,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               .length === 1,
           );
           const expectedHeight =
+            (receivingCategoryActions.has(element) ? 48 : undefined) ??
             authenticationShape?.height ??
             r2gPriceShape?.height ??
             requestShape?.height ??
@@ -3844,7 +4001,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
         failures,
       };
     },
-    { screen, variant, role, expectedReturns },
+    { screen, variant, role, expectedReturns, receivingCategory },
   );
 }
 

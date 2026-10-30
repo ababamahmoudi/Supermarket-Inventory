@@ -1,3 +1,11 @@
+## 2026-10-30 — R3c final control composition and real simulated readiness
+
+Restored the original 1.7:1 invoice panes, kept the full category action at 48 px without stretching, and fitted its heading with scoped existing 8 px spacing. The new control has a real native dialog association. Its audit recognition is bound to canonical invoice/company/NEW count and exact real structure; generic control rules and every original pane/density number remain. All 55 actual source-regression cases passed, covering all 39 pane/control CI failures plus retained density/F6/compact flows, 40 counterfeit checks and 16 original density negative controls.
+
+Removed the cosmetic 2500 ms simulated wait after the fictional values and original were already ready. The same guarded fresh-authority transition now completes on the next task; original verification, actual attribution, human review, Live behavior and all pre-post financial protections remain. The gated storage/provider regression failed before and passed after. All 21 affected component tests and 12 unchanged F1/supplier/branch browser cases passed with no retries. F1 also adds visible review completion within its ordinary five-second deadline and a genuine-new-ID guard, retaining the canonical status/source/provenance checks.
+
+The final combined build/type check and 77 component tests passed. The composed F1 EN/FA desktop/phone run passed all four cases in 48.4 seconds with no skips or retries. Full lint/token checks and final independent CI are recorded with the release; overlapping batches are not a unique-suite total.
+
 ## 2026-10-30 — R3c F9 — retained disclosure proofs match the actual chooser
 
 The retained native-picker tests now require both the exact Simulated mode title and the complete statement that photos/PDFs use fictional values and do not read the invoice. Live-mode proof first requires the actual chooser to be visible, then checks absence of the real translated warning component. All picker type/multiple/cancel, no-draft, exact canonical state, original/identity and branch-permission assertions remain.

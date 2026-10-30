@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   setNewInvoiceLineCategories,
   type NewInvoiceCategoriesRead,
@@ -15,6 +15,7 @@ export function NewProductCategories({
   current?: NewInvoiceCategoriesRead | null;
 }) {
   const { state, command, t, tCount, lang } = useDemo();
+  const dialogId = useId();
   const [review, setReview] = useState<NewInvoiceCategoriesRead | null>(null);
   const [category, setCategory] = useState("");
   const [saving, setSaving] = useState(false);
@@ -36,6 +37,10 @@ export function NewProductCategories({
       {current && (
         <Button
           className="receiving-new-category-action"
+          data-ui-component="receiving-new-categories"
+          aria-haspopup="dialog"
+          aria-controls={dialogId}
+          aria-expanded={review !== null}
           variant="secondary"
           size="sm"
           onClick={() => {
@@ -48,8 +53,10 @@ export function NewProductCategories({
         </Button>
       )}
       <Dialog
+        id={dialogId}
+        className="receiving-new-categories-dialog"
         open={review !== null}
-        title={label(review?.count ?? 0)}
+        title={label(review?.count ?? current?.count ?? 0)}
         description={t(
           "Choose their category, then check each new product's remaining details before confirming.",
           "دستهٔ این کالاها را انتخاب کنید، سپس پیش از تأیید، جزئیات باقی‌ماندهٔ هر کالای جدید را بررسی کنید.",

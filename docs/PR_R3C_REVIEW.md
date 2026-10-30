@@ -188,6 +188,8 @@ Local verification passed 1,165 affected tests, lint/build and all 12 EN/FA desk
 3. Save Live in Settings → Receiving, reopen that simulated invoice and reload. Its full **Simulated reading** warning stays visible. If you normally post it during rehearsal, the posted view retains the warning too.
 4. With the actual reader kit running and Test connection successful, start a fresh fictional Live invoice and press **Read invoice**. Successful review has normal Live provenance and no simulation warning. This is the actual-device rehearsal; automated responses are intercepted fictional examples.
 
+Simulated review now follows actual original readiness without an artificial 2500 ms wait. The saved original and real receiver are retained first; no provider request or posting occurs. The source regression failed before and passed after, and all 12 unchanged F1/supplier/branch browser cases pass. The final composed F1 run also passes all four EN/FA desktop/phone cases with the same completion deadlines, source hashes and provenance checks.
+
 Local source verification and independent integrated CI are recorded on PR #29.
 
 ## P1 F2 — exact localhost reader fallback
@@ -208,7 +210,7 @@ Local source verification and independent integrated CI are recorded on PR #29.
 5. Inspect Activity/Undo for the real receiver and restore the category choice if desired. A dialog left open while another genuine edit changes its invoice must keep the selection and explain that the receiver must close/review/reopen before saving.
 6. Repeat in Persian on a phone. The dialog's primary action must remain visible, the NEW rows stay amber and the page must not overflow horizontally.
 
-The K8/F6 composition passed 218 tests, full lint/build and all six real EN/FA desktop/phone mixed-row/stale cases without skips/retries. The subsequent full CI found a real 92 px heading against the unchanged 48 px density cap when 25 NEW products added the category action. The source repair keeps the full counted action and filters visible inside the original desktop budget, with phone flow retained. Verification passed build/types, targeted lint/format, all three unchanged token audits and all 16 English/Persian desktop/phone browser cases in 3.0 minutes, with zero skips or retries. Each 25-line desktop fixture now measures a 48 px heading (was 92; cap 48), a 2046 px complete lines card (was 2090; cap 2046), and a 3060.515625 px composed review (was 3104.515625; cap 3100). All four deliberate negative controls remain effective. Full counted-label/filter containment also passes at 1000, 1180, 1280 and 1440 px. Valid group choices survive the intended category edit; previously stale group evidence does not. Integrated full CI is tracked on PR #29.
+The K8/F6 composition passed 218 tests and six real mixed-row/stale cases. Final control validation passed 55 cases covering all 39 actual pane/control CI failures plus the original density/F6/compact checks. The full action is 48 px, compact rather than stretched; panes retain their original 1.7:1 ratio. Generic standards remain unchanged; all 40 counterfeit probes and 16 original density negatives reject their intended defects. Final composed build/types and 77 component tests pass. Full independent CI is recorded on PR #29.
 
 ## P1 F8 — guarded active pages with retained originals
 

@@ -2,7 +2,9 @@
 
 ## R3c F6 — receiving heading keeps all controls inside the existing budget
 
-At desktop widths, a receiving heading that actually has the counted new-product category action reserves intrinsic columns for its title and complete filter strip, with a shrinkable middle action. When this real action is present, give the receiving work column a slightly larger share of the existing desktop layout while retaining the original viewer’s 320 px minimum. The full category label may wrap naturally onto two readable lines inside a genuine control with a 44 px minimum and natural height; do not clip it, shrink its typography, scroll the filters or reserve an empty action slot. Keep the existing phone flow and the unchanged 48 px heading/card/composed density limits.
+Keep the approved 1.7:1 desktop work/original pane allocation and the original viewer minimum. A heading with the actual counted new-product category action uses intrinsic title/filter columns and a shrinkable middle action. Only this new composition uses the existing 8 px gap and inline-inset tokens. Its full 13 px category label may wrap naturally; the genuine action is 48 px at every width, compact to its text, matching the adjacent filters. Preserve the natural narrow-card/phone flow. Do not clip text, scroll or stretch filters, widen panes, reserve an empty action slot or change the existing 48 px heading/card/composed density limits.
+
+The control audit recognizes this new 48 px action only through its real current-company/current-invoice NEW count, exact translated label, unique review/header, actual three filters and native associated category dialog. Generic 32/40/44 px action, width, radius, variant, type and glyph rules remain intact. A copied class, wrong count, broken dialog link, misplaced clone, 44 px genuine action or unrelated generic 48 px action must fail.
 
 ## R3c P1 K9 — pickup evidence and compact shared screens
 

@@ -57,12 +57,19 @@ for (const language of ["en", "fa"] as const)
     const photo = await fictionalPhoto(page, "fictional-simulation-proof.png");
     const picker = await openInvoiceSourcePicker(page, "photo", language);
     await picker.setFiles(photo);
+    await expect(
+      page.getByTestId("invoice-review").getByRole("heading", {
+        name: t(language, "Invoice lines", "ردیف‌های فاکتور"),
+        exact: true,
+      }),
+    ).toBeVisible();
     await expect
       .poll(
         async () => (await readCanonicalBusinessEvidence(page)).invoice.status,
       )
       .toBe("review");
     const simulated = (await readCanonicalBusinessEvidence(page)).invoice;
+    expect(simulated.id).not.toBe(before.invoice.id);
     expect(simulated.simulated_reading).toBe(true);
     expect(await retainedSourceHashes(page, simulated)).toEqual([
       sourceHash(photo),

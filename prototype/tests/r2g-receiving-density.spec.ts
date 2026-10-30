@@ -71,7 +71,7 @@ for (const language of ["en", "fa"] as const)
         [],
       );
     }
-    for (const width of [1000, 1180, 1280, 1440]) {
+    for (const width of [509, 1000, 1180, 1280, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       const action = page.getByRole("button", {
         name: word(
@@ -122,6 +122,8 @@ for (const language of ["en", "fa"] as const)
         contentType: "application/json",
       });
       expect(composition.fullActionContained).toBe(true);
+      expect(composition.actionHeight).toBeGreaterThanOrEqual(48);
+      expect(composition.actionFontSize).toBe("13px");
       expect(composition.fullFiltersContained).toBe(true);
       expect(composition.filterCount).toBe(3);
       expect(composition.filtersScroll).toBe(false);

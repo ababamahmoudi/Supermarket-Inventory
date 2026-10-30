@@ -1593,6 +1593,7 @@ export function EmptyState({
   );
 }
 export function Dialog({
+  id,
   open,
   onOpenChange,
   title,
@@ -1605,6 +1606,7 @@ export function Dialog({
   bodyClassName,
   heading,
 }: {
+  id?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
@@ -1655,6 +1657,7 @@ export function Dialog({
   }, [open]);
   return (
     <dialog
+      id={id}
       ref={ref}
       className={cn(
         "confirm-dialog ui-dialog",

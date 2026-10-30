@@ -1,5 +1,9 @@
 # Workflows and state machines
 
+## R3c — simulated review follows verified source readiness
+
+In Simulated mode, verify and durably save the original first. Once the retained source and fictional example values are ready, finish the simulated draft on the next task rather than waiting for an artificial reading duration. Keep the unmistakable fictional-values warning and ordinary human checks; this creates no Product, posting, stock movement or ledger entry. The completion command retains its actual-person/company/branch/current-invoice/status authority checks, and Live requests keep their separate app-level lifecycle and explicit retry/Cancel rules.
+
 ## R3c P1 K9 — pickup evidence and compact shared screens
 
 In Returns → Record pickup, enter the actual quantity for each item, using the text field or bounded stepper (one unit or 0.001 lb). Below the current unpicked remainder, both a shortfall reason and its real disposition remain required. Add the representative; enter an invoice/credit-note reference only if one exists. Save appends the actual immutable pickup event and RM memo using original protected source cost/currency. Blank-reference signed coverage requires a coherent matching event plus memo/request identity, representative/reference and quantities. Missing/mismatched/copied evidence remains denied. A later pickup receives a new form identity. An exact accepted retry is a no-op after fresh authority checks, including a genuine retained-photo retry, a now-resolved disposition and replay after correction. Reusing identity with changed person/payload fails atomically. Authorized correction remains append-only, preserves physical recovery and cannot reduce settled/submitted-claim coverage. Record resolution/claim verification remains a separate authorized action.

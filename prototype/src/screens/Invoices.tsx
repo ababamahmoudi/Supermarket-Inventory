@@ -1021,7 +1021,8 @@ function InvoiceWorkspace({
       });
     }
   }
-  // Refreshing a processing draft resumes the honest simulated reading state.
+  // The fictional values and saved original are ready; complete on the next task.
+  // Reloading a processing draft uses the same guarded completion.
   useEffect(() => {
     if (invoice.status !== "reading" || invoice.live_reading) return;
     const id = invoice.id;
@@ -1031,7 +1032,7 @@ function InvoiceWorkspace({
           if (draft.invoice.id === id && draft.invoice.status === "reading")
             draft.invoice.status = "review";
         }),
-      2500,
+      0,
     );
     return () => window.clearTimeout(timer);
   }, [invoice.id, invoice.status, invoice.live_reading, updateInvoice]);

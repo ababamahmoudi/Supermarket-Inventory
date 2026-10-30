@@ -1,4 +1,10 @@
-import { expect, test, type Page, type Locator } from "@playwright/test";
+import {
+  expect,
+  test,
+  type Page,
+  type Locator,
+  type TestInfo,
+} from "@playwright/test";
 import Decimal from "decimal.js";
 import readingsFixture from "./fixtures/r2-fictional-readings-export.json" with { type: "json" };
 import { readCanonicalBusinessEvidence } from "./business-evidence";
@@ -319,6 +325,126 @@ async function rejectsBrokenComposition(page: Page) {
   ).toEqual([]);
 }
 
+async function rejectsCategoryCounterfeits(
+  page: Page,
+  info: TestInfo,
+  language: "en" | "fa",
+  width: number,
+  newCount: number,
+) {
+  const action = page.locator(
+    ".receiving-lines-heading > .receiving-new-category-action",
+  );
+  const saved = await action.evaluate((button) => {
+    const dialog = document.getElementById(
+      button.getAttribute("aria-controls")!,
+    )!;
+    return {
+      style: button.getAttribute("style"),
+      label: button.textContent,
+      controls: button.getAttribute("aria-controls"),
+      title: dialog.querySelector("h2")!.textContent,
+    };
+  });
+  for (const mutation of [
+    "height",
+    "count",
+    "placement",
+    "link",
+    "generic",
+  ] as const) {
+    await action.evaluate(
+      (button, { mutation, wrongLabel }) => {
+        if (mutation === "height") {
+          button.style.blockSize = "44px";
+          button.style.minBlockSize = "44px";
+          button.style.maxBlockSize = "44px";
+        } else if (mutation === "count") {
+          button.textContent = wrongLabel;
+          document
+            .getElementById(button.getAttribute("aria-controls")!)!
+            .querySelector("h2")!.textContent = wrongLabel;
+        } else if (mutation === "link") {
+          button.setAttribute(
+            "aria-controls",
+            "b4-counterfeit-category-dialog",
+          );
+        } else {
+          const counterfeit =
+            mutation === "placement"
+              ? (button.cloneNode(true) as HTMLButtonElement)
+              : document.createElement("button");
+          counterfeit.id = "b4-counterfeit-category-action";
+          if (mutation === "generic") {
+            counterfeit.type = "button";
+            counterfeit.className = "ui-button button button-secondary";
+            counterfeit.dataset.controlKind = "action";
+            counterfeit.textContent = "Unrelated action";
+            counterfeit.style.blockSize = "48px";
+            counterfeit.style.minBlockSize = "48px";
+            counterfeit.style.maxBlockSize = "none";
+          }
+          button.parentElement!.insertAdjacentElement("afterend", counterfeit);
+        }
+      },
+      {
+        mutation,
+        wrongLabel: word(
+          language,
+          `Set category for ${newCount + 1} new products`,
+          `تعیین دسته برای ${newCount + 1} کالای جدید`,
+        ),
+      },
+    );
+    try {
+      const negative = await inspect(
+        page,
+        "F6 category contract",
+        `${language}-${width}-${mutation}`,
+        "owner",
+      );
+      if (mutation === "height" || mutation === "generic")
+        expect(
+          negative.failures.some((failure) =>
+            failure.startsWith("Text action height:"),
+          ),
+        ).toBe(true);
+      else
+        expect(negative.failures).toContain(
+          "Receiving category action lacks its canonical invoice/dialog contract",
+        );
+      await info.attach(
+        `F6-contract-negative-${language}-${width}-${mutation}`,
+        {
+          body: JSON.stringify(negative),
+          contentType: "application/json",
+        },
+      );
+    } finally {
+      await action.evaluate((button, saved) => {
+        document.getElementById("b4-counterfeit-category-action")?.remove();
+        if (saved.style === null) button.removeAttribute("style");
+        else button.setAttribute("style", saved.style);
+        button.textContent = saved.label;
+        button.setAttribute("aria-controls", saved.controls!);
+        document
+          .getElementById(saved.controls!)!
+          .querySelector("h2")!.textContent = saved.title;
+      }, saved);
+    }
+    expect(
+      (
+        await inspect(
+          page,
+          "F6 restored category contract",
+          `${language}-${width}-${mutation}`,
+          "owner",
+        )
+      ).failures,
+    ).toEqual([]);
+  }
+}
+
 async function appearance(page: Page, language: "en" | "fa") {
   if (language === "fa") {
     await (await openShellAction(page, "تغییر به تم تیره")).click();
@@ -365,6 +491,17 @@ for (const language of ["en", "fa"] as const) {
           body: JSON.stringify(report),
           contentType: "application/json",
         });
+        await rejectsCategoryCounterfeits(
+          page,
+          info,
+          language,
+          width,
+          imported.lines.filter(
+            (line) =>
+              line.product_code === "NEW" &&
+              line.company_id === imported.company_id,
+          ).length,
+        );
       }
       if (width === 509) await rejectsBrokenComposition(page);
       await info.attach(`B4-geometry-${language}-${width}`, {
