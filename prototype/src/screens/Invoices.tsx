@@ -1,3 +1,8 @@
+import {
+  invoiceDisplayLineShort as lineShort,
+  invoiceDisplayShortTotals as shortTotals,
+  invoiceDisplayRefusedTotals as refusedTotals,
+} from "../invoice-display-arithmetic";
 import Decimal from "decimal.js";
 import { useNavigationIntent } from "../use-navigation-intent";
 import { Camera, FileText, FileJson, PenLine, Receipt } from "lucide-react";
@@ -27,14 +32,11 @@ import {
   dateAfter,
   demoSaleCostInvoice,
   initializeInvoiceManualPriceDecisions,
-  lineShort,
   markInvoiceSupplierReview,
   postInvoice,
   recalculateInvoice,
   receiveShort,
-  refusedTotals,
   setInvoiceLineQuantity as setEachInvoiceLineQuantity,
-  shortTotals,
 } from "../invoice";
 import {
   requireInvoiceAuthority,
@@ -875,6 +877,9 @@ function InvoiceWorkspace({
   const [deliveryQuantities, setDeliveryQuantities] = useState<
     Record<string, number>
   >({});
+  const [deliveryMembers, setDeliveryMembers] = useState<
+    Record<number, number>
+  >({});
   const [deliveryRefs, setDeliveryRefs] = useState<Record<string, string>>({});
   const [deliveryErrors, setDeliveryErrors] = useState<
     Record<string, { quantity?: string; reference?: string }>
@@ -1407,6 +1412,7 @@ function InvoiceWorkspace({
         receipt,
         currentActor,
         index,
+        deliveryMembers[index],
       );
       return {
         restored,
@@ -1578,6 +1584,51 @@ function InvoiceWorkspace({
                           }}
                         />
                       </Field>
+                      {line.free_case && (
+                        <Field
+                          label={t(
+                            "Paid/free source member",
+                            "بخش پولی/رایگان منبع",
+                          )}
+                        >
+                          <Select
+                            value={
+                              deliveryMembers[index] === undefined
+                                ? ""
+                                : String(deliveryMembers[index])
+                            }
+                            onChange={(value) =>
+                              setDeliveryMembers((current) => ({
+                                ...current,
+                                [index]: Number(value),
+                              }))
+                            }
+                            options={[
+                              {
+                                value: "",
+                                label: t(
+                                  "Choose paid or free units",
+                                  "انتخاب واحد پولی یا رایگان",
+                                ),
+                              },
+                              ...line.free_case.members
+                                .filter(
+                                  (member) =>
+                                    member.quantity >
+                                      member.received + member.later &&
+                                    (line.free_case!.decision !== "mistake" ||
+                                      !member.free),
+                                )
+                                .map((member) => ({
+                                  value: String(member.index),
+                                  label: member.free
+                                    ? t("Free units", "واحد رایگان")
+                                    : t("Paid units", "واحد پولی"),
+                                })),
+                            ]}
+                          />
+                        </Field>
+                      )}
                       <Field
                         label={t(
                           "Delivery document reference",

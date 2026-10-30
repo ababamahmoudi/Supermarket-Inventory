@@ -19,9 +19,10 @@ export type ClearanceLotReadDTO = Pick<
 
 export type ReceiptLotSourceReadDTO = Omit<
   ReceiptLot["source_receipts"][number],
-  "unit_cost" | "invoice_id" | "line_index"
+  "unit_cost" | "acquisition_amount" | "invoice_id" | "line_index"
 > & {
   unit_cost?: string;
+  acquisition_amount?: string;
   invoice_id?: string;
   line_index?: number;
 };
@@ -162,6 +163,9 @@ export function projectPurchaseOperational(
                 }
               : {}),
             ...(costAllowed ? { unit_cost: receipt.unit_cost } : {}),
+            ...(costAllowed && receipt.acquisition_amount !== undefined
+              ? { acquisition_amount: receipt.acquisition_amount }
+              : {}),
           })),
         };
       });

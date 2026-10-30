@@ -763,6 +763,7 @@ export function correctReturnPickup(
         quantities: after,
         representative: original.representative,
         slip: original.signed_evidence_reference,
+        correction_of: original.id,
       },
       evidence,
       at,

@@ -39,6 +39,7 @@ export type OperationalReturnRead = Omit<
 };
 
 const privateKeys = new Set([
+  "acquisition_basis",
   "source_receipt",
   "creation_request_id",
   "creation_fingerprint",

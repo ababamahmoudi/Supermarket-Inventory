@@ -264,6 +264,7 @@ export interface Approval extends ScopedRecord {
   threshold?: string | null;
   invoice_ids?: string[];
   config_version?: string;
+  free_case_answer?: import("./invoice-free-cases").FreeCaseView;
   receiving_price?: import("./invoice-receiving-price").ReceivingPriceView;
   manual_override?: boolean;
   clear_manual_price?: boolean;
@@ -410,6 +411,7 @@ export type InvoiceLine = Omit<
   expiry_as_printed?: string;
   pack_size?: string;
   /** Exact AI/source description, separate from checked or edited clean names. */
+  free_case_group?: import("./invoice-free-cases").InvoiceFreeCaseGroup;
   printed_description?: string;
   import_line_index?: number;
   pricing_category?: string;
@@ -663,6 +665,8 @@ export interface LabelWaitlistItem extends ScopedRecord {
     | "price_update";
 }
 export interface ReturnLine {
+  /** Exact grouped-receipt claim value; never inferred from rounded pricing cost. */
+  acquisition_basis?: import("./invoice-free-acquisition").ReturnAcquisitionBasis;
   source_receipt?: {
     invoice_id: string;
     line_index: number;

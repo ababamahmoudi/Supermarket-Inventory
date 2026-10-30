@@ -1,5 +1,19 @@
 # Workflows and state machines
 
+## R3c P1 K8 — one paid/free product with exact source money
+
+Two proven same-product imported members, one paid and one zero/blank cost with a known positive quantity, become one review line. They retain their original printed descriptions, source indices, quantities, cost evidence, tax, dates, lot and delivery allocations privately. Conflicting barcodes, explicit supplier codes, pack, sold-by, tax/date/lot or ambiguous extra members do not merge. Weighed groups remain unsupported and separate.
+
+The actual invoice handler answers the labelled free-case question in the expanded line: Free case (bonus), Two for the price of one, or Mistake on the invoice. Unanswered/stale choices block line confirmation and posting independently of ordinary confidence checks or known-delivery status. The source/actor/session/config-bound action rejects stale, foreign and read-only operations without a partial write. Changing the selected choice retains the genuine receiver/time; a different Manager can subsequently post and approve. The actual approval visibly shows the choice, receiver, physical quantity and permitted pricing explanation.
+
+Bonus includes the accepted free quantity physically while preserving the paid regular pricing cost. Two-for-one prices over the actual combined quantity (including unequal paid/free ratios). Mistake accepts only the paid quantity and retains an attributed supplier invoice-difference note; it does not invent a credit or stock event. All three preserve exact paid paper subtotal/tax/final amount. Before posting they create no Product, movement, payable or approval. Posting creates one Product identity, one physical receipt for the merged line and a separate real approval. Existing normalized same-name catalog identities require compatible size/sold-by/barcode/known supplier pack evidence; incompatible or ambiguous identity blocks posting before code allocation.
+
+Paid and free delivery/refusal quantities remain separate. A missing/refused free member deducts zero paid money. Later deliveries restore only that source member's cumulative amount and tax cents. Explicit member events have separate idempotency identities, so one delivery document may record both paid and free members without losing either; repeating the same member/document is harmless. Ordinary and retained legacy reference identities retain their behavior.
+
+Posting learns both genuinely accepted printed aliases onto the one same-supplier Product binding; a later AI reading using either alias matches that Product and remains Same as last delivery when pack/cost/category agree. Mistake does not learn the omitted member as an accepted purchase alias.
+
+Supported source edits retire free-case/receiving-price evidence as appropriate. Existing receiving manual prices keep their real editor and entered amount, but become visibly stale when the paid/free pricing basis changes. Posted grouped product/quantity/pack/cost/date/lot corrections are conservatively rejected until dedicated source-member correction support exists; original source evidence is retained.
+
 ## R3c — return to an unread invoice
 
 Opening a ready or actively reading draft preserves its source and attempt exactly. Review normalization waits until there is review data; selecting another invoice and returning cannot invalidate or restart an accepted reader request. Other drafts, originals and financial records remain intact.

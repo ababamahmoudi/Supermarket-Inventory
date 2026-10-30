@@ -140,6 +140,7 @@ export function approvalSnapshot(
         approval.threshold,
         approval.manual_price_review,
         approval.receiving_price,
+        approval.free_case_answer,
         approval.manual_override,
         approval.pricing_category,
         (state.invoice_location_corrections ?? [])

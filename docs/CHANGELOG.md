@@ -1,3 +1,9 @@
+## 2026-10-30 — R3c P1 K8 — paid/free receiving and exact acquisition
+
+- Merge proven counted paid/free members into one review line/Product, with actual Floor choice and visible original receiver/choice in real approval. Keep exact paper totals, physical quantities, pricing cost and source acquisition budgets separate.
+- Preserve paid/free short/refused/later allocations, same-document member idempotency, source-bounded split returns and accepted printed aliases. Cost-safe projections avoid private financial leakage and false Bonus arithmetic/cost-halving actions. Unsupported grouped weight and posted monetary/date/lot corrections deny safely.
+- Frozen local verification passed 1,165 affected tests across 82 files, full lint/build and all 12 EN/FA desktop/phone import → Floor answer → Manager Post/Approve browser cases, with no skips/retries. Independent financial/privacy review is clear; integrated checks and CI are recorded on PR #29.
+
 ## 2026-10-30 — R3c unread-workspace navigation repair
 
 - Opening an unread ready/processing invoice no longer normalizes its review fields or changes its source witness. Returning from another invoice preserves the active attempt and saved original until the actual reader result is accepted.

@@ -1,3 +1,7 @@
+import {
+  freeCasePrintedDescriptions,
+  groupInvoiceFreeCases,
+} from "./invoice-free-cases";
 import { invoicePackWeight } from "./invoice-case-weight";
 import { selectInvoiceWeightUnit } from "./invoice-weight";
 import Decimal from "decimal.js";
@@ -628,9 +632,9 @@ export function resolveReadingProductMatch(
                 entry.invoice.status === "posted" &&
                 entry.invoice.id === id &&
                 entry.product.code === binding.product_code &&
-                normalizedPrintedItem(
-                  entry.line.printed_description ?? entry.line.description,
-                ) === key.key,
+                freeCasePrintedDescriptions(entry.line).some(
+                  (raw) => normalizedPrintedItem(raw) === key.key,
+                ),
             ),
           ),
       )
@@ -950,7 +954,12 @@ export function actionableReadingChecks(
     low_confidence_fields: totals.low_confidence_fields,
     calculated_fields: totals.calculated_fields,
     calculated_from_lines: totals.calculated_from_lines,
-    lines,
+    lines: [
+      ...groupInvoiceFreeCases(
+        lines.filter((line): line is InvoiceLine => "line_total" in line),
+      ),
+      ...lines.filter((line) => !("line_total" in line)),
+    ],
   };
 }
 
@@ -1877,6 +1886,7 @@ export function importInvoiceReadings(
         });
       }
     }
+    invoice.lines = groupInvoiceFreeCases(invoice.lines);
     fillCalculatedInvoiceTotals(invoice);
     invoice.payable_after_open_shorts = invoice.final_total;
     invoice.original_pages = structuredClone(pages);

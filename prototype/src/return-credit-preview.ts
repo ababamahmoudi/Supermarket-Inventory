@@ -6,6 +6,7 @@ import { domainScope, selectedLocations } from "./domain-authority";
 import { returnUiStatus } from "./return-workflow";
 import { companyDate } from "./invoice";
 import type { DemoState } from "./types";
+import { groupedReturnLineAmount } from "./invoice-free-acquisition";
 
 export interface AwaitingPickupReturnCredit {
   return_id: string;
@@ -51,7 +52,11 @@ export function awaitingPickupReturnCredits(
       deducted: false as const,
       amount: record.lines
         .reduce(
-          (sum, line) => sum.plus(new Decimal(line.unit_cost!).times(line.qty)),
+          (sum, line) =>
+            sum.plus(
+              groupedReturnLineAmount(line) ??
+                new Decimal(line.unit_cost!).times(line.qty),
+            ),
           new Decimal(0),
         )
         .toFixed(2, Decimal.ROUND_HALF_UP),

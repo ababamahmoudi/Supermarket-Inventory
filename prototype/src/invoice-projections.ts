@@ -26,6 +26,7 @@ import {
   redactLiveReadingProvenance,
 } from "./invoice-live-reading-projection";
 import type { LiveInvoiceReadingView } from "./invoice-live-reading-types";
+import { freeCaseView } from "./invoice-free-cases";
 import { currentKnownDelivery } from "./invoice-known-delivery";
 
 type InvoiceLineMoney =
@@ -53,6 +54,7 @@ export type InvoiceLineView = Omit<
   | "reading_product_match"
   | "known_delivery"
   | "receiving_price"
+  | "free_case_group"
 > &
   Partial<Pick<InvoiceLine, InvoiceLineMoney>> & {
     reading_product_match?: InvoiceProductMatchReadDTO;
@@ -60,6 +62,7 @@ export type InvoiceLineView = Omit<
       NonNullable<InvoiceLine["known_delivery"]>,
       "status" | "date" | "changes"
     >;
+    free_case?: import("./invoice-free-cases").FreeCaseView;
     receiving_price?: import("./invoice-receiving-price").ReceivingPriceView;
   };
 type InvoiceMoney =
@@ -364,6 +367,7 @@ export function invoiceView(
         : original.branch,
     lines: invoice.lines.map((line) => ({
       ...select(line, lineKeys),
+      ...(line.free_case_group ? { free_case: freeCaseView(line, costs) } : {}),
       ...projectReadingProductMatch(state, current, line),
       ...(() => {
         const known = currentKnownDelivery(line);

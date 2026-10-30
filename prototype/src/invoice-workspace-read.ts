@@ -1,3 +1,4 @@
+import { freeCaseActionQuote } from "./invoice-free-cases";
 import Decimal from "decimal.js";
 import { validReceivingPrice } from "./invoice-receiving-price";
 import {
@@ -181,6 +182,12 @@ export function invoiceWorkspaceRead(
     )?.minimum_margin;
     return {
       index,
+      freeCaseQuote:
+        line.free_case_group &&
+        ["draft", "review"].includes(working.invoice.status) &&
+        canInvoiceAuthority(working, actor, "invoices.edit", id, true)
+          ? freeCaseActionQuote(working, actor, index)
+          : undefined,
       price,
       receivingMargin:
         invoice.margin_allowed && selectedMargin

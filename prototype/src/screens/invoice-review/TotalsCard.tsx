@@ -14,7 +14,11 @@ import {
   invoiceCheckField,
   invoiceTotalsCheck,
 } from "../../invoice-checks";
-import { shortTotals, refusedTotals, validMoney } from "../../invoice";
+import { validMoney } from "../../invoice";
+import {
+  invoiceDisplayShortTotals as shortTotals,
+  invoiceDisplayRefusedTotals as refusedTotals,
+} from "../../invoice-display-arithmetic";
 import { setInvoiceAmount } from "../../invoice-entry";
 import { invoiceAmountIssue } from "./amount-issue";
 import type { ReviewProps } from "./types";

@@ -8,6 +8,11 @@ import { effectiveInvoiceVersion } from "./invoice-version";
 import { effectiveInvoiceLocation } from "./received";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
 import { businessFingerprint } from "./business-fingerprint";
+import {
+  freeAcquisitionSourceKey,
+  invoiceFreeAcquisition,
+  type InvoiceFreeAcquisition,
+} from "./invoice-free-acquisition";
 import type { DemoInvoice, DemoState, Product, SupplierRecord } from "./types";
 
 const ReturnQuantity = Decimal.clone({
@@ -113,6 +118,8 @@ interface ReceiptSource {
   quantity_unit: "units" | "lb";
   received_unit: ReturnQuantityUnit;
   unit_multipliers: Partial<Record<ReturnQuantityUnit, string>>;
+  acquisition?: InvoiceFreeAcquisition;
+  acquisition_source_key?: string;
 }
 function validCost(value: unknown): string | null {
   try {
@@ -216,7 +223,16 @@ function receiptSources(
         const received_at =
           later?.at ?? invoice.received_at ?? original.posted_at ?? "";
         if (!Number.isFinite(Date.parse(received_at))) return [];
-        const cost = validCost(line.unit_cost_before_tax);
+        let acquisition: InvoiceFreeAcquisition | undefined;
+        try {
+          acquisition = invoiceFreeAcquisition(line);
+        } catch {
+          // An invalid grouped source cannot silently borrow its pricing cost.
+          return [];
+        }
+        const cost = validCost(
+          acquisition?.unit_cost ?? line.unit_cost_before_tax,
+        );
         const quantity_unit = line.sold_by === "weight" ? "lb" : "units";
         const unit_multipliers: Partial<Record<ReturnQuantityUnit, string>> =
           quantity_unit === "lb"
@@ -266,6 +282,17 @@ function receiptSources(
             quantity_unit,
             received_unit,
             unit_multipliers,
+            ...(acquisition
+              ? {
+                  acquisition,
+                  acquisition_source_key: freeAcquisitionSourceKey(
+                    original.company_id,
+                    original.id,
+                    index,
+                    line,
+                  ),
+                }
+              : {}),
             fingerprint: businessFingerprint({
               branch,
               supplier: {

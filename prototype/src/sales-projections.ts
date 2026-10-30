@@ -21,9 +21,15 @@ import {
 
 const privateFields = new Set([
   "known_delivery",
+  "free_case_group",
+  "acquisition_basis",
+  "acquisition_amount",
   "imported_unit_cost_basis",
   "pricing_quote",
   "unit_cost",
+  "paid_amount",
+  "pricing_unit_cost",
+  "financial",
   "cost_snapshot",
   "previous_cost",
   "new_cost",

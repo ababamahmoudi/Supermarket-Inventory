@@ -1,4 +1,5 @@
 import { receivingPriceProblem } from "./invoice-receiving-price";
+import { validFreeCaseGroup } from "./invoice-free-cases";
 import { invoiceLineAmount, invoicePaperTotalMismatch } from "./invoice-weight";
 import Decimal from "decimal.js";
 import { createId } from "./ids";
@@ -86,6 +87,7 @@ export function isEmptyOptionalInvoiceField(
 // Only checks with a human label and a real receiving control can block review.
 // Unsupported reader metadata remains source evidence rather than an invisible task.
 const reviewableInvoiceFields = new Set([
+  "free_case_decision",
   "supplier",
   "supplier_invoice_number",
   "invoice_date",
@@ -179,6 +181,12 @@ export function normalizeInvoiceReceivingReview(invoice: DemoInvoice): void {
   for (const [index, line] of invoice.lines.entries()) {
     line.id ??= `${invoice.id}:line:${line.import_line_index ?? index}`;
     line.low_confidence_fields = visibleInvoiceCheckFields(line);
+    if (
+      line.free_case_group &&
+      !validFreeCaseGroup(line) &&
+      !line.low_confidence_fields.includes("free_case_decision")
+    )
+      line.low_confidence_fields.push("free_case_decision");
     line.date_tracking ??= false;
     if (!line.date_tracking) line.date_confirmed = true;
   }
@@ -373,6 +381,11 @@ export function confirmInvoiceLineChecks(
     throw new InvoiceLineConfirmationError(
       "quantity_unit",
       "This product is sold by weight. Choose Weight (lb) or Weight (kg).",
+    );
+  if (line.free_case_group && !validFreeCaseGroup(line))
+    throw new InvoiceLineConfirmationError(
+      "free_case_decision",
+      "Answer the free-case question before confirming this line.",
     );
   if (line.product_code === "NEW" && !line.new_name_en?.trim())
     throw new InvoiceLineConfirmationError(

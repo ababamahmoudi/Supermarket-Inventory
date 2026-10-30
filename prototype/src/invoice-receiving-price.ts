@@ -55,6 +55,7 @@ function receivingPriceBasis(state: DemoState, index: number): string {
     unit_cost: line.unit_cost_before_tax,
     case_cost: line.case_cost_before_tax,
     imported_cost_basis: line.imported_unit_cost_basis,
+    free_case_group: line.free_case_group,
     weight_case_cost_basis: line.weight_case_cost_basis,
     weight_conversion_factor: line.weight_conversion_factor,
     case_weight: line.case_weight,

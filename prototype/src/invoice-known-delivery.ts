@@ -22,6 +22,7 @@ import type {
 } from "./types";
 
 import { normalizedPrintedItem } from "./invoice-printed-item";
+import { freeCasePrintedDescriptions } from "./invoice-free-cases";
 export { normalizedPrintedItem } from "./invoice-printed-item";
 
 const money = (value: string) => new Decimal(value).toFixed(4);
@@ -177,7 +178,13 @@ export function compareKnownDelivery(
       before: latest.supplier_item_code,
       after: line.supplier_item_code,
     });
-  if (itemName(line) !== itemName(prior))
+  if (
+    itemName(line) !== itemName(prior) &&
+    !freeCasePrintedDescriptions(prior).some(
+      (printed_description) =>
+        itemName(line) === itemName({ ...prior, printed_description }),
+    )
+  )
     changes.push({
       field: "description",
       before: prior.description,

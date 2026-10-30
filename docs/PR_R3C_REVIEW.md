@@ -20,6 +20,20 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 
 P1 remains after green P0. No pending row in this table is a claim of delivered behavior.
 
+## P1 delivery order
+
+| Order | Item                                                             | Status    |
+| ----- | ---------------------------------------------------------------- | --------- |
+| 1     | K8 — paid/free receiving and exact acquisition                   | Delivered |
+| 2     | F1 — unmistakable retained simulation warning                    | Planned   |
+| 3     | F2 — exact localhost reader default                              | Planned   |
+| 4     | F6 — category for current NEW products                           | Planned   |
+| 5     | F8 — active pages and retained originals                         | Planned   |
+| 6     | F9 — phone chooser fits                                          | Planned   |
+| 7     | F10 — compact actual reader settings                             | Planned   |
+| 8     | F11 — scoped safe failure details                                | Planned   |
+| 9     | K9 — shared checkboxes, pickup and independent Dashboard columns | Planned   |
+
 ## Start on the Mac
 
 Use Node 22.22.2 or a later Node 22 release. Keep the existing reader kit in its own folder; run its documented `npm run serve` there and leave it running. Keys remain only in that kit's `keys.env`.
@@ -156,6 +170,16 @@ Also start a live read, open another invoice, and return to the first before the
 Integrated verification passed 92 protected matching/paint/service/navigation units, lint and a fresh build. All 34 final selected geometry/509/F0/success/Cancel/stale-target browser cases passed in 4.8 minutes, with no retries or skips. Independent full CI is tracked on PR #29. Root and owner visually reviewed current phone and desktop screenshots. Fictional intercepted responses were used for automation; real-provider/physical-device rehearsal is not claimed.
 
 The retained C8 sale/cost proof helper also uses the genuine native file chooser before draft creation. Its 12 desktop/phone sale/phone-layout scenarios pass with the original source/finance/stock/authority assertions unchanged. Final full CI is tracked on PR #29.
+
+## P1 K8 — one paid/free product with exact source money
+
+1. Import/read a fictional or private local invoice with the same actual product on a paid and zero/blank-cost row. Keep real invoice bytes outside GitHub and fixtures.
+2. Open its single merged line. As Floor Worker choose each free-case answer on a fresh draft, inspect the free tag / actual division math / supplier-difference explanation and retain the original viewer.
+3. Confirm the line and totals. As Manager post the invoice, open Approvals, inspect the original receiver/choice and approve. Check one Product, correct physical quantity and unchanged paper total.
+4. On a paid/free shortage, allocate actual missing/refused member quantities. Receive the free units first and verify no payable restoration; receive paid units and verify only their original cents return. Both members may share a delivery document reference.
+5. Create split returns from a grouped receipt; expected credits remain capped at the exact acquisition amount. Recovery/cancellation and actual supplier credit retain their ordinary separate meaning.
+
+Local verification passed 1,165 affected tests, lint/build and all 12 EN/FA desktop/phone cases with actual Floor answer, retained original/hash, Manager Post, visible receiver/choice and genuine approval. No skips or retries. Independent money/privacy review is clear. The final navigation-baseline composition additionally passed 134 focused group/acquisition/live-source/price/audit tests and a fresh build; full CI is tracked on PR #29. Counted groups are supported; grouped weight and posted monetary/date/lot correction edits are conservatively denied.
 
 ## After the demo — record only
 

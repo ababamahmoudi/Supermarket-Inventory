@@ -1,3 +1,9 @@
+import {
+  invoiceDisplayLineShort as lineShort,
+  invoiceDisplayLineRefused as lineRefused,
+  invoiceDisplayShortTotals as shortTotals,
+  invoiceDisplayRefusedTotals as refusedTotals,
+} from "../invoice-display-arithmetic";
 import { readInvoiceReturnRoute } from "../navigation";
 import { companyTimestampText } from "../company-time";
 import { invoiceLineId } from "../invoice-line-links";
@@ -8,13 +14,7 @@ import { InvoiceOtherCharges } from "../InvoiceReadingReview";
 import { useDemo } from "../store";
 import { branchLabel } from "../settings";
 import { invoiceContentVersions } from "../invoice-version";
-import {
-  acceptedInvoiceUnits,
-  lineShort,
-  lineRefused,
-  shortTotals,
-  refusedTotals,
-} from "../invoice";
+import { acceptedInvoiceUnits } from "../invoice";
 import { effectiveInvoiceLocation } from "../received";
 import {
   QuantityText,

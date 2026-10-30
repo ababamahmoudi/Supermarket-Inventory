@@ -20,8 +20,13 @@ import {
 import { branchLabel } from "./settings";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
 import type { DemoState, ReturnRecord } from "./types";
+import {
+  returnAcquisitionAmount,
+  type ReturnAcquisitionBasis,
+} from "./invoice-free-acquisition";
 
 export interface ReturnMemoLine {
+  acquisition_basis?: ReturnAcquisitionBasis;
   product_code: string;
   name_en: string;
   name_fa: string;
@@ -236,6 +241,7 @@ export function createReturnMemo(
     quantities: Record<string, number>;
     representative: string;
     slip: string;
+    correction_of?: string;
   },
   evidence: InternalPurchaseEvidence,
   at = new Date().toISOString(),
@@ -275,6 +281,19 @@ export function createReturnMemo(
       if (!valuation) throw new OperationError("return_cost");
       const cost = new Decimal(valuation.unit_cost);
       const quantity = input.quantities[line.product_code];
+      const corrected = input.correction_of
+        ? record.pickup_memos?.find((memo) => memo.id === input.correction_of)
+        : undefined;
+      if (input.correction_of && !corrected)
+        throw new OperationError("return_cost");
+      const offset = new Decimal(line.picked_up ?? 0)
+        .minus(
+          corrected?.lines.find(
+            (item) => item.product_code === line.product_code,
+          )?.quantity ?? 0,
+        )
+        .toNumber();
+      const acquisition = valuation.acquisition_basis;
       return {
         product_code: line.product_code,
         name_en: product.name_en,
@@ -284,10 +303,15 @@ export function createReturnMemo(
           line.quantity_unit ?? (product.sold_by === "weight" ? "lb" : "units"),
         unit_cost: cost.toFixed(4),
         cost_source: valuation.cost_source,
-        expected_credit: cost
-          .times(quantity)
-          .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
-          .toFixed(2),
+        expected_credit: acquisition
+          ? returnAcquisitionAmount(acquisition, offset, quantity)
+          : cost
+              .times(quantity)
+              .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+              .toFixed(2),
+        ...(acquisition
+          ? { acquisition_basis: { ...acquisition, offset } }
+          : {}),
       };
     });
   const sequence =
@@ -426,10 +450,16 @@ export function pendingReturnCredits(
             );
             // Deduct the frozen full line amount, with proportional remaining rounding.
             return total.plus(
-              new Decimal(line.expected_credit)
-                .times(new Decimal(line.quantity).minus(consumed))
-                .div(line.quantity)
-                .toDecimalPlaces(2, Decimal.ROUND_HALF_UP),
+              line.acquisition_basis
+                ? returnAcquisitionAmount(
+                    line.acquisition_basis,
+                    (line.acquisition_basis.offset ?? 0) + consumed,
+                    line.quantity - consumed,
+                  )
+                : new Decimal(line.expected_credit)
+                    .times(new Decimal(line.quantity).minus(consumed))
+                    .div(line.quantity)
+                    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP),
             );
           }, new Decimal(0));
           return {

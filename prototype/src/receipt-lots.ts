@@ -14,6 +14,7 @@ import {
   normalizeSearch,
 } from "./catalog";
 import { validTrackedDate } from "./date-tracking";
+import { invoiceFreeAcquisition } from "./invoice-free-acquisition";
 import type { AuthenticatedActor } from "./authority-types";
 import { freshActor } from "./authority";
 import { can, requireCapability, requireConcreteLocation } from "./permissions";
@@ -48,6 +49,7 @@ export interface ReceiptLot extends ScopedRecord {
     line_index: number;
     quantity: string;
     unit_cost: string;
+    acquisition_amount?: string;
     received_at: string;
     short_dated: boolean;
   }[];
@@ -100,7 +102,10 @@ function invoiceLots(state: DemoState, original: DemoInvoice): ReceiptLot[] {
       branch,
       line.date_value!,
     ];
-    const unitCost = new Decimal(line.unit_cost_before_tax).toFixed(4);
+    const acquisition = invoiceFreeAcquisition(line);
+    const unitCost =
+      acquisition?.unit_cost ??
+      new Decimal(line.unit_cost_before_tax).toFixed(4);
     return [
       {
         id: `receipt-lot:${encodeURIComponent(JSON.stringify(identity))}`,
@@ -122,6 +127,7 @@ function invoiceLots(state: DemoState, original: DemoInvoice): ReceiptLot[] {
             line_index: lineIndex,
             quantity: quantity.toFixed(),
             unit_cost: unitCost,
+            ...(acquisition ? { acquisition_amount: acquisition.amount } : {}),
             received_at:
               invoice.received_at ??
               invoice.posted_at ??

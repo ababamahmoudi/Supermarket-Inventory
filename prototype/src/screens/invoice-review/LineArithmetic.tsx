@@ -1,7 +1,7 @@
+import { invoiceDisplayPaperMismatch as invoicePaperTotalMismatch } from "../../invoice-display-arithmetic";
 import Decimal from "decimal.js";
 import type { InvoiceEditableLine } from "../../invoice-edit-types";
 import {
-  invoicePaperTotalMismatch,
   invoiceWeightDisplayedCost,
   invoiceWeightDisplayedQuantity,
   setInvoiceWeightCaseCost,

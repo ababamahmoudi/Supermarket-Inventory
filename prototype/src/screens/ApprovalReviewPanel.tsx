@@ -105,6 +105,30 @@ export function ApprovalReviewPanel({
             />
           </Field>
         )}
+      {actualApproval.free_case_answer && (
+        <section className="list-box" data-testid="free-case-approval">
+          <p>
+            {t(
+              `Paid/free decision: ${actualApproval.free_case_answer.decision === "bonus" ? "Free case (bonus)" : actualApproval.free_case_answer.decision === "two_for_one" ? "Two for the price of one" : "Mistake on the invoice"}`,
+              `تصمیم پولی/رایگان: ${actualApproval.free_case_answer.decision === "bonus" ? "کارتن رایگان (جایزه)" : actualApproval.free_case_answer.decision === "two_for_one" ? "دو تا به قیمت یکی" : "اشتباه در فاکتور"}`,
+            )}
+          </p>
+          <p>
+            {t(
+              `Answered by ${actualApproval.free_case_answer.answer?.by} during receiving`,
+              `پاسخ ${actualApproval.free_case_answer.answer?.by} هنگام دریافت`,
+            )}
+          </p>
+          <p>
+            {actualApproval.free_case_answer.physical_units}{" "}
+            {t("physical units", "واحد فیزیکی")} ·{" "}
+            {priceLabel(
+              actualApproval.free_case_answer.pricing_unit_cost ?? "0",
+            )}{" "}
+            {t("pricing cost per unit", "هزینهٔ قیمت‌گذاری هر واحد")}
+          </p>
+        </section>
+      )}
       {actualApproval.receiving_price && (
         <section className="list-box" data-testid="receiving-price-approval">
           <p>

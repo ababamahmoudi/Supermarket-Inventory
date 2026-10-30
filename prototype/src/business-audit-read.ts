@@ -59,6 +59,9 @@ export function privateAuthorityField(key: string): boolean {
 /** Matching source references stay internal in every audit/export projection. */
 const privateMatchingKeys = new Set([
   "printeddescriptionkeys",
+  "freecasegroup",
+  "acquisitionbasis",
+  "acquisitionamount",
   "sourceinvoiceids",
 ]);
 function privateAuditField(key: string): boolean {

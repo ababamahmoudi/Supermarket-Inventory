@@ -1,5 +1,9 @@
 # Requirements (current owner workflow, C9 — 2026-10-19)
 
+## R3c P1 K8 — paid/free receiving
+
+Proven same-product counted paid/free members form one review line and one Product identity. The actual receiver chooses Bonus, Two-for-one or Mistake; ordinary first-time and genuine source questions remain. Preserve exact paper/physical/acquisition evidence, member-specific later receipts and source-bounded return cents, with actual answer/approval attribution and cost-safe projections. Conflicting or unsupported weighted sources require explicit separate handling; grouped posted monetary/date/lot corrections are denied conservatively.
+
 ## R3c — Current demo work (2026-10-29)
 
 Ali's latest order is **K0 → K1 → K2 → K6 → F4 → F7 → F3 → K3 → K4 → K5 → K7**, with each item verified and pushed separately on the existing branch and PR. R2g work is stopped. Ali explicitly lifted the earlier code freeze and authorized continuing without a review pause. The [R3c review guide](PR_R3C_REVIEW.md) distinguishes delivered items from those still being implemented.

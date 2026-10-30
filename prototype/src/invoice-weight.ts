@@ -1,3 +1,4 @@
+import { freeCasePaperAmount } from "./invoice-free-cases";
 import type { InvoiceEditableLine } from "./invoice-edit-types";
 import Decimal from "decimal.js";
 import { calculatePrice } from "./pricing";
@@ -61,6 +62,8 @@ function caseCostFromWeight(
 
 /** Calculate from the original cost basis before rounding the final line amount. */
 export function invoiceLineAmount(line: InvoiceEditableLine): string {
+  const grouped = freeCasePaperAmount(line);
+  if (grouped !== undefined) return grouped;
   if (line.sold_by === "weight") {
     const basis = line.weight_case_cost_basis;
     if (

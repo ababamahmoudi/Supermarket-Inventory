@@ -51,6 +51,7 @@ export function invoiceCheckTarget(field: string, line?: number): string {
           handwritten_note: "handwritten_note",
           manual_price_decision: "manual",
           selling_price: "selling-price",
+          free_case_decision: "free-case",
           refused_units: "refused",
           short_dated: "short-dated",
           confirm: "confirm",

@@ -9,6 +9,10 @@ import {
 } from "./signed-return-pickups";
 import { returnUnpickedQuantity, type OperationalReturn } from "./operations";
 import type { DemoState } from "./types";
+import {
+  groupedReturnLineAmount,
+  returnAcquisitionAmount,
+} from "./invoice-free-acquisition";
 const Amount = Decimal.clone({
   precision: 80,
   rounding: Decimal.ROUND_HALF_UP,
@@ -133,19 +137,32 @@ function credit(
       // Match the existing provisional-credit rule: prorate the retained cents,
       // then round each signed memo line half-up before adding it to the total.
       total = total.plus(
-        retained
-          .times(new Amount(line.quantity).minus(used))
-          .div(line.quantity)
-          .toDecimalPlaces(2),
+        line.acquisition_basis
+          ? returnAcquisitionAmount(
+              line.acquisition_basis,
+              new Amount(line.acquisition_basis.offset ?? 0)
+                .plus(used)
+                .toNumber(),
+              new Amount(line.quantity).minus(used).toNumber(),
+            )
+          : retained
+              .times(new Amount(line.quantity).minus(used))
+              .div(line.quantity)
+              .toDecimalPlaces(2),
       );
     }
   if (hasOriginalCosts)
     record.lines.forEach((line, index) => {
       // Unpicked expected credit is a separate line at the original frozen cost.
       total = total.plus(
-        new Amount(returnUnpickedQuantity(record, line))
-          .times(frozenCosts[index]!)
-          .toDecimalPlaces(2),
+        groupedReturnLineAmount(
+          line,
+          line.picked_up ?? 0,
+          returnUnpickedQuantity(record, line),
+        ) ??
+          new Amount(returnUnpickedQuantity(record, line))
+            .times(frozenCosts[index]!)
+            .toDecimalPlaces(2),
       );
     });
   return {

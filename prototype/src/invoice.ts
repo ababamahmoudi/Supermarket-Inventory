@@ -1,3 +1,11 @@
+import {
+  validFreeCaseGroup,
+  bindFreeCaseProduct,
+  freeCaseExclusion,
+  freeCaseView,
+  refreshFreeCaseAnswer,
+  freeCasePrintedDescriptions,
+} from "./invoice-free-cases";
 import { businessFingerprint } from "./business-fingerprint";
 import { receivingPriceProblem } from "./invoice-receiving-price";
 import { effectiveRoundingBands } from "./pricing-ending-rule";
@@ -84,6 +92,7 @@ import type {
   DemoInvoice,
   DemoState,
   InvoiceLine,
+  Product,
 } from "./types";
 
 const cents = (value: Decimal.Value) =>
@@ -317,7 +326,12 @@ function learnPostedInvoiceDescriptions(
       supplierMatches(record, invoice.supplier),
   );
   if (!supplier) return;
-  for (const line of invoice.lines) {
+  for (const line of invoice.lines.flatMap((row) => {
+    const descriptions = freeCasePrintedDescriptions(row);
+    return descriptions.length
+      ? descriptions.map((raw) => ({ ...row, printed_description: raw }))
+      : [row];
+  })) {
     const raw = line.printed_description ?? "";
     const key = normalizedPrintedItem(raw);
     if (
@@ -745,6 +759,8 @@ export function lineRefused(line: InvoiceEditableLine): {
   tax: string;
   total: string;
 } {
+  const grouped = freeCaseExclusion(line, "refused");
+  if (grouped) return grouped;
   const quantity = line.refused_units ?? 0;
   if (
     !quantity ||
@@ -879,6 +895,8 @@ export function lineShort(line: InvoiceEditableLine): {
   tax: string;
   total: string;
 } {
+  const grouped = freeCaseExclusion(line, "short");
+  if (grouped) return grouped;
   const quantity = Decimal.max(
     0,
     new Decimal(line.qty_invoiced).minus(line.qty_received_at_posting),
@@ -920,6 +938,12 @@ export function shortTotals(invoice: {
   let beforeTax = new Decimal(0);
   let tax = new Decimal(0);
   for (const line of invoice.lines) {
+    const grouped = freeCaseExclusion(line, "open_short");
+    if (grouped) {
+      beforeTax = beforeTax.plus(grouped.beforeTax);
+      tax = tax.plus(grouped.tax);
+      continue;
+    }
     const short = lineShort(line);
     const restored = line.qty_later_received ?? 0;
     beforeTax = beforeTax
@@ -1145,6 +1169,32 @@ export type InvoiceBlocker =
   | "checks"
   | "barcode";
 
+function compatibleNamedProduct(
+  state: DemoState,
+  line: InvoiceLine,
+  product: Product,
+): boolean {
+  const lineSize =
+    readingProductUnitSize(line.pack_size ?? "") ||
+    readingProductUnitSize(line.new_name_en ?? "");
+  const productSize =
+    product.unit_size || readingProductUnitSize(product.name_en);
+  return (
+    (line.sold_by ?? "each") === (product.sold_by ?? "each") &&
+    normalizedPrintedItem(lineSize) === normalizedPrintedItem(productSize) &&
+    (!line.barcode || !product.barcode || line.barcode === product.barcode) &&
+    !(state.supplier_items ?? []).some(
+      (item) =>
+        item.company_id === line.company_id &&
+        !item.archived &&
+        item.product_code === product.code &&
+        normalizedPrintedItem(item.supplier_name) ===
+          normalizedPrintedItem(state.invoice.supplier) &&
+        item.units_per_case !== (line.units_per_case ?? 1),
+    )
+  );
+}
+
 export function invoiceBlockers(
   state: DemoState,
   actor: AuthenticatedActor,
@@ -1202,8 +1252,49 @@ export function invoiceBlockers(
     })
   )
     blockers.push("money");
+  const names = new Map<string, InvoiceLine>();
+  for (const line of invoice.lines)
+    if (line.product_code === "NEW") {
+      const name = normalizedPrintedItem(line.new_name_en ?? "");
+      const catalogMatches = state.products.filter(
+        (product) =>
+          product.company_id === invoice.company_id &&
+          normalizedPrintedItem(product.name_en) === name,
+      );
+      if (
+        catalogMatches.length > 1 ||
+        catalogMatches.some(
+          (product) => !compatibleNamedProduct(state, line, product),
+        )
+      )
+        blockers.push("matching");
+      const prior = names.get(name);
+      if (
+        prior &&
+        JSON.stringify([
+          prior.sold_by,
+          prior.units_per_case,
+          prior.barcode ?? "",
+          prior.supplier_item_code_inferred ? "" : prior.supplier_item_code,
+          prior.pricing_category,
+          readingProductUnitSize(prior.pack_size ?? ""),
+        ]) !==
+          JSON.stringify([
+            line.sold_by,
+            line.units_per_case,
+            line.barcode ?? "",
+            line.supplier_item_code_inferred ? "" : line.supplier_item_code,
+            line.pricing_category,
+            readingProductUnitSize(line.pack_size ?? ""),
+          ])
+      )
+        blockers.push("matching");
+      else names.set(name, line);
+    }
   for (const [lineIndex, line] of invoice.lines.entries()) {
     const firstLineBlocker = blockers.length;
+    if (line.free_case_group && !validFreeCaseGroup(line))
+      blockers.push("review");
     const product = state.products.find(
       (item) =>
         item.code === line.product_code &&
@@ -1375,7 +1466,11 @@ export function postInvoice(
             product.last_cost_before_tax,
         ]),
     );
+    const newProductCodes = new Map<string, string>();
     for (const [lineIndex, line] of invoice.lines.entries()) {
+      const newNameKey = normalizedPrintedItem(line.new_name_en ?? "");
+      if (line.product_code === "NEW" && newProductCodes.has(newNameKey))
+        line.product_code = newProductCodes.get(newNameKey)!;
       if (line.refused_units && acceptedInvoiceUnits(line) === 0) {
         const short = lineShort(line);
         line.short_before_tax = short.beforeTax;
@@ -1391,7 +1486,7 @@ export function postInvoice(
         product = state.products.find(
           (item) =>
             item.company_id === invoice.company_id &&
-            item.name_en === line.new_name_en,
+            normalizedPrintedItem(item.name_en) === newNameKey,
         );
         if (product) line.product_code = product.code;
       }
@@ -1427,6 +1522,9 @@ export function postInvoice(
         state.products.push(product);
       }
       if (!product) throw new Error("Resolve every product before posting.");
+      if (newNameKey && normalizedPrintedItem(product.name_en) === newNameKey)
+        newProductCodes.set(newNameKey, product.code);
+      bindFreeCaseProduct(line);
       const calculation = invoiceLineCalculation(
         line,
         line.pricing_category ?? product.pricing_category,
@@ -1521,6 +1619,8 @@ export function postInvoice(
             item.branch === invoice.branch &&
             item.product_code === product.code &&
             item.proposed_price === price &&
+            !line.free_case_group &&
+            !item.free_case_answer &&
             !receivingPrice &&
             (prior === price && !usesRule
               ? item.type === "margin_review" && item.config_version === context
@@ -1565,6 +1665,9 @@ export function postInvoice(
             threshold: category.minimum_margin,
             reason: margin.below_minimum ? "Below minimum margin" : undefined,
             config_version: context,
+            ...(line.free_case_group
+              ? { free_case_answer: freeCaseView(line, true) }
+              : {}),
             invoice_ids: [invoice.id],
             created_at: now,
             invoice_number: invoice.supplier_invoice_number,
@@ -1860,6 +1963,7 @@ export function receiveShort(
   receipt: string,
   actor: AuthenticatedActor,
   invoiceLineIndex?: number,
+  freeMemberIndex?: number,
 ): string {
   actor = requireInvoiceAuthority(
     state,
@@ -1902,13 +2006,22 @@ export function receiveShort(
     if (!line) throw new Error("Choose an invoice line.");
     const lineIndex = invoice.lines.indexOf(line);
     const lineReceiptKey = `line:${lineIndex}:${receiptReference}`;
+    const memberReceiptKey =
+      line.free_case_group &&
+      Number.isSafeInteger(freeMemberIndex) &&
+      line.free_case_group.members[freeMemberIndex!]
+        ? `line:${lineIndex}:member:${freeMemberIndex}:${receiptReference}`
+        : undefined;
     if (
       invoice.short_receipt_keys.includes(receiptReference) ||
-      invoice.short_receipt_keys.includes(lineReceiptKey)
+      invoice.short_receipt_keys.includes(lineReceiptKey) ||
+      (memberReceiptKey &&
+        invoice.short_receipt_keys.includes(memberReceiptKey))
     )
       return "0.00";
     const receiptEvent =
-      invoiceLineIndex === undefined ? receiptReference : lineReceiptKey;
+      memberReceiptKey ??
+      (invoiceLineIndex === undefined ? receiptReference : lineReceiptKey);
     const short = lineShort(line);
     const previous = line.qty_later_received ?? 0;
     if (
@@ -1918,36 +2031,87 @@ export function receiveShort(
       new Decimal(previous).plus(quantity).gt(short.quantity)
     )
       throw new Error("Receive no more than the remaining missing quantity.");
-    const baseDelta = new Decimal(
-      cumulativeAllocation(
-        short.beforeTax,
-        new Decimal(previous).plus(quantity).toNumber(),
-        short.quantity,
-        line.sold_by === "weight",
-      ),
-    ).minus(
-      cumulativeAllocation(
-        short.beforeTax,
-        previous,
-        short.quantity,
-        line.sold_by === "weight",
-      ),
-    );
-    const taxDelta = new Decimal(
-      cumulativeAllocation(
-        short.tax,
-        new Decimal(previous).plus(quantity).toNumber(),
-        short.quantity,
-        line.sold_by === "weight",
-      ),
-    ).minus(
-      cumulativeAllocation(
-        short.tax,
-        previous,
-        short.quantity,
-        line.sold_by === "weight",
-      ),
-    );
+    let groupedBase: Decimal | undefined, groupedTax: Decimal | undefined;
+    let freePart:
+      | NonNullable<InvoiceLine["free_case_group"]>["allocation"][number]
+      | undefined;
+    if (line.free_case_group) {
+      if (!validFreeCaseGroup(line))
+        throw new Error(
+          "Review the paid/free receipt evidence before receiving it.",
+        );
+      const group = line.free_case_group;
+      const missing = group.members.filter(
+        (m) =>
+          (group.decision !== "mistake" || !m.free) &&
+          m.qty >
+            group.allocation.find((a) => a.member_id === m.id)!.received +
+              group.allocation.find((a) => a.member_id === m.id)!.later,
+      );
+      const member =
+        freeMemberIndex === undefined
+          ? missing.length === 1
+            ? missing[0]
+            : undefined
+          : group.members[freeMemberIndex];
+      if (!member || !missing.includes(member))
+        throw new Error(
+          "Choose the paid or free source member for this later delivery.",
+        );
+      freePart = group.allocation.find((a) => a.member_id === member.id)!;
+      if (quantity > member.qty - freePart.received - freePart.later)
+        throw new Error(
+          "Receive no more than this paid/free member remaining quantity.",
+        );
+      const allocationDelta = (amount: Decimal) =>
+        amount
+          .times(freePart!.later + quantity)
+          .div(member.qty)
+          .toDecimalPlaces(2)
+          .minus(
+            amount.times(freePart!.later).div(member.qty).toDecimalPlaces(2),
+          );
+      groupedBase = allocationDelta(new Decimal(member.paper_amount));
+      groupedTax = allocationDelta(
+        new Decimal(line.line_tax || "0")
+          .times(member.paper_amount)
+          .div(group.paid_amount),
+      );
+    }
+    const baseDelta =
+      groupedBase ??
+      new Decimal(
+        cumulativeAllocation(
+          short.beforeTax,
+          new Decimal(previous).plus(quantity).toNumber(),
+          short.quantity,
+          line.sold_by === "weight",
+        ),
+      ).minus(
+        cumulativeAllocation(
+          short.beforeTax,
+          previous,
+          short.quantity,
+          line.sold_by === "weight",
+        ),
+      );
+    const taxDelta =
+      groupedTax ??
+      new Decimal(
+        cumulativeAllocation(
+          short.tax,
+          new Decimal(previous).plus(quantity).toNumber(),
+          short.quantity,
+          line.sold_by === "weight",
+        ),
+      ).minus(
+        cumulativeAllocation(
+          short.tax,
+          previous,
+          short.quantity,
+          line.sold_by === "weight",
+        ),
+      );
     const restored = cents(baseDelta.plus(taxDelta));
     const orderReceipt = shortOrderReceipt(
       state,
@@ -1993,9 +2157,17 @@ export function receiveShort(
       ? invoicePriorRegularCost(state, evidence, receiptProduct.code)
       : null;
     line.qty_later_received = new Decimal(previous).plus(quantity).toNumber();
+    if (freePart) {
+      freePart.later += quantity;
+      refreshFreeCaseAnswer(line);
+    }
     invoice.short_receipt_keys.push(receiptEvent);
     if (invoice !== original) {
       original.lines[lineIndex].qty_later_received = line.qty_later_received;
+      if (line.free_case_group)
+        original.lines[lineIndex].free_case_group = structuredClone(
+          line.free_case_group,
+        );
       original.short_receipt_keys ??= [];
       original.short_receipt_keys.push(receiptEvent);
     }

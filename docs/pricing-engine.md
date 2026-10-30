@@ -1,5 +1,9 @@
 # Pricing engine
 
+## R3c K8 — paid/free pricing versus acquisition
+
+Keep exact paper money, physical received quantity and pricing cost separate. For a proven paid/free group, Bonus prices from the paid regular cost; Two-for-one prices over the actual paid-plus-free quantity; Mistake accepts only the paid member with an attributed discrepancy. All preserve the original paid paper amount. Existing category rules, .49 → .99 and explicit receiving-price approvals apply after selecting that pricing basis. Exact acquisition/return budgets use retained source cents/physical coverage, never rounded pricing cost multiplied by every free unit. Cost-authorized UI receives selected canonical facts; domain commands never trust presentation facts.
+
 E1 role wording uses Owner/Manager for former Supervisor company authority. Branch Supervisor may only propose an own-store regular price; the central capability/approval boundary executes it after Owner/Manager decision. R3c adds the configured final-ending adjustment below; historical approved/manual prices remain unchanged.
 
 This is the most important rule set in the product. It must be implemented **once** (a pure function with no database access), driven by configuration, and covered by tests. The backend and the prototype use the same algorithm; the prototype has a TypeScript port that must pass the same test file.

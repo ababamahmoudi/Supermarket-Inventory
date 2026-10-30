@@ -415,6 +415,34 @@ export function LinesTable({
                         </>
                       )}
                     </small>
+                    {!correction && line.free_case && (
+                      <small>
+                        {!line.free_case.valid
+                          ? line.free_case.free_cases
+                            ? t(
+                                `${line.free_case.free_cases} case free?`,
+                                `${line.free_case.free_cases} کارتن رایگان؟`,
+                              )
+                            : t(
+                                `${line.free_case.free_units} units free?`,
+                                `${line.free_case.free_units} واحد رایگان؟`,
+                              )
+                          : line.free_case.decision === "bonus"
+                            ? t(
+                                `Free ${line.free_case.free_cases ?? line.free_case.free_units} ${line.free_case.free_cases ? "case" : "units"}`,
+                                `${line.free_case.free_cases ?? line.free_case.free_units} ${line.free_case.free_cases ? "کارتن" : "واحد"} رایگان`,
+                              )
+                            : line.free_case.decision === "two_for_one"
+                              ? t(
+                                  "Two for the price of one",
+                                  "دو تا به قیمت یکی",
+                                )
+                              : t(
+                                  "Supplier invoice difference recorded",
+                                  "اختلاف فاکتور تأمین‌کننده ثبت شد",
+                                )}
+                      </small>
+                    )}
                     {!correction && (
                       <KnownDeliverySummary known={line.known_delivery} />
                     )}

@@ -304,6 +304,34 @@ export function invoiceContentCorrectionPreview(
     after.lines = input.lines.map((incoming, index) => {
       const old = before.lines[index];
       const line = { ...old };
+      if (
+        old.free_case_group &&
+        [
+          "product_code",
+          "qty_invoiced",
+          "qty_received_at_posting",
+          "unit_cost_before_tax",
+          "units_per_case",
+          "quantity_unit",
+          "quantity_entered",
+          "case_cost_before_tax",
+          "sold_by",
+          "date_tracking",
+          "date_type",
+          "date_value",
+          "lot_number",
+        ].some(
+          (field) =>
+            JSON.stringify(
+              (incoming as unknown as Record<string, unknown>)[field],
+            ) !==
+            JSON.stringify((old as unknown as Record<string, unknown>)[field]),
+        )
+      )
+        throw new InvoiceCorrectionError(
+          "lines",
+          "Paid/free quantity and cost corrections require reviewing the original grouped source. Other correction fields remain available.",
+        );
       const fields = [
         "product_code",
         "qty_invoiced",

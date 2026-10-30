@@ -5,6 +5,7 @@ import { businessFingerprint } from "./business-fingerprint";
 import type { AuthenticatedActor } from "./authority-types";
 import type { DemoState } from "./types";
 import type { OperationalReturn } from "./operations";
+import { reserveFreeAcquisition } from "./invoice-free-acquisition";
 import {
   resolveReturnCreateSource,
   ReturnCreateError,
@@ -137,6 +138,20 @@ export function createReturn(
       throw new ReturnCreateError("request");
     return previous.id;
   }
+  let acquisition;
+  if (source.acquisition) {
+    try {
+      acquisition = reserveFreeAcquisition(
+        state,
+        actor.company_id,
+        source.acquisition_source_key!,
+        source.acquisition,
+        quantity.toNumber(),
+      );
+    } catch {
+      throw new ReturnCreateError("quantity");
+    }
+  }
   const at = now.toISOString(),
     attribution = actorAudit(state, actor, now);
   const record: OperationalReturn = {
@@ -163,6 +178,7 @@ export function createReturn(
         entered_quantity: input.quantity,
         entered_quantity_unit: input.quantity_unit,
         unit_cost: source.cost!,
+        ...(acquisition ? { acquisition_basis: acquisition } : {}),
         reason: input.reason,
         location: input.branch,
         source_receipt: {

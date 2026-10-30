@@ -684,3 +684,10 @@ Use bounded browser paint opportunities to expose quick real phases without a fa
 ## 2026-10-30 — acknowledge a foreground reading without another navigation
 
 The accepted invoice can finish without a hashchange, so acknowledge its ready notice on completion too. Bind that acknowledgement to agreement between the last accepted route and raw hash; retain the existing deferred Timesheets navigation and current reading-identity checks. This removes the redundant foreground overlay while preserving background completion and guarded Open.
+
+## 2026-10-30 — R3c K8 — exact paid/free source evidence
+
+- `freeCaseActionQuote(state, actor, index)` now binds the current genuine person/session/location/authority and whole invoice/source/config context. `invoiceWorkspaceRead` exposes it only for editable draft/review invoices with current edit authority.
+- `freeCaseView(line, costs)` provides safe decision/receiver/member-quantity facts and, only with invoice cost authority, selected `financial` arithmetic. `invoice-display-arithmetic.ts` is presentation-only and must not replace canonical domain calculation in commands.
+- F6 integration: category selection preserves an already-valid group decision. Capture `validFreeCaseGroup(line)` before the intended category/inferred-tax edit, then `refreshFreeCaseAnswer(line)` only for that previously valid group after the edit. Do not refresh an already-stale answer indiscriminately. Preserve explicit printed tax. Retain the actor-aware quote signature in the workspace merge.
+- K9 integration: preserve both `correction_of: original.id` (K8 cumulative acquisition offset) and `request_id: original.pickup_request_id` (K9 pickup identity) when correcting memos. Preserve K9 optional-reference eligibility via `pickupEvidenceKey` while retaining K8 exact `returnAcquisitionAmount` branches. Root owns this merge.

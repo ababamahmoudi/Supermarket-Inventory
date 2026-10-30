@@ -1,3 +1,5 @@
+import { invoiceDisplayLineAmount as invoiceLineAmount } from "../../invoice-display-arithmetic";
+import { FreeCaseControl } from "./FreeCaseControl";
 import { validReceivingPrice } from "../../invoice-receiving-price";
 import { ReceivingPriceInputQueue } from "./receiving-price-input";
 import {
@@ -56,7 +58,6 @@ import {
   setInvoiceWeightCaseCost,
   invoiceWeightDisplayedQuantity,
   invoiceWeightDisplayedCost,
-  invoiceLineAmount,
 } from "../../invoice-weight";
 import { clearInvoiceOrderLine } from "../../invoice-orders";
 import { costPerCase, costPerUnit } from "../../supplier-items";
@@ -435,10 +436,14 @@ export function LineEditor({
   }
   let deduction = "0.00";
   try {
-    deduction = new Decimal(invoiceLineAmount(line))
-      .times(new Decimal(short || 0).plus(refused || 0))
-      .div(line.qty_invoiced)
-      .toFixed(2);
+    deduction = line.free_case?.financial
+      ? new Decimal(line.free_case.financial.short.beforeTax)
+          .plus(line.free_case.financial.refused.beforeTax)
+          .toFixed(2)
+      : new Decimal(invoiceLineAmount(line))
+          .times(new Decimal(short || 0).plus(refused || 0))
+          .div(line.qty_invoiced)
+          .toFixed(2);
   } catch {
     /* Keep incomplete edits visible. */
   }
@@ -499,6 +504,16 @@ export function LineEditor({
           </strong>
         </div>
       </header>
+      {!correction &&
+        line.free_case &&
+        workspace.lineDetails[index]?.freeCaseQuote && (
+          <FreeCaseControl
+            view={line.free_case}
+            index={index}
+            quote={workspace.lineDetails[index].freeCaseQuote!}
+            update={reviewUpdate}
+          />
+        )}
       <ReadingCheckProvider
         fields={correction ? [] : line.low_confidence_fields}
         idPrefix={`invoice-check-line-${index}`}
@@ -1802,18 +1817,27 @@ export function LineEditor({
               <p>
                 {t("Deduction:", "کسر:")}{" "}
                 <LtrText>
-                  <LtrValue
-                    value={new Decimal(short || 0)
-                      .plus(refused || 0)
-                      .toString()}
-                  />{" "}
-                  {t("units", "واحد")} ×{" "}
-                  <Money
-                    value={line.unit_cost_before_tax || "0"}
-                    decimals={4}
-                    fixedDecimals
-                    currency={state.config.company.currency}
-                  />{" "}
+                  {line.free_case ? (
+                    t(
+                      "From the paid/free source members",
+                      "براساس ردیف‌های پولی/رایگان منبع",
+                    )
+                  ) : (
+                    <>
+                      <LtrValue
+                        value={new Decimal(short || 0)
+                          .plus(refused || 0)
+                          .toString()}
+                      />{" "}
+                      {t("units", "واحد")} ×{" "}
+                      <Money
+                        value={line.unit_cost_before_tax || "0"}
+                        decimals={4}
+                        fixedDecimals
+                        currency={state.config.company.currency}
+                      />{" "}
+                    </>
+                  )}
                   ={" "}
                   <Money
                     value={deduction}

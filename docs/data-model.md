@@ -1,5 +1,13 @@
 # Data model
 
+## R3c P1 K8 — one paid/free product with exact source money
+
+Keep three independent facts: exact paid paper amount, regular pricing unit cost and exact acquisition amount/physical coverage. Bonus's higher regular pricing cost is not the cost paid for every acquired physical unit. The private `InvoiceLine.free_case_group` retains immutable source members, source fingerprint, original/bound Product identity, paid/free quantities, genuine choice/answer basis, source-specific received/refused/later allocation and optional discrepancy note.
+
+Grouped receipt lots and frozen return sources carry private exact acquisition amount/quantity and a source-specific claim budget separately from the rounded four-place display unit cost. Return creation reserves only remaining same-company/source physical units and cents. Split pickups/settlements use differences of cumulative rounded allocations; three one-unit claims on a two-cent/three-unit source sum to exactly two cents. Repeated requests/claims cannot enlarge the budget. Genuine physical recovery releases only its unspent coverage; supplier-held cancellation and already settled coverage do not create a second claim budget. Actual confirmed supplier credit remains the existing separately authorized financial fact.
+
+Operational invoice/approval/purchase/return/History projections omit private source members, fingerprints and acquisition reservations, including selector/scalar audit paths. Non-deciding approval readers retain safe choice/receiver facts but omit paid amount, pricing unit cost and nested financial arithmetic. Cost-authorized invoice DTOs receive selected exact amount/short/refused facts; UI-only arithmetic helpers use those facts rather than multiplying Bonus pricing cost by all delivered units. Domain posting/return commands continue to derive arithmetic from the canonical private source, never from a DTO claim. Pending free-case questions do not display a generic false paper mismatch or an action that silently halves Bonus cost.
+
 ## R3c — foreground completion acknowledgement
 
 The transient ready-notice controller retains an accepted-route witness. It acknowledges a completed invoice already on that accepted route only when the raw browser hash still agrees; a deferred Timesheets destination cannot clear a background notice early. Canonical reading/source/actor records and authority checks are unchanged.
