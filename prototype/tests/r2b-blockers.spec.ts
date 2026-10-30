@@ -73,7 +73,7 @@ test("R2b 2.3 cannot invoke posting while the original is still being read", asy
 }) => {
   await signIn(page, "Owner");
   await page.goto("/#invoices");
-  await (await openInvoiceUpload(page)).setInputFiles(invoiceImage);
+  await (await openInvoiceUpload(page)).setFiles(invoiceImage);
   await expect(
     page.getByText("Reading invoice…", { exact: true }).first(),
   ).toBeVisible();

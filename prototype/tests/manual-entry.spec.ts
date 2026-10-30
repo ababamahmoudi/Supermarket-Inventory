@@ -1,12 +1,13 @@
-import { openInvoiceDetails } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
+import { createHash } from "node:crypto";
 import {
   chooseOption,
   invoiceImage,
+  openInvoiceDetails,
+  openInvoiceSourcePicker,
   setLanguage,
   signIn,
-  uploadInvoice,
 } from "./helpers";
 
 test.setTimeout(60000);
@@ -234,12 +235,37 @@ test("worker catalog actions stay hidden while invoice quick-add creates an acti
   await expect(
     entryDialog.getByRole("button", { name: "JSON file", exact: true }),
   ).toBeDisabled();
-  await entryDialog
-    .getByRole("button", { name: "Photo (AI reading)", exact: true })
-    .click();
-  await expect(page.getByTestId("invoice-upload-entry")).toBeVisible();
+  const beforeSelection = await readCanonicalBusinessEvidence(page);
+  const picker = await openInvoiceSourcePicker(page);
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
+  await expect(page.getByTestId("invoice-upload-entry")).toHaveCount(0);
   await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
-  await uploadInvoice(page);
+  await picker.setFiles(invoiceImage);
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        newId: invoice.id !== beforeSelection.invoice.id,
+        fileName: invoice.file_name,
+        sourceHash: invoice.file_data?.split(":").at(-1),
+        status: invoice.status,
+      };
+    })
+    .toEqual({
+      newId: true,
+      fileName: invoiceImage.name,
+      sourceHash: createHash("sha256")
+        .update(invoiceImage.buffer)
+        .digest("hex"),
+      status: "review",
+    });
+  await expect(
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('[data-testid^="invoice-line-row-"]')).toHaveCount(
+    6,
+  );
+  await openInvoiceDetails(page);
   await expect(
     page.getByRole("heading", { level: 1, name: /^Invoice/ }),
   ).toBeVisible();

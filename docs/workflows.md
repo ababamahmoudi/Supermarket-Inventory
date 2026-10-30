@@ -1,5 +1,11 @@
 # Workflows and state machines
 
+## R3c F3 — native picker before draft creation
+
+From Invoices, **New invoice → Photo (AI reading)** opens the browser's native image picker directly; **PDF (AI reading)** opens a single-PDF picker. Photo permits multiple images and does not force a camera capture attribute. The chooser closes when the native picker opens. Cancelling returns to the current screen without creating a blank invoice. Valid selection retains the previous workspace, creates the authorized target, saves the chosen originals and opens that target; ordinary intake no longer passes through an empty upload page. A live selection becomes ready to read and requires the existing explicit **Read invoice** action; saving a source does not automatically call the reader or post an invoice.
+
+Invalid/empty selections do not create a target. A selection that outlives its initiating person, location or mounted navigation intent is ignored or rejected before creation, including leaving and returning while asynchronous source validation is pending. If original storage fails after creation, the draft remains available with an actionable choose-again message. Simulated intake retains its actual fictional original and existing simulated reading behavior; exact included-fictional-original recognition and its reuse behavior remain intact. Native camera/library choices are controlled by the device and browser.
+
 ## R3c F7 — truthful reading header
 
 A reading invoice, or an empty invoice with an original, shows **New invoice** instead of an incomplete reference/supplier/date header. A genuinely owned active request shows **Reading with AI…**. An inactive ready attempt says **Original saved · ready to read**; failed and cancelled attempts say respectively **Reading did not finish · original saved** and **Reading cancelled · original saved**. A persisted interrupted attempt says **Reading interrupted · read again**. Simulated reading keeps its own explicit caption. Post invoice is absent during processing. Review resumes the ordinary invoice identity/header and existing posting checks.

@@ -3,7 +3,13 @@ import {
   readConfiguredRoleDefinitions,
 } from "../src/role-config";
 import { expect, test, type Page } from "@playwright/test";
-import { openShellAction, setLanguage, signIn, uploadInvoice } from "./helpers";
+import {
+  openInvoiceSourcePicker,
+  openShellAction,
+  setLanguage,
+  signIn,
+  uploadInvoice,
+} from "./helpers";
 import { inspect, settled } from "../scripts/c5-browser-proof.mjs";
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
 import { readCanonicalBusinessEvidence } from "./business-evidence";
@@ -672,10 +678,10 @@ test("Demo disclaimers stay in Demo and simulated AI reading is explained in its
     exact: true,
   });
   await expect(chooser).toContainText("AI reading is simulated in this demo");
-  await chooser
-    .getByRole("button", { name: "Photo (AI reading)", exact: true })
-    .click();
-  await expect(page.locator("main")).toContainText(
-    "AI invoice reading is simulated",
-  );
+  const beforeSelection = await readCanonicalBusinessEvidence(page);
+  const picker = await openInvoiceSourcePicker(page);
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
+  await expect(page.getByTestId("invoice-upload-entry")).toHaveCount(0);
+  await picker.setFiles([]);
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
 });

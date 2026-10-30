@@ -27,7 +27,7 @@ async function signInWorker(page: Page) {
 async function upload(page: Page) {
   await (
     await openInvoiceUpload(page)
-  ).setInputFiles({
+  ).setFiles({
     name: "fictional-supplier-invoice.png",
     mimeType: "image/png",
     buffer: pixel,
@@ -89,11 +89,6 @@ test("simulated upload, review, lower-price answer and two partial chip deliveri
   );
   await page
     .getByRole("button", { name: "Save and close", exact: true })
-    .click();
-  await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page
-    .getByRole("dialog", { name: "New invoice", exact: true })
-    .getByRole("button", { name: "Photo (AI reading)", exact: true })
     .click();
   const before = await stored(page);
   const beforeStock = before.stock["Branch 1:0009"];

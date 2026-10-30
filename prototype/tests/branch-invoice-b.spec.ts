@@ -1,8 +1,10 @@
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
+import { createHash } from "node:crypto";
 import {
   invoiceImage,
   openInvoiceDetails,
+  openInvoiceSourcePicker,
   openShellAction,
   setBranch,
   signIn,
@@ -10,30 +12,49 @@ import {
 
 test.setTimeout(60000);
 
-async function chooseNewInvoice(
-  page: Page,
-  mode: "Photo (AI reading)" | "Manual entry",
-) {
+async function chooseManualInvoice(page: Page) {
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
   const chooser = page.getByRole("dialog", {
     name: "New invoice",
     exact: true,
   });
   await expect(chooser).toBeVisible();
-  await chooser.getByRole("button", { name: mode, exact: true }).click();
-  if (mode === "Photo (AI reading)")
-    await expect(page).toHaveURL((url) => {
-      const [route, parameters] = url.hash.slice(1).split("?");
-      const entry = new URLSearchParams(parameters);
-      return (
-        route === "invoices" &&
-        Boolean(entry.get("id")) &&
-        entry.get("entry") === "photo"
-      );
-    });
+  await chooser
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
 }
-function photoInput(page: Page) {
-  return page.getByLabel("Upload a PDF or photo", { exact: true });
+async function choosePhotoInvoice(page: Page) {
+  const beforeSelection = await readCanonicalBusinessEvidence(page);
+  const picker = await openInvoiceSourcePicker(page);
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
+  await picker.setFiles(invoiceImage);
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        newId: invoice.id !== beforeSelection.invoice.id,
+        fileName: invoice.file_name,
+        sourceHash: invoice.file_data?.split(":").at(-1),
+        status: invoice.status,
+      };
+    })
+    .toEqual({
+      newId: true,
+      fileName: invoiceImage.name,
+      sourceHash: createHash("sha256")
+        .update(invoiceImage.buffer)
+        .digest("hex"),
+      status: "review",
+    });
+  const acceptedId = (await readCanonicalBusinessEvidence(page)).invoice.id;
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    return (
+      route === "invoices" &&
+      new URLSearchParams(parameters).get("id") === acceptedId
+    );
+  });
+  return acceptedId;
 }
 function originalInput(page: Page) {
   return page.locator('input[type="file"][aria-label="Attach original"]');
@@ -45,28 +66,15 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
-  const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
-    .id;
-  await chooseNewInvoice(page, "Photo (AI reading)");
-  // Both entry actions create real drafts. Bind the accepted photo route before
-  // requesting Manual entry; the old form can remain visible during the command.
-  await expect(page).toHaveURL((url) => {
-    const [route, parameters] = url.hash.slice(1).split("?");
-    const id = new URLSearchParams(parameters).get("id");
-    return route === "invoices" && Boolean(id && id !== previousInvoiceId);
-  });
-  const uploadInvoiceId = new URLSearchParams(
-    new URL(page.url()).hash.split("?")[1],
-  ).get("id");
-  if (!uploadInvoiceId)
-    throw new Error("The accepted photo draft ID is missing.");
+  // A photo draft is created only after the real native picker accepts a file.
+  const uploadInvoiceId = await choosePhotoInvoice(page);
   await page
     .getByRole("button", { name: "Save and close", exact: true })
     .click();
   await expect(
     page.getByRole("tablist", { name: "Invoice views", exact: true }),
   ).toBeVisible();
-  await chooseNewInvoice(page, "Manual entry");
+  await chooseManualInvoice(page);
   await expect(page).toHaveURL((url) => {
     const [route, parameters] = url.hash.slice(1).split("?");
     const id = new URLSearchParams(parameters).get("id");
@@ -144,12 +152,8 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await expect(
     page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toHaveCount(0);
-  await chooseNewInvoice(page, "Photo (AI reading)");
-  await expect(page).toHaveURL((url) => {
-    const [route, parameters] = url.hash.slice(1).split("?");
-    const id = new URLSearchParams(parameters).get("id");
-    return route === "invoices" && Boolean(id && id !== original.id);
-  });
+  const ownInvoiceId = await choosePhotoInvoice(page);
+  expect(ownInvoiceId).not.toBe(original.id);
   const own = await readCanonicalBusinessEvidence(page).then((canonicalState) =>
     JSON.parse(JSON.stringify(canonicalState)!),
   );
@@ -161,6 +165,9 @@ test("a Floor Worker cannot read another branch's manual draft, and starting the
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
+  // The accepted photo now truthfully belongs to Needs review, so the queue
+  // may choose that tab first. Resume this actual manual record from Drafts.
+  await page.getByRole("tab", { name: /^Drafts / }).click();
   await page
     .locator(".invoice-saved-drafts tbody tr")
     .filter({ has: page.getByText("PRIVATE-BRANCH-2", { exact: true }) })
@@ -182,32 +189,44 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
   await signIn(page, "Supervisor");
   await setBranch(page, "Richmond Hill");
   await page.goto("/#invoices");
-  // The original blank seed workspace belongs to North York. Create an actual
-  // selected-store draft instead of uploading into that existing origin.
-  const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
-    .id;
-  await chooseNewInvoice(page, "Photo (AI reading)");
-  await expect(page).toHaveURL((url) => {
-    const [route, parameters] = url.hash.slice(1).split("?");
-    const id = new URLSearchParams(parameters).get("id");
-    return route === "invoices" && Boolean(id && id !== previousInvoiceId);
-  });
-  const acceptedInvoiceId = new URLSearchParams(
-    new URL(page.url()).hash.split("?")[1],
-  ).get("id");
-  if (!acceptedInvoiceId)
-    throw new Error("The accepted foreign-store draft ID is missing.");
+  // Select the actual foreign-store source through its native picker. Merely
+  // opening it must not create a record or replace the existing workspace.
+  const beforeSelection = await readCanonicalBusinessEvidence(page);
+  const picker = await openInvoiceSourcePicker(page);
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
+  expect(await picker.element().isEnabled()).toBe(true);
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  await picker.setFiles(invoiceImage);
   await expect
     .poll(async () => {
       const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
-      return { id: invoice.id, branch: invoice.branch, status: invoice.status };
+      return {
+        newId: invoice.id !== beforeSelection.invoice.id,
+        branch: invoice.branch,
+        fileName: invoice.file_name,
+        sourceHash: invoice.file_data?.split(":").at(-1),
+        status: invoice.status,
+      };
     })
-    .toEqual({ id: acceptedInvoiceId, branch: "Branch 2", status: "draft" });
-  await expect(photoInput(page)).toBeAttached();
-  await expect(photoInput(page)).toBeEnabled();
-  await page.clock.install();
-  await page.clock.pauseAt(new Date(Date.now() + 1000));
-  await photoInput(page).setInputFiles(invoiceImage);
+    .toEqual({
+      newId: true,
+      branch: "Branch 2",
+      fileName: invoiceImage.name,
+      sourceHash: createHash("sha256")
+        .update(invoiceImage.buffer)
+        .digest("hex"),
+      status: "reading",
+    });
+  const acceptedInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
+    .id;
+  await expect(page).toHaveURL((url) => {
+    const [route, parameters] = url.hash.slice(1).split("?");
+    return (
+      route === "invoices" &&
+      new URLSearchParams(parameters).get("id") === acceptedInvoiceId
+    );
+  });
   await expect(
     page.getByText("Reading invoice…", { exact: true }),
   ).toBeVisible();
@@ -219,7 +238,7 @@ test("another branch's reading draft stays hidden and unchanged by reading timer
   await signIn(page, "Floor Worker");
   await page.goto(`/#invoices?id=${encodeURIComponent(original.id)}`);
   await expect(
-    page.getByLabel("Upload a PDF or photo", { exact: true }),
+    page.getByRole("complementary", { name: "Original invoice", exact: true }),
   ).toHaveCount(0);
   await expect(originalInput(page)).toHaveCount(0);
   await (await openShellAction(page, "Demo")).click();

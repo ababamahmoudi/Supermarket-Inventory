@@ -87,12 +87,12 @@ export function LiveInvoiceUpload({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const mounted = useRef(true);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
       mounted.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
   const photos = source !== "pdf";
   async function save(files: readonly File[]) {
     if (saving || disabled || !files.length) return;

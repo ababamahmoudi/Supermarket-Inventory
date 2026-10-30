@@ -1,5 +1,11 @@
 # Data model
 
+## R3c F3 — native picker before draft creation
+
+Photo/PDF intake keeps its selected `File` objects and initiating actor/location/navigation witness in transient UI memory. Opening or cancelling the native picker does not allocate an invoice ID, retain a new invoice, write an activity or save a blob. Empty, invalid or stale selections are rejected before the initial protected creation transaction. The transaction rechecks the genuine company, user/session, authority/person version and concrete receiving location, then retains the prior workspace and creates the selected target with its actual creator.
+
+Originals use the existing protected upload handles and ordered `original_pages`; bytes are retained before the target is presented as ready to read. Each asynchronous upload rechecks the current actor and exact target snapshot, and final attachment independently authorizes that target. A retained target can receive its originals without switching an unrelated current workspace. Creation audit records the entry source and selected-file count; transient `File` objects and navigation callbacks are not stored in business records. Storage failure retains the created draft for recovery rather than deleting it or claiming the original was saved.
+
 ## R3c F7 — truthful reading header
 
 No new persisted data-model field. The processing header derives its title/caption from the existing invoice status/original availability, persisted `live_reading.phase` and actual transient activity for that invoice. It does not treat a persisted processing phase as proof that a request is active. Existing completed-reading provenance remains separate from current activity.

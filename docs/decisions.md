@@ -652,3 +652,7 @@ Checked answers and later human name edits are authoritative product-name propos
 ## 2026-10-30 — R3c F7 — truthful reading header
 
 **R3c F7 — activity must be real:** render a concise New invoice header while the reading has not established invoice identity. Derive active/recovery copy from actual request ownership and retained phase, suppress missing-value fragments and hide the processing Post control. Keep cancellation/failure/interruption distinct, original retention visible and normal review/post behavior unchanged.
+
+## 2026-10-30 — R3c F3 — native picker before draft creation
+
+Photo/PDF source selection now precedes draft creation. The native picker is opened synchronously by the actual source-tile gesture; no asynchronous business command comes before that gesture. A shared intake function validates the selection, checks the initiating actor/location/navigation witness again inside the initial protected creation transaction, then retains and attaches originals through existing private target-bound upload handles. A separate root navigation witness guards the final route change without mistaking the intake's own child remount for user navigation. This prevents empty drafts on cancellation and prevents stale asynchronous validation from creating or reopening an invoice after the person has moved elsewhere. Existing upload-draft recovery remains available when storage fails.

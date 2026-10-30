@@ -1,3 +1,9 @@
+## 2026-10-30 — R3c F3 — native picker before draft creation
+
+Photo and PDF tiles now open their real native file picker before any draft is created. Cancelled, empty, invalid and stale selections leave business state unchanged; valid selections retain the previous workspace and original bytes on the exact authorized target. Live intake saves the original ready for an explicit read. Storage errors leave a recoverable draft. Browser drivers now exercise actual `FileChooser.setFiles` through the visible source tile, retaining their original source-hash, identity, permissions, finance and stock assertions.
+
+Integrated F3 verification passed 16 focused intake/UI unit tests, a fresh build and all 12 English/Persian desktop/phone native-picker browser cases, with no skips or retries. The owner also passed 30 retained recognition, blocker and line-flow browser cases plus TypeScript, full lint and final driver lint/diff checks. Independent full CI is recorded on PR #29.
+
 ## 2026-10-30 — R3c F7 — truthful reading header
 
 - Show New invoice with truthful ready/active/cancelled/failed/interrupted reading captions; remove empty header fragments and the processing Post control. Preserve actual invoice identity and posting checks once review begins.

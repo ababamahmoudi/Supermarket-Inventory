@@ -24,7 +24,7 @@ async function review(page: import("@playwright/test").Page) {
   await page.goto("/#invoices");
   await (
     await openInvoiceUpload(page)
-  ).setInputFiles({
+  ).setFiles({
     name: "fictional-a2-invoice.png",
     mimeType: "image/png",
     buffer: pixel,

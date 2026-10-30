@@ -12,7 +12,7 @@ Work remains on `feat/prototype-r2-receiving`, [PR #29](https://github.com/ababa
 | 4     | K6 — missing-paper payment default                   | Delivered         |
 | 5     | F4 — retained Discard / Cancelled / Undo             | Delivered         |
 | 6     | F7 — truthful processing header                      | Delivered         |
-| 7     | F3 — native picker before draft creation             | In implementation |
+| 7     | F3 — native picker before draft creation             | Delivered         |
 | 8     | K3 — configurable .49 → .99                          | In implementation |
 | 9     | K4 — selling-price proposal in the line editor       | In implementation |
 | 10    | K5 — reading survives navigation                     | In implementation |
@@ -102,6 +102,16 @@ The integrated final source passed 129 targeted units, a fresh build and eight E
 4. After a successful reading, check that the ordinary invoice reference/supplier/date and existing review/post workflow return.
 
 The integrated final source passed six header unit tests, a fresh build and all six held-reader/header/Post-guard browser cases across English/Persian and desktop/phone, with no skips or retries. Independent full CI is tracked on PR #29.
+
+## F3 — native picker before draft creation
+
+1. Choose a concrete receiving branch, open Invoices and click **New invoice → Photo (AI reading)**. The native image picker opens immediately. Cancel it: no extra blank invoice appears and the current invoice remains available. Repeat with **PDF (AI reading)** where the role permits it; that picker accepts one PDF.
+2. Choose a wholly fictional invoice image. The actual original is retained and the new target opens after saving. With Live saved in Settings → Receiving, the header says **New invoice** and **Original saved · ready to read**; click **Read invoice** explicitly to begin the reader. Selecting the file alone does not start a reader request or post the invoice.
+3. Repeat with a fictional PDF, then several fictional image pages. Check that the original viewer shows the selected source/pages in order. Save and close; the previous draft is still available. If the selected photo has completed simulated reading, the list may correctly default to Needs review; select **Drafts** when returning to an earlier manual draft.
+4. Repeat the picker/cancel path in Persian and on a phone-sized browser. The app uses an image picker without forcing camera capture. A physical phone's camera/library presentation and the real reader/local network still require rehearsal on the actual device.
+5. Invalid/empty choices do not create records. Automated coverage also delays actual source validation, leaves Invoices and returns before validation finishes, and verifies full canonical no-create. The retained manual-original attachment tests also verify that storage rejection releases pending protection and preserves the existing draft.
+
+Integrated verification passed 16 unit tests, a fresh build and all 12 English/Persian desktop/phone picker browser cases, with no skips or retries. Independent full CI is tracked on PR #29.
 
 ## After the demo — record only
 

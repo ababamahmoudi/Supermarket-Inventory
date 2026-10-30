@@ -304,6 +304,7 @@ export async function newLiveOriginal(
   await expect(
     chooser.getByText("AI reading is simulated in this demo", { exact: true }),
   ).toHaveCount(0);
+  const nativePicker = page.waitForEvent("filechooser");
   await chooser
     .getByRole("button", {
       name:
@@ -313,24 +314,17 @@ export async function newLiveOriginal(
       exact: true,
     })
     .click();
-  const input = page.getByLabel(
-    t(language, "Upload a PDF or photo", "بارگذاری PDF یا عکس"),
-    { exact: true },
+  const selected = await nativePicker;
+  expect(await selected.element().getAttribute("data-testid")).toBe(
+    "invoice-entry-original",
   );
+  await expect(chooser).toHaveCount(0);
+  const input = page.getByTestId("invoice-entry-original");
   await expect(input).toBeAttached();
-  await expect
-    .poll(async () => (await readCanonicalBusinessEvidence(page)).invoice)
-    .toMatchObject({
-      lines: [],
-      short_lines: [],
-      supplier: "",
-      supplier_invoice_number: "",
-    });
-  expect((await readCanonicalBusinessEvidence(page)).supplier_items).toEqual(
-    beforeEntry.supplier_items,
-  );
-  if (source === "photo") await expect(input).toHaveAttribute("multiple", "");
-  await input.setInputFiles(files);
+  // Opening or cancelling the native picker must not create an empty draft.
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeEntry);
+  expect(selected.isMultiple()).toBe(source === "photo");
+  await selected.setFiles(files);
   await expect
     .poll(async () => (await readCanonicalBusinessEvidence(page)).invoice)
     .toMatchObject({
@@ -339,6 +333,7 @@ export async function newLiveOriginal(
     });
   const afterAttach = await readCanonicalBusinessEvidence(page);
   const invoice = afterAttach.invoice;
+  expect(invoice.id).not.toBe(beforeEntry.invoice.id);
   expect(invoice.file_data).toMatch(/^idb-file:v1:/);
   expect(invoice.lines).toEqual([]);
   expect(invoice.short_lines).toEqual([]);

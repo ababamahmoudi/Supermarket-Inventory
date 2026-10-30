@@ -351,34 +351,47 @@ export const invoiceImage = {
   ),
 };
 
-export async function openInvoiceUpload(page: Page) {
-  const input = page.getByLabel("Upload a PDF or photo", { exact: true });
-  // A retained unread original now has a real list row. Start the upload
-  // workspace through its action rather than replacing a browser record.
-  if ((await input.count()) === 0) {
-    const chooser = page.getByRole("dialog", {
-      name: "New invoice",
-      exact: true,
-    });
-    // Some audit flows deliberately open and inspect the real source chooser
-    // before uploading; its native modal correctly blocks the page action.
-    if (!(await chooser.isVisible()))
-      await page
-        .getByRole("button", { name: "New invoice", exact: true })
-        .click();
-    await expect(chooser).toBeVisible();
-    await chooser
-      .getByRole("button", { name: "Photo (AI reading)", exact: true })
+export async function openInvoiceSourcePicker(
+  page: Page,
+  source: "photo" | "pdf" = "photo",
+  language: "en" | "fa" = "en",
+) {
+  const copy = (en: string, fa: string) => (language === "fa" ? fa : en);
+  const chooser = page.getByRole("dialog", {
+    name: copy("New invoice", "فاکتور جدید"),
+    exact: true,
+  });
+  if (!(await chooser.isVisible()))
+    await page
+      .getByRole("button", {
+        name: copy("New invoice", "فاکتور جدید"),
+        exact: true,
+      })
       .click();
-  }
-  await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
-  await expect(input).toBeAttached();
-  await expect(input).toBeEnabled();
-  return input;
+  await expect(chooser).toBeVisible();
+  const nativePicker = page.waitForEvent("filechooser");
+  await chooser
+    .getByRole("button", {
+      name:
+        source === "pdf"
+          ? copy("PDF (AI reading)", "PDF (خوانش هوش مصنوعی)")
+          : copy("Photo (AI reading)", "عکس (خوانش هوش مصنوعی)"),
+      exact: true,
+    })
+    .click();
+  const selected = await nativePicker;
+  expect(await selected.element().getAttribute("data-testid")).toBe(
+    "invoice-entry-original",
+  );
+  await expect(chooser).toHaveCount(0);
+  return selected;
+}
+export async function openInvoiceUpload(page: Page) {
+  return openInvoiceSourcePicker(page);
 }
 
 export async function uploadInvoice(page: Page) {
-  await (await openInvoiceUpload(page)).setInputFiles(invoiceImage);
+  await (await openInvoiceUpload(page)).setFiles(invoiceImage);
   const deadline = Date.now() + 8000;
   const remaining = () => Math.max(1, deadline - Date.now());
   // The heading mounts before the native original retention/read transaction.

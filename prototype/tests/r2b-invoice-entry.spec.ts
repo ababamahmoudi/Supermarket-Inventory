@@ -2,7 +2,12 @@ import { expect, test } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { invoiceRecords } from "../src/invoice-records";
-import { setBranch, setLanguage, signIn } from "./helpers";
+import {
+  openInvoiceSourcePicker,
+  setBranch,
+  setLanguage,
+  signIn,
+} from "./helpers";
 
 const source = fileURLToPath(
   new URL("./fixtures/r2-fictional-readings-export.json", import.meta.url),
@@ -145,19 +150,17 @@ for (const language of ["en", "fa"] as const) {
   });
 }
 
-test("R2b 3.4 photo and PDF choices share simulated reading with the correct file picker", async ({
+test("R2b 3.4 photo and PDF choices disclose simulated reading and open their native picker without creating a draft", async ({
   page,
 }) => {
   await signIn(page, "Owner");
   await setBranch(page, "Branch 1");
   await page.goto("/#invoices");
-  for (const [name, accept] of [
-    [
-      "Photo (AI reading)",
-      "image/png,image/jpeg,image/webp,image/gif,image/svg+xml",
-    ],
-    ["PDF (AI reading)", "application/pdf"],
-  ]) {
+  for (const [source, accept] of [
+    ["photo", "image/*"],
+    ["pdf", "application/pdf"],
+  ] as const) {
+    const beforeSelection = await readCanonicalBusinessEvidence(page);
     await page
       .getByRole("button", { name: "New invoice", exact: true })
       .click();
@@ -165,20 +168,14 @@ test("R2b 3.4 photo and PDF choices share simulated reading with the correct fil
       name: "New invoice",
       exact: true,
     });
-    await chooser.getByRole("button", { name, exact: true }).click();
-    const entry = page.getByTestId("invoice-upload-entry");
-    await expect(entry).toBeVisible();
+    await expect(chooser).toContainText("AI reading is simulated in this demo");
+    const picker = await openInvoiceSourcePicker(page, source);
+    expect(await picker.element().getAttribute("accept")).toBe(accept);
+    expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
+    await expect(page.getByTestId("invoice-upload-entry")).toHaveCount(0);
     await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
-    await expect(entry.locator("#invoice-original")).toHaveAttribute(
-      "accept",
-      accept,
-    );
-    await expect(
-      entry.getByText("AI invoice reading is simulated", { exact: true }),
-    ).toBeVisible();
-    await entry
-      .getByRole("button", { name: "Save and close", exact: true })
-      .click();
+    await picker.setFiles([]);
+    expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
   }
   await setBranch(page, "all");
   const add = page.getByRole("button", { name: "New invoice", exact: true });

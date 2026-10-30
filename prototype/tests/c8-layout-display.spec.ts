@@ -669,7 +669,7 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
   const original = fileURLToPath(
     new URL("../public/demo-originals/fictional-hw-5012.svg", import.meta.url),
   );
-  await (await openInvoiceUpload(page)).setInputFiles(original);
+  await (await openInvoiceUpload(page)).setFiles(original);
   await expect(
     page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });
@@ -706,7 +706,7 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
   await page
     .getByRole("button", { name: "Save and close", exact: true })
     .click();
-  await (await openInvoiceUpload(page)).setInputFiles(original);
+  await (await openInvoiceUpload(page)).setFiles(original);
   await expect(
     page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });
@@ -722,7 +722,7 @@ test("C8 exact included sale-cost original preserves drafts and cannot be impers
     .click();
   await (
     await openInvoiceUpload(page)
-  ).setInputFiles({ ...invoiceImage, name: "fictional-hw-5012.svg" });
+  ).setFiles({ ...invoiceImage, name: "fictional-hw-5012.svg" });
   await expect(
     page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible({ timeout: 10000 });

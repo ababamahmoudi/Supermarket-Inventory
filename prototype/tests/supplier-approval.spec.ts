@@ -1,31 +1,55 @@
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test, type Page } from "@playwright/test";
-import { chooseOption, signIn, uploadInvoice } from "./helpers";
+import { createHash } from "node:crypto";
+import {
+  chooseOption,
+  invoiceImage,
+  openInvoiceDetails,
+  openInvoiceSourcePicker,
+  signIn,
+} from "./helpers";
 
 async function quickAddSupplier(page: Page, name: string) {
   await signIn(page, "Floor Worker");
   await page.goto("/#invoices");
-  const previousInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
+  const beforeSelection = await readCanonicalBusinessEvidence(page);
+  const picker = await openInvoiceSourcePicker(page);
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
+  await picker.setFiles(invoiceImage);
+  await expect
+    .poll(async () => {
+      const invoice = (await readCanonicalBusinessEvidence(page)).invoice;
+      return {
+        newId: invoice.id !== beforeSelection.invoice.id,
+        fileName: invoice.file_name,
+        sourceHash: invoice.file_data?.split(":").at(-1),
+        status: invoice.status,
+      };
+    })
+    .toEqual({
+      newId: true,
+      fileName: invoiceImage.name,
+      sourceHash: createHash("sha256")
+        .update(invoiceImage.buffer)
+        .digest("hex"),
+      status: "review",
+    });
+  const acceptedInvoiceId = (await readCanonicalBusinessEvidence(page)).invoice
     .id;
-  await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page
-    .getByRole("dialog", { name: "New invoice", exact: true })
-    .getByRole("button", { name: "Photo (AI reading)", exact: true })
-    .click();
   await expect(page).toHaveURL((url) => {
     const [route, parameters] = url.hash.slice(1).split("?");
-    const id = new URLSearchParams(parameters).get("id");
-    return route === "invoices" && Boolean(id && id !== previousInvoiceId);
+    return (
+      route === "invoices" &&
+      new URLSearchParams(parameters).get("id") === acceptedInvoiceId
+    );
   });
-  const acceptedInvoiceId = new URLSearchParams(
-    new URL(page.url()).hash.split("?")[1],
-  ).get("id");
-  // Wait for this accepted draft's retained original and completed reading,
-  // rather than treating the native file-input change as completed review.
-  await uploadInvoice(page);
-  expect((await readCanonicalBusinessEvidence(page)).invoice.id).toBe(
-    acceptedInvoiceId,
+  await expect(
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('[data-testid^="invoice-line-row-"]')).toHaveCount(
+    6,
   );
+  await openInvoiceDetails(page);
   await expect(page.locator("#invoice-details-fields")).toBeVisible();
   await chooseOption(
     page,

@@ -119,32 +119,32 @@ import { InvoiceJsonImport } from "./InvoiceJsonImport";
 import { OriginalViewer } from "./invoice-review/OriginalViewer";
 import { LiveInvoiceReading, LiveInvoiceUpload } from "./LiveInvoiceReading";
 import { getLiveReaderSettings } from "../live-reader-settings";
+import {
+  createPickedInvoice,
+  invoiceEntryOrigin,
+  requireInvoiceEntryOrigin,
+  retainInvoiceWorkspace,
+  validateInvoiceSelection,
+  InvoiceSelectionError,
+  type PickedInvoiceFiles,
+  type InvoiceSourceChoice,
+} from "../invoice-intake";
 import "./invoice-settings-labels.css";
 import "./invoices-c7.css";
 import "./manual-entry.css";
 import "./received-c.css";
 
-/** Keep the previous workspace as a resumable record before opening another. */
-function retainInvoiceWorkspace(draft: DemoState) {
-  if (
-    (draft.invoice.status === "empty" && !draft.invoice.file_data) ||
-    draft.invoice.company_id !== draft.config.company.seed_key
-  )
-    return;
-  draft.invoices ??= [];
-  const index = draft.invoices.findIndex(
-    (item) =>
-      item.company_id === draft.invoice.company_id &&
-      item.id === draft.invoice.id,
-  );
-  const saved = structuredClone(draft.invoice);
-  if (index >= 0) draft.invoices[index] = saved;
-  else draft.invoices.push(saved);
-}
-
 export default function Invoices() {
-  const { state, actor, can, command, navigate, t, authorityGeneration } =
-    useDemo();
+  const {
+    state,
+    actor,
+    can,
+    command,
+    query,
+    navigate,
+    t,
+    authorityGeneration,
+  } = useDemo();
   const routeId = useRouteParam("id"),
     routeVersion = useRouteParam("version");
   const [entryPending, setEntryPending] = useState<{
@@ -175,6 +175,14 @@ export default function Invoices() {
     [],
   );
   const [entryChoiceOpen, setEntryChoiceOpen] = useState(false);
+  const [entryError, setEntryError] = useState("");
+  const captureEntryIntent = useNavigationIntent(
+    actor ? invoiceEntryOrigin(actor) : "signed-out",
+  );
+  const currentEntryOrigin = useRef(actor ? invoiceEntryOrigin(actor) : null);
+  useLayoutEffect(() => {
+    currentEntryOrigin.current = actor ? invoiceEntryOrigin(actor) : null;
+  }, [actor]);
   const id = routeId ?? state.invoice?.id;
   const scope = {
     company_id: state.config.company.seed_key,
@@ -222,35 +230,80 @@ export default function Invoices() {
     workspace?.invoice.id === entryPending.targetId
   )
     setEntryPending(null);
-  const startFallback = async (manual: boolean, source?: "photo" | "pdf") => {
-    if (!actor || actor.selection.kind !== "location") return;
+  const startFallback = async (
+    manual: boolean,
+    source?: InvoiceSourceChoice,
+    picked?: PickedInvoiceFiles,
+  ) => {
+    if (!actor || actor.selection.kind !== "location" || (!manual && !picked))
+      return;
     const location = actor.selection.location_id;
-    await startEntry(async () => {
-      const newId = await command(
-        manual ? "invoices.enter_manual" : "invoices.enter",
-        {
-          company_id: actor.company_id,
-          kind: "location_record",
-          location_ids: [location],
-          mutation: true,
-          location_policy: "active_only",
-        },
-        (draft, currentActor) => {
-          retainInvoiceWorkspace(draft);
-          draft.invoice = createInvoice(draft, currentActor, location, manual, {
-            empty:
-              !manual &&
-              getLiveReaderSettings(draft.config.receiving).mode === "live",
-          });
-          draft.invoice.receiving_employee = currentActor.actor;
-          return draft.invoice.id;
-        },
+    const origin = picked?.origin ?? invoiceEntryOrigin(actor);
+    const navigationIsCurrent = captureEntryIntent();
+    const intentIsCurrent = () =>
+      currentEntryOrigin.current === origin && navigationIsCurrent();
+    let createdId: string | null = null;
+    setEntryError("");
+    try {
+      await startEntry(async () => {
+        const newId = picked
+          ? await createPickedInvoice(
+              { command, query },
+              actor,
+              {
+                ...picked,
+                isCurrent: () =>
+                  (picked.isCurrent?.() ?? true) && navigationIsCurrent(),
+              },
+              (id) => {
+                createdId = id;
+              },
+            )
+          : await command(
+              "invoices.enter_manual",
+              {
+                company_id: actor.company_id,
+                kind: "location_record",
+                location_ids: [location],
+                mutation: true,
+                location_policy: "active_only",
+              },
+              (draft, currentActor) => {
+                requireInvoiceEntryOrigin(currentActor, origin);
+                retainInvoiceWorkspace(draft);
+                draft.invoice = createInvoice(
+                  draft,
+                  currentActor,
+                  location,
+                  true,
+                );
+                draft.invoice.receiving_employee = currentActor.actor;
+                initializeInvoiceManualPriceDecisions(draft, currentActor);
+                return draft.invoice.id;
+              },
+            );
+        if (!intentIsCurrent()) return null;
+        navigate(`invoices?id=${encodeURIComponent(newId)}`);
+        return newId;
+      });
+    } catch (error) {
+      if (!intentIsCurrent()) return;
+      if (createdId)
+        navigate(
+          `invoices?id=${encodeURIComponent(createdId)}&entry=${source ?? "photo"}`,
+        );
+      setEntryError(
+        error instanceof InvoiceSelectionError
+          ? t(
+              "Choose a PDF, PNG, JPEG, WebP, or GIF file.",
+              "فایل PDF، PNG، JPEG، WebP یا GIF انتخاب کنید.",
+            )
+          : t(
+              "The original could not be saved. Choose the file again.",
+              "اصل فایل ذخیره نشد. فایل را دوباره انتخاب کنید.",
+            ),
       );
-      navigate(
-        `invoices?id=${encodeURIComponent(newId)}${source ? `&entry=${source}` : ""}`,
-      );
-      return newId;
-    });
+    }
   };
   if (!actor || !can("invoices.read", scope))
     return (
@@ -280,6 +333,11 @@ export default function Invoices() {
             </Button>
           }
         />
+        {entryError && (
+          <p role="alert" className="form-error">
+            {entryError}
+          </p>
+        )}
         <InvoiceEntryChoices
           open={entryChoiceOpen}
           onClose={() => setEntryChoiceOpen(false)}
@@ -291,10 +349,16 @@ export default function Invoices() {
     );
   return (
     <div aria-busy={entryPending !== null} inert={entryPending !== null}>
+      {entryError && (
+        <p role="alert" className="form-error">
+          {entryError}
+        </p>
+      )}
       <InvoiceWorkspace
         key={`${actor.session_id}:${actor.authority_epoch}:${authorityGeneration}:${workspace.invoice.id}`}
         workspace={workspace}
         startEntry={startEntry}
+        onSelectEntry={startFallback}
         entryPending={entryPending !== null}
       />
     </div>
@@ -308,13 +372,65 @@ function InvoiceEntryChoices({
 }: {
   open: boolean;
   onClose(): void;
-  onSelect(manual: boolean, source?: "photo" | "pdf"): void;
+  onSelect(
+    manual: boolean,
+    source?: InvoiceSourceChoice,
+    picked?: PickedInvoiceFiles,
+  ): void;
   disabled: boolean;
 }) {
   const { state, t, can, actor } = useDemo();
   const liveMode =
     getLiveReaderSettings(state.config.receiving).mode === "live";
   const jsonInput = useRef<HTMLInputElement>(null);
+  const originalInput = useRef<HTMLInputElement>(null);
+  const capturePickerIntent = useNavigationIntent(
+    actor ? invoiceEntryOrigin(actor) : "signed-out",
+  );
+  const picker = useRef<{
+    source: InvoiceSourceChoice;
+    origin: string;
+    isCurrent: () => boolean;
+  } | null>(null);
+  const actorOrigin = useRef(actor ? invoiceEntryOrigin(actor) : null);
+  useLayoutEffect(() => {
+    actorOrigin.current = actor ? invoiceEntryOrigin(actor) : null;
+  }, [actor]);
+  const [pickerError, setPickerError] = useState("");
+  function chooseSource(source: InvoiceSourceChoice) {
+    if (!actor || disabled || !canEnter || !originalInput.current) return;
+    setPickerError("");
+    picker.current = {
+      source,
+      origin: invoiceEntryOrigin(actor),
+      isCurrent: capturePickerIntent(),
+    };
+    const input = originalInput.current;
+    input.accept = source === "pdf" ? "application/pdf" : "image/*";
+    input.multiple = source === "photo";
+    input.value = "";
+    input.click();
+    onClose();
+  }
+  async function filesChosen(files: File[]) {
+    const request = picker.current;
+    picker.current = null;
+    if (!request || !files.length) return;
+    try {
+      await validateInvoiceSelection(files, request.source);
+      if (actorOrigin.current !== request.origin || !request.isCurrent())
+        return;
+      onSelect(false, request.source, { ...request, files });
+    } catch {
+      if (!request.isCurrent()) return;
+      setPickerError(
+        t(
+          "Choose a PDF, PNG, JPEG, WebP, or GIF file.",
+          "فایل PDF، PNG، JPEG، WebP یا GIF انتخاب کنید.",
+        ),
+      );
+    }
+  }
   const hasLocation = actor?.selection.kind === "location";
   const canEnter = hasLocation && can("invoices.enter");
   const canManual = hasLocation && can("invoices.enter_manual");
@@ -345,10 +461,7 @@ function InvoiceEntryChoices({
               className="invoice-entry-choice-tile"
               aria-label={t("Photo (AI reading)", "عکس (خوانش هوش مصنوعی)")}
               disabled={disabled || !canEnter}
-              onClick={() => {
-                onClose();
-                onSelect(false, "photo");
-              }}
+              onClick={() => chooseSource("photo")}
             >
               <Camera size={22} aria-hidden="true" />
               <strong>{t("Photo", "عکس")}</strong>
@@ -364,10 +477,7 @@ function InvoiceEntryChoices({
               className="invoice-entry-choice-tile"
               aria-label={t("PDF (AI reading)", "PDF (خوانش هوش مصنوعی)")}
               disabled={disabled || !canEnter}
-              onClick={() => {
-                onClose();
-                onSelect(false, "pdf");
-              }}
+              onClick={() => chooseSource("pdf")}
             >
               <FileText size={22} aria-hidden="true" />
               <strong>{t("PDF", "PDF")}</strong>
@@ -434,6 +544,27 @@ function InvoiceEntryChoices({
             </p>
           )}
         </Dialog>
+      )}
+      <input
+        ref={originalInput}
+        id="invoice-entry-original"
+        data-testid="invoice-entry-original"
+        className="ui-file-input"
+        type="file"
+        accept="image/*,application/pdf"
+        multiple
+        aria-label={t("Choose invoice file", "انتخاب فایل فاکتور")}
+        disabled={disabled}
+        onChange={(event) => {
+          const files = Array.from(event.currentTarget.files ?? []);
+          event.currentTarget.value = "";
+          void filesChosen(files);
+        }}
+      />
+      {pickerError && (
+        <p role="alert" className="form-error">
+          {pickerError}
+        </p>
       )}
       <InvoiceJsonImport
         key={`${actor?.session_id}:${actor?.authority_epoch}`}
@@ -562,10 +693,16 @@ function InvoicePickerList() {
 function InvoiceWorkspace({
   workspace,
   startEntry,
+  onSelectEntry,
   entryPending,
 }: {
   workspace: InvoiceWorkspaceRead;
   startEntry: (operation: () => Promise<string | null>) => Promise<void>;
+  onSelectEntry(
+    manual: boolean,
+    source?: InvoiceSourceChoice,
+    picked?: PickedInvoiceFiles,
+  ): void;
   entryPending: boolean;
 }) {
   const {
@@ -942,60 +1079,6 @@ function InvoiceWorkspace({
     return () =>
       window.removeEventListener("arzon:demo-invoice-answer", applyDemoAnswer);
   }, [active, locked, lowerLines.length, updateInvoice]);
-
-  async function start(manual = false, source?: "photo" | "pdf") {
-    if (!actor || actor.selection.kind !== "location") return;
-    const location = actor.selection.location_id;
-    try {
-      await startEntry(async () => {
-        const id = await command(
-          manual ? "invoices.enter_manual" : "invoices.enter",
-          {
-            company_id: actor.company_id,
-            kind: "location_record",
-            location_ids: [location],
-            mutation: true,
-            location_policy: "active_only",
-          },
-          (draft, currentActor) => {
-            retainInvoiceWorkspace(draft);
-            const live =
-              !manual &&
-              getLiveReaderSettings(draft.config.receiving).mode === "live";
-            draft.invoice = createInvoice(
-              draft,
-              currentActor,
-              location,
-              manual,
-              { empty: live },
-            );
-            draft.invoice.receiving_employee = currentActor.actor;
-            if (!live)
-              initializeInvoiceManualPriceDecisions(draft, currentActor);
-            return draft.invoice.id;
-          },
-        );
-        setSelectedView(null);
-        navigate(
-          `invoices?id=${encodeURIComponent(id)}${source ? `&entry=${source}` : ""}`,
-        );
-
-        setMessage("");
-        setUploadError("");
-
-        setAttemptedPost(false);
-        setReceivedEdit(undefined);
-        setReceivedError(undefined);
-        return id;
-      });
-    } catch (cause) {
-      setMessage(
-        cause instanceof Error
-          ? cause.message
-          : t("The invoice changed.", "فاکتور تغییر کرد."),
-      );
-    }
-  }
 
   async function attachFile(file: File, fromList = false) {
     let targetInvoiceId = invoice.id;
@@ -1564,7 +1647,7 @@ function InvoiceWorkspace({
       <InvoiceEntryChoices
         open={entryChoiceOpen}
         onClose={() => setEntryChoiceOpen(false)}
-        onSelect={(manual, source) => void start(manual, source)}
+        onSelect={onSelectEntry}
         disabled={uploadPending || entryPending}
       />
       {correctionOpen && (
