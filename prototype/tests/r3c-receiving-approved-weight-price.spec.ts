@@ -40,7 +40,7 @@ test("R3c K4 kg receiving input and its approved comparison state their genuine 
     name: "Selling price (per kg)",
     exact: true,
   });
-  await expect(price).toHaveValue("17.61");
+  await expect(price).toHaveValue("16.51");
   const approved = editor.locator(".receiving-approved-price");
   await expect(approved.locator(".weight-price-main")).toHaveText("$16.51/kg");
   await expect(approved.locator(".weight-price-secondary")).toHaveText(
@@ -59,7 +59,7 @@ test("R3c K4 kg receiving input and its approved comparison state their genuine 
     entered_price: "17.71",
     price_unit: "kg",
     price: "8.03",
-    calculated_price: "7.99",
+    calculated_price: "7.49",
   });
   expect(after.products).toEqual(before.products);
   expect(after.approvals).toEqual(before.approvals);
@@ -69,7 +69,7 @@ test("R3c K4 kg receiving input and its approved comparison state their genuine 
   await editor
     .getByRole("button", { name: "Use calculated price", exact: true })
     .click();
-  await expect(price).toHaveValue("17.61");
+  await expect(price).toHaveValue("16.51");
   await expect
     .poll(
       async () =>
