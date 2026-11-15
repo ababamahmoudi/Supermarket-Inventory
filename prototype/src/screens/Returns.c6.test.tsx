@@ -16,6 +16,10 @@ import { recordPickup, type OperationalReturn } from "../operations";
 import { ReturnActionForms } from "./ReturnActionForms";
 import { ReturnMemoDocument } from "../return-memo";
 import i18n from "../i18n";
+
+// The date picker opens on the current month, so pick a day that is always shown.
+const today = new Date();
+const visibleDay = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-15`;
 const worker = (state: ReturnType<typeof returnFixture>) =>
   authenticatedTestActor(state, "floor_worker", {
     locations: ["Branch 1"],
@@ -163,16 +167,16 @@ it("records mixed per-item replacement and outstanding date without exposing edi
   );
   // This is a controlled styled date field; value is a real entered expected date.
   await user.click(screen.getByLabelText("Remaining expected date"));
-  await user.click(screen.getByRole("button", { name: "2026-10-23" }));
+  await user.click(screen.getByRole("button", { name: visibleDay }));
   await user.click(screen.getByLabelText("Expected date"));
-  await user.click(screen.getByRole("button", { name: "2026-10-23" }));
+  await user.click(screen.getByRole("button", { name: visibleDay }));
   await user.click(screen.getByRole("button", { name: "Record resolution" }));
   await waitFor(() => {
     const record = JSON.parse(screen.getByTestId("return-json").textContent!);
     expect(record.lines[0]).toMatchObject({ picked_up: 3, settled: 1 });
     expect(record.lines[1]).toMatchObject({
       picked_up: 2,
-      outstanding_expected_date: "2026-10-23",
+      outstanding_expected_date: visibleDay,
     });
     expect(record.pickup_memos[0].lines[0].quantity).toBe(3);
     expect(

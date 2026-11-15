@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import Decimal from "decimal.js";
 import { initialState } from "./store";
 import { dashboardPurchases, dashboardSummary } from "./dashboard-data";
@@ -7,6 +7,9 @@ import { cloneWithAuthority } from "./authority";
 import type { PriceUpdateTask } from "./price-updates";
 
 const now = new Date("2026-10-26T16:00:00Z");
+afterEach(() => {
+  vi.useRealTimers();
+});
 const manager = (state: ReturnType<typeof initialState>, branch = "all") =>
   authenticatedTestActor(state, "manager", {
     selection:
@@ -91,6 +94,9 @@ describe("R2c Group1 canonical dashboard", () => {
     );
   });
   it("retains foreign invoice currency and exact amounts without converting them", () => {
+    // Seeded invoices are dated relative to the clock; build them at `now`.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(now);
     const state = initialState();
     const invoice = state.invoices!.find((row) => row.status === "posted")!;
     invoice.import_currency = "USD";

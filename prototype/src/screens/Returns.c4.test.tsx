@@ -30,6 +30,10 @@ import { SupplierReturnsPanel } from "./SupplierReturnsPanel";
 import { supplierPage } from "../suppliers";
 import i18n from "../i18n";
 
+// The date picker opens on the current month, so pick a day that is always shown.
+const today = new Date();
+const visibleDay = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-15`;
+
 beforeEach(async () => {
   localStorage.clear();
   sessionStorage.clear();
@@ -510,7 +514,7 @@ it("accepts explicit three-decimal lb replacements and clears a precision error 
   expect(replacement).toHaveAttribute("min", "0.001");
   fireEvent.change(replacement, { target: { value: "0.0001" } });
   await user.click(screen.getByLabelText("Remaining expected date"));
-  await user.click(await screen.findByRole("button", { name: "2026-10-23" }));
+  await user.click(await screen.findByRole("button", { name: visibleDay }));
   await user.type(
     screen.getByLabelText("Supplier representative name"),
     "Demo Driver",
