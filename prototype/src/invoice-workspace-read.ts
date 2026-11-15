@@ -122,6 +122,7 @@ export function invoiceWorkspaceRead(
     );
     let price: string | null = null,
       roundedUpFrom: string | null = null,
+      roundedUpFromMeetsMargin: boolean | null = null,
       costValid = true;
     try {
       // A new imported product awaits a person's category choice. Its valid
@@ -143,6 +144,8 @@ export function invoiceWorkspaceRead(
           );
           price = calculation.selling_price;
           roundedUpFrom = calculation.rounded_up_from;
+          roundedUpFromMeetsMargin =
+            calculation.rounded_up_from_meets_margin ?? null;
         }
       }
     } catch {
@@ -204,6 +207,7 @@ export function invoiceWorkspaceRead(
         selectedMargin.lt(threshold),
       ),
       roundedUpFrom,
+      roundedUpFromMeetsMargin,
       receivingPriceQuote: receivingPriceQuote(working, index),
       receivingPriceInvalid: receivingPriceProblem(working, index),
       receivingPriceEligible: receivingPriceEligible(working, line),

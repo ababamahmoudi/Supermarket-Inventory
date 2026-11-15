@@ -8,7 +8,7 @@ import {
 } from "./r2-receiving-helpers";
 
 for (const language of ["en", "fa"] as const) {
-  test(`R3c K3 configured rounding explains the real lower price and saves a receiving proposal ${language}`, async ({
+  test(`R3c K3 the 2.49 correction explains the real lower price and saves a receiving proposal ${language}`, async ({
     page,
   }) => {
     const imported = await importReceivingFixture(page, language);
@@ -23,7 +23,11 @@ for (const language of ["en", "fa"] as const) {
     const source = before.invoice;
     await explanation
       .getByRole("button", {
-        name: word(language, "Use $2.49", "استفاده از $2.49"),
+        name: word(
+          language,
+          "Use lower ($2.49)",
+          "استفاده از قیمت کمتر ($2.49)",
+        ),
         exact: true,
       })
       .click();

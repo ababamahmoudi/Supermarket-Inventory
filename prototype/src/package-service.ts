@@ -83,6 +83,7 @@ export function previewWeightPackage(
   if (!price)
     return {
       price: null,
+      rounded_up_from: null,
       size_lb: null,
       formula: null,
       cost_before_tax: null,
@@ -103,6 +104,7 @@ export function previewWeightPackage(
   }).allowed;
   return {
     price: result.selling_price,
+    rounded_up_from: result.rounded_up_from,
     size_lb: result.size_lb,
     formula: result.formula,
     cost_before_tax: financial ? result.cost_before_tax : null,

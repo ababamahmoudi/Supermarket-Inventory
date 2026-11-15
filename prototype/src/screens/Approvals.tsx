@@ -13,9 +13,11 @@ import {
 } from "../settings";
 import { useEffect, useRef, useState } from "react";
 import Decimal from "decimal.js";
+import { RoundedUpNotice } from "../RoundedUpNotice";
 import {
   approvalSnapshot,
   approveInvoiceApprovals,
+  chooseLowerApprovalPrice,
   changeApprovalCategory,
   resubmitApproval,
   keepApprovedPrice,
@@ -690,6 +692,27 @@ export function Approvals() {
     }
     finishRemoval([item.id], scroll);
   };
+  const chooseLowerPrice = async (item: Approval) => {
+    if (!canDecide) return;
+    const scroll = preserveViewport();
+    try {
+      await command(
+        "approvals.decide",
+        domainScope(state, item, true),
+        (draft, freshActor) =>
+          void chooseLowerApprovalPrice(draft, freshActor, item.id),
+      );
+    } catch {
+      setMessage(
+        t(
+          "This proposal changed. Open the approval again before confirming.",
+          "این پیشنهاد تغییر کرد. پیش از تأیید، آن را دوباره باز کنید.",
+        ),
+      );
+      return;
+    }
+    window.requestAnimationFrame(() => window.scrollTo(scroll.x, scroll.y));
+  };
   const correctionPrice = correction?.price || correctionRead.data || "…";
   return (
     <>
@@ -1016,6 +1039,32 @@ export function Approvals() {
                       warning={belowMinimum}
                     />
                   )}
+                  {(() => {
+                    const roundedUp = details.roundedUp;
+                    return (
+                      roundedUp && (
+                        <RoundedUpNotice
+                          testId="approval-rounded-up"
+                          from={roundedUp.from}
+                          meetsMargin={
+                            canDecide ? roundedUp.meets_margin : null
+                          }
+                          format={(value) => (
+                            <ProductPrice
+                              value={value}
+                              product={product}
+                              config={state.config}
+                            />
+                          )}
+                          onUseLower={
+                            canDecide
+                              ? () => void chooseLowerPrice(item)
+                              : undefined
+                          }
+                        />
+                      )
+                    );
+                  })()}
                   {canDecide &&
                     item.status === "pending" &&
                     needsMarginAcknowledgment(details) && (

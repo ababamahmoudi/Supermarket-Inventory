@@ -264,7 +264,7 @@ it("shows an approved weight price in the same configured unit as the receiving 
     await screen.findByRole("textbox", {
       name: "Selling price (per kg)",
     }),
-  ).toHaveValue("17.61");
+  ).toHaveValue("16.51");
   const approved = view.container.querySelector(".receiving-approved-price")!;
   expect(approved.querySelector(".weight-price-main")).toHaveTextContent(
     "$16.51/kg",

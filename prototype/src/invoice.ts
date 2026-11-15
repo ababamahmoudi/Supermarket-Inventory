@@ -8,7 +8,6 @@ import {
 } from "./invoice-free-cases";
 import { businessFingerprint } from "./business-fingerprint";
 import { receivingPriceProblem } from "./invoice-receiving-price";
-import { effectiveRoundingBands } from "./pricing-ending-rule";
 import type { InvoiceEditableLine } from "./invoice-edit-types";
 import { invoiceView, type InvoiceLineView } from "./invoice-projections";
 import Decimal from "decimal.js";
@@ -1610,7 +1609,7 @@ export function postInvoice(
           manual_price_decision: line.manual_price_decision ?? "standard",
           receiving_price: receivingPrice,
           categories: state.config.pricing_categories,
-          bands: effectiveRoundingBands(state.config),
+          bands: state.config.rounding_bands,
           corrections: state.config.special_corrections,
         });
         const existing = state.approvals.find(

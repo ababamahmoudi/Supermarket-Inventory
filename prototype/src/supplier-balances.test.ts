@@ -382,6 +382,43 @@ async function restore(state: DemoState) {
 }
 
 describe("configured minimum margins and safe saved-demo upgrades", () => {
+  it("replaces the old all-.49 setting with the 1.49 correction without repricing", async () => {
+    const state = initialState();
+    delete state.price_ending_rule_schema;
+    (
+      state.config.rounding_bands as Record<string, unknown>
+    ).final_ending_adjustment = {
+      source_endings: ["0.49"],
+      target_ending: "0.99",
+    };
+    state.config.special_corrections = [
+      { from: "2.49", to: "2.99" },
+      { from: "3.49", to: "3.99" },
+    ];
+    const prices = state.products.map((product) => [
+      product.code,
+      product.selling_price,
+      product.branch_prices,
+    ]);
+    const restored = await restore(state);
+    expect(restored.config.special_corrections).toEqual([
+      { from: "1.49", to: "1.99" },
+      { from: "2.49", to: "2.99" },
+      { from: "3.49", to: "3.99" },
+    ]);
+    expect(restored.config.rounding_bands).not.toHaveProperty(
+      "final_ending_adjustment",
+    );
+    expect(
+      restored.products.map((product) => [
+        product.code,
+        product.selling_price,
+        product.branch_prices,
+      ]),
+    ).toEqual(prices);
+    expect(restored.price_ending_rule_schema).toBe(2);
+  });
+
   it("uses the configured quarter margin for all categories, including Rice", () => {
     expect(
       initialState().config.pricing_categories.every(

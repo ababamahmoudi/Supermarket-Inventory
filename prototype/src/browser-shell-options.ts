@@ -1,3 +1,4 @@
+import { migratePriceEndingRule } from "./price-ending-migration";
 import { migratePackageState } from "./package-state";
 import { migrateTimesheetState } from "./timesheet-state";
 import {
@@ -49,6 +50,7 @@ export function browserShellOptions(projectors: ReadModelProjectors) {
       await migrateSalePriceInvariants(...args);
       await migrateTimesheetState(...args);
       await migratePackageState(...args);
+      await migratePriceEndingRule(...args);
     },
     historyRecovery: {
       status: historyRecoveryStatus,

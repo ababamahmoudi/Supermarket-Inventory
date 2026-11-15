@@ -424,7 +424,10 @@ describe("receiving price proposals", () => {
     confirmInvoiceLineChecks(state, floor, 0, true);
     const marker = structuredClone(manualPrice(state, product, "Branch 1"));
     postInvoice(state, floor);
-    expect(state.config.rounding_bands.final_ending_adjustment).toBeTruthy();
+    expect(state.config.special_corrections).toContainEqual({
+      from: "1.49",
+      to: "1.99",
+    });
     expect(regularPrice(state, product, "Branch 1")).toBe("3.49");
     expect(manualPrice(state, product, "Branch 1")).toEqual(marker);
     expect(
@@ -436,7 +439,7 @@ describe("receiving price proposals", () => {
     ).toEqual([]);
   });
 
-  it("default ending changes a new receipt proposal without repricing the stored approved charge", () => {
+  it("the 1.49 correction changes a new receipt proposal without repricing the stored approved charge", () => {
     const { state, floor, line } = prepare();
     const product = state.products.find(
       (row) => row.code === line.product_code,
@@ -447,9 +450,9 @@ describe("receiving price proposals", () => {
       row.selling_price,
       structuredClone(row.branch_prices),
     ]);
-    expect(state.config.rounding_bands.final_ending_adjustment).toMatchObject({
-      source_endings: ["0.49"],
-      target_ending: "0.99",
+    expect(state.config.special_corrections).toContainEqual({
+      from: "1.49",
+      to: "1.99",
     });
     expect(invoiceWorkspaceRead(state, floor).lineDetails[0]).toMatchObject({
       price: "1.99",

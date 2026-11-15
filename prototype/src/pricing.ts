@@ -1,15 +1,13 @@
 import Decimal from "decimal.js";
-import {
-  effectiveRoundingBands,
-  type RoundingBands,
-} from "./pricing-ending-rule";
 import { configSeed as seedConfig } from "./config";
 
 // A local constructor keeps other modules from changing the engine's precision.
 const Money = Decimal.clone({ precision: 80, rounding: Decimal.ROUND_HALF_UP });
 type SeedCategory = (typeof seedConfig.pricing_categories)[number];
-export type PricingConfig = Pick<typeof seedConfig, "special_corrections"> & {
-  rounding_bands: RoundingBands;
+export type PricingConfig = Pick<
+  typeof seedConfig,
+  "special_corrections" | "rounding_bands"
+> & {
   pricing_categories: (Omit<SeedCategory, "minimum_margin"> & {
     minimum_margin: string | null;
   })[];
@@ -21,8 +19,13 @@ export type PricingResult = {
   rounded_raw: string;
   after_band_rounding: string | null;
   special_correction_applied: boolean;
-  /** Actual pre-adjustment selling amount, never the cost/divisor quotient. */
+  /**
+   * The band price a special correction raised (for example 1.49 before
+   * 1.49 → 1.99). Never the cost/divisor quotient. Null when nothing was raised.
+   */
   rounded_up_from: string | null;
+  /** Whether `rounded_up_from` alone already meets the category's minimum margin. */
+  rounded_up_from_meets_margin: boolean | null;
   margin: string | null;
   below_minimum_margin: boolean;
 };
@@ -117,23 +120,6 @@ export function validatePricingConfig(config: PricingConfig): void {
     "invalid_minimum",
   );
 
-  const adjustment = effectiveRoundingBands(config).final_ending_adjustment;
-  if (adjustment !== null) {
-    if (
-      typeof adjustment !== "object" ||
-      !Array.isArray(adjustment.source_endings)
-    )
-      throw new PricingValidationError("invalid_ending");
-    const target = ending(adjustment.target_ending);
-    const sources = new Set<string>();
-    for (const source of adjustment.source_endings) {
-      const amount = ending(source);
-      if (amount.gte(target) || sources.has(amount.toFixed(2)))
-        throw new PricingValidationError("invalid_ending");
-      sources.add(amount.toFixed(2));
-    }
-  }
-
   const corrections = new Set<string>();
   for (const correction of config.special_corrections) {
     const from = centAmount(correction.from, "invalid_correction").toFixed(2);
@@ -205,24 +191,10 @@ export function roundCategoryPrice(
     }
   }
 
-  const adjustment = effectiveRoundingBands(config).final_ending_adjustment;
-  let roundedUpFrom: Decimal | null = null;
-  if (adjustment?.source_endings.length) {
-    const fraction = price.minus(price.floor());
-    if (adjustment.source_endings.some((source) => fraction.eq(source))) {
-      roundedUpFrom = price;
-      price = price.floor().plus(adjustment.target_ending);
-    } else if (correctionApplied && afterBands) {
-      // Existing Grocery corrections may already make the requested ending.
-      // Expose their genuine .49 origin without applying or chaining them again.
-      const bandFraction = afterBands.minus(afterBands.floor());
-      if (
-        adjustment.source_endings.some((source) => bandFraction.eq(source)) &&
-        price.eq(afterBands.floor().plus(adjustment.target_ending))
-      )
-        roundedUpFrom = afterBands;
-    }
-  }
+  // A correction is a suggestion: keep the genuine band price when it raised
+  // the price, so every screen can explain it and offer "Use lower".
+  const roundedUpFrom =
+    correctionApplied && afterBands && price.gt(afterBands) ? afterBands : null;
 
   return {
     selling_price: price.toFixed(2),
@@ -261,13 +233,17 @@ export function calculatePrice(
 
   const margin = price.isZero() ? null : price.minus(cost).div(price);
   // Cross multiplication avoids formatting or recurring-ratio precision affecting review.
-  const belowMinimum =
-    price.isZero() ||
-    (category.minimum_margin !== null &&
-      price.minus(cost).lt(price.times(category.minimum_margin)));
+  const meetsMinimum = (amount: Decimal) =>
+    !amount.isZero() &&
+    (category.minimum_margin === null ||
+      amount.minus(cost).gte(amount.times(category.minimum_margin)));
   return {
     ...rounded,
+    rounded_up_from_meets_margin:
+      rounded.rounded_up_from === null
+        ? null
+        : meetsMinimum(new Money(rounded.rounded_up_from)),
     margin: margin?.toString() ?? null,
-    below_minimum_margin: belowMinimum,
+    below_minimum_margin: !meetsMinimum(price),
   };
 }

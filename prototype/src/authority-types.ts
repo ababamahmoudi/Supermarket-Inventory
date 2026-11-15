@@ -333,7 +333,8 @@ export type SystemReconciliationSource =
   | "return_credit_reminders"
   | "price_updates"
   | "timesheets_migration"
-  | "packages_migration";
+  | "packages_migration"
+  | "pricing_rule_migration";
 /** Requires an active repository-minted witness bound to this exact canonical draft. */
 export declare function requireSystemReconciliation(
   state: BusinessState,

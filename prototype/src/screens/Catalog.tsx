@@ -448,6 +448,9 @@ export function ProductEditor({
   const [stopChoice, setStopChoice] = useState<StopTrackingChoice | "">("");
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [priceDialogOpen, setPriceDialogOpen] = useState(false);
+  const [suggestedWeightPrice, setSuggestedWeightPrice] = useState<
+    string | undefined
+  >();
   const clearIssue = (id: string) =>
     setIssues((current) => current.filter((issue) => issue.fieldId !== id));
   const [manualPrice, setManualPrice] = useState(
@@ -1410,6 +1413,16 @@ export function ProductEditor({
                       setManualPrice(true);
                       setMarginConfirmed(false);
                     }}
+                    onUseLower={(value) => {
+                      if (isNew) {
+                        setSellingPrice(value);
+                        setManualPrice(true);
+                        setMarginConfirmed(false);
+                      } else {
+                        setSuggestedWeightPrice(value);
+                        setPriceDialogOpen(true);
+                      }
+                    }}
                   />
                 ) : (
                   <>
@@ -2174,7 +2187,11 @@ export function ProductEditor({
           product_code={product.code}
           mode={modernWeight ? "regular" : undefined}
           stagedInput={modernWeight ? stagedWeightPrice : undefined}
-          onClose={() => setPriceDialogOpen(false)}
+          suggested_price={suggestedWeightPrice}
+          onClose={() => {
+            setPriceDialogOpen(false);
+            setSuggestedWeightPrice(undefined);
+          }}
           onStage={
             modernWeight
               ? (input) => {

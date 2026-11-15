@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import { useDemo } from "./store";
+import { RoundedUpNotice } from "./RoundedUpNotice";
 import { Field, Select, SegmentedControl, Button, Badge } from "./ui";
 import { Money, LtrText, categoryLabel } from "./presentation";
 import { activePricingCategories } from "./settings";
@@ -23,6 +24,7 @@ export function WeightProductPricing({
   newProduct,
   newManualPrice,
   onNewManualPriceChange,
+  onUseLower,
 }: {
   formId: string;
   category: string;
@@ -40,6 +42,8 @@ export function WeightProductPricing({
   newProduct: boolean;
   newManualPrice?: string;
   onNewManualPriceChange?(value: string): void;
+  /** Choose the lower band price a store correction raised (per lb). */
+  onUseLower?(pricePerLb: string): void;
 }) {
   const { state, lang, t } = useDemo();
   const [currency, factor] = [
@@ -177,6 +181,24 @@ export function WeightProductPricing({
               )
             )}
           </p>
+          {calculation?.rounded_up_from && (
+            <RoundedUpNotice
+              testId="weight-rounded-up"
+              from={calculation.rounded_up_from}
+              meetsMargin={calculation.rounded_up_from_meets_margin}
+              format={(value) => (
+                <>
+                  <Money value={value} currency={currency} />
+                  <LtrText>/lb</LtrText>
+                </>
+              )}
+              onUseLower={
+                onUseLower
+                  ? () => onUseLower(calculation.rounded_up_from!)
+                  : undefined
+              }
+            />
+          )}
           <Button variant="plain" onClick={onChangePrice}>
             {t("Change price", "تغییر قیمت")}
           </Button>

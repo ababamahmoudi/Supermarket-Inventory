@@ -85,11 +85,11 @@ Empty, zero, malformed or stale price evidence keeps the real field marked; Conf
 
 Posting creates an individual manual-price approval with requested and independently calculated prices, entered weight amount/unit and Set by <person> during receiving. The supervisor's existing approval/reason/scope rules decide the actual price. The earlier approved charge and active Sale behavior remain authoritative until that decision.
 
-## R3c K3 — configured .49 to .99 and Use Lower
+## Special corrections are suggestions — Use lower (R3c K3, revised 2026-11-15)
 
-In Settings → Catalog → Rounding rules, configure Round selected price endings up, Source price endings and Round up to ending. The default is On, 0.49 → 0.99. Save changes retains an explicit custom/disabled rule; the same page's Price tester is a preview and never reprices stored approved Products.
+Settings → Catalog → Special corrections lists the corrections (Super Arzon: 1.49 → 1.99, 2.49 → 2.99, 3.49 → 3.99); each pricing category has its own correction switch (on for Grocery and Grocery (Taxable), off for Kitchenware). Every other .49 stays. The Price tester explains a correction but never reprices stored approved Products.
 
-A newly calculated receiving price that changes ending shows Rounded up from $X (store rule) and Use $X. Choosing it makes a real attributed manual receiving-price proposal, clears confirmation and preserves the separately calculated amount. Use calculated price removes the proposal. Posting sends the proposal to individual approval with the original receiving person, even when somebody else posts. Existing scope, below-cost/minimum reason and final approval guards remain; no approved charge changes before approval.
+A newly calculated receiving price raised by a correction shows "Rounded up from $X by the store rule", says whether $X already meets the minimum margin, and offers Use lower ($X). On Approvals, a decider sees the same note on a pending calculated price and can choose Use lower; the proposal becomes the lower, attributed manual price and still needs Approve. Weighed product editors offer the same choice; container (package) rows only explain it, because package prices follow the parent. Choosing it makes a real attributed manual receiving-price proposal, clears confirmation and preserves the separately calculated amount. Use calculated price removes the proposal. Posting sends the proposal to individual approval with the original receiving person, even when somebody else posts. Existing scope, below-cost/minimum reason and final approval guards remain; no approved charge changes before approval.
 
 ## R3c F3 — native picker before draft creation
 

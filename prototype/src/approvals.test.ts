@@ -175,9 +175,11 @@ describe("invoice, approval, offer and catalog integration", () => {
   it("keeps an invoice margin review out of pending-price lookup and sends an override through normal approval", () => {
     const state = initialState();
     // Preserve the exact historical 1.12/1.49 minimum-margin boundary for a
-    // company with the optional ending adjustment disabled. Default-on behavior
-    // and unchanged approved 1.49 are covered by the next case.
-    state.config.rounding_bands.final_ending_adjustment = null;
+    // company without the 1.49 → 1.99 correction. The default correction and
+    // an unchanged approved 1.49 are covered by the next case.
+    state.config.special_corrections = state.config.special_corrections.filter(
+      (entry) => entry.from !== "1.49",
+    );
     prepareInvoice(state, "1.12");
     postInvoice(state, worker(state));
     const product = state.products.find((item) => item.code === "0002")!;

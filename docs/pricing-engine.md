@@ -2,9 +2,9 @@
 
 ## R3c K8 — paid/free pricing versus acquisition
 
-Keep exact paper money, physical received quantity and pricing cost separate. For a proven paid/free group, Bonus prices from the paid regular cost; Two-for-one prices over the actual paid-plus-free quantity; Mistake accepts only the paid member with an attributed discrepancy. All preserve the original paid paper amount. Existing category rules, .49 → .99 and explicit receiving-price approvals apply after selecting that pricing basis. Exact acquisition/return budgets use retained source cents/physical coverage, never rounded pricing cost multiplied by every free unit. Cost-authorized UI receives selected canonical facts; domain commands never trust presentation facts.
+Keep exact paper money, physical received quantity and pricing cost separate. For a proven paid/free group, Bonus prices from the paid regular cost; Two-for-one prices over the actual paid-plus-free quantity; Mistake accepts only the paid member with an attributed discrepancy. All preserve the original paid paper amount. Existing category rules, special corrections and explicit receiving-price approvals apply after selecting that pricing basis. Exact acquisition/return budgets use retained source cents/physical coverage, never rounded pricing cost multiplied by every free unit. Cost-authorized UI receives selected canonical facts; domain commands never trust presentation facts.
 
-E1 role wording uses Owner/Manager for former Supervisor company authority. Branch Supervisor may only propose an own-store regular price; the central capability/approval boundary executes it after Owner/Manager decision. R3c adds the configured final-ending adjustment below; historical approved/manual prices remain unchanged.
+E1 role wording uses Owner/Manager for former Supervisor company authority. Branch Supervisor may only propose an own-store regular price; the central capability/approval boundary executes it after Owner/Manager decision. Historical approved/manual prices never change when a pricing rule changes.
 
 This is the most important rule set in the product. It must be implemented **once** (a pure function with no database access), driven by configuration, and covered by tests. The backend and the prototype use the same algorithm; the prototype has a TypeScript port that must pass the same test file.
 
@@ -31,13 +31,19 @@ raw = unit_cost_before_tax / category.cost_divisor
    - `f < 0.23` → `(D − 1) + 0.99` ("previous .99"). If `D = 0` there is no previous dollar → use the configured minimum **0.49**.
    - `0.23 ≤ f < 0.73` → `D + 0.49`
    - `f ≥ 0.73` → `D + 0.99`
-4. **Special correction** (only for categories with `apply_2_49_3_49_correction = true`, i.e. **Grocery and Grocery (Taxable)** only): if the result is exactly `2.49` → `2.99`; exactly `3.49` → `3.99`. Applied once, after step 3.
+4. **Special corrections** (only for categories whose correction switch `apply_2_49_3_49_correction` is on — **Grocery and Grocery (Taxable)** for Super Arzon): if the result is exactly `1.49` → `1.99`; `2.49` → `2.99`; `3.49` → `3.99`. Applied once, after step 3, never chained. The list lives in `special_corrections`; another company can change it without code. **Every other .49 stays** — for example `4.49`, `52.49`, `100.49` and the `0.49` minimum. Kitchenware's switch is off but stays in Settings → Catalog → Pricing categories, so it can be turned on later. *(Ali's decision, 2026-11-15.)*
 
-5. **Configured final ending adjustment (R3c):** after the existing category rounding and correction, apply `rounding_bands.final_ending_adjustment` once. The configured default is `source_endings: ["0.49"], target_ending: "0.99"`, so `1.49 → 1.99`, `2.49 → 2.99`, `52.49 → 52.99` and the base minimum `0.49 → 0.99`. The target must be a cent ending below 1 and strictly higher than every distinct source ending. `null` or an empty source list disables this rule for another company's configuration. It also applies after weighed bands-Off cent rounding and package calculations. It does not alter existing stored prices or Sale quick picks.
+**A correction is a suggestion.** When a correction raises the price, the result keeps the band price as `rounded_up_from` (for example `1.49` for `1.99`) and `rounded_up_from_meets_margin` (whether that lower price alone already meets the category's minimum margin; it does not always — cost 1.12 gives 1.49 at 24.83 %). Every screen that shows such a calculated price explains it — "Rounded up from $1.49 by the store rule" — and, where a price can be chosen, offers **Use lower**:
 
-The genuine pre-adjustment selling amount is retained as `rounded_up_from`; it is not the raw cost/divisor quotient. Existing Grocery 2.49/3.49 corrections already reach the configured .99 target, so their original .49 remains available for the same explanation and Use lower action without chaining corrections. Other custom correction targets remain unchanged unless their own final ending is configured as a source.
+- Receiving (invoice line): Use lower creates the attributed receiving-price proposal (manual price), approved later as usual.
+- Approvals: a decider's Use lower changes the pending proposal to the lower price as an attributed manual proposal ("Use lower price" activity); the approved price changes only when it is approved.
+- Settings → Price tester: explanation only (nothing is saved there).
+- Weighed items (product editor): explanation per lb; Use lower fills the draft price for a new product, or opens Change price prefilled for an existing one.
+- Containers (packages): explanation only. Package prices always follow the parent product, so there is no per-package Use lower.
 
-Missing legacy final-ending settings inherit the current configured seed default through a pure resolver. Explicit null/empty/custom values survive, no stored record or historical price is migrated, and pricing quotes/fingerprints include this effective default. Settings → Catalog → Pricing categories → Rounding rules can change or disable the adjustment; the ordinary audited settings command validates it.
+Prices that are already approved never change when this rule changes. Saved demo data is upgraded once at startup: the removed `final_ending_adjustment` setting is dropped and `1.49 → 1.99` is added only to an untouched default correction list (a private backup is taken first). No product price is recalculated.
+
+The earlier R3c K3 general rule (`rounding_bands.final_ending_adjustment`, every `.49` → `.99` in every category) was removed on 2026-11-15: it ignored the category switch and duplicated special corrections.
 
 A whole-dollar raw price such as `10.00` has `f = 0.00`, so it becomes `9.99` through the "previous .99" band. No separate rule is needed.
 
@@ -57,21 +63,22 @@ Result = the smallest value of the form `X.99` that is **greater than or equal t
 | Category          | Cost  | Raw   | After bands | Final     | Why                                             |
 | ----------------- | ----- | ----- | ----------- | --------- | ----------------------------------------------- |
 | Grocery           | 1.30  | 2.00  | 1.99        | **1.99**  | below .23 → previous .99                        |
-| Grocery           | 1.00  | 1.54  | 1.49        | **1.99**  | middle band, then final ending adjustment       |
+| Grocery           | 1.00  | 1.54  | 1.49        | **1.99**  | middle band, then 1.49 correction               |
 | Grocery           | 2.50  | 3.85  | 3.99        | **3.99**  | .73 or above                                    |
 | Grocery           | 6.50  | 10.00 | 9.99        | **9.99**  | whole dollar becomes x.99 below                 |
 | Grocery           | 1.60  | 2.46  | 2.49        | **2.99**  | special correction                              |
 | Grocery           | 2.40  | 3.69  | 3.49        | **3.99**  | special correction                              |
 | Grocery           | 2.10  | 3.23  | 3.49        | **3.99**  | .23 is in the middle band, then corrected       |
 | Grocery (Taxable) | 3.20  | 4.92  | 4.99        | **4.99**  | same rules as Grocery                           |
+| Grocery           | 3.00  | 4.62  | 4.49        | **4.49**  | 4.49 is not corrected                           |
 | Rice              | 3.00  | 3.75  | n/a         | **3.99**  | up to next .99                                  |
 | Rice              | 3.20  | 4.00  | n/a         | **4.99**  | exact whole dollar goes up (assumed)            |
 | Rice              | 18.40 | 23.00 | n/a         | **23.99** |                                                 |
 | Kitchenware       | 5.40  | 9.00  | 8.99        | **8.99**  | divisor 0.60                                    |
-| Kitchenware       | 1.50  | 2.50  | 2.49        | **2.99**  | final ending adjustment; no category correction |
-| Kitchenware       | 31.50 | 52.50 | 52.49       | **52.99** | final ending adjustment                         |
+| Kitchenware       | 1.50  | 2.50  | 2.49        | **2.49**  | Kitchenware correction switch is off            |
+| Kitchenware       | 31.50 | 52.50 | 52.49       | **52.49** | .49 stays                                       |
 
-The shared fixture retains all earlier 21 cases, both kg/lb cases and adds a high-dollar final-ending case; all three package cases and retained four-decimal boundary cases remain required. Intermediate band values remain .49 where applicable, while final expected prices follow the configured adjustment. Note: with a 0.65 divisor and costs in whole cents, a raw price ending exactly in .73 cannot occur; do not write a test that expects it.
+The shared fixture holds 25 cases (the earlier 21, two weighed kg/lb cases, a high-dollar `.49` case and Grocery 3.00 → 4.49) plus three package cases; retained four-decimal boundary cases remain required. Note: with a 0.65 divisor and costs in whole cents, a raw price ending exactly in .73 cannot occur; do not write a test that expects it.
 
 ## Margin check
 
@@ -108,7 +115,7 @@ On posting an invoice (and on manual cost edits), for each line: compute the new
 
 ## C manual provenance and exceptional receipts (2026-10-09)
 
-Historical C behavior below retains its quantity/provenance rules; new calculations additionally apply the R3c final-ending setting above. Each selling prices remain per unit: case-entry quantities normalize with the retained positive pack, unit-entry quantities do not multiply again. C4 Weight products instead use explicit kg/lb source quantities and canonical per-lb approved pricing.
+Historical C behavior below retains its quantity/provenance rules; new calculations apply the special corrections above. Each selling prices remain per unit: case-entry quantities normalize with the retained positive pack, unit-entry quantities do not multiply again. C4 Weight products instead use explicit kg/lb source quantities and canonical per-lb approved pricing.
 
 For an already manual-priced product, regular new invoices retain the approved manual price and expose new rule price beside it. Reviewer must choose **Keep manual price / Use rule price**. Keep preserves manual provenance and evaluates any configured minimum-margin review using actual manual price/new regular cost; Use creates normal posting-time Owner/Manager approval even if rule/manual amounts equal so explicit approval can clear provenance. Before approval and after rejection, Cashier still charges the manual approved price. Source-linked proposals retain exact new costs/latest invoice basis and company/location scope.
 
@@ -122,7 +129,7 @@ Pricing normalization is a separate pure step before the existing category algor
 
 1. Company conversion factor is **2.20462 lb per kg**.
 2. If source cost is per kg: canonical cost per lb = source cost ÷ factor, **half-up to four decimals**. If per lb: retain four-decimal source cost unchanged.
-3. Feed canonical cost into the same configured divisor, cent half-up, category rounding mode, special corrections and final-ending adjustment. Default **Use rounding bands for weighed items** = Yes. When explicitly Off for a bands category, use half-up cents instead of the band/special-correction step, followed by the configured final-ending adjustment; Rice's distinct configured upward-ending rule remains unchanged. Each products and historical approved prices are unaffected by this setting.
+3. Feed canonical cost into the same configured divisor, cent half-up, category rounding mode and special corrections. Default **Use rounding bands for weighed items** = Yes. When explicitly Off for a bands category, use half-up cents instead of the band/special-correction step (no correction applies); Rice's distinct configured upward-ending rule remains unchanged. Each products and historical approved prices are unaffected by this setting.
 4. Store the approved price per lb at two decimals with source/canonical units and provenance. A display choice never overwrites/recalculates that stored approved amount. Config **Main display unit** defaults lb (kg allowed); **Show second unit** defaults Yes.
 5. Display kg price = approved lb selling price × factor, half-up to cents. The displayed secondary kg price is not a new approval or pricing-engine input. Margin uses canonical cost and approved price in the same unit; preserve tax/manual-price/below-margin rules.
 
@@ -135,7 +142,7 @@ Add both source-unit cases to seed/pricing-test-cases.json and test conversion p
 
 ## C8 display and temporary-price boundary (2026-10-12)
 
-The current configured algorithm includes the R3c final-ending setting; historical stored prices remain unchanged. A sale is a separate effective-price overlay; regular receipt comparisons and proposals still use the regular approved price/cost. On a different regular cost, manual-price review defaults to Use the new calculated price; the reviewer confirms that decision before posting. Same cost and short-dated receipts do not replace manual price.
+The current configured algorithm includes the special corrections; historical stored prices remain unchanged. A sale is a separate effective-price overlay; regular receipt comparisons and proposals still use the regular approved price/cost. On a different regular cost, manual-price review defaults to Use the new calculated price; the reviewer confirms that decision before posting. Same cost and short-dated receipts do not replace manual price.
 
 Currency displays use at least two and at most four decimals, trimming only zeros after the second:18.4000 → 18.40 and 1.5525 → 1.5525. This applies to read-only costs and printed invoice/order/supplier amounts, without changing four-decimal storage or cent allocations. Weighed sale entry retains exact current-main-unit cents; full-precision conversion handles comparisons and secondary display without changing canonical regular prices. Sale quick picks round down to configured .49/.99 endings, independently of the normal category rounding/special-correction engine.
 
@@ -149,7 +156,7 @@ A weight case has an explicit mass and mass unit. Canonical per-lb purchase cost
 
 ## R2e D3: fixed-size packages of a weight product
 
-`packageSizeInLb` converts g/kg with the company's lb-per-kg factor and oz with configurable `weighed_items.ounces_per_lb` (default 16). It retains the full Decimal result; no float or rounded display conversion enters the formula. Package selling amount is `size_lb × parent approved price/lb + package_container_fee` (default 0.49), then the parent's category rounding, including configured bands/corrections or Rice's upward ending. This amount is already a selling amount: never divide by the cost divisor again. `roundCategoryPrice` is the shared rounding function used by regular pricing and packages, including the R3c final-ending rule. Existing package cases remain present with intentionally updated new-calculation results (for example 5.49→5.99).
+`packageSizeInLb` converts g/kg with the company's lb-per-kg factor and oz with configurable `weighed_items.ounces_per_lb` (default 16). It retains the full Decimal result; no float or rounded display conversion enters the formula. Package selling amount is `size_lb × parent approved price/lb + package_container_fee` (default 0.49), then the parent's category rounding, including configured bands/corrections or Rice's upward ending. This amount is already a selling amount: never divide by the cost divisor again. `roundCategoryPrice` is the shared rounding function used by regular pricing and packages, including special corrections (for example a 100 g Grocery package at 2.49 becomes 2.99; a 250 g package at 5.49 stays 5.49). A package row explains a correction ("Rounded up from") but has no Use lower, because package prices follow the parent.
 
 Package cost is `size_lb × parent canonical current cost/lb + package_container_cost` (default 0.00), stored at four places, with margin calculated against the derived price. Prices are before tax and stored at two places. No independent package approval is created. A pending parent price produces a pending derived package price at its actual location while the approved price remains chargeable.
 
@@ -167,7 +174,7 @@ Existing-parent package previews use the protected canonical package engine on a
 
 ## R3c receiving manual-price proposal
 
-The line editor explains `Rounded up from $X (store rule)` and offers Use $X when a final-ending adjustment applies. The action uses a fresh invoice-authorized command, retains the actual receiver/time and an opaque quote for exact source/cost/category/pricing facts, and invalidates line confirmation. It does not change any approved price, cost, paper amount or receipt. Changed quote facts or an invalid/zero price block posting until reviewed again; Use calculated price removes only this manual proposal.
+The line editor explains `Rounded up from $X by the store rule` and offers Use lower ($X) when a special correction raised the price. The action uses a fresh invoice-authorized command, retains the actual receiver/time and an opaque quote for exact source/cost/category/pricing facts, and invalidates line confirmation. It does not change any approved price, cost, paper amount or receipt. Changed quote facts or an invalid/zero price block posting until reviewed again; Use calculated price removes only this manual proposal.
 
 The selling-price field accepts an explicit positive cent price during regular receiving. Its keystrokes use the existing serialized invoice command queue, preserving focused text while each canonical draft saves. Invalid/empty drafts remain visible and block confirmation/posting at the linked price field. A failed save restores the displayed committed value; retry begins from that reviewed quote. Own queued edits chain the command's returned token; a concurrent receiver, changed source/cost/category, Discard/Undo or later reset invalidates older actions.
 

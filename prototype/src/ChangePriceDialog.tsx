@@ -77,6 +77,8 @@ export interface ChangePriceDialogProps {
   onStage?: (input: ChangePriceInput) => void;
   weightCandidate?: WeightPriceCandidateInput;
   stagedInput?: ChangePriceInput;
+  /** Prefill a new regular price per lb or each, for example "Use lower". */
+  suggested_price?: string;
   branch?: Branch;
   mode?: "sale" | "regular";
   existing_sale_id?: string;
@@ -336,10 +338,17 @@ export function ChangePriceDialog(props: ChangePriceDialogProps) {
               ? "current"
               : "selected"
           : "all",
-      price: originalRequest?.requested_price ?? originalSale?.sale_price ?? "",
+      price:
+        originalRequest?.requested_price ??
+        originalSale?.sale_price ??
+        props.suggested_price ??
+        "",
       price_unit:
         originalRequest?.price_unit ??
         originalSale?.price_unit ??
+        (props.suggested_price && product?.sold_by === "weight"
+          ? "lb"
+          : undefined) ??
         (product?.sold_by === "weight"
           ? weighedSettings(state.config).main_display_unit
           : "each"),

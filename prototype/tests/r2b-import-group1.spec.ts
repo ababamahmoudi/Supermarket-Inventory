@@ -544,7 +544,7 @@ async function checkWeights(page: Page, language: ReceivingLanguage) {
     word(language, "Grocery", "خواربار"),
   );
   await expect(editor.locator("#invoice-line-0-selling-price")).toHaveValue(
-    "7.99",
+    "7.49",
   );
   await expect(editor.locator("#invoice-line-0-selling-price")).toBeEditable();
   await expect

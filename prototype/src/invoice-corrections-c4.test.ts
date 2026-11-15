@@ -575,9 +575,12 @@ describe("immutable invoice content corrections", () => {
   });
   it("previews no new approval at the approved price while retaining supersession and the corrected cost", () => {
     const state = posted(false, 10, (draft) => {
-      // Retain this exact unchanged-price/minimum boundary under a deliberate
-      // legacy setting; the preceding default-enabled correction covers .99.
-      draft.config.rounding_bands.final_ending_adjustment = null;
+      // Retain this exact unchanged-price/minimum boundary for a company
+      // without the 1.49 → 1.99 correction; the preceding case covers it.
+      draft.config.special_corrections =
+        draft.config.special_corrections.filter(
+          (entry) => entry.from !== "1.49",
+        );
     });
     const product = state.products.find((product) => product.code === "0002")!;
     const staleProposal = {
@@ -643,9 +646,12 @@ describe("immutable invoice content corrections", () => {
   });
   it("previews and creates a margin review when the unchanged approved price is below the configured margin", () => {
     const state = posted(false, 10, (draft) => {
-      // Retain this exact unchanged-price/minimum boundary under a deliberate
-      // legacy setting; the preceding default-enabled correction covers .99.
-      draft.config.rounding_bands.final_ending_adjustment = null;
+      // Retain this exact unchanged-price/minimum boundary for a company
+      // without the 1.49 → 1.99 correction; the preceding case covers it.
+      draft.config.special_corrections =
+        draft.config.special_corrections.filter(
+          (entry) => entry.from !== "1.49",
+        );
     });
     const product = state.products.find((product) => product.code === "0002")!;
     state.config.pricing_categories.find(

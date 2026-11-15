@@ -74,34 +74,10 @@ def pricing_details(unit_cost_before_tax, category_key, configuration=None):
                     break
     else:
         raise ValueError("Unknown configured rounding mode.")
-    adjustment = config["rounding_bands"].get(
-        "final_ending_adjustment",
-        load_configuration()["rounding_bands"].get("final_ending_adjustment"),
-    )
-    rounded_up_from = None
-    if adjustment:
-        target = D(adjustment["target_ending"])
-        sources = [D(value) for value in adjustment["source_endings"]]
-        if (
-            not target.is_finite()
-            or target < 0
-            or target >= 1
-            or to_cents(target) != target
-            or len(set(sources)) != len(sources)
-            or any(
-                not value.is_finite() or value < 0 or value >= target or to_cents(value) != value
-                for value in sources
-            )
-        ):
-            raise ValueError("Invalid final price ending adjustment.")
-        dollars = price.to_integral_value(rounding=ROUND_FLOOR)
-        if price - dollars in sources:
-            rounded_up_from = price
-            price = dollars + target
-        elif correction_applied and after_bands is not None:
-            band_dollars = after_bands.to_integral_value(rounding=ROUND_FLOOR)
-            if after_bands - band_dollars in sources and price == band_dollars + target:
-                rounded_up_from = after_bands
+    # A correction is a suggestion: keep the band price it raised so the
+    # application can explain it and offer the lower price.
+    raised = correction_applied and after_bands is not None and price > after_bands
+    rounded_up_from = after_bands if raised else None
     return {
         "rounded_up_from": rounded_up_from,
         "raw_price": to_cents(raw),

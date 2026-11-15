@@ -747,3 +747,13 @@ A 48 px minimum with automatic height permitted the full English category label 
 ## 2026-10-30 — R3c K1 — clear proven unit checks without trusting fallbacks
 
 The known-delivery comparison omitted the reader's unit check, leaving an otherwise unchanged line amber. Use the same recognized reading-unit normalization for mapping and comparison, and carry raw unit/basis evidence into both authorized preview and import. Clear that check only with matching real unit/basis proof. Keep unknown/fallback units and recognized differences as actual review questions, independently of cost-amount changes. Do not add persisted schema fields, fabricate a human acknowledgment or impose a new blanket missing-basis requirement on unflagged legacy records.
+
+## 2026-11-15 — Only 1.49, 2.49 and 3.49 are rounded up; corrections are suggestions
+
+Context: R3c K3 added `rounding_bands.final_ending_adjustment`, which raised every `.49` to `.99` in every category (4.49, 52.49, the 0.49 minimum, Kitchenware). Ali decided on 2026-11-15 that only 1.49 → 1.99, 2.49 → 2.99 and 3.49 → 3.99 are raised, only for Grocery and Grocery (Taxable); Kitchenware stays off but keeps its switch.
+
+Decision: remove the general ending setting (code, Settings controls, resolver) and add `1.49 → 1.99` to `special_corrections`. The general setting was not kept because it ignored the per-category switch, needed its own validation and legacy-default resolver, and duplicated what special corrections already express. A value left in saved data is ignored; a one-time startup upgrade (private backup first) drops it and adds 1.49 → 1.99 only to an untouched default list. Approved and stored prices are never recalculated.
+
+A raised price is a suggestion: the engine returns the lower band price (`rounded_up_from`) and whether it meets the minimum margin. Receiving, Approvals, the Price tester, weighed product editors and container rows explain it; where a price can be chosen (receiving, approvals, weighed product editor) Use lower makes it an attributed manual proposal that still goes through approval.
+
+Why: matches the owner's rule exactly, keeps configuration-only changes for other companies (corrections list + category switch), and keeps one explanation path everywhere.

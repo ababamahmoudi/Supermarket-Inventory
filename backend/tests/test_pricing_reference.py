@@ -61,20 +61,30 @@ def test_reference_rejects_invalid_cost(cost):
         REFERENCE.selling_price(cost, "grocery")
 
 
-def test_configured_final_endings_and_original_special_correction_are_explicit():
+def test_only_configured_corrections_raise_prices_and_keep_the_lower_price():
     details = REFERENCE.pricing_details("1.00", "grocery")
     assert details["selling_price"] == Decimal("1.99")
     assert details["after_band_rounding"] == Decimal("1.49")
+    assert details["special_correction_applied"] is True
     assert details["rounded_up_from"] == Decimal("1.49")
     special = REFERENCE.pricing_details("1.60", "grocery")
     assert special["rounded_up_from"] == Decimal("2.49")
-    assert special["special_correction_applied"] is True
+    for cost, category, price in [
+        ("3.00", "grocery", "4.49"),
+        ("0.10", "grocery", "0.49"),
+        ("31.50", "kitchenware", "52.49"),
+    ]:
+        other = REFERENCE.pricing_details(cost, category)
+        assert other["selling_price"] == Decimal(price)
+        assert other["rounded_up_from"] is None
     config = deepcopy(REFERENCE.load_configuration())
-    config["rounding_bands"]["final_ending_adjustment"] = None
+    config["special_corrections"] = [
+        item for item in config["special_corrections"] if item["from"] != "1.49"
+    ]
     assert REFERENCE.selling_price("1.00", "grocery", config) == Decimal("1.49")
+    # A setting left over from the removed all-.49 rule has no effect.
     config["rounding_bands"]["final_ending_adjustment"] = {
-        "source_endings": [".49"],
-        "target_ending": ".89",
+        "source_endings": ["0.49"],
+        "target_ending": "0.99",
     }
-    assert REFERENCE.selling_price("1.00", "grocery", config) == Decimal("1.89")
-    assert REFERENCE.selling_price("1.60", "grocery", config) == Decimal("2.99")
+    assert REFERENCE.selling_price("31.50", "kitchenware", config) == Decimal("52.49")

@@ -1,4 +1,3 @@
-import { effectiveRoundingBands } from "./pricing-ending-rule";
 import Decimal from "decimal.js";
 import type { AuthenticatedActor } from "./authority-types";
 import {
@@ -154,7 +153,7 @@ function snapshot(
     ),
     cost: unitCost,
     pricing: state.config.pricing_categories,
-    bands: effectiveRoundingBands(state.config),
+    bands: state.config.rounding_bands,
     corrections: state.config.special_corrections,
     weighed: state.config.weighed_items,
     tax: state.config.tax,

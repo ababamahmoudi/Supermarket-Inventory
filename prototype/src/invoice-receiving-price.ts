@@ -5,7 +5,6 @@ import type { AuthenticatedActor } from "./authority-types";
 import type { DemoState, InvoiceLine } from "./types";
 import { requireInvoiceAuthority } from "./invoice-authority";
 import { businessFingerprint } from "./business-fingerprint";
-import { effectiveRoundingBands } from "./pricing-ending-rule";
 import { invoiceLineCalculation } from "./invoice-weight";
 import { createId } from "./ids";
 
@@ -68,7 +67,7 @@ function receivingPriceBasis(state: DemoState, index: number): string {
     received: line.qty_received_at_posting,
     refused: line.refused_units ?? 0,
     categories: state.config.pricing_categories,
-    bands: effectiveRoundingBands(state.config),
+    bands: state.config.rounding_bands,
     corrections: state.config.special_corrections,
     weighed: state.config.weighed_items,
   });

@@ -144,6 +144,28 @@ export function PackageSizeSection({
       return null;
     }
   };
+  // Package prices follow the parent, so a correction is explained, not chosen.
+  const roundedFrom = (
+    rowSize: string,
+    rowUnit: PackageUnit,
+    index: number,
+  ): string | null => {
+    try {
+      if (!parentIsNew) return previews.data?.rounded_up_from?.[index] ?? null;
+      return pricingConfig && pricePerLb
+        ? calculatePackagePrice(
+            rowSize,
+            rowUnit,
+            pricePerLb,
+            "0.0000",
+            parent.pricing_category,
+            pricingConfig,
+          ).rounded_up_from
+        : null;
+    } catch {
+      return null;
+    }
+  };
   const sizeText = (row: Pick<WeightPackageDraft, "size" | "unit">) =>
     lang === "fa"
       ? `${row.size.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)])} ${massUnitLabel(row.unit, lang)}`
@@ -290,6 +312,7 @@ export function PackageSizeSection({
         {visibleRows.map((row, index) => {
           const price = preview(row.size, row.unit, index);
           const proposed = preview(row.size, row.unit, index, true);
+          const from = price ? roundedFrom(row.size, row.unit, index) : null;
           return (
             <div
               className="weight-package-row"
@@ -337,6 +360,12 @@ export function PackageSizeSection({
                 className="weight-package-number weight-package-price"
               >
                 {price ? <Money value={price} currency={currency} /> : "—"}
+                {from && (
+                  <span className="muted" data-testid="package-rounded-up">
+                    {t("Rounded up from", "گردشده به بالا از")}{" "}
+                    <Money value={from} currency={currency} />
+                  </span>
+                )}
                 {proposed && proposed !== price && (
                   <span className="muted">
                     {t("Pending", "در انتظار")}{" "}

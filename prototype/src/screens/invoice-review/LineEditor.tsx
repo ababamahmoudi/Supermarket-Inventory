@@ -9,6 +9,7 @@ import {
 } from "../../weighed";
 import { LineArithmetic } from "./LineArithmetic";
 import { ProductPrice } from "../../weight-price-presentation";
+import { RoundedUpNotice } from "../../RoundedUpNotice";
 import { useRef, useState } from "react";
 import Decimal from "decimal.js";
 import { Check, X } from "lucide-react";
@@ -1555,27 +1556,23 @@ export function LineEditor({
             </Field>
           )}
           {!correction && workspace.lineDetails[index]?.roundedUpFrom && (
-            <p className="muted" data-testid="receiving-rounded-up">
-              {t(
-                `Rounded up from ${priceLabel(workspace.lineDetails[index]!.roundedUpFrom!)} (store rule)`,
-                `گردشده به بالا از ${priceLabel(workspace.lineDetails[index]!.roundedUpFrom!)} (قاعدهٔ فروشگاه)`,
-              )}
-              {workspace.lineDetails[index]?.receivingPriceEligible && (
-                <Button
-                  disabled={priceSaving}
-                  onClick={() =>
-                    void setReceivingPrice(
-                      workspace.lineDetails[index]!.roundedUpFrom!,
-                    )
-                  }
-                >
-                  {t(
-                    `Use ${priceLabel(workspace.lineDetails[index]!.roundedUpFrom!)}`,
-                    `استفاده از ${priceLabel(workspace.lineDetails[index]!.roundedUpFrom!)}`,
-                  )}
-                </Button>
-              )}
-            </p>
+            <RoundedUpNotice
+              testId="receiving-rounded-up"
+              from={workspace.lineDetails[index]!.roundedUpFrom!}
+              meetsMargin={
+                workspace.lineDetails[index]!.roundedUpFromMeetsMargin ?? null
+              }
+              format={priceLabel}
+              disabled={priceSaving}
+              onUseLower={
+                workspace.lineDetails[index]?.receivingPriceEligible
+                  ? () =>
+                      void setReceivingPrice(
+                        workspace.lineDetails[index]!.roundedUpFrom!,
+                      )
+                  : undefined
+              }
+            />
           )}
           {!correction &&
             priceInvalid &&

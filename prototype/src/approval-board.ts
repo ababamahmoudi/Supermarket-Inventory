@@ -11,6 +11,7 @@ import {
   approvalLocationEffects,
   manualRegularApprovalPreview,
   type PriceScope,
+  approvalRoundedUp,
 } from "./approvals";
 import { effectiveApprovalLocation } from "./received";
 import { regularPrice } from "./catalog";
@@ -139,6 +140,8 @@ export function approvalBoard(state: DemoState, actor: AuthenticatedActor) {
       invoiceId: actual.source_invoice_id ?? invoice?.id,
       supplierName: invoice?.supplier ?? actual.supplier_name,
       category: actual.pricing_category ?? product?.pricing_category,
+      /** A store correction raised this price; deciders may use the lower one. */
+      roundedUp: financial ? approvalRoundedUp(state, actual) : null,
     };
   });
 }

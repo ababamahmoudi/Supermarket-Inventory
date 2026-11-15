@@ -67,7 +67,7 @@ export type CompanyConfig = Omit<
   | "receiving"
   | "rounding_bands"
 > & {
-  rounding_bands: import("./pricing-ending-rule").RoundingBands;
+  rounding_bands: typeof configSeed.rounding_bands;
   receiving: Omit<
     typeof configSeed.receiving,
     "ai_reading_mode" | "ai_reader_address" | "default_payment_terms"
@@ -879,6 +879,8 @@ export interface DemoState {
   supplier_balance_snapshot_date?: string;
   supplier_balance_snapshot_currency?: string;
   pricing_minimum_margin_schema?: 2;
+  /** 2: the all-.49 ending rule was replaced by the 1.49 → 1.99 correction. */
+  price_ending_rule_schema?: 2;
   demo_fixture_schema?: 2;
   prototype_b_schema?: 1;
   prototype_c1_schema?: 1;

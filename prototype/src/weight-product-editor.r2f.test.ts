@@ -84,7 +84,6 @@ function postRealCost(
   branch: string,
   cost: string,
   short = false,
-  retainApprovedPrice = false,
 ) {
   actor = actorAtLocation(state, actor, branch);
   state.invoice = createInvoice(state, actor, branch, true);
@@ -113,32 +112,7 @@ function postRealCost(
     same_expiry: "unknown",
     note: "Fictional regular receipt retained.",
   };
-  const priorPrice = state.products.find((row) => row.code === code)!
-    .branch_prices?.[branch];
   postInvoice(state, actor);
-  if (retainApprovedPrice) {
-    // The default ending rule now proposes .99 on this real receipt. Reject it
-    // through the real approval command to retain the historical .49 fixture.
-    const pending = state.approvals.filter(
-      (row) =>
-        row.source_invoice_id === state.invoice.id && row.status === "pending",
-    );
-    expect(pending).toHaveLength(1);
-    expect(pending[0].proposed_price.endsWith(".99")).toBe(true);
-    for (const approval of pending)
-      resolveApproval(
-        state,
-        actor,
-        approval.id,
-        "reject",
-        "branch",
-        branch,
-        "Retain the fictional historical approved price.",
-      );
-    expect(
-      state.products.find((row) => row.code === code)!.branch_prices?.[branch],
-    ).toBe(priorPrice);
-  }
 }
 async function fixture(withReceipts = false, legacyAllReview = false) {
   const state = initialState();
@@ -201,24 +175,8 @@ async function fixture(withReceipts = false, legacyAllReview = false) {
     await repository.runBusinessCommand<DemoState, void>(
       signed.identity,
       (canonical, actor) => {
-        postRealCost(
-          canonical,
-          actor,
-          parent.code,
-          "Branch 1",
-          "4.1000",
-          false,
-          true,
-        );
-        postRealCost(
-          canonical,
-          actor,
-          parent.code,
-          "Branch 2",
-          "6.0000",
-          false,
-          true,
-        );
+        postRealCost(canonical, actor, parent.code, "Branch 1", "4.1000");
+        postRealCost(canonical, actor, parent.code, "Branch 2", "6.0000");
       },
     );
   const service = createPackageService(repository);
@@ -355,7 +313,6 @@ describe("R2f D3 atomic real weight-product editor commands", () => {
               "Branch 1",
               "4.1000",
               kind === "later delivery",
-              true,
             ),
         );
         const boot = (await f.boot()).value;
@@ -998,7 +955,8 @@ describe("R2f D3 atomic real weight-product editor commands", () => {
       expect(currentQuote.value).toEqual({
         price_per_lb: "5.99",
         basis_kind: "sale",
-        prices: ["6.99"],
+        prices: ["6.49"],
+        rounded_up_from: [null],
       });
       expect(await f.read()).toEqual(before);
       const keepQuote = await f.repository.queryBusiness(
@@ -1032,7 +990,8 @@ describe("R2f D3 atomic real weight-product editor commands", () => {
       expect(keepQuote.value).toEqual({
         price_per_lb: "5.99",
         basis_kind: "sale",
-        prices: ["6.99"],
+        prices: ["6.49"],
+        rounded_up_from: [null],
       });
       expect(await f.read()).toEqual(before);
       const revision = before.state.sales!.find(
@@ -1073,7 +1032,8 @@ describe("R2f D3 atomic real weight-product editor commands", () => {
       expect(quote.value).toEqual({
         price_per_lb: "4.99",
         basis_kind: "regular",
-        prices: ["5.99"],
+        prices: ["5.49"],
+        rounded_up_from: [null],
       });
       expect(await f.read()).toEqual(before);
       const changeQuote = await f.repository.queryBusiness(
@@ -1107,6 +1067,7 @@ describe("R2f D3 atomic real weight-product editor commands", () => {
         price_per_lb: "4.49",
         basis_kind: "sale",
         prices: ["4.99"],
+        rounded_up_from: [null],
       });
       expect(await f.read()).toEqual(before);
       const boot = (await f.boot()).value;

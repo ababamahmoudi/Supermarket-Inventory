@@ -1,4 +1,3 @@
-import { effectiveRoundingBands } from "./pricing-ending-rule";
 import { offerVersion, stopCompanyOfferAtStore } from "./offer-store-scopes";
 import { businessFingerprint } from "./business-fingerprint";
 import type { AuthenticatedActor, SystemAttribution } from "./authority-types";
@@ -31,8 +30,8 @@ import {
 } from "./manual-prices";
 import { productStoreCost } from "./product-costs";
 import { effectiveApprovalLocation } from "./received";
-import { calculatePrice } from "./pricing";
-import { calculateWeighedPrice } from "./weighed";
+import { calculatePrice, type PricingConfig } from "./pricing";
+import { calculateWeighedPrice, type WeightConfig } from "./weighed";
 export { isOfferScheduledNow } from "./catalog";
 import type {
   Approval,
@@ -871,7 +870,7 @@ export function changeApprovalCategory(
   approval.config_version = businessFingerprint({
     cost,
     category,
-    pricing: effectiveRoundingBands(state.config),
+    pricing: state.config.rounding_bands,
     corrections: state.config.special_corrections,
   });
   approval.manual_override = false;
@@ -1142,6 +1141,112 @@ export function proposeManualOverride(
     "Propose manual override",
     review.product_code,
     origin,
+  );
+  return approval;
+}
+
+type RoundedUpRead = {
+  products: readonly Pick<
+    Product,
+    | "company_id"
+    | "code"
+    | "pricing_category"
+    | "sold_by"
+    | "package_of_product_id"
+  >[];
+  config: PricingConfig & WeightConfig;
+};
+function roundedUpCandidate(state: RoundedUpRead, approval: Approval) {
+  if (
+    approval.status !== "pending" ||
+    !["price_change", "new_product"].includes(approval.type) ||
+    approval.manual_override ||
+    approval.receiving_price ||
+    !approval.unit_cost
+  )
+    return null;
+  const product = state.products.find(
+    (item) =>
+      item.company_id === approval.company_id &&
+      item.code === approval.product_code,
+  );
+  if (!product || product.package_of_product_id) return null;
+  const categoryKey = approval.pricing_category ?? product.pricing_category;
+  try {
+    const result =
+      product.sold_by === "weight"
+        ? calculateWeighedPrice(
+            approval.unit_cost,
+            "lb",
+            categoryKey,
+            state.config,
+          )
+        : calculatePrice(approval.unit_cost, categoryKey, state.config);
+    return result.rounded_up_from &&
+      result.selling_price === approval.proposed_price
+      ? result
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The lower band price a store correction raised, for "Use lower". */
+export function approvalRoundedUp(
+  state: RoundedUpRead,
+  approval: Approval,
+): { from: string; meets_margin: boolean | null } | null {
+  const result = roundedUpCandidate(state, approval);
+  return result
+    ? {
+        from: result.rounded_up_from!,
+        meets_margin: result.rounded_up_from_meets_margin,
+      }
+    : null;
+}
+
+/**
+ * A store correction (for example 1.49 → 1.99) is a suggestion. The decider
+ * may keep the lower band price; it becomes an attributed manual proposal.
+ */
+export function chooseLowerApprovalPrice(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  id: string,
+): Approval {
+  actor = freshActor(state, actor);
+  const approval = state.approvals.find(
+    (item) => item.company_id === actor.company_id && item.id === id,
+  );
+  if (!approval) throw new Error("Approval is no longer available");
+  requireCapability(
+    state,
+    actor,
+    "approvals.decide",
+    domainScope(state, approval, true),
+  );
+  const result = roundedUpCandidate(state, approval);
+  if (!result) throw new Error("This price was not rounded up by a store rule");
+  const product = currentProduct(state, approval.product_code);
+  const lower = result.rounded_up_from!;
+  const cost = new Decimal(approval.unit_cost!);
+  approval.proposed_price = lower;
+  approval.margin = new Decimal(lower).isZero()
+    ? null
+    : new Decimal(lower).minus(cost).div(lower).toString();
+  approval.manual_override = true;
+  approval.clear_manual_price = false;
+  approval.reason = `Lower price chosen instead of the store rule's ${result.selling_price}`;
+  if (product.pending_branch === approval.branch || !product.pending_branch) {
+    product.pending_price = lower;
+    product.pending_branch = approval.branch;
+  }
+  recordDemoActivity(
+    state,
+    actor,
+    "Use lower price",
+    approval.product_code,
+    approval.branch,
   );
   return approval;
 }

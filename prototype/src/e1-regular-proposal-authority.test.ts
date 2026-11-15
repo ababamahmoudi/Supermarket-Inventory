@@ -27,14 +27,14 @@ describe("E1 regular proposal decision identity and retained write-off safety", 
       "Branch 1",
       "15.79",
     );
-    // A genuine manual amount stays distinct from the new default rule 15.99.
+    // A genuine manual amount stays distinct from the calculated rule price 15.49.
     expect(
       calculatePrice(
         product.last_cost_before_tax,
         product.pricing_category,
         state.config,
       ).selling_price,
-    ).toBe("15.99");
+    ).toBe("15.49");
     expect(request.proposed_price).toBe("15.79");
     expect(regularPrice(state, product, "Branch 1")).toBe(price);
     expect(request.source_manual_request?.requester_user_id).toBe(

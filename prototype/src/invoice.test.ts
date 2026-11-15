@@ -100,8 +100,10 @@ describe("invoice review and posting", () => {
 
   it("posts delivered stock and financial entries once, without inventing approvals for unchanged-price lines", () => {
     const state = reviewed();
-    // Preserve this configured legacy-price boundary; default endings have separate R3c coverage.
-    state.config.rounding_bands.final_ending_adjustment = null;
+    // Preserve the 1.12 → 1.49 margin boundary for a company without the 1.49 → 1.99 correction.
+    state.config.special_corrections = state.config.special_corrections.filter(
+      (entry) => entry.from !== "1.49",
+    );
     state.invoice.lines.find(
       (line) => line.product_code === "0009",
     )!.qty_received_at_posting = 8;
@@ -204,8 +206,10 @@ describe("invoice review and posting", () => {
 
   it("keeps an unchanged-price minimum-margin review instead of silently changing the register price", () => {
     const state = reviewed();
-    // Preserve this configured legacy-price boundary; default endings have separate R3c coverage.
-    state.config.rounding_bands.final_ending_adjustment = null;
+    // Preserve the 1.12 → 1.49 margin boundary for a company without the 1.49 → 1.99 correction.
+    state.config.special_corrections = state.config.special_corrections.filter(
+      (entry) => entry.from !== "1.49",
+    );
     const line = state.invoice.lines.find(
       (item) => item.product_code === "0002",
     )!;
@@ -236,8 +240,10 @@ describe("invoice review and posting", () => {
 
   it("deduplicates identical margin contexts and keeps changed costs or rules as fresh reviews", () => {
     const state = reviewed();
-    // Preserve this configured legacy-price boundary; default endings have separate R3c coverage.
-    state.config.rounding_bands.final_ending_adjustment = null;
+    // Preserve the 1.12 → 1.49 margin boundary for a company without the 1.49 → 1.99 correction.
+    state.config.special_corrections = state.config.special_corrections.filter(
+      (entry) => entry.from !== "1.49",
+    );
     const postCost = (cost: string) => {
       state.invoice = reviewed().invoice;
       state.invoice.lines.find(
@@ -275,8 +281,10 @@ describe("invoice review and posting", () => {
 
   it("appends new invoice evidence to an acknowledged margin context without reopening it", () => {
     const state = reviewed();
-    // Preserve this configured legacy-price boundary; default endings have separate R3c coverage.
-    state.config.rounding_bands.final_ending_adjustment = null;
+    // Preserve the 1.12 → 1.49 margin boundary for a company without the 1.49 → 1.99 correction.
+    state.config.special_corrections = state.config.special_corrections.filter(
+      (entry) => entry.from !== "1.49",
+    );
     const receiveCost = () => {
       state.invoice = reviewed().invoice;
       state.invoice.lines.find(

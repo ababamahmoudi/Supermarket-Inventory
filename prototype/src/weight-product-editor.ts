@@ -1,4 +1,3 @@
-import { effectiveRoundingBands } from "./pricing-ending-rule";
 import Decimal from "decimal.js";
 import type { AuthenticatedActor } from "./authority-types";
 import { freshActor, cloneWithAuthority, actorAtLocation } from "./authority";
@@ -168,7 +167,7 @@ export function weightEditorSnapshot(
       : productStoreCost(state, actor, product),
     pricing: {
       categories: state.config.pricing_categories,
-      bands: effectiveRoundingBands(state.config),
+      bands: state.config.rounding_bands,
       corrections: state.config.special_corrections,
       weighed: state.config.weighed_items,
       tax: state.config.tax,
@@ -508,7 +507,7 @@ export function weightPricingSnapshot(
     },
     cost_locations: costDecisionLocations(state, actor),
     categories: state.config.pricing_categories,
-    bands: effectiveRoundingBands(state.config),
+    bands: state.config.rounding_bands,
     corrections: state.config.special_corrections,
     weighed: state.config.weighed_items,
     tax: state.config.tax,
@@ -630,21 +629,27 @@ export function previewWeightEditorPackages(
         ? ("sale" as const)
         : ("regular" as const)
       : null,
-    prices: input.sizes.map((row) => {
-      try {
-        return previewWeightPackage(
-          draft,
-          actor,
-          product.code,
-          row.size,
-          row.unit,
-          input.branch,
-          now,
-        ).price;
-      } catch {
-        return null;
-      }
-    }),
+    ...(() => {
+      const rows = input.sizes.map((row) => {
+        try {
+          return previewWeightPackage(
+            draft,
+            actor,
+            product.code,
+            row.size,
+            row.unit,
+            input.branch,
+            now,
+          );
+        } catch {
+          return null;
+        }
+      });
+      return {
+        prices: rows.map((row) => row?.price ?? null),
+        rounded_up_from: rows.map((row) => row?.rounded_up_from ?? null),
+      };
+    })(),
   };
 }
 

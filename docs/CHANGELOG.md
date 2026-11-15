@@ -1,3 +1,11 @@
+## 2026-11-15 — Price-ending rule: only 1.49, 2.49 and 3.49 are rounded up
+
+- Ali's decision: Grocery and Grocery (Taxable) raise 1.49 → 1.99, 2.49 → 2.99 and 3.49 → 3.99. Every other .49 stays (4.49, 52.49, the 0.49 minimum, weighed and package prices). Kitchenware stays off; its switch remains in Settings.
+- Removed the R3c K3 general "every .49 → .99" setting (`rounding_bands.final_ending_adjustment`) and its Settings controls; added 1.49 → 1.99 to Special corrections. Saved demo data is upgraded once at startup (backup first, no price recalculated).
+- A raised price is a suggestion everywhere: "Rounded up from $1.49 by the store rule", whether the lower price meets the minimum margin, and Use lower in receiving, Approvals (new attributed "Use lower price" action) and weighed product editors; explanation only in the Price tester and container rows.
+- Fixtures: `seed/pricing-test-cases.json` now has 25 cases, including Grocery 1.00 → 1.99, Grocery 3.00 → 4.49 and Kitchenware 31.50 → 52.49; tests that encoded the old rule were returned to their earlier values.
+- Also fixed six tests that had hard-coded dates which had passed (they failed on the branch as of today regardless of this change).
+
 ## 2026-10-30 — R3c K1 — clear the known unit check
 
 An unchanged repeat delivery could say Same as last delivery while staying amber with one unit check. Compare the recognized reading unit and effective cost-basis evidence in both preview and import, then clear the proven matching unit question and confirm the complete line automatically. Keep unknown/fallback units, actual unit/basis differences, paper arithmetic and unrelated questions for review. Cost-only changes retain only their real cost question; existing qualified-price precedence and corrected historical prices remain intact. No persisted schema or fabricated human confirmation is added.
