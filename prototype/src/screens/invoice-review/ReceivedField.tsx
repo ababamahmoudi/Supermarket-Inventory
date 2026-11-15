@@ -30,7 +30,15 @@ export function ReceivedField({
   onReceived(date: string, time: string): void;
   onEmployee(value: string): void;
 }) {
-  const { state, demoUsers, t } = useDemo();
+  const { state, demoUsers, lang, t } = useDemo();
+  // The stored receiver is the English name; show the person's own Persian name.
+  const personName = (name: string) => {
+    const person = demoUsers.find((row) => row.name === name);
+    return (lang === "fa" && person?.name_fa) || name;
+  };
+  const shownEmployee = employee
+    ? personName(employee)
+    : t("Not added", "اضافه نشده");
   const { open, close, show, position, portalTarget, triggerRef, popupRef } =
     usePopover(320);
   const id = useId();
@@ -81,13 +89,13 @@ export function ReceivedField({
       <div className="receiving-received-content">
         <div className="receiving-readonly-field receiving-received-summary">
           <span
-            title={`${date}, ${time} · ${employee || t("Not added", "اضافه نشده")}`}
+            title={`${date}${t(", ", "، ")}${time} · ${shownEmployee}`}
           >
             {date === today ? t("Today", "امروز") : <LtrValue value={date} />}
-            {", "}
+            {t(", ", "، ")}
             <LtrValue value={time} />
             {" · "}
-            {employee || t("Not added", "اضافه نشده")}
+            {shownEmployee}
           </span>
           <Button
             ref={triggerRef}
@@ -145,7 +153,7 @@ export function ReceivedField({
                       .filter((person) => person.role !== "cashier")
                       .map((person) => ({
                         value: person.name,
-                        label: person.name,
+                        label: personName(person.name),
                       }))}
                   />
                 </BaseField>
