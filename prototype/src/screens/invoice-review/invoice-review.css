@@ -1289,6 +1289,11 @@
   .receiving-review {
     padding-block-end: 150px;
   }
+  /* Keep "Use lower" clear of the fixed phone footer when it scrolls into view. */
+  .receiving-line-editor .rounded-up-notice,
+  .receiving-line-editor .rounded-up-notice button {
+    scroll-margin-block-end: 150px;
+  }
   .receiving-header-main {
     flex-direction: column;
   }
@@ -1492,6 +1497,9 @@
     border-radius: var(--radius-none);
     padding: 0 16px 170px;
     gap: 20px;
+    /* Let the body grow past its reserved height so its last controls can
+       scroll above the fixed footer. */
+    grid-auto-rows: max-content;
     overflow-y: auto;
     overscroll-behavior: contain;
     box-shadow: var(--shadow-none);

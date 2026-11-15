@@ -47,8 +47,8 @@ export function RoundedUpNotice({
           disabled={disabled}
           onClick={onUseLower}
         >
-          {t("Use lower", "استفاده از قیمت کمتر")} (
-          <LtrText>{format(from)}</LtrText>)
+          {t("Use lower", "استفاده از قیمت کمتر")}{" "}
+          <LtrText>({format(from)})</LtrText>
         </Button>
       )}
     </div>

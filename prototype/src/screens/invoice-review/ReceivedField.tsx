@@ -88,9 +88,7 @@ export function ReceivedField({
     >
       <div className="receiving-received-content">
         <div className="receiving-readonly-field receiving-received-summary">
-          <span
-            title={`${date}${t(", ", "، ")}${time} · ${shownEmployee}`}
-          >
+          <span title={`${date}${t(", ", "، ")}${time} · ${shownEmployee}`}>
             {date === today ? t("Today", "امروز") : <LtrValue value={date} />}
             {t(", ", "، ")}
             <LtrValue value={time} />
