@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
-export type C5Variant = "en-light" | "en-dark" | "fa-light" | "phone";
+export type C5Variant =
+  "en-light" | "en-dark" | "fa-light" | "fa-dark" | "phone";
 export type C5Button = {
   screen: string;
   variant: string;
@@ -33,6 +34,13 @@ export type C5Inspection = {
     visualWidth: number | null;
   };
   buttons: C5Button[];
+  originalFullscreenFrames: {
+    invoiceId: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }[];
   toolbarGroups: {
     count: string;
     columns: string;
@@ -58,6 +66,7 @@ export type C5Inspection = {
     classes: string;
     returnStatus: string | null;
     outcome: string | null;
+    presentation: "dot" | "pill";
   }[];
   failures: string[];
 };

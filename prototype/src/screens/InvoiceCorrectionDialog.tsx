@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import {
+  correctionLineChanges,
+  invalidateCorrectionCaseBasis,
+} from "../invoice-correction-fields";
+import { useEffect, useRef, useState } from "react";
+import { PencilLine } from "lucide-react";
 import Decimal from "decimal.js";
 import { useDemo } from "../store";
 import { createId } from "../ids";
 import { InvoiceCorrectionError } from "../invoice-corrections";
 import {
-  purchaseInvoiceView,
   type InvoiceReadDTO,
   type InvoicePurchaseReadDTO,
 } from "../invoice-projections";
@@ -16,25 +20,33 @@ import {
   type InvoiceCorrectionReview,
 } from "../invoice-correction-read";
 import type { InvoiceEditableLine } from "../invoice-edit-types";
-import { setInvoiceLineQuantity } from "../invoice";
+import { recalculateInvoice, setInvoiceLineQuantity } from "../invoice";
 import {
   initializeInvoiceWeight,
   setInvoiceWeightQuantity,
-  setInvoiceWeightReceived,
-  setInvoiceWeightCost,
+  selectInvoiceWeightUnit,
 } from "../invoice-weight";
 import { trackingChoiceForProduct } from "../date-tracking";
+import { Button, Dialog, Field } from "../ui";
 import {
-  Button,
-  DateField,
-  Dialog,
-  Field,
-  NumberField,
-  Select,
-  SegmentedControl,
-} from "../ui";
-import { LtrText, Money, ProductName } from "../presentation";
+  DateText,
+  LtrText,
+  Money,
+  NotAdded,
+  ProductName,
+} from "../presentation";
+import {
+  invoiceWorkspaceRead,
+  type InvoiceWorkspaceRead,
+} from "../invoice-workspace-read";
+import { LinesTable } from "./invoice-review/LinesTable";
+import { useReviewScrollAnchor } from "./invoice-review/useReviewScrollAnchor";
 import "./invoice-document-c4.css";
+import "./invoice-correction-r2b.css";
+
+function correctionScrollParent(element: HTMLElement) {
+  return element.closest<HTMLElement>(".ui-dialog-body");
+}
 
 export function InvoiceCorrectionDialog({
   original,
@@ -55,12 +67,12 @@ export function InvoiceCorrectionDialog({
     "invoices.correct",
     scope,
     (canonical, currentActor) =>
-      purchaseInvoiceView(canonical, currentActor, original.id),
+      invoiceWorkspaceRead(canonical, currentActor, original.id),
     original.id,
   );
   const current =
     state.invoice_workspace?.invoice.id === original.id
-      ? state.invoice_workspace.invoice
+      ? state.invoice_workspace
       : read.data;
   if (!actor || !can("invoices.correct", scope) || !current) return null;
   return (
@@ -71,7 +83,8 @@ export function InvoiceCorrectionDialog({
         authorityGeneration,
         original.id,
       ])}
-      original={current}
+      original={current.invoice}
+      workspace={current}
       onClose={onClose}
       onSaved={onSaved}
     />
@@ -79,10 +92,12 @@ export function InvoiceCorrectionDialog({
 }
 function InvoiceCorrectionWorkspace({
   original,
+  workspace,
   onClose,
   onSaved,
 }: {
   original: InvoicePurchaseReadDTO;
+  workspace: InvoiceWorkspaceRead;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -109,6 +124,21 @@ function InvoiceCorrectionWorkspace({
     original.id,
   ]);
   const [lines, setLines] = useState(() => structuredClone(original.lines));
+  const [unitCostReentered, setUnitCostReentered] = useState<
+    ReadonlySet<number>
+  >(() => new Set());
+  const [openLine, setOpenLine] = useState<number | null>(null);
+  const [reservedHeight, setReservedHeight] = useState(0);
+  const content = useRef<HTMLDivElement>(null);
+  const { anchor, clear: clearAnchor } = useReviewScrollAnchor(
+    correctionScrollParent,
+  );
+  const onOpen = (index: number | null) => {
+    if (index === null && openLine !== null)
+      setReservedHeight(content.current?.scrollHeight ?? 0);
+    else setReservedHeight(0);
+    setOpenLine(index);
+  };
   const [pending, setPending] = useState(false);
   const [reason, setReason] = useState("");
   const [requestId] = useState(() => createId("invoice-correction-request"));
@@ -165,16 +195,29 @@ function InvoiceCorrectionWorkspace({
   function report(caught: unknown) {
     if (caught instanceof InvoiceCorrectionError) {
       const number = /line (\d+)/i.exec(caught.message)?.[1];
-      setError({
-        code: caught.code,
-        line: number ? Number(number) - 1 : undefined,
-      });
+      const index = number ? Number(number) - 1 : undefined;
+      setError({ code: caught.code, line: index });
+      if (index !== undefined) setOpenLine(index);
     } else setError({ code: "stale" });
   }
-  function edit(index: number, change: (line: InvoiceEditableLine) => void) {
+  function edit(
+    index: number,
+    change: (line: InvoiceEditableLine) => void,
+    field?: string,
+  ) {
+    const costEdit =
+      field === "unit_cost_before_tax" || field === "case_cost_before_tax";
+    if (costEdit)
+      setUnitCostReentered((current) => {
+        const next = new Set(current);
+        if (field === "unit_cost_before_tax") next.add(index);
+        else next.delete(index);
+        return next;
+      });
     setLines((current) => {
       const next = structuredClone(current);
       change(next[index]);
+      invalidateCorrectionCaseBasis(current[index], next[index], costEdit);
       return next;
     });
     setPreview(null);
@@ -186,15 +229,10 @@ function InvoiceCorrectionWorkspace({
     )
       setError(null);
   }
-  function fieldError(index: number, code: string) {
-    return error?.code === code &&
-      (error.line === undefined || error.line === index)
-      ? copy[code]
-      : undefined;
-  }
   async function inspect() {
     if (!reason.trim()) {
       setError({ code: "reason" });
+      document.getElementById("invoice-correction-reason")?.focus();
       return;
     }
     if (pending) return;
@@ -207,6 +245,7 @@ function InvoiceCorrectionWorkspace({
           invoiceCorrectionReview(canonical, currentActor, original.id, {
             lines,
             reason,
+            unit_cost_reentered: [...unitCostReentered],
           }),
       );
       setPreview({ key, value });
@@ -227,7 +266,7 @@ function InvoiceCorrectionWorkspace({
           draft,
           currentActor,
           original.id,
-          { lines, reason },
+          { lines, reason, unit_cost_reentered: [...unitCostReentered] },
           preview.snapshot,
           requestId,
         ),
@@ -287,6 +326,206 @@ function InvoiceCorrectionWorkspace({
     );
     return approval ? [approval] : [];
   });
+  const localInvoice = structuredClone({ ...original, lines });
+  recalculateInvoice(localInvoice, state.config);
+  localInvoice.lines = localInvoice.lines.map((line) => ({
+    ...line,
+    low_confidence_fields: [],
+  }));
+  const changed = new Set(
+    correctionLineChanges(original.lines, localInvoice.lines).map(
+      (line) => line.line_index,
+    ),
+  );
+  const onQuantity = (
+    line: InvoiceEditableLine,
+    value: string | number,
+    unit: NonNullable<InvoiceEditableLine["quantity_unit"]>,
+    pack?: number,
+  ) => {
+    if (unit === "kg" || unit === "lb") {
+      selectInvoiceWeightUnit(line, unit, state.config);
+      setInvoiceWeightQuantity(line, value, unit, state.config);
+    } else if (line.sold_by === "weight" && unit === "cases")
+      setInvoiceWeightQuantity(
+        line,
+        value,
+        unit as "kg" | "lb" | "cases",
+        state.config,
+      );
+    else {
+      line.sold_by = "each";
+      setInvoiceLineQuantity(line, value, unit as "units" | "cases", pack);
+    }
+  };
+  const selectProduct = (index: number, code: string) => {
+    const target = state.products.find(
+      (product) =>
+        product.company_id === original.company_id &&
+        product.code === code &&
+        (product.status !== "archived" ||
+          code === original.lines[index].product_code),
+    );
+    if (!target) return;
+    edit(index, (item) => {
+      item.product_code = code;
+      item.new_name_en = target.name_en;
+      item.new_name_fa = target.name_fa;
+      item.sold_by = target.sold_by ?? "each";
+      item.pricing_category = target.pricing_category;
+      item.tax_profile = target.tax_profile;
+      item.taxable = target.taxable;
+      const preference = trackingChoiceForProduct(target);
+      item.date_tracking = preference === "yes";
+      item.date_confirmed = preference !== undefined;
+      if (item.sold_by === "weight")
+        initializeInvoiceWeight(item, state.config);
+      else {
+        item.quantity_unit = "units";
+        item.quantity_entered = item.qty_invoiced;
+        item.source_quantity = undefined;
+        item.source_received_quantity = undefined;
+        item.source_cost_before_tax = undefined;
+      }
+    });
+  };
+  const fieldLabels: Record<string, [string, string]> = {
+    product_code: ["Product", "کالا"],
+    quantity_unit: ["Quantity unit", "واحد تعداد"],
+    quantity_entered: ["Invoiced quantity", "تعداد فاکتور"],
+    qty_invoiced: ["Total invoiced units", "کل واحدهای فاکتور"],
+    qty_received_at_posting: ["Delivered units", "واحدهای تحویل‌شده"],
+    units_per_case: ["Units per case", "واحد در هر کارتن"],
+    unit_cost_before_tax: ["Unit cost", "هزینه واحد"],
+    case_cost_before_tax: ["Case cost", "هزینه کارتن"],
+    source_quantity: ["Invoiced weight", "وزن فاکتور"],
+    source_quantity_unit: ["Weight unit", "واحد وزن"],
+    source_received_quantity: ["Delivered weight", "وزن تحویل‌شده"],
+    source_cost_before_tax: ["Source cost", "هزینه منبع"],
+    source_cost_unit: ["Cost unit", "واحد هزینه"],
+    case_weight: ["Case weight", "وزن کارتن"],
+    case_weight_unit: ["Case weight unit", "واحد وزن کارتن"],
+    date_tracking: ["Track dates", "پیگیری تاریخ‌ها"],
+    date_type: ["Date type", "نوع تاریخ"],
+    date_value: ["Date", "تاریخ"],
+    lot_number: ["Lot number", "شماره سری ساخت"],
+    taxable: ["Taxable", "مشمول مالیات"],
+    line_total: ["Line total", "جمع ردیف"],
+    line_tax: ["Line tax", "مالیات ردیف"],
+  };
+  const value = (field: string, text: string) => {
+    if (!text) return <NotAdded />;
+    if (["taxable", "date_tracking"].includes(field))
+      return text === "true" ? t("Yes", "بله") : t("No", "خیر");
+    if (
+      [
+        "unit_cost_before_tax",
+        "case_cost_before_tax",
+        "source_cost_before_tax",
+      ].includes(field)
+    )
+      return <Money value={text} decimals={4} fixedDecimals />;
+    if (["line_total", "line_tax"].includes(field))
+      return <Money value={text} />;
+    if (field === "product_code") {
+      const product = state.products.find(
+        (item) => item.company_id === original.company_id && item.code === text,
+      );
+      return product ? (
+        <ProductName product={product} language={lang} />
+      ) : (
+        <LtrText>{text}</LtrText>
+      );
+    }
+    if (field === "date_value") return <DateText value={text} />;
+    if (field === "date_type")
+      return text === "best_before"
+        ? t("Best before", "بهترین زمان مصرف")
+        : t("Expiry", "انقضا");
+    if (field === "quantity_unit" && ["units", "cases"].includes(text))
+      return text === "cases" ? t("Cases", "کارتن") : t("Units", "واحد");
+    return <LtrText>{text}</LtrText>;
+  };
+  const difference = preview && (
+    <section
+      className="invoice-correction-changes"
+      aria-label={t("What will change", "چه چیزی تغییر می‌کند")}
+    >
+      <h3>{t("What will change", "چه چیزی تغییر می‌کند")}</h3>
+      {preview.line_changes.map((change) => (
+        <div className="list-box" key={change.line_index}>
+          <h4>
+            {t("Line", "ردیف")} <LtrText>{change.line_index + 1}</LtrText>
+          </h4>
+          <dl>
+            {change.fields.map((field) => (
+              <div key={field.field}>
+                <dt>
+                  {t(
+                    ...(fieldLabels[field.field] ?? [
+                      "Invoice detail",
+                      "جزئیات فاکتور",
+                    ]),
+                  )}
+                </dt>
+                <dd>
+                  {value(field.field, field.before)}
+                  <span aria-hidden="true">→</span>
+                  {value(field.field, field.after)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      ))}
+    </section>
+  );
+  const footer = preview ? (
+    <>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          setPreview(null);
+          setConfirmed(false);
+        }}
+      >
+        {t("Back", "بازگشت")}
+      </Button>
+      <Button
+        disabled={pending || !!preview.blockers.length}
+        onClick={() => {
+          if (confirmed) void save();
+          else setConfirmed(true);
+        }}
+      >
+        {confirmed
+          ? t("Confirm correction", "تأیید اصلاح")
+          : t("Continue", "ادامه")}
+      </Button>
+    </>
+  ) : stalePreview && confirmed ? (
+    <>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          setPreview(null);
+          setConfirmed(false);
+        }}
+      >
+        {t("Back", "بازگشت")}
+      </Button>
+      <Button disabled>{t("Confirm correction", "تأیید اصلاح")}</Button>
+    </>
+  ) : (
+    <>
+      <Button variant="secondary" onClick={onClose}>
+        {t("Cancel", "انصراف")}
+      </Button>
+      <Button disabled={pending} onClick={() => void inspect()}>
+        {t("Preview correction", "پیش‌نمایش اصلاح")}
+      </Button>
+    </>
+  );
   return (
     <Dialog
       open
@@ -294,7 +533,14 @@ function InvoiceCorrectionWorkspace({
         if (!open) onClose();
       }}
       title={t("Correct invoice", "اصلاح فاکتور")}
-      className="invoice-correction-dialog"
+      description={t(
+        "Review line changes; the original is retained.",
+        "تغییر ردیف‌ها را بررسی کنید؛ اصل حفظ می‌شود.",
+      )}
+      icon={<PencilLine size={20} />}
+      footer={footer}
+      className={`invoice-correction-dialog ui-form-surface${openLine !== null ? " has-open-line" : ""}`}
+      bodyClassName="invoice-correction-body"
     >
       {stalePreview && (
         <p role="alert" className="form-error">
@@ -309,6 +555,7 @@ function InvoiceCorrectionWorkspace({
               "پیش از تأیید، اصلاح را بررسی کنید. اصل فاکتور و تخصیص پرداخت‌ها حفظ می‌شوند.",
             )}
           </p>
+          {difference}
           <dl className="posted-invoice-totals">
             <div>
               <dt>{t("Current payable", "قابل پرداخت فعلی")}</dt>
@@ -428,424 +675,69 @@ function InvoiceCorrectionWorkspace({
               )}
             </p>
           )}
-          <div className="actions">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setPreview(null);
-                setConfirmed(false);
-              }}
-            >
-              {t("Back", "بازگشت")}
-            </Button>
-            <Button
-              disabled={pending || !!preview.blockers.length}
-              onClick={() => {
-                if (confirmed) void save();
-                else setConfirmed(true);
-              }}
-            >
-              {confirmed
-                ? t("Confirm correction", "تأیید اصلاح")
-                : t("Continue", "ادامه")}
-            </Button>
-          </div>
         </>
-      ) : stalePreview && confirmed ? (
-        <div className="actions">
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setPreview(null);
-              setConfirmed(false);
+      ) : stalePreview && confirmed ? null : (
+        <div
+          className="invoice-correction-form ui-form-large ui-form-surface"
+          ref={content}
+          style={{ minBlockSize: reservedHeight || undefined }}
+          onWheelCapture={() => {
+            setReservedHeight(0);
+            clearAnchor();
+          }}
+          onTouchMoveCapture={() => {
+            setReservedHeight(0);
+            clearAnchor();
+          }}
+        >
+          <p className="muted">
+            {t(
+              "Posted lines are retained. Edit a line, give a reason, then preview the changes before saving.",
+              "ردیف‌های ثبت‌شده حفظ می‌شوند. ردیفی را ویرایش کنید، دلیل بنویسید و پیش از ذخیره تغییرات را بررسی کنید.",
+            )}
+          </p>
+          <LinesTable
+            invoice={localInvoice}
+            workspace={workspace}
+            correction={{
+              onEdit: edit,
+              onSelectProduct: selectProduct,
+              changed,
+              retainedProductCodes: original.lines.map(
+                (line) => line.product_code,
+              ),
             }}
-          >
-            {t("Back", "بازگشت")}
-          </Button>
-          <Button disabled>{t("Confirm correction", "تأیید اصلاح")}</Button>
-        </div>
-      ) : (
-        <>
-          {lines.map((line, index) => {
-            const weight = line.sold_by === "weight";
-            const product = state.products.find(
-              (product) =>
-                product.company_id === original.company_id &&
-                product.code === line.product_code,
-            );
-            return (
-              <section key={index} className="invoice-correction-line">
-                <h3>
-                  {t("Line", "ردیف")} <LtrText>{index + 1}</LtrText> ·{" "}
-                  {product ? (
-                    <ProductName product={product} language={lang} />
-                  ) : (
-                    <LtrText>{line.description}</LtrText>
-                  )}
-                </h3>
-                <div className="invoice-correction-fields">
-                  <Field
-                    label={t("Product", "کالا")}
-                    error={fieldError(index, "product")}
-                  >
-                    <Select
-                      value={line.product_code}
-                      options={state.products
-                        .filter(
-                          (product) =>
-                            product.company_id === original.company_id &&
-                            product.status !== "archived",
-                        )
-                        .map((product) => ({
-                          value: product.code,
-                          label: `${product.code} · ${lang === "fa" ? product.name_fa : product.name_en}`,
-                        }))}
-                      onChange={(code) =>
-                        edit(index, (item) => {
-                          const target = state.products.find(
-                            (product) =>
-                              product.company_id === original.company_id &&
-                              product.code === code,
-                          )!;
-                          item.product_code = code;
-                          item.sold_by = target.sold_by ?? "each";
-                          item.pricing_category = target.pricing_category;
-                          item.tax_profile = target.tax_profile;
-                          item.taxable = target.taxable;
-                          const preference = trackingChoiceForProduct(target);
-                          item.date_tracking = preference === "yes";
-                          item.date_confirmed = preference !== undefined;
-                          if (item.sold_by === "weight")
-                            initializeInvoiceWeight(item, state.config);
-                          else {
-                            item.quantity_unit = "units";
-                            item.quantity_entered = item.qty_invoiced;
-                            item.source_quantity = undefined;
-                            item.source_received_quantity = undefined;
-                            item.source_cost_before_tax = undefined;
-                          }
-                        })
-                      }
-                    />
-                  </Field>
-                  <Field label={t("Quantity unit", "واحد تعداد")}>
-                    <Select
-                      value={line.quantity_unit ?? "units"}
-                      options={
-                        weight
-                          ? [
-                              { value: "kg", label: "kg" },
-                              { value: "lb", label: "lb" },
-                              { value: "cases", label: t("Cases", "کارتن") },
-                            ]
-                          : [
-                              { value: "units", label: t("Units", "واحد") },
-                              { value: "cases", label: t("Cases", "کارتن") },
-                            ]
-                      }
-                      onChange={(unit) =>
-                        edit(index, (item) =>
-                          weight
-                            ? setInvoiceWeightQuantity(
-                                item,
-                                item.quantity_entered ??
-                                  item.source_quantity ??
-                                  "1",
-                                unit as "kg" | "lb" | "cases",
-                                state.config,
-                              )
-                            : setInvoiceLineQuantity(
-                                item,
-                                item.quantity_entered ?? item.qty_invoiced,
-                                unit as "units" | "cases",
-                              ),
-                        )
-                      }
-                    />
-                  </Field>
-                  <Field
-                    label={t("Invoiced quantity", "تعداد فاکتور")}
-                    error={fieldError(index, "quantity")}
-                  >
-                    <NumberField
-                      min="0"
-                      step={weight ? "0.001" : "1"}
-                      value={
-                        weight
-                          ? line.quantity_unit === "cases"
-                            ? (line.quantity_entered ?? "")
-                            : (line.source_quantity ?? "")
-                          : (line.quantity_entered ?? line.qty_invoiced)
-                      }
-                      onChange={(value) =>
-                        edit(index, (item) =>
-                          weight
-                            ? setInvoiceWeightQuantity(
-                                item,
-                                value,
-                                (item.quantity_unit ?? "lb") as
-                                  "kg" | "lb" | "cases",
-                                state.config,
-                              )
-                            : setInvoiceLineQuantity(
-                                item,
-                                value,
-                                (item.quantity_unit ?? "units") as
-                                  "units" | "cases",
-                              ),
-                        )
-                      }
-                    />
-                  </Field>
-                  <Field
-                    label={t("Delivered quantity", "تعداد تحویل‌شده")}
-                    error={fieldError(index, "quantity")}
-                  >
-                    <NumberField
-                      min="0"
-                      step={weight ? "0.001" : "1"}
-                      value={
-                        weight
-                          ? (line.source_received_quantity ?? "")
-                          : line.qty_received_at_posting
-                      }
-                      onChange={(value) =>
-                        edit(index, (item) =>
-                          weight
-                            ? setInvoiceWeightReceived(
-                                item,
-                                value,
-                                state.config,
-                              )
-                            : (item.qty_received_at_posting = Number(value)),
-                        )
-                      }
-                    />
-                    {weight && (
-                      <small className="muted">
-                        <LtrText>{line.source_quantity_unit}</LtrText>
-                      </small>
-                    )}
-                  </Field>
-                  {weight ? (
-                    <>
-                      <Field label={t("Case weight", "وزن کارتن")}>
-                        <NumberField
-                          min="0"
-                          step="0.001"
-                          value={line.case_weight ?? ""}
-                          onChange={(value) =>
-                            edit(index, (item) => {
-                              item.case_weight = value;
-                              if (item.quantity_unit === "cases")
-                                setInvoiceWeightQuantity(
-                                  item,
-                                  item.quantity_entered ?? "1",
-                                  "cases",
-                                  state.config,
-                                );
-                            })
-                          }
-                        />
-                      </Field>
-                      <Field label={t("Case weight unit", "واحد وزن کارتن")}>
-                        <Select
-                          value={line.case_weight_unit ?? "kg"}
-                          options={[
-                            { value: "kg", label: "kg" },
-                            { value: "lb", label: "lb" },
-                          ]}
-                          onChange={(unit) =>
-                            edit(index, (item) => {
-                              item.case_weight_unit = unit as "kg" | "lb";
-                              if (item.quantity_unit === "cases")
-                                setInvoiceWeightQuantity(
-                                  item,
-                                  item.quantity_entered ?? "1",
-                                  "cases",
-                                  state.config,
-                                );
-                            })
-                          }
-                        />
-                      </Field>
-                    </>
-                  ) : (
-                    <Field label={t("Units per case", "واحد در هر کارتن")}>
-                      <NumberField
-                        min="1"
-                        step="1"
-                        value={line.units_per_case ?? 1}
-                        onChange={(value) =>
-                          edit(index, (item) =>
-                            setInvoiceLineQuantity(
-                              item,
-                              item.quantity_entered ?? item.qty_invoiced,
-                              (item.quantity_unit ?? "units") as
-                                "units" | "cases",
-                              Number(value),
-                            ),
-                          )
-                        }
-                      />
-                    </Field>
-                  )}
-                  <Field
-                    label={
-                      weight
-                        ? t(
-                            "Source cost before tax",
-                            "هزینه منبع پیش از مالیات",
-                          )
-                        : t(
-                            "Unit cost before tax",
-                            "هزینه هر واحد پیش از مالیات",
-                          )
-                    }
-                    error={fieldError(index, "cost")}
-                  >
-                    <NumberField
-                      min="0"
-                      step="0.0001"
-                      value={
-                        weight
-                          ? (line.source_cost_before_tax ?? "")
-                          : line.unit_cost_before_tax
-                      }
-                      onChange={(value) =>
-                        edit(index, (item) =>
-                          weight
-                            ? setInvoiceWeightCost(
-                                item,
-                                value,
-                                item.source_cost_unit ?? "lb",
-                                state.config,
-                              )
-                            : (item.unit_cost_before_tax = value),
-                        )
-                      }
-                    />
-                  </Field>
-                  {weight && (
-                    <Field label={t("Cost unit", "واحد هزینه")}>
-                      <Select
-                        value={line.source_cost_unit ?? "lb"}
-                        options={[
-                          { value: "kg", label: "kg" },
-                          { value: "lb", label: "lb" },
-                        ]}
-                        onChange={(unit) =>
-                          edit(index, (item) =>
-                            setInvoiceWeightCost(
-                              item,
-                              item.source_cost_before_tax ?? "0",
-                              unit as "kg" | "lb",
-                              state.config,
-                            ),
-                          )
-                        }
-                      />
-                    </Field>
-                  )}
-                  <Field label={t("Track date?", "پیگیری تاریخ؟")}>
-                    <SegmentedControl
-                      value={line.date_tracking ? "yes" : "no"}
-                      options={[
-                        { value: "yes", label: t("Yes", "بله") },
-                        { value: "no", label: t("No", "خیر") },
-                      ]}
-                      onChange={(value) =>
-                        edit(index, (item) => {
-                          item.date_tracking = value === "yes";
-                          item.date_confirmed = true;
-                        })
-                      }
-                    />
-                  </Field>
-                  {line.date_tracking && (
-                    <>
-                      <Field label={t("Date type", "نوع تاریخ")}>
-                        <Select
-                          value={line.date_type ?? "expiry"}
-                          options={[
-                            { value: "expiry", label: t("Expiry", "انقضا") },
-                            {
-                              value: "best_before",
-                              label: t("Best before", "بهترین زمان مصرف"),
-                            },
-                          ]}
-                          onChange={(value) =>
-                            edit(index, (item) => {
-                              item.date_type = value as
-                                "expiry" | "best_before";
-                            })
-                          }
-                        />
-                      </Field>
-                      <Field
-                        label={t("Tracked date", "تاریخ پیگیری‌شده")}
-                        error={fieldError(index, "date")}
-                      >
-                        <DateField
-                          value={line.date_value ?? ""}
-                          onChange={(value) =>
-                            edit(index, (item) => {
-                              item.date_value = value;
-                            })
-                          }
-                        />
-                      </Field>
-                      <Field
-                        label={t(
-                          "Lot number (optional)",
-                          "شماره سری ساخت (اختیاری)",
-                        )}
-                      >
-                        <input
-                          value={line.lot_number ?? ""}
-                          onChange={(event) =>
-                            edit(index, (item) => {
-                              item.lot_number = event.target.value;
-                            })
-                          }
-                        />
-                      </Field>
-                    </>
-                  )}
-                </div>
-              </section>
-            );
-          })}
+            onQuantity={onQuantity}
+            openLine={openLine}
+            onOpen={onOpen}
+            anchor={anchor}
+            attemptedPost={error?.line !== undefined}
+          />
           <Field
             label={t("Reason (required)", "دلیل (الزامی)")}
             error={error?.code === "reason" ? copy.reason : undefined}
           >
             <textarea
+              id="invoice-correction-reason"
+              rows={2}
               value={reason}
               onChange={(event) => {
-                setReason(event.target.value);
+                setReason(event.currentTarget.value);
                 if (error?.code === "reason") setError(null);
               }}
             />
           </Field>
-          {error &&
-            !error.line &&
-            !["reason", "product", "quantity", "cost", "date"].includes(
-              error.code,
-            ) && (
-              <p role="alert" className="form-error">
-                {copy[error.code]}
-              </p>
-            )}
-          <div className="actions">
-            <Button variant="secondary" onClick={onClose}>
-              {t("Cancel", "انصراف")}
-            </Button>
-            <Button disabled={pending} onClick={() => void inspect()}>
-              {t("Preview correction", "پیش‌نمایش اصلاح")}
-            </Button>
-          </div>
-        </>
+          {error && error.code !== "reason" && (
+            <p role="alert" className="form-error">
+              {error.line !== undefined && (
+                <>
+                  {t("Line", "ردیف")} <LtrText>{error.line + 1}</LtrText>:{" "}
+                </>
+              )}
+              {copy[error.code] ?? copy.stale}
+            </p>
+          )}
+        </div>
       )}
     </Dialog>
   );

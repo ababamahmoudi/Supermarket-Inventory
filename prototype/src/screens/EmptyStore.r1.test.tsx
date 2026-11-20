@@ -129,6 +129,11 @@ describe("R1 empty business screens retain their normal interface", () => {
         </DemoProvider>
       );
       const rendered = render(ui(Dashboard, "dashboard"));
+      const snapshot = async () => ({
+        business: await fixture.readCanonical(),
+        authority: await fixture.repository.load(fixture.actor.company_id),
+      });
+      let baseline: Awaited<ReturnType<typeof snapshot>> | undefined;
       for (const [route, Page, en, fa] of cases) {
         window.history.replaceState(null, "", `#${route}`);
         rendered.rerender(ui(Page, route));
@@ -137,17 +142,99 @@ describe("R1 empty business screens retain their normal interface", () => {
           {},
           { timeout: 5000 },
         );
-        expect(message.closest(".ui-empty-state")).not.toBeNull();
         expect(rendered.container.textContent).not.toMatch(/NaN|undefined/);
         if (route === "dashboard") {
-          const values = rendered.container.querySelectorAll(".kpi-value");
-          expect(values).toHaveLength(4);
+          expect(
+            message.closest(".dashboard-invoices .dashboard-empty"),
+          ).not.toBeNull();
+          expect(message.closest(".ui-empty-state")).toBeNull();
+          const kpis = rendered.container.querySelector(
+            ".dashboard-kpis.has-timesheets",
+          )!;
+          const tiles = Array.from(
+            kpis.querySelectorAll(
+              ":scope > .ui-summary-tile.dashboard-summary-tile",
+            ),
+          );
+          expect(
+            tiles.map((tile) => tile.querySelector(".kpi-label")?.textContent),
+          ).toEqual(
+            lang === "en"
+              ? [
+                  "Approvals waiting",
+                  "Price updates to apply",
+                  "Open alerts",
+                  "Open shorts",
+                  "Expiring soon",
+                  "On shift now",
+                ]
+              : [
+                  "تأییدهای در انتظار",
+                  "به‌روزرسانی قیمت‌های قابل اجرا",
+                  "هشدارهای باز",
+                  "کسری‌های باز",
+                  "انقضای نزدیک",
+                  "اکنون در حال کار",
+                ],
+          );
+          expect(
+            kpis.querySelectorAll(".timesheet-on-shift-tile"),
+          ).toHaveLength(1);
+          const values = kpis.querySelectorAll(".kpi-value");
+          expect(values).toHaveLength(6);
           for (const value of values) expect(value).toHaveTextContent(/^0$/);
+          for (const card of [
+            ".dashboard-approvals",
+            ".dashboard-invoices",
+            ".dashboard-supplier-purchases",
+            ".dashboard-weekly-purchases",
+            ".price-update-dashboard-card",
+            ".dashboard-alerts",
+            ".dashboard-notes",
+            ".dashboard-balances",
+          ])
+            expect(
+              rendered.container.querySelector(`${card} .dashboard-empty`),
+              card,
+            ).toBeVisible();
+          expect(
+            rendered.container.querySelectorAll(
+              ".dashboard-approval-table,.dashboard-invoices table,.purchase-bars,.purchase-week-chart,.dashboard-task-list,.dashboard-alert-list,.dashboard-balance-row",
+            ),
+          ).toHaveLength(0);
+          baseline = await snapshot();
+          expect(baseline.business).toMatchObject({
+            products: [],
+            suppliers: [],
+            invoices: [],
+            approvals: [],
+            alerts: [],
+            returns: [],
+            ledger: [],
+            notes: [],
+            expiry: [],
+            price_update_tasks: [],
+            timesheet_staff: [],
+            timesheet_days: [],
+            timesheet_rows: [],
+            stock: {},
+            invoice: { status: "empty", lines: [], final_total: "0.00" },
+          });
+          expect(baseline.business.activity).toHaveLength(1);
+          expect(baseline.business.activity[0]).toMatchObject({
+            action: "Removed fictional data",
+            entity_type: "settings",
+            entity_id: "data",
+          });
+        } else {
+          expect(message.closest(".ui-empty-state")).not.toBeNull();
         }
       }
       await waitFor(() =>
         expect(screen.queryByRole("alert")).not.toBeInTheDocument(),
       );
+      expect(baseline).toBeDefined();
+      expect(await snapshot()).toEqual(baseline);
     });
     it(`shows empty Lookup with all locations selected in ${lang}`, async () => {
       const state = initialState();

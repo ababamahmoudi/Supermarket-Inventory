@@ -97,6 +97,7 @@ describe("C4 verified backup and additive migration", () => {
   it("preserves prices, custom packs, documents, financial allocations, operational evidence and authentication", () => {
     const state = savedC3State();
     state.config.weighed_items = {
+      ...(state.config.weighed_items ?? configSeed.weighed_items),
       conversion_factor: "2.20462",
       main_display_unit: "kg",
       show_second_unit: false,

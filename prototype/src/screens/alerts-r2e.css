@@ -1,0 +1,15 @@
+.alerts-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-block-size: 44px;
+  margin-block-end: 16px;
+}
+.alerts-card-heading > h2 {
+  margin: 0;
+}
+.alerts-card-heading > .ui-checked-control {
+  flex: 0 0 auto;
+  margin: 0;
+}

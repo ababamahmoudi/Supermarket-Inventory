@@ -1,4 +1,5 @@
 import { File as NodeFile } from "node:buffer";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { useState } from "react";
 import {
@@ -8,6 +9,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { DemoProvider, initialState, useDemo } from "../store";
@@ -141,21 +143,48 @@ async function accepted(
       expect(window.location.hash).toBe(
         `#invoices?id=${encodeURIComponent(id)}`,
       );
-      expect(screen.getByRole("button", { name: "New invoice" })).toBeEnabled();
+      expect(entryControl()).toBeEnabled();
       expect(document.querySelector('[aria-busy="true"][inert]')).toBeNull();
     },
     { timeout: 10000 },
   );
   return id;
 }
-function begins(buttonName: string) {
+function begins(buttonName: "Manual entry") {
   const button = screen.getByRole("button", { name: buttonName });
   fireEvent.click(button);
-  expect(button).toBeDisabled();
-  expect(button.closest('[aria-busy="true"][inert]')).not.toBeNull();
-  // The original control and command are used twice in the same native turn.
-  // A second click must not allocate a second invoice.
+  const visibleControl = entryControl();
+  expect(visibleControl).toBeInstanceOf(HTMLButtonElement);
+  expect(visibleControl).toBeDisabled();
+  expect(visibleControl!.closest('[aria-busy="true"][inert]')).not.toBeNull();
+  if (button.isConnected) expect(button).toBeDisabled();
   fireEvent.click(button);
+}
+async function photoPicker(
+  read: () => Promise<ReturnType<typeof initialState>>,
+  source: "photo" | "pdf" = "photo",
+) {
+  const before = await read();
+  fireEvent.click(screen.getByRole("button", { name: "New invoice" }));
+  const chooser = screen.getByRole("dialog", { name: "New invoice" });
+  const native = screen.getByTestId(
+    "invoice-entry-original",
+  ) as HTMLInputElement;
+  const click = vi.spyOn(native, "click");
+  fireEvent.click(
+    within(chooser).getByRole("button", {
+      name: source === "photo" ? "Photo (AI reading)" : "PDF (AI reading)",
+    }),
+  );
+  expect(click).toHaveBeenCalledOnce();
+  expect(native.accept).toBe(
+    source === "photo" ? "image/*" : "application/pdf",
+  );
+  expect(
+    screen.queryByRole("dialog", { name: "New invoice" }),
+  ).not.toBeInTheDocument();
+  expect(await read()).toEqual(before);
+  return native;
 }
 async function entryReady() {
   // A retained original is committed before the real controller finishes its
@@ -164,14 +193,21 @@ async function entryReady() {
   await renderedUiReady(entryIsReady);
   await waitFor(
     () => {
-      expect(screen.getByRole("button", { name: "New invoice" })).toBeEnabled();
+      expect(entryControl()).toBeEnabled();
       expect(document.querySelector('[aria-busy="true"][inert]')).toBeNull();
     },
     { timeout: 10000 },
   );
 }
+function entryControl() {
+  return (
+    screen.queryByRole("button", { name: "New invoice" }) ??
+    screen.queryByRole("button", { name: "Save and close" }) ??
+    screen.queryByRole("button", { name: "Upload" })
+  );
+}
 function entryIsReady() {
-  const button = screen.queryByRole("button", { name: "New invoice" });
+  const button = entryControl();
   return (
     button instanceof HTMLButtonElement &&
     !button.disabled &&
@@ -180,21 +216,31 @@ function entryIsReady() {
 }
 async function manual(read: () => Promise<ReturnType<typeof initialState>>) {
   if (!screen.queryByRole("button", { name: "Manual entry" })) {
-    const previous = (await read()).invoice.id;
-    begins("New invoice");
-    await accepted(read, previous, "upload");
+    const close = screen.queryByRole("button", { name: "Save and close" });
+    if (close) fireEvent.click(close);
+    await screen.findByLabelText("Invoice views");
+    // R2e C2 starts every invoice through the one four-choice dialog.
+    fireEvent.click(screen.getByRole("button", { name: "New invoice" }));
     await screen.findByRole("button", { name: "Manual entry" });
   }
   const previous = (await read()).invoice.id;
   begins("Manual entry");
   const id = await accepted(read, previous, "manual");
-  await screen.findByLabelText("Supplier invoice number (optional)");
+  await screen.findByLabelText("Invoice number");
   return id;
+}
+function originalInput() {
+  return (
+    screen.queryByLabelText("Upload a PDF or photo") ??
+    screen.getByLabelText(/^(Attach original|Replace file)$/, {
+      selector: "input[type=file]",
+    })
+  );
 }
 it("keeps old fields inert through genuine New/Manual commands and enables only the accepted draft, preserving the prior manual details", async () => {
   const { read } = await show();
   const firstId = await manual(read);
-  const number = screen.getByLabelText("Supplier invoice number (optional)");
+  const number = screen.getByLabelText("Invoice number");
   fireEvent.change(number, { target: { value: "RETAINED-MANUAL-DETAILS" } });
   await waitFor(async () =>
     expect((await read()).invoice.supplier_invoice_number).toBe(
@@ -206,10 +252,46 @@ it("keeps old fields inert through genuine New/Manual commands and enables only 
     before.invoice.id,
     ...before.invoices!.map((row) => row.id),
   ]);
-  begins("New invoice");
-  expect(number.closest("[inert]")).not.toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Save and close" }));
+  await screen.findByLabelText("Invoice views");
+  const input = await photoPicker(read, "pdf");
+  expect(number).not.toBeInTheDocument();
+  expect(
+    new Set([
+      (await read()).invoice.id,
+      ...(await read()).invoices!.map((row) => row.id),
+    ]).size,
+  ).toBe(ids.size);
+  const original = new NodeFile(
+    ["%PDF-1.7\nFictional pending-source evidence\n%%EOF"],
+    "fictional-pending-source.pdf",
+    { type: "application/pdf" },
+  );
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const arrayBuffer = original.arrayBuffer.bind(original);
+  vi.spyOn(original, "arrayBuffer").mockImplementation(async () => {
+    await gate;
+    return arrayBuffer();
+  });
+  fireEvent.change(input, { target: { files: [original] } });
+  // Replaying this same native change cannot allocate another invoice.
+  fireEvent.change(input, { target: { files: [original] } });
+  await waitFor(() =>
+    expect(entryControl()!.closest('[aria-busy="true"][inert]')).not.toBeNull(),
+  );
+  expect(entryControl()).toBeDisabled();
+  await act(async () => {
+    release();
+  });
   const uploadId = await accepted(read, firstId, "upload");
+  expect(
+    screen.queryByLabelText("Upload a PDF or photo"),
+  ).not.toBeInTheDocument();
   let current = await read();
+  expect(current.invoice.file_name).toBe(original.name);
   expect(
     current.invoices!.find((row) => row.id === firstId)
       ?.supplier_invoice_number,
@@ -218,8 +300,8 @@ it("keeps old fields inert through genuine New/Manual commands and enables only 
     new Set([current.invoice.id, ...current.invoices!.map((row) => row.id)])
       .size,
   ).toBe(ids.size + 1);
-  begins("Manual entry");
-  const finalId = await accepted(read, uploadId, "manual");
+  expect(current.invoice.id).toBe(uploadId);
+  const finalId = await manual(read);
   current = await read();
   expect(current.invoice.lines).toEqual([]);
   expect(current.invoice.created_by_user_id).toBe("demo-person-manager");
@@ -227,10 +309,9 @@ it("keeps old fields inert through genuine New/Manual commands and enables only 
     new Set([current.invoice.id, ...current.invoices!.map((row) => row.id)])
       .size,
   ).toBe(ids.size + 2);
-  fireEvent.change(
-    await screen.findByLabelText("Supplier invoice number (optional)"),
-    { target: { value: "ACCEPTED-MANUAL-DETAILS" } },
-  );
+  fireEvent.change(await screen.findByLabelText("Invoice number"), {
+    target: { value: "ACCEPTED-MANUAL-DETAILS" },
+  });
   await waitFor(async () => {
     const latest = await read();
     expect(latest.invoice.id).toBe(finalId);
@@ -247,14 +328,13 @@ it("protects the actual source snapshot while a same-ID manual original is retai
   const original = new NodeFile([content], "fictional-pending-original.pdf", {
     type: "application/pdf",
   });
-  fireEvent.change(screen.getByLabelText("Upload a PDF or photo"), {
+  fireEvent.change(originalInput(), {
     target: { files: [original] },
   });
-  expect(screen.getByRole("button", { name: "New invoice" })).toBeDisabled();
+  expect(entryControl()).toBeInstanceOf(HTMLButtonElement);
+  expect(entryControl()!.closest("[inert]")).not.toBeNull();
   expect(
-    screen
-      .getByLabelText("Supplier invoice number (optional)")
-      .closest("[inert]"),
+    screen.getByLabelText("Invoice number").closest("[inert]"),
   ).not.toBeNull();
   await entryReady();
   await waitFor(async () => {
@@ -262,7 +342,7 @@ it("protects the actual source snapshot while a same-ID manual original is retai
     expect(current.invoice.id).toBe(id);
     expect(current.invoice.file_name).toBe(original.name);
     expect(current.invoice.file_data).toMatch(/^idb-file:v1:/);
-    expect(screen.getByRole("button", { name: "New invoice" })).toBeEnabled();
+    expect(entryControl()).toBeEnabled();
   });
   const state = await read();
   const stored = await readStoredFile(
@@ -271,26 +351,101 @@ it("protects the actual source snapshot while a same-ID manual original is retai
   );
   expect(await stored.source.text()).toBe(content);
   expect(stored.source_size).toBe(original.size);
+  expect(state.invoice.simulated_reading).toBeUndefined();
   expect(state.invoice.lines).toEqual([]);
   expect(window.location.hash).toBe(`#invoices?id=${encodeURIComponent(id)}`);
 });
-it("holds the old upload route until the real recognized original's canonical invoice and protected workspace agree", async () => {
+it("opens simulated review promptly after its original is durably saved without changing stock or money", async () => {
+  const { read } = await show();
+  const before = await read();
+  const input = await photoPicker(read, "pdf");
+  const content = "%PDF-1.7\nFictional simulation-ready evidence\n%%EOF";
+  const original = new NodeFile([content], "fictional-simulation-ready.pdf", {
+    type: "application/pdf",
+  });
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const arrayBuffer = original.arrayBuffer.bind(original);
+  vi.spyOn(original, "arrayBuffer").mockImplementation(async () => {
+    await gate;
+    return arrayBuffer();
+  });
+  fireEvent.change(input, { target: { files: [original] } });
+  let invoiceId = "";
+  await waitFor(
+    async () => {
+      const current = await read();
+      invoiceId = current.invoice.id;
+      expect(invoiceId).not.toBe(before.invoice.id);
+      expect(current.invoice.status).toBe("draft");
+      expect(current.invoice.file_data).toBeUndefined();
+      expect(current.ledger).toEqual(before.ledger);
+      expect(current.stock_movements).toEqual(before.stock_movements);
+      expect(current.stock).toEqual(before.stock);
+    },
+    { timeout: 10000 },
+  );
+  expect(screen.queryByTestId("invoice-review")).not.toBeInTheDocument();
+  await act(async () => {
+    release();
+  });
+  await waitFor(
+    async () => {
+      const current = await read();
+      expect(current.invoice.id).toBe(invoiceId);
+      expect(current.invoice.file_data).toMatch(/^idb-file:v1:/);
+    },
+    { timeout: 10000 },
+  );
+  // The fictional values and verified original are ready; review needs no
+  // additional reading delay. Keep persistence checks separate from this wait.
+  await waitFor(async () => {
+    expect((await read()).invoice.status).toBe("review");
+    expect(screen.getByTestId("invoice-review")).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Invoice lines" }),
+    ).toBeVisible();
+  });
+  const after = await read();
+  expect(after.invoice.id).toBe(invoiceId);
+  expect(after.invoice.created_by_user_id).toBe("demo-person-manager");
+  expect(after.invoice.branch).toBe("Branch 1");
+  expect(after.invoice.simulated_reading).toBe(true);
+  const stored = await readStoredFile(
+    after.invoice.file_data!,
+    after.invoice.company_id,
+  );
+  expect(await stored.source.text()).toBe(content);
+  expect(stored.source_size).toBe(original.size);
+  expect(stored.sha256).toBe(
+    createHash("sha256").update(content).digest("hex"),
+  );
+  expect(after.ledger).toEqual(before.ledger);
+  expect(after.stock_movements).toEqual(before.stock_movements);
+  expect(after.stock).toEqual(before.stock);
+});
+it("opens the actual recognized original without creating an intermediate empty invoice and holds source readiness", async () => {
   const { read } = await show();
   const before = (await read()).invoice.id;
-  begins("New invoice");
-  const uploadId = await accepted(read, before, "upload");
+  const beforeState = await read();
+  const beforeIds = new Set([
+    beforeState.invoice.id,
+    ...(beforeState.invoices ?? []).map((invoice) => invoice.id),
+  ]);
+  const input = await photoPicker(read);
   const bytes = readFileSync(
     `${process.cwd()}/public/demo-originals/fictional-hw-5012.svg`,
   );
   const original = new NodeFile([bytes], "fictional-hw-5012.svg", {
     type: "image/svg+xml",
   });
-  fireEvent.change(screen.getByLabelText("Upload a PDF or photo"), {
+  fireEvent.change(input, {
     target: { files: [original] },
   });
-  expect(screen.getByRole("button", { name: "New invoice" })).toBeDisabled();
   const targetId = demoSeed.sales_demo.cost_increase_invoice.id;
-  await entryReady();
+  await accepted(read, before, "upload");
   await waitFor(async () => {
     const current = await read();
     expect(current.invoice.id).toBe(targetId);
@@ -300,11 +455,13 @@ it("holds the old upload route until the real recognized original's canonical in
     expect(window.location.hash).toBe(
       `#invoices?id=${encodeURIComponent(targetId)}`,
     );
-    expect(screen.getByRole("button", { name: "New invoice" })).toBeEnabled();
+    expect(entryControl()).toBeEnabled();
   });
-  expect((await read()).invoices!.some((row) => row.id === uploadId)).toBe(
-    true,
-  );
+  const after = await read();
+  expect(after.invoices!.some((row) => row.id === before)).toBe(true);
+  expect(
+    new Set([after.invoice.id, ...after.invoices!.map((row) => row.id)]).size,
+  ).toBe(beforeIds.size + 1);
   await act(async () => {
     await Promise.resolve();
   });
@@ -333,13 +490,11 @@ it.each([
     const { read } = await show();
     await manual(read);
     const before = (await read()).invoice;
-    fireEvent.change(screen.getByLabelText("Upload a PDF or photo"), {
+    fireEvent.change(originalInput(), {
       target: { files: [makeFile()] },
     });
     await screen.findByText(error);
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "New invoice" })).toBeEnabled(),
-    );
+    await waitFor(() => expect(entryControl()).toBeEnabled());
     expect(document.querySelector('[aria-busy="true"][inert]')).toBeNull();
     expect((await read()).invoice).toEqual(before);
   },

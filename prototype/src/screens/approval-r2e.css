@@ -1,0 +1,107 @@
+.approval-invoice-group > .ui-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+:root .invoice-approval-dialog .batch-select-column {
+  inline-size: 44px;
+}
+:root
+  .invoice-approval-dialog
+  .invoice-approval-table
+  > :is(thead, tbody)
+  > tr
+  > :is(th, td):first-child {
+  inline-size: 44px;
+  padding-inline: 0;
+}
+:root
+  .invoice-approval-dialog
+  .invoice-approval-table
+  > :is(thead, tbody)
+  > tr
+  > :is(th, td):nth-child(2) {
+  padding-inline-start: 12px;
+}
+:root
+  .invoice-approval-dialog
+  .invoice-approval-table
+  .ui-checked-control[role="checkbox"] {
+  inline-size: 44px;
+  min-inline-size: 44px;
+  justify-content: center;
+  padding: 0;
+  background: var(--color-clear);
+  border-color: var(--color-clear);
+  box-shadow: var(--shadow-none);
+}
+:root .ui-dialog.invoice-approval-dialog > .ui-dialog-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+}
+.batch-approval-status,
+.invoice-approval-dialog > .ui-dialog-footer > [data-dialog-feedback-host] {
+  grid-column: 1;
+  grid-row: 1;
+  min-block-size: 44px;
+}
+.batch-approval-status {
+  display: flex;
+  align-items: center;
+  line-height: 20px;
+  font-size: var(--font-size-caption);
+}
+.batch-approval-status[data-blocked="false"],
+.invoice-approval-dialog
+  > .ui-dialog-footer:has(.batch-approval-status[data-blocked="true"])
+  > [data-dialog-feedback-host] {
+  visibility: hidden;
+}
+.batch-approval-cancel {
+  grid-column: 2;
+  grid-row: 1;
+}
+.batch-approval-confirm {
+  grid-column: 3;
+  grid-row: 1;
+}
+@media (max-width: 759px) {
+  .batch-approval-status,
+  .invoice-approval-dialog > .ui-dialog-footer > [data-dialog-feedback-host] {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .batch-approval-cancel,
+  .batch-approval-confirm {
+    grid-row: 2;
+  }
+  :root .invoice-approval-dialog .invoice-approval-table > tbody > tr {
+    grid-template-columns: 44px repeat(3, minmax(0, 1fr));
+    column-gap: 12px;
+  }
+  :root
+    .invoice-approval-dialog
+    .invoice-approval-table
+    > tbody
+    > tr
+    > td:nth-child(2) {
+    padding-inline-start: 0;
+  }
+  :root
+    .invoice-approval-dialog
+    .invoice-approval-table
+    > thead
+    > tr
+    > th:first-child {
+    inline-size: auto;
+  }
+  :root
+    .invoice-approval-dialog
+    .invoice-approval-table
+    > thead
+    .ui-checked-control[role="checkbox"] {
+    inline-size: auto;
+    justify-content: start;
+    gap: 12px;
+  }
+}

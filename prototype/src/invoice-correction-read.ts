@@ -1,3 +1,4 @@
+import { correctionLineChanges } from "./invoice-correction-fields";
 import { createId } from "./ids";
 import { freshActor } from "./authority";
 import type { AuthenticatedActor } from "./authority-types";
@@ -23,6 +24,10 @@ export type InvoiceCorrectionReview = Pick<
   | "blockers"
 > & {
   snapshot: string;
+  line_changes: {
+    line_index: number;
+    fields: { field: string; before: string; after: string }[];
+  }[];
   approval_changes: Pick<
     InvoiceCorrectionPreview["approval_changes"][number],
     | "line_index"
@@ -62,6 +67,10 @@ export function invoiceCorrectionReview(
     snapshot: preview.snapshot,
   });
   return {
+    line_changes: correctionLineChanges(
+      preview.before.lines,
+      preview.after.lines,
+    ),
     previous_correction_id: preview.previous_correction_id,
     branch: preview.branch,
     payable_before: preview.payable_before,

@@ -99,3 +99,17 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+.awaiting-return-list {
+  display: grid;
+  gap: 8px;
+}
+.awaiting-return-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}

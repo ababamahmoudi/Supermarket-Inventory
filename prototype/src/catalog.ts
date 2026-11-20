@@ -1,3 +1,4 @@
+import { packageBarcodeIdentity } from "./package-barcodes";
 import Decimal from "decimal.js";
 import {
   isOfferSuppressed,
@@ -156,12 +157,24 @@ export function pendingPrice(
   state: PendingPriceReadState,
   product: Pick<
     Product,
-    "company_id" | "code" | "pending_price" | "pending_branch"
+    | "company_id"
+    | "code"
+    | "pending_price"
+    | "pending_branch"
+    | "package_pending_prices"
   >,
   branch: Branch,
 ): string | null {
   if (product.company_id !== state.config.company.seed_key) return null;
   const selectedBranch = lookupBranch(branch);
+  if (product.package_pending_prices) {
+    if (branch !== "all")
+      return product.package_pending_prices[selectedBranch] ?? null;
+    const prices = Object.values(product.package_pending_prices);
+    return prices.length && prices.every((price) => price === prices[0])
+      ? prices[0]
+      : null;
+  }
   const proposals = state.approvals.filter(
     (approval) =>
       approval.company_id === product.company_id &&
@@ -239,13 +252,14 @@ export function conflictingBarcodeProduct(
   barcode: string,
   excludingCode?: string,
 ) {
-  const normalized = normalizeSearch(barcode);
+  const normalized = packageBarcodeIdentity(normalizeSearch(barcode));
   return normalized
     ? products.find(
         (product) =>
           product.company_id === companyId &&
           product.code !== excludingCode &&
-          normalizeSearch(product.barcode) === normalized,
+          packageBarcodeIdentity(normalizeSearch(product.barcode)) ===
+            normalized,
       )
     : undefined;
 }

@@ -3,9 +3,18 @@ import {
   readConfiguredRoleDefinitions,
 } from "../src/role-config";
 import { expect, test, type Page } from "@playwright/test";
-import { openShellAction, setLanguage, signIn, uploadInvoice } from "./helpers";
+import {
+  openInvoiceSourcePicker,
+  openShellAction,
+  setLanguage,
+  signIn,
+  uploadInvoice,
+} from "./helpers";
 import { inspect, settled } from "../scripts/c5-browser-proof.mjs";
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
+import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { inspectDashboardCardLayout } from "./dashboard-card-layout";
+import { runCanonicalBusinessFixture } from "./business-fixture";
 
 async function visibleGeometry(page: Page, route: string) {
   await page.goto(`/#${route}`);
@@ -63,6 +72,7 @@ async function visibleGeometry(page: Page, route: string) {
               ? "choice"
               : control.getAttribute("data-control-kind"),
           small: control.classList.contains("button-sm"),
+          iconOnly: control.classList.contains("ui-icon-button"),
         })),
         selects,
         searches,
@@ -71,7 +81,7 @@ async function visibleGeometry(page: Page, route: string) {
 }
 
 for (const language of ["en", "fa"] as const) {
-  test(`C9 filter controls are 40px, readable, searchable and compact in ${language}`, async ({
+  test(`list filter controls retain their scoped height, readable choices and compact spacing in ${language}`, async ({
     page,
     isMobile,
   }) => {
@@ -80,13 +90,22 @@ for (const language of ["en", "fa"] as const) {
     for (const route of ["products", "offers", "expiry", "returns", "notes"]) {
       const geometry = await visibleGeometry(page, route);
       expect(geometry.controls.length, route).toBeGreaterThan(0);
+      if (route === "offers")
+        await expect(
+          page.locator(
+            'main > [data-r2c-screen="offers"] .current-offers-table',
+          ),
+        ).toBeVisible();
       for (const control of geometry.controls) {
         expect(
           ["field", "action", "icon", "choice"],
           `${route}: ${control.name} has a defined control kind`,
         ).toContain(control.kind);
+        // R2e B5 shares a 44px filter row; its segmented track contains
+        // 36px choices. Every other scoped control keeps the 44px target.
+        const expectedHeight = control.kind === "choice" ? 36 : 44;
         expect(
-          Math.abs(control.height - (control.kind === "choice" ? 32 : 40)),
+          Math.abs(control.height - expectedHeight),
           `${route}: ${control.name}`,
         ).toBeLessThanOrEqual(1);
       }
@@ -265,9 +284,9 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
   }
   const invoices = page.locator(".dashboard-invoices");
   await expect(invoices.locator("tbody tr").first()).toBeVisible();
-  // Responsive tables expose width-hidden Branch values in expanded details.
-  for (const toggle of await invoices.locator(".table-details-toggle").all())
-    await toggle.click();
+  // Recent invoices use one genuine record destination; the full invoice
+  // presents Branch when the responsive summary omits its column.
+  await expect(invoices.locator(".table-details-toggle")).toHaveCount(0);
   const branchCells = await page.locator(".dashboard-invoices").evaluate(
     (card, branchNames) => {
       const compactRows = [...card.querySelectorAll("tr.phone-list-row")];
@@ -304,6 +323,63 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
     },
     configuration.branches.map((branch) => branch.name),
   );
+  if (branchCells.values.length === 0) {
+    const canonical = await readCanonicalBusinessEvidence(page);
+    const routes = await invoices
+      .locator("tbody tr[data-row-href]")
+      .evaluateAll((rows) =>
+        rows.map((row) => row.getAttribute("data-row-href")!),
+      );
+    expect(routes.length).toBeGreaterThan(0);
+    for (const href of routes) {
+      await page.goto("/#dashboard");
+      const row = invoices.locator(`tr[data-row-href="${href}"]`);
+      await expect(row.locator(".table-row-link")).toHaveCount(1);
+      await expect(row.locator(".dashboard-invoice-reference")).toHaveAttribute(
+        "href",
+        href,
+      );
+      const id = new URLSearchParams(href.split("?")[1]).get("id");
+      const invoice = [canonical.invoice, ...(canonical.invoices ?? [])].find(
+        (item) => item.id === id,
+      );
+      expect(invoice?.status).toBe("posted");
+      let location = invoice!.branch;
+      for (const correction of canonical.invoice_location_corrections ?? [])
+        if (
+          correction.company_id === invoice!.company_id &&
+          correction.invoice_id === invoice!.id &&
+          correction.from_branch === location
+        )
+          location = correction.to_branch;
+      const expectedBranch = canonical.config.branches.find(
+        (branch) => branch.id === location,
+      )?.name_en;
+      expect(expectedBranch).toBeTruthy();
+      await row.locator(".table-row-link").click();
+      await expect(page).toHaveURL((url) => url.hash === href);
+      const branch = page
+        .locator(`[data-invoice-id="${id}"] .posted-invoice-header > div`)
+        .filter({ has: page.getByText("Location", { exact: true }) })
+        .locator("dd");
+      await expect(branch).toHaveText(expectedBranch!);
+      branchCells.values.push(
+        await branch.evaluate((cell) => {
+          const range = document.createRange();
+          range.selectNodeContents(cell);
+          return {
+            text: cell.textContent,
+            visible:
+              cell.getBoundingClientRect().width > 0 &&
+              cell.getBoundingClientRect().height > 0,
+            lineCount: new Set(
+              [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+            ).size,
+          };
+        }),
+      );
+    }
+  }
   for (const count of branchCells.compactBranchCounts) expect(count).toBe(1);
   expect(branchCells.values.length).toBeGreaterThan(0);
   for (const cell of branchCells.values) {
@@ -315,7 +391,7 @@ test("Part 1 pills and dashboard branch values stay on one line", async ({
   }
 });
 
-test("Part 1 invoice names and approved-price notes fit on one line", async ({
+test("R2g invoice names stay complete while four-decimal cost values fit on one line", async ({
   page,
 }) => {
   await signIn(page, "Floor Worker");
@@ -323,10 +399,10 @@ test("Part 1 invoice names and approved-price notes fit on one line", async ({
   await uploadInvoice(page);
   await expect(page.locator(".invoice-line")).toHaveCount(6);
   await expect(
-    page.locator(".invoice-line-toggle .product-name strong"),
+    page.locator(".invoice-line-toggle .receiving-product-name > bdi"),
   ).toHaveCount(6);
   const names = await page
-    .locator(".invoice-line-toggle .product-name strong")
+    .locator(".invoice-line-toggle .receiving-product-name > bdi")
     .evaluateAll((elements) =>
       elements.map((element) => {
         const range = document.createRange();
@@ -334,45 +410,59 @@ test("Part 1 invoice names and approved-price notes fit on one line", async ({
         const rects = [...range.getClientRects()];
         return {
           text: element.textContent,
+          title: element.parentElement!.getAttribute("title"),
           lines: new Set(rects.map((rect) => Math.round(rect.top))).size,
+          contained: rects.every((rect) => {
+            const box = element.parentElement!.getBoundingClientRect();
+            return (
+              rect.left >= box.left - 1.5 &&
+              rect.right <= box.right + 1.5 &&
+              rect.top >= box.top - 1.5 &&
+              rect.bottom <= box.bottom + 1.5
+            );
+          }),
         };
       }),
     );
   expect(names.length).toBeGreaterThan(0);
-  for (const name of names)
-    expect(name.lines, name.text ?? "product name").toBe(1);
-  await page.locator(".invoice-line-toggle").first().click();
-  const note = page
-    .locator(".invoice-line-price .muted")
-    .filter({ hasText: /^Approved:/ })
-    .first();
-  await expect(note).toBeVisible();
-  await expect(note).toContainText("$");
-  const lines = await note.evaluate((element) => {
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    return new Set(
-      [...range.getClientRects()].map((rect) => Math.round(rect.top)),
-    ).size;
-  });
-  expect(lines).toBe(1);
+  for (const name of names) {
+    expect(name.text).toBe(name.title);
+    expect(name.lines, name.text ?? "product name").toBeGreaterThanOrEqual(1);
+    expect(name.contained, name.text ?? "product name").toBe(true);
+  }
+  const costs = page.locator(
+    ".receiving-cost-cell > bdi:visible, .receiving-phone-cost > bdi:first-child:visible",
+  );
+  await expect(costs).toHaveCount(6);
+  for (const cost of await costs.all()) {
+    await expect(cost).toHaveText(/\$\d+\.\d{4}$/);
+    const lines = await cost.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return new Set(
+        [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+      ).size;
+    });
+    expect(lines).toBe(1);
+  }
 });
 
-test("Part 1 purchase charts show week dates and hover/focus amounts with equal-height desktop cards", async ({
+test("Part 1 purchase charts show calendar weeks, hover/focus amounts and equal-height paired desktop cards", async ({
   page,
 }, testInfo) => {
   await signIn(page, "Supervisor");
   await page.goto("/#dashboard");
   const chart = page.locator(".dashboard-purchases").filter({
     has: page.getByRole("heading", {
-      name: "Purchases, last 8 weeks",
+      name: "Purchases by week",
       exact: true,
     }),
   });
   await expect(chart.locator(".purchase-week-totals")).toHaveCount(0);
-  await expect(chart.locator(".purchase-week-labels")).toContainText(
-    /\d{4}-\d{2}-\d{2}/,
-  );
+  await expect(chart.locator(".purchase-week-column time")).toHaveCount(8);
+  await expect(
+    chart.locator(".purchase-week-column time").last(),
+  ).toHaveAttribute("datetime", /\d{4}-\d{2}-\d{2}/);
   const point = chart.locator(".purchase-point").last();
   await point.focus();
   await expect(chart.getByRole("tooltip")).toContainText("$");
@@ -387,13 +477,20 @@ test("Part 1 purchase charts show week dates and hover/focus amounts with equal-
   await point.hover();
   await expect(chart.getByRole("tooltip")).toBeVisible();
   if (testInfo.project.name === "desktop") {
-    const heights = await page
+    const cards = await page
       .locator(".dashboard-purchases")
       .evaluateAll((cards) =>
-        cards.map((card) => card.getBoundingClientRect().height),
+        cards.map((card) => ({
+          height: card.getBoundingClientRect().height,
+          alignSelf: getComputedStyle(card).alignSelf,
+        })),
       );
-    expect(heights).toHaveLength(2);
-    expect(Math.abs(heights[0] - heights[1])).toBeLessThanOrEqual(2);
+    expect(cards).toHaveLength(2);
+    expect(cards.every((card) => card.height > 0)).toBe(true);
+    const layout = await inspectDashboardCardLayout(page);
+    expect(layout.sameRow).toBe(true);
+    expect(layout.cards.filter((card) => card.paired)).toHaveLength(2);
+    expect(layout.failures).toEqual([]);
   }
 });
 
@@ -441,7 +538,7 @@ test("Part 1 Open return exposes pickup and cancellation, then resolution after 
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Receiving representative");
   await form
-    .getByLabel("Signed paper pickup slip reference", { exact: true })
+    .getByLabel("Reference (optional)", { exact: true })
     .fill("PICKUP-B-POLISH");
   await form
     .getByRole("button", { name: "Record pickup", exact: true })
@@ -455,6 +552,26 @@ test("Part 1 approval headers are complete and sortable Products headers and bac
   page,
 }) => {
   await signIn(page, "Supervisor");
+  // This case is the company-default-only preview. C14's ordinary seeded
+  // receipts retain real location prices, whose removal correctly gets a warning.
+  await runCanonicalBusinessFixture(
+    page,
+    (draft) => {
+      const product = draft.products.find(
+        (item) =>
+          item.company_id === draft.config.company.seed_key &&
+          item.code === "0006",
+      );
+      if (!product) throw new Error("The fictional preview product is missing");
+      product.branch_prices = {};
+    },
+    null,
+  );
+  await page.reload();
+  const fixture = await readCanonicalBusinessEvidence(page);
+  expect(
+    fixture.products.find((item) => item.code === "0006")?.branch_prices,
+  ).toEqual({});
   await page.goto("/#approvals");
   await page
     .getByRole("button", { name: "Approve price", exact: true })
@@ -524,7 +641,7 @@ test("Part 1 approval headers are complete and sortable Products headers and bac
   ).toBeVisible();
 });
 
-test("Part 1 demo disclaimer appears inside Demo and only invoice AI reading remains in page copy", async ({
+test("Demo disclaimers stay in Demo and simulated AI reading is explained in its entry flow", async ({
   page,
 }) => {
   await signIn(page, "Supervisor");
@@ -543,8 +660,36 @@ test("Part 1 demo disclaimer appears inside Demo and only invoice AI reading rem
     "Demo with fictional data",
   );
   await page.goto("/#invoices");
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await expect(page.locator("main")).toContainText(
+  await page.getByRole("tab", { name: /^Drafts \d+$/, exact: false }).click();
+  await expect(page.locator("main")).not.toContainText(
     "AI invoice reading is simulated",
   );
+  await page
+    .locator(".invoice-saved-table tbody tr td:first-child a")
+    .first()
+    .click();
+  await expect(page.locator("main")).not.toContainText(
+    "AI invoice reading is simulated",
+  );
+  await page.goto("/#invoices");
+  await page.getByRole("button", { name: "New invoice", exact: true }).click();
+  const chooser = page.getByRole("dialog", {
+    name: "New invoice",
+    exact: true,
+  });
+  await expect(
+    chooser.getByText("Simulated mode", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    chooser.getByText(
+      "Photos and PDFs use fictional values; your invoice is not read.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  const beforeSelection = await readCanonicalBusinessEvidence(page);
+  const picker = await openInvoiceSourcePicker(page);
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
+  await expect(page.getByTestId("invoice-upload-entry")).toHaveCount(0);
+  await picker.setFiles([]);
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeSelection);
 });

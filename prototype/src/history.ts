@@ -1,5 +1,7 @@
+import { isTimesheetActivity, timesheetScope } from "./timesheets";
 import { canApplyNotebookHistoryActivity } from "./notebooks";
 import { businessAuditRead } from "./business-audit-read";
+import { redactLiveReadingProvenance } from "./invoice-live-reading-projection";
 import { clearOfferStoreSuppression, offerVersion } from "./offer-store-scopes";
 import type {
   AuthenticatedActor,
@@ -16,6 +18,11 @@ import type { Activity, DemoState } from "./types";
 import type { RequestTransferEvent } from "./branch-requests";
 import Decimal from "decimal.js";
 import { revertSaleLifecycle, SalesError } from "./sales";
+import { recoverDiscardedInvoice } from "./invoice-discard";
+import {
+  canInvoiceAuthority,
+  invoiceAuthorityScope,
+} from "./invoice-authority";
 
 export type HistoryContext = AuthenticatedActor;
 export type HistoryPath = (string | { key: string; value: string })[];
@@ -225,7 +232,13 @@ function difference(
   afterExists = after !== undefined,
 ) {
   if (equal(before, after)) return;
-  if (Array.isArray(before) && Array.isArray(after)) {
+  // Invoice line order is part of the source document. Retain the whole ordered
+  // array as before stable line IDs, so Undo restores its original positions and
+  // rejects intervening line edits instead of appending the removed row.
+  const orderedInvoiceLines =
+    ["invoice", "invoices"].includes(String(path[0])) &&
+    path.at(-1) === "lines";
+  if (Array.isArray(before) && Array.isArray(after) && !orderedInvoiceLines) {
     const key = ["id", "code", "key"].find((candidate) =>
       [...before, ...after].every(
         (item) => own(item) && typeof item[candidate] === "string",
@@ -433,6 +446,71 @@ export function attachReversals(
   const entries = after.activity.filter((entry) => !previous.has(entry.id));
   const patches = changedPaths(before, after);
   for (const entry of entries) {
+    if (entry.action === "Cancel invoice" && entry.entity_type === "invoice") {
+      const prior = [before.invoice, ...(before.invoices ?? [])].find(
+        (invoice) =>
+          invoice.id === entry.entity_id &&
+          invoice.company_id === entry.company_id,
+      );
+      const cancelled = after.invoices?.find(
+        (invoice) =>
+          invoice.id === entry.entity_id &&
+          invoice.company_id === entry.company_id,
+      );
+      const content = (invoice: NonNullable<typeof prior>) => {
+        const {
+          status: _status,
+          cancellation: _cancellation,
+          version: _version,
+          live_reading: _live,
+          ...rest
+        } = invoice;
+        void _status;
+        void _cancellation;
+        void _version;
+        void _live;
+        return rest;
+      };
+      const others = (state: DemoState) =>
+        (state.invoices ?? []).filter(
+          (invoice) =>
+            invoice.id !== entry.entity_id ||
+            invoice.company_id !== entry.company_id,
+        );
+      if (
+        !prior ||
+        !cancelled ||
+        ["posted", "cancelled"].includes(prior.status) ||
+        cancelled.status !== "cancelled" ||
+        cancelled.cancellation?.by_user_id !== context.user_id ||
+        cancelled.cancellation.at !== entry.at ||
+        !equal(content(prior), content(cancelled)) ||
+        !equal(others(before), others(after)) ||
+        (before.invoice.id !== entry.entity_id &&
+          !equal(before.invoice, after.invoice)) ||
+        patches.some(
+          (patch) => !["invoice", "invoices"].includes(String(patch.path[0])),
+        ) ||
+        unsafeTransaction(before, after, null)
+      ) {
+        entry.reversible = false;
+        continue;
+      }
+      // The invoice already existed in canonical workspace or saved records.
+      // Keep one retained target when reversing; never invert the global
+      // workspace slot or a stale second copy after the person opens another.
+      entry.reversal = [
+        {
+          path: ["invoices", { key: "id", value: cancelled.id }],
+          before: structuredClone(prior),
+          after: structuredClone(cancelled),
+          before_exists: true,
+          after_exists: true,
+        },
+      ];
+      entry.reversible = true;
+      continue;
+    }
     if (entry.entity_type === "sale" && entry.reversible) {
       const selected = after.sales?.find(
         (item) =>
@@ -705,6 +783,13 @@ function accessible(
   )
     return true;
   if (entry.company_id !== state.config.company.seed_key) return false;
+  if (isTimesheetActivity(entry))
+    return can(
+      state,
+      context,
+      "timesheets.read",
+      timesheetScope(entry.company_id, entry.branch),
+    ).allowed;
   return (
     can(state, context, "history.read_all", historyScope(state, entry))
       .allowed ||
@@ -963,6 +1048,43 @@ function patchScope(
   context: HistoryContext,
   entry: Activity,
 ) {
+  const selector = patch.path[1];
+  const invoiceRecord =
+    patch.path[0] === "invoice"
+      ? state.invoice
+      : patch.path[0] === "invoices" &&
+          typeof selector === "object" &&
+          selector.key === "id"
+        ? state.invoices?.find((item) => item.id === selector.value)
+        : undefined;
+  const discardUndo =
+    entry.action === "Cancel invoice" &&
+    entry.entity_type === "invoice" &&
+    entry.entity_id === invoiceRecord?.id &&
+    invoiceRecord?.status === "cancelled";
+  const newCategoriesUndo =
+    invoiceRecord &&
+    entry.action === "Set category for new invoice products" &&
+    entry.entity_type === "invoice" &&
+    entry.entity_id === invoiceRecord?.id &&
+    ["draft", "review"].includes(invoiceRecord?.status ?? "") &&
+    invoiceRecord?.live_reading?.phase !== "processing" &&
+    canInvoiceAuthority(
+      state,
+      context,
+      "invoices.edit",
+      invoiceRecord.id,
+      true,
+    ) &&
+    canInvoiceAuthority(state, context, "invoices.cost_read", invoiceRecord.id);
+  if (invoiceRecord?.status === "cancelled" && !discardUndo)
+    throw new HistoryError("irreversible");
+  if (discardUndo) {
+    const scope = invoiceAuthorityScope(state, invoiceRecord.id, true);
+    scope.status = "activity";
+    if (!can(state, context, "invoices.edit", scope).allowed)
+      throw new HistoryError("permission");
+  }
   const cap = sourceCapability(state, entry, String(patch.path[0]), context);
   if (
     !cap ||
@@ -1001,6 +1123,8 @@ function patchScope(
   if (
     !canDomain(state, context, "history.read_all") &&
     !workerDatePreference &&
+    !(discardUndo && patch.path[0] === "invoices") &&
+    !(newCategoriesUndo && patch.path[0] === "invoices") &&
     ![
       "notes",
       "notifications",
@@ -1422,6 +1546,22 @@ export function reverseActivity(
   if (order)
     candidate.orders!.find((item) => item.id === order.id)!.version =
       order.version + 1;
+  const restoredDiscard =
+    entry.action === "Cancel invoice" &&
+    entry.entity_type === "invoice" &&
+    entry.entity_id
+      ? recoverDiscardedInvoice(
+          candidate,
+          context,
+          entry.entity_id,
+          [state.invoice, ...(state.invoices ?? [])].find(
+            (item) =>
+              item.id === entry.entity_id &&
+              item.company_id === entry.company_id,
+          )?.version ?? 1,
+          now,
+        )
+      : undefined;
   // Names are labels, while older invoice/ledger records retain their original
   // supplier text. Restoring a display name must keep every recorded alias.
   for (const supplier of candidate.suppliers ?? []) {
@@ -1463,7 +1603,8 @@ export function reverseActivity(
     entity_id: entry.entity_id,
     before: entry.after,
     after:
-      entry.entity_type === "supplier"
+      restoredDiscard ??
+      (entry.entity_type === "supplier"
         ? structuredClone(
             candidate.suppliers?.find(
               (record) =>
@@ -1471,7 +1612,7 @@ export function reverseActivity(
                 record.id === entry.entity_id,
             ) ?? entry.before,
           )
-        : entry.before,
+        : entry.before),
     reversible: false,
     reversed_activity_id: entry.id,
     reversal_kind: mode,
@@ -1523,6 +1664,19 @@ export function hydrateLegacyReversals(state: DemoState): void {
 }
 
 const financialHistoryKeys = new Set([
+  "known_delivery",
+  "free_case_group",
+  "acquisition_basis",
+  "acquisition_amount",
+  "imported_unit_cost_basis",
+  "manual_costs",
+  "package_branch_costs",
+  "paper_line_total",
+  "paper_total_acknowledgement",
+  "weight_case_cost_basis",
+  "package_cost_basis",
+  "package_container_cost",
+  "parent_cost_per_lb",
   "cost",
   "store_cost",
   "opening_balance",
@@ -1593,8 +1747,11 @@ export function projectHistoryEntry(
     throw new HistoryError("permission");
   entry = canonical;
   const privateMoney = canDomain(state, actor, "history.read_all");
-  if (privateMoney) return businessAuditRead(entry);
-  return businessAuditRead(projectHistoryValue(entry)) as Activity;
+  const visible = ["owner", "manager"].includes(actor.role)
+    ? entry
+    : redactLiveReadingProvenance(entry);
+  if (privateMoney) return businessAuditRead(visible);
+  return businessAuditRead(projectHistoryValue(visible)) as Activity;
 }
 
 function privateHistoryField(key: string): boolean {

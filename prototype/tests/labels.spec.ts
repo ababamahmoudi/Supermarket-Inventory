@@ -117,7 +117,16 @@ test("creates a template, starts after four used slots, and prints bilingual lab
   await page.reload();
   await page.getByRole("tab", { name: "Templates", exact: true }).click();
   await page.getByLabel("Saved template").click();
-  await expect(page.getByRole("option")).toHaveCount(4);
+  const templates = page.getByRole("option");
+  await expect(templates).toHaveCount(3);
+  await expect(templates).toHaveText(["Regular", "Promo", "Template 1"]);
+  await expect(
+    page.getByRole("option", { name: "Choose a template", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("option", { name: "Template 1", exact: true }).click();
+  await expect(page.getByLabel("Saved template", { exact: true })).toHaveText(
+    "Template 1",
+  );
 });
 
 test("validates A4 dimensions and Persian labels without external requests", async ({

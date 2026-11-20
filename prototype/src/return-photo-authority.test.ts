@@ -145,6 +145,66 @@ describe("E1 return photo attachments", () => {
         .actor_user_id,
     ).toBe(worker.actor.user_id);
   });
+  it.each(["partial", "resolved"] as const)(
+    "an accepted blank-reference %s pickup can retry its genuine photo without reopening source writes",
+    async (kind) => {
+      const { repository, query, worker } = await fixture();
+      const attachment = await uploadReturnPhoto(query, {
+        company_id: worker.actor.company_id,
+        return_id: "c4-return",
+        capability: "returns.pickup_record",
+        file: file(),
+      });
+      const input = {
+        request_id: "fictional-photo-retry-request",
+        quantities: { "0003": kind === "partial" ? 1 : 0 },
+        representative: "Fictional driver",
+        slip: "",
+        photo: attachment,
+        shortfalls: {
+          "0003": {
+            reason: "Actual remaining goods",
+            outcome:
+              kind === "partial"
+                ? ("keep_for_next_pickup" as const)
+                : ("put_back_on_shelf" as const),
+          },
+        },
+      };
+      const first = await repository.runBusinessCommand<DemoState, void>(
+        worker.identity,
+        (draft, actor) => recordPickup(draft, actor, "c4-return", input),
+      );
+      const accepted = structuredClone(first.business.state);
+      const again = await repository.runBusinessCommand<DemoState, void>(
+        worker.identity,
+        (draft, actor) => recordPickup(draft, actor, "c4-return", input),
+      );
+      expect(again.business.state).toEqual(accepted);
+      expect(
+        (again.business.state.returns[0] as OperationalReturn).pickup_memos,
+      ).toHaveLength(1);
+      expect(
+        (again.business.state.returns[0] as OperationalReturn).evidence![0]
+          .photo,
+      ).toBe(storage.reference);
+      await expect(
+        repository.runBusinessCommand<DemoState, void>(
+          worker.identity,
+          (draft, actor) =>
+            recordPickup(draft, actor, "c4-return", {
+              ...input,
+              photo: { name: attachment.name } as ReturnPhotoAttachment,
+            }),
+        ),
+      ).rejects.toThrow();
+      const retained = await repository.loadBusiness<DemoState>(
+        worker.actor.company_id,
+      );
+      expect(retained.state).toEqual(accepted);
+    },
+  );
+
   it("rejects caller-supplied invoice references and structurally copied attachment claims atomically", async () => {
     const { repository, worker } = await fixture();
     const before = await repository.queryBusiness<DemoState, DemoState>(

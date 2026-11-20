@@ -6,7 +6,7 @@ const Money = Decimal.clone({ precision: 80, rounding: Decimal.ROUND_HALF_UP });
 type SeedCategory = (typeof seedConfig.pricing_categories)[number];
 export type PricingConfig = Pick<
   typeof seedConfig,
-  "rounding_bands" | "special_corrections"
+  "special_corrections" | "rounding_bands"
 > & {
   pricing_categories: (Omit<SeedCategory, "minimum_margin"> & {
     minimum_margin: string | null;
@@ -19,6 +19,13 @@ export type PricingResult = {
   rounded_raw: string;
   after_band_rounding: string | null;
   special_correction_applied: boolean;
+  /**
+   * The band price a special correction raised (for example 1.49 before
+   * 1.49 → 1.99). Never the cost/divisor quotient. Null when nothing was raised.
+   */
+  rounded_up_from: string | null;
+  /** Whether `rounded_up_from` alone already meets the category's minimum margin. */
+  rounded_up_from_meets_margin: boolean | null;
   margin: string | null;
   below_minimum_margin: boolean;
 };
@@ -123,24 +130,28 @@ export function validatePricingConfig(config: PricingConfig): void {
   }
 }
 
-/** One configuration-driven engine for live previews and invoice calculations. */
-export function calculatePrice(
-  costInput: string,
+/** Apply a category's normal rounding to an already calculated selling amount. */
+export function roundCategoryPrice(
+  rawInput: string,
   categoryKey: string,
   config: PricingConfig = seedConfig,
   options: { skip_band_rounding?: boolean } = {},
-): PricingResult {
-  const cost = decimal(costInput, "invalid_cost");
-  const fractionalDigits = costInput.trim().split(".")[1]?.length ?? 0;
-  if (cost.lt("0") || fractionalDigits > 4)
-    throw new PricingValidationError("invalid_cost");
+): Pick<
+  PricingResult,
+  | "selling_price"
+  | "raw_price"
+  | "rounded_raw"
+  | "after_band_rounding"
+  | "special_correction_applied"
+  | "rounded_up_from"
+> {
   validatePricingConfig(config);
   const category = config.pricing_categories.find(
     (entry) => entry.key === categoryKey,
   );
   if (!category) throw new PricingValidationError("unknown_category");
-
-  const raw = cost.div(decimal(category.cost_divisor, "invalid_divisor"));
+  const raw = decimal(rawInput, "invalid_cost");
+  if (raw.lt(0)) throw new PricingValidationError("invalid_cost");
   const roundedRaw = raw.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
   let price: Decimal;
   let afterBands: Decimal | null = null;
@@ -180,19 +191,59 @@ export function calculatePrice(
     }
   }
 
-  const margin = price.isZero() ? null : price.minus(cost).div(price);
-  // Cross multiplication avoids formatting or recurring-ratio precision affecting review.
-  const belowMinimum =
-    price.isZero() ||
-    (category.minimum_margin !== null &&
-      price.minus(cost).lt(price.times(category.minimum_margin)));
+  // A correction is a suggestion: keep the genuine band price when it raised
+  // the price, so every screen can explain it and offer "Use lower".
+  const roundedUpFrom =
+    correctionApplied && afterBands && price.gt(afterBands) ? afterBands : null;
+
   return {
     selling_price: price.toFixed(2),
+    rounded_up_from: roundedUpFrom?.toFixed(2) ?? null,
     raw_price: raw.toString(),
     rounded_raw: roundedRaw.toFixed(2),
     after_band_rounding: afterBands?.toFixed(2) ?? null,
     special_correction_applied: correctionApplied,
+  };
+}
+
+/** One configuration-driven engine for live previews and invoice calculations. */
+export function calculatePrice(
+  costInput: string,
+  categoryKey: string,
+  config: PricingConfig = seedConfig,
+  options: { skip_band_rounding?: boolean } = {},
+): PricingResult {
+  const cost = decimal(costInput, "invalid_cost");
+  const fractionalDigits = costInput.trim().split(".")[1]?.length ?? 0;
+  if (cost.lt("0") || fractionalDigits > 4)
+    throw new PricingValidationError("invalid_cost");
+  validatePricingConfig(config);
+  const category = config.pricing_categories.find(
+    (entry) => entry.key === categoryKey,
+  );
+  if (!category) throw new PricingValidationError("unknown_category");
+
+  const rounded = roundCategoryPrice(
+    cost.div(decimal(category.cost_divisor, "invalid_divisor")).toString(),
+    categoryKey,
+    config,
+    options,
+  );
+  const price = new Money(rounded.selling_price);
+
+  const margin = price.isZero() ? null : price.minus(cost).div(price);
+  // Cross multiplication avoids formatting or recurring-ratio precision affecting review.
+  const meetsMinimum = (amount: Decimal) =>
+    !amount.isZero() &&
+    (category.minimum_margin === null ||
+      amount.minus(cost).gte(amount.times(category.minimum_margin)));
+  return {
+    ...rounded,
+    rounded_up_from_meets_margin:
+      rounded.rounded_up_from === null
+        ? null
+        : meetsMinimum(new Money(rounded.rounded_up_from)),
     margin: margin?.toString() ?? null,
-    below_minimum_margin: belowMinimum,
+    below_minimum_margin: !meetsMinimum(price),
   };
 }

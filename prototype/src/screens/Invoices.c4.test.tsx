@@ -57,7 +57,9 @@ async function fixtureFor(state = postedFixture()) {
   fixtures.push(fixture);
   return fixture;
 }
-function postedFixture() {
+function postedFixture(
+  prepare?: (line: import("../types").InvoiceLine) => void,
+) {
   const state = initialState(),
     actor = authenticatedTestActor(state, "manager", {
       locations: ["Branch 1"],
@@ -76,6 +78,7 @@ function postedFixture() {
   const line = state.invoice.lines[0];
   setInvoiceLineQuantity(line, "10", "units", 1);
   line.unit_cost_before_tax = "1.0000";
+  prepare?.(line);
   recalculateInvoice(state.invoice, state.config);
   line.review_confirmed = true;
   line.date_tracking = false;
@@ -91,6 +94,7 @@ function postedFixture() {
 function Harness({ approvals = false }: { approvals?: boolean }) {
   const { state, actor, command, setLang } = useDemo();
   const [loaded, setLoaded] = useState(false);
+  const [completedLedgerChanges, setCompletedLedgerChanges] = useState(0);
   const invoice = state.invoice_workspace?.invoice;
   const scope = {
     company_id: state.config.company.seed_key,
@@ -156,10 +160,14 @@ function Harness({ approvals = false }: { approvals?: boolean }) {
                 allocations: [{ invoice_id: invoice.id, amount: "1.00" }],
               }),
           );
+          setCompletedLedgerChanges((count) => count + 1);
         }}
       >
         Concurrent ledger change
       </button>
+      <output data-testid="completed-ledger-changes">
+        {completedLedgerChanges}
+      </output>
       <output data-testid="corrections">
         {facts.data?.corrections ?? "—"}
       </output>
@@ -183,9 +191,9 @@ function Harness({ approvals = false }: { approvals?: boolean }) {
   );
 }
 
-async function correctionPreview() {
+async function openCorrection(state = postedFixture()) {
   const user = userEvent.setup();
-  const fixture = await fixtureFor();
+  const fixture = await fixtureFor(state);
   render(
     <DemoProvider options={fixture.options}>
       <Harness />
@@ -209,6 +217,17 @@ async function correctionPreview() {
     Boolean(screen.queryByRole("dialog", { name: "Correct invoice" })),
   );
   const dialog = await screen.findByRole("dialog", { name: "Correct invoice" });
+  return { user, dialog, fixture };
+}
+
+async function correctionPreview() {
+  const { user, dialog } = await openCorrection();
+  expect(dialog.querySelectorAll(".receiving-line-editor")).toHaveLength(0);
+  await user.click(
+    dialog.querySelector(
+      '[data-testid="invoice-line-row-0"] .invoice-line-toggle',
+    )!,
+  );
   const cost = within(dialog).getByLabelText("Unit cost before tax");
   await user.clear(cost);
   await user.type(cost, "2.0000");
@@ -230,6 +249,12 @@ it("requires preview and confirmation before appending a correction and preserve
   const { user, dialog } = await correctionPreview();
   expect(screen.getByTestId("corrections")).toHaveTextContent("0");
   expect(within(dialog).getByText("Corrected payable")).toBeInTheDocument();
+  const changes = within(dialog).getByRole("region", {
+    name: "What will change",
+  });
+  expect(within(changes).getByText("Unit cost")).toBeInTheDocument();
+  expect(within(changes).getByText("$1.0000")).toBeInTheDocument();
+  expect(within(changes).getByText("$2.0000")).toBeInTheDocument();
   await user.click(within(dialog).getByRole("button", { name: "Continue" }));
   expect(screen.getByTestId("corrections")).toHaveTextContent("0");
   await user.click(
@@ -242,11 +267,54 @@ it("requires preview and confirmation before appending a correction and preserve
   expect(screen.getByTestId("current-total")).toHaveTextContent("20.00");
 });
 
+it("starts with closed receiving rows and keeps fast local edits separate from retained canonical evidence", async () => {
+  const { user, dialog, fixture } = await openCorrection();
+  expect(dialog.querySelectorAll(".receiving-line-editor")).toHaveLength(0);
+  expect(
+    dialog.querySelectorAll('.invoice-line-toggle[aria-expanded="false"]'),
+  ).toHaveLength(1);
+  const before = await fixture.readCanonical();
+  await user.click(
+    dialog.querySelector(
+      '[data-testid="invoice-line-row-0"] .invoice-line-toggle',
+    )!,
+  );
+  const editor = within(dialog).getByRole("region", { name: "Line 1" });
+  expect(editor).toHaveClass(
+    "receiving-line-editor",
+    "ui-form-large",
+    "ui-form-surface",
+  );
+  const quantity = editor.querySelector("#invoice-line-0-invoiced")!;
+  await user.clear(quantity);
+  await user.type(quantity, "20");
+  expect((quantity as HTMLInputElement).value).toBe("20");
+  for (const name of ["Taxable", "Track date"])
+    expect(
+      within(within(editor).getByRole("group", { name }))
+        .getAllByRole("button")
+        .map((button) => button.textContent),
+    ).toEqual(["No", "Yes"]);
+  expect(
+    within(editor).getByRole("button", { name: "Remove line" }),
+  ).toBeDisabled();
+  const after = await fixture.readCanonical();
+  expect(after.invoice).toEqual(before.invoice);
+  expect(after.ledger).toEqual(before.ledger);
+  expect(after.stock_movements).toEqual(before.stock_movements);
+  expect(after.invoice_content_corrections).toEqual(
+    before.invoice_content_corrections,
+  );
+});
+
 it("rejects a correction whose financial evidence changes after preview", async () => {
   const { user, dialog } = await correctionPreview();
   await user.click(within(dialog).getByRole("button", { name: "Continue" }));
   await user.click(
     screen.getByRole("button", { name: "Concurrent ledger change" }),
+  );
+  await renderedUiReady(
+    () => screen.getByTestId("completed-ledger-changes").textContent === "1",
   );
   await user.click(
     within(dialog).getByRole("button", { name: "Confirm correction" }),
@@ -329,3 +397,113 @@ it("shows a weighed posted quantity with its retained case count and source-unit
   expect(screen.getByText("10 kg")).toBeInTheDocument();
   expect(screen.getByText(/Case of/)).toBeInTheDocument();
 });
+
+it("keeps the retained archived product selectable after a staged switch away", async () => {
+  const source = postedFixture();
+  const code = source.invoice.lines[0].product_code;
+  source.products.find((product) => product.code === code)!.status = "archived";
+  const { user, dialog, fixture } = await openCorrection(source);
+  const canonicalBefore = await fixture.readCanonical();
+  await user.click(within(dialog).getAllByRole("link")[0]);
+  const editor = within(dialog).getByRole("region", { name: "Line 1" });
+  const select = within(editor).getByRole("combobox", {
+    name: "Matched product",
+  });
+  await user.click(select);
+  const target = source.products.find(
+    (product) => product.status !== "archived" && product.code !== code,
+  )!;
+  await user.click(
+    screen.getByRole("option", { name: `${target.name_en} · ${target.code}` }),
+  );
+  expect(
+    within(editor).getByRole("textbox", { name: "English name" }),
+  ).toHaveValue(target.name_en);
+  expect(
+    within(editor).getByRole("textbox", { name: "Persian name (optional)" }),
+  ).toHaveValue(target.name_fa || "");
+  await user.click(select);
+  const retained = source.products.find((product) => product.code === code)!;
+  await user.click(
+    screen.getByRole("option", {
+      name: `${retained.name_en} · ${retained.code}`,
+    }),
+  );
+  expect(select).toHaveTextContent(retained.name_en);
+  expect(
+    within(editor).getByRole("textbox", { name: "English name" }),
+  ).toHaveValue(retained.name_en);
+  expect(
+    within(editor).getByRole("textbox", { name: "Persian name (optional)" }),
+  ).toHaveValue(retained.name_fa || "");
+  expect((await fixture.readCanonical()).invoice).toEqual(
+    canonicalBefore.invoice,
+  );
+});
+
+it.each(["2.0000", "", "invalid"])(
+  "previews the actual shared case-cost edit %j with exact amounts or no-write validation",
+  async (caseCost) => {
+    const source = postedFixture((line) => {
+      setInvoiceLineQuantity(line, "5000", "cases", 6);
+      line.case_cost_before_tax = "1.0000";
+      line.unit_cost_before_tax = "0.1667";
+    });
+    const { user, dialog, fixture } = await openCorrection(source);
+    const before = await fixture.readCanonical();
+    await user.click(within(dialog).getAllByRole("link")[0]);
+    const editor = within(dialog).getByRole("region", { name: "Line 1" });
+    const input = within(editor).getByRole("textbox", {
+      name: "Case cost before tax",
+    });
+    await user.clear(input);
+    if (caseCost) await user.type(input, caseCost);
+    expect(input).toHaveValue(caseCost);
+    if (caseCost === "2.0000")
+      expect(
+        within(editor).getByRole("textbox", { name: "Unit cost before tax" }),
+      ).toHaveValue("0.3333");
+    if (caseCost !== "2.0000") {
+      await user.click(
+        within(editor).getByRole("button", { name: "Confirm line" }),
+      );
+      expect(
+        within(dialog).getByRole("region", { name: "Line 1" }),
+      ).toBeVisible();
+      expect(input).toHaveAttribute("aria-invalid", "true");
+    }
+    await user.click(
+      within(editor).getAllByRole("button", { name: "Close" }).at(-1)!,
+    );
+    await user.type(
+      within(dialog).getByRole("textbox", { name: "Reason (required)" }),
+      "Review the fictional exact case price.",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "Preview correction" }),
+    );
+    if (caseCost === "2.0000") {
+      const difference = await within(dialog).findByRole("region", {
+        name: "What will change",
+      });
+      expect(difference).toHaveTextContent("Case cost$1.0000→$2.0000");
+      expect(dialog).toHaveTextContent("Corrected payable$10,000.00");
+      expect(dialog).toHaveTextContent("Payable delta$5,000.00");
+    } else {
+      const errors = await within(dialog).findAllByRole("alert");
+      expect(errors.map((error) => error.textContent).join(" ")).toContain(
+        "Enter a nonnegative cost with up to four decimal places.",
+      );
+      expect(
+        within(dialog).getByRole("textbox", { name: "Case cost before tax" }),
+      ).toHaveAttribute("aria-invalid", "true");
+      expect(
+        within(dialog).queryByRole("button", { name: "Continue" }),
+      ).not.toBeInTheDocument();
+      expect(
+        within(dialog).getByRole("textbox", { name: "Case cost before tax" }),
+      ).toHaveValue(caseCost);
+    }
+    expect(await fixture.readCanonical()).toEqual(before);
+  },
+);

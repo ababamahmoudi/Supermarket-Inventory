@@ -1,0 +1,114 @@
+{
+  "reading": {
+    "supplier_name": "Fictional Cedar Path Foods",
+    "supplier_invoice_number": "CEDAR-0712",
+    "invoice_date": "2026-07-12",
+    "payment_terms": "Net 30",
+    "currency": null,
+    "subtotal": null,
+    "tax": null,
+    "final_total": "120.00",
+    "lines": [
+      {
+        "description": "Cedar Pantry Item 1 12x250 gr",
+        "supplier_sku": "CP-01",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 2 12x250 gr",
+        "supplier_sku": "CP-02",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 3 12x250 gr",
+        "supplier_sku": "CP-03",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 4 12x250 gr",
+        "supplier_sku": "CP-04",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 5 12x250 gr",
+        "supplier_sku": "CP-05",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 6 12x250 gr",
+        "supplier_sku": "CP-06",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 7 12x250 gr",
+        "supplier_sku": "CP-07",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 8 12x250 gr",
+        "supplier_sku": "CP-08",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 9 12x250 gr",
+        "supplier_sku": "CP-09",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 10 12x250 gr",
+        "supplier_sku": "CP-10",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 11 12x250 gr",
+        "supplier_sku": "CP-11",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      },
+      {
+        "description": "Cedar Pantry Item 12 12x250 gr",
+        "supplier_sku": "CP-12",
+        "unit": "CTN12",
+        "quantity": "1",
+        "line_total": "10.00",
+        "taxable": false
+      }
+    ]
+  },
+  "statuses": {
+    "lines[3].barcode": "check",
+    "header.branch_hint": "check"
+  }
+}

@@ -28,7 +28,7 @@ test("evidenced pickup retains an RM across reload and exposes only a separate S
     .getByLabel("Supplier representative name", { exact: true })
     .fill("Demo Driver C4");
   await page
-    .getByLabel("Signed paper pickup slip reference", { exact: true })
+    .getByLabel("Reference (optional)", { exact: true })
     .fill("SIGNED-C4-BROWSER-001");
   await page
     .locator(".return-action-card")

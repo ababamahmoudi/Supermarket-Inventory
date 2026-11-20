@@ -1,4 +1,9 @@
+import { PoweredByMaker } from "./MakerBrand";
+import { PageContentBoundary } from "./PageContentBoundary";
+import { AuthHeader } from "./AuthHeader";
 import PwaMenu from "./PwaMenu";
+import DemoReadingMode from "./DemoReadingMode";
+import { CollapsedNavTooltip } from "./CollapsedNavTooltip";
 import { InitialSessionLoading, SessionProgress } from "./SessionProgress.c9";
 import { AUTH_IDENTITY_KEY } from "./auth-preferences.e1";
 import {
@@ -33,6 +38,7 @@ import {
   ClipboardCheck,
   Search,
   Settings,
+  CalendarClock,
   Sun,
   Store,
   ShoppingCart,
@@ -46,10 +52,12 @@ import { branchLabel, moduleEnabled } from "./settings";
 import UndoToasts from "./UndoToasts";
 import { demoSeed } from "./config";
 import { PersonalNotifications } from "./PersonalNotifications";
+import { groupedNotifications } from "./notification-groups";
 import { StoredFileImage } from "./stored-file";
 import HistoryScreen from "./screens/History";
 import "./shell-catalog-polish.css";
 import PricingSettings from "./screens/Settings";
+import Timesheets from "./screens/Timesheets";
 import { Lookup, Products, ProductPage } from "./screens/Catalog";
 import Invoices from "./screens/Invoices";
 import Approvals from "./screens/Approvals";
@@ -74,12 +82,14 @@ import SecondSignInStep from "./AuthSteps.e1";
 import LocationDashboard from "./screens/LocationDashboard";
 import PriceUpdates from "./screens/PriceUpdates";
 import { useNavigationRestoration } from "./navigation";
+import { deferTimesheetNavigation } from "./screens/timesheet-save-context";
 import type { Branch } from "./types";
 import {
   Button,
   Card,
   ConfirmDialog,
   Dialog,
+  DialogActions,
   Field,
   IconButton,
   Menu,
@@ -91,6 +101,7 @@ import "./klead-tokens.css";
 import "./c6-shared.css";
 import "./c7-shared.css";
 import "./c8-catalog.css";
+import "./auth-presentation.css";
 
 function CashierPublicProductLookup({ code }: { code: string }) {
   useEffect(() => {
@@ -131,6 +142,14 @@ export const pages: {
     icon: Truck,
     group: "Daily",
     capabilities: ["received.read"],
+  },
+  {
+    key: "timesheets",
+    en: "Timesheets",
+    fa: "کارکرد",
+    icon: CalendarClock,
+    group: "Daily",
+    capabilities: ["timesheets.read"],
   },
   {
     key: "returns",
@@ -310,6 +329,8 @@ function PasswordField({
   autoComplete = "current-password",
   autoFocus = false,
   inputRef,
+  labelAction,
+  stableFeedback = false,
 }: {
   label: string;
   value: string;
@@ -318,13 +339,15 @@ function PasswordField({
   autoComplete?: string;
   autoFocus?: boolean;
   inputRef?: Ref<HTMLInputElement>;
+  labelAction?: ReactNode;
+  stableFeedback?: boolean;
 }) {
   const { t } = useDemo();
   const id = useId();
   const [visible, setVisible] = useState(false);
   return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
+    <div className={stableFeedback ? "field auth-password-feedback" : "field"}>
+      {!labelAction && <label htmlFor={id}>{label}</label>}
       <div className="password-field">
         <input
           id={id}
@@ -355,6 +378,12 @@ function PasswordField({
           )}
         </IconButton>
       </div>
+      {labelAction && (
+        <div className="auth-label-row">
+          <label htmlFor={id}>{label}</label>
+          {labelAction}
+        </div>
+      )}
       {error && (
         <p id={`${id}-error`} className="form-error" role="alert">
           {error}
@@ -372,8 +401,8 @@ function authErrorCopy(
   switch (error) {
     case "invalid":
       return t(
-        "The username or password is incorrect. Try again.",
-        "نام کاربری یا گذرواژه درست نیست. دوباره تلاش کنید.",
+        "Username or password is incorrect.",
+        "نام کاربری یا رمز عبور درست نیست.",
       );
     case "locked":
       return t(
@@ -424,10 +453,18 @@ function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [forgotPassword, setForgotPassword] = useState(false);
+  const [failureNotice, setFailureNotice] = useState("");
   const passwordRef = useRef<HTMLInputElement>(null);
   return (
-    <AuthLayout>
-      <h1>{t("Sign in", "ورود")}</h1>
+    <AuthLayout showLogo={false}>
+      <AuthHeader
+        title={t("Sign in", "ورود")}
+        description={t(
+          `${state.config.company.name_en} back office`,
+          `بخش مدیریت ${state.config.company.name_fa}`,
+        )}
+      />
       {state.config.session.registered_device_shows_recent_users &&
         recentUsers.length > 0 && (
           <div className="recent-users">
@@ -467,12 +504,12 @@ function SignIn() {
           event.preventDefault();
           void signIn(username, password).then((result) => {
             if (!result) return;
-            setError(authError(result));
             if (result === "invalid") {
+              setError(authError(result));
               // A wrong password is cleared so it can be retyped at once.
               setPassword("");
               window.requestAnimationFrame(() => passwordRef.current?.focus());
-            }
+            } else setFailureNotice(authError(result));
           });
         }}
       >
@@ -492,7 +529,7 @@ function SignIn() {
           />
         </Field>
         <PasswordField
-          label={t("Password", "گذرواژه")}
+          label={t("Password", "رمز عبور")}
           value={password}
           onChange={(value) => {
             setPassword(value);
@@ -500,53 +537,114 @@ function SignIn() {
           }}
           error={error}
           inputRef={passwordRef}
+          stableFeedback
+          labelAction={
+            <Button
+              variant="plain"
+              className="auth-help-link"
+              onClick={() => setForgotPassword(true)}
+            >
+              {t("Forgot password?", "رمز را فراموش کرده‌اید؟")}
+            </Button>
+          }
         />
         <Button type="submit" className="signin-submit">
           {t("Sign in", "ورود")}
         </Button>
       </form>
-      <p className="helper signin-help">
-        {t(
-          "Forgot your password? Ask a person who manages accounts to reset it.",
-          "گذرواژه را فراموش کرده‌اید؟ از مسئول حساب‌ها بخواهید آن را بازنشانی کند.",
-        )}
-      </p>
       {demoUsers.length > 0 && (
-        <p className="helper demo-account-hint">
-          {t("Demo accounts:", "حساب‌های دمو:")}{" "}
-          <LtrText>{demoUsers.map((user) => user.username).join(", ")}</LtrText>
-          {" / "}
-          {t("Fresh demo password", "گذرواژهٔ دموی تازه")}{" "}
-          <LtrText>demo1234</LtrText>
-        </p>
+        <div className="demo-account-hint">
+          <strong>{t("Demo accounts", "حساب‌های نمایشی")}</strong>
+          <span>
+            <LtrText>
+              {demoUsers.map((user) => user.username).join(" · ")}
+            </LtrText>
+          </span>
+          <span>
+            {t("Password", "رمز")} <LtrText>demo1234</LtrText>
+          </span>
+        </div>
       )}
+      <Dialog
+        open={forgotPassword}
+        onOpenChange={setForgotPassword}
+        title={t("Forgot password?", "رمز را فراموش کرده‌اید؟")}
+      >
+        <p>
+          {t(
+            "Ask a person who manages accounts to reset your password.",
+            "از مسئول حساب‌ها بخواهید گذرواژهٔ شما را بازنشانی کند.",
+          )}
+        </p>
+        <DialogActions>
+          <Button onClick={() => setForgotPassword(false)}>
+            {t("Close", "بستن")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <AuthFailureNotice
+        message={failureNotice}
+        onClose={() => setFailureNotice("")}
+      />
     </AuthLayout>
   );
 }
-function AuthLayout({ children }: { children: ReactNode }) {
-  const { state, t } = useDemo();
+function AuthLayout({
+  children,
+  showLogo = true,
+}: {
+  children: ReactNode;
+  showLogo?: boolean;
+}) {
+  const { state, t, lang } = useDemo();
   return (
     <div className="signin-page">
       <div className="signin-language">
         <LanguageToggle />
       </div>
-      <Card className="signin-card">
-        <span className="signin-logo-tile">
-          <span className="brand-logo-window signin-logo-window">
-            <StoredFileImage
-              className="signin-logo"
-              value={state.config.company.logo_data ?? logo}
-              companyId={state.config.company.seed_key}
-              alt={t(
-                state.config.company.name_en,
-                state.config.company.name_fa,
-              )}
-            />
-          </span>
-        </span>
-        {children}
-      </Card>
+      <div className="signin-wrap">
+        <Card className="signin-card">
+          {showLogo && (
+            <span className="signin-logo-tile">
+              <StoredFileImage
+                className="signin-logo"
+                value={state.config.company.logo_data ?? logo}
+                companyId={state.config.company.seed_key}
+                alt={t(
+                  state.config.company.name_en,
+                  state.config.company.name_fa,
+                )}
+              />
+            </span>
+          )}
+          {children}
+        </Card>
+        <PoweredByMaker config={state.config} language={lang} fullLogo />
+      </div>
     </div>
+  );
+}
+function AuthFailureNotice({
+  message,
+  onClose,
+}: {
+  message: string;
+  onClose(): void;
+}) {
+  const { t } = useDemo();
+  return (
+    <Dialog
+      open={Boolean(message)}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      title={t("Sign-in could not be completed", "ورود کامل نشد")}
+    >
+      <p role="alert">{message}</p>
+      <DialogActions>
+        <Button onClick={onClose}>{t("Close", "بستن")}</Button>
+      </DialogActions>
+    </Dialog>
   );
 }
 /** Only public company chrome survives a session transition; no cached actor. */
@@ -674,37 +772,61 @@ function ChoosePassword() {
     </AuthLayout>
   );
 }
-function LockScreen() {
+function LockScreen({ location = "" }: { location?: string }) {
   const authError = useAuthErrorCopy();
   const { user, unlock, signOut, t, lang } = useDemo();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [failureNotice, setFailureNotice] = useState("");
+  const passwordRef = useRef<HTMLInputElement>(null);
   return (
-    <AuthLayout>
-      <Initials name={personName(user!, lang)} />
-      <h1>{t("Screen locked", "صفحه قفل شده است")}</h1>
-      <p>{personName(user!, lang)}</p>
+    <AuthLayout showLogo={false}>
+      <AuthHeader
+        title={t("Locked", "قفل شده")}
+        description={
+          <>
+            {personName(user!, lang)}
+            {location && <> · {location}</>}
+          </>
+        }
+        avatar={<Initials name={personName(user!, lang)} />}
+      />
       <form
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          void unlock(password).then((error) => setError(authError(error)));
+          void unlock(password).then((result) => {
+            if (result === "invalid") {
+              setError(authError(result));
+              setPassword("");
+              window.requestAnimationFrame(() => passwordRef.current?.focus());
+            } else if (result) setFailureNotice(authError(result));
+          });
         }}
       >
         <PasswordField
-          label={t("Password", "گذرواژه")}
+          label={t("Password", "رمز عبور")}
           value={password}
-          onChange={setPassword}
+          onChange={(value) => {
+            setPassword(value);
+            setError("");
+          }}
           error={error}
           autoFocus
+          inputRef={passwordRef}
+          stableFeedback
         />
         <Button type="submit" className="signin-submit">
           {t("Unlock", "باز کردن قفل")}
         </Button>
       </form>
-      <Button variant="secondary" onClick={signOut}>
-        {t("Sign in as someone else", "ورود به‌عنوان کاربر دیگر")}
+      <Button variant="plain" className="auth-secondary" onClick={signOut}>
+        {t("Sign in as someone else", "ورود با حساب دیگر")}
       </Button>
+      <AuthFailureNotice
+        message={failureNotice}
+        onClose={() => setFailureNotice("")}
+      />
     </AuthLayout>
   );
 }
@@ -739,12 +861,12 @@ function Reauthenticate() {
           error={error}
           autoFocus
         />
-        <div className="actions">
+        <DialogActions>
           <Button variant="secondary" onClick={() => navigate("dashboard")}>
             {t("Cancel", "انصراف")}
           </Button>
           <Button type="submit">{t("Continue", "ادامه")}</Button>
-        </div>
+        </DialogActions>
       </form>
     </Dialog>
   );
@@ -769,6 +891,7 @@ const screenRegistry: Record<string, ReactNode> = {
   suppliers: <Suppliers />,
   history: <HistoryScreen />,
   lookup: <Lookup />,
+  timesheets: <Timesheets />,
   products: <Products />,
   product: <ProductPage />,
   invoices: <Invoices />,
@@ -818,6 +941,37 @@ export default function App() {
     t,
   } = useDemo();
   const [hash, setHash] = useState(() => window.location.hash.slice(1));
+  // Public lock-screen copy only: neither an actor nor a location selection.
+  // A reload without this hint honestly omits the previous location.
+  const [lockLocation, setLockLocation] = useState<{
+    company: string;
+    username: string;
+    en: string;
+    fa: string;
+  } | null>(null);
+  if (actor && user && authStage === "complete") {
+    const publicLocation = {
+      company: state.config.company.seed_key,
+      username: user.username,
+      en: branchLabel(state.config, branch, "en"),
+      fa: branchLabel(state.config, branch, "fa"),
+    };
+    if (
+      !lockLocation ||
+      Object.entries(publicLocation).some(
+        ([key, value]) =>
+          lockLocation[key as keyof typeof publicLocation] !== value,
+      )
+    )
+      setLockLocation(publicLocation);
+  } else if (
+    lockLocation &&
+    (authStage !== "locked" ||
+      user?.username !== lockLocation.username ||
+      state.config.company.seed_key !== lockLocation.company)
+  ) {
+    setLockLocation(null);
+  }
   useNavigationRestoration();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -860,7 +1014,8 @@ export default function App() {
     return () => media.removeEventListener("change", resize);
   }, []);
   useEffect(() => {
-    const onHash = () => {
+    const onHash = (event: HashChangeEvent) => {
+      if (deferTimesheetNavigation(event)) return;
       setHash(window.location.hash.slice(1));
       setMenuOpen(false);
       setExpandedGroup(null);
@@ -953,11 +1108,18 @@ export default function App() {
     authStage === "second_step_challenge"
   )
     return (
-      <AuthLayout>
+      <AuthLayout showLogo={false}>
         <SecondSignInStep />
       </AuthLayout>
     );
-  if (authStage === "locked") return <LockScreen />;
+  if (authStage === "locked")
+    return (
+      <LockScreen
+        location={
+          lockLocation?.username === user?.username ? lockLocation?.[lang] : ""
+        }
+      />
+    );
   if (authStage === "location") return <LocationUnavailable />;
   if (!actor || !role || !user) return <SignIn />;
   const allowed = pages.filter(
@@ -965,7 +1127,9 @@ export default function App() {
       moduleEnabled(state.config, page.key) &&
       (role !== "cashier" ||
         page.key === "lookup" ||
+        page.key === "timesheets" ||
         page.key === "expiry" ||
+        page.key === "returns" ||
         // Only current protected custom-notebook DTOs establish this route.
         // The Cashier never receives built-in Notes or a general Notes grant.
         (page.key === "notes" && Boolean(state.notebooks?.length))) &&
@@ -1154,22 +1318,28 @@ export default function App() {
     ).length + customUnread;
   const approvalCount =
     state.approvals.filter(
-      (record) => inBranch(record) && record.status === "pending",
+      (record) =>
+        inBranch(record) &&
+        record.type !== "new_supplier" &&
+        record.status === "pending",
     ).length +
     (state.sale_requests ?? []).filter(
       (record) => inBranch(record) && record.status === "pending",
     ).length;
+  const invoiceCount = new Map(
+    [...state.invoices, ...(state.invoice ? [state.invoice] : [])]
+      .filter((record) => inBranch(record) && record.status === "review")
+      .map((record) => [record.id, record]),
+  ).size;
   const alertCount = state.alerts.filter(
     (record) => inBranch(record) && record.status === "pending",
   ).length;
   const pendingPriceUpdates = (state.price_update_tasks ?? []).filter(
     (item) => item.status === "pending",
   ).length;
-  const personalNotifications = state.notifications ?? [];
-  const personalUnread = personalNotifications.filter(
-    (record) => !record.read_at,
+  const notifications = groupedNotifications(state.notifications ?? []).filter(
+    (group) => group.unread,
   ).length;
-  const notifications = personalUnread;
   const groupNames: Record<string, [string, string]> = {
     Daily: ["Daily", "روزانه"],
     Catalog: ["Catalog", "کاتالوگ"],
@@ -1209,6 +1379,16 @@ export default function App() {
       <p className="helper">
         {t("Demo with fictional data", "دمو با داده‌های ساختگی")}
       </p>
+      <DemoReadingMode
+        key={JSON.stringify([
+          actor?.company_id,
+          actor?.user_id,
+          actor?.session_id,
+          actor?.role,
+          actor?.authority_epoch,
+          actor?.person_version,
+        ])}
+      />
       {demoUsers.map((candidate) => (
         <MenuItem
           key={candidate.username}
@@ -1339,49 +1519,60 @@ export default function App() {
                                 request.status !== "closed" &&
                                 request.status !== "cancelled",
                             ).length
-                          : item.key === "approvals"
-                            ? approvalCount
-                            : item.key === "alerts"
-                              ? alertCount
-                              : item.key === "price-updates"
-                                ? pendingPriceUpdates
-                                : 0;
+                          : item.key === "invoices"
+                            ? invoiceCount
+                            : item.key === "approvals"
+                              ? approvalCount
+                              : item.key === "alerts"
+                                ? alertCount
+                                : item.key === "price-updates"
+                                  ? pendingPriceUpdates
+                                  : 0;
                     return (
-                      <a
+                      <CollapsedNavTooltip
                         key={item.key}
-                        href={item.disabled ? undefined : `#${item.key}`}
-                        role={item.disabled ? "link" : undefined}
-                        aria-disabled={item.disabled || undefined}
-                        tabIndex={item.disabled ? -1 : undefined}
-                        aria-label={t(item.en, item.fa)}
-                        title={
-                          item.disabled && !effectiveCollapsed
-                            ? t(item.en, item.fa)
-                            : undefined
-                        }
-                        aria-current={
-                          page.key === item.key ? "page" : undefined
-                        }
-                        onClick={() => setMenuOpen(false)}
+                        enabled={effectiveCollapsed && !menuOpen}
+                        label={t(item.en, item.fa)}
                       >
-                        <Icon size={18} strokeWidth={1.5} aria-hidden="true" />
-                        <span className="nav-item-label">
-                          {t(item.en, item.fa)}
-                        </span>
-                        {count > 0 && (
-                          <>
-                            <span
-                              className={`nav-count ${["approvals", "alerts"].includes(item.key) ? "nav-count-attention" : ""}`}
-                            >
-                              {count}
-                            </span>
-                            <span
-                              className="nav-count-dot"
-                              aria-hidden="true"
-                            />
-                          </>
-                        )}
-                      </a>
+                        <a
+                          href={item.disabled ? undefined : `#${item.key}`}
+                          role={item.disabled ? "link" : undefined}
+                          aria-disabled={item.disabled || undefined}
+                          tabIndex={item.disabled ? -1 : undefined}
+                          aria-label={t(item.en, item.fa)}
+                          title={
+                            item.disabled && !effectiveCollapsed
+                              ? t(item.en, item.fa)
+                              : undefined
+                          }
+                          aria-current={
+                            page.key === item.key ? "page" : undefined
+                          }
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          <Icon
+                            size={18}
+                            strokeWidth={1.5}
+                            aria-hidden="true"
+                          />
+                          <span className="nav-item-label">
+                            {t(item.en, item.fa)}
+                          </span>
+                          {count > 0 && (
+                            <>
+                              <span
+                                className={`nav-count ${["invoices", "approvals", "alerts"].includes(item.key) ? "nav-count-attention" : ""}`}
+                              >
+                                {count}
+                              </span>
+                              <span
+                                className="nav-count-dot"
+                                aria-hidden="true"
+                              />
+                            </>
+                          )}
+                        </a>
+                      </CollapsedNavTooltip>
                     );
                   })}
                 </div>
@@ -1522,6 +1713,9 @@ export default function App() {
           )}
           <Menu
             className="notifications-menu"
+            popupClassName="notifications-popover"
+            minWidth={380}
+            maxViewportHeight={0.7}
             iconOnly
             showChevron={false}
             aria-label={t(
@@ -1538,11 +1732,6 @@ export default function App() {
             }
           >
             <PersonalNotifications />
-            {personalNotifications.length === 0 && (
-              <p className="helper">
-                {t("No new notifications.", "اعلان جدیدی وجود ندارد.")}
-              </p>
-            )}
           </Menu>
           {!isMobile && (
             <Menu className="demo-menu" label={t("Demo", "دمو")}>
@@ -1616,36 +1805,43 @@ export default function App() {
           key={resetGeneration}
           tabIndex={-1}
         >
-          {cashierPublicProductLookup && currentProduct ? (
-            <CashierPublicProductLookup code={currentProduct.code} />
-          ) : requestedKnownRouteDenied && !cashierSafeTopLevelFallback ? (
-            <Card>
-              <p>
-                {parentKey === "settings"
-                  ? t(
-                      "Only an Owner or Manager can change Settings.",
-                      "فقط مالک یا مدیر می‌تواند تنظیمات را تغییر دهد.",
-                    )
-                  : t(
-                      "You do not have permission for this action.",
-                      "اجازهٔ انجام این کار را ندارید.",
-                    )}
-              </p>
-            </Card>
-          ) : needsReauthentication(page.key) ? (
-            <Reauthenticate />
-          ) : page.key === "dashboard" && !can("dashboard.company") ? (
-            <LocationDashboard />
-          ) : (
-            (screenRegistry[
-              allowed.some(
-                (candidate) =>
-                  candidate.key === parentKey && !candidate.disabled,
-              )
-                ? routeKey
-                : page.key
-            ] ?? screenRegistry[page.key])
-          )}
+          <PageContentBoundary
+            resetKey={`${hash}:${actor.company_id}:${actor.user_id}:${actor.session_id}:${actor.authority_epoch}:${actor.person_version}:${branch}:${resetGeneration}`}
+            title={t("Something went wrong", "مشکلی پیش آمد")}
+            reloadLabel={t("Reload this page", "بارگذاری دوبارهٔ این صفحه")}
+            onReload={() => window.location.reload()}
+          >
+            {cashierPublicProductLookup && currentProduct ? (
+              <CashierPublicProductLookup code={currentProduct.code} />
+            ) : requestedKnownRouteDenied && !cashierSafeTopLevelFallback ? (
+              <Card>
+                <p>
+                  {parentKey === "settings"
+                    ? t(
+                        "Only an Owner or Manager can change Settings.",
+                        "فقط مالک یا مدیر می‌تواند تنظیمات را تغییر دهد.",
+                      )
+                    : t(
+                        "You do not have permission for this action.",
+                        "اجازهٔ انجام این کار را ندارید.",
+                      )}
+                </p>
+              </Card>
+            ) : needsReauthentication(page.key) ? (
+              <Reauthenticate />
+            ) : page.key === "dashboard" && !can("dashboard.company") ? (
+              <LocationDashboard />
+            ) : (
+              (screenRegistry[
+                allowed.some(
+                  (candidate) =>
+                    candidate.key === parentKey && !candidate.disabled,
+                )
+                  ? routeKey
+                  : page.key
+              ] ?? screenRegistry[page.key])
+            )}
+          </PageContentBoundary>
         </main>
       </div>
       <Dialog
@@ -1668,12 +1864,12 @@ export default function App() {
                 onChange={(event) => setSearch(event.target.value)}
               />
             </Field>
-            <div className="actions">
+            <DialogActions>
               <Button variant="neutral" onClick={() => setSearchOpen(false)}>
                 {t("Cancel", "لغو")}
               </Button>
               <Button type="submit">{t("Search", "جست‌وجو")}</Button>
-            </div>
+            </DialogActions>
           </form>
         )}
       </Dialog>

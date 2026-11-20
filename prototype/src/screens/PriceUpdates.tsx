@@ -40,7 +40,7 @@ import {
   PriceUpdateValue,
   SaleEndTaskTitle,
 } from "../price-update-presentation";
-import { historyActionLabel } from "../history-copy";
+import { priceUpdateReasonLabel } from "../price-update-copy";
 import { ReceivedDateRange } from "./ReceivedDateRange";
 import { PhysicalSheet } from "./Labels";
 import { waitForPrintImages } from "../print-images";
@@ -409,7 +409,7 @@ export function PriceUpdates() {
                     </div>
                     <PriceUpdateChange task={task} />
                     <div className="price-updates-reason price-updates-wide-cell muted">
-                      {historyActionLabel(task.reason, lang)}
+                      {priceUpdateReasonLabel(task.reason, lang)}
                       {task.decided_by && (
                         <>
                           {" "}
@@ -755,7 +755,7 @@ function PriceUpdateDetail({ id }: { id: string }) {
           </div>
           <div>
             <dt>{t("Why it changed", "دلیل تغییر")}</dt>
-            <dd>{historyActionLabel(task.reason, lang)}</dd>
+            <dd>{priceUpdateReasonLabel(task.reason, lang)}</dd>
           </div>
           <div>
             <dt>{t("Decided by", "تصمیم‌گیرنده")}</dt>
@@ -920,7 +920,7 @@ function PriceUpdateDetail({ id }: { id: string }) {
                     <PriceUpdateValue value={step.new_price} />
                   </span>
                 </td>
-                <td>{historyActionLabel(step.reason, lang)}</td>
+                <td>{priceUpdateReasonLabel(step.reason, lang)}</td>
                 <td>
                   {step.decided_by ? (
                     <bdi>{step.decided_by}</bdi>

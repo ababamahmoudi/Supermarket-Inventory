@@ -114,6 +114,14 @@ describe("invoice-reader kit export contract", () => {
         parsed.invoices[0].ai_reading!.lines![0],
         0,
       ).unit_cost_before_tax,
+    ).toBe("0.9800");
+    expect(
+      mapReadingLine(
+        initialState(),
+        undefined,
+        parsed.invoices[0].ai_reading!.lines![0],
+        0,
+      ).imported_unit_cost_basis?.printed_unit_cost_before_tax,
     ).toBe("0.9801");
     file.invoices[0].ai_reading.subtotal = "NaN";
     expect(() => parseInvoiceReadings(JSON.stringify(file))).toThrow(
@@ -279,7 +287,13 @@ describe("normal invoice field mappings", () => {
           weightQuantityPerLb("2", unit),
         );
       } else {
-        expect(mapped.unit_cost_before_tax).toBe("1.2345");
+        expect(mapped.unit_cost_before_tax).toBe(
+          unit === "case" ? "0.1029" : "1.2350",
+        );
+        expect(
+          mapped.imported_unit_cost_basis?.printed_unit_cost_before_tax,
+        ).toBe("1.2345");
+        expect(mapped.line_total).toBe("2.47");
         expect(mapped.quantity_unit).toBe(unit === "case" ? "cases" : "units");
         expect(mapped.qty_invoiced).toBe(unit === "case" ? 24 : 2);
         if (unit === "other")
@@ -301,10 +315,16 @@ describe("normal invoice field mappings", () => {
       },
       0,
     );
-    expect(mapped.unit_cost_before_tax).toBe("1.2345");
-    expect(mapped.case_cost_before_tax).toBe("14.8140");
+    expect(mapped.unit_cost_before_tax).toBe("0.1029");
+    expect(mapped.case_cost_before_tax).toBe("1.2350");
+    expect(mapped.imported_unit_cost_basis?.printed_unit_cost_before_tax).toBe(
+      "14.8140",
+    );
+    expect(mapped.line_total).toBe("2.47");
+    expect(mapped.taxable_inferred).toBe(true);
+    expect(mapped.low_confidence_fields).not.toContain("taxable");
     expect(mapped.low_confidence_fields).toEqual(
-      expect.arrayContaining(["description", "taxable"]),
+      expect.arrayContaining(["description"]),
     );
   });
   it("offers complete Gregorian and Persian expiry dates, but retains partial dates as printed text", () => {
@@ -322,8 +342,8 @@ describe("normal invoice field mappings", () => {
     );
     expect(mapped).toMatchObject({
       date_value: "2026-11-27",
-      date_confirmed: false,
-      date_tracking: true,
+      date_confirmed: true,
+      date_tracking: false,
     });
   });
 });
@@ -585,18 +605,19 @@ describe("import prepares evidence and normal drafts only", () => {
       initialState().stock_movements?.length ?? 0,
     );
   });
-  it("creates Needs review suppliers and drafts, derives Net 14, and records import provenance/history", async () => {
+  it("creates active suppliers and review drafts, derives Net 14, and records import provenance/history", async () => {
     const state = emptyBusiness(),
       beforeProducts = structuredClone(state.products),
       result = await importFile(state, exported());
     expect(result.imported).toHaveLength(1);
     expect(result.new_suppliers).toEqual(["Fresh Valley Foods"]);
     expect(state.suppliers?.[0]).toMatchObject({
-      status: "proposed",
+      status: "confirmed",
+      active: true,
       created_from_import: true,
-      notes: "Created from an imported reading",
+      notes: "",
     });
-    expect(state.approvals).toContainEqual(
+    expect(state.approvals).not.toContainEqual(
       expect.objectContaining({ type: "new_supplier", status: "pending" }),
     );
     const draft = state.invoices![0];
@@ -659,7 +680,7 @@ describe("import prepares evidence and normal drafts only", () => {
     });
     expect(
       draft.lines.some(
-        (line) => line.date_value === "2026-11-27" && !line.date_confirmed,
+        (line) => line.date_value === "2026-11-27" && !line.date_tracking,
       ),
     ).toBe(true);
     expect(state.products).toHaveLength(0);

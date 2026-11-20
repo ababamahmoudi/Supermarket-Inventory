@@ -1,0 +1,68 @@
+.maker-logo-space {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  flex: 0 0 auto;
+}
+.maker-logo-space img {
+  display: block;
+  inline-size: 104px;
+  block-size: 32px;
+  object-fit: contain;
+}
+.maker-logo-space.is-compact img {
+  inline-size: 80px;
+  block-size: 24px;
+}
+.maker-logo-space.is-compact .maker-logo-light {
+  inline-size: 20px;
+  margin-inline: 30px;
+}
+.maker-logo-space .maker-logo-dark {
+  display: none;
+}
+:root[data-theme="dark"] .maker-logo-space .maker-logo-light {
+  display: none;
+}
+:root[data-theme="dark"] .maker-logo-space .maker-logo-dark {
+  display: block;
+}
+.maker-powered,
+.maker-about-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+}
+.maker-powered {
+  margin: 16px 0 0;
+}
+.maker-about {
+  display: grid;
+  gap: 16px;
+}
+.maker-about h3,
+.maker-about p {
+  margin: 0;
+}
+.maker-about-identity {
+  justify-content: flex-start;
+}
+.maker-print {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4mm;
+  margin-block-start: 6mm;
+  font-size: 8pt;
+  text-align: center;
+}
+@media screen {
+  .maker-print-only {
+    display: none;
+  }
+}

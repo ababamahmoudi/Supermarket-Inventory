@@ -84,9 +84,13 @@ describe("C3 approval presentation and archived handover notes", () => {
         <Approvals />
       </DemoProvider>,
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Keep approved price" }),
+    const keepPrice = await screen.findByRole("button", {
+      name: "Keep approved price",
+    });
+    const reviewedCard = within(
+      keepPrice.closest(".approval-detail-row") as HTMLElement,
     );
+    fireEvent.click(keepPrice);
     expect(
       screen.getByText(
         "Add a reason before keeping the price or proposing an override.",
@@ -104,6 +108,8 @@ describe("C3 approval presentation and archived handover notes", () => {
       "aria-invalid",
       "true",
     );
-    expect(screen.getByText("Pending", { selector: ".badge" })).toBeVisible();
+    expect(
+      reviewedCard.getByText("Pending", { selector: ".badge" }),
+    ).toBeVisible();
   });
 });

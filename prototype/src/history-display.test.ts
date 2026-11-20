@@ -4,6 +4,7 @@ import {
   historyChangeIsMoney,
   historyDisplayChanges,
   historyProductName,
+  historyInvoiceEvidence,
 } from "./history-display";
 import type { Activity } from "./types";
 
@@ -19,6 +20,33 @@ const activity = (values: Partial<Activity> = {}): Activity => ({
 });
 
 describe("History presentation uses recorded evidence", () => {
+  it("uses recorded imported invoice identity and line count without replacing the audit", () => {
+    const entry = activity({
+      action: "Create invoice draft",
+      entity_type: "invoice",
+      entity_id: "fictional-invoice",
+      after: {
+        supplier_invoice_number: "FICTIONAL-25",
+        supplier: "Cedar Valley Foods Inc.",
+        lines: Array.from({ length: 25 }, () => ({
+          description: "Invented item",
+        })),
+        reading_record: { source: "imported" },
+      },
+    });
+    const before = structuredClone(entry);
+    expect(historyInvoiceEvidence(entry)).toEqual({
+      id: "fictional-invoice",
+      number: "FICTIONAL-25",
+      supplier: "Cedar Valley Foods Inc.",
+      lineCount: 25,
+      imported: true,
+    });
+    expect(entry).toEqual(before);
+    expect(
+      historyInvoiceEvidence({ ...entry, entity_type: "product" }),
+    ).toBeUndefined();
+  });
   it.each([
     "Imported 12 invoice readings from fictional-readings-2026-10-21.json",
     "Create invoice draft",

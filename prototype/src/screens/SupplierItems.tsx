@@ -579,7 +579,11 @@ function SupplierItemEditor({
             }}
             searchable
             options={[
-              { value: "", label: t("Choose a product", "انتخاب کالا") },
+              {
+                placeholder: true,
+                value: "",
+                label: t("Choose a product", "انتخاب کالا"),
+              },
               ...state.products
                 .filter(
                   (record) =>
@@ -587,6 +591,12 @@ function SupplierItemEditor({
                     record.status !== "archived",
                 )
                 .map((record) => ({
+                  searchTerms: [
+                    record.name_en,
+                    record.name_fa ?? "",
+                    record.code,
+                    record.barcode ?? "",
+                  ],
                   value: record.code,
                   label: `${record.code} · ${lang === "fa" ? record.name_fa || record.name_en : record.name_en}`,
                 })),

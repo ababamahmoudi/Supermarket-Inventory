@@ -300,13 +300,31 @@ test("C5 conditional correction preview, confirmation, versions, history menu an
     name: "Correct invoice",
     exact: true,
   });
-  const cost = dialog
-    .locator(".invoice-correction-line")
-    .first()
-    .getByLabel("Unit cost before tax", { exact: true });
-  await cost.fill(
-    new Decimal(await cost.inputValue()).plus("0.5000").toFixed(4),
+  await expect(dialog.locator(".receiving-line-editor")).toHaveCount(0);
+  const beforeCorrection = await readCanonicalBusinessEvidence(page);
+  await dialog.locator(".invoice-line-toggle").first().click();
+  const correctionEditor = dialog.getByRole("region", {
+    name: "Line 1",
+    exact: true,
+  });
+  const cost = correctionEditor.getByLabel("Unit cost before tax", {
+    exact: true,
+  });
+  await expect(cost).toHaveCSS("height", "44px");
+  await expect(correctionEditor.locator("#invoice-line-0-invoiced")).toHaveCSS(
+    "height",
+    "44px",
   );
+  const nextCost = new Decimal(await cost.inputValue())
+    .plus("0.5000")
+    .toFixed(4);
+  await cost.fill(nextCost);
+  await measure(page, "Invoice correction populated shared receiving editor");
+  await correctionEditor
+    .getByRole("button", { name: "Close", exact: true })
+    .last()
+    .click();
+  await expect(dialog.locator(".receiving-line-editor")).toHaveCount(0);
   await dialog
     .getByLabel("Reason (required)", { exact: true })
     .fill("Review the corrected fictional unit cost.");
@@ -314,12 +332,29 @@ test("C5 conditional correction preview, confirmation, versions, history menu an
     .getByRole("button", { name: "Preview correction", exact: true })
     .click();
   await measure(page, "Invoice correction preview Continue/Back actions");
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeCorrection);
   await dialog.getByRole("button", { name: "Continue", exact: true }).click();
   await measure(page, "Invoice correction final confirmation");
+  expect(await readCanonicalBusinessEvidence(page)).toEqual(beforeCorrection);
   await dialog
     .getByRole("button", { name: "Confirm correction", exact: true })
     .click();
   await expect(dialog).not.toBeVisible();
+  const afterCorrection = await readCanonicalBusinessEvidence(page);
+  expect(afterCorrection.invoice_content_corrections).toHaveLength(
+    (beforeCorrection.invoice_content_corrections?.length ?? 0) + 1,
+  );
+  const appended = afterCorrection.invoice_content_corrections!.at(-1)!;
+  expect(appended.after.lines[0].unit_cost_before_tax).toBe(nextCost);
+  expect(afterCorrection.invoice).toEqual(beforeCorrection.invoice);
+  expect(
+    afterCorrection.ledger.slice(0, beforeCorrection.ledger.length),
+  ).toEqual(beforeCorrection.ledger);
+  expect(afterCorrection.ledger.at(-1)).toMatchObject({
+    type: "adjustment",
+    invoice_id: appended.invoice_id,
+    amount: appended.payable_delta,
+  });
   await measure(page, "Corrected posted invoice version actions");
   await page.goto("/#history");
   const corrected = page

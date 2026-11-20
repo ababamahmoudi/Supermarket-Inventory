@@ -79,7 +79,7 @@
 .return-detail-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 20px;
 }
 .return-detail .return-detail-header h1 {
@@ -270,4 +270,100 @@
 .return-item-form > .muted {
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
+}
+
+/* K9: keep actual pickup facts together without reserving empty shortfall bands. */
+.return-compact-pickup .return-pickup-items {
+  gap: 12px;
+  margin-block: 16px;
+}
+.return-compact-pickup .return-pickup-item {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) 64px minmax(132px, 148px);
+  align-items: start;
+  gap: 10px;
+  padding: 12px;
+}
+.return-compact-pickup .return-pickup-item.has-shortfall {
+  grid-template-columns: minmax(90px, 1fr) 64px minmax(132px, 148px) minmax(
+      200px,
+      2fr
+    );
+}
+.return-compact-pickup .return-pickup-name,
+.return-compact-pickup .return-pickup-return-qty {
+  margin: 0;
+  padding-block-start: 36px;
+  min-inline-size: 0;
+}
+.return-compact-pickup .return-pickup-return-qty {
+  line-height: var(--line-height-caption);
+}
+.return-compact-pickup .return-pickup-item > .field,
+.return-compact-pickup .return-pickup-item > .form-grid {
+  margin: 0;
+}
+.return-compact-pickup .return-pickup-quantity {
+  display: grid;
+  grid-template-columns: 44px minmax(36px, 1fr) 44px;
+  gap: 0 4px;
+  min-inline-size: 0;
+}
+.return-compact-pickup .return-pickup-quantity > label {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-block-size: 36px;
+}
+.return-compact-pickup .return-pickup-quantity > .ui-input {
+  grid-column: 2;
+  grid-row: 2;
+  min-inline-size: 0;
+  padding-inline: 2px;
+  text-align: center;
+}
+.return-compact-pickup .return-pickup-decrease {
+  grid-column: 1;
+  grid-row: 2;
+}
+.return-compact-pickup .return-pickup-increase {
+  grid-column: 3;
+  grid-row: 2;
+}
+.return-compact-pickup .return-pickup-quantity > p {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+.return-compact-pickup .return-pickup-item .return-pickup-shortfall {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.return-compact-pickup .return-pickup-shortfall > .field > label,
+.return-compact-pickup .return-pickup-person-row > .field > label {
+  min-block-size: 36px;
+}
+.return-compact-pickup .return-pickup-person-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin-block: 16px;
+}
+@media (max-width: 760px) {
+  .return-compact-pickup .return-pickup-item,
+  .return-compact-pickup .return-pickup-item.has-shortfall {
+    grid-template-columns: minmax(0, 1fr) 96px;
+  }
+  .return-compact-pickup .return-pickup-name,
+  .return-compact-pickup .return-pickup-return-qty {
+    padding-block-start: 0;
+  }
+  .return-compact-pickup .return-pickup-quantity,
+  .return-compact-pickup .return-pickup-shortfall {
+    grid-column: 1 / -1;
+  }
+  .return-compact-pickup .return-pickup-quantity > label,
+  .return-compact-pickup .return-pickup-shortfall > .field > label {
+    min-block-size: 24px;
+  }
+  .return-compact-pickup .return-pickup-person-row > .field > label {
+    min-block-size: 54px;
+  }
 }

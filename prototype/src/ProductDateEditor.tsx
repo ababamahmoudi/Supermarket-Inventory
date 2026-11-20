@@ -196,6 +196,7 @@ export function ProductDateEditor({
             }}
             options={[
               {
+                placeholder: true,
                 value: "",
                 label: t(
                   "Choose what to do with the dates",
@@ -282,6 +283,7 @@ export function ProductDateEditor({
                           }
                           options={[
                             {
+                              placeholder: true,
                               value: "",
                               label: t("Choose reason", "دلیل را انتخاب کنید"),
                             },

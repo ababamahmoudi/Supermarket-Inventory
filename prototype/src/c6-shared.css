@@ -114,6 +114,18 @@ time {
   font-size: var(--font-size-label);
   border-radius: var(--radius-small);
 }
+/* Explicit compact label action: only the shared Field review affordance uses it. */
+:root .field .ui-button.button.button-label-action {
+  block-size: 32px;
+  min-block-size: 32px;
+  max-block-size: 32px;
+  padding-inline: 8px;
+  border: 0;
+  border-radius: var(--radius-small);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-caption);
+  line-height: 18px;
+}
 :root .ui-button.button.ui-icon-button {
   inline-size: 36px;
   min-inline-size: 36px;
@@ -574,29 +586,6 @@ div.ui-kpi:hover {
 .sidebar nav a[aria-current="page"]::before {
   display: none;
 }
-/* Icon navigation shows the same translated label on hover and keyboard focus. */
-.is-collapsed .sidebar:not(.is-open) nav a {
-  position: relative;
-}
-.is-collapsed .sidebar:not(.is-open) nav a:is(:hover, :focus) .nav-item-label {
-  display: block;
-  position: absolute;
-  inset-inline-start: calc(100% + 12px);
-  inset-block-start: 50%;
-  transform: translateY(-50%);
-  inline-size: max-content;
-  max-inline-size: 240px;
-  padding: 8px 12px;
-  border-radius: var(--radius-menu);
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-menu);
-  font-size: var(--font-size-label);
-  font-weight: var(--font-weight-caption);
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 60;
-}
 :root .sidebar .user-menu.ui-button.button {
   block-size: 56px;
   min-block-size: 56px;
@@ -759,7 +748,7 @@ div.ui-kpi:hover {
     justify-content: flex-start;
   }
 }
-@media (max-width: 759px) {
+@media (max-width: 760px) {
   :root .sidebar {
     display: none;
     inline-size: 248px;
@@ -1013,8 +1002,6 @@ div.ui-kpi:hover {
 }
 
 @media screen {
-  :root .invoice-lines-table th,
-  :root .invoice-lines-table th *,
   :root .posted-invoice-lines th,
   :root .posted-invoice-lines th * {
     white-space: normal;

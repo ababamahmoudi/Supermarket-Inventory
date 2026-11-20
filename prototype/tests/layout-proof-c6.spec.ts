@@ -24,22 +24,31 @@ for (const language of ["en", "fa"] as const)
     expect(clean.contentWords).toBeGreaterThan(50);
     expect(clean.failures).toEqual([]);
 
-    // Move two existing product-name lines onto each other. This negative
-    // control proves that using actual font ink still detects genuine
-    // overlap; no business data or screenshot is changed.
-    const saved = await product.evaluate((element) => {
-      const secondary = element.querySelector("small")!;
-      const original = {
-        parent: element.getAttribute("style"),
-        secondary: secondary.getAttribute("style"),
-      };
-      (element as HTMLElement).style.position = "relative";
+    // R2c uses DataTable for approvals; table cells have their own audit.
+    // Exercise the separate non-table loaded-ink detector with a temporary
+    // copy of the actual bilingual component and a deterministic collision.
+    await product.evaluate((element) => {
+      const wrapper = document.createElement("div");
+      wrapper.dataset.glyphNegativeControl = "true";
+      wrapper.className = "dashboard-queue-product";
+      Object.assign(wrapper.style, {
+        position: "fixed",
+        top: "200px",
+        left: "200px",
+        width: "400px",
+        zIndex: "9999",
+      });
+      const copy = element.cloneNode(true) as HTMLElement;
+      copy.style.position = "relative";
+      const secondary = copy.querySelector("small")!;
+      secondary.innerHTML = copy.querySelector("strong")!.innerHTML;
       Object.assign(secondary.style, {
         position: "absolute",
         insetBlockStart: "0px",
         insetInlineStart: "0px",
       });
-      return original;
+      wrapper.append(copy);
+      document.querySelector(".r2c-dashboard")!.append(wrapper);
     });
     let collision;
     try {
@@ -55,15 +64,9 @@ for (const language of ["en", "fa"] as const)
         ),
       ).not.toEqual([]);
     } finally {
-      await product.evaluate((element, original) => {
-        const secondary = element.querySelector("small")!;
-        for (const [node, value] of [
-          [element, original.parent],
-          [secondary, original.secondary],
-        ] as const)
-          if (value === null) node.removeAttribute("style");
-          else node.setAttribute("style", value);
-      }, saved);
+      await page
+        .locator("[data-glyph-negative-control]")
+        .evaluate((element) => element.remove());
     }
     const restored = await inspectResponsiveLayout(
       page,

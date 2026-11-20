@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
 import { setLanguage, signIn, uploadInvoice, openShellAction } from "./helpers";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 const routes = [
   "dashboard",
@@ -47,6 +48,22 @@ async function assertPresentation(page: Page) {
       ),
     ]
       .filter(visible)
+      .filter((element) => {
+        if (!element.matches("details.ui-disclosure")) return true;
+        const summary = element.querySelector(":scope > summary");
+        if (
+          !summary?.matches(
+            '.ui-button.button.button-plain[data-control-kind="disclosure"]',
+          )
+        )
+          return true;
+        const style = getComputedStyle(summary);
+        return (
+          !style.display.includes("flex") ||
+          style.listStyleType !== "none" ||
+          summary.querySelectorAll('svg[aria-hidden="true"]').length !== 1
+        );
+      })
       .map((element) => element.outerHTML.slice(0, 160));
     const resize = [...document.querySelectorAll("textarea")]
       .filter(visible)
@@ -112,6 +129,8 @@ for (const variant of ["light", "dark", "Persian"] as const) {
 test("Persian lookup preserves unit order and makes the Persian name primary", async ({
   page,
 }) => {
+  await signIn(page, "Manager");
+  await approvedLookupPrices(page, ["0003"]);
   await signIn(page, "Cashier");
   await setLanguage(page, "fa");
   await page.getByLabel("جست‌وجوی محصولات", { exact: true }).fill("0003");
@@ -125,7 +144,7 @@ test("Persian lookup preserves unit order and makes the Persian name primary", a
   await expect(page.locator(".lookup-detail .price")).toHaveText("$2.99");
 });
 
-test("re-check dialog is centered and the top bar remains visible while Settings scrolls", async ({
+test("re-check dialog uses its responsive frame and the top bar remains visible while Settings scrolls", async ({
   page,
 }) => {
   await page.clock.install({ time: new Date() });
@@ -160,9 +179,30 @@ test("re-check dialog is centered and the top bar remains visible while Settings
   expect(
     Math.abs(bounds!.x + bounds!.width / 2 - viewport.width / 2),
   ).toBeLessThan(3);
-  expect(
-    Math.abs(bounds!.y + bounds!.height / 2 - viewport.height / 2),
-  ).toBeLessThan(3);
+  if (viewport.width <= 760) {
+    expect(Math.abs(bounds!.x)).toBeLessThan(3);
+    expect(Math.abs(bounds!.width - viewport.width)).toBeLessThan(3);
+    expect(Math.abs(bounds!.y + bounds!.height - viewport.height)).toBeLessThan(
+      3,
+    );
+    expect(bounds!.y).toBeGreaterThanOrEqual(0);
+    expect(bounds!.height).toBeLessThanOrEqual(viewport.height);
+    expect(
+      await dialog.evaluate((element) => {
+        const css = getComputedStyle(element);
+        return [
+          css.borderTopLeftRadius,
+          css.borderTopRightRadius,
+          css.borderBottomLeftRadius,
+          css.borderBottomRightRadius,
+        ];
+      }),
+    ).toEqual(["24px", "24px", "0px", "0px"]);
+  } else {
+    expect(
+      Math.abs(bounds!.y + bounds!.height / 2 - viewport.height / 2),
+    ).toBeLessThan(3);
+  }
   await expect(dialog.getByLabel("Password", { exact: true })).toBeFocused();
   await dialog.getByLabel("Password", { exact: true }).fill("demo1234");
   await dialog.getByRole("button", { name: "Continue", exact: true }).click();

@@ -20,44 +20,45 @@ const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
 function Harness() {
   const { command, state, actor, setLang } = useDemo();
   const [modal, setModal] = useState(false);
+  const changeDateEntry = () => {
+    currentCommand = command(
+      "dates.remove",
+      {
+        company_id: state.config.company.seed_key,
+        kind: "location_record",
+        location_ids: ["Branch 1"],
+        mutation: true,
+      },
+      (draft, freshActor) => {
+        let entry = scopedTrackedDates(draft, freshActor).find(
+          (item) => item.status === "active",
+        );
+        if (!entry) {
+          const product = draft.products[0];
+          entry = addTrackedDate(draft, freshActor, {
+            product_code: product.code,
+            branch: "Branch 1",
+            date_type: "expiry",
+            date: relativeDate(30),
+          });
+        }
+        clearExpiry(draft, freshActor, entry.id);
+      },
+    );
+  };
   return (
     <>
-      <button
-        disabled={!actor}
-        onClick={() => {
-          currentCommand = command(
-            "dates.remove",
-            {
-              company_id: state.config.company.seed_key,
-              kind: "location_record",
-              location_ids: ["Branch 1"],
-              mutation: true,
-            },
-            (draft, freshActor) => {
-              let entry = scopedTrackedDates(draft, freshActor).find(
-                (item) => item.status === "active",
-              );
-              if (!entry) {
-                const product = draft.products[0];
-                entry = addTrackedDate(draft, freshActor, {
-                  product_code: product.code,
-                  branch: "Branch 1",
-                  date_type: "expiry",
-                  date: relativeDate(30),
-                });
-              }
-              clearExpiry(draft, freshActor, entry.id);
-            },
-          );
-        }}
-      >
+      <button disabled={!actor} onClick={changeDateEntry}>
         Change date entry
       </button>
       <button onClick={() => setLang("fa")}>Persian</button>
       <button onClick={() => setModal(true)}>Open dialog</button>
       {modal && (
         <dialog open aria-label="Another action">
-          <button onClick={() => setModal(false)}>Close dialog</button>
+          <button onClick={changeDateEntry}>Change date in dialog</button>
+          <div className="ui-dialog-actions">
+            <button onClick={() => setModal(false)}>Close dialog</button>
+          </div>
         </dialog>
       )}
       <output data-testid="date-status">{state.expiry[0]?.status}</output>
@@ -124,9 +125,9 @@ async function renderHarness() {
   ).not.toBeDisabled();
   return fixture;
 }
-async function changeDate() {
+async function changeDate(label = "Change date entry") {
   await act(async () => {
-    fireEvent.click(screen.getByText("Change date entry"));
+    fireEvent.click(screen.getByText(label));
     await currentCommand;
   });
 }
@@ -138,7 +139,8 @@ async function waitForUndo(
     const state = await fixture.readCanonical();
     if (
       state.expiry[0].status === "active" &&
-      !screen.queryByTestId("undo-toast")
+      !screen.queryByTestId("undo-toast") &&
+      !screen.queryByTestId("dialog-action-status")
     ) {
       await act(async () => {
         await new Promise<void>((resolve) => realSetImmediate(resolve));
@@ -168,19 +170,82 @@ describe("Undo toast integration", () => {
     act(() => vi.advanceTimersByTime(1));
     expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
   });
-  it("stays above modal content and resumes a relocated toast's timer when its old focus disappears", async () => {
+  it("defers page Undo without leaking into an unrelated dialog and preserves its remaining time", async () => {
     await renderHarness();
     await changeDate();
     act(() => vi.advanceTimersByTime(1000));
     fireEvent.focus(screen.getByRole("button", { name: /^Undo$/ }));
     await act(async () => fireEvent.click(screen.getByText("Open dialog")));
-    expect(screen.getByTestId("undo-toast").closest("dialog")).toBe(
-      screen.getByRole("dialog"),
-    );
-    await act(async () => fireEvent.click(screen.getByText("Close dialog")));
-    expect(screen.getByTestId("undo-toast").closest("dialog")).toBeNull();
-    act(() => vi.advanceTimersByTime(7000));
     expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("dialog-action-status"),
+    ).not.toBeInTheDocument();
+    expect(document.querySelector(".dialog-feedback-only")).toBeNull();
+    act(() => vi.advanceTimersByTime(30000));
+    expect(
+      screen.queryByTestId("dialog-action-status"),
+    ).not.toBeInTheDocument();
+    await act(async () => fireEvent.click(screen.getByText("Close dialog")));
+    expect(
+      screen.queryByTestId("dialog-action-status"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("undo-toast").closest("dialog")).toBeNull();
+    expect(
+      screen.getByTestId("undo-toast").closest(".undo-toast-stack")
+        ?.parentElement,
+    ).toBe(document.body);
+    act(() => vi.advanceTimersByTime(6999));
+    expect(screen.getByTestId("undo-toast")).toBeVisible();
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
+  });
+  it("keeps the genuine guarded Undo available in the modal footer", async () => {
+    const fixture = await renderHarness();
+    await act(async () => fireEvent.click(screen.getByText("Open dialog")));
+    await changeDate("Change date in dialog");
+    expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
+    expect(screen.getByTestId("dialog-action-status")).toBeVisible();
+    expect((await fixture.readCanonical()).activity[0]).not.toHaveProperty(
+      "dialog_scope",
+    );
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: /^Undo$/ })),
+    );
+    await waitForUndo(fixture);
+    expect(screen.getByTestId("date-status")).toHaveTextContent("active");
+    expect(
+      screen.queryByTestId("dialog-action-status"),
+    ).not.toBeInTheDocument();
+  });
+  it("does not assign a pending page command to a dialog opened before it finishes", async () => {
+    await renderHarness();
+    await act(async () => {
+      fireEvent.click(screen.getByText("Change date entry"));
+      fireEvent.click(screen.getByText("Open dialog"));
+      await currentCommand;
+    });
+    expect(
+      screen.queryByTestId("dialog-action-status"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("undo-toast")).not.toBeInTheDocument();
+    await act(async () => fireEvent.click(screen.getByText("Close dialog")));
+    expect(screen.getByTestId("undo-toast")).toBeVisible();
+  });
+  it("a reopened dialog with the same title cannot inherit the previous instance's Undo", async () => {
+    await renderHarness();
+    await act(async () => fireEvent.click(screen.getByText("Open dialog")));
+    await changeDate("Change date in dialog");
+    expect(screen.getByTestId("dialog-action-status")).toBeVisible();
+    await act(async () => fireEvent.click(screen.getByText("Close dialog")));
+    expect(screen.getByTestId("undo-toast")).toBeVisible();
+    await act(async () => fireEvent.click(screen.getByText("Open dialog")));
+    expect(
+      screen.queryByTestId("dialog-action-status"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^Undo$/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("date-status")).toHaveTextContent("cleared");
   });
   it("a new eligible action replaces the paused message", async () => {
     await renderHarness();

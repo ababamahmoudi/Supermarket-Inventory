@@ -1,0 +1,126 @@
+:root .offer-task.r2c-offer-task {
+  display: grid;
+  gap: 16px;
+  min-inline-size: 0;
+}
+.r2c-offer-heading {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+}
+:root .r2c-offer-heading h3,
+:root .r2c-offer-heading .product-name strong {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+:root .r2c-offer-terms {
+  font-size: var(--font-size-large-title);
+  font-weight: var(--font-weight-large-title);
+  line-height: var(--line-height-large-title);
+}
+.r2c-offer-summary,
+.r2c-offer-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+.r2c-offer-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+:root .offer-task.r2c-offer-task .ui-button.button[data-control-kind="action"] {
+  block-size: 44px;
+  min-block-size: 44px;
+  max-block-size: none;
+}
+.r2c-offer-task .grid-2 {
+  gap: 20px;
+}
+@media (max-width: 759px) {
+  .r2c-offer-task .grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+:root dialog.ui-dialog.r2c-offer-create[open] {
+  inline-size: min(760px, calc(100vw - 32px));
+  max-inline-size: 760px;
+  block-size: min(760px, calc(100dvh - 32px));
+  max-block-size: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+}
+.r2c-offer-create > .ui-dialog-header,
+.r2c-offer-create > .ui-dialog-footer {
+  flex: 0 0 auto;
+}
+.r2c-offer-create > .ui-dialog-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.r2c-offer-create .dialog-description {
+  min-block-size: 40px;
+}
+.r2c-offer-form .grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.r2c-offer-form > p {
+  min-block-size: 44px;
+}
+.r2c-offer-form .ui-checked-control {
+  min-block-size: 44px;
+}
+@media (max-width: 759px) {
+  .r2c-offer-form .grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Form fields share the column edges while their popovers size independently. */
+:root .r2c-offer-form .field > .ui-select {
+  inline-size: 100%;
+  max-inline-size: 100%;
+}
+.r2c-offer-form .field > .ui-select > .select-sizing {
+  display: none;
+}
+.r2c-offer-form .field > .ui-select > span:not(.select-sizing) {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Suggestions use the existing field-tint item surface rather than a faint outline. */
+:root .offer-task.r2c-offer-task {
+  border: 0;
+  background: var(--field-fill);
+  border-radius: var(--radius-control);
+}
+.r2e-offer-decision-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 20px;
+}
+.r2e-offer-decision-row .field {
+  margin-block: 0;
+}
+.r2e-offer-decision-row .r2c-offer-actions {
+  flex-wrap: nowrap;
+}
+@media (max-width: 1100px) {
+  .r2e-offer-decision-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

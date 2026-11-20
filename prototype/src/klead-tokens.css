@@ -39,16 +39,23 @@
   --surface-kpi-icon: rgba(255, 255, 255, 0.12);
   --color-clear: transparent;
   --color-current: currentColor;
+  --mask-opaque: #000000;
   --radius-none: 0;
   --radius-card: 20px;
   --radius-control: 12px;
   --radius-small: 10px;
   --radius-dialog: 24px;
+  --radius-dialog-top: var(--radius-dialog) var(--radius-dialog)
+    var(--radius-none) var(--radius-none);
   --radius-menu: 14px;
   --radius-search: 16px;
   --radius-toast: 14px;
   --radius-round: 999px;
+  --radius-small-bottom: var(--radius-none) var(--radius-none)
+    var(--radius-small) var(--radius-small);
   --radius-keycap: 4px;
+  --radius-chart-bar: var(--radius-keycap) var(--radius-keycap)
+    var(--radius-none) var(--radius-none);
   --radius-mark-small: 2px;
   --radius-mark: 3px;
   --radius-section-top: var(--radius-search) var(--radius-search)
@@ -59,11 +66,14 @@
   --shadow-dialog: 0 24px 64px rgba(20, 26, 43, 0.24);
   --shadow-menu: 0 16px 40px rgba(20, 26, 43, 0.16);
   --shadow-row-divider: inset 0 -1px var(--row-divider);
+  --shadow-row-divider-top: inset 0 1px var(--row-divider);
+  --shadow-divider-outline: inset 0 0 0 1px var(--divider);
   --table-row-rule: linear-gradient(var(--row-divider), var(--row-divider));
   --shadow-selected: inset 0 0 0 1px var(--accent);
   --shadow-thumb: 0 1px 3px rgba(20, 26, 43, 0.1);
   --shadow-focus: 0 0 0 4px var(--klead-focus-ring);
   --font-en: Manrope, system-ui, sans-serif;
+  --font-en-bilingual: Manrope, Vazirmatn, system-ui, sans-serif;
   --font-fa: Vazirmatn, Manrope, system-ui, sans-serif;
   --font-size-base: 16px;
   --font-size-body: 0.875rem;
@@ -83,12 +93,21 @@
   --line-height-caption: 1rem;
   --font-weight-caption: 600;
   --font-size-label: 0.8125rem;
+  --line-height-label: 1.125rem;
   --font-size-product-price: 2.75rem;
   --line-height-product-price: 3rem;
   --font-weight-product-price: 800;
   --font-size-lookup-price: 3.75rem;
   --line-height-lookup-price: 3.75rem;
   --font-weight-lookup-price: 800;
+  /* Approved R2f price hierarchies share tokens across their real screens. */
+  --font-size-weekly-stat: 1.5rem;
+  --font-size-approval-value: 1.0625rem;
+  --font-size-approval-price: 1.625rem;
+  --line-height-approval-value: 1.2;
+  --font-size-weight-lookup-price: 2.25rem;
+  --line-height-weight-lookup-price: 2.475rem;
+  --font-size-weight-lookup-unit: 1.125rem;
   --page: var(--klead-page);
   --surface-topbar: color-mix(in srgb, var(--page) 85%, var(--color-clear));
   --sidebar: var(--klead-surface);
@@ -109,6 +128,8 @@
   --primary-text: var(--klead-primary-text);
   --accent-hover: var(--accent);
   --accent-soft: var(--klead-accent-tint);
+  --accent-border-soft: color-mix(in srgb, var(--accent) 25%, var(--divider));
+  --surface-footer: color-mix(in srgb, var(--surface) 65%, var(--page));
   --accent-tint-text: var(--klead-accent-text);
   --nav-active: var(--accent-soft);
   --hover-fill: var(--klead-hover);
@@ -122,6 +143,8 @@
   --pending: var(--klead-amber-text);
   --pending-dot: var(--klead-amber-dot);
   --pending-bg: var(--klead-amber-tint);
+  --warning-row-bg: color-mix(in srgb, var(--pending-dot) 8%, var(--surface));
+  --receiving-question-bg: var(--pending-bg);
   --approved: var(--klead-green-text);
   --approved-dot: var(--klead-green-dot);
   --approved-bg: var(--klead-green-tint);
@@ -200,6 +223,8 @@
   --primary-text: var(--klead-primary-text);
   --accent-hover: var(--accent);
   --accent-soft: var(--klead-accent-tint);
+  --accent-border-soft: color-mix(in srgb, var(--accent) 25%, var(--divider));
+  --surface-footer: color-mix(in srgb, var(--surface) 65%, var(--page));
   --accent-tint-text: var(--klead-accent-text);
   --nav-active: var(--accent-soft);
   --hover-fill: var(--klead-hover);
@@ -213,6 +238,11 @@
   --pending: var(--klead-amber-text);
   --pending-dot: var(--klead-amber-dot);
   --pending-bg: var(--klead-amber-tint);
+  --receiving-question-bg: color-mix(
+    in srgb,
+    var(--pending-dot) 8%,
+    var(--surface)
+  );
   --approved: var(--klead-green-text);
   --approved-dot: var(--klead-green-dot);
   --approved-bg: var(--klead-green-tint);

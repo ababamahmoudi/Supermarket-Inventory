@@ -105,6 +105,63 @@ export function ApprovalReviewPanel({
             />
           </Field>
         )}
+      {actualApproval.free_case_answer && (
+        <section className="list-box" data-testid="free-case-approval">
+          <p>
+            {t(
+              `Paid/free decision: ${actualApproval.free_case_answer.decision === "bonus" ? "Free case (bonus)" : actualApproval.free_case_answer.decision === "two_for_one" ? "Two for the price of one" : "Mistake on the invoice"}`,
+              `تصمیم پولی/رایگان: ${actualApproval.free_case_answer.decision === "bonus" ? "کارتن رایگان (جایزه)" : actualApproval.free_case_answer.decision === "two_for_one" ? "دو تا به قیمت یکی" : "اشتباه در فاکتور"}`,
+            )}
+          </p>
+          <p>
+            {t(
+              `Answered by ${actualApproval.free_case_answer.answer?.by} during receiving`,
+              `پاسخ ${actualApproval.free_case_answer.answer?.by} هنگام دریافت`,
+            )}
+          </p>
+          <p>
+            {actualApproval.free_case_answer.physical_units}{" "}
+            {t("physical units", "واحد فیزیکی")} ·{" "}
+            {priceLabel(
+              actualApproval.free_case_answer.pricing_unit_cost ?? "0",
+            )}{" "}
+            {t("pricing cost per unit", "هزینهٔ قیمت‌گذاری هر واحد")}
+          </p>
+        </section>
+      )}
+      {actualApproval.receiving_price && (
+        <section className="list-box" data-testid="receiving-price-approval">
+          <p>
+            {t(
+              `Set by ${actualApproval.receiving_price.set_by} during receiving`,
+              `تعیین‌شده توسط ${actualApproval.receiving_price.set_by} هنگام دریافت`,
+            )}
+          </p>
+          {actualApproval.receiving_price.entered_price &&
+            actualApproval.receiving_price.price_unit === "kg" && (
+              <p>
+                {t("Entered price", "قیمت واردشده")}:{" "}
+                <bdi dir="ltr">
+                  {formatMoney(actualApproval.receiving_price.entered_price, {
+                    currency: state.config.company.currency,
+                  })}
+                  /kg
+                </bdi>
+              </p>
+            )}
+          <p>
+            {t("Requested price", "قیمت پیشنهادی")}:{" "}
+            <bdi dir="ltr">
+              {priceLabel(actualApproval.receiving_price.price)}
+            </bdi>
+            {" · "}
+            {t("Calculated price", "قیمت محاسبه‌شده")}:{" "}
+            <bdi dir="ltr">
+              {priceLabel(actualApproval.receiving_price.calculated_price)}
+            </bdi>
+          </p>
+        </section>
+      )}
       <section
         className="approval-review-summary"
         aria-label={t("Approval summary", "خلاصه تأیید")}
@@ -117,23 +174,36 @@ export function ApprovalReviewPanel({
         </div>
         <div className="approval-review-facts">
           <div className="approval-review-price-pair">
+            {actualApproval.type !== "new_product" && (
+              <>
+                {" "}
+                <span>
+                  <small>{t("Old price", "قیمت قبلی")}</small>
+                  <strong>
+                    {oldPrice ? (
+                      <ProductPrice
+                        value={oldPrice}
+                        product={product}
+                        config={state.config}
+                      />
+                    ) : (
+                      t("No approved price yet", "هنوز قیمت تأییدشده ندارد")
+                    )}
+                  </strong>
+                </span>
+                <ArrowRight
+                  className="directional"
+                  size={18}
+                  aria-hidden="true"
+                />
+              </>
+            )}
             <span>
-              <small>{t("Old price", "قیمت قبلی")}</small>
-              <strong>
-                {oldPrice ? (
-                  <ProductPrice
-                    value={oldPrice}
-                    product={product}
-                    config={state.config}
-                  />
-                ) : (
-                  t("No approved price yet", "هنوز قیمت تأییدشده ندارد")
-                )}
-              </strong>
-            </span>
-            <ArrowRight className="directional" size={18} aria-hidden="true" />
-            <span>
-              <small>{t("New price", "قیمت جدید")}</small>
+              <small>
+                {actualApproval.type === "new_product"
+                  ? t("First price", "قیمت نخست")
+                  : t("New price", "قیمت جدید")}
+              </small>
               <strong>
                 <ProductPrice
                   value={proposedPrice}
@@ -262,7 +332,7 @@ export function ApprovalReviewPanel({
                             config={state.config}
                           />
                         ) : (
-                          "—"
+                          t("No price yet", "هنوز قیمتی ندارد")
                         )}
                         <ArrowRight
                           className="directional"

@@ -14,6 +14,7 @@ import "@fontsource/vazirmatn/arabic-800.css";
 import "./styles.css";
 import App from "./App";
 import { DemoProvider } from "./store";
+import { LiveInvoiceReadingProvider } from "./LiveInvoiceReadingProvider";
 import { createBrowserProviderOptions } from "./e1-application-options";
 // Shared component rules load last so pages cannot restyle them by accident.
 import "./foundation.css";
@@ -31,7 +32,9 @@ const providerOptions = createBrowserProviderOptions();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <DemoProvider options={providerOptions}>
-      <App />
+      <LiveInvoiceReadingProvider>
+        <App />
+      </LiveInvoiceReadingProvider>
     </DemoProvider>
   </StrictMode>,
 );

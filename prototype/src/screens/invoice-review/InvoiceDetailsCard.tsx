@@ -1,0 +1,584 @@
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ComponentProps,
+} from "react";
+import { Check, ChevronDown, FileText } from "lucide-react";
+import { useDemo } from "../../store";
+import {
+  BufferedInput,
+  BufferedTextarea,
+  Button,
+  Disclosure,
+  DateField,
+  Select,
+  Dialog,
+  DialogActions,
+  Field as BaseField,
+} from "../../ui";
+import { LtrValue } from "../../presentation";
+import { branchLabel, configuredBranches } from "../../settings";
+import { setInvoiceLocation } from "../../received";
+import { selectInvoiceWorkspace } from "../../invoice-workspace-read";
+import { supplierChoices, supplierMatches } from "../../supplier-editor";
+import {
+  ReadingField as Field,
+  ReadingCheckProvider,
+  ReadingUnknownChecks,
+} from "../../InvoiceReadingReview";
+import {
+  invoiceCheckField,
+  acknowledgeInvoiceCheck,
+  acknowledgeInvoiceFieldAbsence,
+} from "../../invoice-checks";
+import {
+  setInvoicePaymentTerms,
+  refreshInvoiceDueDate,
+} from "../../invoice-entry";
+import { clearInvoiceOrder, setInvoiceOrder } from "../../invoice-orders";
+import { PaymentTermsControl } from "../PaymentTermsControl";
+import type { ReviewProps } from "./types";
+import { ReceivedField } from "./ReceivedField";
+import { LiveReadingProvenance } from "../../LiveReadingProvenance";
+export function InvoiceDetailsCard({
+  invoice,
+  update,
+  onSupplierAdd,
+  onReceived,
+  receivedLocal,
+  attemptedPost,
+  invalidDueDate = false,
+}: Pick<
+  ReviewProps,
+  | "invoice"
+  | "update"
+  | "onSupplierAdd"
+  | "onReceived"
+  | "receivedLocal"
+  | "attemptedPost"
+> & { invalidDueDate?: boolean }) {
+  const { state, t, lang, can, command, actor } = useDemo();
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [locationTarget, setLocationTarget] = useState(invoice.branch);
+  const [locationError, setLocationError] = useState("");
+  const [phoneOpen, setPhoneOpen] = useState(false);
+  const scope = {
+    company_id: invoice.company_id,
+    kind: "company_shared" as const,
+    entity_id: invoice.id,
+  };
+  const fields = (invoice.low_confidence_fields ?? []).filter(
+    (x) => !["subtotal", "tax", "final_total"].includes(invoiceCheckField(x)),
+  );
+  // PR 29: one even grid — three short fields, then Bill to (two columns)
+  // beside Ship to.
+  const moreKeys = [
+    "order_reference",
+    "currency",
+    "supplier_tax_number",
+    "bill_to",
+    "ship_to",
+  ];
+  const [more, setMore] = useState(() =>
+    fields.some(
+      (x) =>
+        moreKeys.includes(invoiceCheckField(x)) &&
+        String(
+          (invoice as unknown as Record<string, unknown>)[
+            invoiceCheckField(x) === "currency"
+              ? "import_currency"
+              : invoiceCheckField(x)
+          ] ?? "",
+        ).trim() !== "",
+    ),
+  );
+  const edit = (field: string, value: string) =>
+    update((draft, actor) => {
+      (draft.invoice as unknown as Record<string, unknown>)[field] = value;
+      for (const key of draft.invoice.low_confidence_fields ?? [])
+        if (
+          invoiceCheckField(key) === field ||
+          (field === "import_currency" && invoiceCheckField(key) === "currency")
+        )
+          acknowledgeInvoiceCheck(draft, actor, key);
+      if (field === "invoice_date") refreshInvoiceDueDate(draft.invoice);
+    });
+  const dueDateChecked = Boolean(
+    actor &&
+    invoice.checked_fields?.due_date?.checked_by_user_id === actor.user_id,
+  );
+  const readingRecord = invoice as unknown as Record<
+    string,
+    string | undefined
+  >;
+  return (
+    <section
+      className="list-box receiving-details ui-form-large"
+      data-testid="invoice-details-card"
+      data-phone-open={phoneOpen}
+    >
+      <div className="receiving-card-title">
+        <h2>{t("Invoice details", "اطلاعات فاکتور")}</h2>
+        <Button
+          variant="secondary"
+          size="sm"
+          aria-label={t(
+            "Looks right: Invoice details",
+            "درست است: اطلاعات فاکتور",
+          )}
+          onClick={() =>
+            update((draft, actor) => {
+              for (const field of fields)
+                acknowledgeInvoiceCheck(draft, actor, field);
+            })
+          }
+        >
+          <Check size={16} aria-hidden="true" />
+          {fields.length > 0
+            ? t(`Looks right · ${fields.length}`, `درست است · ${fields.length}`)
+            : t("Looks right", "درست است")}
+        </Button>
+        {/* Phone (reference screen 05): the closed card still says what to check. */}
+        {fields.length > 0 && (
+          <span className="receiving-details-phone-check">
+            {t(`${fields.length} to check`, `${fields.length} برای بررسی`)}
+          </span>
+        )}
+        <Button
+          variant="plain"
+          size="sm"
+          className="receiving-details-phone-toggle"
+          aria-label={t("Expand invoice details", "باز کردن اطلاعات فاکتور")}
+          aria-expanded={phoneOpen}
+          aria-controls="invoice-details-content"
+          onClick={() => setPhoneOpen((value) => !value)}
+        >
+          <ChevronDown size={18} aria-hidden="true" />
+        </Button>
+      </div>
+      <LiveReadingProvenance invoice={invoice} />
+      <div className="receiving-details-phone-summary">
+        <LtrValue value={invoice.supplier} />
+        {" · "}
+        <LtrValue value={invoice.supplier_invoice_number} />
+      </div>
+      <div className="receiving-details-content" id="invoice-details-content">
+        <ReadingCheckProvider
+          fields={fields}
+          idPrefix="invoice-check-header"
+          fieldLooksRight
+          onAcknowledge={(field) =>
+            update((draft, actor) => {
+              acknowledgeInvoiceCheck(draft, actor, field);
+            })
+          }
+          record={invoice}
+          onNotOnInvoice={(field) =>
+            update((draft, actor) => {
+              acknowledgeInvoiceFieldAbsence(draft, actor, field);
+              return true;
+            })
+          }
+        >
+          <div
+            className="detail-grid receiving-details-grid"
+            id="invoice-details-fields"
+            tabIndex={-1}
+          >
+            <Field
+              readingField="supplier"
+              label={t("Supplier", "تأمین‌کننده")}
+              error={
+                attemptedPost && !invoice.supplier.trim()
+                  ? t("Choose a supplier.", "تأمین‌کننده را انتخاب کنید.")
+                  : undefined
+              }
+            >
+              <Select
+                searchable
+                id="invoice-supplier"
+                value={invoice.supplier}
+                options={[
+                  {
+                    placeholder: true,
+                    value: "",
+                    label: t("Choose supplier", "انتخاب تأمین‌کننده"),
+                  },
+                  ...supplierChoices(state).map((s) => ({
+                    searchTerms: [s.name, ...(s.previous_names ?? [])],
+                    value: s.name,
+                    label: s.name,
+                  })),
+                  ...(!supplierChoices(state).some((s) =>
+                    supplierMatches(s, invoice.supplier),
+                  ) && invoice.supplier
+                    ? [{ value: invoice.supplier, label: invoice.supplier }]
+                    : []),
+                  {
+                    value: "__add_supplier",
+                    label: t("+ Add supplier", "+ افزودن تأمین‌کننده"),
+                  },
+                ]}
+                onChange={(value) => {
+                  if (value === "__add_supplier") {
+                    onSupplierAdd();
+                    return;
+                  }
+                  update((draft, actor) => {
+                    draft.invoice.supplier = value;
+                    clearInvoiceOrder(draft.invoice);
+                    for (const field of fields)
+                      if (invoiceCheckField(field) === "supplier")
+                        acknowledgeInvoiceCheck(draft, actor, field);
+                  });
+                }}
+              />
+            </Field>
+            <Field
+              readingField="supplier_invoice_number"
+              label={t("Invoice number", "شماره فاکتور")}
+              error={
+                attemptedPost && !invoice.supplier_invoice_number.trim()
+                  ? t("Enter the invoice number.", "شماره فاکتور را وارد کنید.")
+                  : undefined
+              }
+            >
+              <BufferedInput
+                id="invoice-number"
+                dir="ltr"
+                value={invoice.supplier_invoice_number}
+                onChange={(e) =>
+                  edit("supplier_invoice_number", e.target.value)
+                }
+              />
+            </Field>
+            <Field
+              readingField="invoice_date"
+              label={t("Invoice date", "تاریخ فاکتور")}
+              error={
+                attemptedPost &&
+                !/^\d{4}-\d{2}-\d{2}$/.test(invoice.invoice_date ?? "")
+                  ? t("Choose an invoice date.", "تاریخ فاکتور را انتخاب کنید.")
+                  : undefined
+              }
+            >
+              <DateField
+                id="invoice-date"
+                value={invoice.invoice_date ?? ""}
+                onChange={(value) => edit("invoice_date", value)}
+              />
+            </Field>
+            <PaymentTermsControl
+              id="invoice-payment-terms"
+              label={t("Payment terms (optional)", "شرایط پرداخت (اختیاری)")}
+              value={invoice.payment_terms ?? ""}
+              inferred={invoice.payment_terms_inferred}
+              defaulted={invoice.payment_terms_defaulted}
+              onChange={(value) =>
+                update((draft, actor) => {
+                  setInvoicePaymentTerms(draft.invoice, value);
+                  acknowledgeInvoiceCheck(draft, actor, "payment_terms");
+                  // Choosing the terms works the due date out from them, and
+                  // that counts as checking it (Ali, PR 29 review).
+                  if (/^\d{4}-\d{2}-\d{2}$/.test(draft.invoice.due_date ?? ""))
+                    acknowledgeInvoiceCheck(draft, actor, "due_date");
+                })
+              }
+            />
+            <Field
+              readingField="due_date"
+              hint={
+                dueDateChecked &&
+                invoice.payment_terms &&
+                !invoice.due_date_manual
+                  ? t(
+                      "From payment terms · checked by you",
+                      "از شرایط پرداخت · بررسی‌شده توسط شما",
+                    )
+                  : invoice.calculated_fields?.includes("due_date")
+                    ? t(
+                        `Calculated from ${invoice.payment_terms}`,
+                        `محاسبه‌شده از ${invoice.payment_terms}`,
+                      )
+                    : undefined
+              }
+              label={t("Due date (optional)", "تاریخ سررسید (اختیاری)")}
+              error={
+                attemptedPost && invalidDueDate
+                  ? t(
+                      "Choose the due date for these payment terms.",
+                      "سررسید این شرایط پرداخت را انتخاب کنید.",
+                    )
+                  : undefined
+              }
+            >
+              <DateField
+                id="invoice-due-date"
+                value={invoice.due_date ?? ""}
+                onChange={(value) =>
+                  update((draft, actor) => {
+                    acknowledgeInvoiceCheck(draft, actor, "due_date");
+                    draft.invoice.due_date = value;
+                    draft.invoice.due_date_manual = true;
+                  })
+                }
+              />
+            </Field>
+            <Field label={t("Location", "مکان")}>
+              <div id="invoice-location" className="receiving-readonly-field">
+                <LtrValue
+                  value={branchLabel(state.config, invoice.branch, lang)}
+                />
+                {can("invoices.assign_receiving_location", scope) && (
+                  <Button
+                    variant="plain"
+                    size="sm"
+                    onClick={() => {
+                      setLocationTarget(invoice.branch);
+                      setLocationOpen(true);
+                    }}
+                  >
+                    {t("Change location", "تغییر مکان")}
+                  </Button>
+                )}
+              </div>
+            </Field>
+            <ReceivedField
+              key={invoice.id}
+              date={receivedLocal.date}
+              time={receivedLocal.time}
+              employee={invoice.receiving_employee ?? ""}
+              source={invoice.imported_received_source}
+              alternative={
+                fields.some(
+                  (field) => invoiceCheckField(field) === "received_at",
+                )
+                  ? invoice.imported_received_alternative
+                  : undefined
+              }
+              onReceived={onReceived}
+              onEmployee={(value) => {
+                void edit("receiving_employee", value);
+              }}
+            />
+            <Field label={t("Order (optional)", "سفارش (اختیاری)")}>
+              <Select
+                id="invoice-order"
+                value={invoice.order_id ?? ""}
+                onChange={(value) =>
+                  update((draft, actor) => setInvoiceOrder(draft, actor, value))
+                }
+                options={[
+                  {
+                    value: "",
+                    label: t("No linked order", "بدون سفارش مرتبط"),
+                  },
+                  ...(state.orders ?? [])
+                    .filter(
+                      (o) =>
+                        o.supplier === invoice.supplier &&
+                        o.branch === invoice.branch &&
+                        o.status !== "cancelled",
+                    )
+                    .map((o) => ({ value: o.id, label: o.reference })),
+                ]}
+              />
+            </Field>
+          </div>
+          <Disclosure
+            className="receiving-more"
+            summary={t("More details", "جزئیات بیشتر")}
+            open={more}
+            onToggle={(e) => setMore(e.currentTarget.open)}
+          >
+            <div className="detail-grid ui-fields-align-labels receiving-more-grid">
+              {moreKeys.map((key) => {
+                const labels: Record<string, [string, string]> = {
+                  order_reference: [
+                    "Order reference (optional)",
+                    "مرجع سفارش (اختیاری)",
+                  ],
+                  bill_to: ["Bill to (optional)", "صورتحساب به (اختیاری)"],
+                  ship_to: ["Ship to (optional)", "ارسال به (اختیاری)"],
+                  currency: ["Currency", "ارز"],
+                  supplier_tax_number: [
+                    "Supplier tax number (optional)",
+                    "شماره مالیاتی تأمین‌کننده (اختیاری)",
+                  ],
+                };
+                const inputProps = {
+                  id: `invoice-${key.replaceAll("_", "-")}`,
+                  dir: "ltr" as const,
+                  value:
+                    key === "currency"
+                      ? (invoice.import_currency ?? "")
+                      : (readingRecord[key] ?? ""),
+                  onChange: (
+                    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+                  ) =>
+                    edit(
+                      key === "currency" ? "import_currency" : key,
+                      event.target.value,
+                    ),
+                };
+                return (
+                  <Field
+                    key={key}
+                    readingField={key}
+                    label={t(...labels[key])}
+                    className={
+                      key === "bill_to"
+                        ? "receiving-address-field receiving-more-wide"
+                        : key === "ship_to"
+                          ? "receiving-address-field"
+                          : undefined
+                    }
+                    hint={
+                      key === "currency" && invoice.import_currency_inferred
+                        ? t("Company currency", "ارز شرکت")
+                        : undefined
+                    }
+                  >
+                    {key === "bill_to" || key === "ship_to" ? (
+                      <ReceivingAddress {...inputProps} expanded={more} />
+                    ) : (
+                      <BufferedInput {...inputProps} />
+                    )}
+                  </Field>
+                );
+              })}
+              <ReadingUnknownChecks
+                fields={fields}
+                known={[
+                  "supplier",
+                  "supplier_invoice_number",
+                  "invoice_date",
+                  "payment_terms",
+                  "due_date",
+                  "received_at",
+                  "receiving_employee",
+                  "order_id",
+                  ...moreKeys,
+                ]}
+                record={invoice}
+              />
+            </div>
+            {invoice.reading_record?.source === "imported" && (
+              <p className="receiving-reading-evidence receiving-reading-line">
+                <FileText size={16} aria-hidden="true" />
+                <span>
+                  {t(
+                    "Read by AI from an imported file",
+                    "خوانده‌شده با هوش مصنوعی از فایل واردشده",
+                  )}
+                  {" · "}
+                  {invoice.reading_record.models.length === 1
+                    ? t("Model", "مدل")
+                    : t("Models", "مدل‌ها")}
+                  {": "}
+                  <LtrValue value={invoice.reading_record.models.join(", ")} />
+                  {fields.length > 0 && (
+                    <>
+                      {" · "}
+                      {fields.length === 1
+                        ? t("1 field to check", "1 مورد برای بررسی")
+                        : t(
+                            `${fields.length} fields to check`,
+                            `${fields.length} مورد برای بررسی`,
+                          )}
+                    </>
+                  )}
+                </span>
+              </p>
+            )}
+          </Disclosure>
+        </ReadingCheckProvider>
+      </div>
+      <Dialog
+        open={locationOpen}
+        onOpenChange={setLocationOpen}
+        title={t("Change receiving location", "تغییر مکان دریافت")}
+      >
+        <BaseField label={t("Location", "مکان")}>
+          <Select
+            id="invoice-location-target"
+            value={locationTarget}
+            options={configuredBranches(state.config).map((branch) => ({
+              value: branch,
+              label: branchLabel(state.config, branch, lang),
+            }))}
+            onChange={setLocationTarget}
+          />
+        </BaseField>
+        {locationError && (
+          <p className="form-error" role="alert">
+            {locationError}
+          </p>
+        )}
+        <DialogActions>
+          <Button variant="secondary" onClick={() => setLocationOpen(false)}>
+            {t("Cancel", "انصراف")}
+          </Button>
+          <Button
+            onClick={async () => {
+              try {
+                await command(
+                  "invoices.assign_receiving_location",
+                  scope,
+                  (draft, actor) => {
+                    if (draft.invoice.id !== invoice.id)
+                      selectInvoiceWorkspace(draft, actor, invoice.id);
+                    setInvoiceLocation(draft, actor, locationTarget);
+                  },
+                );
+                setLocationError("");
+                setLocationOpen(false);
+              } catch {
+                setLocationError(
+                  t(
+                    "Choose an allowed receiving location for your draft.",
+                    "مکان دریافت مجاز برای پیش‌نویس انتخاب کنید.",
+                  ),
+                );
+              }
+            }}
+          >
+            {t("Save location", "ذخیره مکان")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </section>
+  );
+}
+
+/** Keep the receiving buffer while fitting up to four lines of the address. */
+function ReceivingAddress({
+  expanded,
+  ...props
+}: ComponentProps<typeof BufferedTextarea> & { expanded: boolean }) {
+  const element = useRef<HTMLTextAreaElement>(null);
+  const fit = (node: HTMLTextAreaElement) => {
+    const style = getComputedStyle(node);
+    const line = parseFloat(style.lineHeight) || 21;
+    const padding =
+      parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+    const border =
+      parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+    node.style.height = "auto";
+    node.style.height = `${Math.min(line * 4 + padding + border, Math.max(line * 2 + padding + border, node.scrollHeight + border))}px`;
+  };
+  useLayoutEffect(() => {
+    if (element.current) fit(element.current);
+  }, [props.value, expanded]);
+  return (
+    <BufferedTextarea
+      {...props}
+      rows={2}
+      ref={element}
+      onInput={(event) => fit(event.currentTarget)}
+      className="receiving-address-input"
+    />
+  );
+}

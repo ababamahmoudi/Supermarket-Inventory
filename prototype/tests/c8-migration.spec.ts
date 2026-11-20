@@ -45,6 +45,11 @@ async function saved(page: Page) {
   return readCanonicalBusinessEvidence(page);
 }
 
+async function showReviewOriginal(page: Page) {
+  if ((page.viewportSize()?.width ?? 1440) <= 760)
+    await page.getByRole("button", { name: /^View original \(/ }).click();
+}
+
 /** This isolated test deliberately exercises the real first import. The app is
  * unloaded before its authority database alone is removed; immutable files,
  * raw legacy sources and every file backup remain in their existing database.
@@ -300,9 +305,12 @@ async function prepareRetainedState(page: Page) {
   await page.goto("/#invoices");
   const previousInvoiceId = (await saved(page)).invoice.id;
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
-  // The two guarded commands finish asynchronously. Select a file only after
-  // their real canonical manual draft and current protected editor agree.
+  await page
+    .getByRole("dialog", { name: "New invoice", exact: true })
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
+  // Select a file only after the chosen entry command's real canonical manual
+  // draft and current protected editor agree.
   await expect
     .poll(async () => {
       const current = (await saved(page)).invoice;
@@ -314,15 +322,16 @@ async function prepareRetainedState(page: Page) {
     })
     .toBe(true);
   await expect(
-    page.getByRole("heading", { name: "Review invoice lines", exact: true }),
+    page.getByRole("heading", { name: "Invoice lines", exact: true }),
   ).toBeVisible();
   await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
+    .getByLabel("Attach original", { exact: true })
     .setInputFiles(invoiceImage);
   const sourceHash = digest(invoiceImage.buffer);
   await expect
     .poll(async () => (await saved(page)).invoice.file_data)
     .toBe(`idb-file:v1:super-arzon:${sourceHash}`);
+  await showReviewOriginal(page);
   const image = page.getByRole("img", {
     name: "Original invoice image",
     exact: true,
@@ -604,6 +613,7 @@ test("C8 schema-only boundary preserves real saved settings, manual prices, all 
   expect(await readOriginal(page, prepared.state.invoice.file_data!)).toEqual(
     prepared.original,
   );
+  await showReviewOriginal(page);
   await expect(
     page.getByRole("img", { name: "Original invoice image", exact: true }),
   ).toBeVisible();

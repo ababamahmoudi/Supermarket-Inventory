@@ -222,11 +222,20 @@ async function setupScene(page, scene, variant) {
     if (scene === "correct-invoice-preview") {
       await button(page, "Correct invoice", "اصلاح فاکتور").click();
       const modal = dialog(page, "Correct invoice", "اصلاح فاکتور");
-      await field(
-        modal.locator(".invoice-correction-line").first(),
+      await expect(modal.locator(".receiving-line-editor")).toHaveCount(0);
+      await modal.locator(".invoice-line-toggle").first().click();
+      const editor = modal.getByRole("region", {
+        name: exact("Line 1", "ردیف 1"),
+      });
+      const cost = field(
+        editor,
         "Unit cost before tax",
         "هزینه هر واحد پیش از مالیات",
-      ).fill("1.01");
+      );
+      await expect(cost).toHaveCSS("height", "44px");
+      await cost.fill("1.01");
+      await button(editor, "Close", "بستن").last().click();
+      await expect(modal.locator(".receiving-line-editor")).toHaveCount(0);
       await field(modal, "Reason (required)", "دلیل (الزامی)").fill(
         "Correct the bean unit cost.",
       );

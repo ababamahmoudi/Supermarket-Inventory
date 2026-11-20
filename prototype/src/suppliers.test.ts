@@ -207,12 +207,15 @@ describe("Suppliers scoped read models", () => {
     );
     expect(page.notes.some((note) => note.id === "foreign-note")).toBe(false);
   });
-  it("keeps proposed suppliers with no deliveries and no made-up delivery date", () => {
+  it("keeps active suppliers with incomplete profiles and no deliveries or made-up delivery date", () => {
     const { state, worker } = fixture();
     const supplier = suppliersOverview(state, worker).find(
       (item) => item.name === "Corner Spice Co.",
     )!;
-    expect(supplier.status).toBe("proposed");
+    expect(supplier.status).toBe("confirmed");
+    expect(supplier.profile_missing).toEqual(
+      expect.arrayContaining(["phone", "email", "payment_terms", "address"]),
+    );
     expect(supplier.last_delivery).toBeUndefined();
     expect(supplier.deliveries_this_month).toBe(0);
   });

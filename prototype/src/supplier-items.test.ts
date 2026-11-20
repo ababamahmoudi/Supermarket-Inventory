@@ -487,6 +487,10 @@ describe("Supplier item maintenance and permission boundaries", () => {
         product_code: "FOREIGN",
       }),
     ).toThrow("product");
+    state.suppliers = structuredClone([...supplierRecords(state)]);
+    state.suppliers.find(
+      (record) => record.name === "Corner Spice Co.",
+    )!.active = false;
     expect(() =>
       saveSupplierItem(state, manager, "Corner Spice Co.", edits),
     ).toThrow("supplier");

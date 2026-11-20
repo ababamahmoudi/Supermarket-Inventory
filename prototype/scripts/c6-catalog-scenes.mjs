@@ -15,8 +15,19 @@ async function addShelfDate(page, { field, button, today }) {
   await visit(page, "expiry");
   const form = page.locator(".date-quick-add");
   await form.waitFor();
-  await field(form, "Product").fill("0006");
-  await form.getByRole("option", { name: /0006$/ }).click();
+  const product = field(form, "Product");
+  await product.fill("0006");
+  const resultsId = await product.getAttribute("aria-controls");
+  expect(resultsId).toBeTruthy();
+  const results = page.locator(`[id="${resultsId}"][role="listbox"]`);
+  await expect(results).toBeVisible();
+  const choice = results.getByRole("option").filter({
+    has: page.locator("bdi.ltr-fragment").filter({
+      hasText: /^[\u2066-\u2069\s]*0006[\u2066-\u2069\s]*$/u,
+    }),
+  });
+  await expect(choice).toHaveCount(1);
+  await choice.click();
   await today(page, form);
   await button(form, "More").click();
   await field(form, "Quantity (optional)").fill("20");

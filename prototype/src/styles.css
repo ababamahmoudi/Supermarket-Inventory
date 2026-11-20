@@ -1998,101 +1998,15 @@ html[data-theme="dark"] .signin-logo {
   gap: 20px;
   min-inline-size: 0;
 }
-.invoice-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-.invoice-summary-grid .ui-summary-tile {
-  padding: 16px;
-}
-.invoice-details-form,
-.invoice-line-form {
+.invoice-details-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   max-inline-size: 960px;
   gap: 16px;
 }
-.invoice-received-fields {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.invoice-received-fields > input {
-  inline-size: 120px;
-}
-.invoice-lines-table {
-  inline-size: 100%;
-  min-inline-size: 0;
-}
-.invoice-lines-table th {
-  padding: 8px;
-  font-size: 0.75rem;
-}
 .invoice-line-summary td {
   padding: 12px 8px;
   vertical-align: top;
-}
-.invoice-line-description {
-  min-inline-size: 100px;
-  max-inline-size: 160px;
-  overflow-wrap: anywhere;
-}
-.invoice-line-review {
-  display: grid;
-  gap: 16px;
-  padding: 16px;
-  background: var(--surface-soft);
-  border-radius: var(--radius-control);
-}
-.invoice-line-form .field {
-  max-inline-size: 100%;
-}
-.invoice-line-controls {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.invoice-line-heading {
-  display: grid;
-  align-content: start;
-  gap: 6px;
-}
-.invoice-line-price {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-}
-.invoice-line-price .price-display {
-  font-size: 1.5rem;
-}
-.invoice-action-footer {
-  position: sticky;
-  inset-block-end: 0;
-  z-index: 3;
-  display: grid;
-  gap: 8px;
-}
-.invoice-blockers {
-  display: grid;
-  gap: 8px;
-}
-.invoice-action-footer .bottom-bar {
-  position: static;
-  padding: 16px;
-  background: var(--surface);
-  border: 0;
-  border-radius: var(--radius-search);
-  flex-wrap: wrap;
-}
-.invoice-manual-line {
-  display: flex;
-  align-items: end;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.invoice-manual-line .field {
-  inline-size: 240px;
-  max-inline-size: 100%;
 }
 .invoice-reading-state {
   display: grid;
@@ -2107,10 +2021,6 @@ html[data-theme="dark"] .signin-logo {
 }
 .invoice-line .ui-number {
   inline-size: 128px;
-}
-.invoice-received-fields .field {
-  inline-size: 144px;
-  max-inline-size: 100%;
 }
 .signin-card h1 {
   margin-block-end: 24px;
@@ -2269,21 +2179,8 @@ html[data-theme="dark"] .signin-logo {
   .invoice-workspace {
     gap: 16px;
   }
-  .invoice-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .invoice-details-form,
-  .invoice-line-form {
+  .invoice-details-form {
     grid-template-columns: 1fr;
-  }
-  .invoice-lines-table {
-    min-inline-size: 0;
-  }
-  .invoice-lines-table table {
-    min-inline-size: 480px;
-  }
-  .invoice-line-description {
-    max-inline-size: 180px;
   }
   .signin-card {
     padding: 28px 24px;
@@ -2307,9 +2204,6 @@ html[data-theme="dark"] .signin-logo {
     --card: #fff;
     --text: #1c1c1c;
     --text-muted: #666;
-  }
-  .invoice-action-footer {
-    display: none;
   }
 }
 
@@ -2446,8 +2340,7 @@ td .button:focus-visible,
   padding-block: 24px;
 }
 .form-grid,
-.invoice-details-form,
-.invoice-line-form {
+.invoice-details-form {
   gap: 20px;
   max-inline-size: 960px;
 }

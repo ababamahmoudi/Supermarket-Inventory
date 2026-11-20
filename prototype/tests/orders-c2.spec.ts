@@ -235,7 +235,12 @@ test("free-text To order note saves unresolved selection but needs explicit item
   await noteForm.getByLabel("Note", { exact: true }).fill(noteText);
   await expect(
     noteForm.getByLabel("Product (optional)", { exact: true }),
-  ).toContainText("Choose product");
+  ).toContainText("No product");
+  await noteForm.getByLabel("Product (optional)", { exact: true }).click();
+  await expect(
+    page.getByRole("option", { name: "Choose product", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("option", { name: "No product", exact: true }).click();
   await expect(
     noteForm.getByLabel("Quantity (optional)", { exact: true }),
   ).toHaveValue("");

@@ -2,6 +2,8 @@ export interface UndoToast {
   id: string;
   actor_username?: string;
   action: string;
+  /** UI-only origin for one open dialog instance; never persisted. */
+  dialog_scope?: string;
   remaining: number;
   running_since: number | null;
 }
@@ -17,7 +19,7 @@ export function remainingTime(toast: UndoToast, now: number): number {
 }
 export function addUndoToast(
   queue: UndoToast[],
-  toast: Pick<UndoToast, "id" | "action" | "actor_username">,
+  toast: Pick<UndoToast, "id" | "action" | "actor_username" | "dialog_scope">,
   now: number,
 ): UndoToast[] {
   void queue;
