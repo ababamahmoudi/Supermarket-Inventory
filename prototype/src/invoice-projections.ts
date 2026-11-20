@@ -43,7 +43,9 @@ type InvoiceLineMoney =
   | "line_total"
   | "line_tax"
   | "short_before_tax"
-  | "short_tax";
+  | "short_tax"
+  | "allocated_unit_cost_before_tax"
+  | "allocated_source_cost_before_tax";
 export type InvoiceProductMatchReadDTO = Pick<
   NonNullable<InvoiceLine["reading_product_match"]>,
   "product_code" | "basis" | "earlier_delivery" | "requires_check"
@@ -185,6 +187,8 @@ const lineMoneyKeys = [
   "line_tax",
   "short_before_tax",
   "short_tax",
+  "allocated_unit_cost_before_tax",
+  "allocated_source_cost_before_tax",
 ] as const satisfies readonly InvoiceLineMoney[];
 const invoiceKeys = [
   "id",

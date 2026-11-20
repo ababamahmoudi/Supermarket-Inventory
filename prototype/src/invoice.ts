@@ -12,6 +12,11 @@ import type { InvoiceEditableLine } from "./invoice-edit-types";
 import { invoiceView, type InvoiceLineView } from "./invoice-projections";
 import Decimal from "decimal.js";
 import {
+  allocateInvoiceCredits,
+  invoiceCreditHistory,
+  invoiceLineCost,
+} from "./invoice-credit-allocation";
+import {
   fillCalculatedInvoiceTotals,
   invoiceCheckCount,
 } from "./invoice-checks";
@@ -737,6 +742,7 @@ export function recalculateInvoice(
       invoice.final_total = invoiceComputedTotal(invoice)!;
   }
   fillCalculatedInvoiceTotals(invoice);
+  allocateInvoiceCredits(invoice);
   invoice.payable_after_open_shorts = cents(
     new Decimal(validMoney(invoice.final_total) ? invoice.final_total : "0")
       .minus(shortTotals(invoice).total)
@@ -1443,6 +1449,8 @@ export function postInvoice(
   if (blockers.length) throw new Error(blockers.join(", "));
   if (state.ledger.some((entry) => entry.id === `${invoice.id}:posted`))
     return false;
+  // PR 29: post with the current credit allocation; it stays on the record.
+  allocateInvoiceCredits(invoice);
   const orderComparison = prepareInvoiceOrder(state, actor);
   const evidence = invoicePurchaseEvidence(
     state,
@@ -1507,7 +1515,7 @@ export function postInvoice(
               : readingProductUnitSize(line.pack_size ?? "") ||
                 readingProductUnitSize(line.new_name_en ?? ""),
           sold_by: line.sold_by ?? "each",
-          last_cost_before_tax: line.unit_cost_before_tax,
+          last_cost_before_tax: invoiceLineCost(line),
           selling_price: "",
           offer: null,
           taxable: line.taxable,
@@ -1534,7 +1542,7 @@ export function postInvoice(
       const manual = manualPrice(state, product, invoice.branch);
       const costChanged = !new Decimal(
         priorCosts.get(product.code) ?? product.last_cost_before_tax,
-      ).eq(line.unit_cost_before_tax);
+      ).eq(invoiceLineCost(line));
       const receivingPrice = line.receiving_price;
       const manualReview = !receivingPrice && !!manual && costChanged;
       const keepsManual = !receivingPrice && !!manual && !costChanged;
@@ -1548,7 +1556,7 @@ export function postInvoice(
             kept_price: prior!,
             calculated_price: rulePrice,
             prior_cost: new Decimal(priorCosts.get(product.code)!).toFixed(4),
-            received_cost: new Decimal(line.unit_cost_before_tax).toFixed(4),
+            received_cost: new Decimal(invoiceLineCost(line)).toFixed(4),
             receiver_recommendation: line.manual_price_decision ?? "rule",
           }
         : undefined;
@@ -1559,7 +1567,7 @@ export function postInvoice(
       const actualMargin =
         (keepsManual || receivingPrice) && new Decimal(price).gt(0)
           ? new Decimal(price)
-              .minus(line.unit_cost_before_tax)
+              .minus(invoiceLineCost(line))
               .div(price)
               .toFixed(8)
           : calculation.margin;
@@ -1605,7 +1613,7 @@ export function postInvoice(
           branch: invoice.branch,
           product: product.code,
           prior,
-          cost: line.unit_cost_before_tax,
+          cost: invoiceLineCost(line),
           manual_price_decision: line.manual_price_decision ?? "standard",
           receiving_price: receivingPrice,
           categories: state.config.pricing_categories,
@@ -1629,7 +1637,7 @@ export function postInvoice(
           existing.invoice_ids = [
             ...new Set([...(existing.invoice_ids ?? []), invoice.id]),
           ];
-          existing.unit_cost = line.unit_cost_before_tax;
+          existing.unit_cost = invoiceLineCost(line);
           existing.margin = margin.margin;
           existing.threshold = category.minimum_margin;
           existing.invoice_number = invoice.supplier_invoice_number;
@@ -1659,7 +1667,7 @@ export function postInvoice(
                 : prior === price && !usesRule && !receivingPrice
                   ? "margin_review"
                   : "price_change",
-            unit_cost: line.unit_cost_before_tax,
+            unit_cost: invoiceLineCost(line),
             margin: margin.margin,
             threshold: category.minimum_margin,
             reason: margin.below_minimum ? "Below minimum margin" : undefined,
@@ -1721,11 +1729,11 @@ export function postInvoice(
           line_index: lineIndex,
           previous_cost:
             priorCosts.get(product.code) ?? product.last_cost_before_tax,
-          new_cost: line.unit_cost_before_tax,
+          new_cost: invoiceLineCost(line),
           regular_price_before: prior ?? "0",
           proposed_regular_price: price,
         });
-        product.last_cost_before_tax = line.unit_cost_before_tax;
+        product.last_cost_before_tax = invoiceLineCost(line);
       }
       const short = lineShort(line);
       line.short_before_tax = short.beforeTax;
@@ -1786,7 +1794,7 @@ export function postInvoice(
         supplier: invoice.supplier,
         previous_cost: previousReceiptCost(state, actor, product.code, line)!
           .cost,
-        new_cost: line.unit_cost_before_tax,
+        new_cost: invoiceLineCost(line),
         same_expiry: answer.same_expiry,
         old_expiry: answer.old_expiry,
         new_expiry: answer.new_expiry,
@@ -1919,6 +1927,9 @@ export function postInvoice(
       action: "Posted invoice",
       entity_type: "invoice",
       entity_id: invoice.id,
+      ...(invoiceCreditHistory(invoice).length
+        ? { invoice_credit_allocations: invoiceCreditHistory(invoice) }
+        : {}),
       after: {
         supplier_invoice_number: invoice.supplier_invoice_number,
         supplier: invoice.supplier,

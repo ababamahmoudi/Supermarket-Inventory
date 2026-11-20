@@ -255,7 +255,7 @@ for (const language of ["en", "fa"] as const) {
     });
     await expect(costCheck).toHaveCount(1);
     await expect(
-      costCheck.getByRole("img", {
+      costCheck.getByRole("button", {
         name: t(
           language,
           "Check this against the original",

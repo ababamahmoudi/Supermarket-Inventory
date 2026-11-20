@@ -138,6 +138,51 @@ export function InvoiceOtherCharges({
                         <LtrValue value={charge.description} />
                       )}
                     </span>
+                    {!onEdit && charge.applies_to && (
+                      <small
+                        className="posted-charge-applies"
+                        data-testid={`posted-charge-${index}-applies-to`}
+                      >
+                        {t("Applies to:", "اعمال روی:")}{" "}
+                        {charge.applies_to === "invoice_total"
+                          ? t("Invoice total", "جمع فاکتور")
+                          : t("Chosen items", "کالاهای انتخابی")}
+                        {(charge.allocations ?? []).map((allocation) => {
+                          const position = invoice.lines.findIndex(
+                            (line, lineIndex) =>
+                              (line.id ?? String(lineIndex)) ===
+                              allocation.line_id,
+                          );
+                          const line = invoice.lines[position];
+                          return (
+                            <span key={allocation.line_id}>
+                              {" · "}
+                              <LtrValue
+                                value={
+                                  line?.new_name_en ||
+                                  line?.description ||
+                                  allocation.line_id
+                                }
+                              />{" "}
+                              <ReadingMoney value={allocation.amount} /> (
+                              {t("unit cost", "هزینه واحد")}{" "}
+                              <ReadingMoney
+                                value={allocation.unit_cost_before}
+                                decimals={4}
+                                fixedDecimals
+                              />{" "}
+                              →{" "}
+                              <ReadingMoney
+                                value={allocation.unit_cost_after}
+                                decimals={4}
+                                fixedDecimals
+                              />
+                              )
+                            </span>
+                          );
+                        })}
+                      </small>
+                    )}
                   </td>
                   <td className="numeric">
                     <span

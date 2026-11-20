@@ -207,6 +207,14 @@ for (const language of ["en", "fa"] as const) {
         (entry) => entry.name === "Cedar Valley Foods Inc.",
       )?.phone ?? "",
     ).toBe("");
+    // PR 29: the printed discount must say what it applies to before posting.
+    await page
+      .locator("#invoice-check-charge-1-input-applies_to")
+      .getByRole("button", {
+        name: word(language, "Invoice total", "جمع فاکتور"),
+        exact: true,
+      })
+      .click();
     const post = page.getByRole("button", {
       name: word(language, "Post invoice", "ثبت فاکتور"),
       exact: true,

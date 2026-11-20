@@ -220,8 +220,8 @@
   :root
     .invoice-saved-table.ui-data-table.is-responsive.is-mobile.is-phone-list
     tr.phone-list-row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
-    grid-template-areas: "name value" "secondary secondary";
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content) 28px;
+    grid-template-areas: "name value chevron" "secondary secondary chevron";
     gap: 6px 12px;
     padding: 12px;
     margin-block-end: 12px;

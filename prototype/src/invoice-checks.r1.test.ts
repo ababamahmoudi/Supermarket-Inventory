@@ -164,12 +164,15 @@ describe("R1 human review and invoice charges", () => {
         description: "Fictional discount",
         amount: "-1.00",
         taxable: false,
+        // PR 29: a credit says what it applies to; the invoice total here.
+        applies_to: "invoice_total",
       },
       {
         line_type: "credit",
         description: "Fictional credit",
         amount: "-2.00",
         taxable: false,
+        applies_to: "invoice_total",
       },
     ];
     recalculateInvoice(state.invoice, state.config);

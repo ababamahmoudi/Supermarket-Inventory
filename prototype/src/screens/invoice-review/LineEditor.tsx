@@ -479,7 +479,9 @@ export function LineEditor({
   // (cost per lb under a per-lb price). The source kg cost stays in its field.
   const costInPriceUnit = (() => {
     try {
-      const perUnit = new Decimal(line.unit_cost_before_tax);
+      const perUnit = new Decimal(
+        line.allocated_unit_cost_before_tax ?? line.unit_cost_before_tax,
+      );
       return priceUnit === "kg"
         ? perUnit
             .times(

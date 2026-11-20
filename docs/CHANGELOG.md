@@ -1,3 +1,12 @@
+## 2026-11-20 — PR 29 receiving review (Ali's test of 2026-11-19/20)
+
+- Invoices list: headings aligned with values, 24 px column gaps, 16 px hover inset (also Suppliers), progress bar, Open invoice in the row menu, menu never covers the next Review; phone cards keep Review. Shared tables measure the real action group and key stripped cell content.
+- Invoice details: payment terms check the due date; per-field Looks right in the amber ! popover with a counted card button (decision recorded); More details as one grid with a quiet reading line.
+- Lines: one quiet bulk bar; Set category only for uncategorised new products (bug fix); Confirm N ready lines with Undo; selling price and margin on every closed row; a typed short is kept by Confirm line (bug fix) and shown in red.
+- Line editor: Use lower inside Selling price; one math/paper-total box with real buttons; category/Taxable sync via configured `taxable_twin`; cost shown in the price unit; "1 case".
+- Totals: calculated Subtotal with the paper difference (bug fix); Payable 700/20 px; discounts/credits choose Invoice total or Chosen items with Decimal allocation to item costs, stored on the posted invoice and in History.
+- Seed config: `taxable_twin` for Grocery ↔ Grocery (Taxable).
+
 ## 2026-11-15 — Price-ending rule: only 1.49, 2.49 and 3.49 are rounded up
 
 - Ali's decision: Grocery and Grocery (Taxable) raise 1.49 → 1.99, 2.49 → 2.99 and 3.49 → 3.99. Every other .49 stays (4.49, 52.49, the 0.49 minimum, weighed and package prices). Kitchenware stays off; its switch remains in Settings.

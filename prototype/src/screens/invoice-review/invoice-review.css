@@ -695,18 +695,85 @@
 .receiving-total-deduction > .ltr-fragment {
   color: var(--klead-red-text);
 }
+/* PR 29 (item 7): keep the tinted bar; weight 700 at 20 px, from tokens. */
 .receiving-total-payable {
   padding: 12px 16px;
   border-radius: var(--radius-menu);
   background: var(--klead-accent-tint);
-  font-size: 18px;
-  font-weight: 800;
+  font-size: var(--font-size-title);
+  line-height: var(--line-height-title);
+  font-weight: var(--font-weight-headline);
 }
 .receiving-total-payable > strong {
   font-weight: inherit;
 }
 .receiving-total-payable > strong:last-child {
-  font-size: 22px;
+  font-size: var(--font-size-title);
+}
+
+/* PR 29 (item 8): a discount or credit chooses what it applies to. */
+.receiving-credit {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.receiving-credit-choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.receiving-credit-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: var(--font-size-label);
+  font-weight: 600;
+}
+.receiving-credit.please-check-field .ui-segments {
+  box-shadow: 0 0 0 2px var(--pending-dot);
+}
+.receiving-credit-question {
+  margin: 0;
+  color: var(--pending);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.receiving-credit-items {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.receiving-credit-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-block-size: 32px;
+  padding-inline: 12px 4px;
+  border-radius: var(--radius-round);
+  background: var(--accent-soft);
+  color: var(--accent-tint-text);
+  font-size: var(--font-size-label);
+}
+.receiving-credit-add {
+  inline-size: auto;
+  min-inline-size: 160px;
+}
+.receiving-credit-info,
+.receiving-charge-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.receiving-credit-info {
+  padding: 8px 12px;
+  border-radius: var(--radius-control);
+  background: var(--neutral-fill);
+  color: var(--text);
 }
 .receiving-total-row {
   display: flex;
@@ -2005,10 +2072,20 @@
   display: none;
 }
 @container receiving-lines (max-width: 760px) {
-  .receiving-table .receiving-col-price,
-  .receiving-table th:nth-child(6),
-  .receiving-table .receiving-price-cell {
-    display: none;
+  /* Collapse (not remove) the column, so an open editor's six-column span
+     never creates an extra column. */
+  .receiving-table .receiving-col-price {
+    inline-size: 0;
+  }
+  .receiving-table > thead > tr > th:nth-child(6),
+  .receiving-table > tbody > .invoice-line-summary > td.receiving-price-cell {
+    padding: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+  .receiving-table > tbody > .invoice-line-summary > td.receiving-total-cell {
+    border-start-end-radius: var(--radius-small);
+    border-end-end-radius: var(--radius-small);
   }
   .receiving-table .receiving-total-cell > .receiving-total-price {
     display: block;
@@ -2028,4 +2105,16 @@
   .receiving-col-total {
     inline-size: 98px;
   }
+}
+.posted-charge-applies {
+  display: block;
+  margin-block-start: 2px;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  white-space: normal;
+}
+.receiving-credit-choice > .ui-segments {
+  min-block-size: 44px;
+  block-size: 44px;
 }

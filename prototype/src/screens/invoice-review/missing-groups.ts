@@ -117,8 +117,25 @@ export function missingGroups(
       ),
       invoiceCheckTarget(details[0]),
     );
+  // PR 29: an unanswered discount/credit names its own fix.
+  (invoice.other_charges ?? []).forEach((charge, index) => {
+    if (
+      visibleInvoiceCheckFields(charge).some(
+        (field) => invoiceCheckField(field) === "applies_to",
+      )
+    )
+      add(
+        t(
+          `Credit ${index + 1}: choose Invoice total or Chosen items`,
+          `اعتبار ${index + 1}: جمع فاکتور یا کالاهای انتخابی را انتخاب کنید`,
+        ),
+        `invoice-check-charge-${index}-input-applies_to`,
+      );
+  });
   const chargeChecks = (invoice.other_charges ?? []).flatMap((charge, index) =>
-    visibleInvoiceCheckFields(charge).map((field) => ({ index, field })),
+    visibleInvoiceCheckFields(charge)
+      .filter((field) => invoiceCheckField(field) !== "applies_to")
+      .map((field) => ({ index, field })),
   );
   if (totals.length + chargeChecks.length)
     add(

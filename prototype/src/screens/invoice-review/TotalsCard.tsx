@@ -69,18 +69,24 @@ export function TotalsCard({
           ? differences.totalDifference
           : undefined;
     const hasValue = validMoney(invoice[key]);
-    const provenance = calculated
-      ? t("Calculated", "محاسبه‌شده")
-      : (invoice.reading_record || invoice.demo_original_snapshot) && hasValue
-        ? key === "final_total" &&
-          [invoice.subtotal, invoice.tax, invoice.final_total].every(
-            validMoney,
-          ) &&
-          !differences.totalDifference &&
-          !differences.subtotalDifference
-          ? t("Matches paper", "مطابق کاغذ")
-          : t("On paper", "روی کاغذ")
-        : undefined;
+    // PR 29 (13a): a Subtotal that differs from the lines shows the real
+    // calculated sum; the paper number moves to the amber line below.
+    const calculatedSubtotal =
+      key === "subtotal" && difference ? items.plus(charges).toFixed(2) : null;
+    const provenance = calculatedSubtotal
+      ? t("Calculated from the lines", "محاسبه‌شده از ردیف‌ها")
+      : calculated
+        ? t("Calculated", "محاسبه‌شده")
+        : (invoice.reading_record || invoice.demo_original_snapshot) && hasValue
+          ? key === "final_total" &&
+            [invoice.subtotal, invoice.tax, invoice.final_total].every(
+              validMoney,
+            ) &&
+            !differences.totalDifference &&
+            !differences.subtotalDifference
+            ? t("Matches paper", "مطابق کاغذ")
+            : t("On paper", "روی کاغذ")
+          : undefined;
     const provenanceTitle = calculated
       ? t(
           key === "subtotal" && invoice.calculated_from_lines
@@ -106,7 +112,7 @@ export function TotalsCard({
                 </small>
               )}
             </span>
-            <Money value={invoice[key]} />
+            <Money value={calculatedSubtotal ?? invoice[key]} />
           </div>
         ) : (
           <Field
@@ -143,9 +149,23 @@ export function TotalsCard({
           </Field>
         )}
         {difference && (
-          <span className="receiving-check-summary">
-            {t("Paper:", "کاغذ:")} <Money value={invoice[key]} /> ·{" "}
-            {t("Difference", "اختلاف")} <Money value={difference} />
+          <span className="receiving-check-summary receiving-total-difference">
+            {key === "subtotal" ? (
+              <>
+                {t("On the paper:", "روی کاغذ:")} <Money value={invoice[key]} />
+              </>
+            ) : (
+              <>
+                {t("Subtotal + tax:", "جمع پیش از مالیات + مالیات:")}{" "}
+                <Money
+                  value={safe(invoice.subtotal)
+                    .plus(safe(invoice.tax))
+                    .toFixed(2)}
+                />
+              </>
+            )}{" "}
+            · {t("Difference", "اختلاف")}{" "}
+            <Money value={safe(difference).abs().toFixed(2)} />
           </span>
         )}
       </div>

@@ -13,6 +13,7 @@ import {
   addInvoiceOtherCharge,
   editInvoiceOtherCharge,
   removeInvoiceOtherCharge,
+  setInvoiceChargeAppliesTo,
 } from "../../invoice-other-charges";
 import { ReviewHeader } from "./ReviewHeader";
 import { ProgressStrip } from "./ProgressStrip";
@@ -261,6 +262,17 @@ export function InvoiceReviewPage(props: ReviewProps & { extras?: ReactNode }) {
               onRemove={(index) => {
                 void update((draft, actor) =>
                   removeInvoiceOtherCharge(draft, actor, index),
+                );
+              }}
+              onAppliesTo={(index, appliesTo, lineIds) => {
+                void update((draft, actor) =>
+                  setInvoiceChargeAppliesTo(
+                    draft,
+                    actor,
+                    index,
+                    appliesTo,
+                    lineIds,
+                  ),
                 );
               }}
             />

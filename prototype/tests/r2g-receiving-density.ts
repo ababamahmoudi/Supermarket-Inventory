@@ -132,6 +132,10 @@ export async function inspectReceivingDensity(
       if (box.height < 44 || box.height > maximum + 0.5)
         failures.push(`Density row content budget: ${index + 1}`);
       for (const cell of row.querySelectorAll<HTMLElement>(":scope > td")) {
+        // PR 29: a narrow card collapses (hides) the Selling price cell; its
+        // price is shown under Line total instead.
+        if (cell.classList.contains("receiving-price-cell") && !visible(cell))
+          continue;
         const style = getComputedStyle(cell);
         if (style.paddingTop !== "12px" || style.paddingBottom !== "12px")
           failures.push(`Density 12px row padding: ${index + 1}`);
@@ -274,15 +278,34 @@ export async function inspectReceivingDensity(
         actual: atMost(table.querySelector("thead"), 36, "table header"),
         maximum: 36,
       },
-      charges: {
-        actual: atMost(
-          charges,
-          20 + 20 + 10 + 44 * chargeCount + 8 * Math.max(0, chargeCount - 1),
-          "inline charges",
-        ),
-        maximum:
-          20 + 20 + 10 + 44 * chargeCount + 8 * Math.max(0, chargeCount - 1),
-      },
+      charges: (() => {
+        // PR 29 adds a one-line fee note, and for a credit the Applies to
+        // row, its question, chosen-item chips and the cost-change note.
+        const extra = chargeRows.reduce((sum, row) => {
+          let add = 0;
+          if (row.querySelector(".receiving-charge-note")) add += 8 + 2 * 16;
+          if (row.querySelector(".receiving-credit")) {
+            add += 8 + 44;
+            if (row.querySelector(".receiving-credit-question"))
+              add += 8 + 2 * 16;
+            if (row.querySelector(".receiving-credit-items")) add += 8 + 44;
+            if (row.querySelector(".receiving-credit-info"))
+              add += 8 + 16 + 4 * 16;
+          }
+          return sum + add;
+        }, 0);
+        const maximum =
+          20 +
+          20 +
+          10 +
+          44 * chargeCount +
+          8 * Math.max(0, chargeCount - 1) +
+          extra;
+        return {
+          actual: atMost(charges, maximum, "inline charges"),
+          maximum,
+        };
+      })(),
       footer: {
         actual: atMost(
           review.querySelector(".receiving-add-line"),

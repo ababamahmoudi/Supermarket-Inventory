@@ -128,11 +128,12 @@ export function InvoiceQueueTable({
           "progress",
         ],
         // PR 29 phone composition: number and total, supplier, date · lines,
-        // progress, then ⋯ and the row's own Review action (no extra chevron).
-        render: ({ cell }) => (
+        // progress, then ⋯ and Review; the shared row chevron stays.
+        render: ({ cell, recordLink }) => (
           <>
             <td className="phone-list-name">{cell("invoice")}</td>
             <td className="phone-list-value">{cell("total")}</td>
+            <td className="phone-list-chevron">{recordLink}</td>
             <td className="phone-list-secondary">
               <span>{cell("supplier")}</span>
               {branch === "all" && <span>{cell("location")}</span>}

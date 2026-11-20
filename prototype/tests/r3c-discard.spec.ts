@@ -218,9 +218,8 @@ for (const language of ["en", "fa"] as const) {
     });
     expect(geometry.inside).toBe(true);
     expect(geometry.overflow).toBeLessThanOrEqual(2);
-    // PR 29 approved phone card: the row's own action replaces the chevron.
     if ((page.viewportSize()?.width ?? 1440) <= 760)
-      await expect(row.locator(".invoice-queue-primary-action")).toBeVisible();
+      await expect(row.locator(".phone-list-chevron a")).toHaveCount(1);
     await more.click();
     await page
       .getByRole("menuitem", {

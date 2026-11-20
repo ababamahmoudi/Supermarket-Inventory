@@ -182,6 +182,11 @@ test("R2b 2.2 checks persist acknowledgments and Next focuses details, line evid
     ).toBeVisible();
     await expect(editor).toHaveCount(0);
   }
+  // PR 29: the fixture's printed discount first says what it applies to.
+  await page
+    .locator("#invoice-check-charge-1-input-applies_to")
+    .getByRole("button", { name: "Invoice total", exact: true })
+    .click();
   // A real flagged paper tax remains actionable; derived subtotal stays quiet.
   await expect(page.locator(".receiving-progress-checks")).toHaveText(
     "1 highlighted field",

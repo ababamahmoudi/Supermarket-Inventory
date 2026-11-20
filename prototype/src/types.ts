@@ -339,6 +339,14 @@ export interface Alert extends ScopedRecord {
   order_id?: string;
   order_differences?: InvoiceOrderDifference[];
 }
+/** PR 29: one chosen line's share of a credit and its unit cost change. */
+export type InvoiceCreditAllocation = {
+  line_id: string;
+  amount: string;
+  unit_cost_before: string;
+  unit_cost_after: string;
+};
+
 export type InvoiceCheckReceipts = Record<
   string,
   { checked_by_user_id: string; checked_at: string }
@@ -445,6 +453,10 @@ export type InvoiceLine = Omit<
     printed_case_cost_before_tax?: string;
   };
   receiving_price?: import("./invoice-receiving-price").ReceivingPriceProposal;
+  /** PR 29: unit cost after credits applied to chosen items (4 decimals). */
+  allocated_unit_cost_before_tax?: string;
+  /** PR 29: the weighed source cost after the same credit share. */
+  allocated_source_cost_before_tax?: string;
   manual_price_decision?: "keep" | "rule";
   short_dated?: boolean;
   supplier_item_id?: string;
@@ -557,6 +569,10 @@ export type DemoInvoice = Omit<
       taxable: boolean;
       low_confidence_fields?: string[];
       checked_fields?: InvoiceCheckReceipts;
+      /** PR 29: a discount/credit lowers the invoice total or chosen items. */
+      applies_to?: "invoice_total" | "chosen_items";
+      chosen_line_ids?: string[];
+      allocations?: InvoiceCreditAllocation[];
     }[];
     demo_original_snapshot?: true;
     legacy_demo_original?: {
@@ -809,6 +825,15 @@ export interface LedgerEntry extends ScopedRecord {
   note?: string;
 }
 export interface Activity extends ScopedRecord {
+  /** PR 29: what each discount/credit applies to and its item allocation. */
+  invoice_credit_allocations?: {
+    charge_index: number;
+    description: string;
+    amount: string;
+    applies_to: "invoice_total" | "chosen_items";
+    allocations: InvoiceCreditAllocation[];
+    line_names: Record<string, string>;
+  }[];
   invoice_category_selection?: {
     line_ids: string[];
     count: number;

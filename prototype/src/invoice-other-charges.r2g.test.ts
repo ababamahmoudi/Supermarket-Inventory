@@ -92,9 +92,11 @@ describe("B4 inline invoice charges and credits", () => {
     ];
     const provenance = structuredClone(state.invoice.reading_record);
     editInvoiceOtherCharge(state, actor, 0, "line_total", "-1.25");
+    // PR 29: the amount is now a credit, so Applies to becomes a check.
     expect(state.invoice.other_charges[0].low_confidence_fields).toEqual([
       "description",
       "taxable",
+      "applies_to",
     ]);
     expect(
       state.invoice.other_charges[0].checked_fields?.line_total,

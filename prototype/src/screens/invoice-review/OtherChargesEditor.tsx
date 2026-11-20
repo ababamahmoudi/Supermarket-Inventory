@@ -5,6 +5,9 @@ import type { InvoiceReadDTO } from "../../invoice-projections";
 import type { InvoiceChargeField } from "../../invoice-other-charges";
 import { BufferedInput, Button, Field, SegmentedControl } from "../../ui";
 import { useDemo } from "../../store";
+import { isInvoiceCredit } from "../../invoice-credit-allocation";
+import { invoiceLineId } from "../../invoice-line-links";
+import { CreditAppliesTo } from "./CreditAppliesTo";
 
 /** Reserve the rendered prefix, including a multi-letter ISO code, before paint. */
 function ChargeAmountInput({
@@ -50,12 +53,37 @@ export function OtherChargesEditor({
   invoice,
   onEdit,
   onRemove,
+  onAppliesTo,
 }: {
   invoice: InvoiceReadDTO;
   onEdit(index: number, field: InvoiceChargeField, value: string): void;
   onRemove(index: number): void;
+  onAppliesTo?(
+    index: number,
+    appliesTo: "invoice_total" | "chosen_items",
+    lineIds: string[],
+  ): void;
 }) {
   const { t, state } = useDemo();
+  const lineName = (id: string) => {
+    const lines = invoice.lines ?? [];
+    const index = lines.findIndex(
+      (line, position) => invoiceLineId(line, position) === id,
+    );
+    const line = lines[index];
+    if (!line) return id;
+    const product = (state.products ?? []).find(
+      (item) =>
+        item.company_id === invoice.company_id &&
+        item.code === line.product_code,
+    );
+    return (
+      line.new_name_en ||
+      product?.name_en ||
+      line.description ||
+      t(`Line ${index + 1}`, `ردیف ${index + 1}`)
+    );
+  };
   if (!invoice.other_charges?.length) return null;
   const currencyCode =
     typeof invoice.import_currency === "string" &&
@@ -190,6 +218,28 @@ export function OtherChargesEditor({
               >
                 <Trash2 size={16} aria-hidden="true" />
               </Button>
+              {isInvoiceCredit(charge) ? (
+                <CreditAppliesTo
+                  index={index}
+                  charge={charge}
+                  lines={(invoice.lines ?? []).map((line, position) => ({
+                    id: invoiceLineId(line, position),
+                    name: lineName(invoiceLineId(line, position)),
+                  }))}
+                  lineName={lineName}
+                  checked={Boolean(checked("applies_to" as InvoiceChargeField))}
+                  onChange={(appliesTo, ids) =>
+                    onAppliesTo?.(index, appliesTo, ids)
+                  }
+                />
+              ) : (
+                <p className="receiving-charge-note muted">
+                  {t(
+                    "Fees and deposits change the invoice total only. Item costs and prices stay the same.",
+                    "هزینه‌ها و ودیعه‌ها فقط جمع فاکتور را تغییر می‌دهند. هزینه و قیمت کالاها تغییر نمی‌کند.",
+                  )}
+                </p>
+              )}
               {charge.low_confidence_fields?.length ? (
                 <span id={`${id}-hint`} className="sr-only">
                   {hint}

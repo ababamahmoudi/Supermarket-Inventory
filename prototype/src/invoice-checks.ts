@@ -5,6 +5,7 @@ import {
 } from "./invoice-free-cases";
 import { invoiceLineAmount, invoicePaperTotalMismatch } from "./invoice-weight";
 import Decimal from "decimal.js";
+import { allocateInvoiceCredits } from "./invoice-credit-allocation";
 import { createId } from "./ids";
 import { costPerUnit, packUnits } from "./supplier-items";
 import type { AuthenticatedActor } from "./authority-types";
@@ -90,6 +91,7 @@ export function isEmptyOptionalInvoiceField(
 // Only checks with a human label and a real receiving control can block review.
 // Unsupported reader metadata remains source evidence rather than an invisible task.
 const reviewableInvoiceFields = new Set([
+  "applies_to",
   "free_case_decision",
   "supplier",
   "supplier_invoice_number",
@@ -161,6 +163,9 @@ export function visibleInvoiceCheckFields(record: {
 /** Adopt the receiving defaults on an authorized draft, preserving explicit date choices. */
 export function normalizeInvoiceReceivingReview(invoice: DemoInvoice): void {
   if (invoice.status === "posted" || invoice.status === "cancelled") return;
+  // PR 29: credits on chosen items recompute their allocated unit costs, and
+  // an unanswered credit is an `applies_to` check.
+  allocateInvoiceCredits(invoice);
   const required = [
     "supplier",
     "supplier_invoice_number",

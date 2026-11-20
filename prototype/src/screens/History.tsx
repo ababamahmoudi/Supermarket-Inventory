@@ -433,6 +433,41 @@ export default function History() {
           )}
         </span>
       );
+    // PR 29: a credit's choice and item allocation read as one plain line.
+    if (entry.invoice_credit_allocations?.length)
+      return (
+        <span className="history-credit-allocations">
+          {entry.invoice_credit_allocations.map((credit) => (
+            <span key={credit.charge_index} className="history-credit">
+              <bdi>{credit.description}</bdi> <Money value={credit.amount} />
+              {" → "}
+              {credit.applies_to === "invoice_total"
+                ? t("Invoice total", "جمع فاکتور")
+                : t("Chosen items", "کالاهای انتخابی")}
+              {credit.allocations.map((allocation) => (
+                <span key={allocation.line_id}>
+                  {" · "}
+                  <bdi>{credit.line_names[allocation.line_id]}</bdi>{" "}
+                  <Money value={allocation.amount} /> (
+                  {t("unit cost", "هزینه واحد")}{" "}
+                  <Money
+                    value={allocation.unit_cost_before}
+                    decimals={4}
+                    fixedDecimals
+                  />{" "}
+                  →{" "}
+                  <Money
+                    value={allocation.unit_cost_after}
+                    decimals={4}
+                    fixedDecimals
+                  />
+                  )
+                </span>
+              ))}
+            </span>
+          ))}
+        </span>
+      );
     const changes = historyDisplayChanges(entry);
     const expanded = expandedChanges.includes(entry.id);
     const displayChange = (change: HistoryDisplayChange, index: number) => {

@@ -190,7 +190,7 @@ for (const language of ["en", "fa"] as const) {
     const packField = page.locator("#invoice-check-line-0-pack_size");
     await expect(packField).toHaveClass(/please-check-field/);
     await expect(
-      packField.getByRole("img", {
+      packField.getByRole("button", {
         name: word(
           language,
           "Check this against the original",

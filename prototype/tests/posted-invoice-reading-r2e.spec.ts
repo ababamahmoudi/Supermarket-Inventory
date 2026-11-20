@@ -145,6 +145,11 @@ for (const language of ["en", "fa"] as const)
     await page
       .getByRole("button", { name: "Looks right: Totals", exact: true })
       .click();
+    // PR 29: the fixture's printed discount must say what it applies to.
+    await page
+      .locator("#invoice-check-charge-1-input-applies_to")
+      .getByRole("button", { name: "Invoice total", exact: true })
+      .click();
     await page
       .getByRole("button", { name: "Post invoice", exact: true })
       .click();

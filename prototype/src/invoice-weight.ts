@@ -20,15 +20,22 @@ export function invoiceLineCalculation(
   category: string,
   config: CompanyConfig,
 ) {
+  // PR 29: a credit applied to chosen items lowers the cost used for pricing.
   return line.sold_by === "weight"
     ? calculateWeighedPrice(
-        line.source_cost_before_tax ?? line.unit_cost_before_tax,
+        line.allocated_source_cost_before_tax ??
+          line.source_cost_before_tax ??
+          line.unit_cost_before_tax,
         line.source_cost_unit ?? "lb",
         category,
         config,
         line.weight_conversion_factor,
       )
-    : calculatePrice(line.unit_cost_before_tax, category, config);
+    : calculatePrice(
+        line.allocated_unit_cost_before_tax ?? line.unit_cost_before_tax,
+        category,
+        config,
+      );
 }
 
 function hasValidCaseWeight(line: InvoiceEditableLine): boolean {

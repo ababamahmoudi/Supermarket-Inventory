@@ -1,5 +1,23 @@
 # Decisions
 
+## PR 29 receiving review decisions — 2026-11-20
+
+### 2026-11-20 — Per-field Looks right in the amber ! popover
+
+**Context:** Ali tested PR 29 and wanted to accept one highlighted field without clearing the others; the card button gave no sense of how many were left. **Decision (Ali, approved 2026-11-20):** tapping the amber ! opens its existing explanation as a small popover with Change and Looks right; Looks right clears only that field and records who and when. The card button reads "Looks right · N" and still clears all of them. **Why:** the extra control appears only on demand, so the screen stays calm, and nothing moves (2 px rule). Supersedes the 2026-10-21 "One confirmation per line" entry for highlighted fields.
+
+### 2026-11-20 — Discounts and credits apply to the invoice total or to chosen items
+
+**Context:** a printed discount is often for particular items, but the paper rarely says which. **Decision (Ali, 2026-11-20):** every negative other charge must choose Invoice total or Chosen items; nothing is preselected and it blocks posting until answered. Chosen items splits the pre-tax credit by line total (Decimal, half-up cents, last line takes the remainder) and lowers each chosen line's unit cost (4 decimals); prices are recalculated through the normal engine and approvals. The paper lines and every invoice total stay identical; the allocation is stored on the posted invoice and in History. **Why:** item margins stay true without changing what is owed.
+
+### 2026-11-20 — Taxable twins live in configuration
+
+**Context:** choosing "Grocery (Taxable)" did not switch Taxable on, and switching Taxable did not change the category. **Decision:** a category's `taxable` sets the line's Taxable when a person chooses it; switching Taxable moves to the category's configured `taxable_twin`, and without one an amber note asks the person to check the category. **Why:** no names are guessed or hardcoded; another store configures its own pairs. The bulk "Set category" keeps its earlier rule of preserving explicit paper tax.
+
+### 2026-11-20 — Confirm N ready lines is one reversible change
+
+**Context:** single Confirm line writes no History entry. **Decision:** the bulk action confirms only lines that pass every Confirm line rule with nothing highlighted, as one attributed, reversible "Confirm ready invoice lines" History entry, which gives the bottom Undo toast. **Why:** one tap can confirm many lines, so it must be undoable as a whole.
+
 ## R2g — Screenshot-led polish on top of live reading (2026-10-29)
 
 **Context:** Ali approved exact auth, Change price, Lookup and receiving compositions and identified shared inconsistencies, particularly at 509 px. R3 is already complete and remains the integration base.
@@ -443,6 +461,8 @@ Supplier approval and required contact fields slowed receiving. Require only the
 Repeated Yes/No questions add no useful review. Default each line to No unless its matched product already tracks dates; Yes exposes the date and may suggest printed expiry.
 
 ### 2026-10-21 — One confirmation per line
+
+**Superseded on 2026-11-20 for highlighted fields** by "Per-field Looks right in the amber ! popover" below; Confirm line still confirms a whole line.
 
 Per-field buttons caused excessive controls. Confirm line acknowledges the entire validated line, highlights included; invoice details and totals each retain one Looks right.
 

@@ -4,6 +4,12 @@ import { requireInvoiceAuthority } from "./invoice-authority";
 import { acknowledgeInvoiceOtherChargeCheck } from "./invoice-checks";
 import { recalculateInvoice } from "./invoice";
 import { createId } from "./ids";
+import {
+  allocateInvoiceCredits,
+  invoiceCreditHistory,
+  isInvoiceCredit,
+} from "./invoice-credit-allocation";
+import { invoiceLineId } from "./invoice-line-links";
 
 export type InvoiceChargeField = "description" | "line_total" | "taxable";
 
@@ -26,7 +32,12 @@ function changeCharge(
   const before = structuredClone(state.invoice);
   change(current);
   recalculateInvoice(state.invoice, state.config);
+  const credits =
+    action === "Choose what a credit applies to"
+      ? invoiceCreditHistory(state.invoice)
+      : [];
   state.activity.push({
+    ...(credits.length ? { invoice_credit_allocations: credits } : {}),
     id: createId("invoice-charge"),
     company_id: state.invoice.company_id,
     branch: state.invoice.branch,
@@ -88,5 +99,35 @@ export function removeInvoiceOtherCharge(
     if (!Number.isSafeInteger(index) || !state.invoice.other_charges?.[index])
       throw new Error("Choose an invoice charge.");
     state.invoice.other_charges.splice(index, 1);
+  });
+}
+
+/**
+ * PR 29 (Ali, 2026-11-20): a discount or credit applies to the invoice total
+ * or to chosen items. The choice is recorded as the person's check (who/when).
+ */
+export function setInvoiceChargeAppliesTo(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  index: number,
+  appliesTo: "invoice_total" | "chosen_items",
+  chosenLineIds: readonly string[] = [],
+): void {
+  changeCharge(state, actor, "Choose what a credit applies to", (current) => {
+    const charge = Number.isSafeInteger(index)
+      ? state.invoice.other_charges?.[index]
+      : undefined;
+    if (!charge || !isInvoiceCredit(charge))
+      throw new Error("Choose a discount or credit.");
+    if (!["invoice_total", "chosen_items"].includes(appliesTo))
+      throw new Error("Choose Invoice total or Chosen items.");
+    const known = new Set(state.invoice.lines.map(invoiceLineId));
+    const chosen = [...new Set(chosenLineIds)].filter((id) => known.has(id));
+    charge.applies_to = appliesTo;
+    if (appliesTo === "chosen_items") charge.chosen_line_ids = chosen;
+    else delete charge.chosen_line_ids;
+    allocateInvoiceCredits(state.invoice);
+    if (appliesTo === "invoice_total" || chosen.length)
+      acknowledgeInvoiceOtherChargeCheck(state, current, index, "applies_to");
   });
 }

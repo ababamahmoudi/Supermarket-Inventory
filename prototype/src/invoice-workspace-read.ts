@@ -1,4 +1,5 @@
 import { readyInvoiceLineIndexes } from "./invoice-ready-lines";
+import { invoiceLineCost } from "./invoice-credit-allocation";
 import { freeCaseActionQuote } from "./invoice-free-cases";
 import Decimal from "decimal.js";
 import { validReceivingPrice } from "./invoice-receiving-price";
@@ -179,7 +180,7 @@ export function invoiceWorkspaceRead(
         : null;
     const selectedMargin =
       actualPrice && costValid
-        ? actualPrice.minus(line.unit_cost_before_tax).div(actualPrice)
+        ? actualPrice.minus(invoiceLineCost(line)).div(actualPrice)
         : null;
     const threshold = working.config.pricing_categories.find(
       (category) =>
@@ -201,7 +202,7 @@ export function invoiceWorkspaceRead(
           ? selectedMargin.times(100).toFixed(2)
           : null,
       receivingBelowCost: Boolean(
-        actualPrice && costValid && actualPrice.lt(line.unit_cost_before_tax),
+        actualPrice && costValid && actualPrice.lt(invoiceLineCost(line)),
       ),
       receivingBelowMinimum: Boolean(
         invoice.margin_allowed &&

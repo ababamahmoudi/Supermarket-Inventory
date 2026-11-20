@@ -52,6 +52,9 @@ function receivingPriceBasis(state: DemoState, index: number): string {
     product: line.product_code,
     category: line.pricing_category ?? product?.pricing_category,
     unit_cost: line.unit_cost_before_tax,
+    // PR 29: a credit on chosen items changes the cost used for pricing.
+    allocated_cost: line.allocated_unit_cost_before_tax,
+    allocated_source_cost: line.allocated_source_cost_before_tax,
     case_cost: line.case_cost_before_tax,
     imported_cost_basis: line.imported_unit_cost_basis,
     free_case_group: line.free_case_group,

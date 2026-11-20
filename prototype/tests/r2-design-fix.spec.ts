@@ -781,7 +781,8 @@ for (const language of ["en", "fa"] as const) {
         expect(pageErrors).toEqual([]);
       }
       const table = page.locator("table.receiving-table");
-      await expect(table.locator("thead th")).toHaveCount(5);
+      // PR 29 adds the Selling price heading after the five originals.
+      await expect(table.locator("thead th")).toHaveCount(6);
       await noHorizontalScroll(page);
       if (!phone) {
         await originalToolbarFits(
