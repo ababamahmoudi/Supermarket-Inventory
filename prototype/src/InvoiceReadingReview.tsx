@@ -5,7 +5,9 @@ import {
   createContext,
   isValidElement,
   useContext,
+  useEffect,
   useId,
+  useRef,
   useState,
   type ComponentProps,
   type ReactNode,
@@ -227,6 +229,8 @@ const CheckContext = createContext<{
   fields: readonly string[];
   record?: object;
   idPrefix: string;
+  /** The amber ! popover offers Looks right for this one field. */
+  fieldLooksRight?: boolean;
   onAcknowledge(field: string): void;
   onNotOnInvoice?(field: string): unknown | Promise<unknown>;
   onEdit?(field: string, change: () => void): void;
@@ -236,6 +240,7 @@ export function ReadingCheckProvider({
   fields,
   record,
   idPrefix,
+  fieldLooksRight = false,
   onAcknowledge,
   onNotOnInvoice,
   onEdit,
@@ -244,6 +249,7 @@ export function ReadingCheckProvider({
   fields?: readonly string[];
   record?: object;
   idPrefix: string;
+  fieldLooksRight?: boolean;
   onAcknowledge(field: string): void;
   onNotOnInvoice?(field: string): unknown | Promise<unknown>;
   onEdit?(field: string, change: () => void): void;
@@ -255,6 +261,7 @@ export function ReadingCheckProvider({
         fields: fields ?? [],
         record,
         idPrefix,
+        fieldLooksRight,
         onAcknowledge,
         onNotOnInvoice,
         onEdit,
@@ -280,6 +287,11 @@ export function ReadingField({
   const helpId = useId();
   const [helpFocused, setHelpFocused] = useState(false);
   const [helpHovered, setHelpHovered] = useState(false);
+  // PR 29 (Ali, 2026-11-20): tapping the amber ! opens a small popover with
+  // Looks right for this one field.
+  const [helpOpen, setHelpOpen] = useState(false);
+  const popoverRef = useRef<HTMLSpanElement>(null);
+  const markerRef = useRef<HTMLButtonElement>(null);
   const [absenceAcknowledged, setAbsenceAcknowledged] = useState(false);
   const childId = isValidElement<{ id?: string }>(props.children)
     ? (props.children.props.id ?? "")
@@ -311,6 +323,29 @@ export function ReadingField({
       "The AI wasn't sure about this. Compare it with the photo.",
       "هوش مصنوعی از این مورد مطمئن نبود. با عکس مقایسه کنید.",
     );
+  useEffect(() => {
+    if (!helpOpen) return;
+    const outside = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !popoverRef.current?.contains(event.target) &&
+        !markerRef.current?.contains(event.target)
+      )
+        setHelpOpen(false);
+    };
+    const escape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setHelpOpen(false);
+      markerRef.current?.focus();
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [helpOpen]);
+  const canLooksRight = Boolean(field && context?.fieldLooksRight);
   const canMarkAbsent = !!(
     field &&
     context?.record &&
@@ -347,24 +382,40 @@ export function ReadingField({
           {(field || absenceAcknowledged) && (
             <span className="reading-check-label-actions">
               {field && (
-                <span
+                <button
+                  ref={markerRef}
+                  type="button"
                   className="reading-check-marker"
-                  role="img"
+                  data-control-kind="disclosure"
                   aria-label={t(
                     "Check this against the original",
                     "با اصل فاکتور بررسی کنید",
                   )}
-                  tabIndex={0}
+                  aria-haspopup={canLooksRight ? "dialog" : undefined}
+                  aria-expanded={canLooksRight ? helpOpen : undefined}
                   aria-describedby={
-                    helpFocused || helpHovered ? helpId : undefined
+                    !helpOpen && (helpFocused || helpHovered)
+                      ? helpId
+                      : undefined
                   }
                   onFocus={() => setHelpFocused(true)}
                   onBlur={() => setHelpFocused(false)}
                   onMouseEnter={() => setHelpHovered(true)}
                   onMouseLeave={() => setHelpHovered(false)}
+                  onClick={() => {
+                    if (!canLooksRight) return;
+                    setHelpOpen((open) => !open);
+                    requestAnimationFrame(() =>
+                      popoverRef.current
+                        ?.querySelector<HTMLButtonElement>(
+                          ".reading-check-looks-right",
+                        )
+                        ?.focus(),
+                    );
+                  }}
                 >
                   <span aria-hidden="true">!</span>
-                  {(helpFocused || helpHovered) && (
+                  {!helpOpen && (helpFocused || helpHovered) && (
                     <span
                       id={helpId}
                       role="tooltip"
@@ -373,6 +424,56 @@ export function ReadingField({
                       {hint}
                     </span>
                   )}
+                </button>
+              )}
+              {field && canLooksRight && helpOpen && (
+                <span
+                  ref={popoverRef}
+                  role="dialog"
+                  aria-label={t(
+                    `Check ${String(props.label)}`,
+                    `بررسی ${String(props.label)}`,
+                  )}
+                  className="reading-check-popover reading-ai-tooltip"
+                >
+                  <span className="reading-check-popover-text">{hint}</span>
+                  <span className="reading-check-popover-actions">
+                    <Button
+                      variant="neutral"
+                      size="sm"
+                      className="reading-check-change"
+                      onClick={() => {
+                        setHelpOpen(false);
+                        const target = childId
+                          ? document.getElementById(childId)
+                          : null;
+                        (target?.matches("input, textarea, button, select")
+                          ? target
+                          : target?.querySelector<HTMLElement>(
+                              "input, textarea, button",
+                            )
+                        )?.focus();
+                      }}
+                    >
+                      {t("Change", "تغییر")}
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="reading-check-looks-right"
+                      aria-label={t(
+                        `Looks right: ${String(props.label)}`,
+                        `درست است: ${String(props.label)}`,
+                      )}
+                      onClick={() => {
+                        setHelpOpen(false);
+                        context!.onAcknowledge(field);
+                        markerRef.current?.blur();
+                      }}
+                    >
+                      {t("Looks right", "درست است")}
+                    </Button>
+                  </span>
                 </span>
               )}
               {!field && absenceAcknowledged && (

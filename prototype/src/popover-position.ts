@@ -33,6 +33,8 @@ export function boundedPopoverPosition(
     obstruction?: PopoverRect;
     minimumHeight?: number;
     gap?: number;
+    /** A horizontal band (for example a column of row actions) the popup must not cover. */
+    clearOf?: { left: number; right: number };
   },
 ): BoundedPopoverPosition {
   const gap =
@@ -49,13 +51,15 @@ export function boundedPopoverPosition(
     Math.max(trigger.width, options.minWidth),
     Math.max(0, maxRight - minLeft),
   );
-  const left = Math.max(
-    minLeft,
-    Math.min(
-      options.rtl ? trigger.right - width : trigger.left,
-      maxRight - width,
-    ),
-  );
+  const clamp = (value: number) =>
+    Math.max(minLeft, Math.min(value, maxRight - width));
+  let left = clamp(options.rtl ? trigger.right - width : trigger.left);
+  const band = options.clearOf;
+  if (band && band.right > left && band.left < left + width) {
+    // Move toward the inline start, beside the band, so the next row's
+    // actions in that band stay visible and clickable.
+    left = clamp(options.rtl ? band.right + gap : band.left - gap - width);
+  }
   const obstruction = options.obstruction;
   const overlaps =
     obstruction &&

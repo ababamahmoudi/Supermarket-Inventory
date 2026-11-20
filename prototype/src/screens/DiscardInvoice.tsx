@@ -20,10 +20,15 @@ export function DiscardInvoice({
   invoice,
   menu = false,
   onDiscarded,
+  onOpen,
+  clearOf,
 }: {
   invoice: InvoiceReadDTO;
   menu?: boolean;
   onDiscarded?(): void;
+  /** List rows also offer Open invoice from the same menu. */
+  onOpen?(): void;
+  clearOf?: () => { left: number; right: number } | null | undefined;
 }) {
   const { query, command, can, t } = useDemo();
   const reader = useOptionalLiveInvoiceReadingService();
@@ -105,8 +110,15 @@ export function DiscardInvoice({
           icon={<MoreHorizontal size={18} />}
           iconOnly
           showChevron={false}
+          minWidth={180}
+          clearOf={clearOf}
         >
-          <MenuItem onClick={() => void begin()}>
+          {onOpen && (
+            <MenuItem onClick={onOpen}>
+              {t("Open invoice", "باز کردن فاکتور")}
+            </MenuItem>
+          )}
+          <MenuItem className="danger" onClick={() => void begin()}>
             {t("Discard invoice", "کنار گذاشتن فاکتور")}
           </MenuItem>
         </Menu>

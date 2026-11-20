@@ -154,13 +154,94 @@
   margin-block-start: 24px;
 }
 
+.invoice-queue-lines-unit {
+  display: none;
+}
 @media (max-width: 760px) {
-  .invoice-saved-table .invoice-queue-primary-action {
-    display: none;
+  .invoice-saved-table .invoice-queue-lines-unit {
+    display: inline;
   }
   .invoice-saved-table .invoice-queue-phone-actions {
-    margin-inline-start: auto;
-    display: inline-flex;
+    inline-size: 100%;
+    display: flex;
+    justify-content: flex-end;
     align-items: center;
+  }
+  .invoice-saved-table .invoice-queue-phone-actions .invoice-queue-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .invoice-saved-table
+    .invoice-queue-phone-actions
+    .invoice-queue-primary-action {
+    order: 2;
+  }
+}
+
+/* PR 29 review (2026-11-20): one 24 px gap between every column, a 16 px
+   inner inset so the hover fill never touches the first or last value, and a
+   quiet progress bar under the counted progress copy. */
+.invoice-saved-table,
+.suppliers-table {
+  --table-cell-padding: 12px;
+  --table-edge-padding: 16px;
+}
+.invoice-queue-progress-copy {
+  display: block;
+}
+.invoice-queue-checks {
+  white-space: nowrap;
+}
+.invoice-queue-checks {
+  color: var(--pending);
+  font-weight: 600;
+}
+.invoice-queue-bar {
+  display: block;
+  margin-block-start: 6px;
+  inline-size: min(100%, 200px);
+  block-size: 4px;
+  border-radius: 999px;
+  background: var(--neutral-fill);
+  overflow: hidden;
+}
+.invoice-queue-bar > span {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--approved-dot);
+}
+.invoice-saved-table td:last-child {
+  white-space: nowrap;
+}
+@media screen and (max-width: 760px) {
+  /* Each invoice sits in its own box on phones (Ali's list rule). */
+  :root
+    .invoice-saved-table.ui-data-table.is-responsive.is-mobile.is-phone-list
+    tr.phone-list-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    grid-template-areas: "name value" "secondary secondary";
+    gap: 6px 12px;
+    padding: 12px;
+    margin-block-end: 12px;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-control);
+    box-shadow: var(--shadow-none);
+  }
+  :root
+    .invoice-saved-table.ui-data-table.is-responsive.is-mobile.is-phone-list
+    tr.phone-list-row::after {
+    content: none;
+  }
+  :root
+    .invoice-saved-table.ui-data-table.is-responsive.is-mobile.is-phone-list
+    td.phone-list-secondary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  :root .invoice-saved-table .invoice-queue-bar {
+    inline-size: 100%;
   }
 }

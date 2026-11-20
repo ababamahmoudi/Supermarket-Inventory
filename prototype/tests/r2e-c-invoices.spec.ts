@@ -44,12 +44,8 @@ for (const language of ["en", "fa"] as const) {
     const more = details.locator("details.receiving-more");
     if ((await more.getAttribute("open")) === null)
       await more.locator("summary").click();
-    await expect(
-      details.getByRole("heading", {
-        name: word(language, "Reading", "خوانش"),
-        exact: true,
-      }),
-    ).toBeVisible();
+    // PR 29 (13d): the reading information is one quiet line, not a heading.
+    await expect(details.locator(".receiving-reading-line")).toBeVisible();
     for (const model of models)
       await expect(
         details.locator(".receiving-reading-evidence"),

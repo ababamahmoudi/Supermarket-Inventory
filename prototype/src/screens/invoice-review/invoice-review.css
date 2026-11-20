@@ -1736,9 +1736,35 @@
   overflow-y: auto;
   resize: none;
 }
+/* PR 29 (13d): More details is one even three-column grid; Bill to spans two. */
+.receiving-more > .detail-grid.receiving-more-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+.receiving-more-grid > .receiving-more-wide {
+  grid-column: span 2;
+}
+.receiving-reading-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--divider);
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.receiving-reading-line > svg {
+  flex: 0 0 auto;
+}
 @media (max-width: 759px) {
-  .receiving-more > .detail-grid {
+  .receiving-more > .detail-grid,
+  .receiving-more > .detail-grid.receiving-more-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .receiving-more-grid > .receiving-more-wide {
+    grid-column: auto;
   }
 }
 

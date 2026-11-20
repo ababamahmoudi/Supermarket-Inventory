@@ -196,7 +196,12 @@ export function TotalsCard({
       <ReadingCheckProvider
         fields={fields}
         idPrefix="invoice-check-header"
-        onAcknowledge={() => {}}
+        fieldLooksRight
+        onAcknowledge={(field) =>
+          update((draft, actor) => {
+            acknowledgeInvoiceCheck(draft, actor, field);
+          })
+        }
       >
         <div
           id="invoice-totals"

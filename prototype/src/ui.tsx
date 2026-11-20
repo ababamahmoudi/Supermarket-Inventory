@@ -818,8 +818,13 @@ export function DataTable({
             (total, control) => total + control.getBoundingClientRect().width,
             0,
           );
+          // The rendered nowrap group is the truth when its spacing comes from
+          // margins or a gap that computed style does not report.
+          const groupWidth =
+            group !== cell ? Math.ceil(group.scrollWidth) + padding : 0;
           width = Math.max(
             width,
+            groupWidth,
             controlsWidth +
               gap * (controls.length + facts.length - 1) +
               padding,
@@ -1838,10 +1843,15 @@ export type SelectOption = {
 
 export function usePopover<T extends HTMLElement = HTMLButtonElement>(
   minWidth = 224,
-  options: { minimumHeight?: number; gap?: number } = {},
+  options: {
+    minimumHeight?: number;
+    gap?: number;
+    clearOf?: () => { left: number; right: number } | null | undefined;
+  } = {},
 ) {
   const minimumHeight = options.minimumHeight ?? 240;
   const gap = options.gap ?? 8;
+  const clearOf = options.clearOf;
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<CSSProperties>({});
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
@@ -1868,6 +1878,7 @@ export function usePopover<T extends HTMLElement = HTMLButtonElement>(
         obstruction: document
           .querySelector(".undo-toast-stack")
           ?.getBoundingClientRect(),
+        clearOf: clearOf?.() ?? undefined,
       },
     );
     setPosition((previous) =>
@@ -1878,7 +1889,7 @@ export function usePopover<T extends HTMLElement = HTMLButtonElement>(
         ? previous
         : next,
     );
-  }, [minWidth, minimumHeight, gap]);
+  }, [minWidth, minimumHeight, gap, clearOf]);
   const close = (restoreFocus = false) => {
     setOpen(false);
     if (restoreFocus) triggerRef.current?.focus();
@@ -3076,6 +3087,7 @@ export function Menu({
   minWidth = 224,
   popupClassName,
   maxViewportHeight = 1,
+  clearOf,
   children,
   className,
   ...props
@@ -3088,6 +3100,8 @@ export function Menu({
   popupClassName?: string;
   /** Fraction of the visible viewport; ordinary menus retain their existing bound. */
   maxViewportHeight?: number;
+  /** A horizontal band the open menu keeps clear of, such as a column of row actions. */
+  clearOf?: () => { left: number; right: number } | null | undefined;
   children: ReactNode;
   className?: string;
   "aria-label"?: string;
@@ -3100,7 +3114,7 @@ export function Menu({
     portalTarget,
     triggerRef,
     popupRef,
-  } = usePopover(minWidth);
+  } = usePopover(minWidth, { clearOf });
   const menuId = useId();
   const itemsWithin = (menu: HTMLElement | null) =>
     Array.from(

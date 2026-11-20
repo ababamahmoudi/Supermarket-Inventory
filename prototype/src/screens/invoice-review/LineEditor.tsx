@@ -518,7 +518,12 @@ export function LineEditor({
       <ReadingCheckProvider
         fields={correction ? [] : line.low_confidence_fields}
         idPrefix={`invoice-check-line-${index}`}
-        onAcknowledge={() => {}}
+        fieldLooksRight={!correction}
+        onAcknowledge={(field) =>
+          reviewUpdate((draft, actor) => {
+            acknowledgeInvoiceCheck(draft, actor, field, index);
+          })
+        }
         record={line}
         onNotOnInvoice={
           correction

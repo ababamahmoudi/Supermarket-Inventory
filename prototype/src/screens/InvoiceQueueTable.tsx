@@ -23,6 +23,23 @@ function LiveQueueProgress({ invoice }: { invoice: InvoiceReadDTO }) {
   );
 }
 
+// The row menu opens beside the Review column, never over the next row's
+// Review button (Ali, PR 29 review 2026-11-19).
+function reviewColumnBand() {
+  const buttons = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      ".invoice-saved-table .invoice-queue-primary-action",
+    ),
+  )
+    .map((button) => button.getBoundingClientRect())
+    .filter((box) => box.width > 0);
+  if (!buttons.length) return null;
+  return {
+    left: Math.min(...buttons.map((box) => box.left)),
+    right: Math.max(...buttons.map((box) => box.right)),
+  };
+}
+
 export function InvoiceQueueTable({
   invoices,
   onOpen,
@@ -46,7 +63,7 @@ export function InvoiceQueueTable({
           label: t("Invoice", "فاکتور"),
           required: true,
           priority: 1,
-          minWidth: 240,
+          minWidth: 160,
         },
         {
           key: "supplier",
@@ -71,18 +88,18 @@ export function InvoiceQueueTable({
           minWidth: 120,
         },
         {
-          key: "total",
-          label: t("Total", "جمع"),
-          align: "end",
-          priority: 2,
-          minWidth: 95,
-        },
-        {
           key: "lines",
           label: t("Lines", "ردیف‌ها"),
           align: "end",
           priority: 3,
           minWidth: 60,
+        },
+        {
+          key: "total",
+          label: t("Total", "جمع"),
+          align: "end",
+          priority: 2,
+          minWidth: 95,
         },
         {
           key: "progress",
@@ -99,6 +116,7 @@ export function InvoiceQueueTable({
           minWidth: 90,
         },
       ]}
+      recordDetails
       phoneList={{
         name: "invoice",
         value: "total",
@@ -106,22 +124,24 @@ export function InvoiceQueueTable({
           "supplier",
           ...(branch === "all" ? ["location"] : []),
           "date",
+          "lines",
           "progress",
         ],
-        render: ({ cell, recordLink }) => (
+        // PR 29 phone composition: number and total, supplier, date · lines,
+        // progress, then ⋯ and the row's own Review action (no extra chevron).
+        render: ({ cell }) => (
           <>
             <td className="phone-list-name">{cell("invoice")}</td>
             <td className="phone-list-value">{cell("total")}</td>
-            <td className="phone-list-chevron">{recordLink}</td>
             <td className="phone-list-secondary">
-              {[
-                "supplier",
-                ...(branch === "all" ? ["location"] : []),
-                "date",
-                "progress",
-              ].map((key) => (
-                <span key={key}>{cell(key)}</span>
-              ))}
+              <span>{cell("supplier")}</span>
+              {branch === "all" && <span>{cell("location")}</span>}
+              <span className="invoice-queue-phone-facts">
+                {cell("date")}
+                {" · "}
+                {cell("lines")}
+              </span>
+              <span>{cell("progress")}</span>
               <span className="invoice-queue-phone-actions">
                 {cell("action")}
               </span>
@@ -136,8 +156,8 @@ export function InvoiceQueueTable({
           <th scope="col">{t("Supplier", "تأمین‌کننده")}</th>
           {branch === "all" && <th scope="col">{t("Location", "مکان")}</th>}
           <th scope="col">{t("Invoice date", "تاریخ فاکتور")}</th>
-          <th scope="col">{t("Total", "جمع")}</th>
           <th scope="col">{t("Lines", "ردیف‌ها")}</th>
+          <th scope="col">{t("Total", "جمع")}</th>
           <th scope="col">{t("Progress", "پیشرفت")}</th>
           <th scope="col">{t("Action", "عملیات")}</th>
         </tr>
@@ -198,13 +218,20 @@ export function InvoiceQueueTable({
                 )}
               </td>
               <td className="numeric">
+                <span className="invoice-queue-lines">
+                  <LtrValue value={String(saved.lines.length)} />
+                  <span className="invoice-queue-lines-unit">
+                    {saved.lines.length === 1
+                      ? t(" line", " ردیف")
+                      : t(" lines", " ردیف")}
+                  </span>
+                </span>
+              </td>
+              <td className="numeric">
                 <ReadingMoney
                   value={saved.final_total ?? ""}
                   currency={state.config.company.currency}
                 />
-              </td>
-              <td className="numeric">
-                <LtrValue value={String(saved.lines.length)} />
               </td>
               <td>
                 <span className="invoice-queue-progress">
@@ -213,31 +240,57 @@ export function InvoiceQueueTable({
                   ) : saved.live_reading && saved.status === "reading" ? (
                     <LiveQueueProgress invoice={saved} />
                   ) : (
-                    t(
-                      `${confirmed}/${saved.lines.length} confirmed · ${checks} to check`,
-                      `${confirmed}/${saved.lines.length} تأیید شده · ${checks} نیاز به بررسی`,
-                    )
+                    <>
+                      <span className="invoice-queue-progress-copy">
+                        {t(
+                          `${confirmed} of ${saved.lines.length} confirmed`,
+                          `${confirmed} از ${saved.lines.length} تأیید شده`,
+                        )}
+                        {checks > 0 && (
+                          <>
+                            {" · "}
+                            <span className="invoice-queue-checks">
+                              {t(`${checks} to check`, `${checks} برای بررسی`)}
+                            </span>
+                          </>
+                        )}
+                      </span>
+                      <span className="invoice-queue-bar" aria-hidden="true">
+                        <span
+                          style={{
+                            inlineSize: `${saved.lines.length ? Math.round((confirmed / saved.lines.length) * 100) : 0}%`,
+                          }}
+                        />
+                      </span>
+                    </>
                   )}
                 </span>
               </td>
               <td>
-                <Button
-                  className="invoice-queue-primary-action"
-                  variant={reviewAction ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={() => void open(saved)}
-                >
-                  {saved.status === "cancelled"
-                    ? t("Open invoice", "باز کردن فاکتور")
-                    : reviewAction
-                      ? t("Review", "بررسی")
-                      : unreadOriginal(saved)
-                        ? t("Continue", "ادامه")
-                        : saved.live_reading && saved.status === "reading"
-                          ? t("Read again", "خواندن دوباره")
-                          : t("Resume draft", "ادامه پیش‌نویس")}
-                </Button>
-                <DiscardInvoice invoice={saved} menu />
+                <div className="actions invoice-queue-actions">
+                  <Button
+                    className="invoice-queue-primary-action"
+                    variant={reviewAction ? "primary" : "secondary"}
+                    size="sm"
+                    onClick={() => void open(saved)}
+                  >
+                    {saved.status === "cancelled"
+                      ? t("Open invoice", "باز کردن فاکتور")
+                      : reviewAction
+                        ? t("Review", "بررسی")
+                        : unreadOriginal(saved)
+                          ? t("Continue", "ادامه")
+                          : saved.live_reading && saved.status === "reading"
+                            ? t("Read again", "خواندن دوباره")
+                            : t("Resume draft", "ادامه پیش‌نویس")}
+                  </Button>
+                  <DiscardInvoice
+                    invoice={saved}
+                    menu
+                    onOpen={() => void open(saved)}
+                    clearOf={reviewColumnBand}
+                  />
+                </div>
               </td>
             </tr>
           );

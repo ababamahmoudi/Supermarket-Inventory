@@ -44,7 +44,7 @@ it.each([
       </ReadingCheckProvider>,
     );
     await user.hover(
-      screen.getByRole("img", { name: "Check this against the original" }),
+      screen.getByRole("button", { name: "Check this against the original" }),
     );
     expect(screen.getByRole("tooltip")).toHaveTextContent(hint);
     if (source === "unresolved")
@@ -52,7 +52,7 @@ it.each([
         "Set to the invoice date",
       );
     await user.unhover(
-      screen.getByRole("img", { name: "Check this against the original" }),
+      screen.getByRole("button", { name: "Check this against the original" }),
     );
     await user.click(screen.getByRole("button", { name: /^Change$/ }));
     expect(

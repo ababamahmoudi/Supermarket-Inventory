@@ -69,7 +69,9 @@ describe("R1 fields needing a human check", () => {
     render(<EditableCheck />);
     const input = screen.getByLabelText("Unit cost before tax");
     expect(
-      screen.getAllByRole("img", { name: "Check this against the original" }),
+      screen.getAllByRole("button", {
+        name: "Check this against the original",
+      }),
     ).toHaveLength(3);
     expect(input.closest(".field")).toHaveClass("please-check-field");
     await user.clear(input);
@@ -78,7 +80,9 @@ describe("R1 fields needing a human check", () => {
     expect(input).toHaveFocus();
     expect(input).toHaveValue("12.50");
     expect(
-      screen.getAllByRole("img", { name: "Check this against the original" }),
+      screen.getAllByRole("button", {
+        name: "Check this against the original",
+      }),
     ).toHaveLength(2);
     expect(input.closest(".field")).not.toHaveClass("please-check-field");
     expect(screen.getByLabelText("Line total").closest(".field")).toHaveClass(
@@ -95,7 +99,7 @@ describe("R1 fields needing a human check", () => {
     );
     await user.tab();
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
-    const marker = screen.getAllByRole("img", {
+    const marker = screen.getAllByRole("button", {
       name: "Check this against the original",
     })[0];
     await user.hover(marker);
@@ -115,7 +119,9 @@ describe("R1 fields needing a human check", () => {
     expect(screen.getByLabelText("Description")).toHaveValue("Fictional");
     expect(screen.getByText("Calculated")).toBeInTheDocument();
     expect(
-      screen.queryAllByRole("img", { name: "Check this against the original" }),
+      screen.queryAllByRole("button", {
+        name: "Check this against the original",
+      }),
     ).toHaveLength(0);
     expect(document.querySelectorAll(".please-check-field")).toHaveLength(0);
   });
@@ -146,7 +152,7 @@ it("localizes a retained delivery-reference reading without exposing an internal
     expect(screen.queryByText("delivery_reference")).not.toBeInTheDocument();
     expect(input.closest(".field")).toHaveClass("please-check-field");
     expect(
-      screen.getByRole("img", { name: "با اصل فاکتور بررسی کنید" }),
+      screen.getByRole("button", { name: "با اصل فاکتور بررسی کنید" }),
     ).toBeInTheDocument();
   } finally {
     locale.language = "en";

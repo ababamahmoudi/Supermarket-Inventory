@@ -2846,7 +2846,7 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               )
             : null;
           const marker = actions?.querySelector(
-            ':scope > .reading-check-marker[role="img"][tabindex="0"]',
+            ":scope > button.reading-check-marker[aria-label]",
           );
           const caption = tidy(element.textContent);
           const expectedCaption = document.documentElement.lang.startsWith("fa")

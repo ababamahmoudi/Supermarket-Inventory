@@ -32,7 +32,7 @@ for (const language of ["en", "fa"] as const) {
           continue;
         }
         await expect(progress).toContainText(
-          language === "en" ? /^0\/\d+ confirmed/ : /^0\/\d+ تأیید شده/,
+          language === "en" ? /^0 of \d+ confirmed/ : /^0 از \d+ تأیید شده/,
         );
         const textBox = await progress.boundingBox();
         const actionBox = await action.boundingBox();

@@ -5,7 +5,7 @@ import {
   type ChangeEvent,
   type ComponentProps,
 } from "react";
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown, FileText } from "lucide-react";
 import { useDemo } from "../../store";
 import {
   BufferedInput,
@@ -59,7 +59,7 @@ export function InvoiceDetailsCard({
   | "receivedLocal"
   | "attemptedPost"
 > & { invalidDueDate?: boolean }) {
-  const { state, t, lang, can, command } = useDemo();
+  const { state, t, lang, can, command, actor } = useDemo();
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationTarget, setLocationTarget] = useState(invoice.branch);
   const [locationError, setLocationError] = useState("");
@@ -72,12 +72,14 @@ export function InvoiceDetailsCard({
   const fields = (invoice.low_confidence_fields ?? []).filter(
     (x) => !["subtotal", "tax", "final_total"].includes(invoiceCheckField(x)),
   );
+  // PR 29: one even grid — three short fields, then Bill to (two columns)
+  // beside Ship to.
   const moreKeys = [
     "order_reference",
-    "bill_to",
-    "ship_to",
     "currency",
     "supplier_tax_number",
+    "bill_to",
+    "ship_to",
   ];
   const [more, setMore] = useState(() =>
     fields.some(
@@ -103,6 +105,10 @@ export function InvoiceDetailsCard({
           acknowledgeInvoiceCheck(draft, actor, key);
       if (field === "invoice_date") refreshInvoiceDueDate(draft.invoice);
     });
+  const dueDateChecked = Boolean(
+    actor &&
+    invoice.checked_fields?.due_date?.checked_by_user_id === actor.user_id,
+  );
   const readingRecord = invoice as unknown as Record<
     string,
     string | undefined
@@ -129,7 +135,10 @@ export function InvoiceDetailsCard({
             })
           }
         >
-          {t("Looks right", "درست است")}
+          <Check size={16} aria-hidden="true" />
+          {fields.length > 0
+            ? t(`Looks right · ${fields.length}`, `درست است · ${fields.length}`)
+            : t("Looks right", "درست است")}
         </Button>
         {/* Phone (reference screen 05): the closed card still says what to check. */}
         {fields.length > 0 && (
@@ -159,7 +168,12 @@ export function InvoiceDetailsCard({
         <ReadingCheckProvider
           fields={fields}
           idPrefix="invoice-check-header"
-          onAcknowledge={() => {}}
+          fieldLooksRight
+          onAcknowledge={(field) =>
+            update((draft, actor) => {
+              acknowledgeInvoiceCheck(draft, actor, field);
+            })
+          }
           record={invoice}
           onNotOnInvoice={(field) =>
             update((draft, actor) => {
@@ -266,18 +280,29 @@ export function InvoiceDetailsCard({
                 update((draft, actor) => {
                   setInvoicePaymentTerms(draft.invoice, value);
                   acknowledgeInvoiceCheck(draft, actor, "payment_terms");
+                  // Choosing the terms works the due date out from them, and
+                  // that counts as checking it (Ali, PR 29 review).
+                  if (/^\d{4}-\d{2}-\d{2}$/.test(draft.invoice.due_date ?? ""))
+                    acknowledgeInvoiceCheck(draft, actor, "due_date");
                 })
               }
             />
             <Field
               readingField="due_date"
               hint={
-                invoice.calculated_fields?.includes("due_date")
+                dueDateChecked &&
+                invoice.payment_terms &&
+                !invoice.due_date_manual
                   ? t(
-                      `Calculated from ${invoice.payment_terms}`,
-                      `محاسبه‌شده از ${invoice.payment_terms}`,
+                      "From payment terms · checked by you",
+                      "از شرایط پرداخت · بررسی‌شده توسط شما",
                     )
-                  : undefined
+                  : invoice.calculated_fields?.includes("due_date")
+                    ? t(
+                        `Calculated from ${invoice.payment_terms}`,
+                        `محاسبه‌شده از ${invoice.payment_terms}`,
+                      )
+                    : undefined
               }
               label={t("Due date (optional)", "تاریخ سررسید (اختیاری)")}
               error={
@@ -368,7 +393,7 @@ export function InvoiceDetailsCard({
             open={more}
             onToggle={(e) => setMore(e.currentTarget.open)}
           >
-            <div className="detail-grid ui-fields-align-labels">
+            <div className="detail-grid ui-fields-align-labels receiving-more-grid">
               {moreKeys.map((key) => {
                 const labels: Record<string, [string, string]> = {
                   order_reference: [
@@ -404,9 +429,11 @@ export function InvoiceDetailsCard({
                     readingField={key}
                     label={t(...labels[key])}
                     className={
-                      key === "bill_to" || key === "ship_to"
-                        ? "receiving-address-field"
-                        : undefined
+                      key === "bill_to"
+                        ? "receiving-address-field receiving-more-wide"
+                        : key === "ship_to"
+                          ? "receiving-address-field"
+                          : undefined
                     }
                     hint={
                       key === "currency" && invoice.import_currency_inferred
@@ -422,23 +449,6 @@ export function InvoiceDetailsCard({
                   </Field>
                 );
               })}
-              {invoice.reading_record?.source === "imported" && (
-                <div className="receiving-reading-evidence">
-                  <h3>{t("Reading", "خوانش")}</h3>
-                  <p className="muted">
-                    {t(
-                      "Read by AI · imported file",
-                      "خوانده‌شده با هوش مصنوعی · فایل واردشده",
-                    )}
-                  </p>
-                  <p>
-                    {t("Models", "مدل‌ها")}:{" "}
-                    <LtrValue
-                      value={invoice.reading_record.models.join(", ")}
-                    />
-                  </p>
-                </div>
-              )}
               <ReadingUnknownChecks
                 fields={fields}
                 known={[
@@ -455,6 +465,34 @@ export function InvoiceDetailsCard({
                 record={invoice}
               />
             </div>
+            {invoice.reading_record?.source === "imported" && (
+              <p className="receiving-reading-evidence receiving-reading-line">
+                <FileText size={16} aria-hidden="true" />
+                <span>
+                  {t(
+                    "Read by AI from an imported file",
+                    "خوانده‌شده با هوش مصنوعی از فایل واردشده",
+                  )}
+                  {" · "}
+                  {invoice.reading_record.models.length === 1
+                    ? t("Model", "مدل")
+                    : t("Models", "مدل‌ها")}
+                  {": "}
+                  <LtrValue value={invoice.reading_record.models.join(", ")} />
+                  {fields.length > 0 && (
+                    <>
+                      {" · "}
+                      {fields.length === 1
+                        ? t("1 field to check", "1 مورد برای بررسی")
+                        : t(
+                            `${fields.length} fields to check`,
+                            `${fields.length} مورد برای بررسی`,
+                          )}
+                    </>
+                  )}
+                </span>
+              </p>
+            )}
           </Disclosure>
         </ReadingCheckProvider>
       </div>
