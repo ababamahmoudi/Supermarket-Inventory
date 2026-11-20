@@ -733,7 +733,8 @@
   font-weight: 600;
 }
 .receiving-credit.please-check-field .ui-segments {
-  box-shadow: 0 0 0 2px var(--pending-dot);
+  outline: 2px solid var(--pending-dot);
+  outline-offset: 0;
 }
 .receiving-credit-question {
   margin: 0;
