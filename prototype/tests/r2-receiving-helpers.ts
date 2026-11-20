@@ -336,15 +336,21 @@ export async function answerCreditsOnInvoiceTotal(
   page: Page,
   language: ReceivingLanguage = "en",
 ) {
-  const pending = page.locator(
-    ".receiving-credit.please-check-field [id$='-input-applies_to']",
+  const credits = page.locator(".receiving-credit:visible");
+  const pending = await credits.evaluateAll((elements) =>
+    elements.flatMap((element, index) =>
+      element.classList.contains("please-check-field") ? [index] : [],
+    ),
   );
-  while ((await pending.count()) > 0)
-    await pending
-      .first()
+  for (const index of pending) {
+    const choice = credits
+      .nth(index)
+      .locator("[id$='-input-applies_to']")
       .getByRole("button", {
         name: word(language, "Invoice total", "جمع فاکتور"),
         exact: true,
-      })
-      .click();
+      });
+    await choice.click();
+    await expect(choice).toHaveAttribute("aria-pressed", "true");
+  }
 }

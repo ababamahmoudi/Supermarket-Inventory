@@ -123,7 +123,8 @@ for (const language of ["en", "fa"] as const)
       });
       await expect(panel).toBeVisible();
       const rows = panel.locator(".receiving-missing-row");
-      await expect(rows).toHaveCount(52);
+      // PR 29: plus the fixture discount's Applies to question.
+      await expect(rows).toHaveCount(53);
       await expect(
         rows.filter({
           hasText: word(
