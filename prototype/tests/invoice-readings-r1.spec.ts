@@ -13,7 +13,11 @@ import {
 } from "./helpers";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { assertDashboardOperationalAndShiftTiles } from "./dashboard-kpi-evidence";
-import { openReceivingLine, receivingRow } from "./r2-receiving-helpers";
+import {
+  answerCreditsOnInvoiceTotal,
+  openReceivingLine,
+  receivingRow,
+} from "./r2-receiving-helpers";
 
 const sampleFile = fileURLToPath(
   new URL("./fixtures/fictional-readings-export.json", import.meta.url),
@@ -324,6 +328,7 @@ test("Owner imports fictional readings, reviews checks and posts only item lines
     .getByRole("button", { name: "Looks right: Totals", exact: true })
     .click();
   await expect(page.getByText("Please check", { exact: true })).toHaveCount(0);
+  await answerCreditsOnInvoiceTotal(page);
   await page.getByRole("button", { name: "Post invoice", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Post invoice", exact: true })

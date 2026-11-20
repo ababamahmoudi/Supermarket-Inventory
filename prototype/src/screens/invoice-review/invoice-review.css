@@ -1804,7 +1804,17 @@
   overflow-y: auto;
   resize: none;
 }
-/* PR 29 (13d): More details is one even three-column grid; Bill to spans two. */
+/* PR 29 (13d): More details is one even three-column grid; Bill to spans two.
+   A narrow card (e.g. 1280 px beside the original) uses two columns. */
+.receiving-more {
+  container-type: inline-size;
+  container-name: receiving-more;
+}
+@container receiving-more (max-width: 640px) {
+  .receiving-more > .detail-grid.receiving-more-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .receiving-more > .detail-grid.receiving-more-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: start;
@@ -2069,9 +2079,7 @@
 /* PR 29: a narrow Lines card (for example 1440 px with the original beside
    it) folds Selling price into the Line total cell as one small line, so
    product names and their category/check line keep their width. */
-.receiving-total-price {
-  display: none;
-}
+
 @container receiving-lines (max-width: 760px) {
   /* Collapse (not remove) the column, so an open editor's six-column span
      never creates an extra column. */
@@ -2088,13 +2096,20 @@
     border-start-end-radius: var(--radius-small);
     border-end-end-radius: var(--radius-small);
   }
-  .receiving-table .receiving-total-cell > .receiving-total-price {
+  .receiving-table .receiving-total-cell[data-folded-price]::after {
+    content: attr(data-folded-price);
     display: block;
+    direction: ltr;
+    unicode-bidi: isolate;
     color: var(--text-muted);
     font-size: var(--font-size-caption);
     line-height: var(--line-height-caption);
     font-weight: 500;
     white-space: nowrap;
+  }
+  .receiving-table .receiving-price-heading,
+  .receiving-table td.receiving-price-cell > * {
+    display: none;
   }
   .receiving-col-status {
     inline-size: 64px;

@@ -1,3 +1,4 @@
+import { answerCreditsOnInvoiceTotal } from "./r2-receiving-helpers";
 import { expect, type Page } from "@playwright/test";
 import readings from "./fixtures/r1-fictional-readings-export.json" with { type: "json" };
 import {
@@ -64,6 +65,7 @@ export async function preparePostedTwoPageOriginal(page: Page) {
   await page
     .getByRole("button", { name: "Looks right: Totals", exact: true })
     .click();
+  await answerCreditsOnInvoiceTotal(page);
   await page.getByRole("button", { name: "Post invoice", exact: true }).click();
   await page
     .getByRole("dialog", { name: "Post invoice", exact: true })

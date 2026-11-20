@@ -72,7 +72,8 @@ for (const language of ["en", "fa"] as const)
       const tooltip = control.getByRole("tooltip");
       await bounded(page, tooltip);
       await expect(tooltip).toContainText(
-        word(language, "52 items need attention", "52 مورد نیاز به بررسی دارد"),
+        // PR 29 adds the fixture discount's Applies to question (52 → 53).
+        word(language, "53 items need attention", "53 مورد نیاز به بررسی دارد"),
       );
       await expect(tooltip).toContainText(
         word(language, "25 lines", "25 ردیف"),

@@ -326,3 +326,25 @@ export async function expectReceivingStable(
     `The used control/closing row must stay within 2px on every measured frame: ${JSON.stringify(geometry)}`,
   ).toBeLessThanOrEqual(2);
 }
+
+/**
+ * PR 29 (Ali, 2026-11-20): every printed discount/credit must say what it
+ * applies to before posting. Older posting walks keep their earlier meaning by
+ * answering Invoice total (totals only, item costs unchanged).
+ */
+export async function answerCreditsOnInvoiceTotal(
+  page: Page,
+  language: ReceivingLanguage = "en",
+) {
+  const pending = page.locator(
+    ".receiving-credit.please-check-field [id$='-input-applies_to']",
+  );
+  while ((await pending.count()) > 0)
+    await pending
+      .first()
+      .getByRole("button", {
+        name: word(language, "Invoice total", "جمع فاکتور"),
+        exact: true,
+      })
+      .click();
+}

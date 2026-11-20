@@ -46,7 +46,7 @@ export function LinesTable({
   onOpen(index: number | null): void;
   anchor(element?: HTMLElement): void;
 } & LineCommands) {
-  const { state, t, tCount, lang } = useDemo();
+  const { state, t, tCount, lang, money } = useDemo();
   const [leaving, setLeaving] = useState<ReadonlySet<string>>(new Set());
   const [failedConfirmations, setFailedConfirmations] = useState<
     ReadonlySet<string>
@@ -223,7 +223,9 @@ export function LinesTable({
                 {t("Line total", "جمع ردیف")}
               </th>
               <th scope="col" className="numeric">
-                {t("Selling price", "قیمت فروش")}
+                <span className="receiving-price-heading">
+                  {t("Selling price", "قیمت فروش")}
+                </span>
               </th>
             </tr>
           </thead>
@@ -585,6 +587,17 @@ export function LinesTable({
                   <td
                     className="numeric receiving-total-cell"
                     data-column-key="total"
+                    // PR 29: a narrow card draws the selling price under the
+                    // total from this attribute; the cell text stays the total.
+                    data-folded-price={
+                      detail?.sellingPrice
+                        ? `${money(detail.sellingPrice)}${
+                            detail.receivingMargin
+                              ? ` · ${new Decimal(detail.receivingMargin).toFixed(0)}%`
+                              : ""
+                          }`
+                        : undefined
+                    }
                   >
                     {payable ? (
                       <span className="receiving-short-total">
@@ -597,13 +610,6 @@ export function LinesTable({
                       </span>
                     ) : (
                       <Money value={line.line_total} />
-                    )}
-                    {detail?.sellingPrice && (
-                      <small className="receiving-total-price">
-                        <Money value={detail.sellingPrice} />
-                        {detail.receivingMargin &&
-                          ` · ${new Decimal(detail.receivingMargin).toFixed(0)}%`}
-                      </small>
                     )}
                   </td>
                   <td
