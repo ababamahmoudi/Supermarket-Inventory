@@ -332,8 +332,9 @@ async function rejectsCategoryCounterfeits(
   width: number,
   newCount: number,
 ) {
+  // PR 29: the counted action lives in the quiet bulk bar.
   const action = page.locator(
-    ".receiving-lines-heading > .receiving-new-category-action",
+    ".receiving-bulk-bar-actions > .receiving-new-category-action",
   );
   const saved = await action.evaluate((button) => {
     const dialog = document.getElementById(
@@ -341,7 +342,7 @@ async function rejectsCategoryCounterfeits(
     )!;
     return {
       style: button.getAttribute("style"),
-      label: button.textContent,
+      label: button.innerHTML,
       controls: button.getAttribute("aria-controls"),
       title: dialog.querySelector("h2")!.textContent,
     };
@@ -356,9 +357,11 @@ async function rejectsCategoryCounterfeits(
     await action.evaluate(
       (button, { mutation, wrongLabel }) => {
         if (mutation === "height") {
-          button.style.blockSize = "44px";
-          button.style.minBlockSize = "44px";
-          button.style.maxBlockSize = "44px";
+          // PR 29: the bar action uses the generic receiving height, so a
+          // counterfeit 52px band must fail.
+          button.style.blockSize = "52px";
+          button.style.minBlockSize = "52px";
+          button.style.maxBlockSize = "52px";
         } else if (mutation === "count") {
           button.textContent = wrongLabel;
           document
@@ -380,8 +383,8 @@ async function rejectsCategoryCounterfeits(
             counterfeit.className = "ui-button button button-secondary";
             counterfeit.dataset.controlKind = "action";
             counterfeit.textContent = "Unrelated action";
-            counterfeit.style.blockSize = "48px";
-            counterfeit.style.minBlockSize = "48px";
+            counterfeit.style.blockSize = "52px";
+            counterfeit.style.minBlockSize = "52px";
             counterfeit.style.maxBlockSize = "none";
           }
           button.parentElement!.insertAdjacentElement("afterend", counterfeit);
@@ -425,7 +428,7 @@ async function rejectsCategoryCounterfeits(
         document.getElementById("b4-counterfeit-category-action")?.remove();
         if (saved.style === null) button.removeAttribute("style");
         else button.setAttribute("style", saved.style);
-        button.textContent = saved.label;
+        button.innerHTML = saved.label;
         button.setAttribute("aria-controls", saved.controls!);
         document
           .getElementById(saved.controls!)!

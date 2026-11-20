@@ -87,6 +87,7 @@
       "rounding": "bands",
       "apply_2_49_3_49_correction": true,
       "taxable": false,
+      "taxable_twin": "grocery_taxable",
       "date_tracking_prompt": true
     },
     {
@@ -96,6 +97,7 @@
       "rounding": "bands",
       "apply_2_49_3_49_correction": true,
       "taxable": true,
+      "taxable_twin": "grocery",
       "date_tracking_prompt": true
     },
     {

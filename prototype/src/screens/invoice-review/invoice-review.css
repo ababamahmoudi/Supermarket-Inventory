@@ -1796,3 +1796,236 @@
   line-height: var(--line-height-caption);
   font-weight: 400;
 }
+
+/* PR 29 — Lines card: title + filters, then one quiet bulk bar that never
+   wraps its actions (it scrolls sideways if it must). */
+.receiving-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 16px;
+  padding-inline: 16px 8px;
+  border-radius: var(--radius-control);
+  background: var(--neutral-fill);
+  min-inline-size: 0;
+}
+.receiving-bulk-bar-label {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-label);
+  white-space: nowrap;
+}
+.receiving-bulk-bar-actions {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  gap: 8px;
+  min-inline-size: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.receiving-bulk-bar-actions::-webkit-scrollbar {
+  display: none;
+}
+:root .receiving-bulk-bar-actions > .ui-button.button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  gap: 6px;
+}
+@container receiving-lines (max-width: 760px) {
+  .receiving-bulk-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .receiving-bulk-bar-actions {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 760px) {
+  .receiving-bulk-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .receiving-bulk-bar-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* Every closed line shows its selling price and margin. */
+.receiving-col-status {
+  inline-size: 56px;
+}
+.receiving-col-quantity {
+  inline-size: 128px;
+}
+.receiving-col-cost,
+.receiving-col-total {
+  inline-size: 92px;
+}
+.receiving-col-price {
+  inline-size: 96px;
+}
+.receiving-price-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  white-space: nowrap;
+}
+.receiving-price-stack > small {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.receiving-phone-price {
+  display: none;
+}
+
+/* A short or refused line: pale red row, paper total struck through, the
+   amount actually payable in red. */
+.receiving-table
+  > tbody
+  > .invoice-line-summary.has-short:not(.is-expanded)
+  > td {
+  background: var(--danger-bg);
+}
+.receiving-short-total {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.receiving-short-total > s {
+  color: var(--text-muted);
+}
+.receiving-short-payable {
+  color: var(--danger);
+  font-weight: 700;
+}
+@media (max-width: 760px) {
+  .receiving-table > tbody > .invoice-line-summary.has-short:not(.is-expanded) {
+    background: var(--danger-bg);
+  }
+  .receiving-table > tbody > .invoice-line-summary > .receiving-price-cell {
+    display: none;
+  }
+  .receiving-phone-price {
+    display: block;
+    margin-block-start: 2px;
+  }
+  .receiving-phone-price .receiving-price-stack {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+  }
+}
+
+/* PR 29 (item 9): a smaller Selling price block. Cost and margin sit beside
+   the price; the Use lower note is one line inside the block. */
+.receiving-editor-bottom {
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.8fr);
+}
+.receiving-selling-price > div:first-child:has(> .receiving-price-facts) {
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: end;
+}
+.receiving-selling-price
+  > div:first-child:has(> .receiving-price-facts)
+  > :not(.field):not(.receiving-price-facts) {
+  grid-column: 1 / -1;
+}
+.receiving-price-facts {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  margin: 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.rounded-up-notice.receiving-rounded-up-inline {
+  flex-wrap: nowrap;
+  margin: 0;
+  padding: 4px 4px 4px 12px;
+  padding-inline: 12px 4px;
+  border-radius: var(--radius-control);
+  background: var(--accent-soft);
+}
+.receiving-rounded-up-inline > .helper {
+  flex: 1 1 auto;
+  color: var(--text);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.receiving-rounded-up-inline > .ui-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .receiving-editor-bottom {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* PR 29 (item 11): one compact box for the paper line total and its math
+   check. Neutral when they agree; pale amber with real buttons when not. */
+.receiving-line-math {
+  display: grid;
+  gap: 6px;
+  padding: 8px 8px 8px 12px;
+  padding-inline: 12px 8px;
+  border-radius: var(--radius-control);
+  background: var(--neutral-fill);
+}
+.receiving-line-math > .receiving-printed-total {
+  padding: 0;
+  background: var(--color-clear);
+  border-radius: var(--radius-none);
+}
+.receiving-line-math.receiving-paper-mismatch {
+  background: var(--pending-bg);
+}
+.receiving-line-math.receiving-paper-mismatch > .receiving-printed-total {
+  color: var(--text);
+}
+.receiving-line-math > .receiving-pack-equation {
+  margin: 0;
+}
+.receiving-line-math-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* PR 29: a narrow Lines card (for example 1440 px with the original beside
+   it) folds Selling price into the Line total cell as one small line, so
+   product names and their category/check line keep their width. */
+.receiving-total-price {
+  display: none;
+}
+@container receiving-lines (max-width: 760px) {
+  .receiving-table .receiving-col-price,
+  .receiving-table th:nth-child(6),
+  .receiving-table .receiving-price-cell {
+    display: none;
+  }
+  .receiving-table .receiving-total-cell > .receiving-total-price {
+    display: block;
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .receiving-col-status {
+    inline-size: 64px;
+  }
+  .receiving-col-quantity {
+    inline-size: 152px;
+  }
+  .receiving-col-cost,
+  .receiving-col-total {
+    inline-size: 98px;
+  }
+}

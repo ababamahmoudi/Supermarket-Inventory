@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { Tag } from "lucide-react";
 import {
   setNewInvoiceLineCategories,
   type NewInvoiceCategoriesRead,
@@ -49,6 +50,7 @@ export function NewProductCategories({
             setError("");
           }}
         >
+          <Tag size={16} aria-hidden="true" />
           {label(current.count)}
         </Button>
       )}

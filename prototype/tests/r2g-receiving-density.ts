@@ -166,9 +166,24 @@ export async function inspectReceivingDensity(
     const table = review.querySelector(".receiving-table")!;
     if (getComputedStyle(table).borderSpacing !== "0px 4px")
       failures.push("Density 4px table spacing");
+    // PR 29 (Ali, 2026-11-20): a sixth Selling price heading follows the five
+    // originals. A narrow card folds it into Line total, so it is hidden there.
     const headings = [...table.querySelectorAll("thead th")];
-    if (headings.length !== 5 || headings.some((heading) => !visible(heading)))
+    if (
+      headings.length !== 6 ||
+      headings.slice(0, 5).some((heading) => !visible(heading)) ||
+      (visible(headings[5]) &&
+        Math.abs(rect(headings[5]).top - rect(headings[4]).top) > 1)
+    )
       failures.push("Density must retain all five table headings");
+    const narrowPrice = !visible(headings[5]);
+    if (
+      rows.some(
+        (row) =>
+          visible(row.querySelector(".receiving-price-cell")!) === narrowPrice,
+      )
+    )
+      failures.push("Density selling price column matches its heading");
     const chargeCount = expected.other_charges?.length ?? 0;
     const charges = review.querySelector(".receiving-charges")!;
     const chargeRows = [...charges.querySelectorAll(".receiving-charge")];
@@ -246,6 +261,15 @@ export async function inspectReceivingDensity(
         ),
         maximum: 48,
       },
+      // PR 29 quiet bulk bar: one 36px action row plus its label, at most.
+      bulkBar: (() => {
+        const bar = review.querySelector(".receiving-bulk-bar");
+        const maximum = bar ? 16 + 18 + 8 + 36 : 0;
+        return {
+          actual: bar ? atMost(bar, maximum, "bulk bar") : 0,
+          maximum,
+        };
+      })(),
       tableHeader: {
         actual: atMost(table.querySelector("thead"), 36, "table header"),
         maximum: 36,
@@ -276,6 +300,7 @@ export async function inspectReceivingDensity(
       4 * (rows.length + 2) +
       parts.tableHeader.maximum +
       parts.linesHeading.maximum +
+      (parts.bulkBar.maximum ? parts.bulkBar.maximum + 8 : 0) +
       parts.charges.maximum +
       parts.footer.maximum +
       38 +

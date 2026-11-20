@@ -355,7 +355,8 @@ for (const language of ["en", "fa"] as const) {
     });
     await page.reload();
     await expect(page.getByTestId("invoice-review")).toBeVisible();
-    await expect(bulkButton(page, language)).toBeVisible();
+    // PR 29: every new product now has a category, so the action is hidden.
+    await expect(bulkButton(page, language)).toHaveCount(0);
     const reloaded = await readCanonicalBusinessEvidence(page);
     expect(reloaded.invoice).toEqual(after.invoice);
     expect(reloaded.activity).toEqual(after.activity);

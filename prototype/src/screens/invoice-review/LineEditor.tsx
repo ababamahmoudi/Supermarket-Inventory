@@ -1,13 +1,16 @@
+import type { DemoState } from "../../types";
 import { invoiceDisplayLineAmount as invoiceLineAmount } from "../../invoice-display-arithmetic";
 import { FreeCaseControl } from "./FreeCaseControl";
 import { validReceivingPrice } from "../../invoice-receiving-price";
 import { ReceivingPriceInputQueue } from "./receiving-price-input";
 import {
   weighedSettings,
+  weightConversionFactor,
   weightPriceDisplay,
   type WeightUnit,
 } from "../../weighed";
 import { LineArithmetic } from "./LineArithmetic";
+import { countedWord } from "./counted-word";
 import { ProductPrice } from "../../weight-price-presentation";
 import { RoundedUpNotice } from "../../RoundedUpNotice";
 import { useRef, useState } from "react";
@@ -40,6 +43,9 @@ import {
   visibleInvoiceCheckFields,
   acknowledgeInvoiceCheck,
   setInvoiceLineCategory,
+  setInvoiceLineTaxable,
+  syncInvoiceLineTaxableToCategory,
+  invoiceLineTaxableMismatch,
   confirmInvoiceLineChecks,
   InvoiceLineConfirmationError,
   acknowledgeInvoicePaperTotal,
@@ -221,6 +227,8 @@ export function LineEditor({
       index,
       (item, draft, actor) => {
         setInvoiceLineCategory(item, value, draft.config);
+        // PR 29: Taxable follows the chosen category's configured setting.
+        syncInvoiceLineTaxableToCategory(item, draft.config);
         acknowledgeInvoiceCheck(draft, actor, "pricing_category", index);
       },
       true,
@@ -287,10 +295,57 @@ export function LineEditor({
         acknowledgeInvoiceCheck(draft, actor, "description", index);
       });
   };
+  // The typed short/refused values, shared by Apply and Confirm line.
+  const applyShortTo = (draft: DemoState) => {
+    const item = draft.invoice.lines[index];
+    const wasConfirmed = item.review_confirmed;
+    clearInvoiceOrderLine(item);
+    item.qty_received_at_posting = Math.max(
+      0,
+      item.qty_invoiced - Number(short || 0),
+    );
+    item.refused_units = Number(refused || 0);
+    item.handwritten_note = [item.handwritten_note, reason]
+      .filter(Boolean)
+      .join(" · ");
+    item.review_changed_after_confirmation ||= wasConfirmed;
+    item.review_confirmed = false;
+    recalculateInvoice(draft.invoice, draft.config);
+  };
+  /** PR 29: a short typed but not yet applied is never silently dropped. */
+  const pendingShort = (): "none" | "apply" | "invalid" => {
+    if (correction || !shortOpen) return "none";
+    const shortUnits = short.trim() === "" ? 0 : Number(short);
+    const refusedUnits = refused.trim() === "" ? 0 : Number(refused);
+    if (
+      shortUnits ===
+        Math.max(0, line.qty_invoiced - line.qty_received_at_posting) &&
+      refusedUnits === (line.refused_units ?? 0) &&
+      !reason.trim()
+    )
+      return "none";
+    return Number.isInteger(shortUnits) &&
+      Number.isInteger(refusedUnits) &&
+      shortUnits >= 0 &&
+      refusedUnits >= 0 &&
+      shortUnits <= line.qty_invoiced
+      ? "apply"
+      : "invalid";
+  };
   const confirm = async () => {
     if (!(await priceQueue.settled())) return;
     anchor();
     setAttempted(true);
+    const shortChange = pendingShort();
+    if (shortChange === "invalid") {
+      setFailure(
+        t(
+          "Check the short and refused units. They must be whole numbers no larger than the invoiced units.",
+          "واحدهای کسری و ردشده را بررسی کنید. باید عدد صحیح و حداکثر برابر واحدهای فاکتور باشند.",
+        ),
+      );
+      return;
+    }
     const canConfirmLocally =
       !correction &&
       Boolean(
@@ -306,7 +361,10 @@ export function LineEditor({
       !priceQueue.edited &&
       !workspace.lineDetails[index]?.receivingPriceInvalid &&
       (!line.date_tracking || actualDate(line.date_value));
-    const settle = canConfirmLocally ? onConfirmationStart?.() : undefined;
+    const settle =
+      canConfirmLocally && shortChange === "none"
+        ? onConfirmationStart?.()
+        : undefined;
     try {
       await saveName();
       if (correction) {
@@ -333,6 +391,7 @@ export function LineEditor({
       let field = "";
       const result = await reviewUpdate((draft, actor) => {
         try {
+          if (shortChange === "apply") applyShortTo(draft);
           confirmInvoiceLineChecks(draft, actor, index, true);
           return true;
         } catch (cause) {
@@ -416,6 +475,39 @@ export function LineEditor({
     const display = weightPriceDisplay(value, state.config).main;
     return `${money(display.amount)}/${display.unit}`;
   };
+  // PR 29 (13c): the cost beside a selling price uses that price's own unit
+  // (cost per lb under a per-lb price). The source kg cost stays in its field.
+  const costInPriceUnit = (() => {
+    try {
+      const perUnit = new Decimal(line.unit_cost_before_tax);
+      return priceUnit === "kg"
+        ? perUnit
+            .times(
+              weightConversionFactor(
+                line.weight_conversion_factor ?? state.config,
+              ),
+            )
+            .toFixed(4, Decimal.ROUND_HALF_UP)
+        : perUnit.toFixed(4);
+    } catch {
+      return null;
+    }
+  })();
+  const categoryName = (category: { key: string; label: string }) =>
+    t(
+      category.label,
+      (
+        {
+          grocery: "خواربار",
+          grocery_taxable: "خواربار مشمول مالیات",
+          rice: "برنج",
+          kitchenware: "لوازم آشپزخانه",
+        } as Record<string, string>
+      )[category.key] ?? category.label,
+    );
+  const lineCategory = state.config.pricing_categories.find(
+    (item) => item.key === (line.pricing_category ?? product?.pricing_category),
+  );
   const priceInvalid = Boolean(priceDetail?.receivingPriceInvalid);
   const priceError =
     priceFailure ||
@@ -790,17 +882,7 @@ export function LineEditor({
                       },
                       ...state.config.pricing_categories.map((x) => ({
                         value: x.key,
-                        label: t(
-                          x.label,
-                          (
-                            {
-                              grocery: "خواربار",
-                              grocery_taxable: "خواربار مشمول مالیات",
-                              rice: "برنج",
-                              kitchenware: "لوازم آشپزخانه",
-                            } as Record<string, string>
-                          )[x.key] ?? x.label,
-                        ),
+                        label: categoryName(x),
                       })),
                     ]}
                   />
@@ -1186,19 +1268,22 @@ export function LineEditor({
                   />
                 </Field>
               </div>
-              {line.quantity_unit === "cases" && line.sold_by !== "weight" && (
-                <p className="receiving-pack-equation">
-                  <LtrValue
-                    value={t(
-                      `${line.quantity_entered ?? 0} cases × ${line.units_per_case ?? 1} units = ${line.qty_invoiced} units`,
-                      `${line.quantity_entered ?? 0} کارتن × ${line.units_per_case ?? 1} واحد = ${line.qty_invoiced} واحد`,
-                    )}
-                  />
-                </p>
-              )}
               <LineArithmetic
                 line={line}
                 edit={edit}
+                packEquation={
+                  line.quantity_unit === "cases" && line.sold_by !== "weight"
+                    ? t(
+                        `${line.quantity_entered ?? 0} ${countedWord(line.quantity_entered ?? 0, "case", "cases")} × ${line.units_per_case ?? 1} ${countedWord(line.units_per_case ?? 1, "unit", "units")} = ${line.qty_invoiced} ${countedWord(line.qty_invoiced, "unit", "units")}`,
+                        `${line.quantity_entered ?? 0} کارتن × ${line.units_per_case ?? 1} واحد = ${line.qty_invoiced} واحد`,
+                      )
+                    : undefined
+                }
+                paper={{
+                  calculated: calculated || undefined,
+                  open: printedOpen,
+                  onToggle: () => setPrintedOpen(!printedOpen),
+                }}
                 acknowledge={
                   correction
                     ? undefined
@@ -1209,27 +1294,6 @@ export function LineEditor({
                       }
                 }
               />
-              <div className="receiving-printed-total">
-                <span>
-                  {t("Line total on paper:", "جمع ردیف روی فاکتور:")}{" "}
-                  <Money value={line.paper_line_total ?? line.line_total} />
-                  {calculated && calculated !== line.line_total && (
-                    <>
-                      {" "}
-                      · {t("Calculated:", "محاسبه‌شده:")}{" "}
-                      <Money value={calculated} />
-                    </>
-                  )}
-                </span>
-                <Button
-                  variant="plain"
-                  size="sm"
-                  aria-expanded={printedOpen}
-                  onClick={() => setPrintedOpen(!printedOpen)}
-                >
-                  {t("Edit", "ویرایش")}
-                </Button>
-              </div>
               {printedOpen && (
                 <Field
                   readingField="line_total"
@@ -1267,6 +1331,15 @@ export function LineEditor({
               <Field
                 readingField="taxable"
                 label={t("Taxable", "مشمول مالیات")}
+                hint={
+                  lineCategory &&
+                  !invoiceLineTaxableMismatch(line, state.config)
+                    ? t(
+                        `Follows ${categoryName(lineCategory)}`,
+                        `مطابق ${categoryName(lineCategory)}`,
+                      )
+                    : undefined
+                }
               >
                 <SegmentedControl
                   id={id("taxable")}
@@ -1284,34 +1357,53 @@ export function LineEditor({
                       disabled: !!correction,
                     },
                   ]}
-                  onChange={(value) =>
-                    edit(
-                      "taxable",
-                      (item) => {
-                        item.taxable = value === "true";
-                        item.taxable_inferred = false;
-                        const category = state.config.pricing_categories.find(
-                          (x) => x.key === item.pricing_category,
+                  onChange={(value) => {
+                    if (correction || !editLine) return;
+                    setFailedField("");
+                    setFailure("");
+                    editLine(
+                      index,
+                      (item, draft, actor) => {
+                        // PR 29: switching Taxable moves to the category's
+                        // configured twin; without one the note below says so.
+                        const before = item.pricing_category;
+                        setInvoiceLineTaxable(
+                          item,
+                          value === "true",
+                          draft.config,
                         );
-                        const configuredProfile =
-                          state.config.tax.profiles.find(
-                            (x) =>
-                              x.key === category?.default_tax_profile &&
-                              new Decimal(x.rate).gt(0),
-                          ) ??
-                          state.config.tax.profiles.find((x) =>
-                            new Decimal(x.rate).gt(0),
+                        acknowledgeInvoiceCheck(draft, actor, "taxable", index);
+                        if (item.pricing_category !== before)
+                          acknowledgeInvoiceCheck(
+                            draft,
+                            actor,
+                            "pricing_category",
+                            index,
                           );
-                        item.tax_profile =
-                          value === "true"
-                            ? (configuredProfile?.key ?? "non_taxable")
-                            : "non_taxable";
                       },
                       true,
-                    )
-                  }
+                    );
+                  }}
                 />
               </Field>
+              {lineCategory &&
+                invoiceLineTaxableMismatch(line, state.config) && (
+                  <p
+                    className="receiving-taxable-note"
+                    role="status"
+                    data-testid="receiving-taxable-note"
+                  >
+                    {line.taxable
+                      ? t(
+                          `${categoryName(lineCategory)} is not taxable and has no taxable version. Check the pricing category.`,
+                          `${categoryName(lineCategory)} مشمول مالیات نیست و نسخهٔ مشمول ندارد. دستهٔ قیمت‌گذاری را بررسی کنید.`,
+                        )
+                      : t(
+                          `${categoryName(lineCategory)} is taxable and has no non-taxable version. Check the pricing category.`,
+                          `${categoryName(lineCategory)} مشمول مالیات است و نسخهٔ بدون مالیات ندارد. دستهٔ قیمت‌گذاری را بررسی کنید.`,
+                        )}
+                  </p>
+                )}
             </section>
             <section className="receiving-date-section">
               <Field label={t("Track dates", "پیگیری تاریخ‌ها")}>
@@ -1451,11 +1543,30 @@ export function LineEditor({
                       priceDetail.receivingMargin !== null &&
                       priceDetail?.receivingMargin !== undefined && (
                         <p
-                          className="muted"
+                          className="muted receiving-price-facts"
                           data-testid="receiving-price-margin"
                         >
-                          {t("Margin", "حاشیه سود")}:{" "}
-                          <LtrValue value={`${priceDetail.receivingMargin}%`} />
+                          <span>
+                            {costInPriceUnit && (
+                              <>
+                                {t("Cost", "هزینه")}{" "}
+                                <Money
+                                  value={costInPriceUnit}
+                                  decimals={4}
+                                  fixedDecimals
+                                  currency={state.config.company.currency}
+                                />
+                                <LtrValue
+                                  value={`/${priceUnit ?? t("unit", "واحد")}`}
+                                />
+                                {" · "}
+                              </>
+                            )}
+                            {t("margin", "حاشیه سود")}{" "}
+                            <LtrValue
+                              value={`${new Decimal(priceDetail.receivingMargin).toFixed(0)}%`}
+                            />
+                          </span>
                         </p>
                       )}
                     {priceDetail?.receivingPriceEligible &&
@@ -1478,6 +1589,27 @@ export function LineEditor({
                         </p>
                       )}
                   </div>
+                )}
+                {!correction && workspace.lineDetails[index]?.roundedUpFrom && (
+                  <RoundedUpNotice
+                    testId="receiving-rounded-up"
+                    className="receiving-rounded-up-inline"
+                    from={workspace.lineDetails[index]!.roundedUpFrom!}
+                    meetsMargin={
+                      workspace.lineDetails[index]!.roundedUpFromMeetsMargin ??
+                      null
+                    }
+                    format={priceLabel}
+                    disabled={priceSaving}
+                    onUseLower={
+                      workspace.lineDetails[index]?.receivingPriceEligible
+                        ? () =>
+                            void setReceivingPrice(
+                              workspace.lineDetails[index]!.roundedUpFrom!,
+                            )
+                        : undefined
+                    }
+                  />
                 )}
                 {!correction && (
                   <div className="receiving-approved-price">
@@ -1559,25 +1691,6 @@ export function LineEditor({
                 }
               />
             </Field>
-          )}
-          {!correction && workspace.lineDetails[index]?.roundedUpFrom && (
-            <RoundedUpNotice
-              testId="receiving-rounded-up"
-              from={workspace.lineDetails[index]!.roundedUpFrom!}
-              meetsMargin={
-                workspace.lineDetails[index]!.roundedUpFromMeetsMargin ?? null
-              }
-              format={priceLabel}
-              disabled={priceSaving}
-              onUseLower={
-                workspace.lineDetails[index]?.receivingPriceEligible
-                  ? () =>
-                      void setReceivingPrice(
-                        workspace.lineDetails[index]!.roundedUpFrom!,
-                      )
-                  : undefined
-              }
-            />
           )}
           {!correction &&
             priceInvalid &&
@@ -1851,20 +1964,7 @@ export function LineEditor({
                 variant="secondary"
                 onClick={() => {
                   void reviewUpdate((draft) => {
-                    const item = draft.invoice.lines[index];
-                    const wasConfirmed = item.review_confirmed;
-                    clearInvoiceOrderLine(item);
-                    item.qty_received_at_posting = Math.max(
-                      0,
-                      item.qty_invoiced - Number(short || 0),
-                    );
-                    item.refused_units = Number(refused || 0);
-                    item.handwritten_note = [item.handwritten_note, reason]
-                      .filter(Boolean)
-                      .join(" · ");
-                    item.review_changed_after_confirmation ||= wasConfirmed;
-                    item.review_confirmed = false;
-                    recalculateInvoice(draft.invoice, draft.config);
+                    applyShortTo(draft);
                   });
                 }}
               >

@@ -60,8 +60,12 @@ for (const language of ["en", "fa"] as const) {
           (element) => element.scrollWidth <= element.clientWidth,
         ),
       ).toBe(true);
-      await expect(table.locator("thead th")).toHaveCount(5);
+      // PR 29 adds the Selling price heading after the five originals.
+      await expect(table.locator("thead th")).toHaveCount(6);
       const status = receivingRow(page, 0).locator(".receiving-status-icon");
+      // PR 29's bulk bar sits above the lines; the status column itself must
+      // still be fully visible (never clipped sideways) once scrolled to.
+      await status.scrollIntoViewIfNeeded();
       await expect(status).toBeInViewport({ ratio: 1 });
     }
     expect(

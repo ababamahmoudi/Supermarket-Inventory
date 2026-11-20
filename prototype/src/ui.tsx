@@ -942,18 +942,24 @@ export function DataTable({
           </IconButton>
         ) : null;
         if (mobile && phoneList && bodyRow && !fullRow) {
-          const withoutRowLinks = (nodes: ReactNode): ReactNode =>
-            Array.isArray(nodes)
-              ? nodes.map(withoutRowLinks)
-              : !isValidElement<{ children?: ReactNode }>(nodes)
-                ? nodes
-                : nodes.type === TableRowLink || nodes.type === TableRowAction
-                  ? null
-                  : nodes.props.children === undefined
-                    ? nodes
-                    : cloneElement(nodes, {
-                        children: withoutRowLinks(nodes.props.children),
-                      });
+          // Static children are passed back as arguments (or keyed by
+          // Children.toArray), so React never sees an unkeyed list.
+          const withoutRowLinks = (nodes: ReactNode): ReactNode => {
+            if (Array.isArray(nodes))
+              return Children.toArray(nodes).map(withoutRowLinks);
+            if (!isValidElement<{ children?: ReactNode }>(nodes)) return nodes;
+            if (nodes.type === TableRowLink || nodes.type === TableRowAction)
+              return null;
+            if (nodes.props.children === undefined) return nodes;
+            const children = nodes.props.children;
+            return Array.isArray(children)
+              ? cloneElement(
+                  nodes,
+                  undefined,
+                  ...(children as ReactNode[]).map(withoutRowLinks),
+                )
+              : cloneElement(nodes, { children: withoutRowLinks(children) });
+          };
           const permittedCell = (key: string | undefined) => {
             const index = resolvedColumns.findIndex(
               (column) => column.key === key && !column.hidden,

@@ -14,6 +14,7 @@ export function RoundedUpNotice({
   onUseLower,
   disabled,
   testId = "rounded-up-notice",
+  className,
 }: {
   from: string;
   meetsMargin: boolean | null;
@@ -21,10 +22,16 @@ export function RoundedUpNotice({
   onUseLower?: () => void;
   disabled?: boolean;
   testId?: string;
+  className?: string;
 }) {
   const { t } = useDemo();
   return (
-    <div className="rounded-up-notice" data-testid={testId}>
+    <div
+      className={
+        className ? `rounded-up-notice ${className}` : "rounded-up-notice"
+      }
+      data-testid={testId}
+    >
       <p className="helper">
         {t("Rounded up from", "گردشده به بالا از")}{" "}
         <LtrText>{format(from)}</LtrText>{" "}

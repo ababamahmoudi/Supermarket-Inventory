@@ -25,11 +25,21 @@ async function controlTops(page: Page) {
   );
 }
 
+/** Phones start with the details card closed; open it like a person would. */
+async function openDetails(page: Page, language: "en" | "fa") {
+  const expand = page.getByRole("button", {
+    name: word(language, "Expand invoice details", "باز کردن اطلاعات فاکتور"),
+    exact: true,
+  });
+  if (await expand.isVisible()) await expand.click();
+}
+
 for (const language of ["en", "fa"] as const) {
   test(`PR 29 payment terms check the due date in ${language}`, async ({
     page,
   }) => {
     await openPr29Invoice(page, language);
+    await openDetails(page, language);
     const due = page.locator("#invoice-check-header-due_date");
     await expect(due).toHaveClass(/please-check-field/);
     const terms = page.locator("#invoice-payment-terms");
@@ -58,6 +68,7 @@ for (const language of ["en", "fa"] as const) {
     page,
   }) => {
     await openPr29Invoice(page, language);
+    await openDetails(page, language);
     const card = page.getByTestId("invoice-details-card");
     const cardButton = card.getByRole("button", {
       name: word(
@@ -69,12 +80,17 @@ for (const language of ["en", "fa"] as const) {
     await expect(cardButton).toHaveText(
       word(language, "Looks right · 2", "درست است · 2"),
     );
-    const before = await controlTops(page);
-    await marker(
+    const numberMarker = marker(
       page,
       "invoice-check-header-supplier_invoice_number",
       language,
-    ).click();
+    );
+    // Reach the marker first, so only the app (not the test) could move things.
+    await numberMarker.evaluate((element) =>
+      element.scrollIntoView({ block: "center", behavior: "instant" }),
+    );
+    const before = await controlTops(page);
+    await numberMarker.click();
     const popover = page.getByRole("dialog", {
       name: word(language, "Check Invoice number", "بررسی شماره فاکتور"),
     });

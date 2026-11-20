@@ -34,6 +34,10 @@ import {
   setInvoiceReceivingPrice,
 } from "./invoice-receiving-price";
 import type { DemoState } from "./types";
+import {
+  confirmReadyInvoiceLines,
+  readyInvoiceLineIndexes,
+} from "./invoice-ready-lines";
 
 function fixture() {
   const state = initialState();
@@ -454,9 +458,30 @@ describe("F6 current new-product categories", () => {
     expect(state.invoice.lines[0]).toEqual(before.lines[0]);
   });
 
+  it("PR 29: offers the bulk choice only for new products still without a category", () => {
+    const { state, floor } = fixture();
+    expect(newInvoiceCategoriesRead(state, floor)).toMatchObject({
+      count: 2,
+      line_ids: ["new-a", "new-b"],
+    });
+    for (const line of state.invoice.lines.slice(1))
+      line.low_confidence_fields = (line.low_confidence_fields ?? []).filter(
+        (field) => field !== "pricing_category",
+      );
+    state.invoice.lines[2].pricing_category = "";
+    expect(newInvoiceCategoriesRead(state, floor)).toMatchObject({
+      count: 1,
+      line_ids: ["new-b"],
+    });
+    state.invoice.lines[2].pricing_category = "kitchenware";
+    expect(newInvoiceCategoriesRead(state, floor)).toBeNull();
+  });
+
   it("makes the genuine category choice without fabricating receipts for absent questions", () => {
     const { state, floor } = fixture();
     state.invoice.lines[1].low_confidence_fields = ["description"];
+    // PR 29: a new product is a bulk target only while it has no category.
+    state.invoice.lines[1].pricing_category = "";
     setNewInvoiceLineCategories(state, floor, request(state, floor));
     expect(state.invoice.lines[1].pricing_category).toBe("grocery_taxable");
     expect(state.invoice.lines[1].checked_fields).toBeUndefined();
@@ -778,5 +803,46 @@ describe("F6 categories with K8 protected paid/free answers", () => {
     expect(state).toEqual(answered);
     setNewInvoiceLineCategories(state, floor, request(state, floor));
     expect(validFreeCaseGroup(state.invoice.lines[1])).toBe(true);
+  });
+});
+
+describe("PR 29 Confirm N ready lines", () => {
+  it("confirms exactly the lines with nothing left to check, reversibly", () => {
+    const { state, floor } = fixture();
+    for (const line of state.invoice.lines) line.date_tracking = false;
+    expect(readyInvoiceLineIndexes(state)).toEqual([]);
+    state.invoice.lines[1].low_confidence_fields = [];
+    expect(readyInvoiceLineIndexes(state)).toEqual([1]);
+    const before = structuredClone(state.invoice);
+    expect(confirmReadyInvoiceLines(state, floor, [0, 1, 2])).toEqual([1]);
+    expect(state.invoice.lines.map((line) => line.review_confirmed)).toEqual([
+      true,
+      true,
+      false,
+    ]);
+    // The line that still has checks is left alone.
+    expect(state.invoice.lines[2].low_confidence_fields).toEqual(
+      before.lines[2].low_confidence_fields,
+    );
+    const entry = state.activity.at(-1)!;
+    expect(entry).toMatchObject({
+      action: "Confirm ready invoice lines",
+      actor_user_id: floor.user_id,
+      reversible: true,
+      entity_id: state.invoice.id,
+    });
+  });
+
+  it("skips a line without a category or with an invalid date", () => {
+    const { state } = fixture();
+    state.invoice.lines[1].low_confidence_fields = [];
+    state.invoice.lines[2].low_confidence_fields = [];
+    state.invoice.lines[1].date_tracking = false;
+    state.invoice.lines[1].pricing_category = "";
+    Object.assign(state.invoice.lines[2], {
+      date_tracking: true,
+      date_value: "",
+    });
+    expect(readyInvoiceLineIndexes(state)).toEqual([]);
   });
 });

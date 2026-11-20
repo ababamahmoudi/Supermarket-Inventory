@@ -1033,15 +1033,18 @@ export async function inspect(page, screen, variant, role = "supervisor") {
             `R2c field height: ${tidy(element.getAttribute("aria-label") || element.id)}`,
           );
       }
-      // F6's full counted action is a genuine 48px peer of the line filters.
-      // A copied marker cannot opt an unrelated action out of generic sizing.
+      // F6's counted action sits in PR 29's quiet bulk bar with generic sizing.
+      // A copied marker cannot claim its canonical invoice/dialog contract.
       const receivingCategoryActions = new Set();
       for (const action of document.querySelectorAll(
         "button.receiving-new-category-action,button[data-ui-component='receiving-new-categories']",
       )) {
         if (!visible(action)) continue;
-        const heading = action.parentElement;
-        const lines = heading?.parentElement;
+        // PR 29: the action lives in the quiet bulk bar under the heading.
+        const actionGroup = action.parentElement;
+        const bar = actionGroup?.parentElement;
+        const heading = bar?.previousElementSibling;
+        const lines = bar?.parentElement;
         const review = lines?.closest(
           '.receiving-review[data-testid="invoice-review"]',
         );
@@ -1100,11 +1103,14 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           lines.parentElement?.matches(".receiving-work") &&
           lines.firstElementChild === heading &&
           heading.matches(".receiving-lines-heading") &&
-          heading.children.length === 4 &&
+          heading.children.length === 2 &&
+          actionGroup?.matches(".receiving-bulk-bar-actions") &&
+          bar?.matches(".receiving-bulk-bar[role='group']") &&
+          bar.nextElementSibling?.matches(".receiving-lines-table") &&
           heading.firstElementChild?.matches("h2") &&
           tidy(heading.firstElementChild.textContent) ===
             (fa ? "ردیف‌های فاکتور" : "Invoice lines") &&
-          heading.querySelectorAll(":scope > button").length === 1 &&
+          heading.querySelectorAll(":scope > button").length === 0 &&
           lines.querySelector(
             ":scope > .receiving-lines-table > table.receiving-table",
           ) &&
@@ -1114,14 +1120,14 @@ export async function inspect(page, screen, variant, role = "supervisor") {
           action.type === "button" &&
           !action.disabled &&
           !action.hasAttribute("role") &&
-          action.children.length === 0 &&
+          action.children.length === 1 &&
+          action.firstElementChild?.matches("svg[aria-hidden='true']") &&
           fullLabelContained &&
-          Math.abs(parseFloat(getComputedStyle(action).fontSize) - 13) < 0.1 &&
           tidy(action.textContent) === expectedLabel &&
           action.getAttribute("aria-haspopup") === "dialog" &&
           dialog?.matches("dialog.ui-dialog.receiving-new-categories-dialog") &&
           action.nextElementSibling === dialog &&
-          dialog.parentElement === heading &&
+          dialog.parentElement === actionGroup &&
           action.getAttribute("aria-expanded") === String(dialog.open) &&
           tidy(
             dialog.querySelector(":scope > .ui-dialog-header h2")?.textContent,
@@ -3063,7 +3069,6 @@ export async function inspect(page, screen, variant, role = "supervisor") {
               .length === 1,
           );
           const expectedHeight =
-            (receivingCategoryActions.has(element) ? 48 : undefined) ??
             authenticationShape?.height ??
             r2gPriceShape?.height ??
             requestShape?.height ??

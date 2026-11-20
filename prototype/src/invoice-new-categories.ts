@@ -4,6 +4,7 @@ import type { AuthenticatedActor } from "./authority-types";
 import { businessFingerprint } from "./business-fingerprint";
 import { actorAudit } from "./domain-authority";
 import { createId } from "./ids";
+import { invoiceCheckField } from "./invoice-checks";
 import {
   canInvoiceAuthority,
   requireInvoiceAuthority,
@@ -33,9 +34,15 @@ function invoiceFor(state: DemoState, id: string) {
     : state.invoices?.find((invoice) => invoice.id === id);
 }
 
+/** PR 29: only new products still without a decided category need the bulk choice. */
 function newLineIds(invoice: DemoInvoice) {
   return invoice.lines.flatMap((line, index) =>
-    line.product_code === "NEW" && line.company_id === invoice.company_id
+    line.product_code === "NEW" &&
+    line.company_id === invoice.company_id &&
+    (!line.pricing_category?.trim() ||
+      (line.low_confidence_fields ?? []).some(
+        (field) => invoiceCheckField(field) === "pricing_category",
+      ))
       ? [invoiceLineId(line, index)]
       : [],
   );

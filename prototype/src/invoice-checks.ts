@@ -371,6 +371,20 @@ export function confirmInvoiceLineChecks(
     state.invoice.id,
     true,
   );
+  const line = assertInvoiceLineConfirmable(state, lineIndex);
+  for (const field of [...(line.low_confidence_fields ?? [])])
+    acknowledgeRecordCheck(line, actor.user_id, field);
+  line.low_confidence_fields = [];
+  line.taxable_inferred = false;
+  line.review_confirmed = true;
+  line.review_changed_after_confirmation = false;
+}
+
+/** The Confirm line rules, without changing anything (shared with bulk confirm). */
+export function assertInvoiceLineConfirmable(
+  state: DemoState,
+  lineIndex: number,
+) {
   const line = state.invoice.lines[lineIndex];
   if (!line || state.invoice.status === "posted")
     throw new Error("Choose a draft invoice line.");
@@ -462,12 +476,7 @@ export function confirmInvoiceLineChecks(
       "line_total",
       "Check the line arithmetic against the paper total, or acknowledge that the paper total is wrong.",
     );
-  for (const field of [...(line.low_confidence_fields ?? [])])
-    acknowledgeRecordCheck(line, actor.user_id, field);
-  line.low_confidence_fields = [];
-  line.taxable_inferred = false;
-  line.review_confirmed = true;
-  line.review_changed_after_confirmation = false;
+  return line;
 }
 
 /** A distinct decision; ordinary Confirm must not silently waive a money mismatch. */
@@ -702,6 +711,104 @@ export function invoiceTotalsCheck(invoice: {
 }
 
 /** An unmarked tax field follows the selected pricing category until a person checks it. */
+type TaxableCategory = {
+  key: string;
+  taxable?: boolean;
+  taxable_twin?: string;
+  archived?: boolean;
+  default_tax_profile?: string;
+};
+
+type TaxConfig = {
+  pricing_categories: readonly { key: string }[];
+  tax: { profiles: readonly { key: string; rate: string }[] };
+};
+
+function taxableCategory(
+  config: TaxConfig,
+  key: string | undefined,
+): TaxableCategory | undefined {
+  return config.pricing_categories.find((item) => item.key === key) as
+    TaxableCategory | undefined;
+}
+
+/** The configured tax profile for a taxable or non-taxable line. */
+function lineTaxProfile(
+  config: TaxConfig,
+  taxable: boolean,
+  category?: TaxableCategory,
+): string {
+  if (!taxable) return "non_taxable";
+  return (
+    (
+      config.tax.profiles.find(
+        (item) =>
+          item.key === category?.default_tax_profile &&
+          new Decimal(item.rate).gt(0),
+      ) ?? config.tax.profiles.find((item) => new Decimal(item.rate).gt(0))
+    )?.key ?? "non_taxable"
+  );
+}
+
+/**
+ * PR 29 (Ali, 2026-11-20): a person's category choice sets Taxable from that
+ * category's configured `taxable` value. Nothing is hardcoded.
+ */
+export function syncInvoiceLineTaxableToCategory(
+  line: Omit<InvoiceLine, "demo_note">,
+  config: TaxConfig,
+): void {
+  const category = taxableCategory(config, line.pricing_category);
+  if (typeof category?.taxable !== "boolean") return;
+  line.taxable = category.taxable;
+  line.taxable_inferred = false;
+  line.tax_profile = lineTaxProfile(config, category.taxable, category);
+}
+
+/**
+ * PR 29: switching Taxable moves the line to the category's configured
+ * taxable/non-taxable twin. Returns false when no twin exists, so the screen
+ * can say so instead of guessing.
+ */
+export function setInvoiceLineTaxable(
+  line: Omit<InvoiceLine, "demo_note">,
+  taxable: boolean,
+  config: CompanyConfig,
+): boolean {
+  const current = taxableCategory(config, line.pricing_category);
+  line.taxable = taxable;
+  line.taxable_inferred = false;
+  if (
+    !current ||
+    current.taxable === undefined ||
+    current.taxable === taxable
+  ) {
+    line.tax_profile = lineTaxProfile(config, taxable, current);
+    return true;
+  }
+  const twin = taxableCategory(config, current.taxable_twin);
+  if (twin && !twin.archived && twin.taxable === taxable) {
+    setInvoiceLineCategory(line, twin.key, config);
+    line.taxable = taxable;
+    line.tax_profile = lineTaxProfile(config, taxable, twin);
+    return true;
+  }
+  line.tax_profile = lineTaxProfile(config, taxable, current);
+  return false;
+}
+
+/** True while the line's Taxable choice disagrees with its category's setting. */
+export function invoiceLineTaxableMismatch(
+  line: Pick<InvoiceLine, "pricing_category" | "taxable">,
+  config: TaxConfig,
+): boolean {
+  const category = taxableCategory(config, line.pricing_category);
+  return (
+    typeof category?.taxable === "boolean" &&
+    category.taxable !== Boolean(line.taxable)
+  );
+}
+
 export function setInvoiceLineCategory(
   line: Omit<InvoiceLine, "demo_note">,
   category: string,

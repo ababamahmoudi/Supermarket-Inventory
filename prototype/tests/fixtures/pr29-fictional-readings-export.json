@@ -175,7 +175,8 @@
       },
       "ai_statuses": {
         "header.supplier_invoice_number": "check",
-        "header.due_date": "check"
+        "header.due_date": "check",
+        "lines[1].unit_cost_before_tax": "check"
       },
       "ai_source": "Invented fixture reading",
       "ai_models": ["fictional-model-a", "fictional-model-b"],

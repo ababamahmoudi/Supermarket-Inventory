@@ -83,13 +83,15 @@ for (const language of ["en", "fa"] as const)
         exact: true,
       });
       await expect(action).toBeVisible();
+      // PR 29 (Ali, 2026-11-20): the counted action moved from the heading
+      // into one quiet bulk bar that never wraps.
       const heading = page.locator(".receiving-lines-heading");
       const composition = await heading.evaluate((element) => {
-        const action = element.querySelector<HTMLButtonElement>(".ui-button")!;
+        const bar = element.nextElementSibling as HTMLElement;
+        const action = bar.querySelector<HTMLButtonElement>(
+          ".receiving-new-category-action",
+        )!;
         const filters = element.querySelector<HTMLElement>(".ui-segments")!;
-        const original = element
-          .closest(".receiving-layout")
-          ?.querySelector(".original-viewer");
         const contained = (target: Element) => {
           const bounds = target.getBoundingClientRect();
           const range = document.createRange();
@@ -102,14 +104,21 @@ for (const language of ["en", "fa"] as const)
               text.bottom <= bounds.bottom + 1.5,
           );
         };
+        const lines = new Set(
+          [...action.childNodes]
+            .filter((node) => node.nodeType === Node.TEXT_NODE)
+            .flatMap((node) => {
+              const range = document.createRange();
+              range.selectNodeContents(node);
+              return [...range.getClientRects()];
+            })
+            .filter((rect) => rect.width > 0)
+            .map((rect) => Math.round(rect.top)),
+        );
         return {
-          headingHeight: element.getBoundingClientRect().height,
-          headingDisplay: getComputedStyle(element).display,
-          headingWidth: element.getBoundingClientRect().width,
-          originalWidth: original?.getBoundingClientRect().width,
-          actionWidth: action.getBoundingClientRect().width,
+          inBulkBar: bar.matches(".receiving-bulk-bar"),
           actionHeight: action.getBoundingClientRect().height,
-          actionFontSize: getComputedStyle(action).fontSize,
+          actionLines: lines.size,
           fullActionContained: contained(action),
           fullFiltersContained: contained(filters),
           filterCount: filters.querySelectorAll("button").length,
@@ -118,13 +127,14 @@ for (const language of ["en", "fa"] as const)
             document.documentElement.scrollWidth > innerWidth + 1,
         };
       });
-      await info.attach(`F6 counted heading ${language} ${width}`, {
+      await info.attach(`F6 counted bulk bar ${language} ${width}`, {
         body: JSON.stringify(composition),
         contentType: "application/json",
       });
+      expect(composition.inBulkBar).toBe(true);
       expect(composition.fullActionContained).toBe(true);
-      expect(composition.actionHeight).toBe(48);
-      expect(composition.actionFontSize).toBe("13px");
+      expect(composition.actionLines).toBe(1);
+      expect(composition.actionHeight).toBeLessThanOrEqual(44);
       expect(composition.fullFiltersContained).toBe(true);
       expect(composition.filterCount).toBe(3);
       expect(composition.filtersScroll).toBe(false);

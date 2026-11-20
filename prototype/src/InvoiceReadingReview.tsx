@@ -336,7 +336,7 @@ export function ReadingField({
     const escape = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return;
       setHelpOpen(false);
-      markerRef.current?.focus();
+      markerRef.current?.focus({ preventScroll: true });
     };
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
@@ -410,7 +410,7 @@ export function ReadingField({
                         ?.querySelector<HTMLButtonElement>(
                           ".reading-check-looks-right",
                         )
-                        ?.focus(),
+                        ?.focus({ preventScroll: true }),
                     );
                   }}
                 >

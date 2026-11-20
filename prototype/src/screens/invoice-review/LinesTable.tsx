@@ -2,16 +2,18 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check } from "lucide-react";
 import Decimal from "decimal.js";
 import { useDemo } from "../../store";
-import { SegmentedControl } from "../../ui";
+import { Button, SegmentedControl } from "../../ui";
 import { LtrText, LtrValue, QuantityText, UnitText } from "../../presentation";
 import { visibleInvoiceCheckFields } from "../../invoice-checks";
 import { invoiceLineId } from "../../invoice-line-links";
 import { categoryLabel } from "../../formatters";
-import { weightQuantityFromLb } from "../../weighed";
+import { weighedSettings, weightQuantityFromLb } from "../../weighed";
+import { lineRefused, lineShort } from "../../invoice";
 import { ReadingMoney as Money } from "../../InvoiceReadingReview";
 import { LineEditor } from "./LineEditor";
 import { KnownDeliverySummary } from "./KnownDeliverySummary";
 import { NewProductCategories } from "./NewProductCategories";
+import { confirmReadyInvoiceLines } from "../../invoice-ready-lines";
 import type { LineCommands, ReviewProps } from "./types";
 
 type LineFilter = "all" | "attention" | "confirmed";
@@ -65,6 +67,8 @@ export function LinesTable({
       optimisticConfirmed.has(invoiceLineId(line, index)),
     );
   const [filter, setFilter] = useState<LineFilter>("all");
+  const [confirmingReady, setConfirmingReady] = useState(false);
+  const readyLines = correction ? [] : (workspace.readyLineIndexes ?? []);
   const [pinnedLine, setPinnedLine] = useState<{
     id: string;
     navigationKey?: number;
@@ -105,12 +109,6 @@ export function LinesTable({
     <section className="list-box receiving-lines">
       <div className="receiving-lines-heading">
         <h2>{t("Invoice lines", "ردیف‌های فاکتور")}</h2>
-        {!correction && (
-          <NewProductCategories
-            invoiceId={invoice.id}
-            current={workspace.newProductCategories}
-          />
-        )}
         {correction ? (
           <span className="muted">
             {tCount(
@@ -151,6 +149,54 @@ export function LinesTable({
           />
         )}
       </div>
+      {!correction &&
+        (workspace.newProductCategories || readyLines.length > 0) && (
+          <div
+            className="receiving-bulk-bar"
+            role="group"
+            aria-label={t(
+              "Do these for every line at once",
+              "برای همه ردیف‌ها با هم",
+            )}
+          >
+            <span className="receiving-bulk-bar-label">
+              {t("Do these for every line at once:", "برای همه ردیف‌ها با هم:")}
+            </span>
+            <div className="receiving-bulk-bar-actions">
+              <NewProductCategories
+                invoiceId={invoice.id}
+                current={workspace.newProductCategories}
+              />
+              {readyLines.length > 0 && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="receiving-confirm-ready"
+                  disabled={confirmingReady}
+                  onClick={async () => {
+                    setConfirmingReady(true);
+                    try {
+                      await update!((draft, actor) =>
+                        confirmReadyInvoiceLines(draft, actor, readyLines),
+                      );
+                    } finally {
+                      setConfirmingReady(false);
+                    }
+                  }}
+                >
+                  <Check size={16} aria-hidden="true" />
+                  {tCount(
+                    "Confirm {{count}} ready line",
+                    "Confirm {{count}} ready lines",
+                    "تأیید {{count}} ردیف آماده",
+                    "تأیید {{count}} ردیف آماده",
+                    readyLines.length,
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       <div
         className="receiving-lines-table"
         role="region"
@@ -163,6 +209,7 @@ export function LinesTable({
             <col className="receiving-col-quantity" />
             <col className="receiving-col-cost" />
             <col className="receiving-col-total" />
+            <col className="receiving-col-price" />
           </colgroup>
           <thead>
             <tr>
@@ -174,6 +221,9 @@ export function LinesTable({
               </th>
               <th scope="col" className="numeric">
                 {t("Line total", "جمع ردیف")}
+              </th>
+              <th scope="col" className="numeric">
+                {t("Selling price", "قیمت فروش")}
               </th>
             </tr>
           </thead>
@@ -315,6 +365,44 @@ export function LinesTable({
                 )}
               </>
             );
+            // PR 29: a short/refused line shows its paper total struck
+            // through and the amount actually payable in red.
+            const reduced = Decimal.sum(
+              lineShort(line).beforeTax,
+              lineRefused(line).beforeTax,
+            );
+            let payable = "";
+            try {
+              if (reduced.gt(0))
+                payable = new Decimal(line.line_total)
+                  .minus(reduced)
+                  .toFixed(2);
+            } catch {
+              payable = "";
+            }
+            const detail = workspace.lineDetails?.[index];
+            const sellingPrice = detail?.sellingPrice ? (
+              <span className="receiving-price-stack">
+                <strong>
+                  <Money value={detail.sellingPrice} />
+                  {weighted && (
+                    <LtrValue
+                      value={`/${weighedSettings(state.config).main_display_unit}`}
+                    />
+                  )}
+                </strong>
+                {detail.receivingMargin && (
+                  <small>
+                    {t(
+                      `${new Decimal(detail.receivingMargin).toFixed(0)}% margin`,
+                      `حاشیه سود ${new Decimal(detail.receivingMargin).toFixed(0)}%`,
+                    )}
+                  </small>
+                )}
+              </span>
+            ) : (
+              <span className="muted">{t("Not added", "افزوده نشده")}</span>
+            );
             return (
               <tbody
                 key={lineId}
@@ -323,7 +411,7 @@ export function LinesTable({
                 data-leaving={leaving.has(lineId) || undefined}
               >
                 <tr
-                  className={`invoice-line-summary receiving-row-${status}${expanded ? " is-expanded" : ""}`}
+                  className={`invoice-line-summary receiving-row-${status}${payable ? " has-short" : ""}${expanded ? " is-expanded" : ""}`}
                   id={rowId}
                   data-testid={rowId}
                   data-line-id={lineId}
@@ -461,6 +549,9 @@ export function LinesTable({
                           <LtrValue value={shortSummary} />
                         </span>
                       )}
+                      <span className="receiving-phone-price">
+                        {sellingPrice}
+                      </span>
                     </span>
                   </td>
                   <td
@@ -495,12 +586,36 @@ export function LinesTable({
                     className="numeric receiving-total-cell"
                     data-column-key="total"
                   >
-                    <Money value={line.line_total} />
+                    {payable ? (
+                      <span className="receiving-short-total">
+                        <s>
+                          <Money value={line.line_total} />
+                        </s>
+                        <span className="receiving-short-payable">
+                          <Money value={payable} />
+                        </span>
+                      </span>
+                    ) : (
+                      <Money value={line.line_total} />
+                    )}
+                    {detail?.sellingPrice && (
+                      <small className="receiving-total-price">
+                        <Money value={detail.sellingPrice} />
+                        {detail.receivingMargin &&
+                          ` · ${new Decimal(detail.receivingMargin).toFixed(0)}%`}
+                      </small>
+                    )}
+                  </td>
+                  <td
+                    className="numeric receiving-price-cell"
+                    data-column-key="price"
+                  >
+                    {sellingPrice}
                   </td>
                 </tr>
                 {failedConfirmations.has(lineId) && (
                   <tr className="receiving-confirmation-error">
-                    <td colSpan={5}>
+                    <td colSpan={6}>
                       <p className="form-error" role="alert">
                         {t(
                           "The line could not be saved. It still needs attention. Try confirming again.",
@@ -512,7 +627,7 @@ export function LinesTable({
                 )}
                 {expanded && (
                   <tr className="table-expanded-row receiving-editor-row invoice-line-detail">
-                    <td colSpan={5}>
+                    <td colSpan={6}>
                       <LineEditor
                         invoice={invoice}
                         workspace={workspace}

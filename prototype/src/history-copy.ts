@@ -6,6 +6,10 @@ import { configSeed } from "./config";
 import { configuredRoleLabel } from "./role-config";
 
 const actions: Record<string, [string, string]> = {
+  "Confirm ready invoice lines": [
+    "Confirm ready invoice lines",
+    "تأیید ردیف‌های آمادهٔ فاکتور",
+  ],
   "Set category for new invoice products": [
     "Set category for new invoice products",
     "تعیین دسته برای کالاهای جدید فاکتور",

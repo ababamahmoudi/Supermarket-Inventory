@@ -1,3 +1,4 @@
+import { readyInvoiceLineIndexes } from "./invoice-ready-lines";
 import { freeCaseActionQuote } from "./invoice-free-cases";
 import Decimal from "decimal.js";
 import { validReceivingPrice } from "./invoice-receiving-price";
@@ -193,6 +194,8 @@ export function invoiceWorkspaceRead(
           ? freeCaseActionQuote(working, actor, index)
           : undefined,
       price,
+      /** PR 29: the price the closed row shows (a person's proposal wins). */
+      sellingPrice: actualPrice ? actualPrice.toFixed(2) : null,
       receivingMargin:
         invoice.margin_allowed && selectedMargin
           ? selectedMargin.times(100).toFixed(2)
@@ -253,6 +256,11 @@ export function invoiceWorkspaceRead(
     blockersById,
     lowerLineIndexes: lowerPriceLineIndexes(working, actor),
     lineDetails,
+    readyLineIndexes:
+      ["draft", "review"].includes(working.invoice.status) &&
+      canInvoiceAuthority(working, actor, "invoices.edit", id, true)
+        ? readyInvoiceLineIndexes(working)
+        : [],
     supplierItems,
     newProductCategories: newInvoiceCategoriesRead(state, actor, id),
     locationSuggestion: suggestedInvoiceLocation(state, canonical),
