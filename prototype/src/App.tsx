@@ -1334,8 +1334,10 @@ export default function App() {
   const alertCount = state.alerts.filter(
     (record) => inBranch(record) && record.status === "pending",
   ).length;
+  // PR 29: the sidebar number is the Pending tab's own count — the same
+  // permission-checked list (company, selected locations), status Pending.
   const pendingPriceUpdates = (state.price_update_tasks ?? []).filter(
-    (item) => item.status === "pending",
+    (item) => inBranch(item) && item.status === "pending",
   ).length;
   const notifications = groupedNotifications(state.notifications ?? []).filter(
     (group) => group.unread,

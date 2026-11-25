@@ -29,3 +29,24 @@ export async function waitForPrintImages(
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
 }
+
+/**
+ * PR 29: print only the label sheets. While the browser print runs, the page
+ * carries a class that hides every other part of the document, so nothing can
+ * push the sheets down (this does not depend on CSS `:has()` support).
+ */
+export function printLabelSheets(print: () => void = () => window.print()) {
+  const root = document.documentElement;
+  root.classList.add("printing-labels");
+  const cleanup = () => {
+    root.classList.remove("printing-labels");
+    window.removeEventListener("afterprint", cleanup);
+  };
+  window.addEventListener("afterprint", cleanup);
+  try {
+    print();
+  } finally {
+    // Most browsers block until the dialog closes; afterprint covers the rest.
+    setTimeout(cleanup, 0);
+  }
+}

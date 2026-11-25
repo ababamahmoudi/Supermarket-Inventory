@@ -168,7 +168,8 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
   await page
     .getByRole("tab", { name: "Mix-and-match pools", exact: true })
     .click();
-  const pool = page.locator("section.card").filter({
+  // PR 29: one pools card; each pool lists its products as chips.
+  const pool = page.locator(".offer-pool").filter({
     has: page.getByRole("heading", { name: "2 for $5.00", exact: true }),
   });
   for (const product of [
@@ -178,7 +179,7 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
   ])
     await expect(
       pool
-        .getByRole("cell")
+        .getByRole("listitem")
         .filter({ has: page.getByText(product, { exact: true }) }),
     ).toBeVisible();
   await setLanguage(page, "fa");

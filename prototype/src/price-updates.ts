@@ -1201,6 +1201,8 @@ export function preparePriceTaskPrint(
   actor: AuthenticatedActor,
   ids: string[],
   now = new Date(),
+  /** PR 29: the first sheet starts at the slot the person chose (1-based). */
+  startSlot = 1,
 ): PriceTaskPrint {
   const tasks = [...new Set(ids)].map(
     (id) => taskFor(state, actor, id, "price_updates.label_confirm").task,
@@ -1308,10 +1310,10 @@ export function preparePriceTaskPrint(
       company_id: actor.company_id,
       branch: tasks[0].branch,
       template: structuredClone(template),
-      startSlot: 1,
+      startSlot: batches.length ? 1 : startSlot,
       entries: [],
       products,
-      pages: labelPages(products, template, 1),
+      pages: labelPages(products, template, batches.length ? 1 : startSlot),
     });
   }
   return {
@@ -1353,6 +1355,7 @@ export function recordPriceTaskPrint(
     actor,
     print.items.map((row) => row.task_id),
     new Date(print.created_at),
+    print.batches[0]?.startSlot ?? 1,
   );
   if (!same(printComparable(print), printComparable(fresh)))
     throw new PriceUpdatesError("stale_print");
@@ -1668,4 +1671,48 @@ export function priceUpdateProgress(
     )
     .map((task) => structuredClone(task))
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+/**
+ * PR 29 bulk Seen/Done: each selected update is changed by the ordinary
+ * single-update rules (same permission, status, audit and who/when). Updates
+ * the person may not change, or that no longer need the step, are skipped and
+ * counted rather than failing the whole batch.
+ */
+export function bulkPriceTasks(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  ids: string[],
+  mode: "seen" | "done",
+  now = new Date(),
+): { changed: string[]; skipped: string[] } {
+  const changed: string[] = [];
+  const skipped: string[] = [];
+  for (const id of [...new Set(ids)]) {
+    const task = state.price_update_tasks?.find((row) => row.id === id);
+    if (
+      !task ||
+      task.company_id !== actor.company_id ||
+      task.status !== "pending" ||
+      (mode === "seen" && task.seen?.version === task.version) ||
+      !can(
+        state,
+        freshActor(state, actor),
+        mode === "seen" ? "price_updates.read" : "price_updates.complete",
+        taskScope(state, task, true),
+      ).allowed
+    ) {
+      skipped.push(id);
+      continue;
+    }
+    try {
+      if (mode === "seen") markPriceTaskSeen(state, actor, id, now);
+      else completePriceTasks(state, actor, [id], now);
+      changed.push(id);
+    } catch (cause) {
+      if (!(cause instanceof PriceUpdatesError)) throw cause;
+      skipped.push(id);
+    }
+  }
+  return { changed, skipped };
 }

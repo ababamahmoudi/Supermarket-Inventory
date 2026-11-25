@@ -10,10 +10,13 @@ export function ReceivedDateRange({
   from,
   to,
   onChange,
+  preset,
 }: {
   from: string;
   to: string;
   onChange: (from: string, to: string) => void;
+  /** A named range (e.g. "Last 30 days") shown on the button when chosen. */
+  preset?: { first: string; last: string; en: string; fa: string };
 }) {
   const { state, t } = useDemo();
   const [open, setOpen] = useState(false);
@@ -64,7 +67,9 @@ export function ReceivedDateRange({
         }}
       >
         <CalendarDays size={18} aria-hidden="true" />{" "}
-        {from || to ? (
+        {preset && from === preset.first && to === preset.last ? (
+          t(preset.en, preset.fa)
+        ) : from || to ? (
           <>
             <span>{t("From", "از")}</span>
             <DateText value={from} />
@@ -98,6 +103,17 @@ export function ReceivedDateRange({
             }
           />
           <div className="received-range-quick-actions">
+            {preset && (
+              <FilterChip
+                checked={from === preset.first && to === preset.last}
+                onChange={() => {
+                  onChange(preset.first, preset.last);
+                  setOpen(false);
+                }}
+              >
+                {t(preset.en, preset.fa)}
+              </FilterChip>
+            )}
             {(
               [
                 ["today", "Today", "امروز"],

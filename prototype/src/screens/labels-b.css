@@ -302,6 +302,24 @@
     padding: 0 !important;
     background: #fff !important;
   }
+  /* PR 29: while label sheets print, nothing else is laid out (works without
+     :has()), and the last sheet is only as tall as its labels, so a browser
+     that adds its own page margins never spills onto a blank second page. */
+  html.printing-labels body > *:not(.label-print-output) {
+    display: none !important;
+  }
+  html.printing-labels body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  html.printing-labels .label-print-output {
+    display: block !important;
+  }
+  .label-print-output .print-sheet:last-child {
+    height: var(--label-used-height, 297mm) !important;
+    min-height: 0 !important;
+    break-after: auto;
+  }
 }
 .label-settings-fields {
   margin-block-start: 24px;

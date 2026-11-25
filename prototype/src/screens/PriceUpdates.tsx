@@ -1,6 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { createPortal, flushSync } from "react-dom";
-import { ArrowLeft, Check, ChevronRight, Eye, Printer } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  ArrowLeft,
+  Check,
+  ChevronRight,
+  Download,
+  Eye,
+  Printer,
+} from "lucide-react";
 import { useDemo } from "../store";
 import { useProtectedQuery } from "../use-protected-query";
 import { useRouteParam } from "../navigation";
@@ -9,21 +15,18 @@ import {
   priceUpdateProgress,
   markPriceTaskSeen,
   completePriceTasks,
-  queuePriceTaskLabels,
-  preparePriceTaskPrint,
-  recordPriceTaskPrint,
-  confirmPriceTaskLabel,
+  bulkPriceTasks,
   type PriceUpdateTask,
-  type PriceTaskPrint,
 } from "../price-updates";
+import { priceUpdatesCsv } from "../price-updates-csv";
+import { PriceLabelPrintDialog } from "./PriceLabelPrint";
+import { useTimedToast } from "../use-timed-toast";
 import {
   Badge,
   Button,
   Card,
   Checkbox,
   DataTable,
-  Dialog,
-  DialogActions,
   EmptyState,
   Field,
   FilterToolbar,
@@ -31,10 +34,10 @@ import {
   Select,
   Tabs,
 } from "../ui";
-import { DateText, LtrText, NotAdded, ProductName } from "../presentation";
+import { LtrText, NotAdded, ProductName } from "../presentation";
 import { branchLabel } from "../settings";
-import { companyDate } from "../invoice";
-import { companyTimestampText } from "../company-time";
+import { companyDate, dateAfter } from "../invoice";
+import { companyDateTime, companyTimestampText } from "../company-time";
 import {
   PriceUpdateChange,
   PriceUpdateValue,
@@ -42,9 +45,6 @@ import {
 } from "../price-update-presentation";
 import { priceUpdateReasonLabel } from "../price-update-copy";
 import { ReceivedDateRange } from "./ReceivedDateRange";
-import { PhysicalSheet } from "./Labels";
-import { waitForPrintImages } from "../print-images";
-import type { ScopedReadView } from "../e1-read-model";
 import type { ResourceScope } from "../authority-types";
 import "./price-updates-e2.css";
 
@@ -81,9 +81,25 @@ export function PriceUpdates() {
     setFilters({ key: filterKey, location: value, status });
   const setStatus = (value: string) =>
     setFilters({ key: filterKey, location, status: value });
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const today = companyDate(state.config);
+  const last30 = {
+    first: dateAfter(today, -29),
+    last: today,
+    en: "Last 30 days",
+    fa: "۳۰ روز گذشته",
+  };
+  const [pendingRange, setPendingRange] = useState({ from: "", to: "" });
+  // PR 29 (Ali, 2026-11-20): Done updates are kept forever; the Done tab
+  // opens on the last 30 days and the dates reach older ones.
+  const [doneRange, setDoneRange] = useState({
+    from: last30.first,
+    to: last30.last,
+  });
+  const range = status === "done" ? doneRange : pendingRange;
+  const setRange = status === "done" ? setDoneRange : setPendingRange;
   const [selected, setSelected] = useState<string[]>([]);
+  const [printTasks, setPrintTasks] = useState<PriceUpdateTask[]>([]);
+  const [toast, setToast] = useTimedToast();
   const [error, setError] = useState("");
   const { command } = useDemo();
   const company = state.config.company.seed_key;
@@ -97,15 +113,30 @@ export function PriceUpdates() {
     `price-updates:${progress}`,
   );
   const tasks = result.data ?? [];
-  const visible = tasks.filter(
-    (item) =>
-      item.status === status &&
-      (location === "all" || item.branch === location) &&
-      (!from || companyDate(state.config, new Date(item.created_at)) >= from) &&
-      (!to || companyDate(state.config, new Date(item.created_at)) <= to),
-  );
+  const dayOf = (value?: string) =>
+    value ? companyDate(state.config, new Date(value)) : "";
+  const visible = tasks
+    .filter((item) => {
+      if (item.status !== status) return false;
+      if (location !== "all" && item.branch !== location) return false;
+      const day = dayOf(
+        status === "done" ? item.completed_at : item.created_at,
+      );
+      return (
+        (!range.from || day >= range.from) && (!range.to || day <= range.to)
+      );
+    })
+    .sort((a, b) =>
+      status === "done"
+        ? (b.completed_at ?? "").localeCompare(a.completed_at ?? "")
+        : 0,
+    );
+  const selectable = status === "pending" ? visible : [];
   const selection = selected.filter((id) =>
-    visible.some((item) => item.id === id && item.status === "pending"),
+    selectable.some((item) => item.id === id),
+  );
+  const selectedTasks = selectable.filter((item) =>
+    selection.includes(item.id),
   );
   const ownedLocations = [...new Set(tasks.map((item) => item.branch))];
   const scopedIdentity = actor
@@ -115,33 +146,52 @@ export function PriceUpdates() {
   useEffect(() => {
     currentIdentity.current = scopedIdentity;
   }, [scopedIdentity]);
-  const batch = async (mode: "labels" | "done") => {
+  const shortStamp = (at: string) => {
+    const local = companyDateTime(state.config, at);
+    return local.date === today ? local.time : local.date;
+  };
+  const productName = (task: PriceUpdateTask) => {
+    const product = state.products.find(
+      (item) =>
+        item.company_id === task.company_id && item.code === task.product_code,
+    );
+    return product
+      ? lang === "fa"
+        ? product.name_fa || product.name_en
+        : product.name_en
+      : task.product_code;
+  };
+  const bulk = async (mode: "seen" | "done") => {
     if (!actor || !selection.length) return;
     try {
-      await command(
-        mode === "labels" ? "labels.queue_write" : "price_updates.complete",
+      // Each row is checked by the single-update rules inside bulkPriceTasks
+      // (Seen needs read, Done needs complete, per location); rows the person
+      // may not change are skipped and counted, never changed.
+      const outcome = await command(
+        "price_updates.read",
         {
           company_id: company,
           kind: "location_record",
-          location_ids: [
-            ...new Set(
-              visible
-                .filter((item) => selection.includes(item.id))
-                .map((item) => item.branch),
-            ),
-          ],
+          location_ids: [...new Set(selectedTasks.map((item) => item.branch))],
           mutation: true,
           location_policy: "active_only",
         },
         (draft, freshActor) =>
-          mode === "labels"
-            ? queuePriceTaskLabels(draft, freshActor, selection)
-            : completePriceTasks(draft, freshActor, selection),
+          bulkPriceTasks(draft, freshActor, selection, mode),
       );
-      if (currentIdentity.current === scopedIdentity) {
-        setSelected([]);
-        setError("");
-      }
+      if (currentIdentity.current !== scopedIdentity) return;
+      const changed = outcome.changed.length;
+      const skipped = outcome.skipped.length;
+      setToast(
+        (mode === "done"
+          ? t(`Marked ${changed} as done`, `${changed} مورد انجام‌شده شد`)
+          : t(`Marked ${changed} as seen`, `${changed} مورد دیده‌شده شد`)) +
+          (skipped
+            ? ` · ${t(`${skipped} skipped`, `${skipped} مورد رد شد`)}`
+            : ""),
+      );
+      setSelected([]);
+      setError("");
     } catch {
       if (currentIdentity.current === scopedIdentity)
         setError(
@@ -151,6 +201,21 @@ export function PriceUpdates() {
           ),
         );
     }
+  };
+  const exportCsv = () => {
+    const csv = priceUpdatesCsv(visible, {
+      product: productName,
+      location: (task) => branchLabel(state.config, task.branch, lang),
+      stamp: (at) => companyTimestampText(state.config, at),
+    });
+    const url = URL.createObjectURL(
+      new Blob([csv], { type: "text/csv;charset=utf-8;" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `price-updates-done-${range.from || "start"}-to-${range.to || today}.csv`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
   };
   if (
     !actor ||
@@ -173,6 +238,33 @@ export function PriceUpdates() {
       />
     );
   const isManager = can("dashboard.company");
+  const allSelected =
+    selectable.length > 0 && selection.length === selectable.length;
+  const step = (
+    kind: "seen" | "done",
+    stamp: { by: string; at: string } | null,
+  ) => (
+    <span
+      className={`price-updates-step ${stamp ? "is-complete" : kind === "seen" ? "is-pending" : "is-waiting"}`}
+    >
+      <span className="price-updates-step-dot" aria-hidden="true" />
+      <span className="price-updates-step-label">
+        {kind === "seen" ? t("Seen", "دیده‌شده") : t("Done", "انجام‌شده")}
+      </span>
+      {stamp ? (
+        <span className="price-updates-step-copy">
+          <bdi>{stamp.by}</bdi>
+          <LtrText className="muted">{shortStamp(stamp.at)}</LtrText>
+        </span>
+      ) : (
+        <span className="price-updates-step-copy">
+          {kind === "seen"
+            ? t("Not seen yet", "هنوز دیده نشده")
+            : t("Not done yet", "هنوز انجام نشده")}
+        </span>
+      )}
+    </span>
+  );
   return (
     <div className="price-updates-page" data-pwa-unsaved={selection.length > 0}>
       <PageHeader
@@ -206,7 +298,7 @@ export function PriceUpdates() {
       {progress && isManager ? (
         <PriceUpdateProgress tasks={tasks} />
       ) : (
-        <Card>
+        <Card className="price-updates-card">
           <FilterToolbar
             aria-label={t("Price update filters", "فیلترهای به‌روزرسانی قیمت")}
             count={tCount(
@@ -217,19 +309,34 @@ export function PriceUpdates() {
               visible.length,
             )}
             actions={
-              isManager ? (
-                <Button
-                  variant="neutral"
-                  onClick={() => navigate("price-updates?view=progress")}
-                >
-                  {t("Store progress", "پیشرفت فروشگاه‌ها")}
-                </Button>
-              ) : undefined
+              <>
+                {status === "done" && (
+                  <Button
+                    variant="neutral"
+                    disabled={!visible.length}
+                    onClick={exportCsv}
+                  >
+                    <Download size={18} aria-hidden="true" />
+                    {t("Export CSV", "خروجی CSV")}
+                  </Button>
+                )}
+                {isManager && (
+                  <Button
+                    variant="neutral"
+                    onClick={() => navigate("price-updates?view=progress")}
+                  >
+                    {t("Store progress", "پیشرفت فروشگاه‌ها")}
+                  </Button>
+                )}
+              </>
             }
             leading={
               <Tabs
                 value={status}
-                onChange={setStatus}
+                onChange={(value) => {
+                  setStatus(value);
+                  setSelected([]);
+                }}
                 options={[
                   {
                     value: "pending",
@@ -264,14 +371,15 @@ export function PriceUpdates() {
               />
             </Field>
             <ReceivedDateRange
-              from={from}
-              to={to}
-              onChange={(nextFrom, nextTo) => {
-                setFrom(nextFrom);
-                setTo(nextTo);
-              }}
+              from={range.from}
+              to={range.to}
+              preset={status === "done" ? last30 : undefined}
+              onChange={(from, to) => setRange({ from, to })}
             />
-            {(status !== "pending" || location !== "all" || from || to) && (
+            {(status !== "pending" ||
+              location !== "all" ||
+              pendingRange.from ||
+              pendingRange.to) && (
               <Button
                 variant="plain"
                 onClick={() => {
@@ -280,14 +388,22 @@ export function PriceUpdates() {
                     location: "all",
                     status: "pending",
                   });
-                  setFrom("");
-                  setTo("");
+                  setPendingRange({ from: "", to: "" });
+                  setDoneRange({ from: last30.first, to: last30.last });
                 }}
               >
                 {t("Clear filters", "پاک کردن فیلترها")}
               </Button>
             )}
           </FilterToolbar>
+          {status === "done" && (
+            <p className="muted price-updates-retention">
+              {t(
+                "Done updates are kept forever. Change the dates to see older ones.",
+                "موارد انجام‌شده برای همیشه نگه داشته می‌شوند. برای موارد قدیمی‌تر تاریخ را عوض کنید.",
+              )}
+            </p>
+          )}
           {result.pending ? (
             <p role="status">{t("Loading…", "در حال بارگذاری…")}</p>
           ) : result.error ? (
@@ -311,16 +427,43 @@ export function PriceUpdates() {
             </EmptyState>
           ) : (
             <div className="price-updates-list">
-              <div className="price-updates-table-header" aria-hidden="true">
-                <span />
-                <span>{t("Product", "کالا")}</span>
-                <span>{t("Store", "فروشگاه")}</span>
-                <span className="price-updates-price-heading">
+              <div className="price-updates-table-header">
+                {status === "pending" ? (
+                  <Checkbox
+                    className="price-updates-select-all"
+                    aria-label={t(
+                      "Select all on this page",
+                      "انتخاب همه در این صفحه",
+                    )}
+                    checked={allSelected}
+                    onChange={(checked) =>
+                      setSelected(
+                        checked ? selectable.map((item) => item.id) : [],
+                      )
+                    }
+                  >
+                    <span className="price-updates-select-all-text">
+                      {t("Select all on this page", "انتخاب همه در این صفحه")}
+                    </span>
+                  </Checkbox>
+                ) : (
+                  <span />
+                )}
+                <span className="price-updates-wide-heading">
+                  {t("Product", "کالا")}
+                </span>
+                <span className="price-updates-price-heading price-updates-wide-heading">
                   {t("Price", "قیمت")}
                 </span>
-                <span>{t("Why", "دلیل")}</span>
-                <span>{t("Seen", "دیده‌شده")}</span>
-                <span />
+                <span className="price-updates-wide-heading price-updates-step-heading">
+                  {t("Seen", "دیده‌شده")}
+                </span>
+                <span className="price-updates-wide-heading price-updates-step-heading">
+                  {t("Done", "انجام‌شده")}
+                </span>
+                <span className="price-updates-wide-heading price-updates-action-heading">
+                  {t("Action", "اقدام")}
+                </span>
               </div>
               {visible.map((task) => {
                 const product = state.products.find(
@@ -330,13 +473,21 @@ export function PriceUpdates() {
                 );
                 const seen =
                   task.seen?.version === task.version ? task.seen : null;
+                const done =
+                  task.status === "done" && task.completed_at
+                    ? { by: task.completed_by ?? "", at: task.completed_at }
+                    : null;
                 const scope = taskScope(task.company_id, task.branch);
+                const isSelected = selection.includes(task.id);
+                const open = () =>
+                  navigate(`price-update?id=${encodeURIComponent(task.id)}`);
                 return (
                   <div
-                    className="price-updates-row"
+                    className={`price-updates-row${isSelected ? " is-selected" : ""}`}
                     key={task.id}
                     role="link"
                     tabIndex={0}
+                    data-control-kind="disclosure"
                     onClick={(event) => {
                       if (
                         event.target instanceof Element &&
@@ -344,9 +495,7 @@ export function PriceUpdates() {
                           "button,a,input,textarea,[role=checkbox],[role=combobox]",
                         )
                       )
-                        navigate(
-                          `price-update?id=${encodeURIComponent(task.id)}`,
-                        );
+                        open();
                     }}
                     onKeyDown={(event) => {
                       if (
@@ -354,16 +503,14 @@ export function PriceUpdates() {
                         ["Enter", " "].includes(event.key)
                       ) {
                         event.preventDefault();
-                        navigate(
-                          `price-update?id=${encodeURIComponent(task.id)}`,
-                        );
+                        open();
                       }
                     }}
                   >
                     {task.status === "pending" ? (
                       <Checkbox
-                        aria-label={`${t("Select", "انتخاب")} ${product?.name_en ?? task.product_code}`}
-                        checked={selection.includes(task.id)}
+                        aria-label={`${t("Select", "انتخاب")} ${productName(task)}`}
+                        checked={isSelected}
                         onChange={(checked) =>
                           setSelected(
                             checked
@@ -373,7 +520,7 @@ export function PriceUpdates() {
                         }
                       />
                     ) : (
-                      <Badge tone="approved">{t("Done", "انجام‌شده")}</Badge>
+                      <span aria-hidden="true" />
                     )}
                     <div className="price-updates-product">
                       {product ? (
@@ -381,71 +528,47 @@ export function PriceUpdates() {
                       ) : (
                         <LtrText>{task.product_code}</LtrText>
                       )}
-                      <small className="muted price-updates-compact-meta">
+                      <small className="muted price-updates-meta">
                         {branchLabel(state.config, task.branch, lang)} ·{" "}
-                        <DateText value={task.effective_at} />
+                        {priceUpdateReasonLabel(task.reason, lang)}
+                        {task.decided_by && (
+                          <>
+                            {" "}
+                            · <bdi>{task.decided_by}</bdi>
+                          </>
+                        )}
                       </small>
                       {task.sale_end_preparation && (
                         <small>
                           <SaleEndTaskTitle task={task} />
                         </small>
                       )}
-                      {task.status === "done" && (
-                        <small className="muted">
-                          <bdi>{task.completed_by}</bdi> ·{" "}
-                          {task.completed_at && (
-                            <LtrText>
-                              {companyTimestampText(
-                                state.config,
-                                task.completed_at,
-                              )}
-                            </LtrText>
-                          )}
-                        </small>
-                      )}
-                    </div>
-                    <div className="price-updates-store price-updates-wide-cell">
-                      {branchLabel(state.config, task.branch, lang)}
+                      <div className="price-updates-compact-steps">
+                        {step("seen", seen)}
+                        {step("done", done)}
+                      </div>
                     </div>
                     <PriceUpdateChange task={task} />
-                    <div className="price-updates-reason price-updates-wide-cell muted">
-                      {priceUpdateReasonLabel(task.reason, lang)}
-                      {task.decided_by && (
-                        <>
-                          {" "}
-                          · <bdi>{task.decided_by}</bdi>
-                        </>
-                      )}
+                    <div className="price-updates-wide-cell">
+                      {step("seen", seen)}
                     </div>
-                    <div
-                      className={`price-updates-steps price-updates-wide-cell ${task.status === "done" ? "is-complete" : seen ? "is-started" : "is-pending"}`}
-                    >
-                      <span aria-hidden="true" />
-                      {seen ? (
-                        <span className="price-updates-seen">
-                          <bdi>{seen.by}</bdi>
-                          <small className="muted">
-                            <LtrText>
-                              {companyTimestampText(state.config, seen.at)}
-                            </LtrText>
-                          </small>
-                        </span>
-                      ) : (
-                        t("Not seen yet", "هنوز دیده نشده")
-                      )}
+                    <div className="price-updates-wide-cell">
+                      {step("done", done)}
                     </div>
                     <div className="price-updates-row-actions">
                       {task.status === "pending" && (
                         <Button
                           variant="tinted"
                           size="sm"
-                          className="price-updates-wide-cell"
-                          disabled={!can("labels.print", scope)}
-                          onClick={() =>
-                            navigate(
-                              `price-update?id=${encodeURIComponent(task.id)}`,
-                            )
+                          className="price-updates-print"
+                          disabled={
+                            !can("labels.print", scope) &&
+                            !can("labels.queue_write", {
+                              ...scope,
+                              mutation: true,
+                            })
                           }
+                          onClick={() => setPrintTasks([task])}
                         >
                           {t("Print label", "چاپ برچسب")}
                         </Button>
@@ -453,12 +576,8 @@ export function PriceUpdates() {
                       <Button
                         variant="plain"
                         className="price-update-open"
-                        aria-label={`${t("Open price update", "باز کردن به‌روزرسانی قیمت")} ${product?.name_en ?? task.product_code}`}
-                        onClick={() =>
-                          navigate(
-                            `price-update?id=${encodeURIComponent(task.id)}`,
-                          )
-                        }
+                        aria-label={`${t("Open price update", "باز کردن به‌روزرسانی قیمت")} ${productName(task)}`}
+                        onClick={open}
                       >
                         <ChevronRight className="directional" size={20} />
                       </Button>
@@ -469,20 +588,76 @@ export function PriceUpdates() {
             </div>
           )}
           {selection.length > 0 && (
-            <div className="actions">
-              <Button variant="tinted" onClick={() => void batch("labels")}>
-                <Printer size={18} />
-                {t("Print labels", "چاپ برچسب‌ها")}
-              </Button>
-              {can("price_updates.complete") && (
-                <Button onClick={() => void batch("done")}>
-                  {t("Mark as done", "علامت‌گذاری انجام‌شده")}
-                </Button>
+            <div
+              className="price-updates-bulk-bar"
+              role="region"
+              aria-label={t(
+                "Selected price updates",
+                "به‌روزرسانی‌های انتخاب‌شده",
               )}
+            >
+              <p className="price-updates-bulk-count">
+                <strong>
+                  {t(
+                    `${selection.length} selected`,
+                    `${selection.length} انتخاب شده`,
+                  )}
+                </strong>
+                {!allSelected && (
+                  <>
+                    {" · "}
+                    <Button
+                      variant="plain"
+                      onClick={() =>
+                        setSelected(selectable.map((item) => item.id))
+                      }
+                    >
+                      {t(
+                        `Select all ${selectable.length}`,
+                        `انتخاب هر ${selectable.length}`,
+                      )}
+                    </Button>
+                  </>
+                )}
+                {" · "}
+                <Button variant="plain" onClick={() => setSelected([])}>
+                  {t("Clear", "پاک کردن")}
+                </Button>
+              </p>
+              <div className="price-updates-bulk-actions">
+                <Button
+                  variant="neutral"
+                  onClick={() => setPrintTasks(selectedTasks)}
+                >
+                  <Printer size={18} aria-hidden="true" />
+                  {t("Print labels", "چاپ برچسب‌ها")}
+                </Button>
+                <Button variant="tinted" onClick={() => void bulk("seen")}>
+                  {t("Mark as seen", "علامت دیده‌شده")}
+                </Button>
+                {can("price_updates.complete") && (
+                  <Button onClick={() => void bulk("done")}>
+                    {t("Mark as done", "علامت انجام‌شده")}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </Card>
       )}
+      <PriceLabelPrintDialog
+        key={printTasks.map((task) => task.id).join(",")}
+        tasks={printTasks}
+        open={printTasks.length > 0}
+        onOpenChange={(next) => {
+          if (!next) setPrintTasks([]);
+        }}
+        onNotice={(message) => {
+          setToast(message);
+          setSelected([]);
+        }}
+      />
+      {toast}
     </div>
   );
 }
@@ -563,7 +738,7 @@ export function PriceUpdateProgress({ tasks }: { tasks: PriceUpdateTask[] }) {
 }
 
 function PriceUpdateDetail({ id }: { id: string }) {
-  const { state, actor, can, command, query, t, lang, navigate } = useDemo();
+  const { state, actor, can, command, t, lang, navigate } = useDemo();
   const result = useProtectedQuery(
     "price_updates.read",
     { company_id: state.config.company.seed_key, kind: "company_shared" },
@@ -574,10 +749,25 @@ function PriceUpdateDetail({ id }: { id: string }) {
   );
   const task = result.data;
   const [error, setError] = useState("");
-  const [printing, setPrinting] = useState(false);
-  const [pendingPrint, setPendingPrint] = useState<PriceTaskPrint | null>(null);
-  const [printState, setPrintState] = useState<ScopedReadView | null>(null);
-  const [confirmation, setConfirmation] = useState(false);
+  // The print flow keeps its own copy of the task: recording the print
+  // reloads this page's data, and the dialog must stay mounted meanwhile.
+  const [printTask, setPrintTask] = useState<PriceUpdateTask | null>(null);
+  const [toast, setToast] = useTimedToast();
+  // Same position in every branch, so the open print flow is never remounted.
+  const withPrintDialog = (body: ReactNode) => (
+    <>
+      {body}
+      <PriceLabelPrintDialog
+        tasks={printTask ? [printTask] : []}
+        open={printTask !== null}
+        onOpenChange={(next) => {
+          if (!next) setPrintTask(null);
+        }}
+        onNotice={setToast}
+      />
+      {toast}
+    </>
+  );
   const intent = actor
     ? `${actor.session_id}:${actor.authority_epoch}:${id}`
     : "";
@@ -618,36 +808,6 @@ function PriceUpdateDetail({ id }: { id: string }) {
       return false;
     }
   };
-  const print = async () => {
-    if (!task || printing) return;
-    setPrinting(true);
-    try {
-      const snapshot = await query(
-        "labels.print",
-        taskScope(task.company_id, task.branch),
-        (canonical, freshActor) =>
-          preparePriceTaskPrint(canonical, freshActor, [id]),
-      );
-      if (currentIntent.current !== intent) return;
-      flushSync(() => {
-        setPendingPrint(snapshot);
-        setPrintState(structuredClone(state));
-      });
-      await waitForPrintImages(
-        document.querySelector(".price-task-print-output"),
-      );
-      if (currentIntent.current !== intent) return;
-      window.print();
-      const recorded = await run((draft, freshActor) => {
-        recordPriceTaskPrint(draft, freshActor, snapshot);
-      }, "labels.print");
-      if (recorded) setConfirmation(true);
-    } catch {
-      if (currentIntent.current === intent) fail();
-    } finally {
-      if (currentIntent.current === intent) setPrinting(false);
-    }
-  };
   const backLink = (
     <a
       className="back-link"
@@ -662,10 +822,10 @@ function PriceUpdateDetail({ id }: { id: string }) {
     </a>
   );
   if (!task)
-    return (
+    return withPrintDialog(
       <div
         className="price-update-detail"
-        data-pwa-unsaved={printing || confirmation}
+        data-pwa-unsaved={printTask !== null}
       >
         {backLink}
         <PageHeader title={t("Price update", "به‌روزرسانی قیمت")} />
@@ -679,7 +839,7 @@ function PriceUpdateDetail({ id }: { id: string }) {
                 )}
           </p>
         </Card>
-      </div>
+      </div>,
     );
   const product = state.products.find(
     (item) =>
@@ -699,11 +859,8 @@ function PriceUpdateDetail({ id }: { id: string }) {
     </span>
   );
   const history = [...task.steps].sort((a, b) => b.at.localeCompare(a.at));
-  return (
-    <div
-      className="price-update-detail"
-      data-pwa-unsaved={printing || confirmation}
-    >
+  return withPrintDialog(
+    <div className="price-update-detail" data-pwa-unsaved={printTask !== null}>
       {backLink}
       <PageHeader title={t("Price update", "به‌روزرسانی قیمت")} />
       {error && (
@@ -842,29 +999,17 @@ function PriceUpdateDetail({ id }: { id: string }) {
                 </>
               )}
             </span>
-            <div className="actions">
-              <Button
-                variant="tinted"
-                size="sm"
-                disabled={printing || !can("labels.print", scope)}
-                onClick={() => void print()}
-              >
-                <Printer size={16} aria-hidden="true" />
-                {t("Print label now", "چاپ برچسب اکنون")}
-              </Button>
-              <Button
-                variant="neutral"
-                size="sm"
-                disabled={!can("labels.queue_write", scope)}
-                onClick={() =>
-                  void run((draft, freshActor) => {
-                    queuePriceTaskLabels(draft, freshActor, [id]);
-                  }, "labels.queue_write")
-                }
-              >
-                {t("Add to label waitlist", "افزودن به فهرست انتظار برچسب‌ها")}
-              </Button>
-            </div>
+            <Button
+              variant="tinted"
+              size="sm"
+              disabled={
+                !can("labels.print", scope) && !can("labels.queue_write", scope)
+              }
+              onClick={() => setPrintTask(task)}
+            >
+              <Printer size={16} aria-hidden="true" />
+              {t("Print label", "چاپ برچسب")}
+            </Button>
           </div>
         )}
       </Card>
@@ -933,58 +1078,7 @@ function PriceUpdateDetail({ id }: { id: string }) {
           </tbody>
         </DataTable>
       </Card>
-      {pendingPrint &&
-        printState &&
-        createPortal(
-          <div className="label-print-output price-task-print-output">
-            {pendingPrint.batches.flatMap((batch, batchIndex) =>
-              batch.pages.map((page, index) => (
-                <PhysicalSheet
-                  key={`${batchIndex}:${index}`}
-                  template={batch.template}
-                  products={page}
-                  state={printState}
-                  branch={pendingPrint.branch}
-                />
-              )),
-            )}
-          </div>,
-          document.body,
-        )}
-      <Dialog
-        open={confirmation}
-        onOpenChange={setConfirmation}
-        title={t(
-          "Did the labels print correctly?",
-          "آیا برچسب‌ها درست چاپ شدند؟",
-        )}
-      >
-        <DialogActions>
-          <Button
-            variant="neutral"
-            onClick={() => {
-              setConfirmation(false);
-              setPendingPrint(null);
-              setPrintState(null);
-            }}
-          >
-            {t("No", "خیر")}
-          </Button>
-          <Button
-            onClick={() => {
-              if (pendingPrint)
-                void run((draft, freshActor) => {
-                  confirmPriceTaskLabel(draft, freshActor, id, pendingPrint.id);
-                }, "price_updates.label_confirm").then((ok) => {
-                  if (ok) setConfirmation(false);
-                });
-            }}
-          >
-            {t("Yes", "بله")}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </div>
+    </div>,
   );
 }
 export default PriceUpdates;

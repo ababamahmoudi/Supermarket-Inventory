@@ -1,3 +1,7 @@
+## PR 29 Price updates and Offers (2026-11-20)
+
+See design-language "PR 29 Price updates and Offers" and requirements "PR 29 Price updates and Offers review". Price updates: Seen and Done columns, select all on this page, sticky bulk bar (Print labels, Mark as seen, Mark as done with skipped count), Print label dialog (Print now with starting slot or Add to print queue), Done tab with last 30 days, date range and Export CSV; sidebar count equals Pending. Offers: one Offer suggestions card with one-row boxes and its own empty state; pools as one card with chips; YYYY-MM-DD dates.
+
 ## PR 29 receiving review (2026-11-20)
 
 See [design-language.md](design-language.md#pr-29-receiving-review--approved-changes-ali-2026-11-20) and requirements "PR 29 receiving review". Invoices list: Lines before Total; Open invoice/Discard invoice in ⋯; phone cards keep Review. Invoice review: per-field Looks right in the amber ! popover and a counted card button; payment terms check the due date; More details as one grid with a quiet reading line; Lines bulk bar with Set category (only uncategorised new products) and Confirm N ready lines; Selling price column; short rows in red; line editor with Use lower inside Selling price, one math box and category/Taxable sync; credits choose Applies to (Invoice total / Chosen items) with item chips and the cost change; Totals shows the calculated Subtotal with the paper difference; Payable 700/20 px. Posted invoices show each credit's choice and allocation; History shows "Choose what a credit applies to" and the posted allocation.

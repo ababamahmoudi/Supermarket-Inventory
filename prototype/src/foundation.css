@@ -367,23 +367,6 @@
   margin: 0;
 }
 
-/* Price updates: the Seen cell's name is text, only the first span is the dot. */
-:root .price-updates-steps > .price-updates-seen {
-  inline-size: auto;
-  block-size: auto;
-  border-radius: var(--radius-none);
-  background: none;
-  /* Blue is for names you can click; this name is plain text. */
-  color: var(--text);
-}
-/* The status dot sits on the name's line, not between name and time. */
-:root .price-updates-row .price-updates-steps {
-  align-items: flex-start;
-}
-:root .price-updates-row .price-updates-steps > span[aria-hidden="true"] {
-  margin-block-start: calc(0.5lh - 3px);
-}
-
 /* Labels: the "Select all" box lines up with the row boxes below it. */
 @media (min-width: 761px) {
   :root .labels-selection-toolbar {

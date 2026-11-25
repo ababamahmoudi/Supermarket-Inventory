@@ -116,6 +116,18 @@ Daily navigation has Date, previous/next day, Today, branch and weekday, plus Pr
 
 **C — Existing data and fictional practice.** Before upgrading an existing IndexedDB store, save and verify an exact private backup and compare the canonical revision in the write transaction; concurrent changes require another backup/retry. Add absent module/settings defaults and empty timesheet arrays while preserving explicit Off, custom departments and all existing data. Only fresh demo or explicit Reset seeds eight invented staff and 24 shifts over three relative days, including overnight and missing-Out cases. Empty store removes current-company timesheet records and keeps the migration/demo marker so reload cannot reseed them. No uploaded business names, screenshots or timesheets enter fixtures. Defaults remain branch staff with optional login, audited past-day editing, and included weekly payroll CSV; see [recorded defaults](open-questions.md#r2d-timesheet-defaults-recorded-2026-10-26) and the [R2d review guide](PR_R2D_REVIEW.md).
 
+## PR 29 Price updates and Offers review (Ali, 2026-11-20)
+
+- **Label printing:** one regular label prints on exactly one A4 page, in the chosen starting slot, with the template's own margins (for the 60 × 40 mm template: 10 mm). While labels print, nothing else on the page is laid out, and the last sheet is only as tall as its used rows, so a browser's own page margins never push it to a second page.
+- **Print label choice:** "Print label" on a price update (row, bulk bar or detail) asks **Print now** or **Add to print queue**. Print now opens the existing print flow for exactly those labels, starting at the chosen slot, then asks "Did the labels print correctly?". Add to print queue puts them on the location's label waitlist (an existing entry for the same product is counted up, never duplicated) and shows a confirmation toast. Print now works for one location at a time.
+- **Seen and Done columns:** each has its own column with the person's name and the date (YYYY-MM-DD), or the 24-hour time for today. On a narrow card or phone both sit on one compact line under the product. Price updates still have only Seen and Done, each with who and when.
+- **Select all and bulk actions:** the header checkbox selects every row on the current page and filters. While anything is selected a sticky bar shows "N selected", Print labels, Mark as seen and Mark as done. Each row uses the ordinary permission rules; rows the person can't change are skipped and counted ("Marked 5 as done · 1 skipped").
+- **Done updates are kept forever (Ali's decision, 2026-11-20):** they are never deleted. The Done tab opens on the last 30 days (by Done date), has a From/To date range (YYYY-MM-DD) for older ones, and **Export CSV** saves exactly what the filters show: product, code, old and new price (2 decimals), location, seen by and when, done by and when.
+- **Sidebar count:** the Price updates number equals the Pending tab for the same person and location scope (same permission-checked list).
+- **Offer suggestions:** one card titled "Offer suggestions" with its count and caption; each suggestion is its own compact box laid out as one row — what it is, its options (mix-and-match, optional start/end dates), then Dismiss and Confirm offer (the one primary). The row stacks on a narrow card. "No suggestions waiting" is the card's own empty state.
+- **Mix-and-match pools:** one card; the intro is one caption line under the title; pools with products list them as chips (name · price, blue because they open the product); an empty pool is one short row with its add action (opens Create offer).
+- **Dates:** every offer and sale date reads YYYY-MM-DD in both languages (design-language rule 10).
+
 ## PR 29 receiving review (Ali, 2026-11-19/20)
 
 - **Invoices list:** headings sit exactly over their values (numbers end-aligned, text start-aligned), 24 px between columns, 16 px inside the hover fill; the row menu (Open invoice, Discard invoice) never covers the next row's Review. Suppliers rows use the same inset.
@@ -841,7 +853,7 @@ E2 below is the current source specification; E3 remains an authorised **Planned
 9. Where it appears:
    - A new sidebar item, "Price updates", with a count badge.
    - A dashboard card, "Price updates to apply".
-   - The notification bell. The Price updates page has filters for Pending or Done, location and date. You can select several tasks and then "Print labels" (adds them all to the label waitlist) or "Mark as done".
+   - The notification bell. The Price updates page has filters for Pending or Done, location and date. You can select several tasks and then "Print labels" (PR 29: asks Print now or Add to print queue), "Mark as seen" or "Mark as done". Done tasks are kept forever; the Done tab opens on the last 30 days and can export CSV.
 10. Changes on top of changes:
 
 - If the price changes again before the task is done, update that same task to the newest price (keeping the earlier step in its history) instead of adding a second task.

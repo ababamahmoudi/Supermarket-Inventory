@@ -87,6 +87,7 @@ export function Offers() {
     setBranch,
     lang,
     t,
+    tCount,
     actor: historyContext,
   } = useDemo();
   const branches = sellingBranches(state.config).filter((id) =>
@@ -587,26 +588,25 @@ export function Offers() {
       )}
       {tab !== "pools" ? (
         <>
-          {tab === "offers" && suggestions.length === 0 && (
-            <p className="muted offers-empty-suggestions">
-              {state.config.promotions.ai_suggestions_enabled === false
-                ? t(
-                    "Offer suggestions are turned off in Settings.",
-                    "پیشنهادهای خودکار فروش در تنظیمات غیرفعال هستند.",
-                  )
-                : t("No suggestions waiting.", "پیشنهادی در انتظار نیست.")}
-            </p>
-          )}
-          {tab === "offers" && suggestions.length > 0 && (
-            <Card title={t("Offer suggestions", "پیشنهادهای پیشنهادی")}>
-              <p className="muted card-lead">
-                {t(
-                  "Confirm an offer before it starts.",
-                  "پیش از شروع، پیشنهاد را تأیید کنید.",
+          {tab === "offers" && (
+            <Card className="offer-suggestions-card">
+              {/* PR 29: one card; its title, count and caption sit on one line. */}
+              <div className="offer-suggestions-heading">
+                <h2>{t("Offer suggestions", "پیشنهادهای پیشنهادی")}</h2>
+                {suggestions.length > 0 && (
+                  <Badge tone="info">
+                    <LtrText>{suggestions.length}</LtrText>
+                  </Badge>
                 )}
-              </p>
+                <p className="muted">
+                  {t(
+                    "Confirm an offer before it starts.",
+                    "پیش از شروع، پیشنهاد را تأیید کنید.",
+                  )}
+                </p>
+              </div>
               {suggestions.length === 0 ? (
-                <EmptyState>
+                <p className="muted offers-empty-suggestions">
                   {state.config.promotions.ai_suggestions_enabled === false
                     ? t(
                         "Offer suggestions are turned off in Settings.",
@@ -616,7 +616,7 @@ export function Offers() {
                         "No suggestions waiting. Approve a mapped price to create one.",
                         "پیشنهادی منتظر نیست. یک قیمت دارای نگاشت را تأیید کنید تا پیشنهاد ایجاد شود.",
                       )}
-                </EmptyState>
+                </p>
               ) : (
                 suggestions.map((offer) => {
                   const product = products.find(
@@ -650,94 +650,105 @@ export function Offers() {
                     });
                   return (
                     <section
-                      className="offer-task r2c-offer-task list-box ui-form-surface"
+                      className="offer-task r2c-offer-task offer-suggestion-row list-box ui-form-surface"
                       key={offer.id}
                     >
-                      <div className="r2c-offer-heading">
-                        <h3>
-                          {product ? (
-                            <a
-                              className="entity-link"
-                              href={`#product?code=${encodeURIComponent(product.code)}`}
-                            >
-                              <ProductName product={product} language={lang} />
-                            </a>
-                          ) : (
-                            <LtrText>{offer.product_code}</LtrText>
-                          )}
-                        </h3>
-                        <strong className="r2c-offer-terms">
-                          {offerLabel(offer.label)}
-                        </strong>
-                      </div>
-                      <p className="r2c-offer-summary muted">
-                        <span>
-                          {t("Regular", "عادی")}{" "}
-                          <Money value={regular} currency={offer.currency} />
-                        </span>
-                        {amounts?.saving && (
-                          <span>
-                            · {t("saves", "صرفه‌جویی")}{" "}
-                            <Money
-                              value={amounts.saving}
-                              currency={offer.currency}
-                            />
-                          </span>
-                        )}
-                        <span>
-                          ·{" "}
-                          {offer.scope === "all"
-                            ? t("All selling locations", "همهٔ مکان‌های فروش")
-                            : branchName(offer.branch)}
-                        </span>
-                        {product && (
-                          <ManualPricePill
-                            product={product}
-                            branch={offer.branch}
-                            companyDefault={offer.scope === "all"}
-                          />
-                        )}
-                      </p>
-                      <div className="r2c-offer-status">
-                        <Badge tone="pending">
-                          {t("Pending", "در انتظار")}
-                        </Badge>
-                      </div>
-                      <Checkbox
-                        checked={options.mix}
-                        onChange={(value) => change({ mix: value })}
-                      >
-                        {t(
-                          "Join the mix-and-match pool",
-                          "عضویت در گروه ترکیبی",
-                        )}
-                      </Checkbox>
-                      <div className="r2e-offer-decision-row">
-                        <div className="grid-2">
-                          <Field
-                            label={t(
-                              "Start date (optional)",
-                              "تاریخ شروع (اختیاری)",
+                      <div className="offer-suggestion-what">
+                        <div className="r2c-offer-heading">
+                          <h3>
+                            {product ? (
+                              <a
+                                className="entity-link"
+                                href={`#product?code=${encodeURIComponent(product.code)}`}
+                              >
+                                <ProductName
+                                  product={product}
+                                  language={lang}
+                                />
+                              </a>
+                            ) : (
+                              <LtrText>{offer.product_code}</LtrText>
                             )}
-                          >
-                            <DateField
-                              value={options.start}
-                              onChange={(value) => change({ start: value })}
-                            />
-                          </Field>
-                          <Field
-                            label={t(
-                              "End date (optional)",
-                              "تاریخ پایان (اختیاری)",
-                            )}
-                          >
-                            <DateField
-                              value={options.end}
-                              onChange={(value) => change({ end: value })}
-                            />
-                          </Field>
+                          </h3>
+                          <Badge tone="pending">
+                            {t("Pending", "در انتظار")}
+                          </Badge>
+                          <strong className="r2c-offer-terms">
+                            {offerLabel(offer.label)}
+                          </strong>
                         </div>
-                        <div className="actions r2c-offer-actions">
+                        <p className="r2c-offer-summary muted">
+                          <span>
+                            {t("Regular", "عادی")}{" "}
+                            <Money value={regular} currency={offer.currency} />
+                          </span>
+                          {amounts?.saving && (
+                            <span>
+                              · {t("saves", "صرفه‌جویی")}{" "}
+                              <Money
+                                value={amounts.saving}
+                                currency={offer.currency}
+                              />
+                            </span>
+                          )}
+                          <span>
+                            ·{" "}
+                            {offer.scope === "all"
+                              ? t("All selling locations", "همهٔ مکان‌های فروش")
+                              : branchName(offer.branch)}
+                          </span>
+                          {product && (
+                            <ManualPricePill
+                              product={product}
+                              branch={offer.branch}
+                              companyDefault={offer.scope === "all"}
+                            />
+                          )}
+                        </p>
+                      </div>
+                      <div className="r2e-offer-decision-row offer-suggestion-decision">
+                        <div className="offer-suggestion-options">
+                          <Checkbox
+                            checked={options.mix}
+                            onChange={(value) => change({ mix: value })}
+                          >
+                            {t(
+                              "Join the mix-and-match pool",
+                              "عضویت در گروه ترکیبی",
+                            )}
+                          </Checkbox>
+                          <div className="grid-2 offer-suggestion-dates">
+                            <Field
+                              label={t(
+                                "Start date (optional)",
+                                "تاریخ شروع (اختیاری)",
+                              )}
+                            >
+                              <DateField
+                                value={options.start}
+                                onChange={(value) => change({ start: value })}
+                              />
+                            </Field>
+                            <Field
+                              label={t(
+                                "End date (optional)",
+                                "تاریخ پایان (اختیاری)",
+                              )}
+                            >
+                              <DateField
+                                value={options.end}
+                                onChange={(value) => change({ end: value })}
+                              />
+                            </Field>
+                          </div>
+                        </div>
+                        <div className="actions r2c-offer-actions offer-suggestion-actions">
+                          <Button
+                            variant="plain"
+                            onClick={() => stop(offer.id, true)}
+                          >
+                            {t("Dismiss", "کنار گذاشتن")}
+                          </Button>
                           <Button
                             variant="primary"
                             disabled={readiness !== "ready"}
@@ -746,15 +757,13 @@ export function Offers() {
                           >
                             {t("Confirm offer", "تأیید پیشنهاد")}
                           </Button>
-                          <Button
-                            variant="plain"
-                            onClick={() => stop(offer.id, true)}
-                          >
-                            {t("Dismiss", "کنار گذاشتن")}
-                          </Button>
                         </div>
                       </div>
-                      <p className="muted">{readyMessage(readiness)}</p>
+                      {readiness !== "ready" && (
+                        <p className="muted offer-suggestion-note">
+                          {readyMessage(readiness)}
+                        </p>
+                      )}
                     </section>
                   );
                 })
@@ -1108,91 +1117,106 @@ export function Offers() {
         </>
       ) : (
         <>
-          <Card
-            className="r2c-offer-pools"
-            title={t("Mix-and-match pools", "گروه‌های ترکیبی")}
-          >
-            <p>
-              {t("Showing effective offers for", "نمایش پیشنهادهای مؤثر برای")}:{" "}
-              <strong className="branch-label">{branchName(viewBranch)}</strong>
-            </p>
-            <p className="muted">
+          <Card className="offer-pools-card r2c-offer-pools">
+            {/* PR 29: one caption line under the title; pools with products
+                list them as chips; an empty pool is one short row. */}
+            <div className="offer-pools-heading">
+              <h2>{t("Mix-and-match pools", "گروه‌های ترکیبی")}</h2>
+              <span className="offer-pools-location">
+                · <bdi className="branch-label">{branchName(viewBranch)}</bdi>
+              </span>
+            </div>
+            <p className="muted offer-pools-caption">
               {t(
-                "Products in the same pool combine across suppliers and categories. Pools keep company, branch, currency, and offer definition separate.",
-                "کالاهای یک گروه بین تأمین‌کنندگان و دسته‌ها ترکیب می‌شوند. گروه‌ها شرکت، شعبه، ارز و نوع پیشنهاد را جدا نگه می‌دارند.",
+                "Products in the same pool count together for the offer, even from different suppliers or categories.",
+                "کالاهای یک گروه برای پیشنهاد با هم شمرده می‌شوند، حتی از تأمین‌کنندگان یا دسته‌های مختلف.",
               )}
             </p>
-          </Card>
-          {state.config.promotions.price_to_offer.map((mapping) => {
-            const members = effectivePool(
-              state,
-              viewBranch,
-              mapping.mix_and_match_pool,
-              state.config.company.currency,
-            );
-            return (
-              <Card key={mapping.mix_and_match_pool}>
-                <h2>{offerLabel(mapping.offer)}</h2>
-                {members.length === 0 ? (
-                  <EmptyState>
-                    {t(
-                      "No products in this pool. Confirm an offer with mix-and-match enabled.",
-                      "کالایی در این گروه نیست. یک پیشنهاد را با گزینه ترکیبی تأیید کنید.",
+            <div className="offer-pools-list">
+              {state.config.promotions.price_to_offer.map((mapping) => {
+                const members = effectivePool(
+                  state,
+                  viewBranch,
+                  mapping.mix_and_match_pool,
+                  state.config.company.currency,
+                );
+                return (
+                  <section
+                    className={`offer-pool${members.length ? "" : " is-empty"}`}
+                    key={mapping.mix_and_match_pool}
+                    aria-label={formatOffer(
+                      mapping.offer,
+                      lang,
+                      state.config.company.currency,
                     )}
-                  </EmptyState>
-                ) : (
-                  <DataTable
-                    columns={[
-                      { width: "38%" },
-                      { width: "18%" },
-                      { width: "18%", align: "end" },
-                      { width: "26%" },
-                    ]}
                   >
-                    <thead>
-                      <tr>
-                        <th>{t("Product", "کالا")}</th>
-                        <th>{t("Product Code", "کد کالا")}</th>
-                        <th className="number-cell">
-                          {t("Approved price", "قیمت تأییدشده")}
-                        </th>
-                        <th>{t("Supplier", "تأمین‌کننده")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {members.map((product) => (
-                        <tr key={product.code}>
-                          <td>
-                            <ProductName product={product} language={lang} />
-                          </td>
-                          <td>
-                            <LtrText>{product.code}</LtrText>
-                          </td>
-                          <td className="number-cell">
-                            <Money
-                              value={effectivePrice(
-                                state,
-                                product,
-                                viewBranch,
-                              )!}
-                              currency={state.config.company.currency}
-                            />
-                            <ManualPricePill
-                              product={product}
-                              branch={viewBranch}
-                            />
-                          </td>
-                          <td>
-                            <LtrText>{product.main_supplier}</LtrText>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </DataTable>
-                )}
-              </Card>
-            );
-          })}
+                    <div className="offer-pool-head">
+                      <h3>{offerLabel(mapping.offer)}</h3>
+                      {members.length ? (
+                        <span className="muted offer-pool-count">
+                          {tCount(
+                            "{{count}} product",
+                            "{{count}} products",
+                            "{{count}} کالا",
+                            "{{count}} کالا",
+                            members.length,
+                          )}
+                        </span>
+                      ) : (
+                        <>
+                          <span className="muted offer-pool-empty">
+                            {t(
+                              "No products yet. Confirm an offer with mix-and-match on to add one.",
+                              "هنوز کالایی نیست. برای افزودن، یک پیشنهاد را با گزینهٔ ترکیبی تأیید کنید.",
+                            )}
+                          </span>
+                          {mayManageMultiBuy && (
+                            <Button
+                              variant="plain"
+                              size="sm"
+                              className="offer-pool-add"
+                              onClick={() => {
+                                setCreateOpen(true);
+                                setCreateType("multi_buy");
+                                setCreateAttempted(false);
+                                setMessage(null);
+                              }}
+                            >
+                              {t("Add product", "افزودن کالا")}
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {members.length > 0 && (
+                      <ul className="offer-pool-chips">
+                        {members.map((product) => (
+                          <li key={product.code}>
+                            <a
+                              className="entity-link offer-pool-chip"
+                              href={`#product?code=${encodeURIComponent(product.code)}`}
+                              data-product-code={product.code}
+                            >
+                              <ProductName product={product} language={lang} />
+                              <span aria-hidden="true"> · </span>
+                              <Money
+                                value={effectivePrice(
+                                  state,
+                                  product,
+                                  viewBranch,
+                                )!}
+                                currency={state.config.company.currency}
+                              />
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          </Card>
         </>
       )}
       <Dialog

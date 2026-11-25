@@ -124,3 +124,157 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* PR 29 (Ali, 2026-11-20): one suggestions card; each suggestion is its own
+   compact box laid out as one row — what it is, its options, then Dismiss and
+   Confirm (the one primary). The row stacks on narrow cards. */
+.offer-suggestions-card {
+  container-type: inline-size;
+  display: grid;
+  gap: 12px;
+}
+.offer-suggestions-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.offer-suggestions-heading > h2,
+.offer-suggestions-heading > p {
+  margin: 0;
+}
+.offer-suggestions-heading > p {
+  font-size: var(--font-size-caption);
+}
+:root .offer-suggestions-card .offers-empty-suggestions {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: var(--radius-control);
+  background: var(--field-fill);
+}
+:root .offer-task.offer-suggestion-row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 16px;
+}
+.offer-suggestion-what,
+.offer-suggestion-options {
+  display: grid;
+  gap: 6px;
+  min-inline-size: 0;
+}
+.offer-suggestion-what .r2c-offer-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+/* Options and actions form one layout-neutral group (kept for the C9 rule). */
+:root .offer-suggestion-row > .offer-suggestion-decision {
+  display: contents;
+}
+:root .offer-suggestion-row .offer-suggestion-dates {
+  gap: 12px;
+}
+.offer-suggestion-row .field {
+  margin-block: 0;
+}
+.offer-suggestion-note {
+  margin: 0;
+  font-size: var(--font-size-caption);
+}
+@container (min-width: 720px) {
+  :root .offer-task.offer-suggestion-row {
+    grid-template-columns: minmax(170px, 1fr) minmax(280px, 1.4fr) auto;
+    align-items: center;
+    gap: 12px 20px;
+  }
+  .offer-suggestion-row .offer-suggestion-dates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .offer-suggestion-note {
+    grid-column: 1 / -1;
+  }
+  /* The actions sit level with the date fields (C9 rule). */
+  .offer-suggestion-row .offer-suggestion-actions {
+    flex-wrap: nowrap;
+    align-self: end;
+  }
+}
+
+/* PR 29: mix-and-match pools in one card, products as chips. */
+.offer-pools-card {
+  display: grid;
+  gap: 12px;
+}
+.offer-pools-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+}
+.offer-pools-heading > h2 {
+  margin: 0;
+}
+.offer-pools-location {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-title);
+}
+:root .offer-pools-caption {
+  margin: 0;
+  font-size: var(--font-size-caption);
+}
+.offer-pools-list {
+  display: grid;
+  gap: 8px;
+}
+.offer-pool {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--row-divider);
+  border-radius: var(--radius-control);
+}
+.offer-pool.is-empty {
+  padding-block: 10px;
+}
+.offer-pool-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+}
+.offer-pool-head > h3 {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-headline);
+}
+.offer-pool-count {
+  margin-inline-start: auto;
+  font-size: var(--font-size-caption);
+}
+.offer-pool-empty {
+  flex: 1 1 240px;
+  font-size: var(--font-size-caption);
+}
+.offer-pool-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.offer-pool-chip {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 2px;
+  padding: 6px 12px;
+  border-radius: var(--radius-round);
+  background: var(--field-fill);
+  font-size: var(--font-size-label);
+}
+.offer-pool-chip .product-name small {
+  display: none;
+}

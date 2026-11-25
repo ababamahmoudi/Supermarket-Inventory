@@ -1,5 +1,14 @@
 # Klead design language v1
 
+## PR 29 Price updates and Offers — approved changes (Ali, 2026-11-20)
+
+- **Price updates list:** each update is its own box (selected boxes use the soft surface). Wide card (≥ 900 px): checkbox · Product (name, then "location · reason · decider") · Price (end-aligned) · Seen · Done · Action (Print label tinted + one chevron); fixed column tracks so every row lines up under its heading. Seen/Done show a 6 px dot, the name, and YYYY-MM-DD or 24-hour time for today. Narrower: Seen and Done become one compact caption line under the product; phone puts the price and actions below.
+- **Bulk bar:** sticky at the card bottom, card radius and menu shadow: "N selected · Select all N · Clear", then Print labels (neutral), Mark as seen (tinted), Mark as done (primary). Text actions keep their natural width (no stretching on phone).
+- **Print label dialog:** tag icon, title "Print label", subtitle "60 × 40 mm label · location", the real label preview on a soft surface, two choice boxes (Print now with Starting slot / Add to print queue with the waiting count), Cancel + one primary in the footer.
+- **Done tab:** caption "Done updates are kept forever. Change the dates to see older ones."; the date range button reads "Last 30 days" while that range is chosen; Export CSV (neutral, download icon).
+- **Offer suggestions:** title, count badge and caption on one line; each suggestion a field-fill box with three parts in one row (≥ 720 px card): what it is · options · Dismiss (plain) then Confirm offer (primary). Empty state is a field-fill line inside the card.
+- **Mix-and-match pools:** one card, "Mix-and-match pools · location", one caption line, each pool an outlined box with its offer and "N products", product chips (round, field fill, blue link text). Empty pool: one short row with "No products yet…" and Add product.
+
 ## PR 29 receiving review — approved changes (Ali, 2026-11-20)
 
 These supersede the conflicting older wording below for the same parts.

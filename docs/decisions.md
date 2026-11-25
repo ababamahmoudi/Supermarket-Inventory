@@ -1,5 +1,19 @@
 # Decisions
 
+## PR 29 Price updates decisions — 2026-11-20
+
+### 2026-11-20 — Done price updates are kept forever
+
+**Context:** Ali asked whether old Done price updates should be cleaned up; the list would grow without limit. **Decision (Ali, 2026-11-20):** Done price updates are never deleted (they are business records with who and when). The Done tab opens on the last 30 days by Done date, a From/To range reaches older ones, and Export CSV saves exactly the filtered rows. **Why:** keeps the audit trail complete (rule 6, never delete business records) while the default view stays short.
+
+### 2026-11-20 — Print label asks Print now or Add to print queue
+
+**Context:** a single price-update label printed two pages with the wrong margins in Safari, and staff sometimes want to batch labels instead. **Decision:** one dialog with Print now (the existing print flow, a starting slot, then "Did the labels print correctly?") or Add to print queue (the existing waitlist, which counts an existing entry up). Printing hides everything except the label sheets via a class set just for the print, and the last sheet is only as tall as its used rows. **Why:** works the same in every browser without relying on `:has()` print support, and reuses the existing print evidence and waitlist rules unchanged.
+
+### 2026-11-20 — Bulk Seen/Done skip what a person can't change
+
+**Context:** select-all can include rows from locations where the person may not mark Done. **Decision:** each row goes through the ordinary single-update rules; rows that are not allowed (or already seen) are skipped and counted in the toast. **Why:** permissions stay enforced per record on the server side, and one forbidden row doesn't block the rest.
+
 ## PR 29 receiving review decisions — 2026-11-20
 
 ### 2026-11-20 — Per-field Looks right in the amber ! popover

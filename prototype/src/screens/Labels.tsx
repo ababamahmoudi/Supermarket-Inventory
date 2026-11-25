@@ -58,7 +58,7 @@ import {
 import type { ScopedReadView } from "../e1-read-model";
 import { StoredFileImage } from "../stored-file";
 import { isStoredFileReference } from "../file-database";
-import { waitForPrintImages } from "../print-images";
+import { waitForPrintImages, printLabelSheets } from "../print-images";
 import { WhatsMissing } from "../WhatsMissing";
 import type {
   Branch,
@@ -482,11 +482,26 @@ export function PhysicalSheet({
   alignment?: boolean;
 }) {
   const { capacity } = labelLayout(template);
+  // The lowest used slot edge: the last printed sheet ends there (PR 29).
+  const used = alignment ? capacity : products.length;
+  let usedHeight = 0;
+  for (let index = 0; index < used; index++)
+    if (alignment || products[index]) {
+      const slot = labelSlotGeometry(template, index);
+      usedHeight = Math.max(usedHeight, slot.top + slot.height);
+    }
   return (
     <div
       className="print-sheet"
       dir="ltr"
-      style={{ width: "210mm", height: "297mm" }}
+      data-used-height-mm={Math.min(297, usedHeight).toFixed(2)}
+      style={
+        {
+          width: "210mm",
+          height: "297mm",
+          "--label-used-height": `${Math.min(297, usedHeight + 1)}mm`,
+        } as CSSProperties
+      }
     >
       {Array.from(
         { length: alignment ? capacity : products.length },
@@ -852,7 +867,7 @@ function TemplateDesigner({
           ),
       );
       flushSync(() => setAlignmentTemplate(structuredClone(draft)));
-      window.print();
+      printLabelSheets();
       await command(
         "labels.calibrate",
         labelScope(state.config.company.seed_key),
@@ -1488,7 +1503,7 @@ export function Labels() {
           return;
         }
       }
-      window.print();
+      printLabelSheets();
       setConfirmationOpen(true);
       setError("");
     } catch (cause) {

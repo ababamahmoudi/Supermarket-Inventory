@@ -388,7 +388,10 @@ it("pauses a retained multi-buy at the sale store, removes it from that pool, an
     ),
   ).toEqual(priorOffers);
   await user.click(screen.getByRole("tab", { name: "Mix-and-match pools" }));
-  expect(screen.queryByText("0003")).not.toBeInTheDocument();
+  // PR 29: pools list their products as chips (one per product code).
+  expect(
+    document.querySelector('.offer-pool-chip[data-product-code="0003"]'),
+  ).toBeNull();
   await user.click(screen.getByRole("tab", { name: "Current offers" }));
   await user.click(
     within(row("0003", "sale")).getByRole("button", { name: "More" }),
@@ -406,7 +409,7 @@ it("pauses a retained multi-buy at the sale store, removes it from that pool, an
     ),
   ).toEqual(priorOffers);
   await user.click(screen.getByRole("tab", { name: "Mix-and-match pools" }));
-  expect(screen.getByText("0003").closest("tr")).toHaveTextContent(
-    "Sour Cherry Juice 1 L",
-  );
+  expect(
+    document.querySelector('.offer-pool-chip[data-product-code="0003"]'),
+  ).toHaveTextContent("Sour Cherry Juice 1 L");
 });

@@ -31,18 +31,27 @@ test("Black Tea: real approval, scoped notification, Cashier pill, physical prin
   await expect(
     status.getByRole("button", { name: "Mark as seen", exact: true }),
   ).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Print label now", exact: true })
-    .click();
+  // PR 29: Print label asks Print now or Add to print queue.
+  const printNow = async () => {
+    await page
+      .getByRole("button", { name: "Print label", exact: true })
+      .click();
+    const choice = page.getByRole("dialog", { name: "Print label" });
+    await expect(
+      choice.getByRole("radio", { name: /^Print now/ }),
+    ).toBeChecked();
+    await choice
+      .getByRole("button", { name: "Print now", exact: true })
+      .click();
+  };
+  await printNow();
   const confirm = page.getByRole("dialog", {
     name: "Did the labels print correctly?",
     exact: true,
   });
   await expect(confirm).toBeVisible();
   await confirm.getByRole("button", { name: "No", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Print label now", exact: true })
-    .click();
+  await printNow();
   await page
     .getByRole("dialog", {
       name: "Did the labels print correctly?",

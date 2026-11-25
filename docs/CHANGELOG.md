@@ -1,3 +1,10 @@
+## 2026-11-20 — PR 29 Price updates and Offers (Ali's test of 2026-11-20)
+
+- Label printing: one label prints on one A4 page in the chosen slot with the template margins (bug fix); Print label asks Print now or Add to print queue (toast; waitlist entries are counted up).
+- Price updates: Seen and Done columns with who and date/time; select all on this page; sticky bulk bar with Mark as seen / Mark as done reporting skipped rows; Done tab opens on the last 30 days with a date range and Export CSV (Done updates kept forever — decision recorded).
+- Sidebar Price updates count now uses the same scoped list as the Pending tab (bug fix).
+- Offers: one suggestions card with one-row boxes, empty state inside it; pools as one card with product chips and short empty rows; all offer/sale dates YYYY-MM-DD in both languages.
+
 ## 2026-11-20 — PR 29 receiving review (Ali's test of 2026-11-19/20)
 
 - Invoices list: headings aligned with values, 24 px column gaps, 16 px hover inset (also Suppliers), progress bar, Open invoice in the row menu, menu never covers the next Review; phone cards keep Review. Shared tables measure the real action group and key stripped cell content.
