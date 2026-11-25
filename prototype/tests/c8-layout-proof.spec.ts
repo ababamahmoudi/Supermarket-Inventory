@@ -623,7 +623,9 @@ for (const language of ["en", "fa"] as const)
                 exact: true,
               })
               .click();
-            await inspect("offers:pools", true);
+            // PR 29 (Ali, 2026-11-20): pools list products as chips, not a table.
+            await expect(page.locator(".offer-pools-card")).toBeVisible();
+            await inspect("offers:pools");
           }
           if (entry.route === "payables") {
             const row = page
