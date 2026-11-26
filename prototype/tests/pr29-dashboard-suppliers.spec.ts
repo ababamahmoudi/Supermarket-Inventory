@@ -302,6 +302,26 @@ test.describe("PR 29 Dashboard, Suppliers, alert and sidebar", () => {
       await page.getByRole("tab", { name: tab, exact: true }).click();
       await expect(page.locator("main")).not.toContainText("—");
     }
+    // Once every contact detail is added, the same button says Edit.
+    await page.locator(".supplier-profile-action").click();
+    const editor = page.getByRole("dialog");
+    for (const input of await editor.locator("input, textarea").all()) {
+      const type = await input.getAttribute("type");
+      if (type === "checkbox" || type === "file" || !(await input.isVisible()))
+        continue;
+      if (!(await input.inputValue()))
+        await input.fill(
+          type === "email" ? "orders@example.com" : "Fictional value",
+        );
+    }
+    await editor.getByRole("combobox").first().click();
+    await page.getByRole("option").nth(1).click();
+    await editor.getByRole("button", { name: /^Save/ }).click();
+    await expect(editor).toHaveCount(0);
+    await expect(
+      page.locator(".supplier-contact-grid .value-empty"),
+    ).toHaveCount(0);
+    await expect(page.locator(".supplier-profile-action")).toHaveText("Edit");
   });
 
   test("main cards share the soft shadow with no border at radius 20", async ({
