@@ -87,8 +87,11 @@ test("Supervisor adds a quoted supplier item without invented purchases and work
   await expect(item).toContainText("Case of 12");
   await expect(item.locator(".money")).toHaveCount(0);
   await expandDetails(item);
-  await expect(await columnValue(item, "Date last bought")).toHaveText("—");
-  await expect(await columnValue(item, "Last invoice")).toHaveText("—");
+  // Ali's rule: empty values say "Not added".
+  await expect(await columnValue(item, "Date last bought")).toHaveText(
+    "Not added",
+  );
+  await expect(await columnValue(item, "Last invoice")).toHaveText("Not added");
   await item.focus();
   await page.keyboard.press("Enter");
   const history = page.getByRole("dialog", {

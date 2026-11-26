@@ -102,6 +102,67 @@
   gap: 12px;
   margin-block: 24px;
 }
+.settings-reader-card {
+  display: grid;
+  gap: 16px;
+}
+:root .settings-reader-card.ui-card > h2 {
+  margin: 0;
+}
+.settings-reader-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 180px) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+.settings-reader-fields .field {
+  min-inline-size: 0;
+}
+.settings-reader-address > .helper {
+  margin: 0;
+}
+.settings-reader-address input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  text-align: start;
+}
+:root .settings-reader-card.ui-card > .settings-reader-actions,
+:root .settings-reader-card.ui-card > .settings-reader-save {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.settings-reader-save {
+  justify-content: flex-end;
+}
+.settings-reader-status:empty {
+  display: none;
+}
+.settings-reader-status p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .settings-layout:has(.settings-reader-card) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-layout:has(.settings-reader-card) > .settings-group-menu {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  .settings-reader-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-reader-mode {
+    max-inline-size: 240px;
+  }
+  :root .settings-reader-card .ui-button.button:not(.ui-icon-button) {
+    block-size: 44px;
+    min-block-size: 44px;
+    max-block-size: 44px;
+  }
+}
 .settings-pricing-table {
   max-inline-size: 100%;
 }

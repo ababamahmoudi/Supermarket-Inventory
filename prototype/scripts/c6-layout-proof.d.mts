@@ -13,6 +13,15 @@ export function inspectResponsiveLayout(
   contentWords: number;
   unitFragments: { text: string | null; lines: number }[];
   collisionGeometry: string;
+  priceEndTracks: Array<{
+    label: string | null;
+    scrollWidth: number;
+    clientWidth: number;
+    position: number;
+    maximum: number;
+    fadeStart: boolean;
+    fadeEnd: boolean;
+  }>;
   cells: number;
   forms: {
     className: string;

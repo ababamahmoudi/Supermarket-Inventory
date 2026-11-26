@@ -11,6 +11,7 @@ import {
 } from "../scripts/capture-c8-proof.mjs";
 import { openAlert, setBranch, setLanguage, signIn } from "./helpers";
 import { configuredPersonExpectation } from "./configured-person-expectations";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 async function prepare(
   page: Page,
@@ -147,8 +148,8 @@ for (const language of ["en", "fa"] as const) {
     await expect(
       button(
         dialog.getByRole("group", { name: exact("Ends", "پایان") }),
-        "Last day",
-        "آخرین روز",
+        "2 weeks",
+        "۲ هفته",
       ),
     ).toHaveAttribute("aria-pressed", "true");
     await expect(
@@ -355,6 +356,8 @@ for (const language of ["en", "fa"] as const) {
   test(`C8 worker request keeps regular charge and privacy until Supervisor acknowledgment and approval (${language})`, async ({
     page,
   }) => {
+    await signIn(page, "Manager");
+    await approvedLookupPrices(page, ["0002"]);
     await prepare(page, language, "Floor Worker");
     const before = await readC8State(page);
     const dialog = await openC8PriceDialog(page, "0002");
@@ -425,7 +428,7 @@ for (const language of ["en", "fa"] as const) {
     const card = page.locator(`[data-sale-request-id="${request.id}"]`);
     await expect(card).toBeVisible();
     await expect(card).toContainText(
-      language === "en" ? "Margin at this price" : "حاشیه سود در این قیمت",
+      language === "en" ? "Margin" : "حاشیه سود",
     );
     await button(card, "Approve", "تأیید").click();
     await expect(
@@ -441,8 +444,8 @@ for (const language of ["en", "fa"] as const) {
     await card
       .getByRole("checkbox", {
         name: exact(
-          "Use this price anyway",
-          "با این حال از این قیمت استفاده شود",
+          "Use this price anyway — it's below the minimum margin.",
+          "با وجود حاشیه کمتر از حداقل، این قیمت را استفاده کن.",
         ),
       })
       .check();

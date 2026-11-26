@@ -15,6 +15,7 @@ import {
   DateText,
   LtrText,
   Money,
+  NotAdded,
   ProductName,
   UnitSize,
 } from "../presentation";
@@ -202,7 +203,11 @@ export default function SupplierItems({
                   </small>
                 </td>
                 <td>
-                  <LtrText>{row.supplier_item_code || "—"}</LtrText>
+                  {row.supplier_item_code ? (
+                    <LtrText>{row.supplier_item_code}</LtrText>
+                  ) : (
+                    <NotAdded />
+                  )}
                 </td>
                 <td>{pack(row.units_per_case)}</td>
                 {row.financial && (
@@ -223,7 +228,11 @@ export default function SupplierItems({
                   </>
                 )}
                 <td>
-                  <DateText value={row.last_bought_date} />
+                  {row.last_bought_date ? (
+                    <DateText value={row.last_bought_date} />
+                  ) : (
+                    <NotAdded />
+                  )}
                 </td>
                 <td>
                   {row.last_invoice_id ? (
@@ -242,7 +251,7 @@ export default function SupplierItems({
                       </LtrText>
                     </Button>
                   ) : (
-                    <span className="muted">—</span>
+                    <NotAdded />
                   )}
                 </td>
                 {supervisor && (
@@ -579,7 +588,11 @@ function SupplierItemEditor({
             }}
             searchable
             options={[
-              { value: "", label: t("Choose a product", "انتخاب کالا") },
+              {
+                placeholder: true,
+                value: "",
+                label: t("Choose a product", "انتخاب کالا"),
+              },
               ...state.products
                 .filter(
                   (record) =>
@@ -587,6 +600,12 @@ function SupplierItemEditor({
                     record.status !== "archived",
                 )
                 .map((record) => ({
+                  searchTerms: [
+                    record.name_en,
+                    record.name_fa ?? "",
+                    record.code,
+                    record.barcode ?? "",
+                  ],
                   value: record.code,
                   label: `${record.code} · ${lang === "fa" ? record.name_fa || record.name_en : record.name_en}`,
                 })),

@@ -5,13 +5,20 @@ implement the application engine, while this file remains its independent refere
 """
 
 import json
+import runpy
 from decimal import ROUND_FLOOR, ROUND_HALF_UP
 from decimal import Decimal as D
 from pathlib import Path
 
 
 def load_configuration():
-    return json.loads(Path(__file__).with_name("arzon-config.json").read_text(encoding="utf-8"))
+    config = json.loads(Path(__file__).with_name("arzon-config.json").read_text(encoding="utf-8"))
+    if "bands" not in config["rounding_bands"]:
+        root = Path(__file__).resolve().parent.parent
+        adapter = runpy.run_path(str(root / "scripts/prepare-local-seed.py"))
+        retained = json.loads((root / "prototype/src/compat/configuration.json").read_text())
+        config = adapter["prepare_configuration"](config, retained)
+    return config
 
 
 def to_cents(value):
@@ -67,7 +74,12 @@ def pricing_details(unit_cost_before_tax, category_key, configuration=None):
                     break
     else:
         raise ValueError("Unknown configured rounding mode.")
+    # A correction is a suggestion: keep the band price it raised so the
+    # application can explain it and offer the lower price.
+    raised = correction_applied and after_bands is not None and price > after_bands
+    rounded_up_from = after_bands if raised else None
     return {
+        "rounded_up_from": rounded_up_from,
         "raw_price": to_cents(raw),
         "after_band_rounding": after_bands,
         "special_correction_applied": correction_applied,

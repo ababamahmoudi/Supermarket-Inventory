@@ -1,5 +1,6 @@
 import { configuredPersonExpectation } from "./configured-person-expectations";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
+import { runCanonicalBusinessFixture } from "./business-fixture";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { chooseOption, setBranch, setLanguage, signIn } from "./helpers";
 
@@ -93,18 +94,15 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
 }) => {
   await signIn(page, "Supervisor");
   await setBranch(page, "all");
-  await page.goto("/#lookup");
-  await page
-    .getByRole("main")
-    .getByLabel("Search products", { exact: true })
-    .fill("0009");
-  // Aggregate Lookup requires an actual selling store before prices/actions.
-  await chooseOption(
-    page,
-    page.locator(".lookup-page").getByLabel("Location", { exact: true }),
-    "Branch 1",
-    "North York",
+  // Keep the subject in Lookup's supported route across protected location
+  // refreshes, so this price-scope check always compares the same product.
+  await page.goto("/#lookup?search=0009");
+  // Aggregate Lookup now lists the company catalog without a local gate.
+  // Select a concrete store in the shell for this price-scope/audit proof.
+  await expect(page.locator(".lookup-results-list")).toContainText(
+    "Potato Chips",
   );
+  await setBranch(page, "Branch 1");
   const activityBefore = new Set(
     (await readCanonicalBusinessEvidence(page)).activity.map(
       (entry) => entry.id,
@@ -121,6 +119,9 @@ test("Lookup Change price defaults to all stores and records the signed-in Super
   await expect(editor).not.toBeVisible();
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
   await setBranch(page, "Branch 2");
+  await expect(
+    page.locator(".lookup-detail").getByRole("heading", { level: 2 }),
+  ).toHaveText("Potato Chips 150 g");
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
   // E2 appends derived store tasks after the accepted price decision. Prove
   // the new causal decision itself, independently of those later audit rows.
@@ -150,16 +151,27 @@ test("Change price changes this store only, and validation stays inside the open
   page,
 }) => {
   await signIn(page, "Supervisor");
-  await setBranch(page, "Branch 1");
-  await page.goto("/#lookup");
-  await page
-    .getByRole("main")
-    .getByLabel("Search products", { exact: true })
-    .fill("0009");
-  const editor = await openRegularPrice(page);
-  const before = await readCanonicalBusinessEvidence(page).then(
-    (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
+  // This scope proof starts with an actual approved price at the other store;
+  // R2c 7.3 no longer calls a bare company default that store's approval.
+  await runCanonicalBusinessFixture(
+    page,
+    (state) => {
+      const product = state.products.find((row) => row.code === "0009")!;
+      product.branch_prices = {
+        ...product.branch_prices,
+        "Branch 2": product.selling_price,
+      };
+    },
+    undefined,
   );
+  await page.reload();
+  await setBranch(page, "Branch 1");
+  await page.goto("/#lookup?search=0009");
+  await expect(
+    page.locator(".lookup-detail").getByRole("heading", { level: 2 }),
+  ).toHaveText("Potato Chips 150 g");
+  const editor = await openRegularPrice(page);
+  const before = (await readCanonicalBusinessEvidence(page)).products;
   await editor.getByLabel("Price", { exact: true }).fill("3.291");
   await editor
     .getByRole("button", { name: "Save new price", exact: true })
@@ -168,11 +180,7 @@ test("Change price changes this store only, and validation stays inside the open
     editor.getByRole("alert", { name: "What's missing", exact: true }),
   ).toContainText("at most two decimals");
   await expect(editor).toBeVisible();
-  expect(
-    await readCanonicalBusinessEvidence(page).then(
-      (canonicalState) => JSON.parse(JSON.stringify(canonicalState)!).products,
-    ),
-  ).toEqual(before);
+  expect((await readCanonicalBusinessEvidence(page)).products).toEqual(before);
   await editor.getByLabel("Price", { exact: true }).fill("3.29");
   await editor
     .getByRole("button", { name: "Only North York", exact: true })
@@ -183,7 +191,21 @@ test("Change price changes this store only, and validation stays inside the open
   await expect(editor).not.toBeVisible();
   await expect(page.locator(".lookup-detail .price")).toHaveText("$3.29");
   await setBranch(page, "Branch 2");
+  await expect(
+    page.locator(".lookup-detail").getByRole("heading", { level: 2 }),
+  ).toHaveText("Potato Chips 150 g");
   await expect(page.locator(".lookup-detail .price")).toHaveText("$2.99");
+  const after = (await readCanonicalBusinessEvidence(page)).products;
+  const originalProduct = before.find((product) => product.code === "0009")!;
+  const changedProduct = after.find((product) => product.code === "0009")!;
+  expect(changedProduct.selling_price).toBe(originalProduct.selling_price);
+  expect(changedProduct.branch_prices).toEqual({
+    ...originalProduct.branch_prices,
+    "Branch 1": "3.29",
+  });
+  expect(after.filter((product) => product.code !== "0009")).toEqual(
+    before.filter((product) => product.code !== "0009"),
+  );
 });
 
 test("Floor Worker and Cashier never see product Edit, including direct product links", async ({
@@ -208,6 +230,18 @@ test("Floor Worker and Cashier never see product Edit, including direct product 
 test("Lookup columns mirror in Persian, with selected row distinct from offer dot and terms", async ({
   page,
 }) => {
+  await signIn(page, "Manager");
+  await runCanonicalBusinessFixture(
+    page,
+    (state) => {
+      const product = state.products.find((row) => row.code === "0009")!;
+      product.branch_prices = {
+        ...product.branch_prices,
+        "Branch 1": product.selling_price,
+      };
+    },
+    undefined,
+  );
   await signIn(page, "Cashier");
   await page
     .getByRole("main")
@@ -216,10 +250,10 @@ test("Lookup columns mirror in Persian, with selected row distinct from offer do
   const row = page.locator(".lookup-result-row.is-selected");
   let geometry = await row.evaluate((element) => {
     const name = element
-      .querySelector(".lookup-result-name")!
+      .querySelector(".lookup-result-name > strong")!
       .getBoundingClientRect();
     const price = element
-      .querySelector(".lookup-result-price")!
+      .querySelector(".lookup-result-price > .selling-price-value")!
       .getBoundingClientRect();
     return { nameX: name.x, priceX: price.x, width: price.width };
   });
@@ -227,10 +261,10 @@ test("Lookup columns mirror in Persian, with selected row distinct from offer do
   await setLanguage(page, "fa");
   geometry = await row.evaluate((element) => {
     const name = element
-      .querySelector(".lookup-result-name")!
+      .querySelector(".lookup-result-name > strong")!
       .getBoundingClientRect();
     const price = element
-      .querySelector(".lookup-result-price")!
+      .querySelector(".lookup-result-price > .selling-price-value")!
       .getBoundingClientRect();
     return { nameX: name.x, priceX: price.x, width: price.width };
   });
@@ -284,7 +318,9 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
     exact: true,
   });
   await editor.getByLabel("English name", { exact: true }).fill("Edited chips");
-  await editor.getByLabel("Barcode", { exact: true }).fill(owner.barcode);
+  await editor
+    .getByLabel("Barcode (optional)", { exact: true })
+    .fill(owner.barcode);
   // Resolve tracking first so this failure proves the barcode business guard.
   await stopTrackingKeepDates(page, editor);
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -311,7 +347,9 @@ test("duplicate barcode reports one scoped conflict and allows a corrected save"
     conflicting_product_code: owner.code,
     triggered_by: configuredPersonExpectation("manager").name_en,
   });
-  await editor.getByLabel("Barcode", { exact: true }).fill("new-chips-barcode");
+  await editor
+    .getByLabel("Barcode (optional)", { exact: true })
+    .fill("new-chips-barcode");
   await editor
     .getByRole("button", { name: "Save product", exact: true })
     .click();

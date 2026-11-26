@@ -1,0 +1,63 @@
+# CI203 invoice integration checks
+
+## Retained receiving-name font
+
+On a fresh production build of `2fead8b`, the existing Persian 1280px invoice clipping oracle reproduced “Canned Fava Beans 400 g” leaving its product cell. Temporary CDP inspection identified bundled Manrope letters mixed with bundled Vazirmatn spacing/punctuation: about 173px versus 170px in English. The cell was 182.44px wide with 12px start padding. The comparison table's bilingual ProductName was already contained.
+
+A reusable `--font-en-bilingual` token puts Manrope before bundled Vazirmatn only for the retained English receiving name. The actual title, one-line ellipsis, columns, check counts and all clipping tolerances are unchanged. Temporary diagnostics were removed.
+
+All four existing 1280px EN/FA × light/dark invoice cases pass (1.1min, Chromium, fresh production build, port5196, one worker). The token suite passes all three tests; affected formatting/lint and the build pass.
+
+Click check: Supervisor → Invoices → New invoice → Photo (AI reading) → upload the fictional invoice fixture → compare with a real same-supplier order → switch EN/FA and light/dark at 1280px. Product names retain the same Latin glyph metrics without changing the financial evidence.
+
+## Approved Lookup mass labels
+
+The original C4 layout flow reproduced a stale Persian expectation: Lookup displays `$7.49/پوند` and `$16.51/کیلوگرم`. Only those two assertions now select the approved labels by language. English `/lb` and `/kg`, exact amounts, approved-price setup, private/canonical evidence and every geometry assertion are unchanged. The ordinary Catalog price contract is unchanged.
+
+All six original desktop workflows pass at 1280/1440/1920px in EN/FA (3.2min, fresh production source plus the receiving font correction, one worker). This includes the explicit New item order comparison, retained posted original, correction evidence, dates and pending credits. No tolerance, timeout or skip changed.
+
+## Exact original-viewer title
+
+The existing original-document flow reproduced a stale phone-only Persian dialog name. Its exact anchored name now matches the approved `فاکتور اصلی`; the English `Original invoice` name is unchanged. Every retained source/Blob/byte/SHA-256 comparison, supplier document route, bilingual close/reopen, reload and no-console-error assertion remains. Both original desktop/phone cases pass (17.3sec). The posted version-navigation link still deliberately uses `اصل فاکتور`; source inspection confirmed its separate existing test is correct and remains untouched.
+
+Final local total: 12 original browser cases pass (four invoice theme/language cases, six document-layout cases and two original-viewer cases), plus all three token tests, fresh production build, affected lint/format and diff checks. No C5 Catalog assertions or proof script changes are included.
+
+## CI204 — integrated actual-box correction
+
+A clean detached `8a30702` production build reproduced no failures in the six original 1280px cases locally (6/6), while CI204 still reported the same six variants across retries. The font pin alone was insufficient: CSS-only ellipsis retained an unbounded live name range, with the ordinary English name using almost all available cell space. A new strict test against the actual name box failed in both EN/FA on this baseline, including the checked Sour Cherry Juice and Dried Barberries lines.
+
+The source now reuses bounded FitText for the visible prefix, retains the exact complete native title and complete disclosure aria-label plus check count, and preserves all table widths/numeric gaps. Names missing entered text display the existing localized Not added placeholder without writing business data.
+
+Core fresh-production proof after the fix: all six unchanged original 1280px cases and both strict actual-box resize cases pass (8/8, 1.4min). The latter cover390/1000/1279/1280/1281/1440px, exact prefix/title/full accessible name, actual disclosure navigation, unchanged canonical business evidence and a genuine injected-overflow failure followed by restoration. Both original EN/FA C5 reference and C8 receiving flows also pass (4/4, 54.4sec), including their title-removal-only negative and restored-positive checks. The stricter C5/C8 title capability checks add no clipping exception or tolerance change.
+
+Click check: Supervisor → Invoices → upload the fictional fixture → resize around1280px in EN/FA. Hover the one-line shortened name for its exact original; open the row to review the full product. Numeric columns and all financial evidence retain their existing values.
+
+CI204 companion proof: R0 D9's four original alignment scenes pass; explicit phone-emulation actual-box EN/FA cases and both phone R2 reference receiving flows pass. Together with the core cases above, 20 distinct browser cases pass (repeated desktop actual-box diagnostics are not counted twice). The existing LinesTable component suite passes3/3; the source production build, affected ESLint/Prettier and diff checks pass.
+
+Saved fictional full-page/panel captures and actual CDP metrics are outside the repository in `/workspace/r2ef-final-review/ci204-invoice-fit`. The EN/light and FA/dark 1280px panels and full pages were individually viewed. Canned Fava's actual fitted glyphs use bundled Manrope Bold, about151.64px within the158.44px name box; the cell remains182.44px wide. Its native title remains exactly `Canned Fava Beans 400 g`. Both interfaces now share this measured result.
+
+Two extra phone C8 receiving-flow checks failed before reaching the receiving component, at their posted-short heading: the unchanged C8 word oracle reports `QA-SHORT-LAYOUT` breaking across the heading. Both EN/FA failures, traces and snapshots were retained in the same external evidence folder for separate root triage. Their desktop counterparts and title-removal-only negative probes pass; no heading test or oracle was weakened here.
+
+The extra CI205 phone check exposed a separate repeated-reference issue on the posted document. The h1 was already a complete unbroken reference (325.156 px EN / 328.344 px FA inside 358 px). The two-column Invoice details number was the value wrapping `QA-SHORT-LAYOUT` over two lines. That read-only field now uses shared FitText inside its actual column, retaining the complete source number in its native title. The full heading/accessibility name, details grid, system-assigned note, invoice identity and source routing are unchanged.
+
+Both unchanged full C8 receiving flows pass on phone and desktop in EN/FA, including real short posting and its ledger/stock checks. The focused actual-reference proof covers 390/1000/1440 px in both languages, exact full heading/accessibility and title, a truthful visible prefix, actual single-line glyph containment, unchanged route/back link, and unchanged invoices/correction/stock/ledger/product evidence. Forcing the number back into an 80 px wrapping box must fail the unchanged original word oracle; restoring it must pass. All eight browser cases passed (1.4 min); three affected unit/token/navigation files passed 11 tests. Production build, TypeScript, changed-file ESLint and formatting passed. No oracle, clipping tolerance or test budget changed.
+
+The fitted invoice number keeps an existing System assigned flag as quiet secondary text on its own line, with no dangling leading separator. The actual retained-flag browser fixture verifies both translated labels at 390/1000/1440 px; all four EN/FA desktop/phone cases pass. Stored flags and number assignment remain unchanged.
+
+The posted-import header now also follows R2e C1: the existing human EN/FA imported-reading caption replaces model IDs, which remain in the initially closed shared More details → Reading evidence. All four actual JSON import/review/post browser variants pass, including retained original-byte hashes, canonical no-write and real correction Cancel. See [C1 click path and evidence](PR_R2E_OPERATIONS_REVIEW.md).
+
+Posted source unit costs reuse the existing atomic price whitespace contract for the complete four-decimal amount and complete source-unit suffix. The only legal narrow-column break is immediately before the whole /unit suffix. The 18% Unit cost column, shared 12+12 px padding, source amounts/currency and existing 12/14 px, weight-500 typography stay unchanged. Actual imported EN/FA proof measures both atoms at 1440/1280/1000/390 px, including contained glyphs, correct RTL/LTR header edge and a deliberately split kg rejected by the exact atom glyph probe while the original C8 word guard remains unchanged. It retains the entire unfiltered C8 report, original-byte hashes, source/canonical evidence and correction Cancel; the final combined gate includes the bounded filename/page count and Other charges card fixes. All eight original/actual-import EN/FA desktop/phone cases now pass (2.0 min), with zero failures in every complete unfiltered C8 report.
+
+Posted Other charges and credits is one existing surface Card only when charges are present. Its shared CardHeader reserves 44 px and exposes one h2; the reused inner renderer keeps its default heading in review, with no nested Card or monetary changes. The actual two-charge import verifies the single heading/title edge and full table containment; an empty posted invoice verifies no empty Card. Eight affected unit/token/review cases, the production build, TypeScript, changed-file lint and formatting pass. Final1280 EN/FA and390 EN/FA saved views were individually inspected: complete cost/unit atoms, readable2-page count and padded charges Card are intact.
+
+## CI205 — renamed receiving-name drivers
+
+A fresh production build of `db6ba0f` reproduced the three desktop failures in the unchanged receiving-stability EN/FA and R2b checks flows. The old assertions required the entire edited name in the painted row, although the intentional bounded FitText contract preserves the full native title and disclosure accessible name while painting a contained exact prefix.
+
+Only those two drivers changed. They now require the exact complete title, exact complete accessible name with the existing visible check count, a truthful fitted prefix and actual glyph containment within 1.5 px. The stability flow rejects both an unrelated short prefix and overflowing full-name glyphs, restores the genuine prefix and rechecks it. The original frame-by-frame anchor geometry, per-keystroke unchanged row, category/date/confirmation, 25-line review, required-pack and acknowledgment/totals assertions remain unchanged; no timeout, retry, project or tolerance was relaxed.
+
+Both flows independently read the actual company-scoped IndexedDB record, require the active workspace's exact invoice ID and complete saved `new_name_en`, and preserve the printed description, pack, supplier item code, quantities and source costs. As in the existing invoice-records contract, the active canonical workspace takes precedence over the imported saved copy for the same ID. After a real reload, the full canonical invoice must remain exactly equal and the reopened editor must retain the complete renamed value.
+
+All six desktop/phone Chromium cases pass (2.1 min, fresh production build, one worker), including EN/FA stability and both R2b workflows. Changed-file ESLint/Prettier, TypeScript and diff checks pass. The original three-failure traces are retained outside the repository at `/tmp/ci205-receiving-before`; the final run log is `/tmp/ci205-receiving-final.log`. The two Firefox receiving cases remain unchanged for CI: local launch lacked Firefox 1543, and an ordinary installation from the official download hosts was blocked by the enforced proxy with HTTP 403 “Domain forbidden.” No local Firefox success is claimed.
+
+Click check: import the fictional R2 reading, open its first line, rename it, blur and confirm the line. Hover the fitted row name for the complete value, reopen its editor and reload the page; the complete edited name remains saved, with the original pack, quantities and costs.

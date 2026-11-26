@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Decimal from "decimal.js";
 import { initialState } from "./store";
 import { authenticatedTestActor } from "./authority-test-fixture";
@@ -599,6 +599,14 @@ describe("C6 tracking stop and reminders", () => {
 });
 
 describe("C6 recent dates, invoice lots and scoped clearance", () => {
+  // Label printing reads the clock; keep the fictional lots unexpired.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(now);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
   it("keeps receipt supplier identity and evidence isolated when another company has the same supplier name", () => {
     const state = lotState();
     const suppliers = structuredClone([...supplierRecords(state)]);

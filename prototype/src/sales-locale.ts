@@ -76,21 +76,11 @@ export function salesText(
   return t(...copy[key]);
 }
 
-/** A local calendar date is not an instant; do not shift it across a time zone. */
-export function saleCalendarDate(
-  value: string,
-  language: Language,
-  long = false,
-): string {
-  const date = new Date(`${value}T12:00:00Z`);
-  if (!Number.isFinite(date.getTime())) return value;
-  return new Intl.DateTimeFormat(
-    language === "fa" ? "fa-IR-u-ca-gregory-nu-latn" : "en-CA",
-    {
-      timeZone: "UTC",
-      month: long ? "long" : "short",
-      day: "numeric",
-      ...(long ? { weekday: "long" as const, year: "numeric" as const } : {}),
-    },
-  ).format(date);
+/**
+ * A local calendar date is not an instant; do not shift it across a time zone.
+ * PR 29 (design language rule 10): dates read YYYY-MM-DD in both languages.
+ */
+export function saleCalendarDate(value: string, language?: Language): string {
+  void language;
+  return value;
 }

@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { KeyRound, ShieldCheck } from "lucide-react";
+import { AuthHeader } from "./AuthHeader";
+import { configuredRoleLabel } from "./people-presentation.e1";
 import { useDemo } from "./store";
-import { Button, Field, SegmentedControl } from "./ui";
+import { Badge, Button, Field, SegmentedControl } from "./ui";
 
 /** Rendered before every business route; incomplete setup never receives an actor. */
 export default function SecondSignInStep() {
@@ -11,6 +14,7 @@ export default function SecondSignInStep() {
     completeSecondStep,
     signOut,
     state,
+    user,
     t,
   } = useDemo();
   const [method, setMethod] = useState<"passkey" | "authenticator">(
@@ -52,18 +56,18 @@ export default function SecondSignInStep() {
     }
   };
   return (
-    <section className="sign-in-card" aria-labelledby="second-sign-in-title">
-      <h1 id="second-sign-in-title">
-        {setup
-          ? t("Choose a second sign-in step", "انتخاب مرحلهٔ دوم ورود")
-          : t("Second sign-in step", "مرحلهٔ دوم ورود")}
-      </h1>
-      <p className="muted">
-        {t(
-          "Simulated in this prototype",
-          "در این نمونهٔ آزمایشی شبیه‌سازی شده است",
+    <section className="auth-second-step">
+      <AuthHeader
+        title={
+          setup
+            ? t("Choose a second sign-in step", "انتخاب مرحلهٔ دوم ورود")
+            : t("Confirm it's you", "تأیید هویت")
+        }
+        description={t(
+          `${user?.name_en ?? user?.name ?? ""} needs a second step to open ${configuredRoleLabel(state.config, user?.role ?? "manager", "en").toLowerCase()} tools.`,
+          `برای ابزارهای ${configuredRoleLabel(state.config, user?.role ?? "manager", "fa")} یک مرحلهٔ دوم لازم است.`,
         )}
-      </p>
+      />
       <form
         noValidate
         onSubmit={(event) => {
@@ -87,6 +91,36 @@ export default function SecondSignInStep() {
             ]}
           />
         )}
+        <div className="auth-step-explanation">
+          <span className="auth-step-icon">
+            {selected === "passkey" ? (
+              <KeyRound size={26} aria-hidden="true" />
+            ) : (
+              <ShieldCheck size={26} aria-hidden="true" />
+            )}
+          </span>
+          <div>
+            <strong>
+              {selected === "passkey"
+                ? t("Use your passkey", "از کلید ورود استفاده کنید")
+                : t(
+                    "Use your authenticator app",
+                    "از برنامهٔ احراز هویت استفاده کنید",
+                  )}
+            </strong>
+            <span className="muted">
+              {selected === "passkey"
+                ? t(
+                    "Your device asks for your fingerprint, face or PIN.",
+                    "دستگاه اثر انگشت، چهره یا پین می‌خواهد.",
+                  )
+                : t(
+                    "Enter the code from your authenticator app.",
+                    "کد برنامهٔ احراز هویت را وارد کنید.",
+                  )}
+            </span>
+          </div>
+        </div>
         {selected === "authenticator" && (
           <Field
             label={t("Authenticator app code", "کد برنامهٔ احراز هویت")}
@@ -113,17 +147,32 @@ export default function SecondSignInStep() {
             {error}
           </p>
         )}
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" className="signin-submit" disabled={pending}>
           {selected === "passkey"
-            ? t("Use simulated passkey", "استفاده از کلید ورود شبیه‌سازی‌شده")
+            ? t("Continue with passkey", "ادامه با کلید ورود")
             : t("Continue", "ادامه")}
         </Button>
+        <p className="auth-simulated-note">
+          <Badge>{t("Simulated", "شبیه‌سازی")}</Badge>
+          <span>
+            {selected === "passkey"
+              ? t(
+                  "In this prototype the passkey is simulated.",
+                  "در این نمونه کلید ورود شبیه‌سازی شده است.",
+                )
+              : t(
+                  "In this prototype the authenticator code is simulated.",
+                  "در این نمونه کد احراز هویت شبیه‌سازی شده است.",
+                )}
+          </span>
+        </p>
         <Button
-          variant="neutral"
+          variant="plain"
+          className="auth-secondary"
           disabled={pending}
           onClick={() => void signOut()}
         >
-          {t("Sign out", "خروج")}
+          {t("Sign in as someone else", "ورود با حساب دیگر")}
         </Button>
       </form>
     </section>

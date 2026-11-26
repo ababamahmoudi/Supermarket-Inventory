@@ -83,6 +83,7 @@ export function initialState(): DemoState {
               supplier_balance_snapshot_date: relativeDate(0),
               supplier_balance_snapshot_currency: configSeed.company.currency,
               pricing_minimum_margin_schema: 2,
+              price_ending_rule_schema: 2,
               config: configSeed,
               products,
               approvals: [

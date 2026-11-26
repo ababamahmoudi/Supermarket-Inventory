@@ -1,4 +1,5 @@
 import { notificationReadable } from "./notification-access";
+import { notificationGroupIdentity } from "./notification-identity";
 import { freshActor } from "./authority";
 import { businessAuditRead } from "./business-audit-read";
 import type {
@@ -19,7 +20,16 @@ import {
 } from "./offers-read-model";
 
 const privateFields = new Set([
+  "known_delivery",
+  "free_case_group",
+  "acquisition_basis",
+  "acquisition_amount",
+  "imported_unit_cost_basis",
+  "pricing_quote",
   "unit_cost",
+  "paid_amount",
+  "pricing_unit_cost",
+  "financial",
   "cost_snapshot",
   "previous_cost",
   "new_cost",
@@ -63,6 +73,7 @@ export function approvalViews(
       const origin = effectiveApprovalLocation(state, approval);
       return (
         approval.company_id === state.config.company.seed_key &&
+        approval.type !== "new_supplier" &&
         (origin === "all" ? decides : selected.has(origin)) &&
         (decides || approval.status === "pending") &&
         can(
@@ -189,10 +200,11 @@ export type NotificationReadDTO = Pick<
   | "request_id"
   | "alert_id"
   | "invoice_id"
+  | "supplier_id"
   | "href"
   | "created_at"
   | "read_at"
-> & { reason?: string };
+> & { reason?: string; group_key: string };
 export interface SalesReadProjection {
   sales: SaleReadDTO[];
   sale_requests: SaleRequestReadDTO[];
@@ -294,6 +306,7 @@ export function projectSalesReadView(
             );
           return {
             id: item.id,
+            group_key: notificationGroupIdentity(state, item),
             company_id: item.company_id,
             branch: item.branch,
             kind: item.kind,
@@ -304,6 +317,7 @@ export function projectSalesReadView(
             request_id: item.request_id,
             alert_id: item.alert_id,
             invoice_id: item.invoice_id,
+            supplier_id: item.supplier_id,
             href: item.href,
             created_at: item.created_at,
             read_at: item.read_at,

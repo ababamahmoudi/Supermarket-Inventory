@@ -2,6 +2,40 @@ import Decimal from "decimal.js";
 import type { HistoryPath } from "./history";
 import type { Activity, Language, Product } from "./types";
 
+/** Invoice creation/posting is an event; retain the full audit without diffing hundreds of fields in its list summary. */
+export function historyInvoiceEvidence(entry: Activity):
+  | {
+      id?: string;
+      number: string;
+      supplier: string;
+      lineCount: number;
+      imported: boolean;
+    }
+  | undefined {
+  if (
+    entry.entity_type !== "invoice" ||
+    !["Create invoice draft", "Posted invoice"].includes(entry.action)
+  )
+    return;
+  const after = entry.after as
+    | {
+        supplier_invoice_number?: unknown;
+        supplier?: unknown;
+        lines?: unknown[];
+        line_count?: number;
+        reading_record?: unknown;
+      }
+    | undefined;
+  if (!after || typeof after.supplier_invoice_number !== "string") return;
+  return {
+    id: entry.entity_id,
+    number: after.supplier_invoice_number,
+    supplier: typeof after.supplier === "string" ? after.supplier : "",
+    lineCount: after.line_count ?? after.lines?.length ?? 0,
+    imported: Boolean(after.reading_record),
+  };
+}
+
 export interface HistoryDisplayChange {
   path: HistoryPath;
   field: string;

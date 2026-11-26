@@ -104,6 +104,7 @@
   margin-block-start: 24px;
 }
 @media (max-width: 760px) {
+  :root .history-table tbody tr > td[data-column-key="item"],
   :root .history-table tbody tr > td[data-column-key="values"] {
     grid-column: 1 / -1;
   }

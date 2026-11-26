@@ -12,12 +12,23 @@ import type { DemoState } from "../src/types";
  */
 export async function readCanonicalBusinessEvidence(
   page: Page,
+  traceLabel?: string,
 ): Promise<DemoState> {
   return page.evaluate(
-    ({ databaseName, companyId }) =>
+    ({ databaseName, companyId, traceLabel }) =>
       new Promise<DemoState>((resolve, reject) => {
+        const started = performance.now();
+        const trace = (phase: string) => {
+          if (traceLabel) {
+            console.info(
+              `[canonical-evidence:${traceLabel}] ${phase} ${Math.round(performance.now() - started)}ms`,
+            );
+          }
+        };
+        trace("evaluate entered");
         const open = indexedDB.open(databaseName);
         const fail = (message: string, database?: IDBDatabase) => {
+          trace(message);
           database?.close();
           reject(new Error(message));
         };
@@ -31,6 +42,7 @@ export async function readCanonicalBusinessEvidence(
         open.onblocked = () =>
           fail("The canonical business database is blocked.");
         open.onsuccess = () => {
+          trace("database open");
           const database = open.result;
           database.onversionchange = () => database.close();
           if (!database.objectStoreNames.contains("business")) {
@@ -38,9 +50,11 @@ export async function readCanonicalBusinessEvidence(
             return;
           }
           const transaction = database.transaction("business", "readonly");
+          trace("transaction created");
           const request = transaction.objectStore("business").get(companyId);
           let state: DemoState | undefined;
           request.onsuccess = () => {
+            trace("record read");
             const record = request.result;
             if (
               record?.company_id !== companyId ||
@@ -53,6 +67,7 @@ export async function readCanonicalBusinessEvidence(
             state = record.state;
           };
           transaction.oncomplete = () => {
+            trace("transaction complete");
             database.close();
             if (!state) {
               reject(
@@ -75,6 +90,7 @@ export async function readCanonicalBusinessEvidence(
       databaseName: AUTHORITY_DATABASE_NAME,
       companyId: { ...retainedConfig.company, ...sourceConfig.company }
         .seed_key,
+      traceLabel,
     },
   );
 }

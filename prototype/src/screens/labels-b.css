@@ -302,6 +302,29 @@
     padding: 0 !important;
     background: #fff !important;
   }
+  /* PR 29: while label sheets print, nothing else is laid out (works without
+     :has()), so a browser that adds its own page margins never spills onto a
+     blank second page. */
+  html.printing-labels body > *:not(.label-print-output) {
+    display: none !important;
+  }
+  html.printing-labels body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  html.printing-labels .label-print-output {
+    display: block !important;
+  }
+  /* Every sheet stays exactly A4 (template maths and calibration are
+     unchanged); the last one only takes up the height of its used rows in the
+     page flow, and the clipped container leaves nothing below it to print. */
+  .label-print-output {
+    overflow: hidden !important;
+  }
+  .label-print-output .print-sheet:last-child {
+    margin-block-end: calc(var(--label-used-height, 297mm) - 297mm) !important;
+    break-after: auto;
+  }
 }
 .label-settings-fields {
   margin-block-start: 24px;

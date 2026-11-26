@@ -1,0 +1,36 @@
+.collapsed-nav-tooltip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  z-index: 1000;
+  inline-size: max-content;
+  max-inline-size: min(240px, calc(100vw - 24px));
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--klead-toast-ink);
+  color: var(--klead-white);
+  box-shadow: var(--shadow-menu);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  font-weight: var(--font-weight-caption);
+  white-space: nowrap;
+  pointer-events: auto;
+  overflow: visible;
+}
+.collapsed-nav-tooltip::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 8px;
+  block-size: 8px;
+  background: var(--klead-toast-ink);
+  transform: translateY(-50%) rotate(45deg);
+  pointer-events: none;
+}
+.collapsed-nav-tooltip[data-side="right"]::before {
+  left: -4px;
+}
+.collapsed-nav-tooltip[data-side="left"]::before {
+  right: -4px;
+}

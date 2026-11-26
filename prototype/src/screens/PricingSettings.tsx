@@ -1,3 +1,4 @@
+import { RoundedUpNotice } from "../RoundedUpNotice";
 import { useSettingsConfiguration } from "../settings-configuration";
 import { useState } from "react";
 import Decimal from "decimal.js";
@@ -841,6 +842,24 @@ export default function PricingSettings() {
                   : `${new Decimal(result.margin).times("100").toFixed(2)}%`}
               </dd>
             </dl>
+            {result.rounded_up_from && (
+              <RoundedUpNotice
+                testId="price-tester-rounded-up"
+                from={result.rounded_up_from}
+                meetsMargin={result.rounded_up_from_meets_margin}
+                format={(value) =>
+                  soldBy === "weight" ? (
+                    <ProductPrice
+                      value={value}
+                      product={{ sold_by: "weight" }}
+                      config={draft}
+                    />
+                  ) : (
+                    money(value)
+                  )
+                }
+              />
+            )}
             {result.below_minimum_margin && (
               <Badge tone="pending">
                 {t("Below minimum margin", "کمتر از حداقل حاشیه سود")}

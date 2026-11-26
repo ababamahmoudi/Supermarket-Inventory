@@ -57,9 +57,15 @@
 }
 .product-offer-line {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
+  gap: 0 6px;
   color: var(--accent);
+  white-space: nowrap;
+}
+/* PR 29: YYYY-MM-DD dates are longer; in a narrow cell the date moves to
+   the next line as a whole instead of leaving the cell. */
+.product-offer-line > bdi {
   white-space: nowrap;
 }
 .product-offer-line::before {

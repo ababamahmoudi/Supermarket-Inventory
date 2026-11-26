@@ -8,6 +8,7 @@ import type { E1DemoContextValue } from "../e1-demo-context";
 import { loadInvoiceOriginal } from "../invoice-file-access";
 import { invoiceView } from "../invoice-projections";
 import { OriginalInvoice } from "./OriginalInvoice";
+import { OriginalViewer } from "./invoice-review/OriginalViewer";
 
 let context: E1DemoContextValue | null = null;
 const fixtures: Awaited<ReturnType<typeof authenticatedProviderFixture>>[] = [];
@@ -53,7 +54,7 @@ it("opens each retained image page with navigation and keeps private page refere
       <Sample />
     </DemoProvider>,
   );
-  await screen.findByText("Page 1 of 2", {}, { timeout: 10_000 });
+  await screen.findByLabelText("Page 1 of 2", {}, { timeout: 10_000 });
   const view = await context!.query(
     "invoices.read",
     {
@@ -76,7 +77,7 @@ it("opens each retained image page with navigation and keeps private page refere
     .getByRole("img", { name: "Original invoice image" })
     .getAttribute("src");
   await user.click(screen.getByRole("button", { name: "Next page" }));
-  await screen.findByText("Page 2 of 2");
+  await screen.findByLabelText("Page 2 of 2");
   await waitFor(() =>
     expect(
       screen.getByRole("img", { name: "Original invoice image" }),
@@ -134,7 +135,7 @@ it("rechecks the same page reference after loading bytes before making them visi
       <Sample />
     </DemoProvider>,
   );
-  await screen.findByText("Page 1 of 2", {}, { timeout: 10_000 });
+  await screen.findByLabelText("Page 1 of 2", {}, { timeout: 10_000 });
   const invoiceId = (await actual.readCanonical()).invoice.id;
   const current = context!;
   let queryCount = 0;
@@ -166,4 +167,89 @@ it("rechecks the same page reference after loading bytes before making them visi
       page: 1,
     }),
   ).rejects.toThrow("Original evidence changed.");
+});
+
+it("opens at full width with rotation and keeps replacement in the More menu", async () => {
+  const actual = await fixture();
+  const user = userEvent.setup();
+  render(
+    <DemoProvider options={actual.options}>
+      <Sample />
+    </DemoProvider>,
+  );
+  const image = await screen.findByRole("img", {
+    name: "Original invoice image",
+  });
+  await waitFor(() =>
+    expect(image).toHaveAttribute("src", expect.stringMatching(/^blob:/)),
+  );
+  expect(image.closest(".invoice-original-media")).toHaveAttribute(
+    "data-fit",
+    "width",
+  );
+  await user.click(screen.getByRole("button", { name: "Rotate" }));
+  expect(image.closest(".invoice-original-media")).toHaveAttribute(
+    "data-rotation",
+    "90",
+  );
+  await user.click(screen.getByRole("button", { name: "Zoom in" }));
+  expect(image.closest(".invoice-original-media")).toHaveAttribute(
+    "data-fit",
+    "custom",
+  );
+  await user.click(screen.getByRole("button", { name: "Fit width" }));
+  expect(image.closest(".invoice-original-media")).toHaveAttribute(
+    "data-fit",
+    "width",
+  );
+  expect(
+    screen.queryByRole("button", { name: "Browse" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByText("AI invoice reading is simulated"),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "More" }));
+  expect(
+    screen.getByRole("menuitem", { name: "Fit page" }),
+  ).toBeInTheDocument();
+});
+
+function ViewerSample() {
+  const current = useDemo();
+  return current.state.invoice_workspace ? (
+    <OriginalViewer invoice={current.state.invoice_workspace.invoice} />
+  ) : null;
+}
+it("remembers original visibility per person and tolerates blocked preference storage", async () => {
+  const actual = await fixture();
+  const user = userEvent.setup();
+  render(
+    <DemoProvider options={actual.options}>
+      <ViewerSample />
+    </DemoProvider>,
+  );
+  const hide = await screen.findByRole("button", { name: "Hide original" });
+  await user.click(hide);
+  expect(
+    screen
+      .getByRole("button", { name: "Show original" })
+      .closest(".original-viewer"),
+  ).toHaveAttribute("data-hidden", "true");
+  expect(
+    localStorage.getItem(
+      `invoice-original-hidden:${actual.actor.company_id}:${actual.actor.user_id}`,
+    ),
+  ).toBe("true");
+  const write = vi
+    .spyOn(Storage.prototype, "setItem")
+    .mockImplementation(() => {
+      throw new DOMException("blocked", "SecurityError");
+    });
+  await user.click(screen.getByRole("button", { name: "Show original" }));
+  expect(
+    screen
+      .getByRole("button", { name: "Hide original" })
+      .closest(".original-viewer"),
+  ).toHaveAttribute("data-hidden", "false");
+  write.mockRestore();
 });

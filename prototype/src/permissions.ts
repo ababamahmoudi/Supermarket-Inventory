@@ -81,7 +81,10 @@ const operational = [
 ] satisfies Capability[];
 const branchSupervisor = new Set<Capability>([
   ...operational,
+  "timesheets.read",
+  "timesheets.edit",
   "dashboard.location",
+  "catalog.package_edit",
   "invoices.enter_manual",
   "supplier_items.cost_read",
   "orders.read",
@@ -108,6 +111,10 @@ const floorWorker = new Set<Capability>([
 // other people's quantities, lots, notes or supplier invoice evidence.
 const cashier = new Set<Capability>([
   ...common,
+  "timesheets.read",
+  "timesheets.edit",
+  "returns.read",
+  "returns.create",
   "history.undo_own",
   "dates.add",
 ]);
@@ -151,6 +158,14 @@ function roleHasCapability(
   capability: Capability,
 ): boolean {
   if (!knownCapabilities.has(capability)) return false;
+  if (
+    (capability.startsWith("timesheets.") &&
+      (state.config.modules?.timesheets === false ||
+        role === "floor_worker")) ||
+    ((capability === "returns.read" || capability === "returns.create") &&
+      state.config.modules?.returns === false)
+  )
+    return false;
   if (isCompanyRole(role)) return true;
   const grants =
     role === "branch_supervisor"

@@ -1,3 +1,7 @@
+import {
+  syncWeightPackages,
+  syncWeightPackagesAtClock,
+} from "./weight-packages";
 import type {
   AuthenticatedActor,
   DecisionAttribution,
@@ -41,6 +45,7 @@ import {
   type LabelPrintProduct,
 } from "./label-workflow";
 import type { DemoState, Activity } from "./types";
+import { syncSupplierProfileNotifications } from "./supplier-profiles";
 
 export interface PriceUpdatesSettings {
   allow_floor_worker_complete: boolean;
@@ -494,7 +499,16 @@ function sourceOf(
       (row.entity_type === "settings" &&
         ["catalog", "offers", "company"].includes(row.entity_id ?? "")),
   );
-  const entry = specific.at(-1) ?? invoiceSource ?? configSource;
+  const entry =
+    [...specific]
+      .reverse()
+      .find(
+        (row) =>
+          row.action === "Package price recalculated" && row.branch === branch,
+      ) ??
+    specific.at(-1) ??
+    invoiceSource ??
+    configSource;
   const saleId = next?.sale_id ?? previous?.sale_id;
   const sale = saleId
     ? state.sales?.find(
@@ -810,6 +824,7 @@ export function capturePriceUpdateChanges(
   now = new Date(),
 ) {
   actor = freshActor(state, actor);
+  syncWeightPackages(state, actor, now);
   if (!state.prototype_e2_schema) initializePriceUpdates(state, now);
   reconcileChanges(state, snapshots(before, now), now, actor, before);
   syncGeneralNotifications(state, now);
@@ -911,12 +926,40 @@ function reminders(state: DemoState, now: Date) {
   }
 }
 /** Clock transitions require a repository-minted live witness; callers cannot fabricate a System actor. */
+/** The installed sales-clock job commits parent lifecycle and package effects together. */
+export function captureSalesClockPackageChanges(
+  state: DemoState,
+  attribution: SystemAttribution,
+  now = new Date(attribution.applied_at),
+) {
+  requireSystemReconciliation(state, attribution, "sales_clock");
+  if (
+    !state.products.some(
+      (product) =>
+        product.company_id === state.config.company.seed_key &&
+        product.package_of_product_id &&
+        product.status !== "archived",
+    )
+  )
+    return;
+  if (!state.prototype_e2_schema) initializePriceUpdates(state, now);
+  syncWeightPackagesAtClock(state, attribution, now, "sales_clock");
+  reconcileChanges(
+    state,
+    state.price_update_baseline ?? snapshots(state, now),
+    now,
+    null,
+    null,
+  );
+  syncGeneralNotifications(state, now);
+}
 export function evaluatePriceUpdates(
   state: DemoState,
   attribution: SystemAttribution,
   now = new Date(attribution.applied_at),
 ) {
   requireSystemReconciliation(state, attribution, "price_updates");
+  syncWeightPackagesAtClock(state, attribution, now);
   if (!state.prototype_e2_schema) initializePriceUpdates(state, now);
   else
     reconcileChanges(
@@ -1158,6 +1201,8 @@ export function preparePriceTaskPrint(
   actor: AuthenticatedActor,
   ids: string[],
   now = new Date(),
+  /** PR 29: the first sheet starts at the slot the person chose (1-based). */
+  startSlot = 1,
 ): PriceTaskPrint {
   const tasks = [...new Set(ids)].map(
     (id) => taskFor(state, actor, id, "price_updates.label_confirm").task,
@@ -1265,10 +1310,10 @@ export function preparePriceTaskPrint(
       company_id: actor.company_id,
       branch: tasks[0].branch,
       template: structuredClone(template),
-      startSlot: 1,
+      startSlot: batches.length ? 1 : startSlot,
       entries: [],
       products,
-      pages: labelPages(products, template, 1),
+      pages: labelPages(products, template, batches.length ? 1 : startSlot),
     });
   }
   return {
@@ -1310,6 +1355,7 @@ export function recordPriceTaskPrint(
     actor,
     print.items.map((row) => row.task_id),
     new Date(print.created_at),
+    print.batches[0]?.startSlot ?? 1,
   );
   if (!same(printComparable(print), printComparable(fresh)))
     throw new PriceUpdatesError("stale_print");
@@ -1483,6 +1529,7 @@ function settingsAudit(
   });
 }
 function syncGeneralNotifications(state: DemoState, now: Date) {
+  syncSupplierProfileNotifications(state, now);
   for (const request of state.sale_requests ?? [])
     if (
       request.company_id === state.config.company.seed_key &&
@@ -1502,6 +1549,7 @@ function syncGeneralNotifications(state: DemoState, now: Date) {
   for (const approval of state.approvals)
     if (
       approval.company_id === state.config.company.seed_key &&
+      approval.type !== "new_supplier" &&
       approval.status === "pending"
     )
       notify(state, {
@@ -1623,4 +1671,48 @@ export function priceUpdateProgress(
     )
     .map((task) => structuredClone(task))
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+/**
+ * PR 29 bulk Seen/Done: each selected update is changed by the ordinary
+ * single-update rules (same permission, status, audit and who/when). Updates
+ * the person may not change, or that no longer need the step, are skipped and
+ * counted rather than failing the whole batch.
+ */
+export function bulkPriceTasks(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  ids: string[],
+  mode: "seen" | "done",
+  now = new Date(),
+): { changed: string[]; skipped: string[] } {
+  const changed: string[] = [];
+  const skipped: string[] = [];
+  for (const id of [...new Set(ids)]) {
+    const task = state.price_update_tasks?.find((row) => row.id === id);
+    if (
+      !task ||
+      task.company_id !== actor.company_id ||
+      task.status !== "pending" ||
+      (mode === "seen" && task.seen?.version === task.version) ||
+      !can(
+        state,
+        freshActor(state, actor),
+        mode === "seen" ? "price_updates.read" : "price_updates.complete",
+        taskScope(state, task, true),
+      ).allowed
+    ) {
+      skipped.push(id);
+      continue;
+    }
+    try {
+      if (mode === "seen") markPriceTaskSeen(state, actor, id, now);
+      else completePriceTasks(state, actor, [id], now);
+      changed.push(id);
+    } catch (cause) {
+      if (!(cause instanceof PriceUpdatesError)) throw cause;
+      skipped.push(id);
+    }
+  }
+  return { changed, skipped };
 }

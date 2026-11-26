@@ -141,8 +141,8 @@ export function addProduct(
   const allowed = configuredBranches(state.config);
   if (proposalBranch !== "all" && !allowed.includes(proposalBranch))
     fail("branch");
-  for (const field of ["name_en", "unit_size"] as const)
-    if (!edits[field].trim()) fail(field);
+  if (!edits.name_en.trim()) fail("name_en");
+  if (edits.sold_by !== "weight" && !edits.unit_size.trim()) fail("unit_size");
   const category = activePricingCategories(state.config).find(
     (item) => item.key === edits.pricing_category,
   );

@@ -19,7 +19,7 @@
   :root .suppliers-table .table-identity > a:first-child,
   :root .supplier-tab-card .table-identity > a:first-child {
     min-inline-size: 0;
-    color: var(--text);
+    color: var(--accent);
     font-weight: var(--font-weight-caption);
     text-decoration: none;
   }
@@ -83,7 +83,8 @@
   :root .supplier-filter-chip[aria-pressed="true"] {
     background: var(--accent-soft);
     color: var(--accent-tint-text);
-    border-color: var(--color-clear);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-selected);
   }
   :root .ui-menu-item.supplier-destructive-action {
     color: var(--danger);
@@ -162,4 +163,148 @@
       grid-template-columns: minmax(0, 1fr);
     }
   }
+}
+
+.supplier-read-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* R2c contact information is one padded card; its title and action never repeat the supplier name. */
+.supplier-detail-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+:root .supplier-detail-title > .badge {
+  font-size: var(--font-size-caption);
+}
+:root .supplier-contact-card {
+  padding: 24px;
+}
+.supplier-contact-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block-end: 24px;
+}
+.supplier-contact-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+.supplier-contact-heading a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  color: var(--accent);
+  font-weight: 600;
+}
+:root .supplier-contact-card .supplier-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 32px;
+  max-inline-size: none;
+}
+:root .supplier-contact-grid > div {
+  min-inline-size: 0;
+}
+:root .supplier-contact-grid dd {
+  overflow-wrap: anywhere;
+}
+.supplier-contact-source {
+  margin-block: 20px 0;
+}
+:root .supplier-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+:root .supplier-kpis .kpi-card:first-child .kpi-value {
+  font-size: var(--font-size-title);
+  line-height: var(--line-height-title);
+}
+@media (max-width: 1000px) {
+  :root .supplier-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  :root .supplier-contact-card {
+    padding: 20px;
+  }
+  :root .supplier-contact-card .supplier-contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+}
+
+.supplier-detail-title h1 {
+  margin: 0;
+}
+
+/* PR 29 (Ali, 2026-11-20): Contact details is one dense 4-column grid (2 on a
+   phone), about half its old height; the address may span two columns. */
+:root .supplier-contact-card {
+  padding: 20px 24px;
+}
+:root .supplier-contact-card .supplier-contact-heading {
+  margin-block-end: 12px;
+}
+:root
+  .supplier-contact-card
+  .supplier-contact-heading
+  .supplier-contact-source {
+  margin: 0;
+  font-size: var(--font-size-caption);
+}
+:root .supplier-contact-card {
+  container-type: inline-size;
+}
+:root .supplier-contact-card .supplier-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 24px;
+  max-inline-size: none;
+  margin: 0;
+}
+:root .supplier-contact-card .supplier-contact-grid dt {
+  margin-block-end: 2px;
+}
+:root .supplier-contact-card .supplier-contact-address {
+  grid-column: span 2;
+}
+/* Fewer, wider columns when the card is narrow, so an email or web address
+   never breaks inside a word. */
+@container (max-width: 899px) {
+  :root .supplier-contact-card .supplier-contact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+  }
+}
+@container (max-width: 559px) {
+  :root .supplier-contact-card .supplier-contact-email,
+  :root .supplier-contact-card .supplier-contact-website,
+  :root .supplier-contact-card .supplier-contact-address {
+    grid-column: 1 / -1;
+  }
+}
+/* Every KPI tile uses the same value line, so "Not added" lines up with the
+   numbers in the other tiles. */
+:root .supplier-kpis .kpi-card .kpi-value,
+:root .supplier-kpis .kpi-card:first-child .kpi-value {
+  line-height: var(--line-height-large-title);
+}
+:root .supplier-kpis .kpi-card:first-child .kpi-value {
+  font-size: var(--font-size-title);
+}
+/* A zero-width strut at the numbers' size puts the smaller first value on
+   the same baseline as the numbers in the other tiles. */
+:root .supplier-kpis .kpi-card:first-child .kpi-value::before {
+  content: "\200b";
+  font-size: var(--font-size-large-title);
 }

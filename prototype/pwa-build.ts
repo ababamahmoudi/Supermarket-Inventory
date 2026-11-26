@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
+import { configuredMaker, type MakerConfig } from "./src/maker-branding.ts";
 import companyConfiguration from "../seed/arzon-config.json" with { type: "json" };
 
 /** Only fingerprinted compiled code/styles/fonts and explicit public icons. */
@@ -15,11 +16,16 @@ export function publicStaticAsset(path: string): boolean {
     )
   );
 }
-export function createWebManifest() {
+export function createWebManifest(
+  configuration: MakerConfig & {
+    company: { name: string };
+  } = companyConfiguration,
+) {
+  const maker = configuredMaker(configuration);
   return {
     id: "./",
-    name: companyConfiguration.company.name,
-    short_name: companyConfiguration.company.name,
+    name: configuration.company.name,
+    short_name: configuration.company.name,
     lang: "en",
     start_url: "./",
     scope: "./",
@@ -27,12 +33,33 @@ export function createWebManifest() {
     background_color: "#F4F5F7",
     theme_color: "#FFFFFF",
     icons: [192, 512].map((size) => ({
-      src: `icons/company-${size}.png`,
+      src:
+        (size === 192 ? maker?.icon_192_file : maker?.icon_512_file) ??
+        `icons/company-${size}.png`,
       sizes: `${size}x${size}`,
       type: "image/png",
       purpose: "any maskable",
     })),
   };
+}
+/** Bootstrap icons use the same public maker choice as the running app. */
+export function configureBrandHead(
+  html: string,
+  configuration: MakerConfig = companyConfiguration,
+): string {
+  const maker = configuredMaker(configuration);
+  const favicon = maker?.favicon_file ?? "icons/company-192.png";
+  const touch = maker?.icon_192_file ?? "icons/company-192.png";
+  return html
+    .replace(
+      /(<link\s+rel="icon"[^>]*type=")[^"]+/,
+      `$1${favicon.endsWith(".svg") ? "image/svg+xml" : "image/png"}`,
+    )
+    .replace(/(<link\s+rel="icon"[^>]*href=")[^"]+/, `$1./${favicon}`)
+    .replace(
+      /(<link\s+rel="apple-touch-icon"[^>]*href=")[^"]+/,
+      `$1./${touch}`,
+    );
 }
 export function createOfflinePage(): string {
   return `<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme:light)"><meta name="theme-color" content="#181C25" media="(prefers-color-scheme:dark)"><title>No connection</title><link rel="stylesheet" href="offline.css"><script>(()=>{let theme=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';try{const saved=JSON.parse(localStorage.getItem('supermarket-prototype-preferences-v3')||'null');if(saved?.version===3&&['light','dark'].includes(saved.device_preferences?.theme))theme=saved.device_preferences.theme;}catch{}document.documentElement.dataset.theme=theme;document.documentElement.style.colorScheme=theme;})();</script></head><body><main><img src="icons/company-192.png" alt=""><h1 id="heading">No connection</h1><p id="detail">Reconnect, then try again.</p><button id="retry">Try again</button><button class="language" id="language" aria-label="Language">EN | فا</button></main><script>let fa=false;document.getElementById('retry').onclick=()=>location.reload();document.getElementById('language').onclick=()=>{fa=!fa;document.documentElement.lang=fa?'fa':'en';document.documentElement.dir=fa?'rtl':'ltr';document.getElementById('heading').textContent=fa?'اتصال برقرار نیست':'No connection';document.getElementById('detail').textContent=fa?'دوباره متصل شوید و تلاش کنید.':'Reconnect, then try again.';document.getElementById('retry').textContent=fa?'تلاش دوباره':'Try again';};</script></body></html>`;
@@ -107,6 +134,9 @@ export function phonePwa(): Plugin {
   return {
     name: "configured-private-safe-phone-app",
     apply: "build",
+    transformIndexHtml(html) {
+      return configureBrandHead(html);
+    },
     generateBundle(_options, bundle) {
       const manifest = JSON.stringify(createWebManifest(), null, 2);
       const assets = Object.keys(bundle).filter(publicStaticAsset).sort();
@@ -129,7 +159,13 @@ export function phonePwa(): Plugin {
       );
       const offlineCss = `${tokens}\n${fontFaces}\n:root{color-scheme:light dark;font-family:var(--font-en);background:var(--page);color:var(--text)}html[lang=fa]{font-family:var(--font-fa)}body{min-height:100dvh;margin:0;display:grid;place-items:center;padding:0 16px;box-sizing:border-box}main{max-width:28rem;text-align:center;background:var(--surface);border-radius:var(--radius-card);padding:32px;box-shadow:var(--shadow-card)}img{width:88px;height:88px;background:var(--klead-white);border-radius:var(--radius-control)}button{font:inherit;min-height:44px;border:0;border-radius:var(--radius-control);padding:0 20px;background:var(--accent-fill);color:var(--primary-text);cursor:pointer}button:focus-visible{box-shadow:var(--shadow-focus)}.language{display:block;margin:24px auto 0;background:var(--color-clear);color:var(--accent-tint-text)}`;
       const offline = createOfflinePage();
-      const icons = [192, 512].map((size) => `icons/company-${size}.png`);
+      const icons = [
+        ...new Set([
+          ...createWebManifest().icons.map((icon) => icon.src),
+          "icons/company-192.png",
+          "icons/company-512.png",
+        ]),
+      ];
       const files = [...assets, ...icons, "offline.css", "offline.html"];
       const release = createHash("sha256");
       for (const name of assets) {

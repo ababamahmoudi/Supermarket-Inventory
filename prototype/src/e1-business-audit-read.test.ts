@@ -1,15 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { authenticatedTestActor } from "./authority-test-fixture";
-import { decisionAttribution } from "./authority";
+import { cloneWithAuthority, decisionAttribution } from "./authority";
 import { returnFixture } from "./return-test-fixture";
 import { approvalBoard, approvalPanelRead } from "./approval-board";
 import { approvalViews, alertViews } from "./sales-projections";
 import { returnView, returnMemoView } from "./return-projections";
-import { projectHistoryEntry, historyChangePreview } from "./history";
+import {
+  attachReversals,
+  projectHistoryEntry,
+  historyChangePreview,
+  selectHistory,
+} from "./history";
 import { approvalSnapshot, resolveApproval } from "./approvals";
 import { returnFinancialFingerprint } from "./return-workflow";
 import { recordPickup, type OperationalReturn } from "./operations";
 import { businessAuditRead } from "./business-audit-read";
+import { saveSupplierItem } from "./supplier-items";
 import type { Activity } from "./types";
 
 const privateSession = "fictional-private-session-DO-NOT-PUBLISH";
@@ -249,5 +255,123 @@ describe("E1 business audit projections never publish private authentication rec
       email: "supplier@example.test",
     });
     expect(read.audit).toEqual({ username: "fictional" });
+  });
+
+  it("real supplier-item History omits internal printed matching provenance while retaining ordinary audited edits", () => {
+    const { state, manager, worker } = fixture();
+    const supplier = "Fresh Valley Foods";
+    const added = saveSupplierItem(state, manager, supplier, {
+      product_code: "0003",
+      supplier_item_code: "FICTIONAL-AUDIT-SKU",
+      units_per_case: 6,
+    });
+    added.printed_description_keys = [
+      {
+        key: "fictional private printed matching key",
+        product_code: "0003",
+        source_invoice_ids: ["fictional-private-source-invoice"],
+      },
+    ];
+    const before = cloneWithAuthority(state);
+    saveSupplierItem(
+      state,
+      manager,
+      supplier,
+      {
+        product_code: "0003",
+        supplier_item_code: added.supplier_item_code,
+        units_per_case: 12,
+      },
+      added.id,
+    );
+    const entry = attachReversals(before, state, manager).find(
+      (item) => item.action === "Save supplier item",
+    )!;
+    expect(entry).toBeDefined();
+    expect(entry.after).toMatchObject({
+      printed_description_keys: added.printed_description_keys,
+    });
+    const original = structuredClone(state);
+    const projected = projectHistoryEntry(state, manager, entry);
+    expect(projected.before).toMatchObject({ units_per_case: 6 });
+    expect(projected.after).toMatchObject({
+      supplier_item_code: "FICTIONAL-AUDIT-SKU",
+      units_per_case: 12,
+    });
+    const preview = historyChangePreview(state, manager, entry.id);
+    expect(preview.some((item) => item.patch.after === 12)).toBe(true);
+    const exported = JSON.stringify([
+      projected,
+      selectHistory(state, manager),
+      preview,
+    ]);
+    expect(exported).not.toContain("printed_description_keys");
+    expect(exported).not.toContain("source_invoice_ids");
+    expect(exported).not.toContain("fictional private printed matching key");
+    expect(exported).not.toContain("fictional-private-source-invoice");
+    expect(() => projectHistoryEntry(state, worker, entry)).toThrow(
+      "permission",
+    );
+    expect(() => historyChangePreview(state, worker, entry.id)).toThrow(
+      "permission",
+    );
+    expect(state).toEqual(original);
+  });
+
+  it("redacts matching provenance in nested copies and primitive paths without altering retained patches or supplier contacts", () => {
+    const privateSource = "fictional-private-nested-source-invoice";
+    const privateKey = "fictional private nested matching key";
+    const value = {
+      "supplier_items · fictional-id · printed_description_keys": privateKey,
+      "supplier_items[0].source_invoice_ids": privateSource,
+      supplier: {
+        phone: "Fictional supplier phone",
+        email: "supplier@example.test",
+        printed_description_keys: [
+          { key: privateKey, source_invoice_ids: [privateSource] },
+        ],
+      },
+      patches: [
+        {
+          path: ["supplier_items", "printed_description_keys"],
+          before: privateKey,
+          after: privateSource,
+          current: privateSource,
+          guards: [{ after: privateSource }],
+          conflict: false,
+        },
+        {
+          patch: {
+            path: [
+              "supplier_items",
+              { key: "printed_description_keys", value: privateKey },
+            ],
+            before: privateKey,
+            after: privateSource,
+          },
+          current: privateSource,
+          conflict: true,
+        },
+        {
+          path: ["supplier_items[0].source_invoice_ids"],
+          before: privateSource,
+          after: privateSource,
+        },
+      ],
+    };
+    const original = structuredClone(value);
+    const read = businessAuditRead(value);
+    expect(read.supplier).toEqual({
+      phone: "Fictional supplier phone",
+      email: "supplier@example.test",
+    });
+    expect(read.patches).toEqual([
+      { path: [], conflict: false },
+      { patch: { path: [] }, conflict: true },
+      { path: [] },
+    ]);
+    expect(JSON.stringify(read)).not.toContain(privateSource);
+    expect(JSON.stringify(read)).not.toContain(privateKey);
+    expect(value).toEqual(original);
   });
 });

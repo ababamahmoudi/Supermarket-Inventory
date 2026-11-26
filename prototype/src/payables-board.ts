@@ -1,3 +1,4 @@
+import { supplierMatches, supplierRecords } from "./supplier-editor";
 import type { AuthenticatedActor } from "./authority-types";
 import { businessAuditRead } from "./business-audit-read";
 import { freshActor } from "./authority";
@@ -18,10 +19,29 @@ export function payablesBoard(
 ) {
   actor = freshActor(state, actor);
   requireCapability(state, actor, "payables.read", domainScope(state));
+  const registry = supplierRecords(state).filter(
+    (record) => record.company_id === actor.company_id,
+  );
+  const overview = supplierBalanceOverview(state, actor).map((row) => ({
+    ...row,
+    supplier_id: registry.find((record) =>
+      supplierMatches(record, row.supplier),
+    )?.id,
+  }));
+  const selected = overview.find(
+    (row) => row.supplier_id === supplier || row.supplier === supplier,
+  );
+  const selectedSupplier = selected?.supplier ?? "";
   return businessAuditRead({
-    overview: supplierBalanceOverview(state, actor),
-    summary: supplierBalanceSummary(state, actor, supplier, throughDate),
-    paymentSummary: supplierBalanceSummary(state, actor, supplier),
+    overview,
+    selectedSupplier,
+    summary: supplierBalanceSummary(
+      state,
+      actor,
+      selectedSupplier,
+      throughDate,
+    ),
+    paymentSummary: supplierBalanceSummary(state, actor, selectedSupplier),
     ledger: state.ledger.filter(
       (row) =>
         row.company_id === actor.company_id &&

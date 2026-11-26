@@ -278,3 +278,17 @@ input.ui-input.control-narrow {
   inline-size: 140px;
   max-inline-size: 100%;
 }
+
+/* A store correction is a suggestion: its note and "Use lower" wrap together. */
+.rounded-up-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-block: 4px 0;
+}
+.rounded-up-notice > .helper {
+  margin: 0;
+  flex: 1 1 16rem;
+  min-inline-size: 0;
+}

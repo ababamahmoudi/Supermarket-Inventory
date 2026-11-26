@@ -86,7 +86,8 @@ test("C5 button contract covers Suppliers, every supplier tab and item dialogs",
       await page.getByRole("tab", { name: tab, exact: true }).click();
       await proof.check(`Supplier: ${tab}`);
     }
-    await page.getByRole("button", { name: "Edit", exact: true }).click();
+    // PR 29: one header button, Complete profile until the profile is complete.
+    await page.locator(".supplier-profile-action").click();
     await proof.check("Edit supplier dialog");
     await closeDialog(page);
     await page
@@ -156,10 +157,11 @@ test("C5 button contract covers working Settings groups and their dialogs", asyn
       "Offers",
       "Taxes",
       "Receiving",
-      "Returns/date tracking/labels",
+      "Returns, dates and labels",
       "Notifications",
       "Modules",
       "Data",
+      "About",
     ]) {
       await navigation
         .getByRole("button", { name: group, exact: true })
@@ -420,13 +422,13 @@ test("C5 button contract covers sign-in, first-sign-in password and lock actions
     await userMenu.click();
     await page.getByRole("menuitem", { name: "Lock", exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: "Screen locked", exact: true }),
+      page.getByRole("heading", { name: "Locked", exact: true }),
     ).toBeVisible();
-    await measure("Screen locked", "en-dark", "supervisor");
+    await measure("Locked", "en-dark", "supervisor");
     await page
       .getByRole("button", { name: "Switch to Persian", exact: true })
       .click();
-    await measure("Screen locked", "fa-dark", "supervisor");
+    await measure("Locked", "fa-dark", "supervisor");
   } finally {
     const output = info.outputPath("button-audit.json");
     await writeFile(output, JSON.stringify(reports, null, 2));

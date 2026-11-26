@@ -1,3 +1,5 @@
+import { StaffPrintMaker } from "./MakerBrand";
+import type { MakerBranding } from "./maker-branding";
 import { createContext, useContext, type ReactNode } from "react";
 import type { Language } from "./types";
 import "./operational-print.css";
@@ -27,6 +29,7 @@ export function OperationalPrintDocument({
   reference,
   language,
   documentLanguage = "bilingual",
+  branding,
   children,
 }: {
   title_en: string;
@@ -35,6 +38,7 @@ export function OperationalPrintDocument({
   reference: string;
   language: Language;
   documentLanguage?: "bilingual" | "en";
+  branding?: MakerBranding;
   children: ReactNode;
 }) {
   return (
@@ -56,6 +60,11 @@ export function OperationalPrintDocument({
           <bdi dir="ltr">{reference}</bdi>
         </header>
         {children}
+        <StaffPrintMaker
+          config={{ branding }}
+          language={documentLanguage === "en" ? "en" : language}
+          bilingual={documentLanguage === "bilingual"}
+        />
       </article>
     </PrintLanguagePolicy.Provider>
   );

@@ -207,6 +207,92 @@ describe("Branch requests presentation", () => {
       screen.queryByRole("button", { name: "New request" }),
     ).not.toBeInTheDocument();
   });
+  it("keeps Added non-selectable and saves genuine pack and note details once", async () => {
+    await mount();
+    const previousSession = sharedUiSessionId();
+    fireEvent.click(screen.getByText("Worker session"));
+    await waitForSharedUiActor("floor_worker", undefined, previousSession);
+    const baseline = await sharedUiCanonical();
+    await userEvent.click(screen.getByRole("button", { name: "New request" }));
+    await choose("Ask this location", "Warehouse");
+    const search = screen.getByLabelText(
+      "Add a product, or type an item that isn't in the catalog",
+    );
+    await userEvent.type(search, "0001");
+    await userEvent.click(screen.getByRole("button", { name: "Add" }));
+    expect(screen.getByRole("button", { name: "Added" })).toBeDisabled();
+    expect(document.querySelectorAll(".request-draft-line")).toHaveLength(1);
+    await choose("Units / Cases", "Cases");
+    await userEvent.click(
+      document.querySelector<HTMLButtonElement>(".request-line-pack-action")!,
+    );
+    await userEvent.clear(screen.getByLabelText("Units per case"));
+    await userEvent.type(screen.getByLabelText("Units per case"), "12");
+    await userEvent.clear(screen.getByLabelText("Quantity"));
+    await userEvent.type(screen.getByLabelText("Quantity"), "2");
+    await userEvent.click(screen.getByRole("button", { name: "Add note" }));
+    await userEvent.type(
+      screen.getByLabelText("Note (optional)"),
+      "For the prepared shelf",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Done" }));
+    expect(screen.queryByLabelText("Note (optional)")).not.toBeInTheDocument();
+    expect(screen.getByText("For the prepared shelf")).toBeInTheDocument();
+    const save = screen.getByRole("button", {
+      name: "Save as draft",
+    });
+    fireEvent.click(save);
+    fireEvent.click(save);
+    await waitFor(async () =>
+      expect((await sharedUiCanonical()).branch_requests).toHaveLength(1),
+    );
+    const saved = (await sharedUiCanonical()).branch_requests![0];
+    expect(saved).toMatchObject({
+      status: "draft",
+      from_branch: "Branch 1",
+      to_branch: "Warehouse",
+      items: [
+        {
+          product_code: "0001",
+          quantity: "2",
+          quantity_unit: "cases",
+          units_per_case: 12,
+          normalized_units: 24,
+          note: "For the prepared shelf",
+        },
+      ],
+    });
+    const after = await sharedUiCanonical();
+    expect(after.stock).toEqual(baseline.stock);
+    expect(after.ledger).toEqual(baseline.ledger);
+  });
+  it("cancels local new-item edits without writing a request or History event", async () => {
+    await mount();
+    const previousSession = sharedUiSessionId();
+    fireEvent.click(screen.getByText("Worker session"));
+    await waitForSharedUiActor("floor_worker", undefined, previousSession);
+    const before = await sharedUiCanonical();
+    await userEvent.click(screen.getByRole("button", { name: "New request" }));
+    await userEvent.type(
+      screen.getByLabelText(
+        "Add a product, or type an item that isn't in the catalog",
+      ),
+      "Fictional baking tray",
+    );
+    expect(
+      screen.getByText("For things that aren't in the catalog"),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /^Add item:/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(
+      screen.queryByRole("heading", { name: "New request" }),
+    ).not.toBeInTheDocument();
+    const after = await sharedUiCanonical();
+    expect(after.branch_requests).toEqual(before.branch_requests);
+    expect(after.activity).toEqual(before.activity);
+    expect(after.stock).toEqual(before.stock);
+    expect(after.ledger).toEqual(before.ledger);
+  });
 });
 
 beforeEach(async () => {

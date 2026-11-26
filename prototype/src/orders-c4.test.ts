@@ -21,6 +21,7 @@ import {
 import {
   currentInvoiceOrderComparison,
   invoiceOrderIssues,
+  invoiceOrderProblems,
   setInvoiceNewItemMatch,
   setInvoiceOrder,
 } from "./invoice-orders";
@@ -534,4 +535,24 @@ describe("C4 intentional temporary orders", () => {
     ]);
     expect(order).toEqual(retainedOrder);
   });
+});
+
+it("R2b reports the actual invalid temporary supplier-item association without altering business data", () => {
+  const { state, order, line } = fixture();
+  const item = saveSupplierItem(state, actor(state), state.invoice.supplier, {
+    product_code: line.product_code,
+    supplier_item_code: line.supplier_item_code!,
+    units_per_case: 12,
+  });
+  line.supplier_item_id = item.id;
+  placeOrder(state, actor(state), order.id);
+  setInvoiceOrder(state, actor(state), order.id);
+  setInvoiceNewItemMatch(state, actor(state), order.lines[0].id, 0);
+  item.archived = true;
+  const before = structuredClone(state);
+  expect(invoiceOrderProblems(state, actor(state))).toEqual([
+    { kind: "association", line: 0, order_line_id: order.lines[0].id },
+  ]);
+  expect(invoiceOrderIssues(state, actor(state))).toEqual(["order_decisions"]);
+  expect(state).toEqual(before);
 });

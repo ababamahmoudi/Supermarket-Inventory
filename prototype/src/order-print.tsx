@@ -33,6 +33,7 @@ export function OrderPrintDocument({
         reference={order.reference}
         language={printLanguage}
         documentLanguage={documentLanguage}
+        branding={config.branding}
       >
         <dl className="operational-print-meta">
           <div>

@@ -1,3 +1,4 @@
+import { openInvoiceDetails } from "./helpers";
 import { createHash } from "node:crypto";
 import { readCanonicalBusinessEvidence } from "./business-evidence";
 import { expect, test } from "@playwright/test";
@@ -5,6 +6,7 @@ import Decimal from "decimal.js";
 import {
   chooseOption,
   confirmInvoiceLine,
+  openInvoiceLine,
   invoiceImage,
   setBranch,
   signIn,
@@ -25,19 +27,51 @@ async function saved(
 }
 
 async function manualInvoice(page: import("@playwright/test").Page) {
+  const previousId = (await saved(page)).invoice.id;
   await page.goto("/#invoices");
   await page.getByRole("button", { name: "New invoice", exact: true }).click();
-  await page.getByRole("button", { name: "Manual entry", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "New invoice", exact: true })
+    .getByRole("button", { name: "Manual entry", exact: true })
+    .click();
+  await openInvoiceDetails(page);
+  await expect
+    .poll(async () => {
+      const current = (await saved(page)).invoice;
+      return (
+        current.id !== previousId &&
+        current.entry_mode === "manual" &&
+        current.lines.length === 0
+      );
+    })
+    .toBe(true);
+  const currentId = (await saved(page)).invoice.id;
+  await expect(page).toHaveURL(
+    (url) => url.hash === `#invoices?id=${encodeURIComponent(currentId)}`,
+  );
+  await expect(page.locator('[aria-busy="true"][inert]')).toHaveCount(0);
+  await page
+    .getByLabel("Invoice number", { exact: true })
+    .fill("FICTIONAL-RECEIVING-C");
   const header = page.locator("#invoice-details-fields");
   await header.getByLabel("Supplier", { exact: true }).click();
   await page
     .getByRole("listbox", { name: "Supplier", exact: true })
     .getByRole("option", { name: /Fresh Valley Foods/ })
     .click();
+  await chooseOption(
+    page,
+    page.getByRole("combobox", {
+      name: "Add a product to the invoice",
+      exact: true,
+    }),
+    "0002",
+    "Canned Fava Beans 400 g",
+  );
   await page.getByRole("button", { name: "Add line", exact: true }).click();
   const id = (await saved(page)).invoice.id;
   await page
-    .getByLabel("Upload a PDF or photo", { exact: true })
+    .getByLabel("Attach original", { exact: true })
     .setInputFiles(invoiceImage);
   // The existing manual line remains mounted while its original is saving.
   // Wait for this exact file and accepted route before editing that line.
@@ -60,7 +94,7 @@ async function manualInvoice(page: import("@playwright/test").Page) {
       sha256: createHash("sha256").update(invoiceImage.buffer).digest("hex"),
     });
   await expect(
-    page.getByRole("button", { name: "New invoice", exact: true }),
+    page.getByRole("button", { name: "Save and close", exact: true }),
   ).toBeEnabled();
   await expect(page).toHaveURL(
     (url) => url.hash === `#invoices?id=${encodeURIComponent(id)}`,
@@ -84,14 +118,23 @@ test("a worker retargets their own invoice to Warehouse without gaining Warehous
     await page
       .getByRole("button", { name: "Invoice details", exact: true })
       .click();
+  await header
+    .getByRole("button", { name: "Change location", exact: true })
+    .click();
+  const locationDialog = page.getByRole("dialog", {
+    name: "Change receiving location",
+    exact: true,
+  });
   await chooseOption(
     page,
-    header.getByLabel("Location", { exact: true }),
+    locationDialog.getByLabel("Location", { exact: true }),
     "Warehouse",
   );
-  await expect(header.getByLabel("Location", { exact: true })).toContainText(
-    "Warehouse",
-  );
+  await locationDialog
+    .getByRole("button", { name: "Save location", exact: true })
+    .click();
+  await expect(locationDialog).not.toBeVisible();
+  await expect(header).toContainText("Warehouse");
   await expect(page.locator(".topbar .branch-pill")).toContainText(
     "North York",
   );
@@ -106,10 +149,21 @@ test("a worker retargets their own invoice to Warehouse without gaining Warehous
     branch: "Warehouse",
     handling_branch: "Branch 1",
   });
-  for (const line of await page.locator(".invoice-line").all()) {
-    await line.getByRole("button", { name: "No", exact: true }).click();
+  const count = await page
+    .locator('[data-testid^="invoice-line-row-"]')
+    .count();
+  for (let index = 0; index < count; index++) {
+    const line = await openInvoiceLine(page, index);
+    await line
+      .getByRole("group", { name: "Track date", exact: true })
+      .getByRole("button", { name: "No", exact: true })
+      .click();
     await confirmInvoiceLine(page, line);
-    await expect(line.getByText("Confirmed", { exact: true })).toBeVisible();
+    await expect(
+      page
+        .getByTestId(`invoice-line-row-${index}`)
+        .getByRole("img", { name: "Confirmed", exact: true }),
+    ).toBeVisible();
   }
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
@@ -261,14 +315,17 @@ test("invoice changed regular cost defaults to calculated and explicit Keep pres
     )
     .toBe("2.79");
   await manualInvoice(page);
-  const line = page.locator(".invoice-line").first();
+  const line = await openInvoiceLine(page, 0);
   await line.getByLabel("Unit cost before tax", { exact: true }).fill("1.4000");
   await expect(
-    line.getByText("Manual price", { exact: true }).first(),
+    line.getByRole("group", { name: "Manual price decision", exact: true }),
   ).toBeVisible();
   await expect(
-    line.getByRole("checkbox", {
-      name: "Confirm this invoice line",
+    line.getByText("Approved:", { exact: true }).locator(".."),
+  ).toContainText("$2.79");
+  await expect(
+    line.getByRole("button", {
+      name: "Confirm line",
       exact: true,
     }),
   ).toBeEnabled();
@@ -279,11 +336,16 @@ test("invoice changed regular cost defaults to calculated and explicit Keep pres
     }),
   ).toHaveAttribute("aria-pressed", "true");
   await line.getByRole("button", { name: "Keep $2.79", exact: true }).click();
-  await line.getByRole("button", { name: "No", exact: true }).click();
   await line
-    .getByRole("checkbox", { name: "Confirm this invoice line", exact: true })
+    .getByRole("group", { name: "Track date", exact: true })
+    .getByRole("button", { name: "No", exact: true })
     .click();
-  await expect(line.getByText("Confirmed", { exact: true })).toBeVisible();
+  await confirmInvoiceLine(page, line);
+  await expect(
+    page
+      .getByTestId("invoice-line-row-0")
+      .getByRole("img", { name: "Confirmed", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Post invoice", exact: true }),
   ).toBeEnabled();

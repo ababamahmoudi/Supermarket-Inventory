@@ -58,7 +58,7 @@ import {
 import type { ScopedReadView } from "../e1-read-model";
 import { StoredFileImage } from "../stored-file";
 import { isStoredFileReference } from "../file-database";
-import { waitForPrintImages } from "../print-images";
+import { waitForPrintImages, printLabelSheets } from "../print-images";
 import { WhatsMissing } from "../WhatsMissing";
 import type {
   Branch,
@@ -90,6 +90,7 @@ import "./labels-b.css";
 import "./labels-c1.css";
 import "./c3-labels-notes-offers.css";
 import "./labels-klead.css";
+import "./labels-r2e.css";
 const defaultFields = {
   name: true,
   description: true,
@@ -481,11 +482,26 @@ export function PhysicalSheet({
   alignment?: boolean;
 }) {
   const { capacity } = labelLayout(template);
+  // The lowest used slot edge: the last printed sheet ends there (PR 29).
+  const used = alignment ? capacity : products.length;
+  let usedHeight = 0;
+  for (let index = 0; index < used; index++)
+    if (alignment || products[index]) {
+      const slot = labelSlotGeometry(template, index);
+      usedHeight = Math.max(usedHeight, slot.top + slot.height);
+    }
   return (
     <div
       className="print-sheet"
       dir="ltr"
-      style={{ width: "210mm", height: "297mm" }}
+      data-used-height-mm={Math.min(297, usedHeight).toFixed(2)}
+      style={
+        {
+          width: "210mm",
+          height: "297mm",
+          "--label-used-height": `${Math.min(297, usedHeight + 1)}mm`,
+        } as CSSProperties
+      }
     >
       {Array.from(
         { length: alignment ? capacity : products.length },
@@ -851,7 +867,7 @@ function TemplateDesigner({
           ),
       );
       flushSync(() => setAlignmentTemplate(structuredClone(draft)));
-      window.print();
+      printLabelSheets();
       await command(
         "labels.calibrate",
         labelScope(state.config.company.seed_key),
@@ -907,6 +923,7 @@ function TemplateDesigner({
             onChange={choose}
             options={[
               {
+                placeholder: true,
                 value: "",
                 label: t("Choose a template", "یک قالب انتخاب کنید"),
               },
@@ -920,9 +937,9 @@ function TemplateDesigner({
         <Button variant="neutral" onClick={() => choose("")}>
           {t("New template", "قالب جدید")}
         </Button>
-        <Checkbox checked={showArchived} onChange={setShowArchived}>
+        <FilterChip checked={showArchived} onChange={setShowArchived}>
           {t("Show archived", "نمایش بایگانی‌شده‌ها")}
-        </Checkbox>
+        </FilterChip>
       </div>
       {draft.built_in && (
         <p className="muted label-template-kind">
@@ -1486,7 +1503,7 @@ export function Labels() {
           return;
         }
       }
-      window.print();
+      printLabelSheets();
       setConfirmationOpen(true);
       setError("");
     } catch (cause) {
@@ -1634,6 +1651,7 @@ export function Labels() {
                 ]}
               />
               <Select
+                searchable
                 aria-label={t("Supplier", "تأمین‌کننده")}
                 value={filters.supplier}
                 onChange={(value) =>
@@ -1692,17 +1710,28 @@ export function Labels() {
                 </Button>
               )}
             </FilterToolbar>
-            <div className="labels-selection-toolbar">
-              <Checkbox
-                checked={allFilteredSelected}
-                disabled={selectable.length === 0}
-                onChange={selectFiltered}
+            {allFilteredSelected && (
+              <div
+                className="labels-filtered-selection-summary muted"
+                role="status"
               >
-                {t("Select all filtered", "انتخاب همه نتایج فیلترشده")}
-              </Checkbox>
-            </div>
+                <span>
+                  {translateCount(
+                    "All {{count}} filtered product selected",
+                    "All {{count}} filtered products selected",
+                    "همهٔ {{count}} کالای فیلترشده انتخاب شد",
+                    "همهٔ {{count}} کالای فیلترشده انتخاب شدند",
+                    selectable.length,
+                    lang,
+                  )}
+                </span>
+                <Button variant="plain" onClick={() => selectFiltered(false)}>
+                  {t("Clear", "پاک کردن")}
+                </Button>
+              </div>
+            )}
             <DataTable
-              className="labels-product-table c9-labels-products-table"
+              className="labels-product-table c9-labels-products-table r2e-labels-products"
               phoneList={{
                 name: "product",
                 value: "price",
@@ -1753,12 +1782,17 @@ export function Labels() {
             >
               <thead>
                 <tr>
-                  <th
-                    aria-label={t(
-                      "Select all filtered",
-                      "انتخاب همه نتایج فیلترشده",
-                    )}
-                  />
+                  <th scope="col">
+                    <Checkbox
+                      checked={allFilteredSelected}
+                      disabled={selectable.length === 0}
+                      onChange={selectFiltered}
+                      aria-label={t(
+                        "Select all filtered",
+                        "انتخاب همه نتایج فیلترشده",
+                      )}
+                    />
+                  </th>
                   <th>{t("Product", "کالا")}</th>
                   <th>{t("Product Code", "کد کالا")}</th>
                   <th>{t("Offer", "پیشنهاد")}</th>
@@ -2159,6 +2193,7 @@ export function Labels() {
                     }}
                     options={[
                       {
+                        placeholder: true,
                         value: "",
                         label: t("Choose a template", "یک قالب انتخاب کنید"),
                       },

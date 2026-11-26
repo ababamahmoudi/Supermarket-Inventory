@@ -246,29 +246,42 @@ export function setInvoiceNewItemMatch(
 }
 
 export type InvoiceOrderIssue = "order" | "order_decisions";
-export function invoiceOrderIssues(
+export type InvoiceOrderProblem = {
+  kind:
+    | "unavailable"
+    | "stale"
+    | "supplier"
+    | "association"
+    | "extra"
+    | "extra_quantity"
+    | "refused"
+    | "price"
+    | "missing"
+    | "comparison";
+  line?: number;
+  order_line_id?: string;
+};
+/** The same fresh, scoped validation supplies both posting and field navigation. */
+export function invoiceOrderProblems(
   state: DemoState,
   actor: AuthenticatedActor,
-): InvoiceOrderIssue[] {
+): InvoiceOrderProblem[] {
   requireInvoiceAuthority(state, actor, "invoices.read");
   const invoice = state.invoice;
-  if (!invoice.order_id)
-    return invoice.lines.some((line) => (line.refused_units ?? 0) > 0)
-      ? ["order_decisions"]
-      : [];
+  if (!invoice.order_id) return [];
   const order = compatibleInvoiceOrders(state, actor).find(
     (record) => record.id === invoice.order_id,
   );
-  if (!order || order.version !== invoice.order_review_version)
-    return ["order"];
+  if (!order) return [{ kind: "unavailable" }];
+  if (order.version !== invoice.order_review_version)
+    return [{ kind: "stale" }];
   try {
     const comparison = compareInvoiceOrder(order, invoice);
     const supplier = state.suppliers?.find(
       (item) =>
         item.id === order.supplier_id && item.company_id === invoice.company_id,
     );
-    if (supplier && (!supplier.active || supplier.status !== "confirmed"))
-      return ["order_decisions"];
+    if (supplier && !supplier.active) return [{ kind: "supplier" }];
     for (const row of comparison.lines) {
       const line = invoice.lines[row.invoice_line_index];
       const temporary = order.lines.find(
@@ -287,36 +300,67 @@ export function invoiceOrderIssues(
               item.supplier_item_code !== (line.supplier_item_code ?? "")),
         )
       )
-        return ["order_decisions"];
+        return [
+          {
+            kind: "association",
+            line: row.invoice_line_index,
+            order_line_id: temporary.id,
+          },
+        ];
     }
-    const unresolved =
-      comparison.lines.some((row) => {
-        const line = invoice.lines[row.invoice_line_index];
-        const refused = line.refused_units ?? 0;
-        return (
-          (row.extra_units > 0 &&
-            !["keep", "refuse"].includes(line.extra_delivery_decision ?? "")) ||
-          (line.extra_delivery_decision === "refuse"
-            ? refused !== row.extra_units
-            : refused !== 0) ||
-          (row.price_changed &&
-            row.accepted_units > 0 &&
-            !(
-              line.order_price_decision === "accept" ||
-              (line.order_price_decision === "short_dated" && line.short_dated)
-            ))
-        );
-      }) ||
-      comparison.residual.some(
-        (row) =>
-          !["short", "back_ordered", "cancelled"].includes(
-            invoice.order_missing_decisions?.[row.order_line_id] ?? "",
-          ),
-      );
-    return unresolved ? ["order_decisions"] : [];
+    const problems: InvoiceOrderProblem[] = [];
+    for (const row of comparison.lines) {
+      const line = invoice.lines[row.invoice_line_index];
+      const refused = line.refused_units ?? 0;
+      if (
+        row.extra_units > 0 &&
+        !["keep", "refuse"].includes(line.extra_delivery_decision ?? "")
+      )
+        problems.push({ kind: "extra", line: row.invoice_line_index });
+      else if (
+        line.extra_delivery_decision === "refuse"
+          ? refused !== row.extra_units
+          : refused !== 0
+      )
+        problems.push({
+          kind: row.extra_units > 0 ? "extra_quantity" : "refused",
+          line: row.invoice_line_index,
+        });
+      if (
+        row.price_changed &&
+        row.accepted_units > 0 &&
+        !(
+          line.order_price_decision === "accept" ||
+          (line.order_price_decision === "short_dated" && line.short_dated)
+        )
+      )
+        problems.push({ kind: "price", line: row.invoice_line_index });
+    }
+    for (const row of comparison.residual)
+      if (
+        !["short", "back_ordered", "cancelled"].includes(
+          invoice.order_missing_decisions?.[row.order_line_id] ?? "",
+        )
+      )
+        problems.push({ kind: "missing", order_line_id: row.order_line_id });
+    return problems;
   } catch {
-    return ["order_decisions"];
+    return [{ kind: "comparison" }];
   }
+}
+export function invoiceOrderIssues(
+  state: DemoState,
+  actor: AuthenticatedActor,
+): InvoiceOrderIssue[] {
+  return [
+    ...new Set(
+      invoiceOrderProblems(state, actor).map((problem) =>
+        problem.kind === "unavailable" || problem.kind === "stale"
+          ? ("order" as const)
+          : ("order_decisions" as const),
+      ),
+    ),
+  ];
 }
 
 function initialReceipt(invoice: DemoInvoice): OrderReceiptInput {
@@ -644,6 +688,29 @@ export function clearInvoiceOrder(invoice: DemoInvoice): void {
   invoice.order_comparison = undefined;
   invoice.order_missing_decisions = undefined;
   for (const line of invoice.lines) clearInvoiceOrderLine(line);
+}
+
+/** Removing a different line moves indices, while its confirmed facts stay the same. */
+export function reindexInvoiceOrderLines(invoice: DemoInvoice): void {
+  for (const [index, line] of invoice.lines.entries()) {
+    const match = line.order_new_item_match;
+    if (
+      match &&
+      match.fingerprint ===
+        invoiceNewItemFingerprint(
+          line,
+          match.invoice_line_index,
+          match.product_code,
+        )
+    ) {
+      match.invoice_line_index = index;
+      match.fingerprint = invoiceNewItemFingerprint(
+        line,
+        index,
+        match.product_code,
+      );
+    }
+  }
 }
 
 export function clearInvoiceOrderLine(line: InvoiceLine): void {

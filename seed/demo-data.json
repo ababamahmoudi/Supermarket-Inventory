@@ -217,7 +217,7 @@
     },
     {
       "name": "Corner Spice Co.",
-      "status": "proposed",
+      "status": "confirmed",
       "phone": null,
       "email": null,
       "sales_rep_name": "Demo Rep E",
@@ -233,7 +233,7 @@
         "Branch 2": 0,
         "Branch 3": 0
       },
-      "note": "Quick-added by a Floor Worker; waiting for Owner or Manager confirmation."
+      "note": "Quick-added by a Floor Worker; optional profile details are incomplete."
     }
   ],
   "products": [

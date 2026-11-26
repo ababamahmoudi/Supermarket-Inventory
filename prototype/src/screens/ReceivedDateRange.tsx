@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { useDemo } from "../store";
 import { companyDate, dateAfter } from "../invoice";
-import { Button, DateField, Dialog, Field } from "../ui";
+import { Button, DateField, Dialog, Field, FilterChip } from "../ui";
 import { DateText } from "../presentation";
 import { WhatsMissing } from "../WhatsMissing";
 
@@ -10,10 +10,13 @@ export function ReceivedDateRange({
   from,
   to,
   onChange,
+  preset,
 }: {
   from: string;
   to: string;
   onChange: (from: string, to: string) => void;
+  /** A named range (e.g. "Last 30 days") shown on the button when chosen. */
+  preset?: { first: string; last: string; en: string; fa: string };
 }) {
   const { state, t } = useDemo();
   const [open, setOpen] = useState(false);
@@ -21,7 +24,7 @@ export function ReceivedDateRange({
   const [draftTo, setTo] = useState(to);
   const [attempted, setAttempted] = useState(false);
   const invalid = !!draftFrom && !!draftTo && draftFrom > draftTo;
-  const selectQuick = (kind: "today" | "week" | "month") => {
+  const quickRange = (kind: "today" | "week" | "month") => {
     const today = companyDate(state.config);
     const date = new Date(`${today}T12:00:00Z`);
     const first =
@@ -40,7 +43,14 @@ export function ReceivedDateRange({
             )
               .toISOString()
               .slice(0, 10);
-    onChange(first, last);
+    return { first, last };
+  };
+  const selectQuick = (kind: "today" | "week" | "month") => {
+    const { first, last } = quickRange(kind);
+    onChange(
+      from === first && to === last ? "" : first,
+      from === first && to === last ? "" : last,
+    );
     setOpen(false);
   };
   return (
@@ -57,7 +67,9 @@ export function ReceivedDateRange({
         }}
       >
         <CalendarDays size={18} aria-hidden="true" />{" "}
-        {from || to ? (
+        {preset && from === preset.first && to === preset.last ? (
+          t(preset.en, preset.fa)
+        ) : from || to ? (
           <>
             <span>{t("From", "از")}</span>
             <DateText value={from} />
@@ -91,27 +103,35 @@ export function ReceivedDateRange({
             }
           />
           <div className="received-range-quick-actions">
-            <Button
-              variant="tinted"
-              size="sm"
-              onClick={() => selectQuick("today")}
-            >
-              {t("Today", "امروز")}
-            </Button>
-            <Button
-              variant="tinted"
-              size="sm"
-              onClick={() => selectQuick("week")}
-            >
-              {t("This week", "این هفته")}
-            </Button>
-            <Button
-              variant="tinted"
-              size="sm"
-              onClick={() => selectQuick("month")}
-            >
-              {t("This month", "این ماه")}
-            </Button>
+            {preset && (
+              <FilterChip
+                checked={from === preset.first && to === preset.last}
+                onChange={() => {
+                  onChange(preset.first, preset.last);
+                  setOpen(false);
+                }}
+              >
+                {t(preset.en, preset.fa)}
+              </FilterChip>
+            )}
+            {(
+              [
+                ["today", "Today", "امروز"],
+                ["week", "This week", "این هفته"],
+                ["month", "This month", "این ماه"],
+              ] as const
+            ).map(([kind, en, fa]) => {
+              const range = quickRange(kind);
+              return (
+                <FilterChip
+                  key={kind}
+                  checked={from === range.first && to === range.last}
+                  onChange={() => selectQuick(kind)}
+                >
+                  {t(en, fa)}
+                </FilterChip>
+              );
+            })}
           </div>
           <div className="manual-entry-pair">
             <Field label={t("From", "از")}>

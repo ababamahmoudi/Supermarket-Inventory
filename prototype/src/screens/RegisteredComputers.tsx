@@ -372,7 +372,11 @@ function RegisteredComputersContent({ identity }: { identity: string }) {
                 );
               }}
               options={[
-                { value: "", label: t("Choose location", "انتخاب مکان") },
+                {
+                  placeholder: true,
+                  value: "",
+                  label: t("Choose location", "انتخاب مکان"),
+                },
                 ...state.config.branches
                   .filter((item) => item.active !== false)
                   .map((item) => ({

@@ -1,4 +1,4 @@
-import { ChevronRight, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import type {
   AuthenticatedActor,
   Capability,
@@ -25,7 +25,7 @@ import { SellingPriceValue } from "../selling-price-presentation";
 import { weightPriceDisplay } from "../weighed";
 import { SalePrice } from "../sales-presentation";
 import type { Language } from "../types";
-import { Badge, IconButton, Menu, MenuItem } from "../ui";
+import { Badge, TableRowAction, Menu, MenuItem } from "../ui";
 
 type Presentation = {
   state: SalesView;
@@ -178,7 +178,12 @@ export function SalesOfferRow({
       }}
     >
       <td>
-        <ProductName product={row.product} language={lang} />
+        <a
+          className="entity-link"
+          href={`#product?code=${encodeURIComponent(row.product.code)}`}
+        >
+          <ProductName product={row.product} language={lang} />
+        </a>
       </td>
       <td className="numeric">
         {row.kind === "sale" ? (
@@ -323,22 +328,12 @@ export function SalesOfferRow({
                 </>
               )}
             </Menu>
-          ) : (
-            <span className="offer-more-slot" aria-hidden="true" />
-          )}
-          <IconButton
-            variant="ghost"
+          ) : null}
+          <TableRowAction
             aria-label={actionLabel}
             onClick={() => onOpen(row)}
             className="table-row-link offer-record-action"
-          >
-            <ChevronRight
-              className="directional"
-              size={20}
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-          </IconButton>
+          />
         </div>
       </td>
     </tr>

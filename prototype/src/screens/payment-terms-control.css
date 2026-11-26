@@ -1,0 +1,14 @@
+.invoice-payment-terms-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.invoice-payment-terms-row[data-custom="true"] {
+  grid-template-columns: minmax(0, 1fr) minmax(72px, 88px);
+}
+.invoice-payment-terms-row > * {
+  min-inline-size: 0;
+  inline-size: 100%;
+}

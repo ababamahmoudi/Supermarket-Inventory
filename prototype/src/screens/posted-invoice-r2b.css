@@ -1,0 +1,155 @@
+.posted-receiving .posted-invoice-header {
+  margin-block: 16px 0;
+}
+:root .posted-receiving .posted-invoice-header {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.posted-receiving .posted-invoice-header dd {
+  min-block-size: 24px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.posted-receiving .posted-handwriting {
+  grid-column: 1 / -1;
+}
+.posted-handwriting-action {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  margin-block-start: 8px;
+}
+.posted-reading-notes {
+  margin-block-start: 12px;
+}
+.posted-reading-notes ul {
+  margin-block: 8px;
+  padding-inline-start: 20px;
+}
+.posted-reading-notes li + li {
+  margin-block-start: 8px;
+}
+.posted-receiving .receiving-lines h2,
+.posted-receiving .receiving-totals h2 {
+  margin-block: 0;
+}
+.posted-receiving .posted-invoice-lines .receiving-product-cell {
+  overflow-wrap: anywhere;
+}
+
+.posted-receiving .posted-invoice-lines .receiving-product-meta {
+  margin-block: 4px 0;
+}
+.posted-phone-tracked-date {
+  display: none;
+}
+:root .posted-receiving .posted-invoice-totals {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-inline-size: none;
+  inline-size: 100%;
+  margin-block: 0;
+}
+:root .posted-receiving .posted-invoice-totals > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 16px;
+}
+:root .posted-receiving .posted-invoice-totals dt {
+  margin: 0;
+}
+@media (max-width: 759px) {
+  :root .posted-receiving .posted-invoice-header {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .posted-receiving .posted-tracked-cell {
+    display: none;
+  }
+  .posted-phone-tracked-date {
+    display: block;
+    margin-block-start: 4px;
+    color: var(--text-muted);
+  }
+  .posted-receiving .posted-invoice-lines > tbody > tr + tr {
+    margin-block-start: 8px;
+  }
+}
+
+/* Posted lines are settled evidence, with plain rows and quiet separators. */
+.posted-receiving .posted-invoice-lines {
+  border-spacing: 0;
+}
+.posted-receiving .posted-invoice-lines > tbody > .invoice-line-summary {
+  cursor: default;
+  background: var(--color-clear);
+}
+.posted-receiving .posted-invoice-lines > tbody > .invoice-line-summary > td {
+  background: var(--color-clear);
+  border-radius: var(--radius-none);
+  border-block-end: 1px solid var(--divider);
+  padding-block: 8px;
+}
+.posted-receiving
+  .posted-invoice-lines
+  > tbody
+  > .invoice-line-summary:last-child
+  > td {
+  border-block-end: 0;
+}
+:root .posted-receiving .posted-invoice-totals {
+  gap: 4px;
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+:root .posted-receiving .posted-invoice-totals dt {
+  color: var(--text);
+  font-size: inherit;
+  text-align: start;
+}
+:root .posted-receiving .posted-invoice-totals dd {
+  font-weight: 400;
+}
+:root .posted-receiving .posted-invoice-totals .posted-invoice-payable dd {
+  font-weight: 700;
+}
+@media (max-width: 759px) {
+  .posted-receiving .posted-invoice-lines > tbody > .invoice-line-summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+    border: 0;
+    border-block-end: 1px solid var(--divider);
+    border-radius: var(--radius-none);
+    padding: 12px 0;
+  }
+  .posted-receiving
+    .posted-invoice-lines
+    > tbody
+    > .invoice-line-summary
+    > .receiving-product-cell {
+    grid-column: 1;
+  }
+  .posted-receiving
+    .posted-invoice-lines
+    > tbody
+    > .invoice-line-summary
+    > .receiving-total-cell {
+    grid-column: 2;
+  }
+  .posted-receiving .posted-invoice-lines > tbody > .invoice-line-summary > td {
+    border: 0;
+    padding: 0;
+  }
+}
+
+/* Keep the repeated source reference inside its actual details column.
+   The complete reference stays in the heading and the shared native title. */
+.posted-receiving .posted-invoice-number {
+  display: block;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.posted-invoice-other-charges > .invoice-other-charges {
+  margin-block: 0;
+}

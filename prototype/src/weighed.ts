@@ -13,7 +13,7 @@ const WeightDecimal = Decimal.clone({
 });
 export type WeightUnit = "lb" | "kg";
 export type WeighedSettings = NonNullable<CompanyConfig["weighed_items"]>;
-type WeightConfig = { weighed_items?: WeighedSettings };
+export type WeightConfig = { weighed_items?: WeighedSettings };
 type FactorSource = WeightConfig | string;
 export const DEFAULT_WEIGHED_SETTINGS: Readonly<WeighedSettings> =
   Object.freeze({

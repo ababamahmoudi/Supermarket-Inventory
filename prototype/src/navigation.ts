@@ -7,6 +7,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useDemo } from "./store";
+import { deferTimesheetNavigation } from "./screens/timesheet-save-context";
 
 const prefix = "supermarket-navigation-v1";
 const fallback = new Map<string, string>();
@@ -63,20 +64,22 @@ export function useListState<T>(
   if (entry.key !== key) {
     setEntry({ key, value: readNavigationValue(key, initialValue()) });
   }
-  const setValue: Dispatch<SetStateAction<T>> = (next) => {
-    setEntry((previous) => {
-      const current =
-        previous.key === key
-          ? previous.value
-          : readNavigationValue(key, initialValue());
-      const value =
-        typeof next === "function"
-          ? (next as (current: T) => T)(current)
-          : next;
-      saveNavigationValue(key, value);
-      return { key, value };
-    });
-  };
+  const setValue: Dispatch<SetStateAction<T>> = useCallback(
+    (next) => {
+      setEntry((previous) => {
+        // A delayed callback from another person/location must not change
+        // the active filters or initialize its old key with another default.
+        if (previous.key !== key) return previous;
+        const value =
+          typeof next === "function"
+            ? (next as (current: T) => T)(previous.value)
+            : next;
+        saveNavigationValue(key, value);
+        return Object.is(previous.value, value) ? previous : { key, value };
+      });
+    },
+    [key],
+  );
   return [entry.value, setValue];
 }
 
@@ -91,6 +94,45 @@ export function useRouteParam(name: string): string | null {
     [name],
   );
   return useSyncExternalStore(subscribeRoute, get, () => null);
+}
+
+/** Remember the source of an invoice within this person's location/session scope. */
+export function rememberInvoiceReturnRoute(
+  company: string,
+  username: string,
+  location: string,
+  from: string,
+  to: string,
+) {
+  const [page, query = ""] = to.replace(/^#/, "").split("?");
+  const invoiceId = new URLSearchParams(query).get("id");
+  if (page !== "invoices" || !invoiceId) return;
+  const [fromPage, fromQuery = ""] = from.replace(/^#/, "").split("?");
+  // Editing, posting and switching content versions keep the genuine entry page.
+  if (fromPage === "invoices" && new URLSearchParams(fromQuery).has("id"))
+    return;
+  const destination =
+    fromPage === "invoices" || !fromPage ? "#invoices?tab=posted" : from;
+  if (!/^#[a-z][a-z0-9-]*(?:\?.*)?$/.test(destination)) return;
+  saveNavigationValue(
+    navigationKey(company, username, location, `invoice-return:${invoiceId}`),
+    destination,
+  );
+}
+
+export function readInvoiceReturnRoute(
+  company: string,
+  username: string,
+  location: string,
+  invoiceId: string,
+) {
+  const destination = readNavigationValue(
+    navigationKey(company, username, location, `invoice-return:${invoiceId}`),
+    "#invoices?tab=posted",
+  );
+  return /^#[a-z][a-z0-9-]*(?:\?.*)?$/.test(destination)
+    ? destination
+    : "#invoices?tab=posted";
 }
 
 interface RouteScroll {
@@ -143,8 +185,16 @@ export function useNavigationRestoration() {
         window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       }
     };
-    const onRoute = () => {
+    const onRoute = (event: HashChangeEvent) => {
+      if (deferTimesheetNavigation(event)) return;
       save();
+      rememberInvoiceReturnRoute(
+        company,
+        username,
+        branch,
+        route,
+        window.location.hash,
+      );
       route = window.location.hash;
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {

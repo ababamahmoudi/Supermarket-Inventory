@@ -1,3 +1,8 @@
+import { upgradePriceEndingRule } from "./price-ending-migration";
+import { seedFreshDemoApprovedPrices } from "./fresh-demo-prices";
+import { initializePackageState } from "./package-state";
+import { hydrateTimesheetDemo } from "./timesheet-demo";
+import { initializeTimesheetState } from "./timesheet-state";
 import { configSeed, demoSeed } from "./config";
 import retainedConfig from "./compat/configuration.json";
 import { hydrateDemoFixture, restoreDemoFixture } from "./demo-fixtures";
@@ -89,6 +94,7 @@ export function initialState(): DemoState {
               supplier_balance_snapshot_date: relativeDate(0),
               supplier_balance_snapshot_currency: configSeed.company.currency,
               pricing_minimum_margin_schema: 2,
+              price_ending_rule_schema: 2,
               config: configSeed,
               products,
               approvals: [
@@ -226,7 +232,10 @@ export function initialState(): DemoState {
   );
   hydrateC6State(state);
   hydrateSalesDemo(state);
-  return state;
+  seedFreshDemoApprovedPrices(state);
+  return hydrateTimesheetDemo(
+    initializePackageState(initializeTimesheetState(state)),
+  );
 }
 
 function readLegacyState(): { state: DemoState; invalidHistoryRaw?: string } {
@@ -287,6 +296,7 @@ function readLegacyState(): { state: DemoState; invalidHistoryRaw?: string } {
           }
           candidate.pricing_minimum_margin_schema = 2;
         }
+        upgradePriceEndingRule(candidate);
         const migrated = restoreC4State(
           restoreC2State(
             restoreCState(

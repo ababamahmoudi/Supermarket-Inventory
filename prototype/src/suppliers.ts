@@ -1,5 +1,7 @@
+import { effectiveInvoiceReceivedAt } from "./invoice-received-version";
 import { companyCalendarDate } from "./company-time";
 import { supplierRecords, supplierMatches } from "./supplier-editor";
+import { missingSupplierProfileDetails } from "./supplier-profiles";
 import Decimal from "decimal.js";
 import { companyDate } from "./invoice";
 import { OperationError } from "./operations";
@@ -25,6 +27,7 @@ import type {
 } from "./types";
 
 export interface SupplierMoney {
+  has_statement: boolean;
   balance: string;
   confirmed_balance: string;
   pending_credit: string;
@@ -39,8 +42,11 @@ export interface SupplierOverviewRow {
   notes?: string;
   name: string;
   status: "confirmed" | "proposed";
+  profile_missing: ReturnType<typeof missingSupplierProfileDetails>;
+  source_invoice_number?: string;
   phone: string | null;
   email: string | null;
+  website?: string;
   sales_rep_name: string | null;
   sales_rep_phone: string | null;
   payment_terms: string | null;
@@ -155,7 +161,9 @@ function postedInvoices(state: DemoState, context: AuthenticatedActor) {
 function receivedDate(state: DemoState, invoice: DemoInvoice) {
   return companyCalendarDate(
     state.config,
-    invoice.received_at ?? invoice.invoice_date ?? invoice.posted_at,
+    effectiveInvoiceReceivedAt(state, invoice) ??
+      invoice.invoice_date ??
+      invoice.posted_at,
   );
 }
 function supplierShorts(
@@ -220,6 +228,13 @@ export function suppliersOverview(
     .filter((record) => inScope(state, record, context))
     .forEach((record) => addName(record.supplier));
   const month = companyDate(state.config).slice(0, 7);
+  // Keep import creation order while adopting edits from the current workspace.
+  const importSources = new Map(
+    [...(state.invoices ?? []), state.invoice].map((invoice) => [
+      invoice.id,
+      invoice,
+    ]),
+  );
   return [...names].map((name) => {
     const details = metadata.find((supplier) => supplier.name === name);
     const matches = (supplier: string) =>
@@ -239,8 +254,18 @@ export function suppliersOverview(
       address: details?.address,
       notes: details?.notes,
       status: details?.status === "proposed" ? "proposed" : "confirmed",
+      profile_missing: details ? missingSupplierProfileDetails(details) : [],
+      source_invoice_number: details?.created_from_import
+        ? [...importSources.values()].find(
+            (invoice) =>
+              invoice.company_id === context.company_id &&
+              invoice.reading_record?.source === "imported" &&
+              matches(invoice.supplier),
+          )?.supplier_invoice_number
+        : undefined,
       phone: details?.phone ?? null,
       email: details?.email ?? null,
+      website: details?.website,
       sales_rep_name: details?.sales_rep_name ?? null,
       sales_rep_phone: details?.sales_rep_phone ?? null,
       payment_terms: details?.payment_terms ?? null,
@@ -271,6 +296,13 @@ export function suppliersOverview(
                 name,
               );
               return {
+                has_statement: Boolean(
+                  summary.rows.length ||
+                  summary.invoices.length ||
+                  summary.pending_returns.length ||
+                  summary.awaiting_pickup_returns.length ||
+                  summary.snapshot_date,
+                ),
                 balance: summary.balance,
                 confirmed_balance: summary.confirmed_balance,
                 pending_credit: summary.pending_credit,

@@ -166,3 +166,13 @@
     margin-inline-start: 0;
   }
 }
+
+/* PR 29: every Suppliers heading stays on one line over its values. */
+.suppliers-overview .ui-data-table thead th {
+  white-space: nowrap;
+}
+.suppliers-overview .supplier-sort-static {
+  display: inline-flex;
+  align-items: baseline;
+  min-block-size: 44px;
+}

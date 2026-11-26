@@ -15,6 +15,12 @@ import {
 import { effectiveInvoiceVersion } from "./invoice-version";
 import { effectiveInvoiceLocation } from "./received";
 import { supplierMatches, supplierRecords } from "./supplier-editor";
+import {
+  freeAcquisitionSourceKey,
+  groupedReturnLineAmount,
+  invoiceFreeAcquisition,
+  type ReturnAcquisitionBasis,
+} from "./invoice-free-acquisition";
 import type { ProductCostEntry } from "./product-costs";
 import type { DemoState, Product, ReturnRecord } from "./types";
 
@@ -324,6 +330,7 @@ export interface InternalPickupLineValuation {
   product_code: string;
   unit_cost: string;
   cost_source: string;
+  acquisition_basis?: ReturnAcquisitionBasis;
 }
 /** Trusted createReturnMemo calculation only; its public DTO must omit these fields for BS/FW. */
 export function pickupLineValuations(
@@ -358,7 +365,44 @@ export function pickupLineValuations(
         (!record.linked_invoice || item.invoice_id === record.linked_invoice),
     );
     const purchase = purchases[0];
+    const stored = line.unit_cost;
+    const acquisition = line.acquisition_basis;
+    if (acquisition) {
+      groupedReturnLineAmount(line);
+      const receipt = line.source_receipt;
+      const original = [state.invoice, ...(state.invoices ?? [])].find(
+        (invoice) =>
+          invoice.company_id === record.company_id &&
+          invoice.id === receipt?.invoice_id &&
+          invoice.status === "posted",
+      );
+      const sourceLine = original
+        ? effectiveInvoiceVersion(state, original).lines[receipt!.line_index]
+        : undefined;
+      const current = sourceLine && invoiceFreeAcquisition(sourceLine);
+      if (
+        !original ||
+        !sourceLine ||
+        !current ||
+        sourceLine.product_code !== line.product_code ||
+        freeAcquisitionSourceKey(
+          record.company_id,
+          original.id,
+          receipt!.line_index,
+          sourceLine,
+        ) !== acquisition.source_key ||
+        current.quantity < acquisition.source_quantity ||
+        new Decimal(current.amount).lt(acquisition.source_amount)
+      )
+        throw new Error("return_cost");
+    }
+    // New returns retain the exact receipt snapshot; later unrelated purchases
+    // cannot substitute their price or invalidate that already selected cost.
+    const frozenReceipt = Boolean(
+      record.creation_request_id && line.source_receipt && stored !== undefined,
+    );
     if (
+      !frozenReceipt &&
       purchases
         .filter((item) => item.posted_at === purchase?.posted_at)
         .some(
@@ -367,7 +411,6 @@ export function pickupLineValuations(
         )
     )
       throw new Error("return_cost");
-    const stored = (line as typeof line & { unit_cost?: string }).unit_cost;
     const source =
       stored ??
       purchase?.unit_cost_before_tax ??
@@ -392,6 +435,9 @@ export function pickupLineValuations(
         : purchase
           ? `invoice:${purchase.invoice_id}:${index}`
           : `catalog-last-cost:${product.code}`,
+      ...(acquisition
+        ? { acquisition_basis: structuredClone(acquisition) }
+        : {}),
     };
   });
 }

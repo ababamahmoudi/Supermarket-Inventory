@@ -6,7 +6,7 @@ export function shouldShowUndoNotification(action: string): boolean {
     /^(remove|stop|approve|reject|send|complete|cancel|close|archive|clear)\b/i.test(
       action,
     ) ||
-    /^(confirm supplier|confirm offer|place order|mark as (sent|received|taken care of)|mark ordered|keep approved price|keep barcode mappings|apply price to all branches|turn off date tracking)$/i.test(
+    /^(confirm supplier|confirm offer|confirm ready invoice lines|place order|mark as (sent|received|taken care of)|mark ordered|keep approved price|keep barcode mappings|apply price to all branches|turn off date tracking)$/i.test(
       action,
     ) ||
     [

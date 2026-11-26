@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 import {
   chooseOption,
   signIn,
@@ -47,6 +48,8 @@ test("live role switches keep cashier approved price until branch approval; new 
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  await signIn(page, "supervisor");
+  await approvedLookupPrices(page, ["0006"]);
   await signIn(page, "cashier");
   await lookup(page, "0006", "$1.99");
   await expect(
@@ -82,6 +85,7 @@ test("live role switches keep cashier approved price until branch approval; new 
     .click();
   await setBranch(page, "Richmond Hill");
   await lookup(page, "0015", "$5.49");
+  await expect(page.locator(".lookup-pending-price")).toHaveCount(0);
   await expect(
     page.getByText("Pending: confirm with a Supervisor before selling", {
       exact: true,
@@ -105,11 +109,11 @@ test("intentional tea conflicts stay quiet, and applying a selected price clears
     page.getByRole("button", { name: "Mark as intentional", exact: true }),
   ).toHaveCount(0);
   await page
-    .getByRole("checkbox", {
-      name: "Show resolved and intentional alerts",
+    .getByRole("button", {
+      name: "Show resolved",
       exact: true,
     })
-    .check();
+    .click();
   await expect(page.getByText("Intentional", { exact: true })).toBeVisible();
   await resetDemo(page);
   await openAlert(page, "Black Tea");
@@ -164,7 +168,8 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
   await page
     .getByRole("tab", { name: "Mix-and-match pools", exact: true })
     .click();
-  const pool = page.locator("section.card").filter({
+  // PR 29: one pools card; each pool lists its products as chips.
+  const pool = page.locator(".offer-pool").filter({
     has: page.getByRole("heading", { name: "2 for $5.00", exact: true }),
   });
   for (const product of [
@@ -174,7 +179,7 @@ test("approved Lavash suggests a worker-confirmed offer and joins juice and chip
   ])
     await expect(
       pool
-        .getByRole("cell")
+        .getByRole("listitem")
         .filter({ has: page.getByText(product, { exact: true }) }),
     ).toBeVisible();
   await setLanguage(page, "fa");

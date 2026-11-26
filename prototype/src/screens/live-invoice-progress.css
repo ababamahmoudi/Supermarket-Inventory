@@ -1,0 +1,112 @@
+/* Only the live reading state changes B4's normal review breakpoint. */
+@media (min-width: 761px) {
+  .receiving-layout:has(> .live-reading-card) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .receiving-layout:has(> .live-reading-card) > .original-viewer {
+    order: 0;
+    inline-size: auto;
+  }
+}
+.live-reading-card {
+  min-inline-size: 0;
+}
+.live-reading-card .live-reading-time {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-block: 0 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.live-reading-time bdi {
+  min-inline-size: 4ch;
+}
+.live-reading-indeterminate {
+  block-size: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-control);
+  background: var(--surface-soft);
+}
+.live-reading-indeterminate::before {
+  content: "";
+  display: block;
+  inline-size: 35%;
+  block-size: 100%;
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  animation: live-reading-wait 1.4s ease-in-out infinite;
+}
+.live-reading-indeterminate[data-active="false"] {
+  visibility: hidden;
+}
+.live-reading-card .live-reading-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-block: 16px;
+  padding: 0;
+  list-style: none;
+}
+.live-reading-step {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 6px;
+  min-inline-size: 0;
+  min-block-size: 50px;
+  padding: 8px;
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-control);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.live-reading-step-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 16px;
+  block-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.live-reading-step[data-state="complete"] {
+  color: var(--approved);
+}
+.live-reading-card .live-reading-step[aria-current="step"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.live-reading-step-label {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.live-reading-cancel {
+  justify-content: flex-end;
+  margin-block-start: 12px;
+}
+@media (max-width: 480px) {
+  .live-reading-step {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+}
+@keyframes live-reading-wait {
+  0% {
+    transform: translateX(-105%);
+  }
+  100% {
+    transform: translateX(390%);
+  }
+}
+:root[dir="rtl"] .live-reading-indeterminate::before {
+  animation-direction: reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-reading-indeterminate::before {
+    animation: none;
+    transform: none;
+  }
+}

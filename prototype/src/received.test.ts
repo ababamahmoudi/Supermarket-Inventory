@@ -36,6 +36,7 @@ import type { DemoState } from "./types";
 import type { AuthenticatedActor } from "./authority-types";
 import { authenticatedTestActor } from "./authority-test-fixture";
 import { AuthorityError } from "./authority";
+import { invoiceLineHref } from "./invoice-line-links";
 
 const managers = new WeakMap<DemoState, Map<string, AuthenticatedActor>>();
 function context(state: DemoState, branch = "Branch 1"): AuthenticatedActor {
@@ -105,6 +106,18 @@ function outstanding(state: DemoState, branch: string): string {
 }
 
 describe("Received and receiving locations", () => {
+  it("links the actual delivered line by its retained identity rather than its product or row position", () => {
+    const state = reviewed();
+    state.invoice.lines[0].id = "fictional-line/25";
+    postInvoice(state, context(state));
+    const receipt = receivedLog(state, context(state)).find(
+      (row) => row.invoice_id === state.invoice.id,
+    )!;
+    expect(receipt.line_id).toBe("fictional-line/25");
+    expect(invoiceLineHref(receipt.invoice_id, receipt.line_id!)).toBe(
+      `#invoices?id=${encodeURIComponent(state.invoice.id)}&line=fictional-line%2F25`,
+    );
+  });
   it("lists only actual posted deliveries, converts retained cases, deduplicates workspace and combines filters", () => {
     const state = reviewed();
     const all = context(state, "all");

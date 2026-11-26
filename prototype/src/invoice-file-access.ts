@@ -8,6 +8,10 @@ import { freshActor } from "./authority";
 import { readStoredFile, type StoredFileRecord } from "./file-database";
 import { requireInvoiceAuthority } from "./invoice-authority";
 import type { DemoState } from "./types";
+import {
+  activeInvoiceOriginalPages,
+  retainedInvoiceOriginalPages,
+} from "./invoice-original-pages";
 export type ProtectedInvoiceQuery = <T>(
   capability: Capability,
   scope: ResourceScope,
@@ -20,6 +24,7 @@ interface Access {
   page: number;
   user_id: string;
   session_id: string;
+  purpose: "retained" | "reading";
 }
 const accesses = new WeakMap<object, Access>();
 interface OriginalAccess {
@@ -33,6 +38,7 @@ function resolveAccess(
   actor: AuthenticatedActor,
   invoiceId: string,
   page = 0,
+  purpose: "retained" | "reading" = "retained",
 ): OriginalAccess {
   const current = requireInvoiceAuthority(
     state,
@@ -47,11 +53,11 @@ function resolveAccess(
       : state.invoices!.find((record) => record.id === invoiceId)!;
   if (!Number.isSafeInteger(page) || page < 0)
     throw new Error("Original page is invalid.");
-  const source = invoice.original_pages?.length
-    ? invoice.original_pages[page]
-    : page === 0
-      ? invoice
-      : undefined;
+  const source = (
+    purpose === "reading"
+      ? activeInvoiceOriginalPages(invoice)
+      : retainedInvoiceOriginalPages(invoice)
+  )[page];
   if (!source?.file_data || !source.file_name)
     throw new Error("Original evidence is missing.");
   const handle = Object.freeze({
@@ -67,12 +73,18 @@ function resolveAccess(
     page,
     user_id: current.user_id,
     session_id: current.session_id,
+    purpose,
   });
   return handle;
 }
 export async function loadInvoiceOriginal(
   query: ProtectedInvoiceQuery,
-  input: { company_id: string; invoice_id: string; page?: number },
+  input: {
+    company_id: string;
+    invoice_id: string;
+    page?: number;
+    purpose?: "retained" | "reading";
+  },
 ): Promise<StoredFileRecord> {
   const scope: ResourceScope = {
     company_id: input.company_id,
@@ -80,7 +92,7 @@ export async function loadInvoiceOriginal(
     entity_id: input.invoice_id,
   };
   const handle = await query("invoices.read", scope, (state, actor) =>
-    resolveAccess(state, actor, input.invoice_id, input.page),
+    resolveAccess(state, actor, input.invoice_id, input.page, input.purpose),
   );
   const access = accesses.get(handle);
   if (!access) throw new Error("Original access changed.");
@@ -100,6 +112,7 @@ export async function loadInvoiceOriginal(
         current,
         access.invoice_id,
         access.page,
+        access.purpose,
       ),
       resolved = accesses.get(latest)!;
     if (
@@ -198,6 +211,15 @@ export function consumeInvoiceUpload(
   actor: AuthenticatedActor,
   handle: InvoiceUploadHandle,
 ) {
+  const access = verifiedUpload(state, actor, handle);
+  uploads.delete(handle);
+  return uploadedFields(access);
+}
+function verifiedUpload(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  handle: InvoiceUploadHandle,
+) {
   const access = uploads.get(handle);
   if (!access?.stored) throw new Error("Original access changed.");
   const source = uploadSource(state, actor, access.invoice_id);
@@ -207,11 +229,37 @@ export function consumeInvoiceUpload(
     source.snapshot !== access.snapshot
   )
     throw new Error("The invoice changed while the original was saving.");
-  uploads.delete(handle);
+  return access as UploadAccess & {
+    stored: { reference: string; size: number };
+  };
+}
+function uploadedFields(
+  access: UploadAccess & { stored: { reference: string; size: number } },
+) {
   return {
     file_name: access.name,
     file_type: access.type,
     file_data: access.stored.reference,
     file_size: access.stored.size,
   };
+}
+
+/** Validate the whole saved batch before consuming even its first handle. */
+export function consumeInvoiceUploadBatch(
+  state: DemoState,
+  actor: AuthenticatedActor,
+  handles: InvoiceUploadHandle[],
+) {
+  if (!handles.length || new Set(handles).size !== handles.length)
+    throw new Error("Choose each saved original once.");
+  const sources = handles.map((handle) => verifiedUpload(state, actor, handle));
+  const originals = sources.map((source) => {
+    const fields = uploadedFields(source);
+    const sha = fields.file_data.split(":").at(-1) ?? "";
+    if (!/^[a-f\d]{64}$/i.test(sha))
+      throw new Error("The saved original could not be verified.");
+    return { ...fields, original_sha256: sha };
+  });
+  for (const handle of handles) uploads.delete(handle);
+  return originals;
 }

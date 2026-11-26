@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signIn, setBranch } from "./helpers";
 import demoSeed from "../../seed/demo-data.json" with { type: "json" };
 import configuration from "../../seed/arzon-config.json" with { type: "json" };
+import { approvedLookupPrices } from "./lookup-approved-price-fixture";
 
 // Hash navigation works with the desktop sidebar and the collapsed phone menu.
 async function visit(page: Page, route: string, heading: string) {
@@ -14,11 +15,13 @@ async function visit(page: Page, route: string, heading: string) {
 test("cashier finds English, Persian, code and barcode results with approved price, tax and pending tags", async ({
   page,
 }) => {
-  await signIn(page, "Cashier");
-  const search = page.getByLabel("Search products", { exact: true });
   const sumac = demoSeed.products.find((product) =>
     product.name_en.includes("Sumac"),
   )!;
+  await signIn(page, "Manager");
+  await approvedLookupPrices(page, [sumac.code, "0009", "0006"]);
+  await signIn(page, "Cashier");
+  const search = page.getByLabel("Search products", { exact: true });
   for (const query of ["sumac", "سماق", sumac.code, sumac.barcode]) {
     await search.fill(query);
     await expect(
@@ -90,7 +93,7 @@ test("branch switcher shows approved overrides and a new product requires Superv
     await expect(
       page
         .locator(".lookup-detail")
-        .getByText("No approved price yet", { exact: true }),
+        .getByText("Not approved here yet", { exact: true }),
     ).toBeVisible();
     await expect(page.locator(".lookup-pending-price")).toContainText("$5.49");
     await expect(

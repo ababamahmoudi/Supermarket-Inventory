@@ -112,6 +112,13 @@ export const configSeed = {
     ...sourceConfig.product_codes,
   },
   invoices: { ...retainedConfig.invoices, ...sourceConfig.invoices },
+  receiving: {
+    ...sourceConfig.receiving,
+    ai_reading_mode:
+      sourceConfig.receiving.ai_reading_mode === "live"
+        ? ("live" as const)
+        : ("simulated" as const),
+  },
   session: sourceConfig.session,
   weighed_items: {
     ...sourceConfig.weighed_items,

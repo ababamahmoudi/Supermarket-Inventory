@@ -100,6 +100,11 @@ describe("genuine E1 shell dashboard and public-view authority boundary", () => 
     expect(
       document.querySelectorAll(".location-dashboard-kpis .ui-kpi"),
     ).toHaveLength(4);
+    expect(
+      document.querySelectorAll(
+        ".location-dashboard-kpis .timesheet-on-shift-tile",
+      ),
+    ).toHaveLength(1);
   });
   it("keeps Floor Worker home on Invoices and denies the operational Dashboard query", async () => {
     const fixture = await setup("floor_worker");

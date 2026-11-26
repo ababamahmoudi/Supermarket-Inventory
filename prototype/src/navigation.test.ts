@@ -3,6 +3,8 @@ import {
   navigationKey,
   readNavigationValue,
   saveNavigationValue,
+  rememberInvoiceReturnRoute,
+  readInvoiceReturnRoute,
 } from "./navigation";
 
 beforeEach(() => sessionStorage.clear());
@@ -38,5 +40,63 @@ describe("scoped list navigation preferences", () => {
     );
     sessionStorage.setItem(key, "{damaged");
     expect(readNavigationValue(key, "")).toBe("");
+  });
+});
+
+describe("posted invoice Done destination (R2c0.2)", () => {
+  it("returns list entries to Posted and retains external entry through review/posting", () => {
+    rememberInvoiceReturnRoute(
+      "market",
+      "owner",
+      "north",
+      "#invoices?tab=needs_review",
+      "#invoices?id=review-one",
+    );
+    expect(
+      readInvoiceReturnRoute("market", "owner", "north", "review-one"),
+    ).toBe("#invoices?tab=posted");
+    rememberInvoiceReturnRoute(
+      "market",
+      "owner",
+      "north",
+      "#suppliers?name=Fictional",
+      "#invoices?id=external-one",
+    );
+    rememberInvoiceReturnRoute(
+      "market",
+      "owner",
+      "north",
+      "#invoices?id=external-one",
+      "#invoices?id=external-one&version=latest",
+    );
+    expect(
+      readInvoiceReturnRoute("market", "owner", "north", "external-one"),
+    ).toBe("#suppliers?name=Fictional");
+    for (const args of [
+      ["other", "owner", "north"],
+      ["market", "cashier", "north"],
+      ["market", "owner", "south"],
+    ])
+      expect(
+        readInvoiceReturnRoute(
+          ...(args as [string, string, string]),
+          "external-one",
+        ),
+      ).toBe("#invoices?tab=posted");
+  });
+  it("uses Posted for direct links and rejects external URL destinations", () => {
+    expect(readInvoiceReturnRoute("market", "owner", "north", "direct")).toBe(
+      "#invoices?tab=posted",
+    );
+    rememberInvoiceReturnRoute(
+      "market",
+      "owner",
+      "north",
+      "https://example.invalid/",
+      "#invoices?id=direct",
+    );
+    expect(readInvoiceReturnRoute("market", "owner", "north", "direct")).toBe(
+      "#invoices?tab=posted",
+    );
   });
 });

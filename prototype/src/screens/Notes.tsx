@@ -771,7 +771,11 @@ export function Notes() {
                       clearFieldError("location");
                     }}
                     options={[
-                      { value: "", label: notesText(t, "chooseLocation") },
+                      {
+                        value: "",
+                        placeholder: true,
+                        label: notesText(t, "chooseLocation"),
+                      },
                       ...locations.map((location) => ({
                         value: location,
                         label: branchLabel(state.config, location, lang),
@@ -808,6 +812,7 @@ export function Notes() {
                   }
                 >
                   <Select
+                    searchable
                     id="note-product"
                     value={product}
                     onChange={(value) => {
@@ -815,7 +820,14 @@ export function Notes() {
                       clearFieldError("product");
                     }}
                     options={[
-                      { value: "", label: t("Choose product", "انتخاب محصول") },
+                      {
+                        placeholder: activeTab === "store_use",
+                        value: "",
+                        label:
+                          activeTab === "store_use"
+                            ? t("Choose product", "انتخاب محصول")
+                            : t("No product", "بدون محصول"),
+                      },
                       ...state.products
                         .filter(
                           (item) =>
@@ -824,6 +836,12 @@ export function Notes() {
                               item.code === editing?.entry.product_code),
                         )
                         .map((item) => ({
+                          searchTerms: [
+                            item.name_en,
+                            item.name_fa ?? "",
+                            item.code,
+                            item.barcode ?? "",
+                          ],
                           value: item.code,
                           label:
                             lang === "fa"
@@ -900,23 +918,6 @@ export function Notes() {
                 {error}
               </div>
             )}
-            <DialogActions>
-              <Button
-                variant="neutral"
-                onClick={() => {
-                  setEntryOpen(false);
-                  clearEntryForm();
-                  setError("");
-                }}
-              >
-                {t("Cancel", "لغو")}
-              </Button>
-              <Button type="submit">
-                {editing
-                  ? t("Save changes", "ذخیره تغییرات")
-                  : t("Save note", "ذخیره یادداشت")}
-              </Button>
-            </DialogActions>
             {editing && !canSaveEdit && (
               <p className="muted" role="status">
                 {t(
@@ -935,6 +936,23 @@ export function Notes() {
                     )}
               </p>
             )}
+            <DialogActions>
+              <Button
+                variant="neutral"
+                onClick={() => {
+                  setEntryOpen(false);
+                  clearEntryForm();
+                  setError("");
+                }}
+              >
+                {t("Cancel", "لغو")}
+              </Button>
+              <Button type="submit">
+                {editing
+                  ? t("Save changes", "ذخیره تغییرات")
+                  : t("Save note", "ذخیره یادداشت")}
+              </Button>
+            </DialogActions>
           </form>
         </Dialog>
       )}
