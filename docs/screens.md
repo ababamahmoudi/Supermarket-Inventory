@@ -1,3 +1,7 @@
+## PR 29 Dashboard, Suppliers, alert and sidebar (2026-11-25)
+
+Dashboard: 3 newest items per list + a thin "Show all (N)" bar at the bottom of each card, no View all links, 24 px between cards, blue supplier links, YYYY-MM-DD/24-hour Activity times, Review tint / Approve primary. Suppliers: headings on one line; detail with one Complete profile/Edit header button, KPI tiles before a dense 4-column Contact details, "Not added" everywhere. Alerts: the totals alert ("Invoice <number> totals don't match") with four number tiles and Open invoice / Keep as pending / Mark as taken care of. Sidebar: 2 px between items. All top-level boxes share the soft card shadow (dark: 1 px ring).
+
 ## PR 29 Price updates and Offers (2026-11-20)
 
 See design-language "PR 29 Price updates and Offers" and requirements "PR 29 Price updates and Offers review". Price updates: Seen and Done columns, select all on this page, sticky bulk bar (Print labels, Mark as seen, Mark as done with skipped count), Print label dialog (Print now with starting slot or Add to print queue), Done tab with last 30 days, date range and Export CSV; sidebar count equals Pending. Offers: one Offer suggestions card with one-row boxes and its own empty state; pools as one card with chips; YYYY-MM-DD dates.
@@ -188,7 +192,7 @@ Individual Review approval retains real scope/location effects and existing warn
 
 ### Alerts (Owner/Manager)
 
-Same-supplier lower price: item, supplier, old/new cost, worker's answers (same expiry? units left? both dates) → **Taken care of / Still pending** + note. Other-supplier price, cross-branch conflict (**Mark as intentional / Apply to all**), tax discrepancy.
+Same-supplier lower price: item, supplier, old/new cost, worker's answers (same expiry? units left? both dates) → **Taken care of / Still pending** + note. Other-supplier price, cross-branch conflict (**Mark as intentional / Apply to all**), tax discrepancy (PR 29: shown as the totals alert with paper/calculated/difference/tax tiles and Open invoice).
 
 One list for every alert (decisions, sale alerts, date tracking), each row showing the product, a one-line summary and a category label (for example **Cross-branch price**, **Date tracking**). Date-tracking rows open the date; every other row opens its details when clicked (Ali, Oct 2026: the cross-branch price table is too detailed to show on the list). The Dashboard's **Review** button opens the page with that alert already open (`#alerts?id=…`).
 

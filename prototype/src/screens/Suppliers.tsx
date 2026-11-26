@@ -255,7 +255,9 @@ export default function Suppliers() {
     {
       key: "actions",
       label: t("Action", "عملیات"),
-      width: 60,
+      // PR 29: room for the one-line "Action" heading over the chevron.
+      width: 84,
+      minWidth: 84,
       actions: true,
       priority: 0,
       required: true,
@@ -512,7 +514,15 @@ export default function Suppliers() {
                     </th>
                   </>
                 )}
-                <th>{t("Action", "عملیات")}</th>
+                <th>
+                  {/* Same 44 px box as the sort buttons, so every heading
+                      sits on one line. */}
+                  <span className="supplier-sort supplier-sort-static">
+                    <span className="table-header-label">
+                      {t("Action", "عملیات")}
+                    </span>
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -576,12 +586,22 @@ export default function Suppliers() {
                   <td>{supplier.open_returns}</td>
                   <td>{supplier.open_shorts}</td>
                   <td>
-                    <LtrText>{supplier.payment_terms ?? "—"}</LtrText>
+                    {supplier.payment_terms ? (
+                      <LtrText>{supplier.payment_terms}</LtrText>
+                    ) : (
+                      <NotAdded />
+                    )}
                   </td>
                   <td>
-                    <LtrText>{supplier.sales_rep_name ?? "—"}</LtrText>
+                    {supplier.sales_rep_name ? (
+                      <LtrText>{supplier.sales_rep_name}</LtrText>
+                    ) : (
+                      <NotAdded />
+                    )}
                     <small className="muted supplier-secondary">
-                      <LtrText>{supplier.sales_rep_phone ?? "—"}</LtrText>
+                      {supplier.sales_rep_phone && (
+                        <LtrText>{supplier.sales_rep_phone}</LtrText>
+                      )}
                     </small>
                   </td>
                   {supervisor && supplier.financial && (
@@ -589,7 +609,11 @@ export default function Suppliers() {
                       <td>{money(supplier.financial.balance)}</td>
                       <td>{money(supplier.financial.overdue)}</td>
                       <td>
-                        <DateText value={supplier.financial.next_due_date} />
+                        {supplier.financial.next_due_date ? (
+                          <DateText value={supplier.financial.next_due_date} />
+                        ) : (
+                          <NotAdded />
+                        )}
                       </td>
                     </>
                   )}
@@ -678,6 +702,15 @@ export default function Suppliers() {
   nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
   const monthTo = dateAfter(nextMonth.toISOString().slice(0, 10), -1);
 
+  const missingContacts = [
+    current.phone,
+    current.email,
+    current.website,
+    current.address,
+    current.sales_rep_name,
+    current.sales_rep_phone,
+    current.payment_terms,
+  ].filter((value) => !value?.trim()).length;
   return (
     <div className="r2c-screen" data-r2c-screen="suppliers">
       <Button
@@ -708,12 +741,29 @@ export default function Suppliers() {
           </div>
           <p className="muted">
             {t("Supplier details", "اطلاعات تأمین‌کننده")}
+            {missingContacts > 0 && (
+              <>
+                {" · "}
+                {t(
+                  `${missingContacts} contact ${missingContacts === 1 ? "detail" : "details"} not added`,
+                  `${missingContacts} مورد از اطلاعات تماس افزوده نشده`,
+                )}
+              </>
+            )}
           </p>
         </div>
         {canManage && current.id && (
           <div className="actions">
-            <Button variant="neutral" onClick={() => setEditor("edit")}>
-              {t("Edit", "ویرایش")}
+            {/* PR 29: one header button opens the editor; it says Complete
+                profile until every contact detail is added. */}
+            <Button
+              variant={missingContacts > 0 ? "tinted" : "neutral"}
+              className="supplier-profile-action"
+              onClick={() => setEditor("edit")}
+            >
+              {missingContacts > 0
+                ? t("Complete profile", "تکمیل مشخصات")
+                : t("Edit", "ویرایش")}
             </Button>
             {current.active !== false && (
               <Menu label={t("More", "بیشتر")}>
@@ -755,66 +805,6 @@ export default function Suppliers() {
           setConfirmDeactivate(false);
         }}
       />
-      <Card className="supplier-header-card supplier-contact-card">
-        <div className="supplier-contact-heading">
-          <h2>{t("Contact details", "اطلاعات تماس")}</h2>
-          {[
-            current.phone,
-            current.email,
-            current.website,
-            current.address,
-            current.sales_rep_name,
-            current.sales_rep_phone,
-            current.payment_terms,
-          ].some((value) => !value?.trim()) &&
-            canManage && (
-              <a
-                href={`#suppliers?name=${encodeURIComponent(current.name)}&edit=1`}
-                onClick={(event) => {
-                  event.preventDefault();
-                  setEditor("edit");
-                }}
-              >
-                {t("Complete profile", "تکمیل مشخصات")}
-              </a>
-            )}
-        </div>
-        <dl className="supplier-contact-grid">
-          {(
-            [
-              ["phone", t("Phone", "تلفن")],
-              ["email", t("Email", "ایمیل")],
-              ["website", t("Website", "وب‌سایت")],
-              ["address", t("Address", "نشانی")],
-              ["sales_rep_name", t("Sales representative", "نماینده فروش")],
-              ["sales_rep_phone", t("Sales rep phone", "تلفن نماینده فروش")],
-              ["payment_terms", t("Payment terms", "شرایط پرداخت")],
-            ] as const
-          ).map(([field, label]) => (
-            <div key={field}>
-              <dt>{label}</dt>
-              <dd>
-                {current[field]?.trim() ? (
-                  <LtrValue value={current[field]} />
-                ) : (
-                  <NotAdded />
-                )}
-              </dd>
-            </div>
-          ))}
-        </dl>
-        {current.source_invoice_number && (
-          <p className="supplier-contact-source muted">
-            {t("Added from invoice", "افزوده‌شده از فاکتور")}{" "}
-            <LtrValue value={current.source_invoice_number} />
-          </p>
-        )}
-        {current.notes && (
-          <p className="supplier-contact-source">
-            <bdi dir="auto">{current.notes}</bdi>
-          </p>
-        )}
-      </Card>
       <div className="stats-grid supplier-kpis">
         <SummaryTile
           label={t("Last delivery", "آخرین تحویل")}
@@ -901,6 +891,46 @@ export default function Suppliers() {
           }
         />
       </div>
+      <Card className="supplier-header-card supplier-contact-card">
+        <div className="supplier-contact-heading">
+          <h2>{t("Contact details", "اطلاعات تماس")}</h2>
+          {current.source_invoice_number && (
+            <p className="supplier-contact-source muted">
+              {t("Added from invoice", "افزوده‌شده از فاکتور")}{" "}
+              <LtrValue value={current.source_invoice_number} />
+            </p>
+          )}
+        </div>
+        <dl className="supplier-contact-grid">
+          {(
+            [
+              ["phone", t("Phone", "تلفن")],
+              ["email", t("Email", "ایمیل")],
+              ["website", t("Website", "وب‌سایت")],
+              ["payment_terms", t("Payment terms", "شرایط پرداخت")],
+              ["address", t("Address", "نشانی")],
+              ["sales_rep_name", t("Sales representative", "نماینده فروش")],
+              ["sales_rep_phone", t("Sales rep phone", "تلفن نماینده فروش")],
+            ] as const
+          ).map(([field, label]) => (
+            <div key={field} className={`supplier-contact-${field}`}>
+              <dt>{label}</dt>
+              <dd>
+                {current[field]?.trim() ? (
+                  <LtrValue value={current[field]} />
+                ) : (
+                  <NotAdded />
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        {current.notes && (
+          <p className="supplier-contact-source">
+            <bdi dir="auto">{current.notes}</bdi>
+          </p>
+        )}
+      </Card>
       <div className="supplier-tabs">
         <Tabs
           value={effectiveTab}
@@ -928,7 +958,13 @@ export default function Suppliers() {
             </div>
             <div>
               <dt>{t("Supplier items", "کالاهای تأمین‌کننده")}</dt>
-              <dd>{supplierRead.data?.itemCount ?? "—"}</dd>
+              <dd>
+                {supplierRead.data?.itemCount === undefined ? (
+                  <NotAdded />
+                ) : (
+                  supplierRead.data.itemCount
+                )}
+              </dd>
             </div>
             <div>
               <dt>{t("Open shorts", "کسری‌های باز")}</dt>
@@ -943,7 +979,11 @@ export default function Suppliers() {
                 <div>
                   <dt>{t("Next due date", "سررسید بعدی")}</dt>
                   <dd>
-                    <DateText value={current.financial.next_due_date} />
+                    {current.financial.next_due_date ? (
+                      <DateText value={current.financial.next_due_date} />
+                    ) : (
+                      <NotAdded />
+                    )}
                   </dd>
                 </div>
               </>
@@ -1009,7 +1049,11 @@ export default function Suppliers() {
                     </div>
                   </td>
                   <td>
-                    <DateText value={invoice.received} />
+                    {invoice.received ? (
+                      <DateText value={invoice.received} />
+                    ) : (
+                      <NotAdded />
+                    )}
                   </td>
                   <td>{branchName(invoice.branch)}</td>
                   <td>{invoice.items}</td>
@@ -1222,7 +1266,11 @@ export default function Suppliers() {
                     <LtrText>{payment.reference}</LtrText>
                   </td>
                   <td>
-                    <LtrText>{payment.cheque_number ?? "—"}</LtrText>
+                    {payment.cheque_number ? (
+                      <LtrText>{payment.cheque_number}</LtrText>
+                    ) : (
+                      <NotAdded />
+                    )}
                   </td>
                   <td>{money(new Decimal(payment.amount).abs().toString())}</td>
                 </tr>

@@ -136,6 +136,7 @@ Owner specification: C6/C7, 2026-10-11. This document replaces the previous desi
 | Segmented track                     | `#EBEDF0`             | neutral fill token                       |
 | Page-background control fill/border | `#FFFFFF` / `#E1E3E8` | dark surface / hairline                  |
 | Keyboard focus ring                 | `rgba(43,89,195,0.2)` | verified dark accent-ring token          |
+| Card shadow (`--shadow-card`)       | `0 1px 2px rgba(20,26,43,0.05), 0 6px 20px rgba(20,26,43,0.07)` | `0 0 0 1px rgba(255,255,255,0.06)` (soft 1 px ring) |
 
 **Owner dark Primary decision resolved (2026-10-12):** use `#2B59C3` with white for filled primary buttons and solid blue summary cards. Retain `#7397F0` for dark links/icons/selected tabs/focus rings only. All actual composited text pairs still require 4.5:1; do not restore lighter-blue/white filled primaries.
 
@@ -155,7 +156,7 @@ English/numbers: **Manrope**, weights 400–800. Persian: **Vazirmatn**. Bundle 
 
 ## Shape, depth and spacing
 
-- Cards radius 20, no border, shadow `0 1px 2px rgba(20,26,43,0.04), 0 4px 16px rgba(20,26,43,0.04)`.
+- **Every top-level box** (cards, KPI tiles, list-item boxes that stand on the page, detail boxes) uses radius 20, **no border** and `--shadow-card` (PR 29, Ali 2026-11-20 — the supplier KPI tile look): light `0 1px 2px rgba(20,26,43,0.05), 0 6px 20px rgba(20,26,43,0.07)`; dark has its own value, a soft 1 px ring `0 0 0 1px rgba(255,255,255,0.06)`, because a shadow is invisible on the dark page. Boxes nested inside a card keep their field fill/hairline.
 - Dialogs radius 24, shadow `0 24px 64px rgba(20,26,43,0.24)`.
 - Menus radius 14, hairline, shadow `0 16px 40px rgba(20,26,43,0.16)`.
 - Fields/buttons radius 12; small buttons/sidebar items radius 10; tabs/chips/pills/icon buttons fully round. Lookup search radius 16; Undo radius 14. Values live only in tokens.
@@ -201,7 +202,7 @@ Dark tints use 12–18%, measured on the actual surface. **Tables use a coloured
 
 ## App shell
 
-**Sidebar:** 248 px, white in light theme or dark surface, hairline at inline end. Own logo directly on white; dark uses a small white tile. Group labels Daily, Catalog, configured Manager and Admin: 12 px SemiBold grey. Items: 34 px high, radius 10, outline 18 px grey icon; active blue tint, blue icon and Bold label. Counts are small grey capsules; Approvals/Alerts use blue tint. The signed-in person sits at the bottom in a soft grey block with Lock/Sign out menu. Below 1280 px use icons only, retaining hover/focus labels and count dots. Desktop account remains at sidebar bottom. On phones the same initials/account menu may move to the priority top bar, matching the phone reference; hide its sidebar copy while the top-bar version is shown so only one account control is visible. Never make the sidebar scroll.
+**Sidebar:** 248 px, white in light theme or dark surface, hairline at inline end. Own logo directly on white; dark uses a small white tile. Group labels Daily, Catalog, configured Manager and Admin: 12 px SemiBold grey. Items: 34 px high, radius 10, outline 18 px grey icon; active blue tint, blue icon and Bold label. **PR 29:** a 2 px gap separates items so the hover fill and the current page's fill never touch; hover is the neutral hover fill and the current page keeps its own blue tint on hover. Counts are small grey capsules; Approvals/Alerts use blue tint. The signed-in person sits at the bottom in a soft grey block with Lock/Sign out menu. Below 1280 px use icons only, retaining hover/focus labels and count dots. Desktop account remains at sidebar bottom. On phones the same initials/account menu may move to the priority top bar, matching the phone reference; hide its sidebar copy while the top-bar version is shown so only one account control is visible. Never make the sidebar scroll.
 
 Groups remain Daily (Lookup, Invoices, Received, Returns, Labels, Date tracking, Notes, Branch requests); Catalog (Products, Offers, Suppliers); configured Manager (Dashboard, Approvals, Alerts, Payables, Orders); Admin (Users and devices, Settings, History). Filter by role and actual implemented destinations; icons remain unique.
 
@@ -470,6 +471,8 @@ Use the central weight-Lookup 36 px amount and 18 px unit tokens; secondary unit
 By-location expiry stays plaintext using the shared column-value alignment, amber only when actually due soon. Different approved location prices use amber text/dot. Phone comparisons have exactly two logical lines without duplicated captions.
 
 ## R2f D7 — Dashboard compositions
+
+**PR 29 (Ali, 2026-11-20), supersedes the conflicting parts below:** every Dashboard list (Approvals, Recent invoices, Price updates, Alerts, Notes, Supplier balances, Activity) shows its newest **3** items, then one thin full-width **Show all (N)** bar (44 px, soft surface, blue text and arrow) at the bottom of its card that opens the full list; an empty list's bar names its page ("Open price updates"). Card headers carry no View all link. Every gap between Dashboard cards and tiles is **24 px** from 760 px (phones 16 px); short cards fit their content, and only the purchase pair stretches when side by side. Supplier names in Recent invoices are blue links. Activity shows YYYY-MM-DD, or the 24-hour time for today. Review is a filled tint button and Approve the filled primary; no outlines.
 
 `SummaryTile` may opt into two raw wrapping caption lines; existing one-line callers retain FitText. Dashboard uses shared card-header/card-row contracts and `--font-size-weekly-stat` (24 px) for weekly counts. Purchase cards stretch only when they share the same grid row (the existing two-column purchase layout starts at 1101 px); stacked purchase cards and every unrelated card retain content height. Dashboard tiles use two columns below 760 px, three from 760–999 px, and the approved six-tile row from 1000 px when Timesheets is enabled. The intermediate columns preserve complete bilingual words and at most two actual text lines without fitting or ellipsis. A centred Approve/Review label is measured through its actual fixed decision group for the Actions column; peer control heights/centres, shifted group edges and numeric glyph edges remain checked. No global Actions or numeric-column exclusion applies.
 

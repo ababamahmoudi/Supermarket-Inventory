@@ -1834,6 +1834,7 @@ export function postInvoice(
         product_code: "",
         status: "pending",
         supplier: invoice.supplier,
+        invoice_id: invoice.id,
         note: `Invoice ${invoice.supplier_invoice_number}: review totals and tax.`,
       });
     const totals = shortTotals(invoice);

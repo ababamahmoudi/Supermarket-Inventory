@@ -15,6 +15,7 @@ import {
   DateText,
   LtrText,
   Money,
+  NotAdded,
   ProductName,
   UnitSize,
 } from "../presentation";
@@ -202,7 +203,11 @@ export default function SupplierItems({
                   </small>
                 </td>
                 <td>
-                  <LtrText>{row.supplier_item_code || "—"}</LtrText>
+                  {row.supplier_item_code ? (
+                    <LtrText>{row.supplier_item_code}</LtrText>
+                  ) : (
+                    <NotAdded />
+                  )}
                 </td>
                 <td>{pack(row.units_per_case)}</td>
                 {row.financial && (
@@ -223,7 +228,11 @@ export default function SupplierItems({
                   </>
                 )}
                 <td>
-                  <DateText value={row.last_bought_date} />
+                  {row.last_bought_date ? (
+                    <DateText value={row.last_bought_date} />
+                  ) : (
+                    <NotAdded />
+                  )}
                 </td>
                 <td>
                   {row.last_invoice_id ? (

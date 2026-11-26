@@ -135,13 +135,17 @@ it("shows one supplier heading/edit action, seven contact fields and a single co
   expect(document.querySelectorAll(".supplier-contact-grid dt")).toHaveLength(
     7,
   );
-  expect(screen.getAllByRole("button", { name: /^Edit$/ })).toHaveLength(1);
+  // PR 29: one header button; it says Complete profile while details are missing.
+  expect(screen.queryAllByRole("button", { name: /^Edit$/ })).toHaveLength(0);
   expect(
     screen.queryByRole("button", { name: "Edit supplier" }),
   ).not.toBeInTheDocument();
   expect(
-    screen.getAllByRole("link", { name: "Complete profile" }),
+    screen.getAllByRole("button", { name: "Complete profile" }),
   ).toHaveLength(1);
+  expect(
+    screen.queryAllByRole("link", { name: "Complete profile" }),
+  ).toHaveLength(0);
   expect(
     document.querySelectorAll(".supplier-kpis .ui-summary-tile"),
   ).toHaveLength(4);

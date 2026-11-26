@@ -232,10 +232,12 @@ export function dashboardSummary(
     if (index < 0) visible.push(invoices.invoice);
     else visible[index] = invoices.invoice;
   }
-  const recentInvoices = visible
-    .filter(
-      (invoice) => invoice.status !== "empty" && locations.has(invoice.branch),
-    )
+  const scopedInvoices = visible.filter(
+    (invoice) => invoice.status !== "empty" && locations.has(invoice.branch),
+  );
+  // PR 29: the Dashboard's "Show all (N)" bar needs the full count only.
+  const invoiceCount = scopedInvoices.length;
+  const recentInvoices = scopedInvoices
     .sort((left, right) =>
       (
         right.posted_at ??
@@ -314,7 +316,9 @@ export function dashboardSummary(
       branch: entry.branch,
       product_code: entry.product_code,
     }));
-  const balances = supplierBalanceOverview(state, actor)
+  const balanceRows = supplierBalanceOverview(state, actor);
+  const balanceCount = balanceRows.length;
+  const balances = balanceRows
     .sort((left, right) => new Decimal(right.balance).cmp(left.balance))
     .slice(0, 5)
     .map((row) => ({
@@ -482,6 +486,8 @@ export function dashboardSummary(
       .toFixed(2),
     today,
     recentInvoices,
+    invoiceCount,
+    balanceCount,
     shortCount,
     expiryCount,
     notes,

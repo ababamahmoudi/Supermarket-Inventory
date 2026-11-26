@@ -1,6 +1,19 @@
 # Decisions
 
-## PR 29 Price updates decisions — 2026-11-20
+## PR 29 Dashboard and card decisions — 2026-11-20
+
+### 2026-11-20 — One card shadow, with a dark-theme ring
+
+**Context:** Ali loved the supplier KPI tile look and found other boxes flat; in dark mode the faint shadow was invisible. **Decision (Ali):** every top-level box uses radius 20, no border and `--shadow-card` (light `0 1px 2px rgba(20,26,43,0.05), 0 6px 20px rgba(20,26,43,0.07)`); dark theme gets its own `0 0 0 1px rgba(255,255,255,0.06)` ring. **Why:** one token changes every card at once and keeps light/dark equally legible.
+
+### 2026-11-20 — Dashboard lists end with a Show all bar
+
+**Context:** Dashboard lists grew long and their View all links sat in the headers. **Decision (Ali):** 3 newest items, then a thin full-width "Show all (N)" bar; the counts are scalar totals from the scoped dashboard data. **Why:** the page stays short and every list ends the same way.
+
+### 2026-11-20 — Totals alert computes its numbers when shown
+
+**Context:** the tax alert only stored "review totals and tax". **Decision:** the alert reads the posted invoice and works out paper subtotal, lines + charges, the difference and tax/total with Decimal at display time (new alerts also store `invoice_id`); "Tax doesn't match" only when the lines agree with the paper subtotal. **Why:** no new stored money, older alerts work too, and the numbers can never drift from the invoice.
+
 
 ### 2026-11-20 — Done price updates are kept forever
 

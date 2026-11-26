@@ -61,8 +61,10 @@
   --radius-section-top: var(--radius-search) var(--radius-search)
     var(--radius-none) var(--radius-none);
   --shadow-none: none;
+  /* PR 29 (Ali, 2026-11-20): every top-level box uses this soft shadow,
+     no border, radius 20 (the supplier KPI tile look). */
   --shadow-card:
-    0 1px 2px rgba(20, 26, 43, 0.04), 0 4px 16px rgba(20, 26, 43, 0.04);
+    0 1px 2px rgba(20, 26, 43, 0.05), 0 6px 20px rgba(20, 26, 43, 0.07);
   --shadow-dialog: 0 24px 64px rgba(20, 26, 43, 0.24);
   --shadow-menu: 0 16px 40px rgba(20, 26, 43, 0.16);
   --shadow-row-divider: inset 0 -1px var(--row-divider);
@@ -206,6 +208,8 @@
 
 /* Higher-specificity theme aliases replace every legacy theme declaration. */
 :root[data-theme="dark"] {
+  /* A shadow is invisible on the dark page; cards get a soft 1 px ring. */
+  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06);
   --page: var(--klead-page);
   --sidebar: var(--klead-surface);
   --surface: var(--klead-surface);

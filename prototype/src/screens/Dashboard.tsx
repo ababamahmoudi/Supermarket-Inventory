@@ -76,6 +76,30 @@ function DashboardHeading({
 function QuietEmpty({ children }: { children: ReactNode }) {
   return <p className="dashboard-empty muted">{children}</p>;
 }
+/** PR 29 (Ali, 2026-11-20): every Dashboard list shows its newest 3 items,
+ * then this thin full-width bar at the bottom of its card. */
+export const DASHBOARD_LIST_SIZE = 3;
+function ShowAll({
+  href,
+  count,
+  emptyLabel,
+}: {
+  href: string;
+  count: number;
+  emptyLabel: string;
+}) {
+  const { t } = useDemo();
+  return (
+    <a className="dashboard-show-all" href={href} data-count={count}>
+      <span>
+        {count > 0
+          ? t(`Show all (${count})`, `نمایش همه (${count})`)
+          : emptyLabel}
+      </span>
+      <ArrowRight size={16} className="directional" aria-hidden="true" />
+    </a>
+  );
+}
 
 export function Dashboard() {
   const [hoveredPurchaseWeek, setHoveredPurchaseWeek] = useState<number | null>(
@@ -134,6 +158,8 @@ export function Dashboard() {
     purchaseMonthTotal,
     today,
     recentInvoices,
+    invoiceCount,
+    balanceCount,
     shortCount,
     expiryCount,
     notes,
@@ -516,12 +542,6 @@ export function Dashboard() {
       {productLabel(code)}
     </a>
   );
-  const viewAll = (route: string, label = t("View all", "مشاهده همه")) => (
-    <Button variant="plain" onClick={() => navigate(route)}>
-      {label}
-      <ArrowRight size={16} className="directional" aria-hidden="true" />
-    </Button>
-  );
   const margin = (row: DashboardSummary["approvalRows"][number]) =>
     row.margin === null ? (
       <NotAdded />
@@ -536,13 +556,8 @@ export function Dashboard() {
   ).format(new Date(`${today}T12:00:00Z`));
   const activityDate = (at: string) => {
     const local = companyDateTime(state.config, at);
-    return local.date === today
-      ? local.time
-      : new Intl.DateTimeFormat("en-CA", {
-          month: "short",
-          day: "numeric",
-          timeZone: "UTC",
-        }).format(new Date(`${local.date}T12:00:00Z`));
+    // PR 29: YYYY-MM-DD, or the 24-hour time for today (design rule 10).
+    return local.date === today ? local.time : local.date;
   };
   return (
     <div
@@ -601,7 +616,6 @@ export function Dashboard() {
             <DashboardHeading
               title={t("Approvals waiting", "تأییدهای در انتظار")}
               count={approvalCount}
-              action={viewAll("approvals")}
             />
             {approvalRows.length ? (
               <>
@@ -666,7 +680,7 @@ export function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {approvalRows.slice(0, 6).map((row) => {
+                    {approvalRows.slice(0, DASHBOARD_LIST_SIZE).map((row) => {
                       const approval = state.approvals.find(
                         (item) => item.id === row.id,
                       );
@@ -773,9 +787,7 @@ export function Dashboard() {
                             <div className="dashboard-inline-actions">
                               {row.requiresReview || !approval ? (
                                 <Button
-                                  variant={
-                                    row.belowMinimum ? "tinted" : "secondary"
-                                  }
+                                  variant="tinted"
                                   onClick={() =>
                                     navigate(
                                       `approvals?id=${encodeURIComponent(row.id)}`,
@@ -830,24 +842,20 @@ export function Dashboard() {
                     })}
                   </tbody>
                 </DataTable>
-                <p className="dashboard-table-caption muted">
-                  {t(
-                    `Showing ${Math.min(6, approvalCount)} of ${approvalCount} · New products show their first price. Price changes show old → new.`,
-                    `نمایش ${Math.min(6, approvalCount)} از ${approvalCount} · محصول جدید قیمت نخست را نشان می‌دهد. تغییر قیمت به صورت قبلی ← جدید است.`,
-                  )}
-                </p>
               </>
             ) : (
               <QuietEmpty>
                 {t("No approvals waiting.", "تأییدی در انتظار نیست.")}
               </QuietEmpty>
             )}
+            <ShowAll
+              href="#approvals"
+              count={approvalCount}
+              emptyLabel={t("Open approvals", "باز کردن تأییدها")}
+            />
           </Card>
           <Card className="dashboard-invoices">
-            <DashboardHeading
-              title={t("Recent invoices", "فاکتورهای اخیر")}
-              action={viewAll("invoices", t("All invoices", "همه فاکتورها"))}
-            />
+            <DashboardHeading title={t("Recent invoices", "فاکتورهای اخیر")} />
             {recentInvoices.length ? (
               <DataTable
                 recordDetails
@@ -882,75 +890,84 @@ export function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentInvoices.map((invoice) => (
-                    <tr
-                      key={invoice.id}
-                      data-row-href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
-                    >
-                      <td>
-                        <a
-                          className="entity-link dashboard-invoice-reference"
-                          href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
-                          aria-label={`${t("Invoice", "فاکتور")} ${invoice.supplier_invoice_number || invoice.id}`}
-                          title={invoice.supplier_invoice_number || invoice.id}
-                        >
-                          <FitText
-                            className="dashboard-invoice-reference-text"
-                            value={
+                  {recentInvoices
+                    .slice(0, DASHBOARD_LIST_SIZE)
+                    .map((invoice) => (
+                      <tr
+                        key={invoice.id}
+                        data-row-href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                      >
+                        <td>
+                          <a
+                            className="entity-link dashboard-invoice-reference"
+                            href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                            aria-label={`${t("Invoice", "فاکتور")} ${invoice.supplier_invoice_number || invoice.id}`}
+                            title={
                               invoice.supplier_invoice_number || invoice.id
                             }
-                            render={(visible) => <LtrText>{visible}</LtrText>}
+                          >
+                            <FitText
+                              className="dashboard-invoice-reference-text"
+                              value={
+                                invoice.supplier_invoice_number || invoice.id
+                              }
+                              render={(visible) => <LtrText>{visible}</LtrText>}
+                            />
+                          </a>
+                        </td>
+                        <td>
+                          <a
+                            className="entity-link"
+                            href={`#suppliers?name=${encodeURIComponent(invoice.supplier)}`}
+                          >
+                            <bdi>{invoice.supplier}</bdi>
+                          </a>
+                        </td>
+                        <td>{branchName(invoice.branch)}</td>
+                        <td>
+                          <DateText value={invoice.invoice_date} />
+                        </td>
+                        <td>
+                          {invoice.total ? (
+                            <span className="dashboard-invoice-amount">
+                              <strong>
+                                <Money
+                                  value={invoice.total}
+                                  currency={invoice.currency}
+                                />
+                              </strong>
+                              {invoice.currency !==
+                                state.config.company.currency && (
+                                <small className="muted">
+                                  <LtrText>{invoice.currency}</LtrText>
+                                </small>
+                              )}
+                            </span>
+                          ) : (
+                            <NotAdded />
+                          )}
+                        </td>
+                        <td>
+                          <Badge
+                            tone={
+                              invoice.status === "posted"
+                                ? "approved"
+                                : invoice.status === "review"
+                                  ? "pending"
+                                  : "info"
+                            }
+                          >
+                            {invoiceStatus(invoice.status)}
+                          </Badge>
+                        </td>
+                        <td>
+                          <TableRowLink
+                            href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
+                            aria-label={`${t("Open invoice", "باز کردن فاکتور")} ${invoice.supplier_invoice_number || invoice.id}`}
                           />
-                        </a>
-                      </td>
-                      <td>
-                        <bdi>{invoice.supplier}</bdi>
-                      </td>
-                      <td>{branchName(invoice.branch)}</td>
-                      <td>
-                        <DateText value={invoice.invoice_date} />
-                      </td>
-                      <td>
-                        {invoice.total ? (
-                          <span className="dashboard-invoice-amount">
-                            <strong>
-                              <Money
-                                value={invoice.total}
-                                currency={invoice.currency}
-                              />
-                            </strong>
-                            {invoice.currency !==
-                              state.config.company.currency && (
-                              <small className="muted">
-                                <LtrText>{invoice.currency}</LtrText>
-                              </small>
-                            )}
-                          </span>
-                        ) : (
-                          <NotAdded />
-                        )}
-                      </td>
-                      <td>
-                        <Badge
-                          tone={
-                            invoice.status === "posted"
-                              ? "approved"
-                              : invoice.status === "review"
-                                ? "pending"
-                                : "info"
-                          }
-                        >
-                          {invoiceStatus(invoice.status)}
-                        </Badge>
-                      </td>
-                      <td>
-                        <TableRowLink
-                          href={`#invoices?id=${encodeURIComponent(invoice.id)}`}
-                          aria-label={`${t("Open invoice", "باز کردن فاکتور")} ${invoice.supplier_invoice_number || invoice.id}`}
-                        />
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </DataTable>
             ) : (
@@ -961,6 +978,11 @@ export function Dashboard() {
                 )}
               </QuietEmpty>
             )}
+            <ShowAll
+              href="#invoices"
+              count={invoiceCount}
+              emptyLabel={t("Open invoices", "باز کردن فاکتورها")}
+            />
           </Card>
           <div className="dashboard-row dashboard-row-halves dashboard-purchase-pair ui-card-row">
             <Card className="dashboard-purchases dashboard-supplier-purchases">
@@ -1184,7 +1206,7 @@ export function Dashboard() {
             />
             {priceUpdates.length ? (
               <div className="dashboard-task-list">
-                {priceUpdates.slice(0, 4).map((task) => (
+                {priceUpdates.slice(0, DASHBOARD_LIST_SIZE).map((task) => (
                   <a
                     className="dashboard-task-row"
                     href={`#price-update?id=${encodeURIComponent(task.id)}`}
@@ -1233,23 +1255,23 @@ export function Dashboard() {
                 )}
               </QuietEmpty>
             )}
-            <Button
-              variant="tinted"
-              className="dashboard-open-tasks"
-              onClick={() => navigate("price-updates")}
-            >
-              {t("Open price updates", "باز کردن به‌روزرسانی قیمت‌ها")}
-            </Button>
+            <ShowAll
+              href="#price-updates"
+              count={priceUpdates.length}
+              emptyLabel={t(
+                "Open price updates",
+                "باز کردن به‌روزرسانی قیمت‌ها",
+              )}
+            />
           </Card>
           <Card className="dashboard-alerts">
             <DashboardHeading
               title={t("Alerts", "هشدارها")}
               count={alerts.length}
-              action={viewAll("alerts")}
             />
             {alerts.length ? (
               <div className="dashboard-alert-list">
-                {alerts.slice(0, 5).map((item) => (
+                {alerts.slice(0, DASHBOARD_LIST_SIZE).map((item) => (
                   <a
                     className="dashboard-alert-row"
                     href={`#alerts?id=${encodeURIComponent(item.id)}`}
@@ -1284,6 +1306,11 @@ export function Dashboard() {
                 {t("No pending alerts.", "هشداری در انتظار نیست.")}
               </QuietEmpty>
             )}
+            <ShowAll
+              href="#alerts"
+              count={alerts.length}
+              emptyLabel={t("Open alerts", "باز کردن هشدارها")}
+            />
           </Card>
           <Card className="dashboard-notes">
             <DashboardHeading
@@ -1291,10 +1318,9 @@ export function Dashboard() {
                 `Notes for ${configuredRoleLabel(state.config.roles, "manager", "en")}`,
                 `یادداشت‌های ${configuredRoleLabel(state.config.roles, "manager", "fa")}`,
               )}
-              action={viewAll("notes", t("Notes", "یادداشت‌ها"))}
             />
             {notes.length ? (
-              notes.slice(0, 5).map((note) => (
+              notes.slice(0, DASHBOARD_LIST_SIZE).map((note) => (
                 <div className="dashboard-list-row" key={note.id}>
                   <div className="dashboard-list-copy">
                     <strong>{note.text}</strong>
@@ -1321,14 +1347,18 @@ export function Dashboard() {
                 )}
               </p>
             )}
+            <ShowAll
+              href="#notes"
+              count={notes.length}
+              emptyLabel={t("Open notes", "باز کردن یادداشت‌ها")}
+            />
           </Card>
           <Card className="dashboard-balances">
             <DashboardHeading
               title={t("Supplier balances", "مانده تأمین‌کنندگان")}
-              action={viewAll("payables", t("Payables", "حساب‌های پرداختنی"))}
             />
             {balances.length ? (
-              balances.map((row) => (
+              balances.slice(0, DASHBOARD_LIST_SIZE).map((row) => (
                 <div className="dashboard-balance-row" key={row.supplier}>
                   <a
                     className="entity-link"
@@ -1372,12 +1402,17 @@ export function Dashboard() {
                 )}
               </QuietEmpty>
             )}
+            <ShowAll
+              href="#payables"
+              count={balanceCount}
+              emptyLabel={t("Open payables", "باز کردن حساب‌های پرداختنی")}
+            />
           </Card>
           <Card className="dashboard-activity" id="recent-activity">
             <DashboardHeading title={t("Activity", "فعالیت")} />
             {activity.length ? (
               <ol className="dashboard-activity-list">
-                {activity.slice(0, 8).map((item) => (
+                {activity.slice(0, DASHBOARD_LIST_SIZE).map((item) => (
                   <li className="dashboard-activity-item" key={item.id}>
                     <span className="initials-avatar" aria-hidden="true">
                       {initials(item.by)}
@@ -1417,6 +1452,13 @@ export function Dashboard() {
                   "فعالیت اخیری نیست. کارهای شما اینجا ظاهر می‌شوند.",
                 )}
               </QuietEmpty>
+            )}
+            {(can("history.read_all") || can("history.read_own")) && (
+              <ShowAll
+                href="#history"
+                count={activity.length}
+                emptyLabel={t("Open History", "باز کردن تاریخچه")}
+              />
             )}
           </Card>
         </aside>

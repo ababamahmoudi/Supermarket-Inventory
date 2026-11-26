@@ -213,29 +213,32 @@ for (const language of ["en", "fa"] as const)
         exact: true,
       }),
     ).toHaveCount(1);
+    // PR 29 (Ali, 2026-11-20): one header button — Complete profile while
+    // details are missing, Edit once complete — and no link in the card.
     await expect(
       page.getByRole("button", {
         name: language === "en" ? "Edit" : "ویرایش",
         exact: true,
       }),
-    ).toHaveCount(1);
+    ).toHaveCount(0);
     await expect(
-      card.getByRole("link", {
+      page.locator(".supplier-detail-header").getByRole("button", {
         name: language === "en" ? "Complete profile" : "تکمیل مشخصات",
         exact: true,
       }),
     ).toHaveCount(1);
+    await expect(card.getByRole("link")).toHaveCount(0);
     const geometry = await card.evaluate((element) => ({
       padding: parseFloat(getComputedStyle(element).paddingInlineStart),
       columns: getComputedStyle(
         element.querySelector(".supplier-contact-grid")!,
       ).gridTemplateColumns.split(" ").length,
+      width: element.getBoundingClientRect().width,
       overflow: document.documentElement.scrollWidth - innerWidth,
     }));
     expect(geometry.padding).toBeGreaterThanOrEqual(20);
-    expect(geometry.columns).toBe(
-      (page.viewportSize()?.width ?? 1440) > 600 ? 2 : 1,
-    );
+    // PR 29: a dense 4-column grid (2 on a phone).
+    expect(geometry.columns).toBe(geometry.width >= 900 ? 4 : 2);
     expect(geometry.overflow).toBeLessThanOrEqual(1);
     await expect(page.locator(".supplier-kpis .ui-summary-tile")).toHaveCount(
       4,
@@ -250,8 +253,9 @@ for (const language of ["en", "fa"] as const)
         .evaluate((element) => element.tagName),
     ).toBe("DIV");
     const before = await card.boundingBox();
-    await card
-      .getByRole("link", {
+    await page
+      .locator(".supplier-detail-header")
+      .getByRole("button", {
         name: language === "en" ? "Complete profile" : "تکمیل مشخصات",
         exact: true,
       })

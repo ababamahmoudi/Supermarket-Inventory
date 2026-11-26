@@ -86,7 +86,8 @@ test("C5 button contract covers Suppliers, every supplier tab and item dialogs",
       await page.getByRole("tab", { name: tab, exact: true }).click();
       await proof.check(`Supplier: ${tab}`);
     }
-    await page.getByRole("button", { name: "Edit", exact: true }).click();
+    // PR 29: one header button, Complete profile until the profile is complete.
+    await page.locator(".supplier-profile-action").click();
     await proof.check("Edit supplier dialog");
     await closeDialog(page);
     await page

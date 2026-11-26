@@ -385,6 +385,9 @@ stateDiagram-v2
 - **Not reversible by undo/revert:** posted invoices, stock movements, payables entries, prints. These use corrections (`workflows.md` §1, §11) so the original stays visible.
 - Examples: offer stopped by mistake → Undo, or Owner/Manager reverts → the offer is active again. Wrong product name → revert to the previous name. Price approved by mistake → revert restores the previous approved price (and creates a new price proposal history entry).
 
+
+**PR 29 check (2026-11-25):** posting an invoice records "Posted invoice" and marking a price update Done records "Complete price update", each with who and when. To see them: sidebar → Admin → **History** (filters All people / All branches / All actions / Any date). The Dashboard's Activity card shows the newest three and its Show all bar opens History.
+
 ## 1A. Invoice receiving location and posted relocation (C1)
 
 - New invoice defaults to user's own concrete allowed location; Owner/Manager uses a valid current concrete location; an aggregate must ask for a permitted concrete target rather than silently choosing the first location. Ship-to evidence suggests a matching active location but requires reviewer confirmation. Retain reviewer origin location/assignment on a draft. The actual Floor Worker creator/handler/reviewer of an unposted invoice may choose any active same-company receiving location, including Warehouse, and post that invoice through its retained active assigned handling origin. This preserves the C8 invoice-only exception; it grants no unrelated destination records or Orders, no later Short receiving/resolution, and no reviewer reassignment. Branch Supervisor remains assigned-location only.

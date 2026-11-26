@@ -464,7 +464,8 @@ test("R2c All locations shows six approvals with a truthful full queue count", a
       .getByRole("combobox", { name: "Location", exact: true }),
   ).toContainText("All locations");
   const approvals = page.locator(".dashboard-approvals");
-  await expect(approvals.locator(".dashboard-queue-row")).toHaveCount(6);
+  // PR 29 (Ali, 2026-11-20): the newest 3, then a Show all (N) bar.
+  await expect(approvals.locator(".dashboard-queue-row")).toHaveCount(3);
   const total = Number(
     await page
       .locator(".dashboard-summary-tile")
@@ -472,13 +473,10 @@ test("R2c All locations shows six approvals with a truthful full queue count", a
       .locator(".kpi-value")
       .innerText(),
   );
-  expect(total).toBeGreaterThan(6);
+  expect(total).toBeGreaterThan(3);
   await expect(approvals.locator(".dashboard-count")).toHaveText(String(total));
-  await expect(approvals.locator(".dashboard-table-caption")).toContainText(
-    `Showing 6 of ${total}`,
-  );
   await approvals
-    .getByRole("button", { name: "View all", exact: true })
+    .getByRole("link", { name: `Show all (${total})`, exact: true })
     .click();
   await expect(page).toHaveURL(/#approvals$/);
   await expect(

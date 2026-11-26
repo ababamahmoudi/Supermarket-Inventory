@@ -1009,3 +1009,16 @@ div.ui-kpi:hover {
     word-break: normal;
   }
 }
+
+/* PR 29 (Ali, 2026-11-20): a 2 px gap between sidebar items, so the hover
+   fill and the current page's fill never touch; the current page keeps its
+   own fill on hover. */
+:root .sidebar nav a {
+  margin-block-end: 2px;
+}
+:root .sidebar nav a:not([aria-current="page"]):hover {
+  background: var(--hover-fill);
+}
+:root .sidebar nav a[aria-current="page"]:hover {
+  background: var(--accent-soft);
+}

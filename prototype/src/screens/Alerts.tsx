@@ -20,6 +20,7 @@ import type { Alert } from "../types";
 import { dateReminderMessage } from "../date-tracking";
 import { SalesAlerts } from "./SalesAlerts";
 import { AlertRow } from "./AlertRow";
+import { TotalsAlert } from "./TotalsAlert";
 import { alertCategory } from "../alert-categories";
 import { useRouteParam } from "../navigation";
 import "./financial-polish.css";
@@ -262,6 +263,17 @@ export function Alerts() {
                 item.company_id === company && item.code === alert.product_code,
             );
             const category = alertCategory(alert.type, t);
+            if (alert.type === "tax_discrepancy")
+              return (
+                <TotalsAlert
+                  key={alert.id}
+                  alert={alert}
+                  canDecide={canDecide}
+                  note={notes[alert.id] ?? ""}
+                  onNote={(value) => setNotes({ ...notes, [alert.id]: value })}
+                  onResolve={(status) => void resolve(alert.id, status)}
+                />
+              );
             return (
               <AlertRow
                 key={

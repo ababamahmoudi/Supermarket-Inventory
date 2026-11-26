@@ -804,3 +804,57 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* PR 29 (Ali, 2026-11-20): one 24 px gap between every Dashboard card
+   (tiles, cards and the purchase pair) from 760 px; phones keep 16 px. Short
+   cards keep their content height; only the purchase pair stretches when the
+   two sit side by side (from 1101 px). */
+@media (min-width: 760px) {
+  :root .r2c-dashboard,
+  :root .r2c-dashboard .dashboard-kpis,
+  :root .r2c-dashboard .dashboard-layout,
+  :root .r2c-dashboard .dashboard-main,
+  :root .r2c-dashboard .dashboard-aside,
+  :root .r2c-dashboard .dashboard-row.dashboard-purchase-pair {
+    gap: 24px;
+  }
+}
+/* Every list ends with one thin full-width "Show all (N)" bar. */
+:root .r2c-dashboard .card:has(> .dashboard-show-all) {
+  padding-block-end: 0;
+  overflow: hidden;
+}
+:root .r2c-dashboard .card:has(> .dashboard-show-all) {
+  padding-inline: 24px;
+}
+:root .r2c-dashboard .dashboard-show-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-block-size: 44px;
+  margin-block-start: 8px;
+  margin-inline: -24px;
+  padding-inline: 24px;
+  background: var(--surface-soft);
+  color: var(--link-text);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-caption);
+  text-decoration: none;
+}
+:root .r2c-dashboard .dashboard-show-all:hover {
+  background: var(--accent-soft);
+}
+:root .r2c-dashboard .dashboard-show-all:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+/* PR 29: Review is a filled tint button and Approve the filled primary one;
+   neither carries the older table-control outline. */
+:root .r2c-dashboard .dashboard-inline-actions > .ui-button {
+  outline: 0;
+}
+:root .r2c-dashboard .dashboard-inline-actions > .ui-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

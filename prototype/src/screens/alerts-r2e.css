@@ -13,3 +13,89 @@
   flex: 0 0 auto;
   margin: 0;
 }
+
+/* PR 29 (Ali, 2026-11-20): totals alert — plain-words title, the paper and
+   calculated numbers side by side, one primary decision. */
+.totals-alert {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+.totals-alert-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+}
+.totals-alert-head > h3 {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-headline);
+  line-height: var(--line-height-body);
+}
+.totals-alert-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.totals-alert-meta,
+.totals-alert-hint {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.totals-alert-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.totals-alert-stat {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
+  background: var(--field-fill);
+}
+.totals-alert-stat.is-danger {
+  background: var(--danger-bg);
+}
+.totals-alert-stat-label {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+.totals-alert-stat-value {
+  font-size: var(--font-size-title);
+  line-height: var(--line-height-title);
+  font-weight: var(--font-weight-title);
+  overflow-wrap: anywhere;
+}
+.totals-alert-stat.is-danger .totals-alert-stat-value {
+  color: var(--danger);
+}
+.totals-alert .field {
+  margin: 0;
+}
+.totals-alert-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.totals-alert-decisions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+@media (max-width: 759px) {
+  .totals-alert {
+    padding: 16px;
+  }
+  .totals-alert-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

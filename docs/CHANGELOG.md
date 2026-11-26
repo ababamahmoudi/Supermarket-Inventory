@@ -1,3 +1,12 @@
+## 2026-11-25 — PR 29 Dashboard, Suppliers, alert and sidebar (Ali's test of 2026-11-20)
+
+- Dashboard: 3 newest items per list with a "Show all (N)" bar, no header View all links, 24 px gaps, blue supplier links, YYYY-MM-DD Activity dates, filled Review/Approve.
+- Suppliers: one-line headings (Action fixed); detail has one Complete profile/Edit button (empty button removed), KPI tiles first with level values, a dense 4-column Contact details, "Not added" instead of "—".
+- Card shadow token raised; dark theme gets a soft 1 px ring.
+- Totals alert redesign with paper/calculated/difference/tax tiles (Decimal) and Open invoice.
+- Sidebar: 2 px between items; no hover fill on the current page.
+- History: posting and Done appear with who and when (verified; test added).
+
 ## 2026-11-20 — PR 29 Price updates and Offers (Ali's test of 2026-11-20)
 
 - Label printing: one label prints on one A4 page in the chosen slot with the template margins (bug fix); Print label asks Print now or Add to print queue (toast; waitlist entries are counted up).
