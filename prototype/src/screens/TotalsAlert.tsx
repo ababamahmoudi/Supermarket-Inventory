@@ -30,7 +30,8 @@ export function TotalsAlert({
   onResolve: (status: "pending" | "resolved") => void;
 }) {
   const { state, lang, t, navigate } = useDemo();
-  const invoiceId = alert.invoice_id ?? alert.id.replace(/:tax$/, "");
+  // The alert id is "<invoice id>:tax"; nothing extra is stored on the alert.
+  const invoiceId = alert.id.replace(/:tax$/, "");
   const invoice = (state.invoices ?? []).find(
     (row) => row.company_id === alert.company_id && row.id === invoiceId,
   );

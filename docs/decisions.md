@@ -12,7 +12,7 @@
 
 ### 2026-11-20 — Totals alert computes its numbers when shown
 
-**Context:** the tax alert only stored "review totals and tax". **Decision:** the alert reads the posted invoice and works out paper subtotal, lines + charges, the difference and tax/total with Decimal at display time (new alerts also store `invoice_id`); "Tax doesn't match" only when the lines agree with the paper subtotal. **Why:** no new stored money, older alerts work too, and the numbers can never drift from the invoice.
+**Context:** the tax alert only stored "review totals and tax". **Decision:** the alert reads the posted invoice and works out paper subtotal, lines + charges, the difference and tax/total with Decimal at display time from the posted invoice named by the alert id (`<invoice id>:tax`); "Tax doesn't match" only when the lines agree with the paper subtotal. **Why:** no new stored money, older alerts work too, and the numbers can never drift from the invoice.
 
 
 ### 2026-11-20 — Done price updates are kept forever
