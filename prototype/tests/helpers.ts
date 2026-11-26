@@ -293,20 +293,27 @@ export async function resetDemo(page: Page) {
     .locator(".topbar")
     .getByRole("combobox", { name: locationName, exact: true });
   await expect(current).toBeEnabled();
-  if ((await current.locator("bdi").innerText()).trim() !== beforeLocation) {
+  // The reset may apply its default location a moment after the new session
+  // appears, so check again after each restore until the selection sticks.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await page.waitForTimeout(300);
+    if ((await current.locator("bdi").innerText()).trim() === beforeLocation)
+      return;
     // Restore the caller's selection only when the fresh six-person directory
     // still permits it. Never switch personas or substitute a first store.
     await current.click();
-    const permitted = page.getByRole("option", {
-      name: beforeLocation,
-      exact: true,
-    });
-    if (await permitted.count()) {
-      await permitted.click();
-      await expect(current).toBeEnabled();
-    } else {
+    const permitted = page
+      .getByRole("option", { name: beforeLocation, exact: true })
+      .first();
+    await permitted
+      .waitFor({ state: "visible", timeout: 3000 })
+      .catch(() => undefined);
+    if (!(await permitted.count())) {
       await page.keyboard.press("Escape");
+      return;
     }
+    await permitted.click();
+    await expect(current).toBeEnabled();
   }
 }
 
