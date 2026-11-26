@@ -251,7 +251,7 @@ export default function SupplierItems({
                       </LtrText>
                     </Button>
                   ) : (
-                    <span className="muted">—</span>
+                    <NotAdded />
                   )}
                 </td>
                 {supervisor && (

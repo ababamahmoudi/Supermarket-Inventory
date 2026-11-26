@@ -24,7 +24,8 @@ for (const variant of ["en-light", "fa-light", "en-dark"] as const) {
       expect(report.failures, `${route}: full C5 contract`).toEqual([]);
     }
     await page.goto("/#suppliers?name=Corner%20Spice%20Co.");
-    await page.getByRole("button", { name: /^(Edit|ویرایش)$/ }).click();
+    // PR 29: one header button (Complete profile until complete, then Edit).
+    await page.locator(".supplier-profile-action").click();
     await expect(page.locator("dialog.supplier-editor-dialog")).toBeVisible();
     const dialogReport = await inspect(
       page,

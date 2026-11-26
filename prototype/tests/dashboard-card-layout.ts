@@ -87,10 +87,11 @@ export async function inspectDashboardColumnSpacing(page: Page) {
         gap: edge.top - edges[index].bottom,
       }));
       if (window.innerWidth >= 951) {
+        // PR 29 (Ali, 2026-11-20): every gap between Dashboard cards is 24 px.
         for (const gap of gaps)
-          if (Math.abs(gap.gap - 20) > 1)
+          if (Math.abs(gap.gap - 24) > 1)
             failures.push(
-              `${name}: card gap ${gap.gap} after ${gap.after}; expected 20`,
+              `${name}: card gap ${gap.gap} after ${gap.after}; expected 24`,
             );
         if (edges.length < 2)
           failures.push(`${name}: missing actual card edges`);

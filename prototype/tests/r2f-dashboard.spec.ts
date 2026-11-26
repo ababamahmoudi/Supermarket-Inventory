@@ -80,7 +80,8 @@ for (const width of [1440, 1000, 390])
       await expect(activity.locator("time")).toHaveCount(2);
       const activityText = await activity.locator("time").allTextContents();
       expect(activityText[0].trim()).toMatch(/^\d{2}:\d{2}$/);
-      expect(activityText[1].trim()).toMatch(/^[A-Za-z]{3,} \d{1,2}$/);
+      // PR 29 (Ali, 2026-11-20): earlier days read YYYY-MM-DD.
+      expect(activityText[1].trim()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       for (const line of await activity
         .locator(".dashboard-activity-item small")
         .allTextContents())
