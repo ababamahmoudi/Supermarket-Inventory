@@ -178,7 +178,8 @@ for (const language of ["en", "fa"] as const)
               const gap =
                 Math.max(first.x, second.x) -
                 Math.min(first.right, second.right);
-              expect(gap).toBeCloseTo(20, 0);
+              // PR 29 (Ali, 2026-11-20): 24 px between Dashboard cards.
+              expect(gap).toBeCloseTo(24, 0);
               // Grid track spans include their internal gutters: adding the
               // shared gutter proves the actual 8+4 or 6+6 allocation.
               expect((first.width + gap) / (second.width + gap)).toBeCloseTo(

@@ -651,8 +651,10 @@ for (const language of ["en", "fa"] as const) {
     );
     const supplierActions = page.locator(".page-header .actions button");
     await expect(supplierActions).toHaveCount(2);
+    // PR 29: one header button — Complete profile until the profile is
+    // complete, then Edit — plus More.
     await expect(
-      button(page.locator(".page-header"), "Edit", "ویرایش"),
+      page.locator(".page-header .supplier-profile-action"),
     ).toBeVisible();
     await expect(
       button(page.locator(".page-header"), "More", "بیشتر"),
@@ -666,6 +668,21 @@ for (const language of ["en", "fa"] as const) {
       ).toBe(false);
       const style = await appearance(control);
       (report.supplierHeader as unknown[]).push(style);
+      // PR 29 (approved mockup): Complete profile is a blue-tint button; the
+      // other header controls keep the neutral page-background style.
+      if (
+        await control.evaluate(
+          (element) =>
+            element.classList.contains("supplier-profile-action") &&
+            element.classList.contains("button-tinted"),
+        )
+      ) {
+        expect.soft(style.borderWidth).toBe("0px");
+        expect.soft(style.outlineVisible).toBe(false);
+        expect.soft(style.shadow).toBe("none");
+        expect.soft(style.contrast).toBeGreaterThanOrEqual(4.5);
+        continue;
+      }
       expect.soft(style.background).toBe(style.tokens.surface);
       expect.soft(style.colour).toBe(style.tokens.text);
       expect.soft(style.borderVisible).toBe(true);

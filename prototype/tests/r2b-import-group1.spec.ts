@@ -429,12 +429,9 @@ async function checkNamesAndSupplier(page: Page, language: ReceivingLanguage) {
   await expect(page.locator(".supplier-contact-grid")).toContainText(
     "https://bluefinch.example",
   );
+  // PR 29: the one header button (Complete profile or Edit) opens the editor.
   await page
-    .locator(".supplier-detail-header")
-    .getByRole("button", {
-      name: word(language, "Edit", "ویرایش"),
-      exact: true,
-    })
+    .locator(".supplier-detail-header .supplier-profile-action")
     .click();
   const dialog = page.getByRole("dialog", {
     name: word(language, "Edit supplier", "ویرایش تأمین‌کننده"),
